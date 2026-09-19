@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Star } from "lucide-react"
 import type { BatchType } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
@@ -337,8 +337,8 @@ export default function SellerShopPage({
               {seller}
               <BIRBadge size={14} />
             </div>
-            <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>
-               {avgRating} · Member since Jan 2024
+            <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+              <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {avgRating} · Member since Jan 2024
             </div>
           </div>
           <div

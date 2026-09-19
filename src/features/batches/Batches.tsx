@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { BarChart3, Lock, Search, FileText, ArrowRight } from "lucide-react"
+import { BarChart3, Lock, Unlock, Search, FileText, ArrowRight, Star } from "lucide-react"
 import type { ClaimRow, BatchType, SharedState } from "@/types"
 import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
 import { navIntent } from "@/state/navIntent"
@@ -307,7 +307,11 @@ export default function Batches({
                               }}
                               title={b.locked ? "Unlock batch" : "Lock batch"}
                             >
-                              {b.locked ? "Lock" : "Open"}
+                              {b.locked ? (
+                                <Lock size={14} aria-hidden="true" style={{ color: "#991B1B" }} />
+                              ) : (
+                                <Unlock size={14} aria-hidden="true" style={{ color: "#374151" }} />
+                              )}
                             </button>
                           ) : b.locked ? (
                             <span
@@ -376,9 +380,12 @@ export default function Batches({
                                 fontWeight: 600,
                                 padding: "3px 8px",
                                 borderRadius: 999,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
                               }}
                             >
-                               {b.rating}
+                              <Star size={11} aria-hidden="true" fill="#fff" /> {b.rating}
                             </span>
                           )}
                           {pct >= 90 && (

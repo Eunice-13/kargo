@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight } from "lucide-react"
+import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight, Star } from "lucide-react"
 import type { BatchType, Tab } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Modal, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
@@ -108,8 +108,8 @@ export default function SellerProfileModal({
             {seller}
             <BIRBadge size={18} onClick={() => setShowBIR(true)} />
           </div>
-          <div style={{ fontSize: 12, color: "#6B7280" }}>
-             {avgRating} · {sellerBatches.length} batch
+          <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+            <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {avgRating} · {sellerBatches.length} batch
             {sellerBatches.length !== 1 ? "es" : ""}
           </div>
         </div>

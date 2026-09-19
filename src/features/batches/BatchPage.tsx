@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Lock, ArrowLeft, Plane, Check, Link2 } from "lucide-react"
+import { Lock, ArrowLeft, Plane, Check, Link2, Star } from "lucide-react"
 import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo } from "@/types"
 import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge, CategoryIcon, Toggle, ContactSellerModal } from "@/components/shared"
@@ -420,8 +420,8 @@ export default function BatchPage({
                   {batch.seller}
                   <BIRBadge verified />
                 </div>
-                <div style={{ fontSize: 12, color: "#6B7280" }}>
-                   {batch.rating} · Tap to view shop
+                <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 4 }}>
+                  <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {batch.rating} · Tap to view shop
                 </div>
               </div>
             </div>

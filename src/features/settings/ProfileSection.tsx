@@ -1,3 +1,4 @@
+import { Check } from "lucide-react"
 import { Avatar, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 import type { UserInfo } from "@/types"
@@ -169,9 +170,9 @@ export default function ProfileSection({
         {saved && (
           <span
             className="fi"
-            style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}
+            style={{ fontSize: 12, color: GREEN, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}
           >
-            ✓ Changes saved!
+            <Check size={13} aria-hidden="true" /> Changes saved!
           </span>
         )}
         <PrimaryBtn onClick={saveProfile}>Save Changes</PrimaryBtn>

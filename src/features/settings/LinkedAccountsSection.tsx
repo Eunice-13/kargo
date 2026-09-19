@@ -1,4 +1,5 @@
 import type React from "react"
+import { Check, IdCard, Clock3, CheckCircle2 } from "lucide-react"
 import { PaymentIcon, PrimaryBtn } from "@/components/shared"
 import { CREAM, INDIGO } from "@/constants/theme"
 
@@ -152,9 +153,13 @@ export default function LinkedAccountsSection({
                   fontWeight: m.connected ? 500 : 400,
                 }}
               >
-                {m.connected
-                  ? `✓ Connected as ${m.username}`
-                  : "Not connected"}
+                {m.connected ? (
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <Check size={12} aria-hidden="true" /> Connected as {m.username}
+                  </span>
+                ) : (
+                  "Not connected"
+                )}
               </div>
             </div>
             {m.connected ? (
@@ -247,7 +252,7 @@ export default function LinkedAccountsSection({
                   "#D1D5DB"
               }}
             >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🪪</div>
+              <div style={{ color: "#9CA3AF", marginBottom: 8, display: "flex", justifyContent: "center" }}><IdCard size={32} aria-hidden="true" /></div>
               <div
                 style={{
                   fontSize: 13,
@@ -277,7 +282,7 @@ export default function LinkedAccountsSection({
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: 28, marginBottom: 8 }}>⏳</div>
+              <div style={{ color: INDIGO, marginBottom: 8, display: "flex", justifyContent: "center" }}><Clock3 size={28} aria-hidden="true" /></div>
               <div
                 style={{ fontSize: 13, fontWeight: 600, color: INDIGO }}
                 className="lsh"
@@ -298,7 +303,7 @@ export default function LinkedAccountsSection({
                 gap: 10,
               }}
             >
-              <span style={{ fontSize: 24 }}>✅</span>
+              <CheckCircle2 size={24} aria-hidden="true" style={{ color: "#0B7A59", flexShrink: 0 }} />
               <div>
                 <div
                   style={{

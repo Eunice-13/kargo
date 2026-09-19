@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef } from "react"
+import { UserRound, Link2, Bell, CreditCard, Lock } from "lucide-react"
 import type { SettingsSection, SharedState } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card } from "@/components/shared"
+
+const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
+  Profile: UserRound,
+  "Linked Accounts": Link2,
+  Notifications: Bell,
+  "Payment Methods": CreditCard,
+  Security: Lock,
+}
 import SocialConnectModal from "./SocialConnectModal"
 import ProfileSection from "./ProfileSection"
 import LinkedAccountsSection from "./LinkedAccountsSection"
@@ -208,17 +217,10 @@ export default function Settings({ user, setUser, role }: SharedState) {
                   transition: "all 0.15s",
                 }}
               >
-                <span style={{ fontSize: 15 }}>
-                  {s === "Profile"
-                    ? "👤"
-                    : s === "Linked Accounts"
-                      ? "🔗"
-                      : s === "Notifications"
-                        ? "🔔"
-                        : s === "Payment Methods"
-                          ? "💳"
-                          : "Lock"}
-                </span>
+                {(() => {
+                  const Icon = SECTION_ICONS[s]
+                  return <Icon size={15} aria-hidden="true" />
+                })()}
                 {s}
               </button>
             ))}
