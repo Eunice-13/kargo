@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ArrowRight, Star } from "lucide-react"
+import { ArrowRight, Star, ChevronDown, ChevronUp } from "lucide-react"
 import type { BatchType } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
@@ -26,6 +26,10 @@ export default function SellerShopPage({
     totalAvail > 0 ? Math.round((totalClaimed / totalAvail) * 100) : 0
   const [catFilter, setCatFilter] = useState("All")
   const [sortBy, setSortBy] = useState("Newest")
+  // Accordion: only one batch card is expanded at a time (null = all collapsed).
+  const [expandedId, setExpandedId] = useState<number | null>(null)
+  const toggleBatch = (id: number) =>
+    setExpandedId((cur) => (cur === id ? null : id))
   const cats = [
     "All",
     ...Array.from(new Set(sellerBatches.map((b) => b.category))),
@@ -110,6 +114,7 @@ export default function SellerShopPage({
         {filtered.map((b) => {
           const pct = Math.round((b.claimed / b.items) * 100)
           const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"]
+          const isExpanded = expandedId === b.id
           return (
             <div key={b.id} style={{ marginBottom: 20 }}>
               <div
@@ -119,72 +124,133 @@ export default function SellerShopPage({
                   overflow: "hidden",
                 }}
               >
+                {/* Clickable preview region — toggles expand/collapse */}
                 <div
-                  style={{
-                    height: 70,
-                    background: grad,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "0 16px",
-                    position: "relative",
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                  aria-label={`${isExpanded ? "Collapse" : "Expand"} ${b.title}`}
+                  onClick={() => toggleBatch(b.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      toggleBatch(b.id)
+                    }
                   }}
+                  style={{ cursor: "pointer" }}
                 >
-                  <CategoryIcon category={b.category} size={28} color="#fff" />
-                  <div className="flex-1">
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: "#fff",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
-                      }}
-                    >
-                      {b.title}
-                    </div>
-                    <div
-                      style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}
-                    >
-                      {b.trips}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ padding: "10px 16px" }}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span style={{ fontSize: 11, color: "#6B7280" }}>
-                      {b.claimed}/{b.items} claimed
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO,
-                      }}
-                    >
-                      {pct}%
-                    </span>
-                  </div>
                   <div
                     style={{
-                      background: "#F3F4F6",
-                      borderRadius: 999,
-                      height: 4,
-                      overflow: "hidden",
-                      marginBottom: 10,
+                      height: 70,
+                      background: grad,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "0 16px",
+                      position: "relative",
                     }}
                   >
-                    <div
+                    <CategoryIcon category={b.category} size={28} color="#fff" />
+                    <div className="flex-1">
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: "#fff",
+                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        }}
+                      >
+                        {b.title}
+                      </div>
+                      <div
+                        style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}
+                      >
+                        {b.trips}
+                      </div>
+                    </div>
+                    <ChevronDown
+                      size={20}
+                      aria-hidden="true"
                       style={{
-                        width: `${pct}%`,
-                        height: "100%",
-                        background:
-                          pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO,
-                        borderRadius: 999,
+                        color: "#fff",
+                        flexShrink: 0,
+                        transition: "transform 0.2s ease",
+                        transform: isExpanded ? "rotate(180deg)" : "none",
                       }}
                     />
                   </div>
+                  <div style={{ padding: "10px 16px" }}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span style={{ fontSize: 11, color: "#6B7280" }}>
+                        {b.claimed}/{b.items} claimed
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color:
+                            pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO,
+                        }}
+                      >
+                        {pct}%
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        background: "#F3F4F6",
+                        borderRadius: 999,
+                        height: 4,
+                        overflow: "hidden",
+                        marginBottom: isExpanded ? 10 : 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${pct}%`,
+                          height: "100%",
+                          background:
+                            pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO,
+                          borderRadius: 999,
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
-                {/* All items across this batch */}
+                {/* Collapsed affordance — "Check this batch" */}
+                {!isExpanded && (
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Check ${b.title}`}
+                    onClick={() => toggleBatch(b.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        toggleBatch(b.id)
+                      }
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 5,
+                      padding: "10px 16px",
+                      borderTop: "1px solid #F3F4F6",
+                      background: CREAM,
+                      color: INDIGO,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    }}
+                  >
+                    Check this batch
+                    <ChevronDown size={14} aria-hidden="true" />
+                  </div>
+                )}
+                {/* Expanded content — AVAILABLE ITEMS + Claim button */}
+                {isExpanded && (
+                <div className="fi">
                 <div style={{ borderTop: "1px solid #F3F4F6" }}>
                   <div
                     style={{
@@ -302,7 +368,29 @@ export default function SellerShopPage({
                       Claim from this batch <ArrowRight size={13} aria-hidden="true" />
                     </span>
                   </button>
+                  <button
+                    onClick={() => toggleBatch(b.id)}
+                    style={{
+                      width: "100%",
+                      marginTop: 8,
+                      background: "none",
+                      color: "#6B7280",
+                      border: "none",
+                      padding: "4px 0",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 4,
+                    }}
+                  >
+                    Collapse <ChevronUp size={14} aria-hidden="true" />
+                  </button>
                 </div>
+                </div>
+                )}
               </div>
             </div>
           )
