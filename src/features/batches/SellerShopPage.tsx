@@ -111,12 +111,23 @@ export default function SellerShopPage({
             No batches match filters.
           </div>
         )}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+            gap: 16,
+            alignItems: "start",
+          }}
+        >
         {filtered.map((b) => {
           const pct = Math.round((b.claimed / b.items) * 100)
           const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"]
           const isExpanded = expandedId === b.id
           return (
-            <div key={b.id} style={{ marginBottom: 20 }}>
+            <div
+              key={b.id}
+              style={{ gridColumn: isExpanded ? "1 / -1" : "auto" }}
+            >
               <div
                 style={{
                   border: "1px solid #E5E7EB",
@@ -151,19 +162,28 @@ export default function SellerShopPage({
                     }}
                   >
                     <CategoryIcon category={b.category} size={28} color="#fff" />
-                    <div className="flex-1">
+                    <div className="flex-1" style={{ minWidth: 0 }}>
                       <div
                         style={{
                           fontSize: 14,
                           fontWeight: 700,
                           color: "#fff",
                           fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
                         }}
                       >
                         {b.title}
                       </div>
                       <div
-                        style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}
+                        style={{
+                          fontSize: 11,
+                          color: "rgba(255,255,255,0.8)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
                       >
                         {b.trips}
                       </div>
@@ -395,6 +415,7 @@ export default function SellerShopPage({
             </div>
           )
         })}
+        </div>
       </div>
 
       {/* Right — seller profile panel */}
