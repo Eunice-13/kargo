@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { UserRound, Settings as SettingsIcon, LogOut } from "lucide-react"
 import type { UserInfo } from "@/types"
 import { Avatar } from "@/components/shared"
 
@@ -89,7 +90,7 @@ export default function UserMenu({
           </div>
           {[
             {
-              icon: "👤",
+              icon: <UserRound size={16} aria-hidden="true" />,
               label: "View Profile",
               action: () => {
                 onSettings()
@@ -97,7 +98,7 @@ export default function UserMenu({
               },
             },
             {
-              icon: "⚙️",
+              icon: <SettingsIcon size={16} aria-hidden="true" />,
               label: "Settings",
               action: () => {
                 onSettings()
@@ -123,7 +124,7 @@ export default function UserMenu({
               }}
               className="hover:bg-gray-50 transition-colors"
             >
-              <span style={{ fontSize: 16 }}>{item.icon}</span>
+              {item.icon}
               {item.label}
             </button>
           ))}
@@ -149,7 +150,7 @@ export default function UserMenu({
               }}
               className="hover:bg-red-50 transition-colors"
             >
-              <span style={{ fontSize: 16 }}>🚪</span>Log Out
+              <LogOut size={16} aria-hidden="true" />Log Out
             </button>
           </div>
         </div>

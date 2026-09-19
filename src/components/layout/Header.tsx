@@ -78,7 +78,7 @@ export default function Header({
         onSellerSelect={onSellerSelect}
       />
       <div className="flex items-center gap-3 flex-shrink-0">
-        <NotificationsMenu role={role} />
+        <NotificationsMenu role={role} onNavigate={onNavigate} />
         <UserMenu user={user} onSettings={onSettings} onLogout={onLogout} />
       </div>
     </header>

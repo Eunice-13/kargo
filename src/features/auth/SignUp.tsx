@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react"
+import { ShoppingBasket, Plane, FileText, Clock3, CheckCircle2 } from "lucide-react"
 import type { UserInfo, Role } from "@/types"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { PrimaryBtn, Toggle } from "@/components/shared"
@@ -466,7 +467,7 @@ export default function SignUp({
                         background: CREAM,
                       }}
                     >
-                      <div style={{ fontSize: 20, marginBottom: 4 }}>📄</div>
+                      <div style={{ color: "#6B7280", marginBottom: 4, display: "flex", justifyContent: "center" }}><FileText size={20} aria-hidden="true" /></div>
                       <div style={{ fontSize: 12, color: "#6B7280" }}>
                         Click to upload BIR Certificate
                       </div>
@@ -488,7 +489,7 @@ export default function SignUp({
                         fontSize: 13,
                       }}
                     >
-                      <span className="animate-spin inline-block mr-2">⏳</span>
+                      <Clock3 size={16} aria-hidden="true" className="animate-spin inline-block mr-2" />
                       Uploading…
                     </div>
                   )}
@@ -504,7 +505,7 @@ export default function SignUp({
                         gap: 10,
                       }}
                     >
-                      <span style={{ fontSize: 18 }}>✅</span>
+                      <CheckCircle2 size={18} aria-hidden="true" style={{ color: "#0B7A59", flexShrink: 0 }} />
                       <div
                         style={{
                           fontSize: 12,
@@ -637,7 +638,14 @@ export default function SignUp({
                       fontFamily: "'Plus Jakarta Sans',sans-serif",
                     }}
                   >
-                    {r === "Buyer" ? "🛍 Buyer" : "✈️ Seller"}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      {r === "Buyer" ? (
+                        <ShoppingBasket size={14} aria-hidden="true" />
+                      ) : (
+                        <Plane size={14} aria-hidden="true" />
+                      )}
+                      {r}
+                    </span>
                     <div
                       style={{
                         fontSize: 10,

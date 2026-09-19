@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Star } from "lucide-react"
+import { Star, Check } from "lucide-react"
 import { INDIGO, CREAM, GREEN } from "@/constants/theme"
 import Modal from "./Modal"
 import PrimaryBtn from "./PrimaryBtn"
@@ -152,7 +152,8 @@ export default function BuyerProfileModal({
               padding: "8px 0",
             }}
           >
-            ✓ Rating submitted — thanks!
+            <Check size={14} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+            Rating submitted — thanks!
           </div>
         ) : (
           <div>
@@ -163,8 +164,8 @@ export default function BuyerProfileModal({
                   onMouseEnter={() => setHovered(s)}
                   onMouseLeave={() => setHovered(0)}
                   onClick={() => setStars(s)}
+                  aria-label={`Rate ${s} star${s !== 1 ? "s" : ""}`}
                   style={{
-                    fontSize: 28,
                     background: "none",
                     border: "none",
                     cursor: "pointer",
@@ -172,9 +173,14 @@ export default function BuyerProfileModal({
                     transform:
                       (hovered || stars) >= s ? "scale(1.15)" : "scale(1)",
                     color: (hovered || stars) >= s ? "#FBBF24" : "#D1D5DB",
+                    display: "flex",
                   }}
                 >
-                  
+                  <Star
+                    size={28}
+                    aria-hidden="true"
+                    fill={(hovered || stars) >= s ? "#FBBF24" : "none"}
+                  />
                 </button>
               ))}
             </div>

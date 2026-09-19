@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { CheckCircle2 } from "lucide-react"
 import { CREAM } from "@/constants/theme"
 import Modal from "./Modal"
 import PrimaryBtn from "./PrimaryBtn"
@@ -20,7 +21,9 @@ export default function ContactSellerModal({
     <Modal title="Contact Seller" onClose={onClose} width={440}>
       {sent ? (
         <div className="fi text-center py-6">
-          <div style={{ fontSize: 36, marginBottom: 8 }}>✅</div>
+          <div style={{ color: "#0B7A59", marginBottom: 8, display: "flex", justifyContent: "center" }}>
+            <CheckCircle2 size={36} aria-hidden="true" />
+          </div>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#065F46" }}>
             Message Sent!
           </div>

@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import { CYAN_L, SKY } from "@/constants/theme"
 
@@ -152,7 +153,7 @@ export default function TwoFAModal({
                 }}
                 onClick={() => setTfaStep("phone")}
               >
-                ← Back
+                <ArrowLeft size={14} aria-hidden="true" style={{ marginRight: 4 }} /> Back
               </SecondaryBtn>
               <PrimaryBtn
                 style={{

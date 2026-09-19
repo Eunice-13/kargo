@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { ArrowLeft } from "lucide-react"
 import { INDIGO, CORAL } from "@/constants/theme"
 import { PrimaryBtn } from "@/components/shared"
 
@@ -240,9 +241,12 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                   border: "none",
                   cursor: "pointer",
                   visibility: step === 0 ? "hidden" : "visible",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
                 }}
               >
-                ← Back
+                <ArrowLeft size={13} aria-hidden="true" /> Back
               </button>
               <PrimaryBtn
                 onClick={() => (isLast ? onDone() : go(step + 1, "l"))}
