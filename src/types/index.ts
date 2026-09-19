@@ -3,6 +3,7 @@ import type { KanbanCol } from "@/constants/fulfillment"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type AppStage = "login" | "signup" | "app"
+export type EntityId = string | number
 
 // BIR badge verification pipeline stages. Seller access is only granted at
 // "Verified". Ordering reflects the flow:
@@ -17,6 +18,7 @@ export type BirState =
   | "Flagged"
 
 export type UserInfo = {
+  id?: string
   name: string
   email: string
   role: Role
@@ -25,6 +27,7 @@ export type UserInfo = {
   // Verified seller status is the single source of truth for seller access.
   // A user is only a real Seller when birState === "Verified".
   birState?: BirState
+  accountStatus?: "active" | "suspended"
 }
 export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
 export type Role = "Buyer" | "Seller"
@@ -32,7 +35,8 @@ export type ClaimStatus = "Pending" | "Paid and Reserved" | "Expired" | "Cancell
 export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Payment Methods" | "Security"
 
 export type ClaimRow = {
-  id: number
+  id: EntityId
+  productId?: string
   product: string
   batch: string
   seller: string
@@ -47,14 +51,15 @@ export type ClaimRow = {
   buyerFb?: string
 }
 export type ToPayRow = {
-  id: number
+  id: EntityId
+  orderId?: string
   product: string
   seller: string
   amount: number
   hours: number
 }
 export type PayHistRow = {
-  id: number
+  id: EntityId
   product: string
   batch: string
   method: string
@@ -64,6 +69,7 @@ export type PayHistRow = {
 }
 export type OrderRow = {
   id: string
+  dbId?: string
   product: string
   batch: string
   seller: string
@@ -77,8 +83,12 @@ export type OrderRow = {
 
 // ─── Batch data models ────────────────────────────────────────────────────────
 export interface BatchStoredProduct {
+  id?: number
+  dbId?: string
   name: string
   price: number
+  basePrice?: number
+  markup?: number
   qty: number
   claimed: number
   waitlist: number
@@ -86,6 +96,7 @@ export interface BatchStoredProduct {
 }
 export interface BatchItem {
   id: number
+  dbId?: string
   live: boolean
   locked: boolean
   title: string

@@ -9,7 +9,7 @@ export default function RateOrderModal({
   onClose,
 }: {
   order: OrderRow
-  onRate: (rating: number) => void
+  onRate: (rating: number, comment: string) => void | Promise<void>
   onClose: () => void
 }) {
   const [stars, setStars] = useState(0)
@@ -98,7 +98,7 @@ export default function RateOrderModal({
           <PrimaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center" }}
             onClick={() => {
-              if (stars > 0) onRate(stars)
+              if (stars > 0) onRate(stars, comment.trim())
             }}
             disabled={stars === 0}
           >

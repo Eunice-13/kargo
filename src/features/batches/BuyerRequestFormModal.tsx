@@ -2,6 +2,8 @@ import { useState } from "react"
 import { MailCheck } from "lucide-react"
 import type { BatchType } from "@/types"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function BuyerRequestFormModal({
   batches,
@@ -186,8 +188,24 @@ export default function BuyerRequestFormModal({
           </SecondaryBtn>
           <PrimaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center" }}
-            onClick={() => {
-              if (product.trim()) setSent(true)
+            onClick={async () => {
+              if (!product.trim()) return
+              if (isSupabaseConfigured) {
+                const selectedBatch = batches.find((item) => item.title === batch)
+                if (!selectedBatch?.dbId) return
+                try {
+                  await kargoApi.createBuyerRequest(
+                    selectedBatch.dbId,
+                    product.trim(),
+                    Number(qty),
+                    message.trim(),
+                  )
+                } catch (error) {
+                  alert(error instanceof Error ? error.message : "Unable to send request.")
+                  return
+                }
+              }
+              setSent(true)
             }}
             disabled={!product.trim()}
           >

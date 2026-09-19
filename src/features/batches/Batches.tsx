@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { BarChart3, Lock, Unlock, Search, FileText, ArrowRight, Star } from "lucide-react"
-import type { ClaimRow, BatchType, SharedState } from "@/types"
+import type { ClaimRow, BatchType, SharedState, EntityId } from "@/types"
 import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
 import { navIntent } from "@/state/navIntent"
 import { Modal, Card, SH, PrimaryBtn, SecondaryBtn, Avatar, CategoryIcon, Toggle } from "@/components/shared"
@@ -11,6 +11,8 @@ import SellerProfileModal from "./SellerProfileModal"
 import SellerDirectoryPage from "./SellerDirectoryPage"
 import BatchPage from "./BatchPage"
 import { toggleBatchLock } from "./toggleBatchLock"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export const COLS = 3
 export default function Batches({
@@ -56,7 +58,7 @@ export default function Batches({
 
   // Seller-only state
   type ExtReq = {
-    id: number
+    id: EntityId
     buyer: string
     product: string
     batch: string
@@ -64,7 +66,7 @@ export default function Batches({
     status: "pending" | "approved" | "denied"
   }
   type BuyerReq = {
-    id: number
+    id: EntityId
     buyer: string
     product: string
     batch: string
@@ -72,7 +74,7 @@ export default function Batches({
     requestedAt: string
     replied: boolean
   }
-  const [extensionRequests, setExtensionRequests] = useState<ExtReq[]>([
+  const [extensionRequests, setExtensionRequests] = useState<ExtReq[]>(isSupabaseConfigured ? [] : [
     {
       id: 1,
       buyer: "Carlo Reyes",
@@ -90,7 +92,7 @@ export default function Batches({
       status: "pending",
     },
   ])
-  const [buyerRequests, setBuyerRequests] = useState<BuyerReq[]>([
+  const [buyerRequests, setBuyerRequests] = useState<BuyerReq[]>(isSupabaseConfigured ? [] : [
     {
       id: 1,
       buyer: "Trisha Lim",
@@ -118,6 +120,17 @@ export default function Batches({
     action: "approved" | "denied"
   } | null>(null)
 
+  useEffect(() => {
+    if (!isSupabaseConfigured || role !== "Seller") return
+    kargoApi
+      .loadSellerRequests()
+      .then((data) => {
+        setExtensionRequests(data.extensions)
+        setBuyerRequests(data.buyerRequests)
+      })
+      .catch((error) => alert(error instanceof Error ? error.message : "Unable to load seller requests."))
+  }, [role])
+
   const filtered = batches.filter((b) => {
     if (catFilter !== "All" && b.category !== catFilter) return false
     if (dateFilter !== "All") {
@@ -140,15 +153,25 @@ export default function Batches({
   for (let i = 0; i < filtered.length; i += COLS)
     rows.push(filtered.slice(i, i + COLS))
 
-  const handleClaim = (
+  const handleClaim = async (
     key: string,
     batch: BatchType,
     product: typeof batch.products[0],
   ) => {
+    if (isSupabaseConfigured) {
+      if (!product.dbId) return
+      try {
+        await kargoApi.claimProduct(product.dbId, 1)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to claim this product.")
+        return
+      }
+    }
     setClaimedKeys((c) => ({ ...c, [key]: true }))
     const reserveHrs = batch.reserveHours || 48
     const newClaim: ClaimRow = {
       id: Date.now(),
+      productId: product.dbId,
       product: product.name,
       batch: batch.title.replace("—", "—"),
       seller: batch.seller,
@@ -251,7 +274,18 @@ export default function Batches({
               Cancel
             </SecondaryBtn>
             <PrimaryBtn
-              onClick={() => {
+              onClick={async () => {
+                if (isSupabaseConfigured) {
+                  try {
+                    await kargoApi.decideOrderExtension(
+                      String(extConfirm.req.id),
+                      extConfirm.action === "approved",
+                    )
+                  } catch (error) {
+                    alert(error instanceof Error ? error.message : "Unable to decide extension.")
+                    return
+                  }
+                }
                 setExtensionRequests((p) =>
                   p.map((r) =>
                     r.id === extConfirm.req.id
@@ -1019,7 +1053,15 @@ export default function Batches({
                         </span>
                       ) : (
                         <SecondaryBtn
-                          onClick={() => {
+                          onClick={async () => {
+                            if (isSupabaseConfigured) {
+                              try {
+                                await kargoApi.markBuyerRequestReplied(String(req.id))
+                              } catch (error) {
+                                alert(error instanceof Error ? error.message : "Unable to update request.")
+                                return
+                              }
+                            }
                             const fbUrl = `https://facebook.com/${req.buyer.toLowerCase().replace(" ", ".")}`
                             window.open(fbUrl, "_blank", "noopener,noreferrer")
                             setBuyerRequests((p) =>

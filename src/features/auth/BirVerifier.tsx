@@ -3,6 +3,8 @@ import { Lock, FileText, Clock3, CheckCircle2, AlertTriangle } from "lucide-reac
 import type { BirState } from "@/types"
 import { CREAM } from "@/constants/theme"
 import { clientHasDetectableQr, runBirVerification } from "./birVerification"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 // Shared BIR Registration Seal Badge upload + verification UI. Used by both the
 // Sign Up seller flow and the standalone "Apply to Become a Seller" modal so the
@@ -22,11 +24,17 @@ export default function BirVerifier({
     // unreadable images before we send them down the pipeline.
     const hasQr = await clientHasDetectableQr(file)
     if (!hasQr) {
-      setBirState("None")
+      setBirState("Flagged")
       window.setTimeout(() => {}, 0)
       alert(
         "We couldn't detect a QR code in that image. Please upload a clearer, correctly-cropped badge.",
       )
+      return
+    }
+    if (isSupabaseConfigured) {
+      setBirState("Scanning")
+      const outcome = await kargoApi.uploadBirBadge(file)
+      setBirState(outcome.status === "verified" ? "Verified" : "Flagged")
       return
     }
     const outcome = await runBirVerification(file, (stage) =>
@@ -226,9 +234,8 @@ export default function BirVerifier({
                 lineHeight: 1.5,
               }}
             >
-              The QR code was unreadable or its link did not match the official
-              verify.bir.gov.ph domain. Seller access is suspended pending manual
-              review.
+              We couldn't verify this badge — please check the upload guidance
+              and try again.
             </div>
             <button
               type="button"

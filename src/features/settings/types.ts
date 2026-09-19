@@ -1,5 +1,7 @@
+import type { EntityId } from "@/types"
+
 export type PayMethod = {
-  id: number
+  id: EntityId
   name: string
   detail: string
   icon: string

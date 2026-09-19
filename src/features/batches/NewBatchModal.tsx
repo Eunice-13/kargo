@@ -2,6 +2,8 @@ import { useState } from "react"
 import type { BatchType } from "@/types"
 import { INDIGO, CAT_GRAD } from "@/constants/theme"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export type BatchProduct = {
   name: string
@@ -68,7 +70,7 @@ export default function NewBatchModal({
     return `${sm} ${sd}, ${sy} – ${em} ${ed}, ${ey}`
   }
 
-  const submit = () => {
+  const submit = async () => {
     const validProds = products.filter(
       (p) =>
         p.name.trim() &&
@@ -83,11 +85,17 @@ export default function NewBatchModal({
       setError("Add at least one product with a name, price, and quantity.")
       return
     }
+    if (isSupabaseConfigured && (!startDate || !endDate)) {
+      setError("Choose both the start and end date before publishing.")
+      return
+    }
     setError("")
     setLoading(true)
-    setTimeout(() => {
+    try {
       const prods = validProds.map((p) => ({
               name: p.name.trim(),
+              basePrice: Number(p.basePrice),
+              markup: Number(p.markup),
               price: Number(p.basePrice) + Number(p.markup),
               qty: Number(p.qty),
               claimed: 0,
@@ -96,9 +104,24 @@ export default function NewBatchModal({
             }))
       const reserveHours =
         timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal)
+      if (isSupabaseConfigured) {
+        await kargoApi.createBatch({
+          title: title.trim(),
+          category: cat,
+          startsOn: startDate,
+          endsOn: endDate,
+          reservationHours: reserveHours,
+          products: validProds.map((p) => ({
+            name: p.name.trim(),
+            basePrice: Number(p.basePrice),
+            markup: Number(p.markup),
+            quantity: Number(p.qty),
+          })),
+        })
+      }
       onCreate({
         id: Date.now(),
-        live: false,
+        live: isSupabaseConfigured,
         locked: false,
         title: title.trim(),
         seller: sellerName || "You",
@@ -112,7 +135,10 @@ export default function NewBatchModal({
       })
       setLoading(false)
       onClose()
-    }, 1000)
+    } catch (caught) {
+      setLoading(false)
+      setError(caught instanceof Error ? caught.message : "Unable to create batch.")
+    }
   }
 
   return (

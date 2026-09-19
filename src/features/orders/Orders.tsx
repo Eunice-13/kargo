@@ -20,6 +20,8 @@ import {
   FulfillmentDetails,
 } from "@/features/fulfillment"
 import RateOrderModal from "./RateOrderModal"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function Orders({
   orders,
@@ -503,7 +505,16 @@ export default function Orders({
       {rateTarget && (
         <RateOrderModal
           order={rateTarget}
-          onRate={(rating) => {
+          onRate={async (rating, comment) => {
+            if (isSupabaseConfigured) {
+              if (!rateTarget.dbId) return
+              try {
+                await kargoApi.createReview(rateTarget.dbId, rating, comment)
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "Unable to submit rating.")
+                return
+              }
+            }
             setRatings((r) => ({ ...r, [rateTarget.id]: rating }))
             setOrders((prev) =>
               prev.map((o) =>

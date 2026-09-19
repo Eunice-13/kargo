@@ -1,7 +1,10 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { BatchType } from "@/types"
 import { CREAM } from "@/constants/theme"
 import { Modal, PrimaryBtn } from "@/components/shared"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
+import type { FinancialSummary } from "@/services"
 
 export default function FinancialSummaryModal({
   batch,
@@ -10,13 +13,31 @@ export default function FinancialSummaryModal({
   batch: BatchType
   onClose: () => void
 }) {
-  const totalOrders = batch.products.reduce(
+  const localTotalOrders = batch.products.reduce(
     (s, p) => s + p.price * p.claimed,
     0,
   )
   const [expenses, setExpenses] = useState("")
   const [tax, setTax] = useState("")
-  const profit = totalOrders - (Number(expenses) || 0) - (Number(tax) || 0)
+  const [summary, setSummary] = useState<FinancialSummary | null>(null)
+  useEffect(() => {
+    if (!isSupabaseConfigured || !batch.dbId) return
+    kargoApi
+      .getFinancialSummary(
+        new Date("2000-01-01T00:00:00Z"),
+        new Date("2100-01-01T00:00:00Z"),
+        batch.dbId,
+      )
+      .then(setSummary)
+      .catch((error) =>
+        alert(error instanceof Error ? error.message : "Unable to load financial summary."),
+      )
+  }, [batch.dbId])
+  const totalOrders = isSupabaseConfigured ? (summary?.gross_sales ?? 0) : localTotalOrders
+  const expenseAmount = isSupabaseConfigured
+    ? (summary?.estimated_expenses ?? 0)
+    : Number(expenses) || 0
+  const profit = totalOrders - expenseAmount - (Number(tax) || 0)
   return (
     <Modal title="Batch Financial Summary" onClose={onClose} width={440}>
       <div className="space-y-4">
@@ -63,9 +84,10 @@ export default function FinancialSummaryModal({
           </label>
           <input
             type="number"
-            value={expenses}
+            value={isSupabaseConfigured ? String(expenseAmount) : expenses}
             placeholder="0"
             onChange={(e) => setExpenses(e.target.value)}
+            readOnly={isSupabaseConfigured}
             style={{
               width: "100%",
               fontSize: 13,

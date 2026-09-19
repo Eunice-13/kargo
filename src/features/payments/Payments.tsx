@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
 import { CheckCircle2, Paperclip, Clock3 } from "lucide-react"
-import type { ToPayRow, PayHistRow, OrderRow, ClaimStatus, SharedState } from "@/types"
+import type { ToPayRow, PayHistRow, OrderRow, ClaimStatus, SharedState, EntityId } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import {
   Card,
@@ -17,6 +17,8 @@ import PaymentSubmitModal from "./PaymentSubmitModal"
 import TransactionDetailModal from "./TransactionDetailModal"
 import SellerPaymentVerification from "./SellerPaymentVerification"
 import AddressSection from "./AddressSection"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function Payments({
   toPay,
@@ -33,8 +35,9 @@ export default function Payments({
 }: SharedState) {
   const [dragging, setDragging] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
-  const [proofClaimId, setProofClaimId] = useState<number | "">("")
+  const [proofClaimId, setProofClaimId] = useState<EntityId | "">("")
   const [proofToast, setProofToast] = useState(false)
   const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
   const [payAll, setPayAll] = useState(false)
@@ -49,11 +52,29 @@ export default function Payments({
     setTimeout(() => {
       setUploading(false)
       setUploaded(file.name)
+      setUploadedFile(file)
     }, 1200)
   }
 
-  const handlePay = (item: ToPayRow | null, method: string) => {
+  const handlePay = async (item: ToPayRow | null, method: string, referenceNumber?: string, receipt?: File) => {
     const targets = item ? [item] : toPay
+    if (isSupabaseConfigured) {
+      try {
+        for (const target of targets) {
+          const orderId = target.orderId ?? String(target.id)
+          await kargoApi.submitPayment({
+            orderId,
+            method,
+            amount: target.amount,
+            referenceNumber,
+            receipt,
+          })
+        }
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to submit payment.")
+        return
+      }
+    }
     const newHist: PayHistRow[] = targets.map((t, i) => ({
       id: payHistory.length + i + 1,
       product: t.product,
@@ -61,10 +82,10 @@ export default function Payments({
       method,
       amount: t.amount,
       date: TODAY,
-      status: "Paid and Reserved" as ClaimStatus,
+      status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
     }))
     setPayHistory((h) => [...newHist, ...h])
-    setClaims((prev) =>
+    if (!isSupabaseConfigured) setClaims((prev) =>
       prev.map((c) =>
         targets.some((t) => t.product === c.product) && c.status === "Pending"
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
@@ -82,19 +103,22 @@ export default function Payments({
       eta: "Est. Oct 2026",
       rated: false,
     }))
-    setOrders((prev) => [...newOrders, ...prev])
-    setToPay((prev) => (item ? prev.filter((x) => x.id !== item.id) : []))
+    if (!isSupabaseConfigured) {
+      setOrders((prev) => [...newOrders, ...prev])
+      setToPay((prev) => (item ? prev.filter((x) => x.id !== item.id) : []))
+    }
     setPayTarget(null)
     setPayAll(false)
   }
 
   // Submit an uploaded receipt against a chosen "To Pay" item: record it as a
   // manual bank/receipt payment (reusing the same flow as Pay Now) and reset.
-  const handleSubmitProof = () => {
+  const handleSubmitProof = async () => {
     const item = toPay.find((t) => t.id === proofClaimId)
     if (!item) return
-    handlePay(item, "Receipt Upload")
+    await handlePay(item, "Receipt Upload", undefined, uploadedFile ?? undefined)
     setUploaded(null)
+    setUploadedFile(null)
     setProofClaimId("")
     setProofToast(true)
     setTimeout(() => setProofToast(false), 2400)
@@ -590,7 +614,7 @@ export default function Payments({
         <PaymentSubmitModal
           item={payTarget}
           contactPrefill={user.fb || ""}
-          onConfirm={(method, refNo) => handlePay(payTarget, method)}
+          onConfirm={(method, refNo) => handlePay(payTarget, method, refNo)}
           onClose={() => setPayTarget(null)}
         />
       )}

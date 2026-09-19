@@ -1,10 +1,13 @@
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { MapPin, Plus, AlertTriangle } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Card, SH, PrimaryBtn, SecondaryBtn, Modal, Toggle } from "@/components/shared"
+import type { EntityId } from "@/types"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 type Address = {
-  id: number
+  id: EntityId
   label: string
   line: string
   city: string
@@ -25,14 +28,30 @@ const SEED: Address[] = [
 // reference/coordination only — a saved detail both parties can view when
 // arranging delivery or a meetup. It does not feed shipping/logistics.
 export default function AddressSection() {
-  const [addresses, setAddresses] = useState<Address[]>(SEED)
+  const [addresses, setAddresses] = useState<Address[]>(isSupabaseConfigured ? [] : SEED)
   const [formOpen, setFormOpen] = useState(false)
-  const [editId, setEditId] = useState<number | null>(null)
+  const [editId, setEditId] = useState<EntityId | null>(null)
   const [label, setLabel] = useState("")
   const [line, setLine] = useState("")
   const [city, setCity] = useState("")
   const [makeDefault, setMakeDefault] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<Address | null>(null)
+
+  const refreshAddresses = useCallback(async () => {
+    if (!isSupabaseConfigured) return
+    const rows = await kargoApi.loadAddresses()
+    setAddresses(rows.map((row) => ({
+      id: row.id,
+      label: row.label,
+      line: row.address_line,
+      city: row.city ?? "",
+      isDefault: row.is_default,
+    })))
+  }, [])
+
+  useEffect(() => {
+    void refreshAddresses()
+  }, [refreshAddresses])
 
   const openAdd = () => {
     setEditId(null)
@@ -52,12 +71,28 @@ export default function AddressSection() {
     setFormOpen(true)
   }
 
-  const save = () => {
+  const save = async () => {
     if (!line.trim()) return
     const clean = {
       label: label.trim() || "Address",
       line: line.trim(),
       city: city.trim(),
+    }
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.saveAddress({
+          id: editId == null ? undefined : String(editId),
+          label: clean.label,
+          addressLine: clean.line,
+          city: clean.city,
+          isDefault: makeDefault,
+        })
+        await refreshAddresses()
+        setFormOpen(false)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to save address.")
+      }
+      return
     }
     setAddresses((prev) => {
       let next: Address[]
@@ -83,8 +118,18 @@ export default function AddressSection() {
     setFormOpen(false)
   }
 
-  const confirmRemove = () => {
+  const confirmRemove = async () => {
     if (!removeTarget) return
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.deleteAddress(String(removeTarget.id))
+        await refreshAddresses()
+        setRemoveTarget(null)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to delete address.")
+      }
+      return
+    }
     setAddresses((prev) => {
       const next = prev.filter((a) => a.id !== removeTarget.id)
       // If we removed the default, promote the first remaining address.

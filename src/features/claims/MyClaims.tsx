@@ -16,6 +16,8 @@ import {
   BuyerProfileModal,
 } from "@/components/shared"
 import ExtensionRequestModal from "./ExtensionRequestModal"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function MyClaims({
   claims,
@@ -307,8 +309,20 @@ export default function MyClaims({
     )
   }
 
-  const handlePay = (method: string) => {
+  const handlePay = async (method: string) => {
     if (!payTarget) return
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.submitPayment({
+          orderId: String(payTarget.id),
+          method,
+          amount: payTarget.amount,
+        })
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to submit payment.")
+        return
+      }
+    }
     const newHist: PayHistRow = {
       id: payHistory.length + 1,
       product: payTarget.product,
@@ -316,17 +330,17 @@ export default function MyClaims({
       method,
       amount: payTarget.amount,
       date: TODAY,
-      status: "Paid and Reserved",
+      status: isSupabaseConfigured ? "Pending" : "Paid and Reserved",
     }
     setPayHistory((h) => [newHist, ...h])
-    setClaims((prev) =>
+    if (!isSupabaseConfigured) setClaims((prev) =>
       prev.map((c) =>
         c.id === payTarget.id
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
           : c,
       ),
     )
-    setToPay((prev) => prev.filter((t) => t.product !== payTarget.product))
+    if (!isSupabaseConfigured) setToPay((prev) => prev.filter((t) => t.product !== payTarget.product))
     const newOrder: OrderRow = {
       id: `ORD-2026-${String(orders.length + 60).padStart(4, "0")}`,
       product: payTarget.product,
@@ -338,7 +352,7 @@ export default function MyClaims({
       eta: "Est. Oct 2026",
       rated: false,
     }
-    setOrders((prev) => [newOrder, ...prev])
+    if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev])
     setPayTarget(null)
   }
 
@@ -767,7 +781,15 @@ export default function MyClaims({
       {extTarget && (
         <ExtensionRequestModal
           claim={extTarget}
-          onSubmit={() => {
+          onSubmit={async (hours, reason) => {
+            if (isSupabaseConfigured) {
+              try {
+                await kargoApi.requestOrderExtension(String(extTarget.id), hours, reason)
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "Unable to request extension.")
+                return
+              }
+            }
             setClaims((prev) =>
               prev.map((c) =>
                 c.id === extTarget.id ? { ...c, extensionRequested: true } : c,
@@ -815,7 +837,15 @@ export default function MyClaims({
                 Keep Claim
               </SecondaryBtn>
               <button
-                onClick={() => {
+                onClick={async () => {
+                  if (isSupabaseConfigured) {
+                    try {
+                      await kargoApi.cancelOrder(String(cancelTarget.id))
+                    } catch (error) {
+                      alert(error instanceof Error ? error.message : "Unable to cancel order.")
+                      return
+                    }
+                  }
                   setClaims((prev) =>
                     prev.map((c) =>
                       c.id === cancelTarget.id

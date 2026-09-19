@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import type React from "react"
 import { CreditCard, Check, Megaphone } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Card, Avatar, ProductThumb } from "@/components/shared"
@@ -7,6 +8,8 @@ import AddressSection from "./AddressSection"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function SellerPaymentVerification() {
   const VERIFY_SEED: VerifyItem[] = [
@@ -59,13 +62,45 @@ export default function SellerPaymentVerification() {
       contact: "https://facebook.com/carla.reyes",
     },
   ]
-  const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(VERIFY_SEED)
+  const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(isSupabaseConfigured ? [] : VERIFY_SEED)
   const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null)
   const [rejectTarget, setRejectTarget] = useState<VerifyItem | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [rejectCustom, setRejectCustom] = useState("")
   const [insuffTarget, setInsuffTarget] = useState<VerifyItem | null>(null)
   const [insuffAmtPaid, setInsuffAmtPaid] = useState("")
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    kargoApi
+      .loadSellerPaymentSubmissions()
+      .then(setVerifyItems)
+      .catch((error) => alert(error instanceof Error ? error.message : "Unable to load payments."))
+  }, [])
+
+  const updateVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>> = (action) => {
+    setVerifyItems((previous) => {
+      const next = typeof action === "function" ? action(previous) : action
+      if (isSupabaseConfigured) {
+        for (const item of next) {
+          const before = previous.find((candidate) => candidate.id === item.id)
+          if (!before) continue
+          let decision: "verified" | "rejected" | null = null
+          if (item.status !== before.status && item.status === "Verified") decision = "verified"
+          if (item.status !== before.status && item.status === "Rejected") decision = "rejected"
+          if (item.status === "Pending" && item.rejectReason?.startsWith("Short") && item.rejectReason !== before.rejectReason) {
+            decision = "verified"
+          }
+          if (decision) {
+            void kargoApi.reviewPayment(String(item.id), decision, item.rejectReason).catch((error) =>
+              alert(error instanceof Error ? error.message : "Unable to review payment."),
+            )
+          }
+        }
+      }
+      return next
+    })
+  }
 
   const REJECT_REASONS = [
     "Wrong amount transferred",
@@ -397,7 +432,7 @@ export default function SellerPaymentVerification() {
                                 )}
                                 <button
                                   onClick={() =>
-                                    setVerifyItems((p) =>
+                                    updateVerifyItems((p) =>
                                       p.map((v) =>
                                         v.id === item.id
                                           ? {
@@ -423,7 +458,7 @@ export default function SellerPaymentVerification() {
                                 <>
                                   <button
                                     onClick={() =>
-                                      setVerifyItems((p) =>
+                                      updateVerifyItems((p) =>
                                         p.map((v) =>
                                           v.id === item.id
                                             ? {
@@ -482,7 +517,7 @@ export default function SellerPaymentVerification() {
           <ReviewSubmissionModal
             reviewTarget={reviewTarget}
             setReviewTarget={setReviewTarget}
-            setVerifyItems={setVerifyItems}
+            setVerifyItems={updateVerifyItems}
             setRejectTarget={setRejectTarget}
             setRejectReason={setRejectReason}
             setRejectCustom={setRejectCustom}
@@ -496,7 +531,7 @@ export default function SellerPaymentVerification() {
             setInsuffTarget={setInsuffTarget}
             insuffAmtPaid={insuffAmtPaid}
             setInsuffAmtPaid={setInsuffAmtPaid}
-            setVerifyItems={setVerifyItems}
+            setVerifyItems={updateVerifyItems}
           />
         )}
 
@@ -511,7 +546,7 @@ export default function SellerPaymentVerification() {
             setRejectCustom={setRejectCustom}
             setInsuffTarget={setInsuffTarget}
             setInsuffAmtPaid={setInsuffAmtPaid}
-            setVerifyItems={setVerifyItems}
+            setVerifyItems={updateVerifyItems}
             REJECT_REASONS={REJECT_REASONS}
           />
         )}

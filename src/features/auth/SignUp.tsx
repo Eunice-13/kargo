@@ -6,6 +6,8 @@ import { PrimaryBtn, Toggle } from "@/components/shared"
 import AuthInput from "./AuthInput"
 import LogoMark from "./LogoMark"
 import BirVerifier from "./BirVerifier"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function SignUp({
   onLogin,
@@ -39,7 +41,7 @@ export default function SignUp({
   const [birState, setBirState] = useState<BirState>("None")
   const [terms, setTerms] = useState(false)
 
-  const submit = useCallback(() => {
+  const submit = useCallback(async () => {
     const e: Record<string, string> = {}
     if (!name.trim() || name.trim().split(" ").length < 2)
       e.name = "Enter your full name (first and last)."
@@ -50,23 +52,44 @@ export default function SignUp({
       if (!shopName.trim()) e.shopName = "Shop name is required."
       if (!Object.values(socials).some((s) => s.on))
         e.social = "Link at least one social account."
-      if (birState !== "Verified")
+      if (!isSupabaseConfigured && birState !== "Verified")
         e.bir = "Your BIR badge must be verified before you can sell."
       if (!terms) e.terms = "You must agree to the Terms and Privacy Policy."
     }
     setErrs(e)
     if (Object.keys(e).length > 0) return
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      onSuccess({
+    if (!isSupabaseConfigured) {
+      setTimeout(() => {
+        setLoading(false)
+        onSuccess({
+          name: name.trim(),
+          email,
+          role,
+          birState: role === "Seller" ? birState : "None",
+        })
+      }, 600)
+      return
+    }
+    try {
+      const result = await kargoApi.signUp({
         name: name.trim(),
-        email,
-        role,
-        // Carry the verified badge status through; buyers have no badge.
-        birState: role === "Seller" ? birState : "None",
+        email: email.trim(),
+        password,
+        shopName,
+        phone,
+        socials,
       })
-    }, 1800)
+      setLoading(false)
+      if (result.needsEmailConfirmation || !result.user) {
+        setErrs({ general: "Account created. Check your email to confirm it, then log in." })
+        return
+      }
+      onSuccess({ ...result.user, role })
+    } catch (error) {
+      setLoading(false)
+      setErrs({ general: error instanceof Error ? error.message : "Unable to create account." })
+    }
   }, [
     name,
     email,
@@ -424,7 +447,14 @@ export default function SignUp({
 
                 {/* BIR Registration Seal Badge verification */}
                 <div>
-                  <BirVerifier birState={birState} setBirState={setBirState} />
+                  {isSupabaseConfigured ? (
+                    <div style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.5 }}>
+                      Create your account first. KARGO will open the secure BIR
+                      verification step immediately after sign-up.
+                    </div>
+                  ) : (
+                    <BirVerifier birState={birState} setBirState={setBirState} />
+                  )}
                   {errs.bir && (
                     <p
                       className="fi"
@@ -570,6 +600,11 @@ export default function SignUp({
                 ))}
               </div>
             </div>
+            {errs.general && (
+              <p role="status" style={{ fontSize: 12, color: errs.general.startsWith("Account created") ? "#0B7A59" : "#B91C1C" }}>
+                {errs.general}
+              </p>
+            )}
             <PrimaryBtn
               onClick={submit}
               loading={loading}

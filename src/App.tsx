@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type {
   AppStage,
   UserInfo,
@@ -23,11 +23,14 @@ import { FULFILLMENT_INIT } from "@/features/fulfillment"
 import { Login, SignUp, Onboarding, ApplyToSellModal } from "@/features/auth"
 import { NewBatchModal } from "@/features/batches"
 import { Header, TabBar, TabContent } from "@/components/layout"
+import { isSupabaseConfigured, supabase } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const originalPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("preview") === "original"
-  const [stage, setStage] = useState<AppStage>(originalPreview ? "app" : "signup")
+  const [stage, setStage] = useState<AppStage>(originalPreview ? "app" : "login")
+  const [booting, setBooting] = useState(isSupabaseConfigured && !originalPreview)
   const [showOnboarding, setOnboard] = useState(false)
   const [tab, setTab] = useState<Tab>("Dashboard")
   const [user, setUser] = useState<UserInfo>({
@@ -46,13 +49,40 @@ export default function App() {
   const role: Role = user.birState === "Verified" ? "Seller" : "Buyer"
 
   // Shared mutable data
-  const [claims, setClaims] = useState<ClaimRow[]>(CLAIMS_INIT)
-  const [toPay, setToPay] = useState<ToPayRow[]>(TOPAY_INIT)
-  const [payHistory, setPayHistory] = useState<PayHistRow[]>(PAYHIST_INIT)
-  const [orders, setOrders] = useState<OrderRow[]>(ORDERS_INIT)
-  const [batches, setBatches] = useState<BatchType[]>(BATCHES_INIT)
+  const useSeeds = originalPreview || !isSupabaseConfigured
+  const [claims, setClaims] = useState<ClaimRow[]>(useSeeds ? CLAIMS_INIT : [])
+  const [toPay, setToPay] = useState<ToPayRow[]>(useSeeds ? TOPAY_INIT : [])
+  const [payHistory, setPayHistory] = useState<PayHistRow[]>(useSeeds ? PAYHIST_INIT : [])
+  const [orders, setOrders] = useState<OrderRow[]>(useSeeds ? ORDERS_INIT : [])
+  const [batches, setBatches] = useState<BatchType[]>(useSeeds ? BATCHES_INIT : [])
   const [fulfillment, setFulfillment] =
-    useState<FulfillmentOrder[]>(FULFILLMENT_INIT)
+    useState<FulfillmentOrder[]>(useSeeds ? FULFILLMENT_INIT : [])
+
+  const refreshData = useCallback(async () => {
+    if (!isSupabaseConfigured) return
+    const data = await kargoApi.loadCurrentAppData()
+    if (!data) {
+      setStage("login")
+      return
+    }
+    setUser(data.user)
+    setBatches(data.batches)
+    setClaims(data.claims)
+    setToPay(data.toPay)
+    setPayHistory(data.payHistory)
+    setOrders(data.orders)
+    setFulfillment(data.fulfillment)
+    setStage("app")
+  }, [])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || originalPreview || !supabase) return
+    refreshData().finally(() => setBooting(false))
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") setStage("login")
+    })
+    return () => data.subscription.unsubscribe()
+  }, [originalPreview, refreshData])
 
   const shared: SharedState = {
     claims,
@@ -77,10 +107,16 @@ export default function App() {
     setUser(u)
     setStage("app")
     setOnboard(true)
+    if (u.role === "Seller" && u.birState !== "Verified") setShowApplyToSell(true)
   }
   const handleLoginSuccess = (u: UserInfo) => {
     setUser(u)
     setStage("app")
+    if (isSupabaseConfigured) refreshData()
+  }
+
+  if (booting) {
+    return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: CREAM }}>Loading KARGO…</div>
   }
 
   return (
@@ -112,7 +148,10 @@ export default function App() {
         >
           <Header
             user={user}
-            onLogout={() => setStage("login")}
+            onLogout={() => {
+              if (isSupabaseConfigured) void kargoApi.signOut()
+              setStage("login")
+            }}
             onSettings={() => setTab("Settings")}
             onApplyToSell={() => setShowApplyToSell(true)}
             role={role}

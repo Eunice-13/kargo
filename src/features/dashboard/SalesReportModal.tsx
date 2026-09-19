@@ -1,7 +1,10 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Printer, X } from "lucide-react"
 import type { BatchType } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
+import type { FinancialSummary } from "@/services"
 
 type Period = "Day" | "Week" | "Month" | "Year"
 
@@ -65,9 +68,11 @@ export default function SalesReportModal({
   const [anchorYear, setAnchorYear] = useState(() => String(today.getFullYear()))
   const [expenses, setExpenses] = useState("")
   const [tax, setTax] = useState("")
+  const [databaseSummary, setDatabaseSummary] = useState<FinancialSummary | null>(null)
 
   // Build the full realized-sales ledger from claimed batch products.
   const ledger = useMemo<SaleLine[]>(() => {
+    if (isSupabaseConfigured) return []
     const lines: SaleLine[] = []
     batches.forEach((b) => {
       b.products.forEach((p, pi) => {
@@ -117,10 +122,46 @@ export default function SalesReportModal({
     return { filtered: ledger.filter((l) => inRange(l.date)), periodLabel: label }
   }, [period, anchorDay, anchorMonth, anchorYear, ledger])
 
-  const totalSales = filtered.reduce((s, l) => s + l.amount, 0)
-  const itemsSold = filtered.reduce((s, l) => s + l.qty, 0)
-  const orderCount = filtered.length
-  const profit = totalSales - (Number(expenses) || 0) - (Number(tax) || 0)
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    let from: Date
+    let to: Date
+    if (period === "Day") {
+      from = new Date(`${anchorDay}T00:00:00`)
+      to = new Date(from.getTime() + MS_DAY)
+    } else if (period === "Week") {
+      from = startOfWeek(new Date(`${anchorDay}T00:00:00`))
+      to = new Date(from.getTime() + 7 * MS_DAY)
+    } else if (period === "Month") {
+      const [year, month] = anchorMonth.split("-").map(Number)
+      from = new Date(year, month - 1, 1)
+      to = new Date(year, month, 1)
+    } else {
+      const year = Number(anchorYear)
+      from = new Date(year, 0, 1)
+      to = new Date(year + 1, 0, 1)
+    }
+    kargoApi
+      .getFinancialSummary(from, to)
+      .then(setDatabaseSummary)
+      .catch((error) =>
+        alert(error instanceof Error ? error.message : "Unable to load sales summary."),
+      )
+  }, [period, anchorDay, anchorMonth, anchorYear])
+
+  const totalSales = isSupabaseConfigured
+    ? (databaseSummary?.gross_sales ?? 0)
+    : filtered.reduce((s, l) => s + l.amount, 0)
+  const itemsSold = isSupabaseConfigured
+    ? (databaseSummary?.items_sold ?? 0)
+    : filtered.reduce((s, l) => s + l.qty, 0)
+  const orderCount = isSupabaseConfigured
+    ? (databaseSummary?.order_count ?? 0)
+    : filtered.length
+  const expenseAmount = isSupabaseConfigured
+    ? (databaseSummary?.estimated_expenses ?? 0)
+    : Number(expenses) || 0
+  const profit = totalSales - expenseAmount - (Number(tax) || 0)
 
   // Sales grouped by product for the printable table.
   const byProduct = useMemo(() => {
@@ -428,9 +469,10 @@ export default function SalesReportModal({
               <label style={label}>Total Expenses (₱)</label>
               <input
                 type="number"
-                value={expenses}
+                value={isSupabaseConfigured ? String(expenseAmount) : expenses}
                 placeholder="0"
                 onChange={(e) => setExpenses(e.target.value)}
+                readOnly={isSupabaseConfigured}
                 style={field}
               />
             </div>
@@ -447,7 +489,7 @@ export default function SalesReportModal({
           </div>
           {/* Printed read-out of the entered figures. */}
           <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>
-            Expenses: ₱{(Number(expenses) || 0).toLocaleString()} · Tax: ₱
+            Expenses: ₱{expenseAmount.toLocaleString()} · Tax: ₱
             {(Number(tax) || 0).toLocaleString()}
           </div>
           <div

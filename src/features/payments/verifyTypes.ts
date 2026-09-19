@@ -1,5 +1,7 @@
+import type { EntityId } from "@/types"
+
 export type VerifyItem = {
-  id: number
+  id: EntityId
   buyer: string
   product: string
   amount: number

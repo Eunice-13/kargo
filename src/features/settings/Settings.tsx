@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { UserRound, Link2, Bell, CreditCard, Lock } from "lucide-react"
 import type { SettingsSection, SharedState } from "@/types"
 import { INDIGO } from "@/constants/theme"
@@ -15,6 +15,8 @@ import VerifyPaymentMethodModal from "./VerifyPaymentMethodModal"
 import RemovePaymentMethodModal from "./RemovePaymentMethodModal"
 import TwoFAModal from "./TwoFAModal"
 import type { PayMethod } from "./types"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
   Profile: UserRound,
@@ -32,10 +34,6 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [igUser, setIgUser] = useState("")
   const [socialModal, setSocialModal] =
     useState<"Facebook" | "Instagram" | null>(null)
-  const [idState, setIdState] = useState<"none" | "uploading" | "submitted">(
-    "none",
-  )
-  const idFileRef = useRef<HTMLInputElement>(null)
   const [notifs, setNotifs] = useState<Record<string, boolean>>({
     payments: true,
     claims: true,
@@ -66,7 +64,7 @@ export default function Settings({ user, setUser, role }: SharedState) {
   }, [role])
 
   // Payment methods state
-  const [payMethods, setPayMethods] = useState<PayMethod[]>([
+  const [payMethods, setPayMethods] = useState<PayMethod[]>(isSupabaseConfigured ? [] : [
     {
       id: 1,
       name: "GCash",
@@ -109,21 +107,54 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [tfaCode, setTfaCode] = useState("")
   const [tfaLoading, setTfaLoading] = useState(false)
 
-  const saveProfile = () => {
+  const refreshPaymentMethods = async () => {
+    if (!isSupabaseConfigured || role !== "Seller") return
+    const rows = await kargoApi.loadPaymentMethods()
+    setPayMethods(rows.map((row) => ({
+      id: row.id,
+      name: row.method_type,
+      detail: row.account_number ?? "",
+      icon: "",
+      verified: row.is_verified,
+    })))
+  }
+
+  useEffect(() => {
+    void refreshPaymentMethods()
+  }, [role])
+
+  const saveProfile = async () => {
     const newName = [firstName, lastName].filter(Boolean).join(" ") || user.name
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.updateProfile({ displayName: newName, bio, email })
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to save profile.")
+        return
+      }
+    }
     setUser((u) => ({ ...u, name: newName, email, bio }))
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
 
-  const handleIdPick = () => {
-    setIdState("uploading")
-    setTimeout(() => setIdState("submitted"), 1500)
-  }
-
-  const addPayMethod = () => {
+  const addPayMethod = async () => {
     if (!pmName.trim() || !pmNum.trim()) return
     setPmLoading(true)
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.addPaymentMethod(pmType, pmName.trim(), pmNum.trim())
+        await refreshPaymentMethods()
+        setPmName("")
+        setPmNum("")
+        setPmLoading(false)
+        setShowAddPM(false)
+      } catch (error) {
+        setPmLoading(false)
+        alert(error instanceof Error ? error.message : "Unable to add payment method.")
+      }
+      return
+    }
     setTimeout(() => {
       const icons: Record<string, string> = {
         GCash: "",
@@ -148,9 +179,21 @@ export default function Settings({ user, setUser, role }: SharedState) {
     }, 800)
   }
 
-  const confirmVerify = () => {
+  const confirmVerify = async () => {
     if (!verifyTarget) return
     setPmLoading(true)
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.updatePaymentMethod(String(verifyTarget.id), verifyTarget.name, verifyTarget.detail, true)
+        await refreshPaymentMethods()
+        setPmLoading(false)
+        setVerifyTarget(null)
+      } catch (error) {
+        setPmLoading(false)
+        alert(error instanceof Error ? error.message : "Unable to verify payment method.")
+      }
+      return
+    }
     setTimeout(() => {
       setPayMethods((p) =>
         p.map((m) => (m.id === verifyTarget.id ? { ...m, verified: true } : m)),
@@ -160,11 +203,21 @@ export default function Settings({ user, setUser, role }: SharedState) {
     }, 900)
   }
 
-  const confirmRemove = () => {
+  const confirmRemove = async () => {
     if (!removeTarget) return
     // Guard: never let a seller end up with zero payment methods (a batch
     // shouldn't have no way for buyers to pay).
     if (payMethods.length <= 1) return
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.deactivatePaymentMethod(String(removeTarget.id))
+        await refreshPaymentMethods()
+        setRemoveTarget(null)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to remove payment method.")
+      }
+      return
+    }
     setPayMethods((p) => p.filter((m) => m.id !== removeTarget.id))
     setRemoveTarget(null)
   }
@@ -175,9 +228,21 @@ export default function Settings({ user, setUser, role }: SharedState) {
     setEditNum(m.detail)
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editTarget || !editName.trim() || !editNum.trim()) return
     setPmLoading(true)
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.updatePaymentMethod(String(editTarget.id), editName.trim(), editNum.trim())
+        await refreshPaymentMethods()
+        setPmLoading(false)
+        setEditTarget(null)
+      } catch (error) {
+        setPmLoading(false)
+        alert(error instanceof Error ? error.message : "Unable to update payment method.")
+      }
+      return
+    }
     setTimeout(() => {
       setPayMethods((p) =>
         p.map((m) =>
@@ -283,9 +348,6 @@ export default function Settings({ user, setUser, role }: SharedState) {
               setIgConn={setIgConn}
               setIgUser={setIgUser}
               setSocialModal={setSocialModal}
-              idState={idState}
-              handleIdPick={handleIdPick}
-              idFileRef={idFileRef}
             />
           )}
           {section === "Notifications" && (

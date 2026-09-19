@@ -8,7 +8,7 @@ export default function ExtensionRequestModal({
   onClose,
 }: {
   claim: ClaimRow
-  onSubmit: () => void
+  onSubmit: (hours: number, reason: string) => void | Promise<void>
   onClose: () => void
 }) {
   const [days, setDays] = useState("3")
@@ -102,7 +102,7 @@ export default function ExtensionRequestModal({
           </SecondaryBtn>
           <PrimaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center" }}
-            onClick={onSubmit}
+            onClick={() => onSubmit(Number(days) * 24, reason.trim())}
           >
             Send Request
           </PrimaryBtn>

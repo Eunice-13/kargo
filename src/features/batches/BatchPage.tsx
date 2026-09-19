@@ -5,6 +5,8 @@ import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge, CategoryIcon, Toggle, ContactSellerModal } from "@/components/shared"
 import ItemClaimModal from "./ItemClaimModal"
 import { toggleBatchLock } from "./toggleBatchLock"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function BatchPage({
   batch,
@@ -41,15 +43,25 @@ export default function BatchPage({
   const pct = Math.round((batch.claimed / batch.items) * 100)
   const grad = CAT_GRAD[batch.category] || CAT_GRAD["Mixed"]
   const reserveHrs = batch.reserveHours || 48
-  const handleClaim = (
+  const handleClaim = async (
     key: string,
     b: BatchType,
     product: typeof batch.products[0],
   ) => {
+    if (isSupabaseConfigured) {
+      if (!product.dbId) return
+      try {
+        await kargoApi.claimProduct(product.dbId, 1)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to claim this product.")
+        return
+      }
+    }
     setClaimedKeys((c) => ({ ...c, [key]: true }))
     setClaims((prev) => [
       {
         id: Date.now(),
+        productId: product.dbId,
         product: product.name,
         batch: b.title,
         seller: b.seller,
@@ -346,9 +358,18 @@ export default function BatchPage({
                       ) : (
                         <PrimaryBtn
                           size="sm"
-                          onClick={() =>
+                          onClick={async () => {
+                            if (isSupabaseConfigured) {
+                              if (!p.dbId) return
+                              try {
+                                await kargoApi.joinWaitlist(p.dbId)
+                              } catch (error) {
+                                alert(error instanceof Error ? error.message : "Unable to join waitlist.")
+                                return
+                              }
+                            }
                             setWaitlisted((w) => ({ ...w, [pKey]: true }))
-                          }
+                          }}
                         >
                           Join Waitlist
                         </PrimaryBtn>

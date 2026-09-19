@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import type React from "react"
 import type { FulfillmentOrder } from "@/types"
 import type { KanbanCol } from "@/constants/fulfillment"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 // Shared board behaviour: which card is expanded, moving a card between
 // columns, screen-reader announcement, and keeping focus on the status select
@@ -16,8 +18,24 @@ export function useFulfillmentBoard(
   const toggle = (id: string) =>
     setExpandedId((cur) => (cur === id ? null : id))
 
-  const move = (order: FulfillmentOrder, col: KanbanCol) => {
+  const move = async (order: FulfillmentOrder, col: KanbanCol) => {
     if (order.col === col) return
+    if (isSupabaseConfigured) {
+      const status = {
+        Claimed: "payment_submitted",
+        "Pending Payment": "payment_pending",
+        "Payment Confirmed": "payment_confirmed",
+        Preparing: "preparing",
+        Completed: "completed",
+        Cancelled: "cancelled",
+      }[col]
+      try {
+        await kargoApi.setFulfillmentStatus(order.id, status)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to update fulfillment status.")
+        return
+      }
+    }
     setFulfillment((prev) =>
       prev.map((o) => (o.id === order.id ? { ...o, col } : o)),
     )

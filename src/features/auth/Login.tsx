@@ -4,6 +4,8 @@ import { INDIGO, CREAM, CYAN_L, SKY } from "@/constants/theme"
 import { PrimaryBtn } from "@/components/shared"
 import AuthInput from "./AuthInput"
 import LogoMark from "./LogoMark"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function Login({
   onSignUp,
@@ -19,7 +21,7 @@ export default function Login({
   const [loading, setLoading] = useState(false)
   const [forgotSent, setForgotSent] = useState(false)
 
-  const submit = useCallback(() => {
+  const submit = useCallback(async () => {
     let ok = true
     if (!email.trim() || !email.includes("@")) {
       setEmailErr("Enter a valid email address.")
@@ -28,16 +30,26 @@ export default function Login({
     if (!password) {
       setPassErr("Password is required.")
       ok = false
-    } else if (password !== "password123") {
+    } else if (!isSupabaseConfigured && password !== "password123") {
       setPassErr("Incorrect email or password.")
       ok = false
     } else setPassErr("")
     if (!ok) return
     setLoading(true)
-    setTimeout(() => {
+    if (!isSupabaseConfigured) {
+      setTimeout(() => {
+        setLoading(false)
+        onSuccess({ name: "Juan Dela Cruz", email, role: "Buyer" })
+      }, 600)
+      return
+    }
+    try {
+      onSuccess(await kargoApi.signIn(email.trim(), password))
       setLoading(false)
-      onSuccess({ name: "Juan Dela Cruz", email, role: "Buyer" })
-    }, 1600)
+    } catch (error) {
+      setLoading(false)
+      setPassErr(error instanceof Error ? error.message : "Unable to sign in.")
+    }
   }, [email, password, onSuccess])
 
   return (
@@ -108,7 +120,12 @@ export default function Login({
               <div style={{ textAlign: "right", marginTop: 6 }}>
                 <button
                   type="button"
-                  onClick={() => setForgotSent(true)}
+                  onClick={async () => {
+                    setForgotSent(true)
+                    if (isSupabaseConfigured && email.includes("@")) {
+                      await kargoApi.requestPasswordReset(email)
+                    }
+                  }}
                   style={{
                     fontSize: 12,
                     color: INDIGO,
@@ -159,7 +176,7 @@ export default function Login({
               Sign up
             </button>
           </div>
-          <div
+          {!isSupabaseConfigured && <div
             style={{
               background: CYAN_L,
               border: `1px solid ${SKY}`,
@@ -182,7 +199,7 @@ export default function Login({
                 password123
               </code>
             </p>
-          </div>
+          </div>}
         </div>
       </div>
     </div>
