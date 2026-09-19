@@ -1,5 +1,5 @@
 import type React from "react"
-import { CreditCard, Paperclip, Check, X } from "lucide-react"
+import { CreditCard, Paperclip, Check, X, ExternalLink } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Modal, Avatar } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
@@ -171,6 +171,48 @@ export default function ReviewSubmissionModal({
               </div>
             </div>
           ))}
+          {/* Contact link row */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "10px 14px",
+              borderBottom: "1px solid #F3F4F6",
+            }}
+          >
+            <span
+              style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}
+            >
+              Contact Link
+            </span>
+            {reviewTarget.contact ? (
+              <a
+                href={reviewTarget.contact}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: 11,
+                  color: "#fff",
+                  background: INDIGO,
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "4px 10px",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <ExternalLink size={12} aria-hidden="true" /> Open Facebook profile
+              </a>
+            ) : (
+              <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>
+            )}
+          </div>
           {/* Receipt row */}
           <div
             style={{

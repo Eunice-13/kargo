@@ -24,6 +24,7 @@ export default function SellerPaymentVerification() {
       receipt: "receipt_gcash.jpg",
       phone: "0917-823-4410",
       amountPaid: "750",
+      contact: "https://facebook.com/anna.cruz",
     },
     {
       id: 2,
@@ -39,6 +40,7 @@ export default function SellerPaymentVerification() {
       receipt: "maya_proof.png",
       phone: "0918-554-2291",
       amountPaid: "4800",
+      contact: "https://facebook.com/ben.santos",
     },
     {
       id: 3,
@@ -54,6 +56,7 @@ export default function SellerPaymentVerification() {
       receipt: "bdo_receipt.pdf",
       phone: "0916-001-2109",
       amountPaid: "480",
+      contact: "https://facebook.com/carla.reyes",
     },
   ]
   const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(VERIFY_SEED)

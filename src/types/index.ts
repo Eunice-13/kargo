@@ -3,7 +3,7 @@ import type { KanbanCol } from "@/constants/fulfillment"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type AppStage = "login" | "signup" | "app"
-export type UserInfo = { name: string; email: string; role: Role; bio?: string }
+export type UserInfo = { name: string; email: string; role: Role; bio?: string; fb?: string }
 export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
 export type Role = "Buyer" | "Seller"
 export type ClaimStatus = "Pending" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"

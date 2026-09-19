@@ -13,4 +13,5 @@ export type VerifyItem = {
   rejectReason?: string
   phone?: string
   amountPaid?: string
+  contact?: string
 }

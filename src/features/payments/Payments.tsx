@@ -28,6 +28,7 @@ export default function Payments({
   orders,
   setOrders,
   role,
+  user,
 }: SharedState) {
   const [dragging, setDragging] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
@@ -546,6 +547,7 @@ export default function Payments({
       {payTarget && (
         <PaymentSubmitModal
           item={payTarget}
+          contactPrefill={user.fb || ""}
           onConfirm={(method, refNo) => handlePay(payTarget, method)}
           onClose={() => setPayTarget(null)}
         />

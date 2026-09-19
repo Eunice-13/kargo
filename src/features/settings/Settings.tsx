@@ -383,6 +383,12 @@ export default function Settings({ user, setUser, role }: SharedState) {
             if (socialModal === "Facebook") {
               setFbConn(true)
               setFbUser(u)
+              // Persist the linked Facebook handle on the user so other flows
+              // (e.g. the Pay Now contact-link field, #20) can prefill it.
+              const fbUrl = u.startsWith("http")
+                ? u
+                : `https://facebook.com/${u.replace(/^@/, "")}`
+              setUser((prev) => ({ ...prev, fb: fbUrl }))
             } else {
               setIgConn(true)
               setIgUser(u)
