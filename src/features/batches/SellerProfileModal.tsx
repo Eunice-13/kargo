@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Lock } from "lucide-react"
+import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight } from "lucide-react"
 import type { BatchType, Tab } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Modal, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
@@ -146,14 +146,14 @@ export default function SellerProfileModal({
                   sellerBatches.filter((b) => b.live).length ||
                     sellerBatches.length,
                 ),
-                icon: "✈️",
+                icon: <Plane size={18} aria-hidden="true" />,
               },
               {
                 label: "Products Available",
                 value: String(
                   sellerBatches.reduce((s, b) => s + b.products.length, 0),
                 ),
-                icon: "📦",
+                icon: <Package size={18} aria-hidden="true" />,
               },
               {
                 label: "Claim Rate",
@@ -165,7 +165,7 @@ export default function SellerProfileModal({
                     )) *
                     100,
                 )}%`,
-                icon: "📈",
+                icon: <TrendingUp size={18} aria-hidden="true" />,
               },
             ].map((st) => (
               <div
@@ -178,7 +178,7 @@ export default function SellerProfileModal({
                   border: "1px solid #E5E7EB",
                 }}
               >
-                <div style={{ fontSize: 18 }}>{st.icon}</div>
+                <div style={{ color: INDIGO, display: "flex", justifyContent: "center" }}>{st.icon}</div>
                 <div
                   style={{
                     fontSize: 18,
@@ -358,7 +358,13 @@ export default function SellerProfileModal({
                           cursor: "pointer",
                         }}
                       >
-                        {isExpanded ? "Hide Products ↑" : "View Products →"}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          {isExpanded ? (
+                            <>Hide Products <ChevronUp size={13} aria-hidden="true" /></>
+                          ) : (
+                            <>View Products <ArrowRight size={13} aria-hidden="true" /></>
+                          )}
+                        </span>
                       </button>
                       <button
                         onClick={() => {
@@ -377,7 +383,9 @@ export default function SellerProfileModal({
                           whiteSpace: "nowrap" as const,
                         }}
                       >
-                        Claim →
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          Claim <ArrowRight size={13} aria-hidden="true" />
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -528,7 +536,9 @@ export default function SellerProfileModal({
                     color: "#6B7280",
                   }}
                 >
-                  <span>📦 Past & Locked Batches ({pastBatches.length})</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <Package size={14} aria-hidden="true" /> Past & Locked Batches ({pastBatches.length})
+                  </span>
                   <span>{showPast ? "▲" : "▼"}</span>
                 </button>
                 {showPast && (
@@ -659,7 +669,7 @@ export default function SellerProfileModal({
                 {
                   bg: "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)",
                   label: "Instagram",
-                  icon: <span style={{ color: "#fff", fontSize: 11 }}>📷</span>,
+                  icon: <span style={{ color: "#fff", fontWeight: 800, fontSize: 13 }}>IG</span>,
                   url: `https://instagram.com/${seller.toLowerCase().replace(" ", "_")}.pasabuy`,
                 },
                 {
@@ -727,11 +737,11 @@ export default function SellerProfileModal({
                   <span
                     style={{
                       marginLeft: "auto",
-                      fontSize: 12,
                       color: "#9CA3AF",
+                      display: "flex",
                     }}
                   >
-                    ↗
+                    <ArrowUpRight size={13} aria-hidden="true" />
                   </span>
                 </a>
               ))}

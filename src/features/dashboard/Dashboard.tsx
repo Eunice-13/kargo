@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList } from "lucide-react"
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
 import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
 import {
@@ -45,7 +46,7 @@ export default function Dashboard({
     {
       label: "Active Claims",
       value: String(claims.filter((c) => c.status === "Pending").length),
-      icon: "📦",
+      icon: Package,
       sub: "+3 this week",
       sc: GREEN,
       bg: "#E8F9F3",
@@ -53,7 +54,7 @@ export default function Dashboard({
     {
       label: "Pending Payments",
       value: `₱${pendingTotal.toLocaleString()}`,
-      icon: "💳",
+      icon: CreditCard,
       sub: `${toPay.length} items due soon`,
       sc: AMBER,
       bg: "#FFF8E8",
@@ -61,7 +62,7 @@ export default function Dashboard({
     {
       label: "Waitlist Position",
       value: "#3",
-      icon: "⏳",
+      icon: Clock3,
       sub: "Laneige Lip Mask",
       sc: "#6B7280",
       bg: CYAN_L,
@@ -69,7 +70,7 @@ export default function Dashboard({
     {
       label: "Completed Orders",
       value: "47",
-      icon: "✅",
+      icon: CheckCircle2,
       sub: "All time",
       sc: "#6B7280",
       bg: "#F0EEFF",
@@ -79,7 +80,7 @@ export default function Dashboard({
     {
       label: "Active Batches",
       value: String(batches.filter((b) => b.live).length),
-      icon: "✈️",
+      icon: Plane,
       sub: "(open + scheduled)",
       sc: GREEN,
       bg: CREAM,
@@ -87,7 +88,7 @@ export default function Dashboard({
     {
       label: "Awaiting Verification",
       value: "3",
-      icon: "📋",
+      icon: ClipboardList,
       sub: "Payment proofs to review",
       sc: AMBER,
       bg: CYAN_L,
@@ -95,7 +96,7 @@ export default function Dashboard({
     {
       label: "Extension Requests",
       value: "2",
-      icon: "⏳",
+      icon: Clock3,
       sub: "Awaiting your approval",
       sc: "#6B7280",
       bg: "#FFF7ED",
@@ -105,7 +106,7 @@ export default function Dashboard({
       value: String(
         PRIOR_FULFILLED + fulfillment.filter((o) => o.col === "Completed").length,
       ),
-      icon: "✅",
+      icon: CheckCircle2,
       sub: "Completed this quarter",
       sc: "#6B7280",
       bg: "#F0FDF4",
@@ -155,7 +156,7 @@ export default function Dashboard({
               }}
             >
               <div className="flex items-start justify-between mb-3">
-                <span className="text-xl">{s.icon}</span>
+                <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
               </div>
               <div
                 style={{
@@ -278,16 +279,16 @@ export default function Dashboard({
             <div className="space-y-3">
               {[
                 {
-                  icon: "📋",
+                  icon: ClipboardList,
                   label: "Payments to Verify",
                   count: 3,
                   tab: "Payments" as Tab,
                 },
                 {
-                  icon: "⏳",
+                  icon: Clock3,
                   label: "Extension Requests",
                   count: 2,
-                  tab: "My Claims" as Tab,
+                  tab: "Batches" as Tab,
                 },
               ].map((item) => (
                 <div
@@ -302,7 +303,7 @@ export default function Dashboard({
                     gap: 10,
                   }}
                 >
-                  <span style={{ fontSize: 18 }}>{item.icon}</span>
+                  <item.icon size={18} aria-hidden="true" style={{ color: "#9CA3AF", flexShrink: 0 }} />
                   <div className="flex-1">
                     <div
                       style={{
@@ -335,7 +336,8 @@ export default function Dashboard({
                   textAlign: "center",
                 }}
               >
-                ✅ No "Pay All Pending" needed — sellers verify, not pay.
+                <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                No "Pay All Pending" needed — sellers verify, not pay.
               </div>
             </div>
           </Card>
@@ -664,7 +666,8 @@ export default function Dashboard({
                     fontWeight: 600,
                   }}
                 >
-                  ✅ All payments cleared!
+                  <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                  All payments cleared!
                 </div>
               )}
             </div>

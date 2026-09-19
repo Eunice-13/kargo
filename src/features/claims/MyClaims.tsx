@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import {
@@ -75,7 +76,7 @@ export default function MyClaims({
               gap: 8,
             }}
           >
-            <span>📘</span> Opening {fbToast}'s Facebook profile…
+            <Link2 size={15} aria-hidden="true" /> Opening {fbToast}'s Facebook profile…
           </div>
         )}
         <h2
@@ -391,7 +392,13 @@ export default function MyClaims({
                 cursor: "pointer",
               }}
             >
-              {m === "table" ? "☰ Table" : "⊞ Cards"}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                {m === "table" ? (
+                  <><List size={13} aria-hidden="true" /> Table</>
+                ) : (
+                  <><LayoutGrid size={13} aria-hidden="true" /> Cards</>
+                )}
+              </span>
             </button>
           ))}
         </div>
@@ -782,7 +789,8 @@ export default function MyClaims({
                     color: "#92400E",
                   }}
                 >
-                  ⚠️ This item has already been paid. A refund will be processed
+                  <AlertTriangle size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                  This item has already been paid. A refund will be processed
                   to the phone number and payment method on file within 3–5
                   business days.
                 </div>

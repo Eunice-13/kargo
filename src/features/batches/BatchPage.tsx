@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Lock } from "lucide-react"
+import { Lock, ArrowLeft, Plane, Check, Link2 } from "lucide-react"
 import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo } from "@/types"
 import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge, CategoryIcon, Toggle, ContactSellerModal } from "@/components/shared"
@@ -92,7 +92,7 @@ export default function BatchPage({
           fontFamily: "'Plus Jakarta Sans',sans-serif",
         }}
       >
-        ← Back to Batches
+        <ArrowLeft size={14} aria-hidden="true" /> Back to Batches
       </button>
 
       {/* Hero header */}
@@ -163,8 +163,8 @@ export default function BatchPage({
             >
               {batch.category}
             </span>
-            <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
-              ✈️ {batch.trips}
+            <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <Plane size={12} aria-hidden="true" /> {batch.trips}
             </span>
             <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
                48h reservation window
@@ -284,7 +284,8 @@ export default function BatchPage({
                             padding: "2px 8px",
                           }}
                         >
-                          ✓ Claimed
+                          <Check size={11} aria-hidden="true" style={{ display: "inline", verticalAlign: -1, marginRight: 2 }} />
+                          Claimed
                         </span>
                       )}
                       {onWaitlist && (
@@ -327,9 +328,9 @@ export default function BatchPage({
                       </span>
                     ) : isClaimed ? (
                       <span
-                        style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}
+                        style={{ fontSize: 11, color: GREEN, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 3 }}
                       >
-                        ✓ In Claims
+                        <Check size={12} aria-hidden="true" /> In Claims
                       </span>
                     ) : soldOut ? (
                       onWaitlist ? (
@@ -434,7 +435,7 @@ export default function BatchPage({
                 gap: 8,
               }}
             >
-              <span style={{ fontSize: 16 }}>📘</span>
+              <Link2 size={16} aria-hidden="true" style={{ color: INDIGO, flexShrink: 0, marginTop: 1 }} />
               <div>
                 <div
                   style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}
