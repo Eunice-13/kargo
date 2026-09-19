@@ -5,7 +5,7 @@ import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { PeriodOrder } from "@/services"
-import { localExpenseStore } from "@/features/batches/FinancialSummaryModal"
+import { localExpenseStore } from "@/features/batches/expenseStore"
 
 type Period = "Day" | "Week" | "Month" | "Year"
 

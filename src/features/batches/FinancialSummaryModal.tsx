@@ -6,11 +6,7 @@ import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { FinancialSummary } from "@/services"
-
-// In-memory fallback store (demo mode): per-batch expenses persist across modal
-// opens within the session. Keyed by the batch's local id. Exported so the
-// Sales Report's kita calc can read recorded expenses in demo mode too.
-export const localExpenseStore = new Map<number, BatchExpenses>()
+import { localExpenseStore } from "./expenseStore"
 
 const uid = () =>
   globalThis.crypto?.randomUUID?.() ??
@@ -151,11 +147,14 @@ export default function FinancialSummaryModal({
 
   if (showReceipt) {
     return (
-      <ExpenseReceipt
+      <FinancialReceipt
         batch={batch}
+        totalOrders={totalOrders}
         mode={mode}
-        total={recordedExpenses}
+        expenses={recordedExpenses}
         items={items}
+        tax={Number(tax) || 0}
+        profit={profit}
         onBack={() => setShowReceipt(false)}
         onPrint={handlePrintReceipt}
         onClose={onClose}
@@ -347,7 +346,7 @@ export default function FinancialSummaryModal({
                   onClick={() => setShowReceipt(true)}
                   style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
                 >
-                  <Printer size={14} aria-hidden="true" /> Receipt
+                  <Printer size={14} aria-hidden="true" /> Summary Receipt
                 </SecondaryBtn>
                 <PrimaryBtn
                   size="sm"
@@ -433,29 +432,54 @@ export default function FinancialSummaryModal({
   )
 }
 
-// ─── Printable expense receipt (internal bookkeeping) ─────────────────────────
-function ExpenseReceipt({
+// ─── Printable batch financial summary receipt (internal bookkeeping) ─────────
+// Shows the FULL summary: revenue, expenses (with itemized breakdown if used),
+// tax, and estimated profit — not just expenses.
+function FinancialReceipt({
   batch,
+  totalOrders,
   mode,
-  total,
+  expenses,
   items,
+  tax,
+  profit,
   onBack,
   onPrint,
   onClose,
 }: {
   batch: BatchType
+  totalOrders: number
   mode: ExpenseMode
-  total: number
+  expenses: number
   items: ExpenseItem[]
+  tax: number
+  profit: number
   onBack: () => void
   onPrint: () => void
   onClose: () => void
 }) {
+  const dashed = "1px dashed #D1D5DB"
+  const row = (labelText: string, value: string, strong = false, color = "#374151") => (
+    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+      <span style={{ color: strong ? "#111827" : "#6B7280", fontWeight: strong ? 700 : 400 }}>
+        {labelText}
+      </span>
+      <span
+        style={{
+          color,
+          fontWeight: strong ? 800 : 600,
+          fontFamily: "'Plus Jakarta Sans',sans-serif",
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  )
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Expense receipt"
+      aria-label="Batch financial summary receipt"
       style={{
         position: "fixed",
         inset: 0,
@@ -474,114 +498,114 @@ function ExpenseReceipt({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",
-          maxWidth: 560,
+          maxWidth: 480,
           background: "#fff",
-          borderRadius: 14,
+          borderRadius: 12,
           boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
           padding: 24,
+          position: "relative",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 16,
-          }}
+        <button
+          type="button"
+          className="no-print"
+          onClick={onClose}
+          aria-label="Close receipt"
+          style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: 4 }}
         >
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 800,
-                color: "#111827",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
-              }}
-            >
-              Expense Receipt
-            </div>
-            <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
-              {batch.title} · {batch.seller}
-            </div>
-            <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-              Generated {TODAY} · Internal bookkeeping document
-            </div>
-          </div>
-          <button
-            type="button"
-            className="no-print"
-            onClick={onClose}
-            aria-label="Close receipt"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: 4 }}
-          >
-            <X size={20} aria-hidden="true" />
-          </button>
-        </div>
+          <X size={18} aria-hidden="true" />
+        </button>
 
-        {mode === "itemized" && items.length > 0 ? (
-          <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", marginBottom: 14 }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid #E5E7EB" }}>
-                <th style={{ textAlign: "left", padding: "6px 4px", color: "#9CA3AF", fontWeight: 600 }}>Item</th>
-                <th style={{ textAlign: "left", padding: "6px 4px", color: "#9CA3AF", fontWeight: 600 }}>Category</th>
-                <th style={{ textAlign: "left", padding: "6px 4px", color: "#9CA3AF", fontWeight: 600 }}>Date</th>
-                <th style={{ textAlign: "right", padding: "6px 4px", color: "#9CA3AF", fontWeight: 600 }}>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((it) => (
-                <tr key={it.id} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                  <td style={{ padding: "7px 4px", color: "#374151" }}>{it.label || "—"}</td>
-                  <td style={{ padding: "7px 4px", color: "#6B7280" }}>{it.category || "—"}</td>
-                  <td style={{ padding: "7px 4px", color: "#6B7280" }}>{it.date || "—"}</td>
-                  <td
-                    style={{
-                      padding: "7px 4px",
-                      textAlign: "right",
-                      fontWeight: 700,
-                      color: "#111827",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    }}
-                  >
-                    ₱{(Number(it.amount) || 0).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div style={{ fontSize: 13, color: "#374151", marginBottom: 14 }}>
-            {mode === "single"
-              ? "Total expenses entered as a single amount."
-              : "No line items recorded."}
-          </div>
-        )}
-
-        <div
-          style={{
-            background: CREAM,
-            borderRadius: 8,
-            padding: "12px 14px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
-          }}
-        >
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>Total Expenses</span>
-          <span
+        {/* Receipt header */}
+        <div style={{ textAlign: "center", marginBottom: 4 }}>
+          <div
             style={{
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: 800,
               color: "#111827",
               fontFamily: "'Plus Jakarta Sans',sans-serif",
             }}
           >
-            ₱{total.toLocaleString()}
+            {batch.seller}
+          </div>
+          <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+            Batch Financial Summary
+          </div>
+          <div style={{ fontSize: 12, color: "#374151", fontWeight: 600, marginTop: 2 }}>
+            {batch.title}
+          </div>
+          <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+            Generated {TODAY} · Internal document
+          </div>
+        </div>
+
+        <div style={{ borderTop: dashed, margin: "14px 0" }} />
+
+        {/* Revenue */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {row("Total Orders / Revenue", `₱${totalOrders.toLocaleString()}`)}
+        </div>
+
+        <div style={{ borderTop: dashed, margin: "14px 0" }} />
+
+        {/* Expenses (with itemized breakdown when used) */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+          Expenses
+        </div>
+        {mode === "itemized" && items.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 8 }}>
+            {items.map((it) => (
+              <div key={it.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280" }}>
+                <span>
+                  {it.label || "—"}
+                  {it.category ? ` · ${it.category}` : ""}
+                  {it.date ? ` · ${it.date}` : ""}
+                </span>
+                <span style={{ color: "#374151", fontWeight: 600 }}>
+                  ₱{(Number(it.amount) || 0).toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 8, fontStyle: "italic" }}>
+            {mode === "single" ? "Entered as a single total." : "No line items recorded."}
+          </div>
+        )}
+        {row("Total Expenses", `−₱${expenses.toLocaleString()}`)}
+        <div style={{ marginTop: 5 }}>{row("Estimated Tax", `−₱${tax.toLocaleString()}`)}</div>
+
+        <div style={{ borderTop: "2px solid #111827", margin: "12px 0 10px" }} />
+
+        {/* Estimated profit */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: profit >= 0 ? "#D4F5EA" : "#FEE2E2",
+            borderRadius: 8,
+            padding: "12px 14px",
+          }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 800, color: profit >= 0 ? "#065F46" : "#991B1B" }}>
+            Estimated Profit
+          </span>
+          <span
+            style={{
+              fontSize: 20,
+              fontWeight: 800,
+              color: profit >= 0 ? "#065F46" : "#991B1B",
+              fontFamily: "'Plus Jakarta Sans',sans-serif",
+            }}
+          >
+            ₱{profit.toLocaleString()}
           </span>
         </div>
-        <p style={{ fontSize: 11, color: "#9CA3AF", fontStyle: "italic", margin: "0 0 4px" }}>
-          For internal seller records only. Not shared with buyers.
+
+        <p style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic", textAlign: "center", margin: "12px 0 0" }}>
+          Estimate based on current claims, item prices, and recorded expenses. For
+          internal seller records only — not shared with buyers.
         </p>
 
         <div className="no-print" style={{ display: "flex", gap: 10, marginTop: 16 }}>
