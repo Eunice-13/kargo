@@ -1,49 +1,23 @@
 import { useEffect, useMemo, useState } from "react"
 import { Printer, X } from "lucide-react"
-import type { BatchType } from "@/types"
+import type { BatchType, FulfillmentOrder } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
-import type { FinancialSummary } from "@/services"
+import type { PeriodOrder } from "@/services"
+import { localExpenseStore } from "@/features/batches/FinancialSummaryModal"
 
 type Period = "Day" | "Week" | "Month" | "Year"
 
-// One realized sale line. We synthesise a plausible date per batch-product so
-// the Day/Week/Month/Year filter produces meaningful, varying figures — the
-// prototype has no per-sale timestamps, so this keeps the report self-contained.
-type SaleLine = {
-  date: Date
-  product: string
-  category: string
-  qty: number
-  amount: number
-}
-
 const MS_DAY = 86_400_000
-
-// Deterministic pseudo-random in [0,1) from a string seed (stable across renders).
-function seededOffset(seed: string, span: number) {
-  let h = 2166136261
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i)
-    h = Math.imul(h, 16777619)
-  }
-  return Math.abs(h) % span
-}
 
 function parseToday(): Date {
   const d = new Date(TODAY)
   return isNaN(d.getTime()) ? new Date() : d
 }
-
 function fmtDate(d: Date) {
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 }
-
 function startOfWeek(d: Date) {
   const x = new Date(d)
   x.setHours(0, 0, 0, 0)
@@ -53,127 +27,86 @@ function startOfWeek(d: Date) {
 
 export default function SalesReportModal({
   batches,
+  fulfillment,
   shopName,
   onClose,
 }: {
   batches: BatchType[]
+  fulfillment: FulfillmentOrder[]
   shopName: string
   onClose: () => void
 }) {
   const today = useMemo(parseToday, [])
   const [period, setPeriod] = useState<Period>("Month")
-  // Anchor is a yyyy-mm-dd string for Day/Week, yyyy-mm for Month, yyyy for Year.
   const [anchorDay, setAnchorDay] = useState(() => today.toISOString().slice(0, 10))
   const [anchorMonth, setAnchorMonth] = useState(() => today.toISOString().slice(0, 7))
   const [anchorYear, setAnchorYear] = useState(() => String(today.getFullYear()))
-  const [expenses, setExpenses] = useState("")
-  const [tax, setTax] = useState("")
-  const [databaseSummary, setDatabaseSummary] = useState<FinancialSummary | null>(null)
 
-  // Build the full realized-sales ledger from claimed batch products.
-  const ledger = useMemo<SaleLine[]>(() => {
-    if (isSupabaseConfigured) return []
-    const lines: SaleLine[] = []
-    batches.forEach((b) => {
-      b.products.forEach((p, pi) => {
-        if (p.claimed <= 0) return
-        const daysAgo = seededOffset(`${b.id}-${p.name}-${pi}`, 400)
-        const date = new Date(today.getTime() - daysAgo * MS_DAY)
-        lines.push({
-          date,
-          product: p.name,
-          category: b.category,
-          qty: p.claimed,
-          amount: p.price * p.claimed,
-        })
-      })
-    })
-    return lines
-  }, [batches, today])
+  const [dbOrders, setDbOrders] = useState<PeriodOrder[]>([])
+  const [dbExpenses, setDbExpenses] = useState(0)
+  const [loading, setLoading] = useState(false)
 
-  // Which lines fall inside the selected period.
-  const { filtered, periodLabel } = useMemo(() => {
-    let inRange: (d: Date) => boolean
-    let label: string
+  // Resolve the selected period into a [from, to) range + a printed label.
+  const { from, to, periodLabel } = useMemo(() => {
     if (period === "Day") {
-      const anchor = new Date(anchorDay)
-      anchor.setHours(0, 0, 0, 0)
-      const end = anchor.getTime() + MS_DAY
-      inRange = (d) => d.getTime() >= anchor.getTime() && d.getTime() < end
-      label = fmtDate(anchor)
-    } else if (period === "Week") {
-      const start = startOfWeek(new Date(anchorDay))
-      const end = start.getTime() + 7 * MS_DAY
-      inRange = (d) => d.getTime() >= start.getTime() && d.getTime() < end
-      const endD = new Date(end - MS_DAY)
-      label = `${fmtDate(start)} – ${fmtDate(endD)}`
-    } else if (period === "Month") {
+      const f = new Date(`${anchorDay}T00:00:00`)
+      return { from: f, to: new Date(f.getTime() + MS_DAY), periodLabel: fmtDate(f) }
+    }
+    if (period === "Week") {
+      const f = startOfWeek(new Date(`${anchorDay}T00:00:00`))
+      const t = new Date(f.getTime() + 7 * MS_DAY)
+      return { from: f, to: t, periodLabel: `${fmtDate(f)} – ${fmtDate(new Date(t.getTime() - MS_DAY))}` }
+    }
+    if (period === "Month") {
       const [y, m] = anchorMonth.split("-").map(Number)
-      inRange = (d) => d.getFullYear() === y && d.getMonth() === m - 1
-      label = new Date(y, m - 1, 1).toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      })
-    } else {
-      const y = Number(anchorYear)
-      inRange = (d) => d.getFullYear() === y
-      label = String(y)
+      return {
+        from: new Date(y, m - 1, 1),
+        to: new Date(y, m, 1),
+        periodLabel: new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+      }
     }
-    return { filtered: ledger.filter((l) => inRange(l.date)), periodLabel: label }
-  }, [period, anchorDay, anchorMonth, anchorYear, ledger])
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) return
-    let from: Date
-    let to: Date
-    if (period === "Day") {
-      from = new Date(`${anchorDay}T00:00:00`)
-      to = new Date(from.getTime() + MS_DAY)
-    } else if (period === "Week") {
-      from = startOfWeek(new Date(`${anchorDay}T00:00:00`))
-      to = new Date(from.getTime() + 7 * MS_DAY)
-    } else if (period === "Month") {
-      const [year, month] = anchorMonth.split("-").map(Number)
-      from = new Date(year, month - 1, 1)
-      to = new Date(year, month, 1)
-    } else {
-      const year = Number(anchorYear)
-      from = new Date(year, 0, 1)
-      to = new Date(year + 1, 0, 1)
-    }
-    kargoApi
-      .getFinancialSummary(from, to)
-      .then(setDatabaseSummary)
-      .catch((error) =>
-        alert(error instanceof Error ? error.message : "Unable to load sales summary."),
-      )
+    const y = Number(anchorYear)
+    return { from: new Date(y, 0, 1), to: new Date(y + 1, 0, 1), periodLabel: String(y) }
   }, [period, anchorDay, anchorMonth, anchorYear])
 
-  const totalSales = isSupabaseConfigured
-    ? (databaseSummary?.gross_sales ?? 0)
-    : filtered.reduce((s, l) => s + l.amount, 0)
-  const itemsSold = isSupabaseConfigured
-    ? (databaseSummary?.items_sold ?? 0)
-    : filtered.reduce((s, l) => s + l.qty, 0)
-  const orderCount = isSupabaseConfigured
-    ? (databaseSummary?.order_count ?? 0)
-    : filtered.length
-  const expenseAmount = isSupabaseConfigured
-    ? (databaseSummary?.estimated_expenses ?? 0)
-    : Number(expenses) || 0
-  const profit = totalSales - expenseAmount - (Number(tax) || 0)
+  // Supabase mode: fetch the period's orders + recorded expenses.
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    setLoading(true)
+    Promise.all([
+      kargoApi.getPeriodOrders(from, to),
+      kargoApi.getRecordedExpensesForPeriod(from, to),
+    ])
+      .then(([orders, expenses]) => {
+        setDbOrders(orders)
+        setDbExpenses(expenses)
+      })
+      .catch((error) => {
+        setDbOrders([])
+        setDbExpenses(0)
+        alert(error instanceof Error ? error.message : "Unable to load sales report.")
+      })
+      .finally(() => setLoading(false))
+  }, [from, to])
 
-  // Sales grouped by product for the printable table.
-  const byProduct = useMemo(() => {
-    const map = new Map<string, { qty: number; amount: number }>()
-    filtered.forEach((l) => {
-      const cur = map.get(l.product) || { qty: 0, amount: 0 }
-      cur.qty += l.qty
-      cur.amount += l.amount
-      map.set(l.product, cur)
-    })
-    return [...map.entries()].sort((a, b) => b[1].amount - a[1].amount)
-  }, [filtered])
+  // Demo mode: current board orders + recorded expenses from the local store.
+  const demoOrders = useMemo(() => {
+    if (isSupabaseConfigured) return []
+    return fulfillment
+      .filter((o) => o.col === "Completed" || o.col === "Payment Confirmed" || o.col === "Preparing")
+      .map((o) => ({ id: o.id, buyer: o.buyer, purchase: o.product, qty: o.qty, amount: o.amount }))
+  }, [fulfillment])
+  const demoExpenses = useMemo(() => {
+    if (isSupabaseConfigured) return 0
+    let sum = 0
+    for (const b of batches) sum += localExpenseStore.get(b.id)?.total ?? 0
+    return sum
+  }, [batches])
+
+  const orders = isSupabaseConfigured ? dbOrders : demoOrders
+  const revenue = orders.reduce((s, o) => s + o.amount, 0)
+  const expenses = isSupabaseConfigured ? dbExpenses : demoExpenses
+  const kita = revenue - expenses
 
   const handlePrint = () => {
     document.body.classList.add("printing-report")
@@ -183,17 +116,10 @@ export default function SalesReportModal({
     }
     window.addEventListener("afterprint", cleanup)
     window.print()
-    // Fallback in browsers that don't fire afterprint reliably.
     setTimeout(cleanup, 1500)
   }
 
-  const label = {
-    fontSize: 12,
-    fontWeight: 600 as const,
-    color: "#374151",
-    display: "block" as const,
-    marginBottom: 5,
-  }
+  const label = { fontSize: 12, fontWeight: 600 as const, color: "#374151", display: "block" as const, marginBottom: 5 }
   const field = {
     width: "100%",
     fontSize: 13,
@@ -205,6 +131,7 @@ export default function SalesReportModal({
     fontFamily: "inherit",
     boxSizing: "border-box" as const,
   }
+  const dashed = "1px dashed #D1D5DB"
 
   return (
     <div
@@ -229,58 +156,13 @@ export default function SalesReportModal({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",
-          maxWidth: 620,
+          maxWidth: 460,
           background: "#fff",
-          borderRadius: 14,
+          borderRadius: 12,
           boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-          padding: 24,
+          position: "relative",
         }}
       >
-        {/* Header (shop + period) — printed */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 12,
-            marginBottom: 18,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 20,
-                fontWeight: 800,
-                color: "#111827",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
-              }}
-            >
-              {shopName}
-            </div>
-            <div style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
-              Sales Report · {period} · {periodLabel}
-            </div>
-            <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-              Generated {fmtDate(today)}
-            </div>
-          </div>
-          <button
-            type="button"
-            className="no-print"
-            onClick={onClose}
-            aria-label="Close sales report"
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#9CA3AF",
-              padding: 4,
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
         {/* Controls — not printed */}
         <div
           className="no-print"
@@ -289,8 +171,7 @@ export default function SalesReportModal({
             flexWrap: "wrap",
             gap: 10,
             alignItems: "flex-end",
-            marginBottom: 18,
-            paddingBottom: 18,
+            padding: 20,
             borderBottom: "1px solid #F3F4F6",
           }}
         >
@@ -309,10 +190,7 @@ export default function SalesReportModal({
                     padding: "7px 12px",
                     borderRadius: 7,
                     cursor: "pointer",
-                    border:
-                      period === p
-                        ? `1px solid ${INDIGO}`
-                        : "1px solid #E5E7EB",
+                    border: period === p ? `1px solid ${INDIGO}` : "1px solid #E5E7EB",
                     background: period === p ? "#EEF0FF" : "#fff",
                     color: period === p ? INDIGO : "#6B7280",
                   }}
@@ -324,223 +202,144 @@ export default function SalesReportModal({
           </div>
           <div style={{ flex: 1, minWidth: 150 }}>
             <label style={label}>
-              {period === "Year"
-                ? "Year"
-                : period === "Month"
-                  ? "Month"
-                  : "Date"}
+              {period === "Year" ? "Year" : period === "Month" ? "Month" : "Date"}
             </label>
             {period === "Year" ? (
-              <input
-                type="number"
-                value={anchorYear}
-                onChange={(e) => setAnchorYear(e.target.value)}
-                style={field}
-              />
+              <input type="number" value={anchorYear} onChange={(e) => setAnchorYear(e.target.value)} style={field} />
             ) : period === "Month" ? (
-              <input
-                type="month"
-                value={anchorMonth}
-                onChange={(e) => setAnchorMonth(e.target.value)}
-                style={field}
-              />
+              <input type="month" value={anchorMonth} onChange={(e) => setAnchorMonth(e.target.value)} style={field} />
             ) : (
-              <input
-                type="date"
-                value={anchorDay}
-                onChange={(e) => setAnchorDay(e.target.value)}
-                style={field}
-              />
+              <input type="date" value={anchorDay} onChange={(e) => setAnchorDay(e.target.value)} style={field} />
             )}
           </div>
         </div>
 
-        {/* Summary figures — printed */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-            gap: 10,
-            marginBottom: 18,
-          }}
-        >
-          {[
-            { k: "Total Sales", v: `₱${totalSales.toLocaleString()}` },
-            { k: "Completed Orders", v: String(orderCount) },
-            { k: "Items Sold", v: String(itemsSold) },
-          ].map((s) => (
+        {/* Receipt body */}
+        <div style={{ padding: "22px 24px" }}>
+          {/* Receipt header */}
+          <div style={{ textAlign: "center", marginBottom: 4 }}>
             <div
-              key={s.k}
-              style={{ background: CREAM, borderRadius: 8, padding: "12px 14px" }}
+              style={{
+                fontSize: 17,
+                fontWeight: 800,
+                color: "#111827",
+                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                letterSpacing: 0.5,
+              }}
             >
-              <div style={{ fontSize: 11, color: "#6B7280" }}>{s.k}</div>
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 800,
-                  color: "#111827",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
-                  marginTop: 3,
-                }}
-              >
-                {s.v}
-              </div>
+              {shopName}
             </div>
-          ))}
-        </div>
+            <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>Sales Report</div>
+            <div style={{ fontSize: 12, color: "#374151", fontWeight: 600, marginTop: 2 }}>
+              {period} · {periodLabel}
+            </div>
+            <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+              Generated {fmtDate(today)}
+            </div>
+          </div>
 
-        {/* Breakdown by product — printed */}
-        <div style={{ marginBottom: 18 }}>
+          <div style={{ borderTop: dashed, margin: "14px 0" }} />
+
+          {/* Column header */}
           <div
             style={{
-              fontSize: 12,
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 10,
               fontWeight: 700,
-              color: "#374151",
+              color: "#9CA3AF",
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
               marginBottom: 8,
             }}
           >
-            Sales by Product
+            <span>Buyer</span>
+            <span>Purchase</span>
           </div>
-          {byProduct.length === 0 ? (
+
+          {/* Order rows (Buyer | Purchase) */}
+          {loading ? (
+            <div style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", padding: "18px 0" }}>
+              Loading…
+            </div>
+          ) : orders.length === 0 ? (
             <div
               style={{
                 fontSize: 12,
                 color: "#9CA3AF",
-                padding: "14px 0",
                 textAlign: "center",
+                padding: "18px 0",
+                fontStyle: "italic",
               }}
             >
-              No sales in this period.
+              No orders in this period.
             </div>
           ) : (
-            <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #E5E7EB" }}>
-                  <th style={{ textAlign: "left", padding: "6px 4px", color: "#9CA3AF", fontWeight: 600 }}>
-                    Product
-                  </th>
-                  <th style={{ textAlign: "right", padding: "6px 4px", color: "#9CA3AF", fontWeight: 600 }}>
-                    Qty
-                  </th>
-                  <th style={{ textAlign: "right", padding: "6px 4px", color: "#9CA3AF", fontWeight: 600 }}>
-                    Sales
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {byProduct.map(([name, agg]) => (
-                  <tr key={name} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                    <td style={{ padding: "7px 4px", color: "#374151" }}>{name}</td>
-                    <td style={{ padding: "7px 4px", textAlign: "right", color: "#6B7280" }}>
-                      {agg.qty}
-                    </td>
-                    <td
-                      style={{
-                        padding: "7px 4px",
-                        textAlign: "right",
-                        fontWeight: 700,
-                        color: "#111827",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
-                      }}
-                    >
-                      ₱{agg.amount.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {orders.map((o) => (
+                <div
+                  key={o.id}
+                  style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}
+                >
+                  <span style={{ color: "#111827", fontWeight: 600 }}>{o.buyer}</span>
+                  <span style={{ color: "#374151", textAlign: "right" }}>
+                    {o.purchase}
+                    {o.qty > 1 ? ` ×${o.qty}` : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
-        </div>
 
-        {/* Profit estimate (reuses the #2 financial-summary logic) — printed */}
-        <div style={{ marginBottom: 14 }}>
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#374151",
-              marginBottom: 10,
-            }}
-          >
-            Profit Estimate
-          </div>
-          <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-            <div style={{ flex: 1 }}>
-              <label style={label}>Total Expenses (₱)</label>
-              <input
-                type="number"
-                value={isSupabaseConfigured ? String(expenseAmount) : expenses}
-                placeholder="0"
-                onChange={(e) => setExpenses(e.target.value)}
-                readOnly={isSupabaseConfigured}
-                style={field}
-              />
+          <div style={{ borderTop: dashed, margin: "14px 0" }} />
+
+          {/* Revenue / expenses breakdown */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 12, color: "#6B7280" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Revenue ({orders.length} order{orders.length === 1 ? "" : "s"})</span>
+              <span style={{ color: "#374151", fontWeight: 600 }}>₱{revenue.toLocaleString()}</span>
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={label}>Estimated Tax (₱)</label>
-              <input
-                type="number"
-                value={tax}
-                placeholder="0"
-                onChange={(e) => setTax(e.target.value)}
-                style={field}
-              />
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span>Less: Recorded Expenses</span>
+              <span style={{ color: "#374151", fontWeight: 600 }}>−₱{expenses.toLocaleString()}</span>
             </div>
           </div>
-          {/* Printed read-out of the entered figures. */}
-          <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>
-            Expenses: ₱{expenseAmount.toLocaleString()} · Tax: ₱
-            {(Number(tax) || 0).toLocaleString()}
-          </div>
+
+          <div style={{ borderTop: "2px solid #111827", margin: "12px 0 10px" }} />
+
+          {/* KITA total */}
           <div
             style={{
-              background: profit >= 0 ? "#D4F5EA" : "#FEE2E2",
-              borderRadius: 8,
-              padding: "12px 14px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              background: kita >= 0 ? "#D4F5EA" : "#FEE2E2",
+              borderRadius: 8,
+              padding: "12px 14px",
             }}
           >
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: profit >= 0 ? "#065F46" : "#991B1B",
-              }}
-            >
-              Estimated Profit
+            <span style={{ fontSize: 14, fontWeight: 800, color: kita >= 0 ? "#065F46" : "#991B1B" }}>
+              KITA
             </span>
             <span
               style={{
-                fontSize: 16,
+                fontSize: 20,
                 fontWeight: 800,
-                color: profit >= 0 ? "#065F46" : "#991B1B",
+                color: kita >= 0 ? "#065F46" : "#991B1B",
                 fontFamily: "'Plus Jakarta Sans',sans-serif",
               }}
             >
-              ₱{profit.toLocaleString()}
+              ₱{kita.toLocaleString()}
             </span>
           </div>
+
+          <p style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic", textAlign: "center", margin: "12px 0 0" }}>
+            Net earnings = revenue in period − expenses recorded in period.
+          </p>
         </div>
 
-        {/* Disclaimer — printed */}
-        <p
-          style={{
-            fontSize: 11,
-            color: "#9CA3AF",
-            fontStyle: "italic",
-            lineHeight: 1.5,
-            margin: "0 0 4px",
-          }}
-        >
-          This is a prediction/estimate based on current claims and item prices —
-          actual results may change once all items are paid, shipped, and
-          finalized.
-        </p>
-
         {/* Actions — not printed */}
-        <div className="no-print" style={{ display: "flex", gap: 10, marginTop: 16 }}>
+        <div className="no-print" style={{ display: "flex", gap: 10, padding: "0 24px 20px" }}>
           <button
             type="button"
             onClick={onClose}
@@ -577,10 +376,30 @@ export default function SalesReportModal({
               cursor: "pointer",
             }}
           >
-            <Printer size={16} />
-            Print Report
+            <Printer size={16} aria-hidden="true" />
+            Print
           </button>
         </div>
+
+        {/* Close (X) top-right for parity — not printed */}
+        <button
+          type="button"
+          className="no-print"
+          onClick={onClose}
+          aria-label="Close sales report"
+          style={{
+            position: "absolute",
+            top: 14,
+            right: 14,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#9CA3AF",
+            padding: 4,
+          }}
+        >
+          <X size={18} aria-hidden="true" />
+        </button>
       </div>
     </div>
   )

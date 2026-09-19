@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react"
-import { BarChart3, Lock, Unlock, Search, FileText, ArrowRight, Star, Wallet } from "lucide-react"
+import { BarChart3, Lock, Unlock, Search, FileText, ArrowRight, Star } from "lucide-react"
 import type { ClaimRow, BatchType, SharedState, EntityId } from "@/types"
 import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
 import { navIntent } from "@/state/navIntent"
 import { Modal, Card, SH, PrimaryBtn, SecondaryBtn, Avatar, CategoryIcon, Toggle } from "@/components/shared"
 import FinancialSummaryModal from "./FinancialSummaryModal"
-import BatchExpensesModal from "./BatchExpensesModal"
 import BuyerRequestFormModal from "./BuyerRequestFormModal"
 import ItemClaimModal from "./ItemClaimModal"
 import SellerProfileModal from "./SellerProfileModal"
@@ -50,7 +49,6 @@ export default function Batches({
     key: string
   } | null>(null)
   const [financialBatch, setFinancialBatch] = useState<BatchType | null>(null)
-  const [expenseBatch, setExpenseBatch] = useState<BatchType | null>(null)
   const [profileClaimTarget, setProfileClaimTarget] = useState<{
     batch: BatchType
     product: BatchType["products"][0]
@@ -664,18 +662,6 @@ export default function Batches({
                                   <BarChart3 size={15} aria-hidden="true" />
                                 </SecondaryBtn>
                               )}
-                              {role === "Seller" && (
-                                <SecondaryBtn
-                                  size="sm"
-                                  ariaLabel="Track batch expenses"
-                                  onClick={(event) => {
-                                    event.stopPropagation()
-                                    setExpenseBatch(b)
-                                  }}
-                                >
-                                  <Wallet size={15} aria-hidden="true" />
-                                </SecondaryBtn>
-                              )}
                             </div>
                           )}
                         </div>
@@ -1134,12 +1120,6 @@ export default function Batches({
             onClose={() => setFinancialBatch(null)}
           />
         )}
-        {expenseBatch && (
-          <BatchExpensesModal
-            batch={expenseBatch}
-            onClose={() => setExpenseBatch(null)}
-          />
-        )}
         {confirmModals}
       </div>
     )
@@ -1183,12 +1163,6 @@ export default function Batches({
         <FinancialSummaryModal
           batch={financialBatch}
           onClose={() => setFinancialBatch(null)}
-        />
-      )}
-      {expenseBatch && (
-        <BatchExpensesModal
-          batch={expenseBatch}
-          onClose={() => setExpenseBatch(null)}
         />
       )}
       {confirmModals}

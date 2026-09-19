@@ -850,6 +850,7 @@ export default function Dashboard({
       {showSalesReport && (
         <SalesReportModal
           batches={batches}
+          fulfillment={fulfillment}
           shopName={user?.name || "My Shop"}
           onClose={() => setShowSalesReport(false)}
         />

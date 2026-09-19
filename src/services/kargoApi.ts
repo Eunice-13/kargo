@@ -715,6 +715,110 @@ export async function getFinancialSummary(from: Date, to: Date, batchId?: string
   ) as FinancialSummary
 }
 
+// Per-product realized sales for the signed-in seller within a date range.
+// Realized = payment_confirmed / preparing / completed, matching the gross-sales
+// definition in get_financial_summary. Used by the Sales Report breakdown.
+export type ProductSales = { product: string; qty: number; amount: number }
+export async function getSalesByProduct(
+  from: Date,
+  to: Date,
+): Promise<ProductSales[]> {
+  const client = requireSupabase()
+  const { data: auth } = await client.auth.getUser()
+  if (!auth.user) throw new Error("Authentication required")
+  const { data, error } = await client
+    .from("orders")
+    .select("quantity,total_amount,payment_confirmed_at,status,batch_products(name)")
+    .eq("seller_id", auth.user.id)
+    .in("status", ["payment_confirmed", "preparing", "completed"])
+    .gte("payment_confirmed_at", from.toISOString())
+    .lt("payment_confirmed_at", to.toISOString())
+  if (error) throw error
+  const map = new Map<string, ProductSales>()
+  for (const row of data ?? []) {
+    const name =
+      (row.batch_products as unknown as { name: string } | null)?.name ?? "Unknown"
+    const cur = map.get(name) ?? { product: name, qty: 0, amount: 0 }
+    cur.qty += Number(row.quantity)
+    cur.amount += Number(row.total_amount)
+    map.set(name, cur)
+  }
+  return [...map.values()].sort((a, b) => b.amount - a.amount)
+}
+
+// Orders (buyer + what they bought + amount) realized in a date range, for the
+// signed-in seller's Sales Report period table.
+export type PeriodOrder = {
+  id: string
+  buyer: string
+  purchase: string
+  qty: number
+  amount: number
+}
+export async function getPeriodOrders(from: Date, to: Date): Promise<PeriodOrder[]> {
+  const client = requireSupabase()
+  const { data: auth } = await client.auth.getUser()
+  if (!auth.user) throw new Error("Authentication required")
+  const { data, error } = await client
+    .from("orders")
+    .select("id,buyer_id,quantity,total_amount,payment_confirmed_at,batch_products(name)")
+    .eq("seller_id", auth.user.id)
+    .in("status", ["payment_confirmed", "preparing", "completed"])
+    .gte("payment_confirmed_at", from.toISOString())
+    .lt("payment_confirmed_at", to.toISOString())
+    .order("payment_confirmed_at", { ascending: true })
+  if (error) throw error
+  const rows = data ?? []
+  const buyerIds = [...new Set(rows.map((r) => r.buyer_id as string))]
+  const names = new Map<string, string>()
+  if (buyerIds.length) {
+    const { data: profiles } = await client
+      .from("public_profiles")
+      .select("id,display_name")
+      .in("id", buyerIds)
+    for (const p of profiles ?? []) names.set(p.id, p.display_name)
+  }
+  return rows.map((r) => ({
+    id: r.id as string,
+    buyer: names.get(r.buyer_id as string) ?? "Buyer",
+    purchase: (r.batch_products as unknown as { name: string } | null)?.name ?? "Item",
+    qty: Number(r.quantity),
+    amount: Number(r.total_amount),
+  }))
+}
+
+// Recorded batch expenses attributed to a date range, for period kita.
+// Attribution rule (deterministic, no double-count across periods):
+//   - itemized line items with a `date` → counted in the period of that date
+//   - single-total, or itemized items without a date → attributed to the batch
+//     and counted in the period containing the batch's trip end (ends_on)
+export async function getRecordedExpensesForPeriod(from: Date, to: Date): Promise<number> {
+  const client = requireSupabase()
+  const { data: auth } = await client.auth.getUser()
+  if (!auth.user) throw new Error("Authentication required")
+  const { data, error } = await client
+    .from("batch_expenses")
+    .select("mode,total_amount,items,batches!inner(seller_id,ends_on)")
+    .eq("batches.seller_id", auth.user.id)
+  if (error) throw error
+  const inRange = (d: Date) => d.getTime() >= from.getTime() && d.getTime() < to.getTime()
+  let sum = 0
+  for (const row of data ?? []) {
+    const batch = row.batches as unknown as { ends_on: string }
+    const endsOn = new Date(`${batch.ends_on}T00:00:00`)
+    if (row.mode === "itemized") {
+      for (const item of (row.items as ExpenseItem[]) ?? []) {
+        const amount = Number(item.amount) || 0
+        const when = item.date ? new Date(`${item.date}T00:00:00`) : endsOn
+        if (inRange(when)) sum += amount
+      }
+    } else if (inRange(endsOn)) {
+      sum += Number(row.total_amount) || 0
+    }
+  }
+  return sum
+}
+
 // ─── Per-batch expenses (seller bookkeeping) ─────────────────────────────────
 export async function loadBatchExpenses(batchDbId: string): Promise<BatchExpenses | null> {
   const { data, error } = await requireSupabase()
@@ -786,6 +890,9 @@ export const kargoApi = {
   loadSellerRequests,
   markBuyerRequestReplied,
   getFinancialSummary,
+  getSalesByProduct,
+  getPeriodOrders,
+  getRecordedExpensesForPeriod,
   loadBatchExpenses,
   saveBatchExpenses,
 }
