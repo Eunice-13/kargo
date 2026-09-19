@@ -305,3 +305,30 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
   outline: 3px solid color-mix(in srgb, var(--kargo-focus) 45%, transparent);
   outline-offset: 2px;
 }
+
+/* ─── Printable Sales Report (#23) ─────────────────────────────────────────── */
+/* When the seller prints the sales report, the app adds `printing-report` to
+   <body>. Everything except the report container is hidden so the printout is a
+   clean, single-purpose sheet. `.no-print` hides interactive chrome (buttons,
+   the period selector) inside the report itself. */
+.sales-report-sheet { display: none; }
+
+@media print {
+  body.printing-report * { visibility: hidden; }
+  body.printing-report .sales-report-sheet,
+  body.printing-report .sales-report-sheet * { visibility: visible; }
+  body.printing-report .sales-report-sheet {
+    display: block;
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 24px 28px;
+    background: #fff;
+    color: #111827;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body.printing-report .no-print { display: none !important; }
+  @page { margin: 16mm; }
+}

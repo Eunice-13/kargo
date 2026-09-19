@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X } from "lucide-react"
+import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X, FileText } from "lucide-react"
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
 import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
 import {
@@ -21,6 +21,7 @@ import {
   FulfillmentLiveRegion,
   FulfillmentDetails,
 } from "@/features/fulfillment"
+import SalesReportModal from "./SalesReportModal"
 
 export default function Dashboard({
   batches,
@@ -35,10 +36,12 @@ export default function Dashboard({
   orders,
   fulfillment,
   setFulfillment,
+  user,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
   const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
+  const [showSalesReport, setShowSalesReport] = useState(false)
   const board = useFulfillmentBoard(setFulfillment)
 
   // Close the expanded board with Escape.
@@ -492,10 +495,28 @@ export default function Dashboard({
           <SH
             title="Fulfillment Board"
             action={
-              <div className="flex items-center gap-3">
-                <span style={{ fontSize: 12, color: "#9CA3AF" }}>
-                  Track all orders across fulfillment stages
-                </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSalesReport(true)}
+                  aria-label="Open sales report"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#374151",
+                    background: "#fff",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 7,
+                    padding: "5px 10px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <FileText size={14} />
+                  Sales Report
+                </button>
                 <button
                   type="button"
                   onClick={() => setBoardExpanded(true)}
@@ -815,6 +836,13 @@ export default function Dashboard({
         <BuyerProfileModal
           buyer={buyerProfile}
           onClose={() => setBuyerProfile(null)}
+        />
+      )}
+      {showSalesReport && (
+        <SalesReportModal
+          batches={batches}
+          shopName={user?.name || "My Shop"}
+          onClose={() => setShowSalesReport(false)}
         />
       )}
     </div>
