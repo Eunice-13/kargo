@@ -1,3 +1,6 @@
+import type React from "react"
+import type { KanbanCol } from "@/constants/fulfillment"
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type AppStage = "login" | "signup" | "app"
 export type UserInfo = { name: string; email: string; role: Role; bio?: string }
@@ -55,4 +58,62 @@ export type ReportRow = {
   date: string
   status: ReportStatus
   description?: string
+}
+
+// ─── Batch data models ────────────────────────────────────────────────────────
+export interface BatchStoredProduct {
+  name: string
+  price: number
+  qty: number
+  claimed: number
+  waitlist: number
+  locked: boolean
+}
+export interface BatchItem {
+  id: number
+  live: boolean
+  locked: boolean
+  title: string
+  seller: string
+  rating: number
+  trips: string
+  items: number
+  claimed: number
+  category: string
+  reserveHours: number
+  notes?: string
+  products: BatchStoredProduct[]
+}
+export type BatchType = BatchItem
+
+// ─── Fulfillment data model ───────────────────────────────────────────────────
+export type FulfillmentOrder = {
+  id: string
+  col: KanbanCol
+  buyer: string
+  product: string
+  qty: number
+  amount: number
+}
+
+// ─── Shared types for cross-tab props ─────────────────────────────────────────
+export type SharedState = {
+  claims: ClaimRow[]
+  setClaims: React.Dispatch<React.SetStateAction<ClaimRow[]>>
+  toPay: ToPayRow[]
+  setToPay: React.Dispatch<React.SetStateAction<ToPayRow[]>>
+  payHistory: PayHistRow[]
+  setPayHistory: React.Dispatch<React.SetStateAction<PayHistRow[]>>
+  orders: OrderRow[]
+  setOrders: React.Dispatch<React.SetStateAction<OrderRow[]>>
+  reports: ReportRow[]
+  setReports: React.Dispatch<React.SetStateAction<ReportRow[]>>
+  batches: BatchType[]
+  setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
+  fulfillment: FulfillmentOrder[]
+  setFulfillment: React.Dispatch<React.SetStateAction<FulfillmentOrder[]>>
+  user: UserInfo
+  setUser: React.Dispatch<React.SetStateAction<UserInfo>>
+  setTab: (t: Tab) => void
+  role: Role
 }
