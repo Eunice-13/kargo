@@ -11,6 +11,7 @@ export default function FulfillmentDetails({
   onMove: (order: FulfillmentOrder, col: KanbanCol) => void
 }) {
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [confirmComplete, setConfirmComplete] = useState(false)
   const selectId = `fulfillment-status-${order.id}`
   return (
     <div
@@ -36,6 +37,7 @@ export default function FulfillmentDetails({
         onChange={(e) => {
           const next = e.target.value as KanbanCol
           if (next === "Cancelled") setConfirmCancel(true)
+          else if (next === "Completed") setConfirmComplete(true)
           else onMove(order, next)
         }}
         style={{
