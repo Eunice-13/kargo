@@ -3,6 +3,18 @@ import { UserRound, Link2, Bell, CreditCard, Lock } from "lucide-react"
 import type { SettingsSection, SharedState } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card } from "@/components/shared"
+import SocialConnectModal from "./SocialConnectModal"
+import ProfileSection from "./ProfileSection"
+import LinkedAccountsSection from "./LinkedAccountsSection"
+import NotificationsSection from "./NotificationsSection"
+import PaymentMethodsSection from "./PaymentMethodsSection"
+import SecuritySection from "./SecuritySection"
+import AddPaymentMethodModal from "./AddPaymentMethodModal"
+import EditPaymentMethodModal from "./EditPaymentMethodModal"
+import VerifyPaymentMethodModal from "./VerifyPaymentMethodModal"
+import RemovePaymentMethodModal from "./RemovePaymentMethodModal"
+import TwoFAModal from "./TwoFAModal"
+import type { PayMethod } from "./types"
 
 const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
   Profile: UserRound,
@@ -11,17 +23,6 @@ const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
   "Payment Methods": CreditCard,
   Security: Lock,
 }
-import SocialConnectModal from "./SocialConnectModal"
-import ProfileSection from "./ProfileSection"
-import LinkedAccountsSection from "./LinkedAccountsSection"
-import NotificationsSection from "./NotificationsSection"
-import PaymentMethodsSection from "./PaymentMethodsSection"
-import SecuritySection from "./SecuritySection"
-import AddPaymentMethodModal from "./AddPaymentMethodModal"
-import VerifyPaymentMethodModal from "./VerifyPaymentMethodModal"
-import RemovePaymentMethodModal from "./RemovePaymentMethodModal"
-import TwoFAModal from "./TwoFAModal"
-import type { PayMethod } from "./types"
 
 export default function Settings({ user, setUser, role }: SharedState) {
   const [section, setSection] = useState<SettingsSection>("Profile")
@@ -91,10 +92,14 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [showAddPM, setShowAddPM] = useState(false)
   const [verifyTarget, setVerifyTarget] = useState<PayMethod | null>(null)
   const [removeTarget, setRemoveTarget] = useState<PayMethod | null>(null)
+  const [editTarget, setEditTarget] = useState<PayMethod | null>(null)
   const [pmType, setPmType] = useState("GCash")
   const [pmName, setPmName] = useState("")
   const [pmNum, setPmNum] = useState("")
   const [pmLoading, setPmLoading] = useState(false)
+  // Edit form fields (prefilled when a method is being edited/replaced)
+  const [editName, setEditName] = useState("")
+  const [editNum, setEditNum] = useState("")
 
   // 2FA state
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
@@ -157,8 +162,33 @@ export default function Settings({ user, setUser, role }: SharedState) {
 
   const confirmRemove = () => {
     if (!removeTarget) return
+    // Guard: never let a seller end up with zero payment methods (a batch
+    // shouldn't have no way for buyers to pay).
+    if (payMethods.length <= 1) return
     setPayMethods((p) => p.filter((m) => m.id !== removeTarget.id))
     setRemoveTarget(null)
+  }
+
+  const openEdit = (m: PayMethod) => {
+    setEditTarget(m)
+    setEditName(m.name)
+    setEditNum(m.detail)
+  }
+
+  const saveEdit = () => {
+    if (!editTarget || !editName.trim() || !editNum.trim()) return
+    setPmLoading(true)
+    setTimeout(() => {
+      setPayMethods((p) =>
+        p.map((m) =>
+          m.id === editTarget.id
+            ? { ...m, name: editName.trim(), detail: editNum.trim() }
+            : m,
+        ),
+      )
+      setPmLoading(false)
+      setEditTarget(null)
+    }, 700)
   }
 
   const submit2FA = () => {
@@ -267,6 +297,8 @@ export default function Settings({ user, setUser, role }: SharedState) {
               setShowAddPM={setShowAddPM}
               setVerifyTarget={setVerifyTarget}
               setRemoveTarget={setRemoveTarget}
+              onEdit={openEdit}
+              isLastMethod={payMethods.length <= 1}
             />
           )}
           {section === "Security" && (
@@ -305,12 +337,27 @@ export default function Settings({ user, setUser, role }: SharedState) {
         />
       )}
 
+      {/* Edit / Replace modal */}
+      {editTarget && (
+        <EditPaymentMethodModal
+          editTarget={editTarget}
+          editName={editName}
+          setEditName={setEditName}
+          editNum={editNum}
+          setEditNum={setEditNum}
+          pmLoading={pmLoading}
+          saveEdit={saveEdit}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
+
       {/* Remove confirmation */}
       {removeTarget && (
         <RemovePaymentMethodModal
           removeTarget={removeTarget}
           setRemoveTarget={setRemoveTarget}
           confirmRemove={confirmRemove}
+          isLastMethod={payMethods.length <= 1}
         />
       )}
 

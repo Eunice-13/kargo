@@ -6,6 +6,8 @@ type PaymentMethodsSectionProps = {
   setShowAddPM: (v: boolean) => void
   setVerifyTarget: (m: PayMethod | null) => void
   setRemoveTarget: (m: PayMethod | null) => void
+  onEdit: (m: PayMethod) => void
+  isLastMethod: boolean
 }
 
 export default function PaymentMethodsSection({
@@ -13,6 +15,8 @@ export default function PaymentMethodsSection({
   setShowAddPM,
   setVerifyTarget,
   setRemoveTarget,
+  onEdit,
+  isLastMethod,
 }: PaymentMethodsSectionProps) {
   return (
     <div className="pr">
@@ -82,14 +86,33 @@ export default function PaymentMethodsSection({
               </PrimaryBtn>
             )}
             <button
-              onClick={() => setRemoveTarget(m)}
+              onClick={() => onEdit(m)}
               style={{
-                color: "#EF4444",
+                color: "#374151",
                 background: "none",
                 border: "none",
                 fontSize: 11,
                 fontWeight: 600,
                 cursor: "pointer",
+              }}
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => setRemoveTarget(m)}
+              disabled={isLastMethod}
+              title={
+                isLastMethod
+                  ? "You must keep at least one payment method active"
+                  : undefined
+              }
+              style={{
+                color: isLastMethod ? "#D1D5DB" : "#EF4444",
+                background: "none",
+                border: "none",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: isLastMethod ? "not-allowed" : "pointer",
               }}
             >
               Remove
