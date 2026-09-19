@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X } from "lucide-react"
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
 import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
 import {
@@ -38,7 +38,18 @@ export default function Dashboard({
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
   const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
+  const [boardExpanded, setBoardExpanded] = useState(false)
   const board = useFulfillmentBoard(setFulfillment)
+
+  // Close the expanded board with Escape.
+  useEffect(() => {
+    if (!boardExpanded) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setBoardExpanded(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [boardExpanded])
   const pending = claims.filter((c) => c.status === "Pending")
   const pendingTotal = toPay.reduce((s, t) => s + t.amount, 0)
 
@@ -136,6 +147,139 @@ export default function Dashboard({
     setToPay([])
     setShowPayAll(false)
   }
+
+  // Kanban columns for the seller Fulfillment Board. Rendered both inside the
+  // embedded dashboard card and inside the full-screen expanded overlay; the
+  // `expanded` flag simply gives each column more room.
+  const renderBoardColumns = (expanded: boolean) =>
+    KANBAN_COLS.map((col) => {
+      const colColors: Record<string, string> = {
+        Claimed: "#EEF0FF",
+        "Pending Payment": "#FFF7ED",
+        "Payment Confirmed": CYAN_L,
+        Preparing: "#F0FDF4",
+        Completed: "#D4F5EA",
+        Cancelled: "#FEE2E2",
+      }
+      const colOrders = fulfillment.filter((o) => o.col === col)
+      return (
+        <div
+          key={col}
+          style={{
+            minWidth: expanded ? 260 : 180,
+            width: expanded ? 260 : undefined,
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              background: colColors[col] || CREAM,
+              borderRadius: "8px 8px 0 0",
+              padding: "8px 12px",
+              marginBottom: 8,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#374151",
+              }}
+            >
+              {col}
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#6B7280",
+                background: "rgba(255,255,255,0.6)",
+                borderRadius: 999,
+                padding: "1px 7px",
+              }}
+            >
+              {colOrders.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {colOrders.map((o) => {
+              const isExpanded = board.expandedId === o.id
+              return (
+                <div
+                  key={o.id}
+                  style={{
+                    background: "#fff",
+                    borderRadius: 8,
+                    border: "1px solid #E5E7EB",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <div
+                    onClick={() => board.toggle(o.id)}
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={isExpanded}
+                    aria-label={`${isExpanded ? "Collapse" : "Expand"} order for ${o.buyer} — ${o.product}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        board.toggle(o.id)
+                      }
+                    }}
+                    style={{ padding: "9px 10px", cursor: "pointer" }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Avatar name={o.buyer} size={18} />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color: "#374151",
+                        }}
+                      >
+                        {o.buyer}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#6B7280" }}>
+                      {o.product}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: INDIGO,
+                        marginTop: 4,
+                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      }}
+                    >
+                      ₱{o.amount.toLocaleString()}
+                    </div>
+                  </div>
+                  {isExpanded && (
+                    <FulfillmentDetails order={o} onMove={board.move} />
+                  )}
+                </div>
+              )
+            })}
+            {colOrders.length === 0 && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: "#9CA3AF",
+                  textAlign: "center",
+                  padding: "16px 0",
+                }}
+              >
+                —
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    })
 
   return (
     <div className="p-6 space-y-6">
@@ -348,9 +492,32 @@ export default function Dashboard({
           <SH
             title="Fulfillment Board"
             action={
-              <span style={{ fontSize: 12, color: "#9CA3AF" }}>
-                Track all orders across fulfillment stages
-              </span>
+              <div className="flex items-center gap-3">
+                <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+                  Track all orders across fulfillment stages
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setBoardExpanded(true)}
+                  aria-label="Expand fulfillment board to full screen"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: INDIGO,
+                    background: "#EEF0FF",
+                    border: "1px solid #E0E3FF",
+                    borderRadius: 7,
+                    padding: "5px 10px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Maximize2 size={14} />
+                  Expand
+                </button>
+              </div>
             }
           />
           <div
@@ -361,130 +528,93 @@ export default function Dashboard({
               paddingBottom: 8,
             }}
           >
-            {KANBAN_COLS.map((col) => {
-              const colColors: Record<string, string> = {
-                Claimed: "#EEF0FF",
-                "Pending Payment": "#FFF7ED",
-                "Payment Confirmed": CYAN_L,
-                Preparing: "#F0FDF4",
-                Completed: "#D4F5EA",
-                Cancelled: "#FEE2E2",
-              }
-              const colOrders = fulfillment.filter((o) => o.col === col)
-              return (
-                <div key={col} style={{ minWidth: 180, flexShrink: 0 }}>
-                  <div
-                    style={{
-                      background: colColors[col] || CREAM,
-                      borderRadius: "8px 8px 0 0",
-                      padding: "8px 12px",
-                      marginBottom: 8,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: "#374151",
-                      }}
-                    >
-                      {col}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: "#6B7280",
-                        background: "rgba(255,255,255,0.6)",
-                        borderRadius: 999,
-                        padding: "1px 7px",
-                      }}
-                    >
-                      {colOrders.length}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {colOrders.map((o) => {
-                      const isExpanded = board.expandedId === o.id
-                      return (
-                        <div
-                          key={o.id}
-                          style={{
-                            background: "#fff",
-                            borderRadius: 8,
-                            border: "1px solid #E5E7EB",
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                          }}
-                        >
-                          <div
-                            onClick={() => board.toggle(o.id)}
-                            role="button"
-                            tabIndex={0}
-                            aria-expanded={isExpanded}
-                            aria-label={`${isExpanded ? "Collapse" : "Expand"} order for ${o.buyer} — ${o.product}`}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault()
-                                board.toggle(o.id)
-                              }
-                            }}
-                            style={{ padding: "9px 10px", cursor: "pointer" }}
-                          >
-                            <div className="flex items-center gap-2 mb-1">
-                              <Avatar name={o.buyer} size={18} />
-                              <span
-                                style={{
-                                  fontSize: 11,
-                                  fontWeight: 600,
-                                  color: "#374151",
-                                }}
-                              >
-                                {o.buyer}
-                              </span>
-                            </div>
-                            <div style={{ fontSize: 11, color: "#6B7280" }}>
-                              {o.product}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: 12,
-                                fontWeight: 700,
-                                color: INDIGO,
-                                marginTop: 4,
-                                fontFamily: "'Plus Jakarta Sans',sans-serif",
-                              }}
-                            >
-                              ₱{o.amount.toLocaleString()}
-                            </div>
-                          </div>
-                          {isExpanded && (
-                            <FulfillmentDetails order={o} onMove={board.move} />
-                          )}
-                        </div>
-                      )
-                    })}
-                    {colOrders.length === 0 && (
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "#9CA3AF",
-                          textAlign: "center",
-                          padding: "16px 0",
-                        }}
-                      >
-                        —
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+            {renderBoardColumns(false)}
           </div>
           <FulfillmentLiveRegion text={board.announcement} />
         </Card>
+      )}
+      {boardExpanded && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fulfillment Board — expanded view"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 60,
+            background: "#F5F6FA",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "14px 20px",
+              background: "#fff",
+              borderBottom: "1px solid #E5E7EB",
+              flexShrink: 0,
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setBoardExpanded(false)}
+                aria-label="Back to dashboard"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#374151",
+                  background: "#F3F4F6",
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 8,
+                  padding: "7px 12px",
+                  cursor: "pointer",
+                }}
+              >
+                <X size={16} />
+                Back to Dashboard
+              </button>
+              <h2
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: "#111827",
+                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                }}
+              >
+                Fulfillment Board
+              </h2>
+            </div>
+            <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+              Track all orders across fulfillment stages
+            </span>
+          </div>
+          <div
+            style={{
+              flex: 1,
+              overflow: "auto",
+              padding: 20,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: 20,
+                alignItems: "flex-start",
+                minHeight: "100%",
+              }}
+            >
+              {renderBoardColumns(true)}
+            </div>
+          </div>
+          <FulfillmentLiveRegion text={board.announcement} />
+        </div>
       )}
       {role !== "Seller" && (
         <div
