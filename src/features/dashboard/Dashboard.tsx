@@ -236,15 +236,24 @@ export default function Dashboard({
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Avatar name={o.buyer} size={18} />
-                      <span
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setBuyerProfile(o.buyer)
+                        }}
                         style={{
                           fontSize: 11,
                           fontWeight: 600,
-                          color: "#374151",
+                          color: INDIGO,
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          cursor: "pointer",
                         }}
                       >
                         {o.buyer}
-                      </span>
+                      </button>
                     </div>
                     <div style={{ fontSize: 11, color: "#6B7280" }}>
                       {o.product}
