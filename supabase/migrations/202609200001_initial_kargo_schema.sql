@@ -493,11 +493,11 @@ begin
   if p_decision = 'verified' then
     select coalesce(sum(amount), 0) into total_paid from public.payments where order_id = target.id and status = 'verified';
     update public.orders set
-      status = case when total_paid >= target.total_amount then 'payment_confirmed' else 'insufficient_payment' end,
+      status = case when total_paid >= target.total_amount then 'payment_confirmed'::public.order_status else 'insufficient_payment'::public.order_status end,
       payment_confirmed_at = case when total_paid >= target.total_amount then coalesce(payment_confirmed_at, now()) else null end
     where id = target.id returning * into target;
   else
-    update public.orders set status = 'payment_pending' where id = target.id returning * into target;
+    update public.orders set status = 'payment_pending'::public.order_status where id = target.id returning * into target;
   end if;
   insert into public.notifications (recipient_id, category, message, target_path, context)
   values (target.buyer_id, case when p_decision = 'verified' then 'check' else 'clock' end,
@@ -539,7 +539,7 @@ $$;
 create function public.cancel_order(p_order_id uuid)
 returns void language plpgsql security definer set search_path = '' as $$
 begin
-  update public.orders set status = 'cancelled'
+  update public.orders set status = 'cancelled'::public.order_status
   where id = p_order_id and buyer_id = auth.uid()
     and status in ('payment_pending', 'payment_submitted', 'insufficient_payment') and public.is_active(auth.uid());
   if not found then raise exception 'Order cannot be cancelled'; end if;
@@ -769,6 +769,16 @@ revoke all on function public.create_order_review(uuid, smallint, text) from pub
 grant execute on function public.create_order_review(uuid, smallint, text) to authenticated;
 revoke all on function public.create_buyer_request(uuid, text, integer, text) from public;
 grant execute on function public.create_buyer_request(uuid, text, integer, text) to authenticated;
+
+-- service_role is the trusted, server-only role (bypasses RLS). Supabase grants
+-- these by default; we make them explicit so administrative/server tooling
+-- (Edge Functions, one-off seed/admin scripts) can read and write. This never
+-- reaches the browser — anon/authenticated grants above are unchanged.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+grant execute on all functions in schema public to service_role;
+alter default privileges in schema public grant select, insert, update, delete on tables to service_role;
 
 insert into storage.buckets (id, name, public)
 values
