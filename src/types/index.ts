@@ -112,6 +112,24 @@ export interface BatchItem {
 }
 export type BatchType = BatchItem
 
+// ─── Per-batch expenses (seller-only bookkeeping) ─────────────────────────────
+// Private to the seller; never shown to buyers. `mode` picks how the total is
+// entered: a single manual number, or an itemized list that auto-sums.
+export type ExpenseMode = "single" | "itemized"
+export type ExpenseItem = {
+  id: string
+  label: string
+  amount: number
+  category?: string
+  date?: string
+}
+export type BatchExpenses = {
+  batchDbId?: string
+  mode: ExpenseMode
+  total: number
+  items: ExpenseItem[]
+}
+
 // ─── Fulfillment data model ───────────────────────────────────────────────────
 export type FulfillmentOrder = {
   id: string
