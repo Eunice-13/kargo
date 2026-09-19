@@ -132,7 +132,7 @@ export default function Settings({ user, setUser, role }: SharedState) {
           id: Date.now(),
           name: pmType,
           detail: pmNum.trim(),
-          icon: icons[pmType] || "💳",
+          icon: icons[pmType] || "",
           verified: false,
         },
       ])
