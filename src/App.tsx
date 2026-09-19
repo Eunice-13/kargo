@@ -8,7 +8,6 @@ import type {
   ToPayRow,
   PayHistRow,
   OrderRow,
-  ReportRow,
   BatchType,
   FulfillmentOrder,
   SharedState,
@@ -20,7 +19,6 @@ import { CLAIMS_INIT } from "@/data/claims"
 import { TOPAY_INIT } from "@/data/toPay"
 import { PAYHIST_INIT } from "@/data/payHistory"
 import { ORDERS_INIT } from "@/data/orders"
-import { REPORTS_INIT } from "@/data/reports"
 import { FULFILLMENT_INIT } from "@/features/fulfillment"
 import { Login, SignUp, Onboarding } from "@/features/auth"
 import { NewBatchModal } from "@/features/batches"
@@ -45,7 +43,6 @@ export default function App() {
   const [toPay, setToPay] = useState<ToPayRow[]>(TOPAY_INIT)
   const [payHistory, setPayHistory] = useState<PayHistRow[]>(PAYHIST_INIT)
   const [orders, setOrders] = useState<OrderRow[]>(ORDERS_INIT)
-  const [reports, setReports] = useState<ReportRow[]>(REPORTS_INIT)
   const [batches, setBatches] = useState<BatchType[]>(BATCHES_INIT)
   const [fulfillment, setFulfillment] =
     useState<FulfillmentOrder[]>(FULFILLMENT_INIT)
@@ -59,8 +56,6 @@ export default function App() {
     setPayHistory,
     orders,
     setOrders,
-    reports,
-    setReports,
     batches,
     setBatches,
     fulfillment,

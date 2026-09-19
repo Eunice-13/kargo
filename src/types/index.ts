@@ -4,10 +4,9 @@ import type { KanbanCol } from "@/constants/fulfillment"
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type AppStage = "login" | "signup" | "app"
 export type UserInfo = { name: string; email: string; role: Role; bio?: string }
-export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Reports" | "Settings"
+export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
 export type Role = "Buyer" | "Seller"
 export type ClaimStatus = "Pending" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
-export type ReportStatus = "Open" | "Under Review" | "Resolved"
 export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Payment Methods" | "Security"
 
 export type ClaimRow = {
@@ -48,16 +47,6 @@ export type OrderRow = {
   eta: string
   rated: boolean
   rating?: number
-}
-export type ReportRow = {
-  id: string
-  order: string
-  product: string
-  seller: string
-  issue: string
-  date: string
-  status: ReportStatus
-  description?: string
 }
 
 // ─── Batch data models ────────────────────────────────────────────────────────
@@ -106,8 +95,6 @@ export type SharedState = {
   setPayHistory: React.Dispatch<React.SetStateAction<PayHistRow[]>>
   orders: OrderRow[]
   setOrders: React.Dispatch<React.SetStateAction<OrderRow[]>>
-  reports: ReportRow[]
-  setReports: React.Dispatch<React.SetStateAction<ReportRow[]>>
   batches: BatchType[]
   setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
   fulfillment: FulfillmentOrder[]

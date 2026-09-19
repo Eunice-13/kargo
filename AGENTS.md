@@ -1,4 +1,4 @@
-# figma-make-app
+    # figma-make-app
 
 React + Vite + Tailwind CSS project running inside Figma Make.
 
@@ -21,7 +21,7 @@ This is the canonical project structure. The UI is organized by tab/feature — 
 - `src/state/` - Module-level mutable singletons (`navIntent` for cross-tab deep-linking)
 - `src/components/shared/` - UI used by 2+ features (atoms + cross-feature modals); `index.ts` barrel
 - `src/components/layout/` - App-shell chrome: `Header` (SearchBox/NotificationsMenu/UserMenu), `TabBar`, `TabContent`
-- `src/features/<name>/` - One folder per tab (dashboard, batches, claims, payments, orders, reports, settings, auth) plus `fulfillment` (board logic shared by dashboard + orders). Each has an `index.ts` exposing its public surface.
+- `src/features/<name>/` - One folder per tab (dashboard, batches, claims, payments, orders, settings, auth) plus `fulfillment` (board logic shared by dashboard + orders). Each has an `index.ts` exposing its public surface.
 - `src/_unused/` - Dead code kept for reference, not imported anywhere
 - `src/index.css` - Global CSS entrypoint and Tailwind CSS v4 import
 - `index.html` - Vite HTML shell containing the `#root` element and loading `src/main.tsx`
