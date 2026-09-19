@@ -16,6 +16,7 @@ import {
 import PaymentSubmitModal from "./PaymentSubmitModal"
 import TransactionDetailModal from "./TransactionDetailModal"
 import SellerPaymentVerification from "./SellerPaymentVerification"
+import AddressSection from "./AddressSection"
 
 export default function Payments({
   toPay,
@@ -177,6 +178,7 @@ export default function Payments({
           ))}
         </div>
       </div>
+      <AddressSection />
       <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 1fr" }}>
         <div>
           <SH title="To Pay" />

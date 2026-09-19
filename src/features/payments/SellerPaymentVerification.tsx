@@ -3,6 +3,7 @@ import { CreditCard, Check, Megaphone } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Card, Avatar, ProductThumb } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
+import AddressSection from "./AddressSection"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
@@ -468,6 +469,10 @@ export default function SellerPaymentVerification() {
           </table>
           </div>
         </Card>
+
+        <div style={{ marginTop: 24 }}>
+          <AddressSection />
+        </div>
 
         {/* Review submission modal */}
         {reviewTarget && (
