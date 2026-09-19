@@ -19,6 +19,10 @@ export type ClaimRow = {
   status: ClaimStatus
   hours: number
   extensionRequested?: boolean
+  // Who placed the order (seller's "Orders Received" view). Falls back to
+  // `seller` for legacy rows. `buyerFb` is their contact/Facebook link.
+  buyer?: string
+  buyerFb?: string
 }
 export type ToPayRow = {
   id: number

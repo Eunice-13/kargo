@@ -176,9 +176,9 @@ export default function MyClaims({
                 >
                   <td style={{ padding: "10px 14px" }}>
                     <div className="flex items-center gap-2">
-                      <Avatar name={c.seller} size={22} />
+                      <Avatar name={c.buyer || c.seller} size={22} />
                       <button
-                        onClick={() => setBuyerProfile(c.seller)}
+                        onClick={() => setBuyerProfile(c.buyer || c.seller)}
                         style={{
                           background: "none",
                           border: "none",
@@ -189,7 +189,7 @@ export default function MyClaims({
                           padding: 0,
                         }}
                       >
-                        {c.seller}
+                        {c.buyer || c.seller}
                       </button>
                     </div>
                   </td>
@@ -256,12 +256,23 @@ export default function MyClaims({
                       <SecondaryBtn
                         size="sm"
                         onClick={() => {
-                          const fbUrl = `https://facebook.com/${c.seller.toLowerCase().replace(" ", ".")}`
-                          setFbToast(c.seller)
-                          setTimeout(() => {
-                            window.open(fbUrl, "_blank", "noopener,noreferrer")
-                            setFbToast(null)
-                          }, 1200)
+                          const buyerName = c.buyer || c.seller
+                          if (c.buyerFb) {
+                            // Real contact link on file — open it.
+                            setFbToast(buyerName)
+                            setTimeout(() => {
+                              window.open(
+                                c.buyerFb,
+                                "_blank",
+                                "noopener,noreferrer",
+                              )
+                              setFbToast(null)
+                            }, 1200)
+                          } else {
+                            // No contact link — open the buyer's profile instead
+                            // of fabricating a Facebook URL.
+                            setBuyerProfile(buyerName)
+                          }
                         }}
                       >
                         Contact Buyer

@@ -747,18 +747,6 @@ export default function SellerProfileModal({
               ))}
             </div>
           </div>
-          <button
-            style={{
-              fontSize: 11,
-              color: "#EF4444",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
-          >
-            Report this Shop
-          </button>
         </div>
       )}
       {showBIR && <BIRInfoModal onClose={() => setShowBIR(false)} />}

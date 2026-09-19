@@ -29,10 +29,13 @@ export default function Payments({
   setOrders,
   role,
   user,
+  setTab,
 }: SharedState) {
   const [dragging, setDragging] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [proofClaimId, setProofClaimId] = useState<number | "">("")
+  const [proofToast, setProofToast] = useState(false)
   const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
   const [payAll, setPayAll] = useState(false)
   const [histFilter, setHistFilter] =
@@ -85,6 +88,18 @@ export default function Payments({
     setPayAll(false)
   }
 
+  // Submit an uploaded receipt against a chosen "To Pay" item: record it as a
+  // manual bank/receipt payment (reusing the same flow as Pay Now) and reset.
+  const handleSubmitProof = () => {
+    const item = toPay.find((t) => t.id === proofClaimId)
+    if (!item) return
+    handlePay(item, "Receipt Upload")
+    setUploaded(null)
+    setProofClaimId("")
+    setProofToast(true)
+    setTimeout(() => setProofToast(false), 2400)
+  }
+
   if (role === "Seller") return <SellerPaymentVerification />
 
   return (
@@ -92,7 +107,11 @@ export default function Payments({
       <div>
         <SH
           title="Payment Methods"
-          action={<PrimaryBtn size="sm">+ Add Method</PrimaryBtn>}
+          action={
+            <PrimaryBtn size="sm" onClick={() => setTab("Settings")}>
+              + Add Method
+            </PrimaryBtn>
+          }
         />
         <div className="grid grid-cols-4 gap-4">
           {[
@@ -346,6 +365,12 @@ export default function Payments({
             {uploaded && !uploading && (
               <div className="px-4 pb-4">
                 <select
+                  value={proofClaimId}
+                  onChange={(e) =>
+                    setProofClaimId(
+                      e.target.value ? Number(e.target.value) : "",
+                    )
+                  }
                   style={{
                     width: "100%",
                     fontSize: 12,
@@ -356,9 +381,9 @@ export default function Payments({
                     outline: "none",
                   }}
                 >
-                  <option>Select claim to attach…</option>
+                  <option value="">Select claim to attach…</option>
                   {toPay.map((t) => (
-                    <option key={t.id}>
+                    <option key={t.id} value={t.id}>
                       {t.product} — ₱{t.amount.toLocaleString()}
                     </option>
                   ))}
@@ -369,9 +394,26 @@ export default function Payments({
                     display: "flex",
                     justifyContent: "center",
                   }}
+                  disabled={proofClaimId === ""}
+                  onClick={handleSubmitProof}
                 >
                   Submit Payment Proof
                 </PrimaryBtn>
+                {proofToast && (
+                  <div
+                    className="fi"
+                    style={{
+                      marginTop: 8,
+                      fontSize: 11,
+                      color: "#065F46",
+                      background: "#D4F5EA",
+                      borderRadius: 6,
+                      padding: "6px 10px",
+                    }}
+                  >
+                    Payment proof submitted — moved to Payment History.
+                  </div>
+                )}
               </div>
             )}
           </Card>

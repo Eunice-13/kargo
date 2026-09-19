@@ -1,5 +1,6 @@
 import type React from "react"
-import { CreditCard, Paperclip, Check, X, ExternalLink } from "lucide-react"
+import { useState } from "react"
+import { CreditCard, Paperclip, Check, X, ExternalLink, Image as ImageIcon } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Modal, Avatar } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
@@ -19,6 +20,7 @@ export default function ReviewSubmissionModal({
   setRejectReason: (v: string) => void
   setRejectCustom: (v: string) => void
 }) {
+  const [showReceipt, setShowReceipt] = useState(false)
   return (
     <Modal
       title="Payment Submission Details"
@@ -237,6 +239,8 @@ export default function ReviewSubmissionModal({
                 {reviewTarget.receipt}
               </span>
               <button
+                onClick={() => setShowReceipt((v) => !v)}
+                aria-expanded={showReceipt}
                 style={{
                   fontSize: 11,
                   color: "#fff",
@@ -249,10 +253,36 @@ export default function ReviewSubmissionModal({
                   fontFamily: "'Plus Jakarta Sans',sans-serif",
                 }}
               >
-                View
+                {showReceipt ? "Hide" : "View"}
               </button>
             </div>
           </div>
+          {showReceipt && (
+            <div
+              className="fi"
+              style={{
+                marginTop: 10,
+                border: "1px dashed #C7CCE5",
+                borderRadius: 8,
+                background: "#F7F8FF",
+                padding: "22px 14px",
+                textAlign: "center",
+                color: "#6B7280",
+              }}
+            >
+              <ImageIcon
+                size={30}
+                aria-hidden="true"
+                style={{ color: INDIGO, display: "inline-block" }}
+              />
+              <div style={{ fontSize: 12, marginTop: 8, color: "#374151" }}>
+                {reviewTarget.receipt}
+              </div>
+              <div style={{ fontSize: 11, marginTop: 3 }}>
+                Receipt preview — buyer-submitted proof of payment.
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Seller's own records reminder */}
