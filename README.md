@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # KARGO — Order Fulfillment Platform
 
 React 19 + Vite + Tailwind CSS v4 + TypeScript. Front-end prototype (no backend); all data lives in memory and resets on refresh.
@@ -49,3 +50,6 @@ If port 8443 is busy, set another one: `PORT=3000 npm run dev` (macOS/Linux) or 
 - Pay Now / Pay All marks claims "Paid and Reserved" immediately (no seller review); new Payment History rows have a blank Batch and use a hardcoded date (Sep 10, 2026).
 - Seller Dashboard shows leftover dev copy: "No "Pay All Pending" needed — sellers verify, not pay."
 - Accessibility: low-contrast grey/amber text, unlabeled filter dropdowns, no page-level `<h1>`.
+=======
+# kargo
+>>>>>>> 2189c18c3f2464366b2a66bd17a6b62704785f90
