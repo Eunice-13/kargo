@@ -12,14 +12,36 @@ import siteConfiguration from "./.figma/make/site.json"
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
+  // Empty prefix loads ALL env vars so we can accept both the VITE_-prefixed
+  // names and the bare SUPABASE_* names that .env.local / the Supabase CLI use.
   const env = loadEnv(mode, process.cwd(), "")
-  const supabaseUrl =
-    env.VITE_SUPABASE_URL || env.SUPABASE_URL || ""
+
+  // Client-safe values only. The publishable/anon key is designed to ship to
+  // the browser; the URL is public. Resolve from either naming convention.
+  const supabaseUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL || ""
   const supabasePublishableKey =
     env.VITE_SUPABASE_PUBLISHABLE_KEY ||
     env.VITE_SUPABASE_ANON_KEY ||
     env.SUPABASE_PUBLISHABLE_KEY ||
+    env.SUPABASE_ANON_KEY ||
     ""
+
+  // SECURITY: never inline SUPABASE_SECRET_KEY / SUPABASE_ACCESS_TOKEN / JWKS
+  // into the client bundle. Only the two client-safe values above are defined
+  // below; secret keys must stay server-side (Edge Functions), never in `define`.
+
+  // Surface config status at startup so it's obvious whether the app will run
+  // against Supabase or fall back to the in-memory demo.
+  if (mode !== "test") {
+    const ok = Boolean(supabaseUrl && supabasePublishableKey)
+    // eslint-disable-next-line no-console
+    console.log(
+      ok
+        ? "[kargo] Supabase configured — running against the live backend."
+        : "[kargo] Supabase not configured — running in in-memory demo mode. " +
+            "Set VITE_SUPABASE_URL (or SUPABASE_URL) and a publishable key in .env.local.",
+    )
+  }
 
   // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
   const emitSourcemaps = mode === "development"
