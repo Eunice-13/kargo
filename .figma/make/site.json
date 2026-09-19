@@ -1,0 +1,10 @@
+{
+  "description": "Streamline order fulfillment for Filipino Pasabuy micro-entrepreneurs with a centralized platform for managing claims, payments, and batches efficiently.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
