@@ -1,4 +1,5 @@
 import type React from "react"
+import { CreditCard, Paperclip, Check, X } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Modal, Avatar } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
@@ -10,7 +11,6 @@ export default function ReviewSubmissionModal({
   setRejectTarget,
   setRejectReason,
   setRejectCustom,
-  methodIcon,
 }: {
   reviewTarget: VerifyItem
   setReviewTarget: (v: VerifyItem | null) => void
@@ -18,7 +18,6 @@ export default function ReviewSubmissionModal({
   setRejectTarget: (v: VerifyItem | null) => void
   setRejectReason: (v: string) => void
   setRejectCustom: (v: string) => void
-  methodIcon: Record<string, string>
 }) {
   return (
     <Modal
@@ -93,10 +92,6 @@ export default function ReviewSubmissionModal({
             </span>
           </div>
           {([
-            [
-              "Payment Method",
-              `${methodIcon[reviewTarget.method] || "💳"} ${reviewTarget.method}`,
-            ],
             ["Reference ID", reviewTarget.ref],
             ["Account Name", reviewTarget.acctName],
             ["Account Number", reviewTarget.acctNum],
@@ -108,37 +103,72 @@ export default function ReviewSubmissionModal({
                 ? `₱${Number(reviewTarget.amountPaid).toLocaleString()}`
                 : "—",
             ],
-          ] as [string, string][]).map(([k, v]) => (
-            <div
-              key={k}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "10px 14px",
-                borderBottom: "1px solid #F3F4F6",
-              }}
-            >
-              <span
+          ] as [string, string][]).map(([k, v], idx) => (
+            <div key={k}>
+              {idx === 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "10px 14px",
+                    borderBottom: "1px solid #F3F4F6",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: "#9CA3AF",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Payment Method
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#111827",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
+                    }}
+                  >
+                    <CreditCard size={13} aria-hidden="true" />
+                    {reviewTarget.method}
+                  </span>
+                </div>
+              )}
+              <div
                 style={{
-                  fontSize: 12,
-                  color: "#9CA3AF",
-                  fontWeight: 500,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "10px 14px",
+                  borderBottom: "1px solid #F3F4F6",
                 }}
               >
-                {k}
-              </span>
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#111827",
-                  fontFamily:
-                    k === "Reference ID" ? "monospace" : "inherit",
-                }}
-              >
-                {v}
-              </span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "#9CA3AF",
+                    fontWeight: 500,
+                  }}
+                >
+                  {k}
+                </span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#111827",
+                    fontFamily:
+                      k === "Reference ID" ? "monospace" : "inherit",
+                  }}
+                >
+                  {v}
+                </span>
+              </div>
             </div>
           ))}
           {/* Receipt row */}
@@ -161,7 +191,8 @@ export default function ReviewSubmissionModal({
               <span
                 style={{ fontSize: 12, fontWeight: 600, color: INDIGO }}
               >
-                📎 {reviewTarget.receipt}
+                <Paperclip size={12} aria-hidden="true" style={{ display: "inline", verticalAlign: -1, marginRight: 3 }} />
+                {reviewTarget.receipt}
               </span>
               <button
                 style={{
@@ -253,7 +284,7 @@ export default function ReviewSubmissionModal({
                       borderColor: INDIGO,
                     }}
                   >
-                    ✓ Confirm Payment
+                    <Check size={13} aria-hidden="true" /> Confirm Payment
                   </button>
                   <button
                     onClick={() => {
@@ -272,7 +303,7 @@ export default function ReviewSubmissionModal({
                       borderColor: "#EF4444",
                     }}
                   >
-                    ✕ Reject
+                    <X size={13} aria-hidden="true" /> Reject
                   </button>
                 </>
               )}

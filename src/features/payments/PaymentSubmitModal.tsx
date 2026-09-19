@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import { CheckCircle2, Paperclip } from "lucide-react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 
@@ -354,7 +355,7 @@ export default function PaymentSubmitModal({
                   </div>
                 ) : uploaded ? (
                   <>
-                    <div style={{ fontSize: 24 }}>✅</div>
+                    <div style={{ color: "#0B7A59", display: "flex", justifyContent: "center" }}><CheckCircle2 size={24} aria-hidden="true" /></div>
                     <div
                       style={{
                         fontSize: 12,
@@ -372,7 +373,7 @@ export default function PaymentSubmitModal({
                   </>
                 ) : (
                   <>
-                    <div style={{ fontSize: 28 }}>📎</div>
+                    <div style={{ color: "#9CA3AF", display: "flex", justifyContent: "center" }}><Paperclip size={28} aria-hidden="true" /></div>
                     <div
                       style={{
                         fontSize: 12,

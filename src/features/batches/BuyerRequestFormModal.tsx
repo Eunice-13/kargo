@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { MailCheck } from "lucide-react"
 import type { BatchType } from "@/types"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 
@@ -19,7 +20,7 @@ export default function BuyerRequestFormModal({
     return (
       <Modal title="Request Sent" onClose={onClose} width={400}>
         <div className="space-y-4 text-center" style={{ padding: "12px 0" }}>
-          <div style={{ fontSize: 48 }}>📬</div>
+          <div style={{ color: "#0B7A59", display: "flex", justifyContent: "center" }}><MailCheck size={48} aria-hidden="true" /></div>
           <div
             style={{
               fontSize: 15,

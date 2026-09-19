@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import { CheckCircle2, Paperclip, Clock3 } from "lucide-react"
 import type { ToPayRow, PayHistRow, OrderRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import {
@@ -250,7 +251,8 @@ export default function Payments({
                   fontWeight: 600,
                 }}
               >
-                ✅ All payments cleared!
+                <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                All payments cleared!
               </div>
             )}
           </div>
@@ -304,7 +306,7 @@ export default function Payments({
               />
               {uploading ? (
                 <>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>
+                  <div style={{ color: INDIGO, marginBottom: 8, display: "flex", justifyContent: "center" }}><Clock3 size={32} aria-hidden="true" /></div>
                   <div
                     style={{ fontSize: 13, fontWeight: 600, color: INDIGO }}
                     className="lsh"
@@ -314,7 +316,7 @@ export default function Payments({
                 </>
               ) : uploaded ? (
                 <>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+                  <div style={{ color: "#0B7A59", marginBottom: 8, display: "flex", justifyContent: "center" }}><CheckCircle2 size={32} aria-hidden="true" /></div>
                   <div
                     style={{ fontSize: 13, fontWeight: 600, color: "#065F46" }}
                   >
@@ -326,7 +328,7 @@ export default function Payments({
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>📎</div>
+                  <div style={{ color: "#9CA3AF", marginBottom: 8, display: "flex", justifyContent: "center" }}><Paperclip size={32} aria-hidden="true" /></div>
                   <div
                     style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}
                   >

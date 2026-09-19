@@ -1,3 +1,4 @@
+import { Clock3, Search, CheckCircle2 } from "lucide-react"
 import type { ReportRow } from "@/types"
 import { CREAM, CYAN_L, SKY } from "@/constants/theme"
 import { Modal, PrimaryBtn } from "@/components/shared"
@@ -84,10 +85,13 @@ export default function ReportDetailModal({
               padding: "10px 14px",
               fontSize: 12,
               color: "#92400E",
+              display: "flex",
+              gap: 8,
             }}
           >
-            ⏳ This report is awaiting admin review. You'll be notified of
-            updates.
+            <Clock3 size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>This report is awaiting admin review. You'll be notified of
+            updates.</span>
           </div>
         )}
         {report.status === "Under Review" && (
@@ -99,9 +103,12 @@ export default function ReportDetailModal({
               padding: "10px 14px",
               fontSize: 12,
               color: "#0369A1",
+              display: "flex",
+              gap: 8,
             }}
           >
-            🔍 A moderator is actively reviewing this report.
+            <Search size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>A moderator is actively reviewing this report.</span>
           </div>
         )}
         {report.status === "Resolved" && (
@@ -113,9 +120,12 @@ export default function ReportDetailModal({
               padding: "10px 14px",
               fontSize: 12,
               color: "#065F46",
+              display: "flex",
+              gap: 8,
             }}
           >
-            ✅ This report has been resolved.
+            <CheckCircle2 size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>This report has been resolved.</span>
           </div>
         )}
         <PrimaryBtn

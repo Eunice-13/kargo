@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { CreditCard, Check, Megaphone } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Card, Avatar, ProductThumb } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
@@ -69,13 +70,6 @@ export default function SellerPaymentVerification() {
     "Duplicate submission",
     "Other",
   ]
-  const methodIcon: Record<string, string> = {
-    GCash: "",
-    Maya: "",
-    "Bank Transfer": "",
-    "Cash on Meetup": "",
-  }
-
     return (
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
@@ -189,7 +183,7 @@ export default function SellerPaymentVerification() {
                           gap: 4,
                         }}
                       >
-                        {methodIcon[item.method] || "💳"} {item.method}
+                        <CreditCard size={13} aria-hidden="true" /> {item.method}
                       </span>
                     </td>
                     <td
@@ -371,9 +365,12 @@ export default function SellerPaymentVerification() {
                                       borderRadius: 6,
                                       padding: "5px 12px",
                                       whiteSpace: "nowrap" as const,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 5,
                                     }}
                                   >
-                                    ✓ Notified
+                                    <Check size={12} aria-hidden="true" /> Notified
                                   </span>
                                 ) : (
                                   <button
@@ -386,9 +383,12 @@ export default function SellerPaymentVerification() {
                                       background: "#FEF3C7",
                                       color: "#92400E",
                                       borderColor: "#FCD34D",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 5,
                                     }}
                                   >
-                                    📢 Notify Buyer
+                                    <Megaphone size={12} aria-hidden="true" /> Notify Buyer
                                   </button>
                                 )}
                                 <button
@@ -478,7 +478,6 @@ export default function SellerPaymentVerification() {
             setRejectTarget={setRejectTarget}
             setRejectReason={setRejectReason}
             setRejectCustom={setRejectCustom}
-            methodIcon={methodIcon}
           />
         )}
 

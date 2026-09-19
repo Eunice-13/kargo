@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Check } from "lucide-react"
 import type { ReportRow, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import { Modal, Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb } from "@/components/shared"
@@ -264,9 +265,12 @@ export default function Reports({ reports, setReports, orders, role }: SharedSta
                       textAlign: "left",
                       cursor: "pointer",
                       transition: "all 0.15s",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5,
                     }}
                   >
-                    {issueType === type ? "✓ " : ""}
+                    {issueType === type && <Check size={13} aria-hidden="true" />}
                     {type}
                   </button>
                 ))}

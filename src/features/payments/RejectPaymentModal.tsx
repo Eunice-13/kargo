@@ -1,4 +1,5 @@
 import type React from "react"
+import { AlertTriangle } from "lucide-react"
 import { INDIGO } from "@/constants/theme"
 import { Modal, SecondaryBtn } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
@@ -168,11 +169,14 @@ export default function RejectPaymentModal({
               padding: "10px 14px",
               fontSize: 12,
               color: "#92400E",
+              display: "flex",
+              gap: 8,
             }}
           >
-            ⚠️ Selecting this won't reject the payment — instead,
+            <AlertTriangle size={14} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>Selecting this won't reject the payment — instead,
             you'll enter the shortfall amount and the buyer will be
-            notified to complete their payment.
+            notified to complete their payment.</span>
           </div>
         )}
         <div className="flex gap-3 pt-1">
