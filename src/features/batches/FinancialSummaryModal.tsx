@@ -340,23 +340,6 @@ export default function FinancialSummaryModal({
                 </span>
               </div>
 
-              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                <SecondaryBtn
-                  size="sm"
-                  onClick={() => setShowReceipt(true)}
-                  style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
-                >
-                  <Printer size={14} aria-hidden="true" /> Summary Receipt
-                </SecondaryBtn>
-                <PrimaryBtn
-                  size="sm"
-                  onClick={handleSaveExpenses}
-                  disabled={saving}
-                  style={{ flex: 1, display: "flex", justifyContent: "center" }}
-                >
-                  {saving ? "Saving…" : "Save Expenses"}
-                </PrimaryBtn>
-              </div>
               {savedNote && (
                 <div
                   className="fi"
@@ -421,12 +404,30 @@ export default function FinancialSummaryModal({
           and finalized.
         </p>
 
-        <PrimaryBtn
-          style={{ width: "100%", display: "flex", justifyContent: "center" }}
-          onClick={onClose}
-        >
-          Close
-        </PrimaryBtn>
+        <div style={{ display: "flex", gap: 8 }}>
+          <SecondaryBtn
+            size="sm"
+            onClick={onClose}
+            style={{ flex: 1, display: "flex", justifyContent: "center", padding: "9px 8px" }}
+          >
+            Close
+          </SecondaryBtn>
+          <PrimaryBtn
+            size="sm"
+            onClick={handleSaveExpenses}
+            disabled={saving}
+            style={{ flex: 1, display: "flex", justifyContent: "center", padding: "9px 8px" }}
+          >
+            {saving ? "Saving…" : "Save"}
+          </PrimaryBtn>
+          <SecondaryBtn
+            size="sm"
+            onClick={() => setShowReceipt(true)}
+            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 8px" }}
+          >
+            <Printer size={14} aria-hidden="true" /> Receipt
+          </SecondaryBtn>
+        </div>
       </div>
     </Modal>
   )
