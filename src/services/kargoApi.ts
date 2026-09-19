@@ -1,7 +1,10 @@
 import type {
+  BatchExpenses,
   BatchType,
   BirState,
   ClaimRow,
+  ExpenseItem,
+  ExpenseMode,
   FulfillmentOrder,
   OrderRow,
   PayHistRow,
@@ -712,6 +715,43 @@ export async function getFinancialSummary(from: Date, to: Date, batchId?: string
   ) as FinancialSummary
 }
 
+// ─── Per-batch expenses (seller bookkeeping) ─────────────────────────────────
+export async function loadBatchExpenses(batchDbId: string): Promise<BatchExpenses | null> {
+  const { data, error } = await requireSupabase()
+    .from("batch_expenses")
+    .select("batch_id,mode,total_amount,items")
+    .eq("batch_id", batchDbId)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) return null
+  return {
+    batchDbId: data.batch_id,
+    mode: data.mode as ExpenseMode,
+    total: Number(data.total_amount),
+    items: (data.items as ExpenseItem[]) ?? [],
+  }
+}
+
+export async function saveBatchExpenses(batchDbId: string, value: BatchExpenses) {
+  // One expense record per batch (unique batch_id) → upsert on conflict.
+  const total =
+    value.mode === "itemized"
+      ? value.items.reduce((s, i) => s + (Number(i.amount) || 0), 0)
+      : Number(value.total) || 0
+  const { error } = await requireSupabase()
+    .from("batch_expenses")
+    .upsert(
+      {
+        batch_id: batchDbId,
+        mode: value.mode,
+        total_amount: total,
+        items: value.mode === "itemized" ? value.items : [],
+      },
+      { onConflict: "batch_id" },
+    )
+  if (error) throw error
+}
+
 export const kargoApi = {
   signIn,
   signUp,
@@ -746,4 +786,6 @@ export const kargoApi = {
   loadSellerRequests,
   markBuyerRequestReplied,
   getFinancialSummary,
+  loadBatchExpenses,
+  saveBatchExpenses,
 }

@@ -332,3 +332,28 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
   body.printing-report .no-print { display: none !important; }
   @page { margin: 16mm; }
 }
+
+/* ─── Printable Batch Expense Receipt (seller bookkeeping) ─────────────────── */
+/* Adds `printing-receipt` to <body> around window.print(); only the receipt
+   sheet is shown, interactive chrome (.no-print) hidden. */
+.expense-receipt-sheet { }
+
+@media print {
+  body.printing-receipt * { visibility: hidden; }
+  body.printing-receipt .expense-receipt-sheet,
+  body.printing-receipt .expense-receipt-sheet * { visibility: visible; }
+  body.printing-receipt .expense-receipt-sheet {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 24px 28px;
+    background: #fff;
+    color: #111827;
+    box-shadow: none;
+    border-radius: 0;
+    max-width: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body.printing-receipt .no-print { display: none !important; }
+}
