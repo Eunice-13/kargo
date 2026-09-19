@@ -3,7 +3,29 @@ import type { KanbanCol } from "@/constants/fulfillment"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type AppStage = "login" | "signup" | "app"
-export type UserInfo = { name: string; email: string; role: Role; bio?: string; fb?: string }
+
+// BIR badge verification pipeline stages. Seller access is only granted at
+// "Verified". Ordering reflects the flow:
+//   None → Uploading → Scanning (QR decode) → Verifying (domain check)
+//        → Verified | Flagged
+export type BirState =
+  | "None"
+  | "Uploading"
+  | "Scanning"
+  | "Verifying"
+  | "Verified"
+  | "Flagged"
+
+export type UserInfo = {
+  name: string
+  email: string
+  role: Role
+  bio?: string
+  fb?: string
+  // Verified seller status is the single source of truth for seller access.
+  // A user is only a real Seller when birState === "Verified".
+  birState?: BirState
+}
 export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
 export type Role = "Buyer" | "Seller"
 export type ClaimStatus = "Pending" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"

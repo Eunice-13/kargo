@@ -1,20 +1,17 @@
 import type { Role, Tab } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { PrimaryBtn } from "@/components/shared"
-import RoleToggle from "./RoleToggle"
 
 export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
 export default function TabBar({
   active,
   setActive,
   role,
-  setRole,
   onNewBatch,
 }: {
   active: Tab
   setActive: (t: Tab) => void
   role: Role
-  setRole: (r: Role) => void
   onNewBatch: () => void
 }) {
   return (
@@ -74,21 +71,20 @@ export default function TabBar({
           </button>
         ))}
       </div>
-      {/* Right group — clear separation via border + padding */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          paddingLeft: 24,
-          paddingRight: 20,
-          borderLeft: "1px solid #E5E7EB",
-          height: "100%",
-          flexShrink: 0,
-        }}
-      >
-        <RoleToggle role={role} setRole={setRole} />
-        {role === "Seller" && (
+      {/* Right group — only shown for verified sellers (New Batch) */}
+      {role === "Seller" && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            paddingLeft: 24,
+            paddingRight: 20,
+            borderLeft: "1px solid #E5E7EB",
+            height: "100%",
+            flexShrink: 0,
+          }}
+        >
           <PrimaryBtn
             size="sm"
             onClick={onNewBatch}
@@ -104,8 +100,8 @@ export default function TabBar({
             </svg>
             New Batch
           </PrimaryBtn>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

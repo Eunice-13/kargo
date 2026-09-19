@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback } from "react"
-import { ShoppingBasket, Plane, FileText, Clock3, CheckCircle2 } from "lucide-react"
-import type { UserInfo, Role } from "@/types"
+import { ShoppingBasket, Plane } from "lucide-react"
+import type { UserInfo, Role, BirState } from "@/types"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { PrimaryBtn, Toggle } from "@/components/shared"
 import AuthInput from "./AuthInput"
 import LogoMark from "./LogoMark"
+import BirVerifier from "./BirVerifier"
 
 export default function SignUp({
   onLogin,
@@ -35,10 +36,7 @@ export default function SignUp({
     TikTok: { on: false, url: "" },
     Instagram: { on: false, url: "" },
   })
-  const [birState, setBirState] = useState<"none" | "uploading" | "submitted">(
-    "none",
-  )
-  const birRef = useRef<HTMLInputElement>(null)
+  const [birState, setBirState] = useState<BirState>("None")
   const [terms, setTerms] = useState(false)
 
   const submit = useCallback(() => {
@@ -52,8 +50,8 @@ export default function SignUp({
       if (!shopName.trim()) e.shopName = "Shop name is required."
       if (!Object.values(socials).some((s) => s.on))
         e.social = "Link at least one social account."
-      if (birState !== "submitted")
-        e.bir = "Please upload your BIR Certificate."
+      if (birState !== "Verified")
+        e.bir = "Your BIR badge must be verified before you can sell."
       if (!terms) e.terms = "You must agree to the Terms and Privacy Policy."
     }
     setErrs(e)
@@ -61,7 +59,13 @@ export default function SignUp({
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
-      onSuccess({ name: name.trim(), email, role })
+      onSuccess({
+        name: name.trim(),
+        email,
+        role,
+        // Carry the verified badge status through; buyers have no badge.
+        birState: role === "Seller" ? birState : "None",
+      })
     }, 1800)
   }, [
     name,
@@ -418,105 +422,9 @@ export default function SignUp({
                   )}
                 </div>
 
-                {/* BIR Certificate */}
+                {/* BIR Registration Seal Badge verification */}
                 <div>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#374151",
-                      display: "block",
-                      marginBottom: 8,
-                    }}
-                  >
-                    BIR Certificate{" "}
-                    <span style={{ color: "#6B7280", fontWeight: 400 }}>
-                      (required for Verification Badge)
-                    </span>
-                  </label>
-                  <input
-                    ref={birRef}
-                    type="file"
-                    accept="image/*,.pdf"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        setBirState("uploading")
-                        setTimeout(() => setBirState("submitted"), 1500)
-                      }
-                    }}
-                  />
-                  {birState === "none" && (
-                    <div
-                      onClick={() => birRef.current?.click()}
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Upload BIR Certificate"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault()
-                          birRef.current?.click()
-                        }
-                      }}
-                      style={{
-                        border: "2px dashed #D1D5DB",
-                        borderRadius: 8,
-                        padding: "18px 0",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        background: CREAM,
-                      }}
-                    >
-                      <div style={{ color: "#6B7280", marginBottom: 4, display: "flex", justifyContent: "center" }}><FileText size={20} aria-hidden="true" /></div>
-                      <div style={{ fontSize: 12, color: "#6B7280" }}>
-                        Click to upload BIR Certificate
-                      </div>
-                      <div
-                        style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}
-                      >
-                        PDF or image file
-                      </div>
-                    </div>
-                  )}
-                  {birState === "uploading" && (
-                    <div
-                      style={{
-                        border: "1px solid #E5E7EB",
-                        borderRadius: 8,
-                        padding: "14px",
-                        textAlign: "center",
-                        color: "#6B7280",
-                        fontSize: 13,
-                      }}
-                    >
-                      <Clock3 size={16} aria-hidden="true" className="animate-spin inline-block mr-2" />
-                      Uploading…
-                    </div>
-                  )}
-                  {birState === "submitted" && (
-                    <div
-                      style={{
-                        background: "#D4F5EA",
-                        border: "1px solid #6EE7B7",
-                        borderRadius: 8,
-                        padding: "12px 14px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                      }}
-                    >
-                      <CheckCircle2 size={18} aria-hidden="true" style={{ color: "#0B7A59", flexShrink: 0 }} />
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: "#065F46",
-                        }}
-                      >
-                        BIR Certificate Uploaded — Pending Review
-                      </div>
-                    </div>
-                  )}
+                  <BirVerifier birState={birState} setBirState={setBirState} />
                   {errs.bir && (
                     <p
                       className="fi"

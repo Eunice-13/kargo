@@ -20,7 +20,7 @@ import { TOPAY_INIT } from "@/data/toPay"
 import { PAYHIST_INIT } from "@/data/payHistory"
 import { ORDERS_INIT } from "@/data/orders"
 import { FULFILLMENT_INIT } from "@/features/fulfillment"
-import { Login, SignUp, Onboarding } from "@/features/auth"
+import { Login, SignUp, Onboarding, ApplyToSellModal } from "@/features/auth"
 import { NewBatchModal } from "@/features/batches"
 import { Header, TabBar, TabContent } from "@/components/layout"
 
@@ -34,9 +34,16 @@ export default function App() {
     name: originalPreview ? "Alex Jordan" : "",
     email: originalPreview ? "alex@kargo.demo" : "",
     role: "Buyer",
+    // The "original" preview retains seller access so the seller screens remain
+    // viewable; real accounts start with no verified badge.
+    birState: originalPreview ? "Verified" : "None",
   })
-  const [role, setRole] = useState<Role>("Buyer")
   const [showNewBatch, setShowNewBatch] = useState(false)
+  const [showApplyToSell, setShowApplyToSell] = useState(false)
+
+  // Role is derived from verification status — it is NOT user-flippable.
+  // Seller access is unlocked only when the BIR badge is Verified.
+  const role: Role = user.birState === "Verified" ? "Seller" : "Buyer"
 
   // Shared mutable data
   const [claims, setClaims] = useState<ClaimRow[]>(CLAIMS_INIT)
@@ -68,13 +75,11 @@ export default function App() {
 
   const handleSignupSuccess = (u: UserInfo) => {
     setUser(u)
-    setRole(u.role)
     setStage("app")
     setOnboard(true)
   }
   const handleLoginSuccess = (u: UserInfo) => {
     setUser(u)
-    setRole(u.role)
     setStage("app")
   }
 
@@ -109,6 +114,7 @@ export default function App() {
             user={user}
             onLogout={() => setStage("login")}
             onSettings={() => setTab("Settings")}
+            onApplyToSell={() => setShowApplyToSell(true)}
             role={role}
             batches={batches}
             onNavigate={setTab}
@@ -125,9 +131,6 @@ export default function App() {
             active={tab}
             setActive={setTab}
             role={role}
-            setRole={(r) => {
-              setRole(r)
-            }}
             onNewBatch={() => setShowNewBatch(true)}
           />
           <main style={{ minHeight: "calc(100vh - 100px)" }}>
@@ -139,6 +142,13 @@ export default function App() {
               onCreate={(b) => setBatches((prev) => [b, ...prev])}
               onClose={() => setShowNewBatch(false)}
               sellerName={user.name}
+            />
+          )}
+          {showApplyToSell && (
+            <ApplyToSellModal
+              birState={user.birState ?? "None"}
+              onBirState={(s) => setUser((u) => ({ ...u, birState: s }))}
+              onClose={() => setShowApplyToSell(false)}
             />
           )}
         </div>

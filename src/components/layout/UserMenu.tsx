@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { UserRound, Settings as SettingsIcon, LogOut } from "lucide-react"
+import { UserRound, Settings as SettingsIcon, LogOut, Store, Clock3, AlertTriangle } from "lucide-react"
 import type { UserInfo } from "@/types"
 import { Avatar } from "@/components/shared"
 
@@ -7,10 +7,12 @@ export default function UserMenu({
   user,
   onSettings,
   onLogout,
+  onApplyToSell,
 }: {
   user: UserInfo
   onSettings: () => void
   onLogout: () => void
+  onApplyToSell?: () => void
 }) {
   const [showUser, setShowUser] = useState(false)
   const userRef = useRef<HTMLDivElement>(null)
@@ -88,6 +90,98 @@ export default function UserMenu({
               {user.email}
             </div>
           </div>
+          {/* Seller status / apply entry point — reflects verification state */}
+          {(() => {
+            const s = user.birState ?? "None"
+            if (s === "Verified") {
+              return (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "9px 14px",
+                    borderBottom: "1px solid #F3F4F6",
+                    fontSize: 12,
+                    color: "#0B7A59",
+                    fontWeight: 600,
+                  }}
+                >
+                  <Store size={15} aria-hidden="true" /> Verified Seller
+                </div>
+              )
+            }
+            if (s === "Flagged") {
+              return (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 8,
+                    padding: "9px 14px",
+                    borderBottom: "1px solid #F3F4F6",
+                    fontSize: 11.5,
+                    color: "#B91C1C",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <AlertTriangle
+                    size={15}
+                    aria-hidden="true"
+                    style={{ flexShrink: 0, marginTop: 1 }}
+                  />
+                  Seller verification failed — access suspended pending review.
+                </div>
+              )
+            }
+            if (s === "Uploading" || s === "Scanning" || s === "Verifying") {
+              return (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "9px 14px",
+                    borderBottom: "1px solid #F3F4F6",
+                    fontSize: 11.5,
+                    color: "#92400E",
+                    fontWeight: 600,
+                  }}
+                >
+                  <Clock3 size={15} aria-hidden="true" /> Seller application under
+                  review
+                </div>
+              )
+            }
+            // None → offer to apply
+            return (
+              <button
+                onClick={() => {
+                  setShowUser(false)
+                  onApplyToSell?.()
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderBottom: "1px solid #F3F4F6",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  color: "#4F46E5",
+                  fontWeight: 600,
+                  textAlign: "left",
+                }}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                <Store size={16} aria-hidden="true" />
+                Apply to Become a Seller
+              </button>
+            )
+          })()}
           {[
             {
               icon: <UserRound size={16} aria-hidden="true" />,
