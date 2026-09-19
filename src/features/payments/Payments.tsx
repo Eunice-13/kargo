@@ -1,5 +1,6 @@
 import { useState, useRef } from "react"
-import type { ToPayRow, PayHistRow, OrderRow, ClaimStatus, SharedState } from "@/types"
+import { CheckCircle2, Paperclip, Clock3 } from "lucide-react"
+import type { ToPayRow, PayHistRow, OrderRow, ClaimStatus, SharedState, EntityId } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import {
   Card,
@@ -15,6 +16,9 @@ import {
 import PaymentSubmitModal from "./PaymentSubmitModal"
 import TransactionDetailModal from "./TransactionDetailModal"
 import SellerPaymentVerification from "./SellerPaymentVerification"
+import AddressSection from "./AddressSection"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function Payments({
   toPay,
@@ -26,10 +30,15 @@ export default function Payments({
   orders,
   setOrders,
   role,
+  user,
+  setTab,
 }: SharedState) {
   const [dragging, setDragging] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [proofClaimId, setProofClaimId] = useState<EntityId | "">("")
+  const [proofToast, setProofToast] = useState(false)
   const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
   const [payAll, setPayAll] = useState(false)
   const [histFilter, setHistFilter] =
@@ -43,11 +52,29 @@ export default function Payments({
     setTimeout(() => {
       setUploading(false)
       setUploaded(file.name)
+      setUploadedFile(file)
     }, 1200)
   }
 
-  const handlePay = (item: ToPayRow | null, method: string) => {
+  const handlePay = async (item: ToPayRow | null, method: string, referenceNumber?: string, receipt?: File) => {
     const targets = item ? [item] : toPay
+    if (isSupabaseConfigured) {
+      try {
+        for (const target of targets) {
+          const orderId = target.orderId ?? String(target.id)
+          await kargoApi.submitPayment({
+            orderId,
+            method,
+            amount: target.amount,
+            referenceNumber,
+            receipt,
+          })
+        }
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to submit payment.")
+        return
+      }
+    }
     const newHist: PayHistRow[] = targets.map((t, i) => ({
       id: payHistory.length + i + 1,
       product: t.product,
@@ -55,10 +82,10 @@ export default function Payments({
       method,
       amount: t.amount,
       date: TODAY,
-      status: "Paid and Reserved" as ClaimStatus,
+      status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
     }))
     setPayHistory((h) => [...newHist, ...h])
-    setClaims((prev) =>
+    if (!isSupabaseConfigured) setClaims((prev) =>
       prev.map((c) =>
         targets.some((t) => t.product === c.product) && c.status === "Pending"
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
@@ -76,10 +103,25 @@ export default function Payments({
       eta: "Est. Oct 2026",
       rated: false,
     }))
-    setOrders((prev) => [...newOrders, ...prev])
-    setToPay((prev) => (item ? prev.filter((x) => x.id !== item.id) : []))
+    if (!isSupabaseConfigured) {
+      setOrders((prev) => [...newOrders, ...prev])
+      setToPay((prev) => (item ? prev.filter((x) => x.id !== item.id) : []))
+    }
     setPayTarget(null)
     setPayAll(false)
+  }
+
+  // Submit an uploaded receipt against a chosen "To Pay" item: record it as a
+  // manual bank/receipt payment (reusing the same flow as Pay Now) and reset.
+  const handleSubmitProof = async () => {
+    const item = toPay.find((t) => t.id === proofClaimId)
+    if (!item) return
+    await handlePay(item, "Receipt Upload", undefined, uploadedFile ?? undefined)
+    setUploaded(null)
+    setUploadedFile(null)
+    setProofClaimId("")
+    setProofToast(true)
+    setTimeout(() => setProofToast(false), 2400)
   }
 
   if (role === "Seller") return <SellerPaymentVerification />
@@ -89,7 +131,11 @@ export default function Payments({
       <div>
         <SH
           title="Payment Methods"
-          action={<PrimaryBtn size="sm">+ Add Method</PrimaryBtn>}
+          action={
+            <PrimaryBtn size="sm" onClick={() => setTab("Settings")}>
+              + Add Method
+            </PrimaryBtn>
+          }
         />
         <div className="grid grid-cols-4 gap-4">
           {[
@@ -176,6 +222,7 @@ export default function Payments({
           ))}
         </div>
       </div>
+      <AddressSection />
       <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 1fr" }}>
         <div>
           <SH title="To Pay" />
@@ -250,7 +297,8 @@ export default function Payments({
                   fontWeight: 600,
                 }}
               >
-                ✅ All payments cleared!
+                <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                All payments cleared!
               </div>
             )}
           </div>
@@ -304,7 +352,7 @@ export default function Payments({
               />
               {uploading ? (
                 <>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>
+                  <div style={{ color: INDIGO, marginBottom: 8, display: "flex", justifyContent: "center" }}><Clock3 size={32} aria-hidden="true" /></div>
                   <div
                     style={{ fontSize: 13, fontWeight: 600, color: INDIGO }}
                     className="lsh"
@@ -314,7 +362,7 @@ export default function Payments({
                 </>
               ) : uploaded ? (
                 <>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+                  <div style={{ color: "#0B7A59", marginBottom: 8, display: "flex", justifyContent: "center" }}><CheckCircle2 size={32} aria-hidden="true" /></div>
                   <div
                     style={{ fontSize: 13, fontWeight: 600, color: "#065F46" }}
                   >
@@ -326,7 +374,7 @@ export default function Payments({
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>📎</div>
+                  <div style={{ color: "#9CA3AF", marginBottom: 8, display: "flex", justifyContent: "center" }}><Paperclip size={32} aria-hidden="true" /></div>
                   <div
                     style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}
                   >
@@ -341,6 +389,12 @@ export default function Payments({
             {uploaded && !uploading && (
               <div className="px-4 pb-4">
                 <select
+                  value={proofClaimId}
+                  onChange={(e) =>
+                    setProofClaimId(
+                      e.target.value ? Number(e.target.value) : "",
+                    )
+                  }
                   style={{
                     width: "100%",
                     fontSize: 12,
@@ -351,9 +405,9 @@ export default function Payments({
                     outline: "none",
                   }}
                 >
-                  <option>Select claim to attach…</option>
+                  <option value="">Select claim to attach…</option>
                   {toPay.map((t) => (
-                    <option key={t.id}>
+                    <option key={t.id} value={t.id}>
                       {t.product} — ₱{t.amount.toLocaleString()}
                     </option>
                   ))}
@@ -364,9 +418,26 @@ export default function Payments({
                     display: "flex",
                     justifyContent: "center",
                   }}
+                  disabled={proofClaimId === ""}
+                  onClick={handleSubmitProof}
                 >
                   Submit Payment Proof
                 </PrimaryBtn>
+                {proofToast && (
+                  <div
+                    className="fi"
+                    style={{
+                      marginTop: 8,
+                      fontSize: 11,
+                      color: "#065F46",
+                      background: "#D4F5EA",
+                      borderRadius: 6,
+                      padding: "6px 10px",
+                    }}
+                  >
+                    Payment proof submitted — moved to Payment History.
+                  </div>
+                )}
               </div>
             )}
           </Card>
@@ -542,7 +613,8 @@ export default function Payments({
       {payTarget && (
         <PaymentSubmitModal
           item={payTarget}
-          onConfirm={(method, refNo) => handlePay(payTarget, method)}
+          contactPrefill={user.fb || ""}
+          onConfirm={(method, refNo) => handlePay(payTarget, method, refNo)}
           onClose={() => setPayTarget(null)}
         />
       )}

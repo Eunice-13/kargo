@@ -1,3 +1,5 @@
+import { useRef, useState } from "react"
+import { Check } from "lucide-react"
 import { Avatar, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 import type { UserInfo } from "@/types"
@@ -29,6 +31,8 @@ export default function ProfileSection({
   saved,
   saveProfile,
 }: ProfileSectionProps) {
+  const photoRef = useRef<HTMLInputElement>(null)
+  const [photoName, setPhotoName] = useState<string | null>(null)
   return (
     <div className="pr">
       <h3
@@ -62,9 +66,36 @@ export default function ProfileSection({
               year: "numeric",
             })}
           </div>
-          <SecondaryBtn style={{ marginTop: 8 }}>
-            Change Photo
-          </SecondaryBtn>
+          <input
+            ref={photoRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) setPhotoName(f.name)
+            }}
+          />
+          <div className="flex items-center gap-2" style={{ marginTop: 8 }}>
+            <SecondaryBtn onClick={() => photoRef.current?.click()}>
+              Change Photo
+            </SecondaryBtn>
+            {photoName && (
+              <span
+                className="fi"
+                style={{
+                  fontSize: 12,
+                  color: GREEN,
+                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <Check size={13} aria-hidden="true" /> {photoName} selected
+              </span>
+            )}
+          </div>
         </div>
       </div>
       <div
@@ -169,9 +200,9 @@ export default function ProfileSection({
         {saved && (
           <span
             className="fi"
-            style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}
+            style={{ fontSize: 12, color: GREEN, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}
           >
-            ✓ Changes saved!
+            <Check size={13} aria-hidden="true" /> Changes saved!
           </span>
         )}
         <PrimaryBtn onClick={saveProfile}>Save Changes</PrimaryBtn>

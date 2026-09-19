@@ -1,3 +1,4 @@
+import { Check } from "lucide-react"
 import type { OrderRow } from "@/types"
 import { INDIGO, CREAM, GREEN } from "@/constants/theme"
 import Modal from "./Modal"
@@ -76,7 +77,7 @@ export default function TrackOrderModal({
                   transition: "background 0.3s",
                 }}
               >
-                {i < si ? "✓" : i + 1}
+                {i < si ? <Check size={14} aria-hidden="true" /> : i + 1}
               </div>
               <div style={{ paddingTop: 4 }}>
                 <div

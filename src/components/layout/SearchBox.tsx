@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Package, ShoppingBasket, UserRound } from "lucide-react"
 import type { Tab, BatchType } from "@/types"
 import { CREAM } from "@/constants/theme"
 
@@ -199,7 +200,7 @@ export default function SearchBox({
                             "")
                         }
                       >
-                        📦 {b.title}
+                        <Package size={14} aria-hidden="true" /> {b.title}
                       </div>
                     ))}
                   </>
@@ -263,7 +264,7 @@ export default function SearchBox({
                             "")
                         }
                       >
-                        🛍️ {p.name}{" "}
+                        <ShoppingBasket size={14} aria-hidden="true" /> {p.name}{" "}
                         <span style={{ fontSize: 11, color: "#9CA3AF" }}>
                           in {p.batchTitle}
                         </span>
@@ -330,7 +331,7 @@ export default function SearchBox({
                             "")
                         }
                       >
-                        👤 {s}
+                        <UserRound size={14} aria-hidden="true" /> {s}
                       </div>
                     ))}
                   </>

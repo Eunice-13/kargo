@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ArrowLeft } from "lucide-react"
 import type { BatchType } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card, PrimaryBtn, Avatar, BIRBadge } from "@/components/shared"
@@ -67,7 +68,8 @@ export default function SellerDirectoryPage({
               cursor: "pointer",
             }}
           >
-            ← Back to Sellers
+            <ArrowLeft size={13} aria-hidden="true" style={{ display: "inline", marginRight: 4, verticalAlign: -2 }} />
+          Back to Sellers
           </button>
           <span style={{ fontSize: 12, color: "#D1D5DB" }}>/</span>
           <span style={{ fontSize: 13, color: "#6B7280" }}>{shopPage}</span>
@@ -109,7 +111,8 @@ export default function SellerDirectoryPage({
             cursor: "pointer",
           }}
         >
-          ← Back to Batches
+          <ArrowLeft size={13} aria-hidden="true" style={{ display: "inline", marginRight: 4, verticalAlign: -2 }} />
+          Back to Batches
         </button>
         <span style={{ fontSize: 12, color: "#D1D5DB" }}>/</span>
         <span style={{ fontSize: 13, color: "#6B7280" }}>Browse Sellers</span>

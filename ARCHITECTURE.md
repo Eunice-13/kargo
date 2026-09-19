@@ -15,19 +15,19 @@ src/
 
   types/
     index.ts                    All shared types: Role, Tab, AppStage, ClaimStatus,
-                                ReportStatus, SettingsSection, UserInfo, ClaimRow,
-                                ToPayRow, PayHistRow, OrderRow, ReportRow,
+                                SettingsSection, UserInfo, ClaimRow,
+                                ToPayRow, PayHistRow, OrderRow,
                                 BatchStoredProduct, BatchItem, BatchType,
                                 FulfillmentOrder, SharedState
 
   constants/
     theme.ts                    RETRO_THEME, INDIGO, CREAM, CYAN_L, SKY, CORAL,
-                                GREEN, AMBER, TODAY, CAT_GRAD, STATUS_C, REPORT_C
+                                GREEN, AMBER, TODAY, CAT_GRAD, STATUS_C
     fulfillment.ts              KANBAN_COLS, KanbanCol, KANBAN_COL_BG, PRIOR_FULFILLED
 
   data/                         Seed data only (initial values; live copies are
                                 React state in App). batches, claims, toPay,
-                                payHistory, orders, reports, notifications
+                                payHistory, orders, notifications
 
   state/
     navIntent.ts                Module-level mutable `navIntent` singleton, read/
@@ -65,7 +65,6 @@ src/
                                 modals: Review/Insufficient/Reject and verifyTypes),
                                 PaymentSubmitModal, TransactionDetailModal
     orders/                     Orders (+ uses ORDER_STEPS from shared), RateOrderModal
-    reports/                    Reports, ReportDetailModal, ReportBadge
     settings/                   Settings (thin composer) + one file per section
                                 (Profile, LinkedAccounts, Notifications,
                                 PaymentMethods, Security), the payment-method and 2FA

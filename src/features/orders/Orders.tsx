@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Check, Package, Star } from "lucide-react"
 import type { OrderRow, SharedState } from "@/types"
 import { INDIGO, CREAM, CYAN_L, SKY, GREEN, AMBER } from "@/constants/theme"
 import {
@@ -19,6 +20,8 @@ import {
   FulfillmentDetails,
 } from "@/features/fulfillment"
 import RateOrderModal from "./RateOrderModal"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function Orders({
   orders,
@@ -362,7 +365,7 @@ export default function Orders({
                         transition: "background 0.3s",
                       }}
                     >
-                      {i < si ? "✓" : i + 1}
+                      {i < si ? <Check size={12} aria-hidden="true" /> : i + 1}
                     </div>
                     <div
                       style={{
@@ -413,8 +416,8 @@ export default function Orders({
             <div className="flex items-center justify-between">
               <div style={{ fontSize: 12, color: "#6B7280" }}>
                 {order.trackingNo ? (
-                  <span>
-                    📦{" "}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <Package size={13} aria-hidden="true" />{" "}
                     <span style={{ fontFamily: "monospace", fontSize: 11 }}>
                       {order.trackingNo}
                     </span>
@@ -441,17 +444,18 @@ export default function Orders({
                           setHover((h) => ({ ...h, [order.id]: 0 }))
                         }
                         onClick={() => setRateTarget(order)}
+                        aria-label={`Rate ${star} star${star !== 1 ? "s" : ""}`}
                         style={{
                           background: "none",
                           border: "none",
                           cursor: "pointer",
-                          fontSize: 20,
+                          display: "flex",
                           color: star <= (myH || myR) ? AMBER : "#E5E7EB",
                           transition: "color 0.1s,transform 0.1s",
                           transform: star <= myH ? "scale(1.2)" : "scale(1)",
                         }}
                       >
-                        
+                        <Star size={20} aria-hidden="true" fill={star <= (myH || myR) ? AMBER : "none"} />
                       </button>
                     ))}
                     <PrimaryBtn size="sm" onClick={() => setRateTarget(order)}>
@@ -468,8 +472,8 @@ export default function Orders({
                     </PrimaryBtn>
                   )}
                 {(order.rated || myR > 0) && (
-                  <span style={{ fontSize: 12, color: AMBER }}>
-                     {order.rating || myR}/5 Rated
+                  <span style={{ fontSize: 12, color: AMBER, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    <Star size={12} aria-hidden="true" fill={AMBER} /> {order.rating || myR}/5 Rated
                   </span>
                 )}
                 {!delivered && (
@@ -501,7 +505,16 @@ export default function Orders({
       {rateTarget && (
         <RateOrderModal
           order={rateTarget}
-          onRate={(rating) => {
+          onRate={async (rating, comment) => {
+            if (isSupabaseConfigured) {
+              if (!rateTarget.dbId) return
+              try {
+                await kargoApi.createReview(rateTarget.dbId, rating, comment)
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "Unable to submit rating.")
+                return
+              }
+            }
             setRatings((r) => ({ ...r, [rateTarget.id]: rating }))
             setOrders((prev) =>
               prev.map((o) =>

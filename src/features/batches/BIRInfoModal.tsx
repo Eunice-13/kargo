@@ -1,3 +1,4 @@
+import { Check } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Modal, PrimaryBtn } from "@/components/shared"
 
@@ -62,8 +63,8 @@ export default function BIRInfoModal({ onClose }: { onClose: () => void }) {
                 lineHeight: 1.5,
               }}
             >
-              <span style={{ color: INDIGO, fontWeight: 700, flexShrink: 0 }}>
-                ✓
+              <span style={{ color: INDIGO, flexShrink: 0, display: "flex" }}>
+                <Check size={16} aria-hidden="true" />
               </span>
               {text}
             </div>

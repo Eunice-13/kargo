@@ -1,0 +1,4 @@
+project_id = "leylmztbknmlwnwgvaud"
+
+[functions.verify-bir-badge]
+verify_jwt = true

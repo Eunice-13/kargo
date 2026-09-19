@@ -8,6 +8,7 @@ export default function Header({
   user,
   onLogout,
   onSettings,
+  onApplyToSell,
   role,
   batches,
   onNavigate,
@@ -17,6 +18,7 @@ export default function Header({
   user: UserInfo
   onLogout: () => void
   onSettings: () => void
+  onApplyToSell?: () => void
   role?: Role
   batches?: BatchType[]
   onNavigate?: (tab: Tab) => void
@@ -78,8 +80,13 @@ export default function Header({
         onSellerSelect={onSellerSelect}
       />
       <div className="flex items-center gap-3 flex-shrink-0">
-        <NotificationsMenu role={role} />
-        <UserMenu user={user} onSettings={onSettings} onLogout={onLogout} />
+        <NotificationsMenu role={role} onNavigate={onNavigate} />
+        <UserMenu
+          user={user}
+          onSettings={onSettings}
+          onLogout={onLogout}
+          onApplyToSell={onApplyToSell}
+        />
       </div>
     </header>
   )

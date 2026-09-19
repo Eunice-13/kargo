@@ -1,3 +1,4 @@
+import { ClipboardList } from "lucide-react"
 import type { PayHistRow } from "@/types"
 import { Modal, PrimaryBtn, StatusBadge } from "@/components/shared"
 
@@ -51,10 +52,13 @@ export default function TransactionDetailModal({
             padding: "10px 14px",
             fontSize: 12,
             color: "#374151",
+            display: "flex",
+            gap: 8,
           }}
         >
-          📋 This record is for your reference only. Contact the seller directly
-          for disputes.
+          <ClipboardList size={15} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>This record is for your reference only. Contact the seller directly
+          for disputes.</span>
         </div>
         <PrimaryBtn
           style={{ width: "100%", display: "flex", justifyContent: "center" }}

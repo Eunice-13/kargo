@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import { CheckCircle2, Paperclip } from "lucide-react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 
@@ -6,15 +7,18 @@ export default function PaymentSubmitModal({
   item,
   onConfirm,
   onClose,
+  contactPrefill = "",
 }: {
   item: ToPayRow
   onConfirm: (method: string, refNo: string) => void
   onClose: () => void
+  contactPrefill?: string
 }) {
   const [method, setMethod] = useState("GCash")
   const [refNo, setRefNo] = useState("")
   const [acctName, setAcctName] = useState("")
   const [phone, setPhone] = useState("")
+  const [contactLink, setContactLink] = useState(contactPrefill)
   const [amountPaid, setAmountPaid] = useState(String(item.amount))
   const [uploading, setUploading] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
@@ -277,6 +281,40 @@ export default function PaymentSubmitModal({
                   marginBottom: 5,
                 }}
               >
+                Your Facebook profile or contact link
+              </label>
+              <input
+                value={contactLink}
+                onChange={(e) => setContactLink(e.target.value)}
+                placeholder="e.g. facebook.com/yourname"
+                style={{
+                  width: "100%",
+                  fontSize: 13,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 7,
+                  padding: "9px 12px",
+                  outline: "none",
+                  color: "#374151",
+                  fontFamily: "inherit",
+                  boxSizing: "border-box" as const,
+                }}
+                className="placeholder:text-gray-400"
+              />
+              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
+                So the seller can reach you if there's an issue with your
+                payment. Optional but recommended.
+              </div>
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#374151",
+                  display: "block",
+                  marginBottom: 5,
+                }}
+              >
                 Amount Paid (₱) <span style={{ color: "#E11D2E" }}>*</span>
               </label>
               <input
@@ -354,7 +392,7 @@ export default function PaymentSubmitModal({
                   </div>
                 ) : uploaded ? (
                   <>
-                    <div style={{ fontSize: 24 }}>✅</div>
+                    <div style={{ color: "#0B7A59", display: "flex", justifyContent: "center" }}><CheckCircle2 size={24} aria-hidden="true" /></div>
                     <div
                       style={{
                         fontSize: 12,
@@ -372,7 +410,7 @@ export default function PaymentSubmitModal({
                   </>
                 ) : (
                   <>
-                    <div style={{ fontSize: 28 }}>📎</div>
+                    <div style={{ color: "#9CA3AF", display: "flex", justifyContent: "center" }}><Paperclip size={28} aria-hidden="true" /></div>
                     <div
                       style={{
                         fontSize: 12,

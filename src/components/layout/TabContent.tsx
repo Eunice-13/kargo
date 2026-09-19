@@ -6,7 +6,6 @@ import { Batches } from "@/features/batches"
 import { MyClaims } from "@/features/claims"
 import { Payments } from "@/features/payments"
 import { Orders } from "@/features/orders"
-import { Reports } from "@/features/reports"
 import { Settings } from "@/features/settings"
 
 export default function TabContent({ tab, shared }: { tab: Tab; shared: SharedState }) {
@@ -28,7 +27,6 @@ export default function TabContent({ tab, shared }: { tab: Tab; shared: SharedSt
     "My Claims": <MyClaims {...shared} />,
     Payments: <Payments {...shared} />,
     Orders: <Orders {...shared} />,
-    Reports: <Reports {...shared} />,
     Settings: <Settings {...shared} />,
   }
   return (

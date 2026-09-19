@@ -1,10 +1,12 @@
 import { useState } from "react"
-import { Lock } from "lucide-react"
+import { Lock, ArrowLeft, Plane, Check, Link2, Star } from "lucide-react"
 import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo } from "@/types"
 import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge, CategoryIcon, Toggle, ContactSellerModal } from "@/components/shared"
 import ItemClaimModal from "./ItemClaimModal"
 import { toggleBatchLock } from "./toggleBatchLock"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function BatchPage({
   batch,
@@ -41,15 +43,25 @@ export default function BatchPage({
   const pct = Math.round((batch.claimed / batch.items) * 100)
   const grad = CAT_GRAD[batch.category] || CAT_GRAD["Mixed"]
   const reserveHrs = batch.reserveHours || 48
-  const handleClaim = (
+  const handleClaim = async (
     key: string,
     b: BatchType,
     product: typeof batch.products[0],
   ) => {
+    if (isSupabaseConfigured) {
+      if (!product.dbId) return
+      try {
+        await kargoApi.claimProduct(product.dbId, 1)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to claim this product.")
+        return
+      }
+    }
     setClaimedKeys((c) => ({ ...c, [key]: true }))
     setClaims((prev) => [
       {
         id: Date.now(),
+        productId: product.dbId,
         product: product.name,
         batch: b.title,
         seller: b.seller,
@@ -92,7 +104,7 @@ export default function BatchPage({
           fontFamily: "'Plus Jakarta Sans',sans-serif",
         }}
       >
-        ← Back to Batches
+        <ArrowLeft size={14} aria-hidden="true" /> Back to Batches
       </button>
 
       {/* Hero header */}
@@ -163,8 +175,8 @@ export default function BatchPage({
             >
               {batch.category}
             </span>
-            <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
-              ✈️ {batch.trips}
+            <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <Plane size={12} aria-hidden="true" /> {batch.trips}
             </span>
             <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
                48h reservation window
@@ -284,7 +296,8 @@ export default function BatchPage({
                             padding: "2px 8px",
                           }}
                         >
-                          ✓ Claimed
+                          <Check size={11} aria-hidden="true" style={{ display: "inline", verticalAlign: -1, marginRight: 2 }} />
+                          Claimed
                         </span>
                       )}
                       {onWaitlist && (
@@ -327,9 +340,9 @@ export default function BatchPage({
                       </span>
                     ) : isClaimed ? (
                       <span
-                        style={{ fontSize: 11, color: GREEN, fontWeight: 600 }}
+                        style={{ fontSize: 11, color: GREEN, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 3 }}
                       >
-                        ✓ In Claims
+                        <Check size={12} aria-hidden="true" /> In Claims
                       </span>
                     ) : soldOut ? (
                       onWaitlist ? (
@@ -345,9 +358,18 @@ export default function BatchPage({
                       ) : (
                         <PrimaryBtn
                           size="sm"
-                          onClick={() =>
+                          onClick={async () => {
+                            if (isSupabaseConfigured) {
+                              if (!p.dbId) return
+                              try {
+                                await kargoApi.joinWaitlist(p.dbId)
+                              } catch (error) {
+                                alert(error instanceof Error ? error.message : "Unable to join waitlist.")
+                                return
+                              }
+                            }
                             setWaitlisted((w) => ({ ...w, [pKey]: true }))
-                          }
+                          }}
                         >
                           Join Waitlist
                         </PrimaryBtn>
@@ -419,8 +441,8 @@ export default function BatchPage({
                   {batch.seller}
                   <BIRBadge verified />
                 </div>
-                <div style={{ fontSize: 12, color: "#6B7280" }}>
-                   {batch.rating} · Tap to view shop
+                <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 4 }}>
+                  <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {batch.rating} · Tap to view shop
                 </div>
               </div>
             </div>
@@ -434,7 +456,7 @@ export default function BatchPage({
                 gap: 8,
               }}
             >
-              <span style={{ fontSize: 16 }}>📘</span>
+              <Link2 size={16} aria-hidden="true" style={{ color: INDIGO, flexShrink: 0, marginTop: 1 }} />
               <div>
                 <div
                   style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}

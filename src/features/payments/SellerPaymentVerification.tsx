@@ -1,10 +1,15 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import type React from "react"
+import { CreditCard, Check, Megaphone } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Card, Avatar, ProductThumb } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
+import AddressSection from "./AddressSection"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function SellerPaymentVerification() {
   const VERIFY_SEED: VerifyItem[] = [
@@ -22,6 +27,7 @@ export default function SellerPaymentVerification() {
       receipt: "receipt_gcash.jpg",
       phone: "0917-823-4410",
       amountPaid: "750",
+      contact: "https://facebook.com/anna.cruz",
     },
     {
       id: 2,
@@ -37,6 +43,7 @@ export default function SellerPaymentVerification() {
       receipt: "maya_proof.png",
       phone: "0918-554-2291",
       amountPaid: "4800",
+      contact: "https://facebook.com/ben.santos",
     },
     {
       id: 3,
@@ -52,15 +59,48 @@ export default function SellerPaymentVerification() {
       receipt: "bdo_receipt.pdf",
       phone: "0916-001-2109",
       amountPaid: "480",
+      contact: "https://facebook.com/carla.reyes",
     },
   ]
-  const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(VERIFY_SEED)
+  const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(isSupabaseConfigured ? [] : VERIFY_SEED)
   const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null)
   const [rejectTarget, setRejectTarget] = useState<VerifyItem | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [rejectCustom, setRejectCustom] = useState("")
   const [insuffTarget, setInsuffTarget] = useState<VerifyItem | null>(null)
   const [insuffAmtPaid, setInsuffAmtPaid] = useState("")
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    kargoApi
+      .loadSellerPaymentSubmissions()
+      .then(setVerifyItems)
+      .catch((error) => alert(error instanceof Error ? error.message : "Unable to load payments."))
+  }, [])
+
+  const updateVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>> = (action) => {
+    setVerifyItems((previous) => {
+      const next = typeof action === "function" ? action(previous) : action
+      if (isSupabaseConfigured) {
+        for (const item of next) {
+          const before = previous.find((candidate) => candidate.id === item.id)
+          if (!before) continue
+          let decision: "verified" | "rejected" | null = null
+          if (item.status !== before.status && item.status === "Verified") decision = "verified"
+          if (item.status !== before.status && item.status === "Rejected") decision = "rejected"
+          if (item.status === "Pending" && item.rejectReason?.startsWith("Short") && item.rejectReason !== before.rejectReason) {
+            decision = "verified"
+          }
+          if (decision) {
+            void kargoApi.reviewPayment(String(item.id), decision, item.rejectReason).catch((error) =>
+              alert(error instanceof Error ? error.message : "Unable to review payment."),
+            )
+          }
+        }
+      }
+      return next
+    })
+  }
 
   const REJECT_REASONS = [
     "Wrong amount transferred",
@@ -69,13 +109,6 @@ export default function SellerPaymentVerification() {
     "Duplicate submission",
     "Other",
   ]
-  const methodIcon: Record<string, string> = {
-    GCash: "",
-    Maya: "",
-    "Bank Transfer": "",
-    "Cash on Meetup": "",
-  }
-
     return (
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
@@ -189,7 +222,7 @@ export default function SellerPaymentVerification() {
                           gap: 4,
                         }}
                       >
-                        {methodIcon[item.method] || "💳"} {item.method}
+                        <CreditCard size={13} aria-hidden="true" /> {item.method}
                       </span>
                     </td>
                     <td
@@ -371,9 +404,12 @@ export default function SellerPaymentVerification() {
                                       borderRadius: 6,
                                       padding: "5px 12px",
                                       whiteSpace: "nowrap" as const,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 5,
                                     }}
                                   >
-                                    ✓ Notified
+                                    <Check size={12} aria-hidden="true" /> Notified
                                   </span>
                                 ) : (
                                   <button
@@ -386,14 +422,17 @@ export default function SellerPaymentVerification() {
                                       background: "#FEF3C7",
                                       color: "#92400E",
                                       borderColor: "#FCD34D",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 5,
                                     }}
                                   >
-                                    📢 Notify Buyer
+                                    <Megaphone size={12} aria-hidden="true" /> Notify Buyer
                                   </button>
                                 )}
                                 <button
                                   onClick={() =>
-                                    setVerifyItems((p) =>
+                                    updateVerifyItems((p) =>
                                       p.map((v) =>
                                         v.id === item.id
                                           ? {
@@ -419,7 +458,7 @@ export default function SellerPaymentVerification() {
                                 <>
                                   <button
                                     onClick={() =>
-                                      setVerifyItems((p) =>
+                                      updateVerifyItems((p) =>
                                         p.map((v) =>
                                           v.id === item.id
                                             ? {
@@ -469,16 +508,19 @@ export default function SellerPaymentVerification() {
           </div>
         </Card>
 
+        <div style={{ marginTop: 24 }}>
+          <AddressSection />
+        </div>
+
         {/* Review submission modal */}
         {reviewTarget && (
           <ReviewSubmissionModal
             reviewTarget={reviewTarget}
             setReviewTarget={setReviewTarget}
-            setVerifyItems={setVerifyItems}
+            setVerifyItems={updateVerifyItems}
             setRejectTarget={setRejectTarget}
             setRejectReason={setRejectReason}
             setRejectCustom={setRejectCustom}
-            methodIcon={methodIcon}
           />
         )}
 
@@ -489,7 +531,7 @@ export default function SellerPaymentVerification() {
             setInsuffTarget={setInsuffTarget}
             insuffAmtPaid={insuffAmtPaid}
             setInsuffAmtPaid={setInsuffAmtPaid}
-            setVerifyItems={setVerifyItems}
+            setVerifyItems={updateVerifyItems}
           />
         )}
 
@@ -504,7 +546,7 @@ export default function SellerPaymentVerification() {
             setRejectCustom={setRejectCustom}
             setInsuffTarget={setInsuffTarget}
             setInsuffAmtPaid={setInsuffAmtPaid}
-            setVerifyItems={setVerifyItems}
+            setVerifyItems={updateVerifyItems}
             REJECT_REASONS={REJECT_REASONS}
           />
         )}

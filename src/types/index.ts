@@ -3,15 +3,40 @@ import type { KanbanCol } from "@/constants/fulfillment"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type AppStage = "login" | "signup" | "app"
-export type UserInfo = { name: string; email: string; role: Role; bio?: string }
-export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Reports" | "Settings"
+export type EntityId = string | number
+
+// BIR badge verification pipeline stages. Seller access is only granted at
+// "Verified". Ordering reflects the flow:
+//   None → Uploading → Scanning (QR decode) → Verifying (domain check)
+//        → Verified | Flagged
+export type BirState =
+  | "None"
+  | "Uploading"
+  | "Scanning"
+  | "Verifying"
+  | "Verified"
+  | "Flagged"
+
+export type UserInfo = {
+  id?: string
+  name: string
+  email: string
+  role: Role
+  bio?: string
+  fb?: string
+  // Verified seller status is the single source of truth for seller access.
+  // A user is only a real Seller when birState === "Verified".
+  birState?: BirState
+  accountStatus?: "active" | "suspended"
+}
+export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
 export type Role = "Buyer" | "Seller"
 export type ClaimStatus = "Pending" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
-export type ReportStatus = "Open" | "Under Review" | "Resolved"
 export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Payment Methods" | "Security"
 
 export type ClaimRow = {
-  id: number
+  id: EntityId
+  productId?: string
   product: string
   batch: string
   seller: string
@@ -20,16 +45,21 @@ export type ClaimRow = {
   status: ClaimStatus
   hours: number
   extensionRequested?: boolean
+  // Who placed the order (seller's "Orders Received" view). Falls back to
+  // `seller` for legacy rows. `buyerFb` is their contact/Facebook link.
+  buyer?: string
+  buyerFb?: string
 }
 export type ToPayRow = {
-  id: number
+  id: EntityId
+  orderId?: string
   product: string
   seller: string
   amount: number
   hours: number
 }
 export type PayHistRow = {
-  id: number
+  id: EntityId
   product: string
   batch: string
   method: string
@@ -39,6 +69,7 @@ export type PayHistRow = {
 }
 export type OrderRow = {
   id: string
+  dbId?: string
   product: string
   batch: string
   seller: string
@@ -49,21 +80,15 @@ export type OrderRow = {
   rated: boolean
   rating?: number
 }
-export type ReportRow = {
-  id: string
-  order: string
-  product: string
-  seller: string
-  issue: string
-  date: string
-  status: ReportStatus
-  description?: string
-}
 
 // ─── Batch data models ────────────────────────────────────────────────────────
 export interface BatchStoredProduct {
+  id?: number
+  dbId?: string
   name: string
   price: number
+  basePrice?: number
+  markup?: number
   qty: number
   claimed: number
   waitlist: number
@@ -71,6 +96,7 @@ export interface BatchStoredProduct {
 }
 export interface BatchItem {
   id: number
+  dbId?: string
   live: boolean
   locked: boolean
   title: string
@@ -106,8 +132,6 @@ export type SharedState = {
   setPayHistory: React.Dispatch<React.SetStateAction<PayHistRow[]>>
   orders: OrderRow[]
   setOrders: React.Dispatch<React.SetStateAction<OrderRow[]>>
-  reports: ReportRow[]
-  setReports: React.Dispatch<React.SetStateAction<ReportRow[]>>
   batches: BatchType[]
   setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
   fulfillment: FulfillmentOrder[]

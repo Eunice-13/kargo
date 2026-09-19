@@ -1,4 +1,4 @@
-import type { ClaimStatus, ReportStatus } from "@/types"
+import type { ClaimStatus } from "@/types"
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 export const RETRO_THEME = false
@@ -42,9 +42,4 @@ export const STATUS_C: Record<ClaimStatus, { bg: string; text: string; dot: stri
   Expired: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
   Cancelled: { bg: "#F3F4F6", text: "#6B7280", dot: "#9CA3AF" },
   "Insufficient Payment": { bg: "#FFF7ED", text: "#92400E", dot: "#FCD34D" },
-}
-export const REPORT_C: Record<ReportStatus, { bg: string; text: string }> = {
-  Open: { bg: "#FEF3C7", text: "#92400E" },
-  "Under Review": { bg: CYAN_L, text: "#0369A1" },
-  Resolved: { bg: "#D4F5EA", text: "#0B7A59" },
 }

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
+import { UserRound, Link2, Bell, CreditCard, Lock } from "lucide-react"
 import type { SettingsSection, SharedState } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card } from "@/components/shared"
@@ -9,10 +10,21 @@ import NotificationsSection from "./NotificationsSection"
 import PaymentMethodsSection from "./PaymentMethodsSection"
 import SecuritySection from "./SecuritySection"
 import AddPaymentMethodModal from "./AddPaymentMethodModal"
+import EditPaymentMethodModal from "./EditPaymentMethodModal"
 import VerifyPaymentMethodModal from "./VerifyPaymentMethodModal"
 import RemovePaymentMethodModal from "./RemovePaymentMethodModal"
 import TwoFAModal from "./TwoFAModal"
 import type { PayMethod } from "./types"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
+
+const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
+  Profile: UserRound,
+  "Linked Accounts": Link2,
+  Notifications: Bell,
+  "Payment Methods": CreditCard,
+  Security: Lock,
+}
 
 export default function Settings({ user, setUser, role }: SharedState) {
   const [section, setSection] = useState<SettingsSection>("Profile")
@@ -22,10 +34,6 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [igUser, setIgUser] = useState("")
   const [socialModal, setSocialModal] =
     useState<"Facebook" | "Instagram" | null>(null)
-  const [idState, setIdState] = useState<"none" | "uploading" | "submitted">(
-    "none",
-  )
-  const idFileRef = useRef<HTMLInputElement>(null)
   const [notifs, setNotifs] = useState<Record<string, boolean>>({
     payments: true,
     claims: true,
@@ -56,7 +64,7 @@ export default function Settings({ user, setUser, role }: SharedState) {
   }, [role])
 
   // Payment methods state
-  const [payMethods, setPayMethods] = useState<PayMethod[]>([
+  const [payMethods, setPayMethods] = useState<PayMethod[]>(isSupabaseConfigured ? [] : [
     {
       id: 1,
       name: "GCash",
@@ -82,10 +90,14 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [showAddPM, setShowAddPM] = useState(false)
   const [verifyTarget, setVerifyTarget] = useState<PayMethod | null>(null)
   const [removeTarget, setRemoveTarget] = useState<PayMethod | null>(null)
+  const [editTarget, setEditTarget] = useState<PayMethod | null>(null)
   const [pmType, setPmType] = useState("GCash")
   const [pmName, setPmName] = useState("")
   const [pmNum, setPmNum] = useState("")
   const [pmLoading, setPmLoading] = useState(false)
+  // Edit form fields (prefilled when a method is being edited/replaced)
+  const [editName, setEditName] = useState("")
+  const [editNum, setEditNum] = useState("")
 
   // 2FA state
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
@@ -95,21 +107,54 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [tfaCode, setTfaCode] = useState("")
   const [tfaLoading, setTfaLoading] = useState(false)
 
-  const saveProfile = () => {
+  const refreshPaymentMethods = async () => {
+    if (!isSupabaseConfigured || role !== "Seller") return
+    const rows = await kargoApi.loadPaymentMethods()
+    setPayMethods(rows.map((row) => ({
+      id: row.id,
+      name: row.method_type,
+      detail: row.account_number ?? "",
+      icon: "",
+      verified: row.is_verified,
+    })))
+  }
+
+  useEffect(() => {
+    void refreshPaymentMethods()
+  }, [role])
+
+  const saveProfile = async () => {
     const newName = [firstName, lastName].filter(Boolean).join(" ") || user.name
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.updateProfile({ displayName: newName, bio, email })
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to save profile.")
+        return
+      }
+    }
     setUser((u) => ({ ...u, name: newName, email, bio }))
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
 
-  const handleIdPick = () => {
-    setIdState("uploading")
-    setTimeout(() => setIdState("submitted"), 1500)
-  }
-
-  const addPayMethod = () => {
+  const addPayMethod = async () => {
     if (!pmName.trim() || !pmNum.trim()) return
     setPmLoading(true)
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.addPaymentMethod(pmType, pmName.trim(), pmNum.trim())
+        await refreshPaymentMethods()
+        setPmName("")
+        setPmNum("")
+        setPmLoading(false)
+        setShowAddPM(false)
+      } catch (error) {
+        setPmLoading(false)
+        alert(error instanceof Error ? error.message : "Unable to add payment method.")
+      }
+      return
+    }
     setTimeout(() => {
       const icons: Record<string, string> = {
         GCash: "",
@@ -123,7 +168,7 @@ export default function Settings({ user, setUser, role }: SharedState) {
           id: Date.now(),
           name: pmType,
           detail: pmNum.trim(),
-          icon: icons[pmType] || "💳",
+          icon: icons[pmType] || "",
           verified: false,
         },
       ])
@@ -134,9 +179,21 @@ export default function Settings({ user, setUser, role }: SharedState) {
     }, 800)
   }
 
-  const confirmVerify = () => {
+  const confirmVerify = async () => {
     if (!verifyTarget) return
     setPmLoading(true)
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.updatePaymentMethod(String(verifyTarget.id), verifyTarget.name, verifyTarget.detail, true)
+        await refreshPaymentMethods()
+        setPmLoading(false)
+        setVerifyTarget(null)
+      } catch (error) {
+        setPmLoading(false)
+        alert(error instanceof Error ? error.message : "Unable to verify payment method.")
+      }
+      return
+    }
     setTimeout(() => {
       setPayMethods((p) =>
         p.map((m) => (m.id === verifyTarget.id ? { ...m, verified: true } : m)),
@@ -146,10 +203,57 @@ export default function Settings({ user, setUser, role }: SharedState) {
     }, 900)
   }
 
-  const confirmRemove = () => {
+  const confirmRemove = async () => {
     if (!removeTarget) return
+    // Guard: never let a seller end up with zero payment methods (a batch
+    // shouldn't have no way for buyers to pay).
+    if (payMethods.length <= 1) return
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.deactivatePaymentMethod(String(removeTarget.id))
+        await refreshPaymentMethods()
+        setRemoveTarget(null)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to remove payment method.")
+      }
+      return
+    }
     setPayMethods((p) => p.filter((m) => m.id !== removeTarget.id))
     setRemoveTarget(null)
+  }
+
+  const openEdit = (m: PayMethod) => {
+    setEditTarget(m)
+    setEditName(m.name)
+    setEditNum(m.detail)
+  }
+
+  const saveEdit = async () => {
+    if (!editTarget || !editName.trim() || !editNum.trim()) return
+    setPmLoading(true)
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.updatePaymentMethod(String(editTarget.id), editName.trim(), editNum.trim())
+        await refreshPaymentMethods()
+        setPmLoading(false)
+        setEditTarget(null)
+      } catch (error) {
+        setPmLoading(false)
+        alert(error instanceof Error ? error.message : "Unable to update payment method.")
+      }
+      return
+    }
+    setTimeout(() => {
+      setPayMethods((p) =>
+        p.map((m) =>
+          m.id === editTarget.id
+            ? { ...m, name: editName.trim(), detail: editNum.trim() }
+            : m,
+        ),
+      )
+      setPmLoading(false)
+      setEditTarget(null)
+    }, 700)
   }
 
   const submit2FA = () => {
@@ -208,17 +312,10 @@ export default function Settings({ user, setUser, role }: SharedState) {
                   transition: "all 0.15s",
                 }}
               >
-                <span style={{ fontSize: 15 }}>
-                  {s === "Profile"
-                    ? "👤"
-                    : s === "Linked Accounts"
-                      ? "🔗"
-                      : s === "Notifications"
-                        ? "🔔"
-                        : s === "Payment Methods"
-                          ? "💳"
-                          : "Lock"}
-                </span>
+                {(() => {
+                  const Icon = SECTION_ICONS[s]
+                  return <Icon size={15} aria-hidden="true" />
+                })()}
                 {s}
               </button>
             ))}
@@ -251,9 +348,6 @@ export default function Settings({ user, setUser, role }: SharedState) {
               setIgConn={setIgConn}
               setIgUser={setIgUser}
               setSocialModal={setSocialModal}
-              idState={idState}
-              handleIdPick={handleIdPick}
-              idFileRef={idFileRef}
             />
           )}
           {section === "Notifications" && (
@@ -265,6 +359,8 @@ export default function Settings({ user, setUser, role }: SharedState) {
               setShowAddPM={setShowAddPM}
               setVerifyTarget={setVerifyTarget}
               setRemoveTarget={setRemoveTarget}
+              onEdit={openEdit}
+              isLastMethod={payMethods.length <= 1}
             />
           )}
           {section === "Security" && (
@@ -303,12 +399,27 @@ export default function Settings({ user, setUser, role }: SharedState) {
         />
       )}
 
+      {/* Edit / Replace modal */}
+      {editTarget && (
+        <EditPaymentMethodModal
+          editTarget={editTarget}
+          editName={editName}
+          setEditName={setEditName}
+          editNum={editNum}
+          setEditNum={setEditNum}
+          pmLoading={pmLoading}
+          saveEdit={saveEdit}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
+
       {/* Remove confirmation */}
       {removeTarget && (
         <RemovePaymentMethodModal
           removeTarget={removeTarget}
           setRemoveTarget={setRemoveTarget}
           confirmRemove={confirmRemove}
+          isLastMethod={payMethods.length <= 1}
         />
       )}
 
@@ -334,6 +445,12 @@ export default function Settings({ user, setUser, role }: SharedState) {
             if (socialModal === "Facebook") {
               setFbConn(true)
               setFbUser(u)
+              // Persist the linked Facebook handle on the user so other flows
+              // (e.g. the Pay Now contact-link field, #20) can prefill it.
+              const fbUrl = u.startsWith("http")
+                ? u
+                : `https://facebook.com/${u.replace(/^@/, "")}`
+              setUser((prev) => ({ ...prev, fb: fbUrl }))
             } else {
               setIgConn(true)
               setIgUser(u)

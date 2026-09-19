@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import {
@@ -15,6 +16,8 @@ import {
   BuyerProfileModal,
 } from "@/components/shared"
 import ExtensionRequestModal from "./ExtensionRequestModal"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function MyClaims({
   claims,
@@ -75,7 +78,7 @@ export default function MyClaims({
               gap: 8,
             }}
           >
-            <span>📘</span> Opening {fbToast}'s Facebook profile…
+            <Link2 size={15} aria-hidden="true" /> Opening {fbToast}'s Facebook profile…
           </div>
         )}
         <h2
@@ -175,9 +178,9 @@ export default function MyClaims({
                 >
                   <td style={{ padding: "10px 14px" }}>
                     <div className="flex items-center gap-2">
-                      <Avatar name={c.seller} size={22} />
+                      <Avatar name={c.buyer || c.seller} size={22} />
                       <button
-                        onClick={() => setBuyerProfile(c.seller)}
+                        onClick={() => setBuyerProfile(c.buyer || c.seller)}
                         style={{
                           background: "none",
                           border: "none",
@@ -188,7 +191,7 @@ export default function MyClaims({
                           padding: 0,
                         }}
                       >
-                        {c.seller}
+                        {c.buyer || c.seller}
                       </button>
                     </div>
                   </td>
@@ -255,12 +258,23 @@ export default function MyClaims({
                       <SecondaryBtn
                         size="sm"
                         onClick={() => {
-                          const fbUrl = `https://facebook.com/${c.seller.toLowerCase().replace(" ", ".")}`
-                          setFbToast(c.seller)
-                          setTimeout(() => {
-                            window.open(fbUrl, "_blank", "noopener,noreferrer")
-                            setFbToast(null)
-                          }, 1200)
+                          const buyerName = c.buyer || c.seller
+                          if (c.buyerFb) {
+                            // Real contact link on file — open it.
+                            setFbToast(buyerName)
+                            setTimeout(() => {
+                              window.open(
+                                c.buyerFb,
+                                "_blank",
+                                "noopener,noreferrer",
+                              )
+                              setFbToast(null)
+                            }, 1200)
+                          } else {
+                            // No contact link — open the buyer's profile instead
+                            // of fabricating a Facebook URL.
+                            setBuyerProfile(buyerName)
+                          }
                         }}
                       >
                         Contact Buyer
@@ -295,8 +309,20 @@ export default function MyClaims({
     )
   }
 
-  const handlePay = (method: string) => {
+  const handlePay = async (method: string) => {
     if (!payTarget) return
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.submitPayment({
+          orderId: String(payTarget.id),
+          method,
+          amount: payTarget.amount,
+        })
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to submit payment.")
+        return
+      }
+    }
     const newHist: PayHistRow = {
       id: payHistory.length + 1,
       product: payTarget.product,
@@ -304,17 +330,17 @@ export default function MyClaims({
       method,
       amount: payTarget.amount,
       date: TODAY,
-      status: "Paid and Reserved",
+      status: isSupabaseConfigured ? "Pending" : "Paid and Reserved",
     }
     setPayHistory((h) => [newHist, ...h])
-    setClaims((prev) =>
+    if (!isSupabaseConfigured) setClaims((prev) =>
       prev.map((c) =>
         c.id === payTarget.id
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
           : c,
       ),
     )
-    setToPay((prev) => prev.filter((t) => t.product !== payTarget.product))
+    if (!isSupabaseConfigured) setToPay((prev) => prev.filter((t) => t.product !== payTarget.product))
     const newOrder: OrderRow = {
       id: `ORD-2026-${String(orders.length + 60).padStart(4, "0")}`,
       product: payTarget.product,
@@ -326,7 +352,7 @@ export default function MyClaims({
       eta: "Est. Oct 2026",
       rated: false,
     }
-    setOrders((prev) => [newOrder, ...prev])
+    if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev])
     setPayTarget(null)
   }
 
@@ -391,7 +417,13 @@ export default function MyClaims({
                 cursor: "pointer",
               }}
             >
-              {m === "table" ? "☰ Table" : "⊞ Cards"}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                {m === "table" ? (
+                  <><List size={13} aria-hidden="true" /> Table</>
+                ) : (
+                  <><LayoutGrid size={13} aria-hidden="true" /> Cards</>
+                )}
+              </span>
             </button>
           ))}
         </div>
@@ -749,7 +781,15 @@ export default function MyClaims({
       {extTarget && (
         <ExtensionRequestModal
           claim={extTarget}
-          onSubmit={() => {
+          onSubmit={async (hours, reason) => {
+            if (isSupabaseConfigured) {
+              try {
+                await kargoApi.requestOrderExtension(String(extTarget.id), hours, reason)
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "Unable to request extension.")
+                return
+              }
+            }
             setClaims((prev) =>
               prev.map((c) =>
                 c.id === extTarget.id ? { ...c, extensionRequested: true } : c,
@@ -782,7 +822,8 @@ export default function MyClaims({
                     color: "#92400E",
                   }}
                 >
-                  ⚠️ This item has already been paid. A refund will be processed
+                  <AlertTriangle size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                  This item has already been paid. A refund will be processed
                   to the phone number and payment method on file within 3–5
                   business days.
                 </div>
@@ -796,7 +837,15 @@ export default function MyClaims({
                 Keep Claim
               </SecondaryBtn>
               <button
-                onClick={() => {
+                onClick={async () => {
+                  if (isSupabaseConfigured) {
+                    try {
+                      await kargoApi.cancelOrder(String(cancelTarget.id))
+                    } catch (error) {
+                      alert(error instanceof Error ? error.message : "Unable to cancel order.")
+                      return
+                    }
+                  }
                   setClaims((prev) =>
                     prev.map((c) =>
                       c.id === cancelTarget.id

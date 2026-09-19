@@ -11,6 +11,7 @@ export default function FulfillmentDetails({
   onMove: (order: FulfillmentOrder, col: KanbanCol) => void
 }) {
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [confirmComplete, setConfirmComplete] = useState(false)
   const selectId = `fulfillment-status-${order.id}`
   return (
     <div
@@ -36,6 +37,7 @@ export default function FulfillmentDetails({
         onChange={(e) => {
           const next = e.target.value as KanbanCol
           if (next === "Cancelled") setConfirmCancel(true)
+          else if (next === "Completed") setConfirmComplete(true)
           else onMove(order, next)
         }}
         style={{
@@ -77,6 +79,32 @@ export default function FulfillmentDetails({
               }}
             >
               Move to Cancelled
+            </PrimaryBtn>
+          </div>
+        </Modal>
+      )}
+      {confirmComplete && (
+        <Modal
+          title="Mark this order as Completed?"
+          onClose={() => setConfirmComplete(false)}
+          width={420}
+        >
+          <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
+            Marking {order.product} for {order.buyer} as Completed finalizes
+            this order and counts it toward your fulfilled total. You can move
+            it back to another status later if this was a mistake.
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <SecondaryBtn onClick={() => setConfirmComplete(false)}>
+              Not yet
+            </SecondaryBtn>
+            <PrimaryBtn
+              onClick={() => {
+                setConfirmComplete(false)
+                onMove(order, "Completed")
+              }}
+            >
+              Mark Completed
             </PrimaryBtn>
           </div>
         </Modal>

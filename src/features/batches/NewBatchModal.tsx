@@ -2,6 +2,8 @@ import { useState } from "react"
 import type { BatchType } from "@/types"
 import { INDIGO, CAT_GRAD } from "@/constants/theme"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export type BatchProduct = {
   name: string
@@ -68,7 +70,7 @@ export default function NewBatchModal({
     return `${sm} ${sd}, ${sy} – ${em} ${ed}, ${ey}`
   }
 
-  const submit = () => {
+  const submit = async () => {
     const validProds = products.filter(
       (p) =>
         p.name.trim() &&
@@ -83,11 +85,17 @@ export default function NewBatchModal({
       setError("Add at least one product with a name, price, and quantity.")
       return
     }
+    if (isSupabaseConfigured && (!startDate || !endDate)) {
+      setError("Choose both the start and end date before publishing.")
+      return
+    }
     setError("")
     setLoading(true)
-    setTimeout(() => {
+    try {
       const prods = validProds.map((p) => ({
               name: p.name.trim(),
+              basePrice: Number(p.basePrice),
+              markup: Number(p.markup),
               price: Number(p.basePrice) + Number(p.markup),
               qty: Number(p.qty),
               claimed: 0,
@@ -96,9 +104,24 @@ export default function NewBatchModal({
             }))
       const reserveHours =
         timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal)
+      if (isSupabaseConfigured) {
+        await kargoApi.createBatch({
+          title: title.trim(),
+          category: cat,
+          startsOn: startDate,
+          endsOn: endDate,
+          reservationHours: reserveHours,
+          products: validProds.map((p) => ({
+            name: p.name.trim(),
+            basePrice: Number(p.basePrice),
+            markup: Number(p.markup),
+            quantity: Number(p.qty),
+          })),
+        })
+      }
       onCreate({
         id: Date.now(),
-        live: false,
+        live: isSupabaseConfigured,
         locked: false,
         title: title.trim(),
         seller: sellerName || "You",
@@ -112,11 +135,14 @@ export default function NewBatchModal({
       })
       setLoading(false)
       onClose()
-    }, 1000)
+    } catch (caught) {
+      setLoading(false)
+      setError(caught instanceof Error ? caught.message : "Unable to create batch.")
+    }
   }
 
   return (
-    <Modal title="Create New Batch" onClose={onClose} width={520}>
+    <Modal title="Create New Batch" onClose={onClose} width={560}>
       <div className="space-y-4">
         <div>
           <label
@@ -337,124 +363,129 @@ export default function NewBatchModal({
           >
             Items
           </label>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
-              gap: 4,
-              marginBottom: 4,
-            }}
-          >
-            {[
-              "Product Name",
-              "Base Price (₱)",
-              "Markup (₱)",
-              "Selling Price",
-              "Qty",
-            ].map((h) => (
-              <div
-                key={h}
-                style={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: "#9CA3AF",
-                  padding: "0 2px",
-                }}
-              >
-                {h}
-              </div>
-            ))}
-          </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {products.map((p, i) => {
               const selling = Number(p.basePrice || 0) + Number(p.markup || 0)
+              const fieldLabel = {
+                fontSize: 10,
+                fontWeight: 600 as const,
+                color: "#9CA3AF",
+                display: "block" as const,
+                marginBottom: 3,
+              }
+              const numInput = {
+                width: "100%",
+                fontSize: 12,
+                border: "1px solid #E5E7EB",
+                borderRadius: 6,
+                padding: "7px 8px",
+                outline: "none",
+                color: "#374151",
+                fontFamily: "inherit",
+                boxSizing: "border-box" as const,
+              }
               return (
                 <div
                   key={i}
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
-                    gap: 4,
+                    border: "1px solid #F3F4F6",
+                    borderRadius: 8,
+                    padding: 10,
+                    background: "#FCFCFD",
                   }}
                 >
-                  <input
-                    value={p.name}
-                    onChange={(e) => updateProduct(i, "name", e.target.value)}
-                    placeholder="Product name"
-                    style={{
-                      fontSize: 12,
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 6,
-                      padding: "7px 10px",
-                      outline: "none",
-                      color: "#374151",
-                      fontFamily: "inherit",
-                    }}
-                    className="placeholder:text-gray-400"
-                  />
-                  <input
-                    type="number"
-                    value={p.basePrice}
-                    onChange={(e) =>
-                      updateProduct(i, "basePrice", e.target.value)
-                    }
-                    placeholder="0"
-                    style={{
-                      fontSize: 12,
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 6,
-                      padding: "7px 8px",
-                      outline: "none",
-                      color: "#374151",
-                      fontFamily: "inherit",
-                    }}
-                    className="placeholder:text-gray-400"
-                  />
-                  <input
-                    type="number"
-                    value={p.markup}
-                    onChange={(e) => updateProduct(i, "markup", e.target.value)}
-                    placeholder="0"
-                    style={{
-                      fontSize: 12,
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 6,
-                      padding: "7px 8px",
-                      outline: "none",
-                      color: "#374151",
-                      fontFamily: "inherit",
-                    }}
-                    className="placeholder:text-gray-400"
-                  />
+                  {/* Line 1: product name (full width) */}
+                  <div style={{ marginBottom: 8 }}>
+                    <label style={fieldLabel}>Product Name</label>
+                    <input
+                      value={p.name}
+                      onChange={(e) => updateProduct(i, "name", e.target.value)}
+                      placeholder="Product name"
+                      style={{
+                        width: "100%",
+                        fontSize: 12,
+                        border: "1px solid #E5E7EB",
+                        borderRadius: 6,
+                        padding: "7px 10px",
+                        outline: "none",
+                        color: "#374151",
+                        fontFamily: "inherit",
+                        boxSizing: "border-box" as const,
+                      }}
+                      className="placeholder:text-gray-400"
+                    />
+                  </div>
+                  {/* Line 2: numeric fields wrap on narrow screens, no scroll */}
                   <div
                     style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: INDIGO,
-                      background: "#EEF0FF",
-                      borderRadius: 6,
-                      padding: "7px 8px",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(78px, 1fr))",
+                      gap: 8,
                     }}
                   >
-                    {selling > 0 ? `₱${selling.toLocaleString()}` : "—"}
+                    <div>
+                      <label style={fieldLabel}>Base Price (₱)</label>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        value={p.basePrice}
+                        onChange={(e) =>
+                          updateProduct(i, "basePrice", e.target.value)
+                        }
+                        placeholder="0"
+                        style={numInput}
+                        className="placeholder:text-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <label style={fieldLabel}>Markup (₱)</label>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        value={p.markup}
+                        onChange={(e) =>
+                          updateProduct(i, "markup", e.target.value)
+                        }
+                        placeholder="0"
+                        style={numInput}
+                        className="placeholder:text-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <label style={fieldLabel}>Selling Price</label>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: INDIGO,
+                          background: "#EEF0FF",
+                          borderRadius: 6,
+                          padding: "7px 8px",
+                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {selling > 0 ? `₱${selling.toLocaleString()}` : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <label style={fieldLabel}>Qty</label>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        value={p.qty}
+                        onChange={(e) =>
+                          updateProduct(i, "qty", e.target.value)
+                        }
+                        placeholder="qty"
+                        style={numInput}
+                        className="placeholder:text-gray-400"
+                      />
+                    </div>
                   </div>
-                  <input
-                    type="number"
-                    value={p.qty}
-                    onChange={(e) => updateProduct(i, "qty", e.target.value)}
-                    placeholder="qty"
-                    style={{
-                      fontSize: 12,
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 6,
-                      padding: "7px 8px",
-                      outline: "none",
-                      color: "#374151",
-                      fontFamily: "inherit",
-                    }}
-                    className="placeholder:text-gray-400"
-                  />
                 </div>
               )
             })}

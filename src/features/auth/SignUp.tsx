@@ -1,9 +1,13 @@
 import { useState, useRef, useCallback } from "react"
-import type { UserInfo, Role } from "@/types"
+import { ShoppingBasket, Plane } from "lucide-react"
+import type { UserInfo, Role, BirState } from "@/types"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { PrimaryBtn, Toggle } from "@/components/shared"
 import AuthInput from "./AuthInput"
 import LogoMark from "./LogoMark"
+import BirVerifier from "./BirVerifier"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function SignUp({
   onLogin,
@@ -34,13 +38,10 @@ export default function SignUp({
     TikTok: { on: false, url: "" },
     Instagram: { on: false, url: "" },
   })
-  const [birState, setBirState] = useState<"none" | "uploading" | "submitted">(
-    "none",
-  )
-  const birRef = useRef<HTMLInputElement>(null)
+  const [birState, setBirState] = useState<BirState>("None")
   const [terms, setTerms] = useState(false)
 
-  const submit = useCallback(() => {
+  const submit = useCallback(async () => {
     const e: Record<string, string> = {}
     if (!name.trim() || name.trim().split(" ").length < 2)
       e.name = "Enter your full name (first and last)."
@@ -51,17 +52,44 @@ export default function SignUp({
       if (!shopName.trim()) e.shopName = "Shop name is required."
       if (!Object.values(socials).some((s) => s.on))
         e.social = "Link at least one social account."
-      if (birState !== "submitted")
-        e.bir = "Please upload your BIR Certificate."
+      if (!isSupabaseConfigured && birState !== "Verified")
+        e.bir = "Your BIR badge must be verified before you can sell."
       if (!terms) e.terms = "You must agree to the Terms and Privacy Policy."
     }
     setErrs(e)
     if (Object.keys(e).length > 0) return
     setLoading(true)
-    setTimeout(() => {
+    if (!isSupabaseConfigured) {
+      setTimeout(() => {
+        setLoading(false)
+        onSuccess({
+          name: name.trim(),
+          email,
+          role,
+          birState: role === "Seller" ? birState : "None",
+        })
+      }, 600)
+      return
+    }
+    try {
+      const result = await kargoApi.signUp({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        shopName,
+        phone,
+        socials,
+      })
       setLoading(false)
-      onSuccess({ name: name.trim(), email, role })
-    }, 1800)
+      if (result.needsEmailConfirmation || !result.user) {
+        setErrs({ general: "Account created. Check your email to confirm it, then log in." })
+        return
+      }
+      onSuccess({ ...result.user, role })
+    } catch (error) {
+      setLoading(false)
+      setErrs({ general: error instanceof Error ? error.message : "Unable to create account." })
+    }
   }, [
     name,
     email,
@@ -417,104 +445,15 @@ export default function SignUp({
                   )}
                 </div>
 
-                {/* BIR Certificate */}
+                {/* BIR Registration Seal Badge verification */}
                 <div>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#374151",
-                      display: "block",
-                      marginBottom: 8,
-                    }}
-                  >
-                    BIR Certificate{" "}
-                    <span style={{ color: "#6B7280", fontWeight: 400 }}>
-                      (required for Verification Badge)
-                    </span>
-                  </label>
-                  <input
-                    ref={birRef}
-                    type="file"
-                    accept="image/*,.pdf"
-                    style={{ display: "none" }}
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        setBirState("uploading")
-                        setTimeout(() => setBirState("submitted"), 1500)
-                      }
-                    }}
-                  />
-                  {birState === "none" && (
-                    <div
-                      onClick={() => birRef.current?.click()}
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Upload BIR Certificate"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault()
-                          birRef.current?.click()
-                        }
-                      }}
-                      style={{
-                        border: "2px dashed #D1D5DB",
-                        borderRadius: 8,
-                        padding: "18px 0",
-                        textAlign: "center",
-                        cursor: "pointer",
-                        background: CREAM,
-                      }}
-                    >
-                      <div style={{ fontSize: 20, marginBottom: 4 }}>📄</div>
-                      <div style={{ fontSize: 12, color: "#6B7280" }}>
-                        Click to upload BIR Certificate
-                      </div>
-                      <div
-                        style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}
-                      >
-                        PDF or image file
-                      </div>
+                  {isSupabaseConfigured ? (
+                    <div style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.5 }}>
+                      Create your account first. KARGO will open the secure BIR
+                      verification step immediately after sign-up.
                     </div>
-                  )}
-                  {birState === "uploading" && (
-                    <div
-                      style={{
-                        border: "1px solid #E5E7EB",
-                        borderRadius: 8,
-                        padding: "14px",
-                        textAlign: "center",
-                        color: "#6B7280",
-                        fontSize: 13,
-                      }}
-                    >
-                      <span className="animate-spin inline-block mr-2">⏳</span>
-                      Uploading…
-                    </div>
-                  )}
-                  {birState === "submitted" && (
-                    <div
-                      style={{
-                        background: "#D4F5EA",
-                        border: "1px solid #6EE7B7",
-                        borderRadius: 8,
-                        padding: "12px 14px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                      }}
-                    >
-                      <span style={{ fontSize: 18 }}>✅</span>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: "#065F46",
-                        }}
-                      >
-                        BIR Certificate Uploaded — Pending Review
-                      </div>
-                    </div>
+                  ) : (
+                    <BirVerifier birState={birState} setBirState={setBirState} />
                   )}
                   {errs.bir && (
                     <p
@@ -637,7 +576,14 @@ export default function SignUp({
                       fontFamily: "'Plus Jakarta Sans',sans-serif",
                     }}
                   >
-                    {r === "Buyer" ? "🛍 Buyer" : "✈️ Seller"}
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      {r === "Buyer" ? (
+                        <ShoppingBasket size={14} aria-hidden="true" />
+                      ) : (
+                        <Plane size={14} aria-hidden="true" />
+                      )}
+                      {r}
+                    </span>
                     <div
                       style={{
                         fontSize: 10,
@@ -654,6 +600,11 @@ export default function SignUp({
                 ))}
               </div>
             </div>
+            {errs.general && (
+              <p role="status" style={{ fontSize: 12, color: errs.general.startsWith("Account created") ? "#0B7A59" : "#B91C1C" }}>
+                {errs.general}
+              </p>
+            )}
             <PrimaryBtn
               onClick={submit}
               loading={loading}

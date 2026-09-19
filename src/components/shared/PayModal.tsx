@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import { CheckCircle2, Paperclip } from "lucide-react"
 import type { Role } from "@/types"
 import { INDIGO, CREAM } from "@/constants/theme"
 import Modal from "./Modal"
@@ -371,7 +372,7 @@ export default function PayModal({
                   </div>
                 ) : uploaded ? (
                   <>
-                    <div style={{ fontSize: 22 }}>✅</div>
+                    <div style={{ color: "#0B7A59", display: "flex", justifyContent: "center" }}><CheckCircle2 size={22} aria-hidden="true" /></div>
                     <div
                       style={{
                         fontSize: 12,
@@ -390,7 +391,7 @@ export default function PayModal({
                   </>
                 ) : (
                   <>
-                    <div style={{ fontSize: 26 }}>📎</div>
+                    <div style={{ color: "#9CA3AF", display: "flex", justifyContent: "center" }}><Paperclip size={26} aria-hidden="true" /></div>
                     <div
                       style={{
                         fontSize: 12,
