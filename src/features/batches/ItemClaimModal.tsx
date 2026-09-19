@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Clock3, Star } from "lucide-react"
+import { Clock3, Star, ClipboardList } from "lucide-react"
 import type { BatchType } from "@/types"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Modal, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge } from "@/components/shared"
@@ -259,7 +259,9 @@ export default function ItemClaimModal({
               color: "#374151",
             }}
           >
-            📋 Important Reminders
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <ClipboardList size={13} aria-hidden="true" /> Important Reminders
+            </span>
             <span style={{ fontSize: 10, color: "#9CA3AF" }}>
               {showReminders ? "▲" : "▼"}
             </span>

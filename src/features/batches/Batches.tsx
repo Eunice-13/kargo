@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { BarChart3, Lock } from "lucide-react"
+import { BarChart3, Lock, Search, FileText, ArrowRight } from "lucide-react"
 import type { ClaimRow, BatchType, SharedState } from "@/types"
 import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
 import { navIntent } from "@/state/navIntent"
@@ -509,7 +509,9 @@ export default function Batches({
                                 onClick={() => setBatchPage(b)}
                                 size="sm"
                               >
-                                View Items →
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                  View Items <ArrowRight size={13} aria-hidden="true" />
+                                </span>
                               </PrimaryBtn>
                               {role === "Seller" && (
                                 <SecondaryBtn
@@ -644,12 +646,16 @@ export default function Batches({
       <div className="flex-1" />
       {role === "Buyer" && (
         <SecondaryBtn onClick={() => setSellerDir(true)}>
-          🔍 Browse Sellers
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <Search size={13} aria-hidden="true" /> Browse Sellers
+          </span>
         </SecondaryBtn>
       )}
       {role === "Buyer" && (
         <SecondaryBtn onClick={() => setShowBuyerReqForm(true)}>
-          📝 Request Item
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <FileText size={13} aria-hidden="true" /> Request Item
+          </span>
         </SecondaryBtn>
       )}
       <span style={{ fontSize: 12, color: "#9CA3AF" }}>
@@ -932,7 +938,9 @@ export default function Batches({
                             )
                           }}
                         >
-                          Reply on FB →
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            Reply on FB <ArrowRight size={13} aria-hidden="true" />
+                          </span>
                         </SecondaryBtn>
                       )}
                     </div>

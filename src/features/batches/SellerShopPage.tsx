@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ArrowRight } from "lucide-react"
 import type { BatchType } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
@@ -297,7 +298,9 @@ export default function SellerShopPage({
                       fontFamily: "'Plus Jakarta Sans',sans-serif",
                     }}
                   >
-                    Claim from this batch →
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      Claim from this batch <ArrowRight size={13} aria-hidden="true" />
+                    </span>
                   </button>
                 </div>
               </div>
