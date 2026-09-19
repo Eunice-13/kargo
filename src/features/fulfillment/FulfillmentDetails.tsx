@@ -83,6 +83,32 @@ export default function FulfillmentDetails({
           </div>
         </Modal>
       )}
+      {confirmComplete && (
+        <Modal
+          title="Mark this order as Completed?"
+          onClose={() => setConfirmComplete(false)}
+          width={420}
+        >
+          <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
+            Marking {order.product} for {order.buyer} as Completed finalizes
+            this order and counts it toward your fulfilled total. You can move
+            it back to another status later if this was a mistake.
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <SecondaryBtn onClick={() => setConfirmComplete(false)}>
+              Not yet
+            </SecondaryBtn>
+            <PrimaryBtn
+              onClick={() => {
+                setConfirmComplete(false)
+                onMove(order, "Completed")
+              }}
+            >
+              Mark Completed
+            </PrimaryBtn>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

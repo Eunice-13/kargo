@@ -3,7 +3,7 @@ import { BarChart3, Lock, Unlock, Search, FileText, ArrowRight, Star } from "luc
 import type { ClaimRow, BatchType, SharedState } from "@/types"
 import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
 import { navIntent } from "@/state/navIntent"
-import { Card, SH, PrimaryBtn, SecondaryBtn, Avatar, CategoryIcon, Toggle } from "@/components/shared"
+import { Modal, Card, SH, PrimaryBtn, SecondaryBtn, Avatar, CategoryIcon, Toggle } from "@/components/shared"
 import FinancialSummaryModal from "./FinancialSummaryModal"
 import BuyerRequestFormModal from "./BuyerRequestFormModal"
 import ItemClaimModal from "./ItemClaimModal"
@@ -51,6 +51,8 @@ export default function Batches({
     batch: BatchType
     product: BatchType["products"][0]
   } | null>(null)
+  // Confirmation targets for consequential seller actions (#16)
+  const [lockConfirm, setLockConfirm] = useState<BatchType | null>(null)
 
   // Seller-only state
   type ExtReq = {
@@ -110,6 +112,11 @@ export default function Batches({
       replied: false,
     },
   ])
+  // Confirmation target for extension approve/deny (#16)
+  const [extConfirm, setExtConfirm] = useState<{
+    req: ExtReq
+    action: "approved" | "denied"
+  } | null>(null)
 
   const filtered = batches.filter((b) => {
     if (catFilter !== "All" && b.category !== catFilter) return false
@@ -173,6 +180,95 @@ export default function Batches({
     setProfile(null)
     setProfileClaimTarget({ batch, product })
   }
+
+  // Confirmation modals for consequential seller actions (#16). Rendered in
+  // every return branch so they work from the batch grid and the seller panels.
+  const confirmModals = (
+    <>
+      {lockConfirm && (
+        <Modal
+          title={lockConfirm.locked ? "Unlock this batch?" : "Lock this batch?"}
+          onClose={() => setLockConfirm(null)}
+          width={420}
+        >
+          <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
+            {lockConfirm.locked ? (
+              <>
+                Unlocking <strong>{lockConfirm.title}</strong> reopens it so
+                buyers can claim items again.
+              </>
+            ) : (
+              <>
+                Locking <strong>{lockConfirm.title}</strong> pauses new orders —
+                buyers won't be able to claim items until you unlock it.
+                Existing claims are not affected.
+              </>
+            )}
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <SecondaryBtn onClick={() => setLockConfirm(null)}>
+              Cancel
+            </SecondaryBtn>
+            <PrimaryBtn
+              onClick={() => {
+                toggleBatchLock(setBatches, lockConfirm.id)
+                setLockConfirm(null)
+              }}
+            >
+              {lockConfirm.locked ? "Unlock Batch" : "Lock Batch"}
+            </PrimaryBtn>
+          </div>
+        </Modal>
+      )}
+      {extConfirm && (
+        <Modal
+          title={
+            extConfirm.action === "approved"
+              ? "Approve this extension request?"
+              : "Deny this extension request?"
+          }
+          onClose={() => setExtConfirm(null)}
+          width={420}
+        >
+          <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
+            {extConfirm.action === "approved" ? (
+              <>
+                Approving gives <strong>{extConfirm.req.buyer}</strong> more
+                time to pay for <strong>{extConfirm.req.product}</strong>. The
+                buyer will be notified.
+              </>
+            ) : (
+              <>
+                Denying keeps the original deadline for{" "}
+                <strong>{extConfirm.req.buyer}</strong>'s claim on{" "}
+                <strong>{extConfirm.req.product}</strong>. The buyer will be
+                notified.
+              </>
+            )}
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <SecondaryBtn onClick={() => setExtConfirm(null)}>
+              Cancel
+            </SecondaryBtn>
+            <PrimaryBtn
+              onClick={() => {
+                setExtensionRequests((p) =>
+                  p.map((r) =>
+                    r.id === extConfirm.req.id
+                      ? { ...r, status: extConfirm.action }
+                      : r,
+                  ),
+                )
+                setExtConfirm(null)
+              }}
+            >
+              {extConfirm.action === "approved" ? "Approve" : "Deny"}
+            </PrimaryBtn>
+          </div>
+        </Modal>
+      )}
+    </>
+  )
 
   if (batchPage)
     return (
@@ -287,7 +383,7 @@ export default function Batches({
                               aria-label={b.locked ? "Unlock batch" : "Lock batch"}
                               onClick={(e) => {
                                 e.stopPropagation()
-                                toggleBatchLock(setBatches, b.id)
+                                setLockConfirm(b)
                               }}
                               style={{
                                 position: "absolute",
@@ -791,26 +887,14 @@ export default function Batches({
                           <PrimaryBtn
                             size="sm"
                             onClick={() =>
-                              setExtensionRequests((p) =>
-                                p.map((r) =>
-                                  r.id === req.id
-                                    ? { ...r, status: "approved" as const }
-                                    : r,
-                                ),
-                              )
+                              setExtConfirm({ req, action: "approved" })
                             }
                           >
                             Approve
                           </PrimaryBtn>
                           <button
                             onClick={() =>
-                              setExtensionRequests((p) =>
-                                p.map((r) =>
-                                  r.id === req.id
-                                    ? { ...r, status: "denied" as const }
-                                    : r,
-                                ),
-                              )
+                              setExtConfirm({ req, action: "denied" })
                             }
                             style={{
                               fontSize: 12,
@@ -994,6 +1078,7 @@ export default function Batches({
             onClose={() => setFinancialBatch(null)}
           />
         )}
+        {confirmModals}
       </div>
     )
   }
@@ -1038,6 +1123,7 @@ export default function Batches({
           onClose={() => setFinancialBatch(null)}
         />
       )}
+      {confirmModals}
     </div>
   )
 }
