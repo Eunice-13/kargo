@@ -3,6 +3,7 @@ import type {
   BatchType,
   BirState,
   ClaimRow,
+  WaitlistEntry,
   ExpenseItem,
   ExpenseMode,
   FulfillmentOrder,
@@ -30,6 +31,7 @@ export type LoadedAppData = {
   payHistory: PayHistRow[]
   orders: OrderRow[]
   fulfillment: FulfillmentOrder[]
+  waitlist: WaitlistEntry[]
 }
 
 const birToUi: Record<DbProfile["bir_status"], BirState> = {
@@ -299,7 +301,58 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     }
   }
 
-  return { user, batches: [...batchMap.values()], claims, toPay, payHistory, orders, fulfillment }
+  const waitlist = await loadBuyerWaitlist(client, auth.user.id, batchMap)
+  return { user, batches: [...batchMap.values()], claims, toPay, payHistory, orders, fulfillment, waitlist }
+}
+
+async function loadBuyerWaitlist(
+  client: ReturnType<typeof requireSupabase>,
+  userId: string,
+  batchMap: Map<string, BatchType>,
+): Promise<WaitlistEntry[]> {
+  const { data, error } = await client
+    .from("waitlist_entries")
+    .select("id, batch_product_id, joined_at, batch_products(name, selling_price, batch_id)")
+    .eq("buyer_id", userId)
+    .eq("status", "waiting")
+  if (error) throw error
+  const rows = data ?? []
+  const productIds = [...new Set(rows.map((row: { batch_product_id: string }) => row.batch_product_id))]
+  let peers: { batch_product_id: string; joined_at: string }[] = []
+  if (productIds.length > 0) {
+    const { data: peerRows, error: peerError } = await client
+      .from("waitlist_entries")
+      .select("batch_product_id, joined_at")
+      .in("batch_product_id", productIds)
+      .eq("status", "waiting")
+    if (peerError) throw peerError
+    peers = peerRows ?? []
+  }
+  return rows.map((row: {
+    id: string
+    batch_product_id: string
+    joined_at: string
+    batch_products: { name: string; selling_price: number | string; batch_id: string } | null
+  }) => {
+    const product = row.batch_products
+    const batch = product ? batchMap.get(product.batch_id) : undefined
+    const joined = new Date(row.joined_at).getTime()
+    const queue = peers.filter((p) => p.batch_product_id === row.batch_product_id)
+    const position = queue.filter((p) => new Date(p.joined_at).getTime() <= joined).length
+    const catalogProduct = batch?.products.find((p) => p.dbId === row.batch_product_id)
+    return {
+      id: row.id,
+      productId: row.batch_product_id,
+      product: product?.name ?? catalogProduct?.name ?? "Product",
+      batchId: batch?.id ?? (product ? numericId(product.batch_id) : 0),
+      batch: batch?.title ?? "",
+      seller: batch?.seller ?? "",
+      trips: batch?.trips ?? "",
+      position: Math.max(1, position),
+      queueSize: catalogProduct?.waitlist ?? queue.length,
+      amount: Number(product?.selling_price ?? catalogProduct?.price ?? 0),
+    }
+  })
 }
 
 export async function claimProduct(productId: string, quantity: number) {

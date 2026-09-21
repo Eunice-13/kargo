@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X, FileText } from "lucide-react"
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
+import { navIntent } from "@/state/navIntent"
+import { sortWaitlistUpcoming } from "@/data/waitlist"
 import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
 import {
   Card,
@@ -11,9 +13,9 @@ import {
   ProductThumb,
   StatusBadge,
   Countdown,
-  PayModal,
   BuyerProfileModal,
 } from "@/components/shared"
+import BatchCheckoutModal from "@/features/payments/BatchCheckoutModal"
 import {
   KANBAN_COLS,
   PRIOR_FULFILLED,
@@ -22,6 +24,7 @@ import {
   FulfillmentDetails,
 } from "@/features/fulfillment"
 import SalesReportModal from "./SalesReportModal"
+import WaitlistModal from "./WaitlistModal"
 
 export default function Dashboard({
   batches,
@@ -36,13 +39,23 @@ export default function Dashboard({
   orders,
   fulfillment,
   setFulfillment,
+  waitlist,
   user,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
   const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
   const [showSalesReport, setShowSalesReport] = useState(false)
+  const [showWaitlist, setShowWaitlist] = useState(false)
+  const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
   const board = useFulfillmentBoard(setFulfillment)
+
+  const waitlistSorted = useMemo(() => sortWaitlistUpcoming(waitlist), [waitlist])
+  const closestWaitlist = waitlistSorted[0] ?? null
+  const openWaitlist = () => {
+    setActiveWaitlistId(closestWaitlist?.id ?? null)
+    setShowWaitlist(true)
+  }
 
   // Close the expanded board with Escape.
   useEffect(() => {
@@ -53,13 +66,16 @@ export default function Dashboard({
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [boardExpanded])
-  const pending = claims.filter((c) => c.status === "Pending")
+  const activeClaims = claims
+    .filter((c) => c.status === "Pending")
+    .sort((a, b) => Number(b.id) - Number(a.id))
+  const recentClaims = activeClaims.slice(0, 5)
   const pendingTotal = toPay.reduce((s, t) => s + t.amount, 0)
 
   const buyerStats = [
     {
       label: "Active Claims",
-      value: String(claims.filter((c) => c.status === "Pending").length),
+      value: String(activeClaims.length),
       icon: Package,
       sub: "+3 this week",
       sc: GREEN,
@@ -75,9 +91,9 @@ export default function Dashboard({
     },
     {
       label: "Waitlist Position",
-      value: "#3",
+      value: closestWaitlist ? `#${closestWaitlist.position}` : "—",
       icon: Clock3,
-      sub: "Laneige Lip Mask",
+      sub: closestWaitlist ? closestWaitlist.product : "No waitlisted items",
       sc: "#6B7280",
       bg: CYAN_L,
     },
@@ -127,28 +143,32 @@ export default function Dashboard({
     },
   ]
   const stats = role === "Seller" ? sellerStats : buyerStats
-  const upcoming = toPay.slice(0, 4)
+  const upcoming = useMemo(
+    () => [...toPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
+    [toPay],
+  )
 
-  const handlePayAll = (method: string) => {
-    const newHist: PayHistRow[] = toPay.map((t, i) => ({
-      id: payHistory.length + i + 1,
-      product: t.product,
-      batch: "",
-      method,
-      amount: t.amount,
-      date: TODAY,
-      status: "Paid and Reserved" as ClaimStatus,
-    }))
-    setPayHistory((h) => [...newHist, ...h])
+  const handleBatchPayment = (item: (typeof toPay)[number], method: string) => {
+    setPayHistory((history) => [
+      {
+        id: history.length + 1,
+        product: item.product,
+        batch: "",
+        method,
+        amount: item.amount,
+        date: TODAY,
+        status: "Paid and Reserved" as ClaimStatus,
+      },
+      ...history,
+    ])
     setClaims((prev) =>
       prev.map((c) =>
-        toPay.some((t) => t.product === c.product) && c.status === "Pending"
+        c.id === item.id && c.status === "Pending"
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
           : c,
       ),
     )
-    setToPay([])
-    setShowPayAll(false)
+    setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
   }
 
   // Kanban columns for the seller Fulfillment Board. Rendered both inside the
@@ -296,52 +316,70 @@ export default function Dashboard({
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-4 gap-4">
-        {stats.map((s, i) => (
-          <div
-            key={s.label}
-            className="fi"
-            style={{ animationDelay: `${i * 60}ms` }}
-          >
+        {stats.map((s, i) => {
+          const isWaitlist = s.label === "Waitlist Position"
+          return (
             <div
-              style={{
-                background: s.bg,
-                border: "1px solid #E5E7EB",
-                borderRadius: 8,
-                padding: "18px 20px",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              }}
+              key={s.label}
+              className="fi"
+              style={{ animationDelay: `${i * 60}ms` }}
             >
-              <div className="flex items-start justify-between mb-3">
-                <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
-              </div>
               <div
+                role={isWaitlist ? "button" : undefined}
+                tabIndex={isWaitlist ? 0 : undefined}
+                aria-label={isWaitlist ? "Open full waitlist" : undefined}
+                onClick={isWaitlist ? openWaitlist : undefined}
+                onKeyDown={
+                  isWaitlist
+                    ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        openWaitlist()
+                      }
+                    }
+                    : undefined
+                }
                 style={{
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
-                  fontSize: 26,
-                  fontWeight: 800,
-                  color: "#111827",
-                  lineHeight: 1,
-                }}
-                className="mb-1"
-              >
-                {s.value}
-              </div>
-              <div style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
-                {s.label}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: s.sc,
-                  fontWeight: 600,
-                  marginTop: 4,
+                  background: s.bg,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 8,
+                  padding: "18px 20px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                  cursor: isWaitlist ? "pointer" : undefined,
                 }}
               >
-                {s.sub}
+                <div className="flex items-start justify-between mb-3">
+                  <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
+                </div>
+                <div
+                  style={{
+                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    fontSize: 26,
+                    fontWeight: 800,
+                    color: "#111827",
+                    lineHeight: 1,
+                  }}
+                  className="mb-1"
+                >
+                  {s.value}
+                </div>
+                <div style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
+                  {s.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: s.sc,
+                    fontWeight: 600,
+                    marginTop: 4,
+                  }}
+                >
+                  {s.sub}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       {role === "Seller" && (
         <div
@@ -418,7 +456,7 @@ export default function Dashboard({
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
-                        <Countdown hours={c.hours} />
+                        <Countdown hours={c.hours} id={c.id} />
                       ) : (
                         <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                           —
@@ -688,7 +726,7 @@ export default function Dashboard({
                 </tr>
               </thead>
               <tbody>
-                {claims.slice(0, 5).map((c) => {
+                {recentClaims.map((c) => {
                   return (
                     <tr
                       key={c.id}
@@ -734,7 +772,7 @@ export default function Dashboard({
                       </td>
                       <td className="py-2.5">
                         {c.status === "Pending" && c.hours > 0 ? (
-                          <Countdown hours={c.hours} />
+                          <Countdown hours={c.hours} id={c.id} />
                         ) : (
                           <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                             —
@@ -761,13 +799,12 @@ export default function Dashboard({
                           ? "#FFFBF0"
                           : "#fff",
                     borderRadius: 8,
-                    border: `1px solid ${
-                      d.hours < 6
-                        ? "#FED7AA"
-                        : d.hours < 24
-                          ? "#FDE68A"
-                          : "#F3F4F6"
-                    }`,
+                    border: `1px solid ${d.hours < 6
+                      ? "#FED7AA"
+                      : d.hours < 24
+                        ? "#FDE68A"
+                        : "#F3F4F6"
+                      }`,
                   }}
                   className="p-3 flex items-center justify-between"
                 >
@@ -798,7 +835,7 @@ export default function Dashboard({
                     >
                       ₱{d.amount.toLocaleString()}
                     </div>
-                    <Countdown hours={d.hours} />
+                    <Countdown hours={d.hours} id={d.id} />
                   </div>
                 </div>
               ))}
@@ -812,7 +849,7 @@ export default function Dashboard({
                   }}
                   onClick={() => setShowPayAll(true)}
                 >
-                  Pay All Pending
+                  Batch Checkout
                 </PrimaryBtn>
               ) : (
                 <div
@@ -835,9 +872,10 @@ export default function Dashboard({
         </div>
       )}
       {showPayAll && (
-        <PayModal
-          items={toPay.map((t) => ({ product: t.product, amount: t.amount }))}
-          onConfirm={handlePayAll}
+        <BatchCheckoutModal
+          items={toPay}
+          contactPrefill={user.fb || ""}
+          onSubmit={handleBatchPayment}
           onClose={() => setShowPayAll(false)}
         />
       )}
@@ -853,6 +891,19 @@ export default function Dashboard({
           fulfillment={fulfillment}
           shopName={user?.name || "My Shop"}
           onClose={() => setShowSalesReport(false)}
+        />
+      )}
+      {showWaitlist && (
+        <WaitlistModal
+          entries={waitlist}
+          activeId={activeWaitlistId}
+          onSelect={setActiveWaitlistId}
+          onClose={() => setShowWaitlist(false)}
+          onViewBatch={(batchId) => {
+            navIntent.batchId = batchId
+            setShowWaitlist(false)
+            setTab("Batches")
+          }}
         />
       )}
     </div>
