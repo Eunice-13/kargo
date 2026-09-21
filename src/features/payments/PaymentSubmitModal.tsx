@@ -2,6 +2,7 @@ import { useState, useRef } from "react"
 import { CheckCircle2, Paperclip } from "lucide-react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { getSellerPaymentDetails } from "./sellerPaymentDetails"
 
 export default function PaymentSubmitModal({
   item,
@@ -10,7 +11,7 @@ export default function PaymentSubmitModal({
   contactPrefill = "",
 }: {
   item: ToPayRow
-  onConfirm: (method: string, refNo: string) => void
+  onConfirm: (method: string, refNo: string, receipt?: File) => void
   onClose: () => void
   contactPrefill?: string
 }) {
@@ -22,23 +23,15 @@ export default function PaymentSubmitModal({
   const [amountPaid, setAmountPaid] = useState(String(item.amount))
   const [uploading, setUploading] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const SELLER_DETAILS: Record<string, {
-    name: string
-    number: string
-    icon: string
-  }> = {
-    GCash: { name: "Maria Santos", number: "0917 •••• 8821", icon: "" },
-    Maya: { name: "Maria Santos", number: "0917 •••• 5543", icon: "" },
-    "Bank Transfer": {
-      name: "Maria Santos",
-      number: "BDO •••• 4421",
-      icon: "",
-    },
-    COD: { name: "", number: "", icon: "" },
+  const sellerDetails = getSellerPaymentDetails(item.seller)
+  const paymentMethods = {
+    ...sellerDetails.methods,
+    COD: { number: "" },
   }
-  const details = SELLER_DETAILS[method]
+  const details = paymentMethods[method as keyof typeof paymentMethods]
   const isCOD = method === "COD"
 
   const handleFile = (file: File) => {
@@ -46,6 +39,7 @@ export default function PaymentSubmitModal({
     setTimeout(() => {
       setUploading(false)
       setUploaded(file.name)
+      setUploadedFile(file)
     }, 1200)
   }
 
@@ -112,7 +106,7 @@ export default function PaymentSubmitModal({
                   fontFamily: "'Plus Jakarta Sans',sans-serif",
                 }}
               >
-                {SELLER_DETAILS[m].icon} {m}
+                {m}
               </button>
             ))}
           </div>
@@ -148,7 +142,7 @@ export default function PaymentSubmitModal({
                 Account Name
               </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
-                {details.name}
+                {sellerDetails.name}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -173,7 +167,7 @@ export default function PaymentSubmitModal({
               color: "#92400E",
             }}
           >
-             COD: Coordinate pickup directly with the seller via Messenger or
+            COD: Coordinate pickup directly with the seller via Messenger or
             the in-app chat. No payment details required.
           </div>
         )}
@@ -378,11 +372,11 @@ export default function PaymentSubmitModal({
                   background: "#FAFAFA",
                 }}
                 onMouseEnter={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.borderColor =
+                  ; (e.currentTarget as HTMLElement).style.borderColor =
                     "#191BA9"
                 }}
                 onMouseLeave={(e) => {
-                  ;(e.currentTarget as HTMLElement).style.borderColor =
+                  ; (e.currentTarget as HTMLElement).style.borderColor =
                     "#D1D5DB"
                 }}
               >
@@ -441,7 +435,7 @@ export default function PaymentSubmitModal({
           </SecondaryBtn>
           <PrimaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center" }}
-            onClick={() => onConfirm(method, refNo)}
+            onClick={() => onConfirm(method, refNo, uploadedFile ?? undefined)}
             disabled={
               !isCOD &&
               (!refNo.trim() ||

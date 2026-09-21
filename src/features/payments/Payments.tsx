@@ -11,9 +11,9 @@ import {
   StatusBadge,
   Countdown,
   PaymentIcon,
-  PayModal,
 } from "@/components/shared"
 import PaymentSubmitModal from "./PaymentSubmitModal"
+import BatchCheckoutModal from "./BatchCheckoutModal"
 import TransactionDetailModal from "./TransactionDetailModal"
 import SellerPaymentVerification from "./SellerPaymentVerification"
 import AddressSection from "./AddressSection"
@@ -281,7 +281,7 @@ export default function Payments({
                     ₱{toPay.reduce((s, t) => s + t.amount, 0).toLocaleString()}
                   </span>
                   <PrimaryBtn onClick={() => setPayAll(true)}>
-                    Pay All
+                    Batch Checkout
                   </PrimaryBtn>
                 </div>
               </Card>
@@ -465,9 +465,8 @@ export default function Payments({
                 style={{
                   background: histFilter === f ? "#191BA9" : "#fff",
                   color: histFilter === f ? "#fff" : "#6B7280",
-                  border: `1px solid ${
-                    histFilter === f ? "#191BA9" : "#E5E7EB"
-                  }`,
+                  border: `1px solid ${histFilter === f ? "#191BA9" : "#E5E7EB"
+                    }`,
                   borderRadius: 999,
                   fontSize: 12,
                   fontWeight: 600,
@@ -502,111 +501,111 @@ export default function Payments({
         </div>
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-          <table className="w-full text-[13px]">
-            <thead style={{ background: CREAM }}>
-              <tr>
-                {[
-                  "Product",
-                  "Batch",
-                  "Method",
-                  "Amount",
-                  "Date",
-                  "Status",
-                  "Actions",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      color: "#9CA3AF",
-                      fontWeight: 600,
-                      fontSize: 11,
-                      padding: "10px 14px",
-                      textAlign: "left",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {payHistory
-                .filter((h) => {
-                  if (histFilter !== "All" && h.status !== histFilter)
-                    return false
-                  if (
-                    dateFilter2 !== "All" &&
-                    !h.date.includes(dateFilter2.split(" ")[0])
-                  )
-                    return false
-                  return true
-                })
-                .map((p, i) => (
-                  <tr
-                    key={p.id}
-                    style={{
-                      borderTop: "1px solid #F3F4F6",
-                      background: i % 2 ? "#FAFAFA" : "#fff",
-                    }}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td style={{ padding: "10px 14px" }}>
-                      <div className="flex items-center gap-2">
-                        <ProductThumb name={p.product} />
-                        <span style={{ fontWeight: 500, color: "#111827" }}>
-                          {p.product}
-                        </span>
-                      </div>
-                    </td>
-                    <td
+            <table className="w-full text-[13px]">
+              <thead style={{ background: CREAM }}>
+                <tr>
+                  {[
+                    "Product",
+                    "Batch",
+                    "Method",
+                    "Amount",
+                    "Date",
+                    "Status",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
                       style={{
-                        padding: "10px 14px",
-                        color: "#6B7280",
-                        fontSize: 12,
-                      }}
-                    >
-                      {p.batch || "—"}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 14px",
-                        fontSize: 12,
-                        color: "#374151",
-                      }}
-                    >
-                      {p.method}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 14px",
-                        fontWeight: 700,
-                        color: "#111827",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
-                      }}
-                    >
-                      ₱{p.amount.toLocaleString()}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 14px",
                         color: "#9CA3AF",
-                        fontSize: 12,
+                        fontWeight: 600,
+                        fontSize: 11,
+                        padding: "10px 14px",
+                        textAlign: "left",
                       }}
                     >
-                      {p.date}
-                    </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <StatusBadge status={p.status} />
-                    </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <SecondaryBtn size="sm" onClick={() => setTxDetail(p)}>
-                        View Details
-                      </SecondaryBtn>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {payHistory
+                  .filter((h) => {
+                    if (histFilter !== "All" && h.status !== histFilter)
+                      return false
+                    if (
+                      dateFilter2 !== "All" &&
+                      !h.date.includes(dateFilter2.split(" ")[0])
+                    )
+                      return false
+                    return true
+                  })
+                  .map((p, i) => (
+                    <tr
+                      key={p.id}
+                      style={{
+                        borderTop: "1px solid #F3F4F6",
+                        background: i % 2 ? "#FAFAFA" : "#fff",
+                      }}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td style={{ padding: "10px 14px" }}>
+                        <div className="flex items-center gap-2">
+                          <ProductThumb name={p.product} />
+                          <span style={{ fontWeight: 500, color: "#111827" }}>
+                            {p.product}
+                          </span>
+                        </div>
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px 14px",
+                          color: "#6B7280",
+                          fontSize: 12,
+                        }}
+                      >
+                        {p.batch || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px 14px",
+                          fontSize: 12,
+                          color: "#374151",
+                        }}
+                      >
+                        {p.method}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px 14px",
+                          fontWeight: 700,
+                          color: "#111827",
+                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        }}
+                      >
+                        ₱{p.amount.toLocaleString()}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px 14px",
+                          color: "#9CA3AF",
+                          fontSize: 12,
+                        }}
+                      >
+                        {p.date}
+                      </td>
+                      <td style={{ padding: "10px 14px" }}>
+                        <StatusBadge status={p.status} />
+                      </td>
+                      <td style={{ padding: "10px 14px" }}>
+                        <SecondaryBtn size="sm" onClick={() => setTxDetail(p)}>
+                          View Details
+                        </SecondaryBtn>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
         </Card>
       </div>
@@ -619,9 +618,10 @@ export default function Payments({
         />
       )}
       {payAll && (
-        <PayModal
-          items={toPay.map((t) => ({ product: t.product, amount: t.amount }))}
-          onConfirm={(m) => handlePay(null, m)}
+        <BatchCheckoutModal
+          items={toPay}
+          contactPrefill={user.fb || ""}
+          onSubmit={(item, method, refNo, receipt) => handlePay(item, method, refNo, receipt)}
           onClose={() => setPayAll(false)}
         />
       )}

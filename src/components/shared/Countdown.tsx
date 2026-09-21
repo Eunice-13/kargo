@@ -1,14 +1,29 @@
 import { useState, useEffect } from "react"
 import { AMBER } from "@/constants/theme"
 
-export default function Countdown({ hours }: { hours: number }) {
-  const [remaining, setRemaining] = useState(() => Math.max(0, Math.round(hours * 3600)))
+const deadlineTimestamps = new Map<string, number>()
+
+// TODO: This currently uses local state/mock intervals; refactor to absolute system timestamps (Date.now() vs target deadline) for production.
+function getDeadlineTimestamp(key: string, hours: number) {
+  const existing = deadlineTimestamps.get(key)
+  if (existing) return existing
+  const deadline = Date.now() + Math.max(0, hours * 3_600_000)
+  deadlineTimestamps.set(key, deadline)
+  return deadline
+}
+
+export default function Countdown({ hours, id }: { hours: number; id?: string | number }) {
+  const deadlineKey = String(id ?? `hours-${hours}`)
+  const deadline = getDeadlineTimestamp(deadlineKey, hours)
+  const [remaining, setRemaining] = useState(() => Math.max(0, Math.round((deadline - Date.now()) / 1000)))
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setRemaining((value) => Math.max(0, value - 1))
-    }, 1000)
+    const updateRemaining = () => {
+      setRemaining(Math.max(0, Math.round((deadline - Date.now()) / 1000)))
+    }
+    updateRemaining()
+    const timer = window.setInterval(updateRemaining, 1000)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [deadline])
   const currentHours = remaining / 3600
   const urgent = currentHours < 6,
     warn = currentHours < 24

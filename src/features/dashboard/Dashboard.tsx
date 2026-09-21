@@ -13,9 +13,9 @@ import {
   ProductThumb,
   StatusBadge,
   Countdown,
-  PayModal,
   BuyerProfileModal,
 } from "@/components/shared"
+import BatchCheckoutModal from "@/features/payments/BatchCheckoutModal"
 import {
   KANBAN_COLS,
   PRIOR_FULFILLED,
@@ -143,28 +143,32 @@ export default function Dashboard({
     },
   ]
   const stats = role === "Seller" ? sellerStats : buyerStats
-  const upcoming = toPay.slice(0, 4)
+  const upcoming = useMemo(
+    () => [...toPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
+    [toPay],
+  )
 
-  const handlePayAll = (method: string) => {
-    const newHist: PayHistRow[] = toPay.map((t, i) => ({
-      id: payHistory.length + i + 1,
-      product: t.product,
-      batch: "",
-      method,
-      amount: t.amount,
-      date: TODAY,
-      status: "Paid and Reserved" as ClaimStatus,
-    }))
-    setPayHistory((h) => [...newHist, ...h])
+  const handleBatchPayment = (item: (typeof toPay)[number], method: string) => {
+    setPayHistory((history) => [
+      {
+        id: history.length + 1,
+        product: item.product,
+        batch: "",
+        method,
+        amount: item.amount,
+        date: TODAY,
+        status: "Paid and Reserved" as ClaimStatus,
+      },
+      ...history,
+    ])
     setClaims((prev) =>
       prev.map((c) =>
-        toPay.some((t) => t.product === c.product) && c.status === "Pending"
+        c.id === item.id && c.status === "Pending"
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
           : c,
       ),
     )
-    setToPay([])
-    setShowPayAll(false)
+    setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
   }
 
   // Kanban columns for the seller Fulfillment Board. Rendered both inside the
@@ -452,7 +456,7 @@ export default function Dashboard({
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
-                        <Countdown hours={c.hours} />
+                        <Countdown hours={c.hours} id={c.id} />
                       ) : (
                         <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                           —
@@ -768,7 +772,7 @@ export default function Dashboard({
                       </td>
                       <td className="py-2.5">
                         {c.status === "Pending" && c.hours > 0 ? (
-                          <Countdown hours={c.hours} />
+                          <Countdown hours={c.hours} id={c.id} />
                         ) : (
                           <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                             —
@@ -831,7 +835,7 @@ export default function Dashboard({
                     >
                       ₱{d.amount.toLocaleString()}
                     </div>
-                    <Countdown hours={d.hours} />
+                    <Countdown hours={d.hours} id={d.id} />
                   </div>
                 </div>
               ))}
@@ -845,7 +849,7 @@ export default function Dashboard({
                   }}
                   onClick={() => setShowPayAll(true)}
                 >
-                  Pay All Pending
+                  Batch Checkout
                 </PrimaryBtn>
               ) : (
                 <div
@@ -868,9 +872,10 @@ export default function Dashboard({
         </div>
       )}
       {showPayAll && (
-        <PayModal
-          items={toPay.map((t) => ({ product: t.product, amount: t.amount }))}
-          onConfirm={handlePayAll}
+        <BatchCheckoutModal
+          items={toPay}
+          contactPrefill={user.fb || ""}
+          onSubmit={handleBatchPayment}
           onClose={() => setShowPayAll(false)}
         />
       )}
