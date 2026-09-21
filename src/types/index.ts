@@ -140,6 +140,22 @@ export type FulfillmentOrder = {
   amount: number
 }
 
+// Buyer's place in a sold-out product queue. Dashboard and BatchPage share
+// the same live array so the overview card and the waitlist modal never
+// snapshot a stale entry.
+export type WaitlistEntry = {
+  id: string
+  productId?: string
+  product: string
+  batchId: number
+  batch: string
+  seller: string
+  trips: string
+  position: number
+  queueSize: number
+  amount: number
+}
+
 // ─── Shared types for cross-tab props ─────────────────────────────────────────
 export type SharedState = {
   claims: ClaimRow[]
@@ -154,6 +170,8 @@ export type SharedState = {
   setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
   fulfillment: FulfillmentOrder[]
   setFulfillment: React.Dispatch<React.SetStateAction<FulfillmentOrder[]>>
+  waitlist: WaitlistEntry[]
+  setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>
   user: UserInfo
   setUser: React.Dispatch<React.SetStateAction<UserInfo>>
   setTab: (t: Tab) => void

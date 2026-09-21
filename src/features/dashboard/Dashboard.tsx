@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X, FileText } from "lucide-react"
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
+import { navIntent } from "@/state/navIntent"
+import { sortWaitlistUpcoming } from "@/data/waitlist"
 import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
 import {
   Card,
@@ -22,6 +24,7 @@ import {
   FulfillmentDetails,
 } from "@/features/fulfillment"
 import SalesReportModal from "./SalesReportModal"
+import WaitlistModal from "./WaitlistModal"
 
 export default function Dashboard({
   batches,
@@ -36,13 +39,23 @@ export default function Dashboard({
   orders,
   fulfillment,
   setFulfillment,
+  waitlist,
   user,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
   const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
   const [showSalesReport, setShowSalesReport] = useState(false)
+  const [showWaitlist, setShowWaitlist] = useState(false)
+  const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
   const board = useFulfillmentBoard(setFulfillment)
+
+  const waitlistSorted = useMemo(() => sortWaitlistUpcoming(waitlist), [waitlist])
+  const closestWaitlist = waitlistSorted[0] ?? null
+  const openWaitlist = () => {
+    setActiveWaitlistId(closestWaitlist?.id ?? null)
+    setShowWaitlist(true)
+  }
 
   // Close the expanded board with Escape.
   useEffect(() => {
@@ -75,9 +88,9 @@ export default function Dashboard({
     },
     {
       label: "Waitlist Position",
-      value: "#3",
+      value: closestWaitlist ? `#${closestWaitlist.position}` : "—",
       icon: Clock3,
-      sub: "Laneige Lip Mask",
+      sub: closestWaitlist ? closestWaitlist.product : "No waitlisted items",
       sc: "#6B7280",
       bg: CYAN_L,
     },
@@ -296,19 +309,36 @@ export default function Dashboard({
   return (
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-4 gap-4">
-        {stats.map((s, i) => (
+        {stats.map((s, i) => {
+          const isWaitlist = s.label === "Waitlist Position"
+          return (
           <div
             key={s.label}
             className="fi"
             style={{ animationDelay: `${i * 60}ms` }}
           >
             <div
+              role={isWaitlist ? "button" : undefined}
+              tabIndex={isWaitlist ? 0 : undefined}
+              aria-label={isWaitlist ? "Open full waitlist" : undefined}
+              onClick={isWaitlist ? openWaitlist : undefined}
+              onKeyDown={
+                isWaitlist
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        openWaitlist()
+                      }
+                    }
+                  : undefined
+              }
               style={{
                 background: s.bg,
                 border: "1px solid #E5E7EB",
                 borderRadius: 8,
                 padding: "18px 20px",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                cursor: isWaitlist ? "pointer" : undefined,
               }}
             >
               <div className="flex items-start justify-between mb-3">
@@ -341,7 +371,7 @@ export default function Dashboard({
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
       {role === "Seller" && (
         <div
@@ -853,6 +883,19 @@ export default function Dashboard({
           fulfillment={fulfillment}
           shopName={user?.name || "My Shop"}
           onClose={() => setShowSalesReport(false)}
+        />
+      )}
+      {showWaitlist && (
+        <WaitlistModal
+          entries={waitlist}
+          activeId={activeWaitlistId}
+          onSelect={setActiveWaitlistId}
+          onClose={() => setShowWaitlist(false)}
+          onViewBatch={(batchId) => {
+            navIntent.batchId = batchId
+            setShowWaitlist(false)
+            setTab("Batches")
+          }}
         />
       )}
     </div>

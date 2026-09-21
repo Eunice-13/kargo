@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Lock, ArrowLeft, Plane, Check, Link2, Star } from "lucide-react"
-import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo } from "@/types"
+import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo, WaitlistEntry } from "@/types"
 import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge, CategoryIcon, Toggle, ContactSellerModal } from "@/components/shared"
 import ItemClaimModal from "./ItemClaimModal"
@@ -9,7 +9,7 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 
 export default function BatchPage({
-  batch,
+  batch: batchProp,
   role,
   user,
   batches,
@@ -20,6 +20,8 @@ export default function BatchPage({
   onBack,
   onSellerClick,
   setBatches,
+  waitlist,
+  setWaitlist,
 }: {
   batch: BatchType
   role: Role
@@ -32,8 +34,10 @@ export default function BatchPage({
   onBack: () => void
   onSellerClick: (name: string) => void
   setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
+  waitlist: WaitlistEntry[]
+  setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>
 }) {
-  const [waitlisted, setWaitlisted] = useState<Record<string, boolean>>({})
+  const batch = batches.find((b) => b.id === batchProp.id) ?? batchProp
   const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({})
   const [claimTarget, setClaimTarget] = useState<{
     p: typeof batch.products[0]
@@ -225,7 +229,12 @@ export default function BatchPage({
               const isClaimed = claimedKeys[pKey]
               const left = p.qty - p.claimed - (isClaimed ? 1 : 0)
               const soldOut = left <= 0
-              const onWaitlist = waitlisted[pKey]
+              const waitEntry = waitlist.find(
+                (e) =>
+                  (p.dbId && e.productId === p.dbId) ||
+                  (e.batchId === batch.id && e.product === p.name),
+              )
+              const onWaitlist = Boolean(waitEntry)
               return (
                 <Card
                   key={pIdx}
@@ -311,7 +320,7 @@ export default function BatchPage({
                             padding: "2px 8px",
                           }}
                         >
-                          Queue #{p.waitlist + 1}
+                          Queue #{waitEntry?.position ?? p.waitlist + 1}
                         </span>
                       )}
                     </div>
@@ -368,7 +377,51 @@ export default function BatchPage({
                                 return
                               }
                             }
-                            setWaitlisted((w) => ({ ...w, [pKey]: true }))
+                            setWaitlist((prev) => {
+                              if (
+                                prev.some(
+                                  (e) =>
+                                    (p.dbId && e.productId === p.dbId) ||
+                                    (e.batchId === batch.id && e.product === p.name),
+                                )
+                              ) {
+                                return prev
+                              }
+                              const nextPos = p.waitlist + 1
+                              return [
+                                ...prev.map((e) =>
+                                  e.batchId === batch.id && e.product === p.name
+                                    ? { ...e, queueSize: nextPos }
+                                    : e,
+                                ),
+                                {
+                                  id: p.dbId ?? `wl-${batch.id}-${p.name}`,
+                                  productId: p.dbId,
+                                  product: p.name,
+                                  batchId: batch.id,
+                                  batch: batch.title,
+                                  seller: batch.seller,
+                                  trips: batch.trips,
+                                  position: nextPos,
+                                  queueSize: nextPos,
+                                  amount: p.price,
+                                },
+                              ]
+                            })
+                            setBatches((prev) =>
+                              prev.map((b) =>
+                                b.id !== batch.id
+                                  ? b
+                                  : {
+                                      ...b,
+                                      products: b.products.map((prod, i) =>
+                                        i === pIdx
+                                          ? { ...prod, waitlist: prod.waitlist + 1 }
+                                          : prod,
+                                      ),
+                                    },
+                              ),
+                            )
                           }}
                         >
                           Join Waitlist

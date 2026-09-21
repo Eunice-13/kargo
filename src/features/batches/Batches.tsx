@@ -25,6 +25,8 @@ export default function Batches({
   role,
   user,
   setTab,
+  waitlist,
+  setWaitlist,
 }: SharedState) {
   const [batchPage, setBatchPage] = useState<BatchType | null>(() => {
     const id = navIntent.batchId
@@ -308,7 +310,7 @@ export default function Batches({
     return (
       <>
         <BatchPage
-          batch={batchPage}
+          batch={batches.find((b) => b.id === batchPage.id) ?? batchPage}
           role={role}
           user={user}
           batches={batches}
@@ -319,6 +321,8 @@ export default function Batches({
           onBack={() => setBatchPage(null)}
           onSellerClick={(name) => setProfile(name)}
           setBatches={setBatches}
+          waitlist={waitlist}
+          setWaitlist={setWaitlist}
         />
         {profile && (
           <SellerProfileModal

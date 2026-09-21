@@ -10,6 +10,7 @@ import type {
   OrderRow,
   BatchType,
   FulfillmentOrder,
+  WaitlistEntry,
   SharedState,
 } from "@/types"
 import { CREAM } from "@/constants/theme"
@@ -19,6 +20,7 @@ import { CLAIMS_INIT } from "@/data/claims"
 import { TOPAY_INIT } from "@/data/toPay"
 import { PAYHIST_INIT } from "@/data/payHistory"
 import { ORDERS_INIT } from "@/data/orders"
+import { WAITLIST_INIT } from "@/data/waitlist"
 import { FULFILLMENT_INIT } from "@/features/fulfillment"
 import { Login, SignUp, Onboarding, ApplyToSellModal } from "@/features/auth"
 import { NewBatchModal } from "@/features/batches"
@@ -57,6 +59,7 @@ export default function App() {
   const [batches, setBatches] = useState<BatchType[]>(useSeeds ? BATCHES_INIT : [])
   const [fulfillment, setFulfillment] =
     useState<FulfillmentOrder[]>(useSeeds ? FULFILLMENT_INIT : [])
+  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>(useSeeds ? WAITLIST_INIT : [])
 
   const refreshData = useCallback(async () => {
     if (!isSupabaseConfigured) return
@@ -72,6 +75,7 @@ export default function App() {
     setPayHistory(data.payHistory)
     setOrders(data.orders)
     setFulfillment(data.fulfillment)
+    setWaitlist(data.waitlist)
     setStage("app")
   }, [])
 
@@ -97,6 +101,8 @@ export default function App() {
     setBatches,
     fulfillment,
     setFulfillment,
+    waitlist,
+    setWaitlist,
     user,
     setUser,
     setTab,
