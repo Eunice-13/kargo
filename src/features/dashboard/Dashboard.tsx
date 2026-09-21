@@ -66,13 +66,16 @@ export default function Dashboard({
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [boardExpanded])
-  const pending = claims.filter((c) => c.status === "Pending")
+  const activeClaims = claims
+    .filter((c) => c.status === "Pending")
+    .sort((a, b) => Number(b.id) - Number(a.id))
+  const recentClaims = activeClaims.slice(0, 5)
   const pendingTotal = toPay.reduce((s, t) => s + t.amount, 0)
 
   const buyerStats = [
     {
       label: "Active Claims",
-      value: String(claims.filter((c) => c.status === "Pending").length),
+      value: String(activeClaims.length),
       icon: Package,
       sub: "+3 this week",
       sc: GREEN,
@@ -312,66 +315,67 @@ export default function Dashboard({
         {stats.map((s, i) => {
           const isWaitlist = s.label === "Waitlist Position"
           return (
-          <div
-            key={s.label}
-            className="fi"
-            style={{ animationDelay: `${i * 60}ms` }}
-          >
             <div
-              role={isWaitlist ? "button" : undefined}
-              tabIndex={isWaitlist ? 0 : undefined}
-              aria-label={isWaitlist ? "Open full waitlist" : undefined}
-              onClick={isWaitlist ? openWaitlist : undefined}
-              onKeyDown={
-                isWaitlist
-                  ? (e) => {
+              key={s.label}
+              className="fi"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <div
+                role={isWaitlist ? "button" : undefined}
+                tabIndex={isWaitlist ? 0 : undefined}
+                aria-label={isWaitlist ? "Open full waitlist" : undefined}
+                onClick={isWaitlist ? openWaitlist : undefined}
+                onKeyDown={
+                  isWaitlist
+                    ? (e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault()
                         openWaitlist()
                       }
                     }
-                  : undefined
-              }
-              style={{
-                background: s.bg,
-                border: "1px solid #E5E7EB",
-                borderRadius: 8,
-                padding: "18px 20px",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                cursor: isWaitlist ? "pointer" : undefined,
-              }}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
-              </div>
-              <div
+                    : undefined
+                }
                 style={{
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
-                  fontSize: 26,
-                  fontWeight: 800,
-                  color: "#111827",
-                  lineHeight: 1,
-                }}
-                className="mb-1"
-              >
-                {s.value}
-              </div>
-              <div style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
-                {s.label}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: s.sc,
-                  fontWeight: 600,
-                  marginTop: 4,
+                  background: s.bg,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 8,
+                  padding: "18px 20px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                  cursor: isWaitlist ? "pointer" : undefined,
                 }}
               >
-                {s.sub}
+                <div className="flex items-start justify-between mb-3">
+                  <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
+                </div>
+                <div
+                  style={{
+                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    fontSize: 26,
+                    fontWeight: 800,
+                    color: "#111827",
+                    lineHeight: 1,
+                  }}
+                  className="mb-1"
+                >
+                  {s.value}
+                </div>
+                <div style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
+                  {s.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: s.sc,
+                    fontWeight: 600,
+                    marginTop: 4,
+                  }}
+                >
+                  {s.sub}
+                </div>
               </div>
             </div>
-          </div>
-        )})}
+          )
+        })}
       </div>
       {role === "Seller" && (
         <div
@@ -718,7 +722,7 @@ export default function Dashboard({
                 </tr>
               </thead>
               <tbody>
-                {claims.slice(0, 5).map((c) => {
+                {recentClaims.map((c) => {
                   return (
                     <tr
                       key={c.id}
@@ -791,13 +795,12 @@ export default function Dashboard({
                           ? "#FFFBF0"
                           : "#fff",
                     borderRadius: 8,
-                    border: `1px solid ${
-                      d.hours < 6
-                        ? "#FED7AA"
-                        : d.hours < 24
-                          ? "#FDE68A"
-                          : "#F3F4F6"
-                    }`,
+                    border: `1px solid ${d.hours < 6
+                      ? "#FED7AA"
+                      : d.hours < 24
+                        ? "#FDE68A"
+                        : "#F3F4F6"
+                      }`,
                   }}
                   className="p-3 flex items-center justify-between"
                 >
