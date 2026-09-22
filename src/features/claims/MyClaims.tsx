@@ -29,6 +29,7 @@ export default function MyClaims({
   orders,
   setOrders,
   role,
+  setTab,
 }: SharedState) {
   const [filter, setFilter] = useState<ClaimStatus | "All">("All")
   const [payTarget, setPayTarget] = useState<ClaimRow | null>(null)
@@ -92,6 +93,9 @@ export default function MyClaims({
         >
           Orders Received
         </h2>
+        <SecondaryBtn size="sm" onClick={() => setTab("Dashboard")}>
+          Back to Dashboard
+        </SecondaryBtn>
         <p style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 16 }}>
           Manage orders from your buyers.
         </p>
@@ -138,153 +142,153 @@ export default function MyClaims({
         </div>
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-          <table className="w-full text-[13px]">
-            <thead style={{ background: CREAM }}>
-              <tr>
-                {[
-                  "Buyer",
-                  "Product",
-                  "Batch",
-                  "Qty",
-                  "Amount",
-                  "Status",
-                  "Deadline",
-                  "Actions",
-                ].map((h) => (
-                  <th
-                    key={h}
+            <table className="w-full text-[13px]">
+              <thead style={{ background: CREAM }}>
+                <tr>
+                  {[
+                    "Buyer",
+                    "Product",
+                    "Batch",
+                    "Qty",
+                    "Amount",
+                    "Status",
+                    "Deadline",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        color: "#9CA3AF",
+                        fontWeight: 600,
+                        fontSize: 11,
+                        padding: "10px 14px",
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ordFiltered.map((c, i) => (
+                  <tr
+                    key={c.id}
                     style={{
-                      color: "#9CA3AF",
-                      fontWeight: 600,
-                      fontSize: 11,
-                      padding: "10px 14px",
-                      textAlign: "left",
-                      whiteSpace: "nowrap",
+                      borderTop: "1px solid #F3F4F6",
+                      background: i % 2 ? "#FAFAFA" : "#fff",
                     }}
                   >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {ordFiltered.map((c, i) => (
-                <tr
-                  key={c.id}
-                  style={{
-                    borderTop: "1px solid #F3F4F6",
-                    background: i % 2 ? "#FAFAFA" : "#fff",
-                  }}
-                >
-                  <td style={{ padding: "10px 14px" }}>
-                    <div className="flex items-center gap-2">
-                      <Avatar name={c.buyer || c.seller} size={22} />
-                      <button
-                        onClick={() => setBuyerProfile(c.buyer || c.seller)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: INDIGO,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          padding: 0,
-                        }}
-                      >
-                        {c.buyer || c.seller}
-                      </button>
-                    </div>
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <div className="flex items-center gap-2">
-                      <ProductThumb name={c.product} />
-                      <span style={{ color: "#374151" }}>{c.product}</span>
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      color: "#6B7280",
-                      fontSize: 12,
-                    }}
-                  >
-                    {c.batch}
-                  </td>
-                  <td style={{ padding: "10px 14px", color: "#374151" }}>
-                    ×{c.qty}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      fontWeight: 700,
-                      color: "#111827",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    }}
-                  >
-                    ₱{c.amount.toLocaleString()}
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <StatusBadge status={c.status} />
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    {c.status === "Pending" && c.hours > 0 ? (
-                      <Countdown hours={c.hours} />
-                    ) : (
-                      <span style={{ color: "#D1D5DB" }}>—</span>
-                    )}
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <div className="flex items-center gap-1.5">
-                      {c.status === "Pending" && (
-                        <PrimaryBtn
-                          size="sm"
-                          onClick={() =>
-                            setClaims((prev) =>
-                              prev.map((cl) =>
-                                cl.id === c.id
-                                  ? {
+                    <td style={{ padding: "10px 14px" }}>
+                      <div className="flex items-center gap-2">
+                        <Avatar name={c.buyer || c.seller} size={22} />
+                        <button
+                          onClick={() => setBuyerProfile(c.buyer || c.seller)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            color: INDIGO,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            padding: 0,
+                          }}
+                        >
+                          {c.buyer || c.seller}
+                        </button>
+                      </div>
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div className="flex items-center gap-2">
+                        <ProductThumb name={c.product} />
+                        <span style={{ color: "#374151" }}>{c.product}</span>
+                      </div>
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        color: "#6B7280",
+                        fontSize: 12,
+                      }}
+                    >
+                      {c.batch}
+                    </td>
+                    <td style={{ padding: "10px 14px", color: "#374151" }}>
+                      ×{c.qty}
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        fontWeight: 700,
+                        color: "#111827",
+                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      }}
+                    >
+                      ₱{c.amount.toLocaleString()}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <StatusBadge status={c.status} />
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      {c.status === "Pending" && c.hours > 0 ? (
+                        <Countdown hours={c.hours} />
+                      ) : (
+                        <span style={{ color: "#D1D5DB" }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div className="flex items-center gap-1.5">
+                        {c.status === "Pending" && (
+                          <PrimaryBtn
+                            size="sm"
+                            onClick={() =>
+                              setClaims((prev) =>
+                                prev.map((cl) =>
+                                  cl.id === c.id
+                                    ? {
                                       ...cl,
                                       status:
                                         "Paid and Reserved" as ClaimStatus,
                                     }
-                                  : cl,
-                              ),
-                            )
-                          }
-                        >
-                          Mark Shipped
-                        </PrimaryBtn>
-                      )}
-                      <SecondaryBtn
-                        size="sm"
-                        onClick={() => {
-                          const buyerName = c.buyer || c.seller
-                          if (c.buyerFb) {
-                            // Real contact link on file — open it.
-                            setFbToast(buyerName)
-                            setTimeout(() => {
-                              window.open(
-                                c.buyerFb,
-                                "_blank",
-                                "noopener,noreferrer",
+                                    : cl,
+                                ),
                               )
-                              setFbToast(null)
-                            }, 1200)
-                          } else {
-                            // No contact link — open the buyer's profile instead
-                            // of fabricating a Facebook URL.
-                            setBuyerProfile(buyerName)
-                          }
-                        }}
-                      >
-                        Contact Buyer
-                      </SecondaryBtn>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                            }
+                          >
+                            Mark Shipped
+                          </PrimaryBtn>
+                        )}
+                        <SecondaryBtn
+                          size="sm"
+                          onClick={() => {
+                            const buyerName = c.buyer || c.seller
+                            if (c.buyerFb) {
+                              // Real contact link on file — open it.
+                              setFbToast(buyerName)
+                              setTimeout(() => {
+                                window.open(
+                                  c.buyerFb,
+                                  "_blank",
+                                  "noopener,noreferrer",
+                                )
+                                setFbToast(null)
+                              }, 1200)
+                            } else {
+                              // No contact link — open the buyer's profile instead
+                              // of fabricating a Facebook URL.
+                              setBuyerProfile(buyerName)
+                            }
+                          }}
+                        >
+                          Contact Buyer
+                        </SecondaryBtn>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           {ordFiltered.length === 0 && (
             <div
@@ -358,6 +362,11 @@ export default function MyClaims({
 
   return (
     <div className="p-6">
+      <div className="mb-4">
+        <SecondaryBtn size="sm" onClick={() => setTab("Dashboard")}>
+          Back to Dashboard
+        </SecondaryBtn>
+      </div>
       <div className="flex items-center gap-2 mb-5 flex-wrap">
         {filters.map((f) => (
           <button
@@ -544,18 +553,18 @@ export default function MyClaims({
                     )}
                     {(c.status === "Pending" ||
                       c.status === "Paid and Reserved") && (
-                      <SecondaryBtn
-                        size="sm"
-                        onClick={() => setCancelTarget(c)}
-                        style={{
-                          color: "#EF4444",
-                          borderColor: "#FECACA",
-                          background: "#FEF2F2",
-                        }}
-                      >
-                        Cancel
-                      </SecondaryBtn>
-                    )}
+                        <SecondaryBtn
+                          size="sm"
+                          onClick={() => setCancelTarget(c)}
+                          style={{
+                            color: "#EF4444",
+                            borderColor: "#FECACA",
+                            background: "#FEF2F2",
+                          }}
+                        >
+                          Cancel
+                        </SecondaryBtn>
+                      )}
                     {c.status === "Paid and Reserved" && (
                       <SecondaryBtn
                         size="sm"
@@ -588,171 +597,171 @@ export default function MyClaims({
       ) : (
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-          <table className="w-full text-[13px]">
-            <thead style={{ background: CREAM }}>
-              <tr>
-                {[
-                  "Product",
-                  "Batch",
-                  "Seller",
-                  "Qty",
-                  "Amount",
-                  "Status",
-                  "Deadline",
-                  "Actions",
-                ].map((h) => (
-                  <th
-                    key={h}
+            <table className="w-full text-[13px]">
+              <thead style={{ background: CREAM }}>
+                <tr>
+                  {[
+                    "Product",
+                    "Batch",
+                    "Seller",
+                    "Qty",
+                    "Amount",
+                    "Status",
+                    "Deadline",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        color: "#9CA3AF",
+                        fontWeight: 600,
+                        fontSize: 11,
+                        padding: "10px 14px",
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c, i) => (
+                  <tr
+                    key={c.id}
                     style={{
-                      color: "#9CA3AF",
-                      fontWeight: 600,
-                      fontSize: 11,
-                      padding: "10px 14px",
-                      textAlign: "left",
-                      whiteSpace: "nowrap",
+                      borderTop: "1px solid #F3F4F6",
+                      background: i % 2 ? "#FAFAFA" : "#fff",
                     }}
+                    className="hover:bg-blue-50 transition-colors cursor-pointer"
                   >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c, i) => (
-                <tr
-                  key={c.id}
-                  style={{
-                    borderTop: "1px solid #F3F4F6",
-                    background: i % 2 ? "#FAFAFA" : "#fff",
-                  }}
-                  className="hover:bg-blue-50 transition-colors cursor-pointer"
-                >
-                  <td style={{ padding: "10px 14px" }}>
-                    <div className="flex items-center gap-2.5">
-                      <ProductThumb name={c.product} />
-                      <span style={{ fontWeight: 500, color: "#111827" }}>
-                        {c.product}
-                      </span>
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      color: "#6B7280",
-                      fontSize: 12,
-                    }}
-                  >
-                    {c.batch}
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <div className="flex items-center gap-1.5">
-                      <Avatar name={c.seller} size={20} />
-                      <span style={{ fontSize: 12, color: "#374151" }}>
-                        {c.seller}
-                      </span>
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      color: "#374151",
-                      fontSize: 12,
-                    }}
-                  >
-                    ×{c.qty}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      fontWeight: 700,
-                      color: "#111827",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    }}
-                  >
-                    ₱{c.amount.toLocaleString()}
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <StatusBadge status={c.status} />
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    {c.status === "Pending" && c.hours > 0 ? (
-                      <Countdown hours={c.hours} />
-                    ) : (
-                      <span style={{ color: "#D1D5DB" }}>—</span>
-                    )}
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {c.status === "Pending" && (
-                        <PrimaryBtn size="sm" onClick={() => setPayTarget(c)}>
-                          Pay Now
-                        </PrimaryBtn>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div className="flex items-center gap-2.5">
+                        <ProductThumb name={c.product} />
+                        <span style={{ fontWeight: 500, color: "#111827" }}>
+                          {c.product}
+                        </span>
+                      </div>
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        color: "#6B7280",
+                        fontSize: 12,
+                      }}
+                    >
+                      {c.batch}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div className="flex items-center gap-1.5">
+                        <Avatar name={c.seller} size={20} />
+                        <span style={{ fontSize: 12, color: "#374151" }}>
+                          {c.seller}
+                        </span>
+                      </div>
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        color: "#374151",
+                        fontSize: 12,
+                      }}
+                    >
+                      ×{c.qty}
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        fontWeight: 700,
+                        color: "#111827",
+                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      }}
+                    >
+                      ₱{c.amount.toLocaleString()}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <StatusBadge status={c.status} />
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      {c.status === "Pending" && c.hours > 0 ? (
+                        <Countdown hours={c.hours} />
+                      ) : (
+                        <span style={{ color: "#D1D5DB" }}>—</span>
                       )}
-                      {c.status === "Pending" &&
-                        (c.extensionRequested ? (
-                          <span
-                            style={{
-                              background: "#FEF3C7",
-                              color: "#92400E",
-                              fontSize: 10,
-                              fontWeight: 600,
-                              padding: "3px 8px",
-                              borderRadius: 999,
-                            }}
-                          >
-                            Requested
-                          </span>
-                        ) : (
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {c.status === "Pending" && (
+                          <PrimaryBtn size="sm" onClick={() => setPayTarget(c)}>
+                            Pay Now
+                          </PrimaryBtn>
+                        )}
+                        {c.status === "Pending" &&
+                          (c.extensionRequested ? (
+                            <span
+                              style={{
+                                background: "#FEF3C7",
+                                color: "#92400E",
+                                fontSize: 10,
+                                fontWeight: 600,
+                                padding: "3px 8px",
+                                borderRadius: 999,
+                              }}
+                            >
+                              Requested
+                            </span>
+                          ) : (
+                            <SecondaryBtn
+                              size="sm"
+                              onClick={() => setExtTarget(c)}
+                            >
+                              Request Extension
+                            </SecondaryBtn>
+                          ))}
+                        {c.status === "Paid and Reserved" && (
                           <SecondaryBtn
                             size="sm"
-                            onClick={() => setExtTarget(c)}
+                            onClick={() => {
+                              const o = orders.find(
+                                (o) => o.product === c.product,
+                              ) || {
+                                id: `ORD-${c.id}`,
+                                product: c.product,
+                                batch: c.batch,
+                                seller: c.seller,
+                                amount: c.amount,
+                                step: 3,
+                                trackingNo: null,
+                                eta: "Est. Oct 2026",
+                                rated: false,
+                              }
+                              setViewOrder(o)
+                            }}
                           >
-                            Request Extension
+                            View Order
                           </SecondaryBtn>
-                        ))}
-                      {c.status === "Paid and Reserved" && (
-                        <SecondaryBtn
-                          size="sm"
-                          onClick={() => {
-                            const o = orders.find(
-                              (o) => o.product === c.product,
-                            ) || {
-                              id: `ORD-${c.id}`,
-                              product: c.product,
-                              batch: c.batch,
-                              seller: c.seller,
-                              amount: c.amount,
-                              step: 3,
-                              trackingNo: null,
-                              eta: "Est. Oct 2026",
-                              rated: false,
-                            }
-                            setViewOrder(o)
-                          }}
-                        >
-                          View Order
-                        </SecondaryBtn>
-                      )}
-                      {(c.status === "Pending" ||
-                        c.status === "Paid and Reserved") && (
-                        <SecondaryBtn
-                          size="sm"
-                          onClick={() => setCancelTarget(c)}
-                          style={{
-                            color: "#EF4444",
-                            borderColor: "#FECACA",
-                            background: "#FEF2F2",
-                          }}
-                        >
-                          Cancel
-                        </SecondaryBtn>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        )}
+                        {(c.status === "Pending" ||
+                          c.status === "Paid and Reserved") && (
+                            <SecondaryBtn
+                              size="sm"
+                              onClick={() => setCancelTarget(c)}
+                              style={{
+                                color: "#EF4444",
+                                borderColor: "#FECACA",
+                                background: "#FEF2F2",
+                              }}
+                            >
+                              Cancel
+                            </SecondaryBtn>
+                          )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           {filtered.length === 0 && (
             <div

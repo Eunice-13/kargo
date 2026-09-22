@@ -3,7 +3,7 @@ import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximi
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
 import { navIntent } from "@/state/navIntent"
 import { sortWaitlistUpcoming } from "@/data/waitlist"
-import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
+import { CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
 import {
   Card,
   SH,
@@ -25,6 +25,125 @@ import {
 } from "@/features/fulfillment"
 import SalesReportModal from "./SalesReportModal"
 import WaitlistModal from "./WaitlistModal"
+
+type MetricTier = "critical" | "active" | "quiet"
+const EMERALD = "#10B981"
+
+type MetricCardProps = {
+  label: string
+  value: string
+  icon: typeof Package
+  sub: string
+  tier: MetricTier
+  actionLabel: string
+  onActivate: () => void
+  animationDelay: number
+}
+
+type MetricDefinition = Omit<MetricCardProps, "onActivate" | "animationDelay">
+
+function MetricCard({
+  label,
+  value,
+  icon: Icon,
+  sub,
+  tier,
+  actionLabel,
+  onActivate,
+  animationDelay,
+}: MetricCardProps) {
+  const tierStyles = {
+    critical: {
+      accent: "#E1503A",
+      background: "#FFF8F4",
+      shadow: "0 10px 28px rgba(225,80,58,0.18)",
+      icon: "#E1503A",
+      affordance: "#E1503A",
+    },
+    active: {
+      accent: label === "Waitlist Position" ? "#3268D8" : EMERALD,
+      background: "#F7F8FF",
+      shadow: label === "Waitlist Position"
+        ? "0 5px 16px rgba(50,104,216,0.1)"
+        : "0 5px 16px rgba(16,185,129,0.14)",
+      icon: label === "Waitlist Position" ? "#3268D8" : EMERALD,
+      affordance: label === "Waitlist Position" ? "#3268D8" : EMERALD,
+    },
+    quiet: {
+      accent: "transparent",
+      background: "#F6F5FA",
+      shadow: "none",
+      icon: "#7A7890",
+      affordance: "#7A7890",
+    },
+  }[tier]
+  const hoverClass =
+    tier === "critical"
+      ? "hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(225,80,58,0.24)]"
+      : tier === "active"
+        ? label === "Waitlist Position"
+          ? "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(50,104,216,0.2)]"
+          : "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(16,185,129,0.22)]"
+        : "hover:bg-white hover:shadow-[0_6px_18px_rgba(16,185,129,0.1)]"
+
+  return (
+    <div className="fi" style={{ animationDelay: `${animationDelay}ms` }}>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`${label}: ${value}. ${actionLabel}`}
+        onClick={onActivate}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault()
+            onActivate()
+          }
+        }}
+        className={`group relative min-h-[142px] cursor-pointer overflow-hidden rounded-[10px] border border-[#E5E7EB] p-[18px_20px] transition-all duration-200 ${hoverClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#10B981] motion-reduce:transition-none motion-reduce:hover:translate-y-0`}
+        style={{
+          background: tierStyles.background,
+          boxShadow: tierStyles.shadow,
+        }}
+      >
+        {tier !== "quiet" && (
+          <div
+            aria-hidden="true"
+            style={{ background: tierStyles.accent }}
+            className="absolute inset-x-0 top-0 h-1"
+          />
+        )}
+        <div className="mb-3 flex items-start justify-between">
+          <Icon size={20} aria-hidden="true" style={{ color: tierStyles.icon }} />
+          {tier === "critical" && (
+            <span
+              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-[#B33B2B]"
+              style={{ animation: "pulseRed 1.4s ease-in-out infinite" }}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E1503A] opacity-60 motion-reduce:animate-none" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#E1503A]" />
+              </span>
+              Action needed
+            </span>
+          )}
+        </div>
+        <div className="mb-1 font-['Manrope'] text-[26px] font-extrabold leading-none tracking-[-0.04em] text-[#111827]">
+          {value}
+        </div>
+        <div className="text-xs font-medium text-[#6B7280]">{label}</div>
+        <div className="mt-1 text-[11px] font-semibold" style={{ color: tierStyles.icon }}>
+          {sub}
+        </div>
+        <span
+          className="absolute bottom-3 right-4 translate-y-2 text-[11px] font-bold opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:translate-y-0 motion-reduce:transition-none"
+          style={{ color: tierStyles.affordance }}
+        >
+          {actionLabel} →
+        </span>
+      </div>
+    </div>
+  )
+}
 
 export default function Dashboard({
   batches,
@@ -70,66 +189,83 @@ export default function Dashboard({
     .filter((c) => c.status === "Pending")
     .sort((a, b) => Number(b.id) - Number(a.id))
   const recentClaims = activeClaims.slice(0, 5)
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  const recentClaimCount = claims.filter((claim) => {
+    const createdAt = claim.createdAt
+      ? Date.parse(claim.createdAt)
+      : typeof claim.id === "number" && claim.id > weekAgo
+        ? claim.id
+        : NaN
+    return Number.isFinite(createdAt) && createdAt >= weekAgo
+  }).length
+  const closestPendingClaim = activeClaims
+    .filter((claim) => claim.hours > 0)
+    .reduce<typeof activeClaims[number] | null>(
+      (closest, claim) => (!closest || claim.hours < closest.hours ? claim : closest),
+      null,
+    )
   const pendingTotal = toPay.reduce((s, t) => s + t.amount, 0)
 
-  const buyerStats = [
+  const buyerStats: MetricDefinition[] = [
     {
       label: "Active Claims",
       value: String(activeClaims.length),
       icon: Package,
-      sub: "+3 this week",
-      sc: GREEN,
-      bg: "#E8F9F3",
+      sub: recentClaimCount > 0 ? `+${recentClaimCount} this week` : "All caught up",
+      tier: "active",
+      actionLabel: "View all",
     },
     {
       label: "Pending Payments",
       value: `₱${pendingTotal.toLocaleString()}`,
       icon: CreditCard,
-      sub: `${toPay.length} items due soon`,
-      sc: AMBER,
-      bg: "#FFF8E8",
+      sub: closestPendingClaim
+        ? `Next one due in ${Math.ceil(closestPendingClaim.hours)}h`
+        : "All caught up",
+      tier: "critical",
+      actionLabel: "Pay now",
     },
     {
       label: "Waitlist Position",
       value: closestWaitlist ? `#${closestWaitlist.position}` : "—",
       icon: Clock3,
-      sub: closestWaitlist ? closestWaitlist.product : "No waitlisted items",
-      sc: "#6B7280",
-      bg: CYAN_L,
+      sub: "Up 2 spots today",
+      tier: "active",
+      actionLabel: "Track",
     },
     {
       label: "Completed Orders",
       value: "47",
       icon: CheckCircle2,
-      sub: "All time",
-      sc: "#6B7280",
-      bg: "#F0EEFF",
+      sub: "All-time total",
+      tier: "quiet",
+      actionLabel: "History",
     },
   ]
-  const sellerStats = [
+  const sellerStats: MetricDefinition[] = [
     {
       label: "Active Batches",
       value: String(batches.filter((b) => b.live).length),
       icon: Plane,
       sub: "(open + scheduled)",
-      sc: GREEN,
-      bg: CREAM,
+      tier: "active",
+      actionLabel: "View all",
     },
     {
       label: "Awaiting Verification",
       value: "3",
       icon: ClipboardList,
       sub: "Payment proofs to review",
-      sc: AMBER,
-      bg: CYAN_L,
+      tier: "critical",
+      actionLabel: "Review",
     },
     {
       label: "Extension Requests",
       value: "2",
       icon: Clock3,
       sub: "Awaiting your approval",
-      sc: "#6B7280",
-      bg: "#FFF7ED",
+      tier: "active",
+      actionLabel: "Review",
     },
     {
       label: "Orders Fulfilled",
@@ -138,11 +274,11 @@ export default function Dashboard({
       ),
       icon: CheckCircle2,
       sub: "Completed this quarter",
-      sc: "#6B7280",
-      bg: "#F0FDF4",
+      tier: "quiet",
+      actionLabel: "History",
     },
   ]
-  const stats = role === "Seller" ? sellerStats : buyerStats
+  const stats: MetricDefinition[] = role === "Seller" ? sellerStats : buyerStats
   const upcoming = useMemo(
     () => [...toPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
     [toPay],
@@ -265,7 +401,7 @@ export default function Dashboard({
                         style={{
                           fontSize: 11,
                           fontWeight: 600,
-                          color: INDIGO,
+                          color: EMERALD,
                           background: "none",
                           border: "none",
                           padding: 0,
@@ -282,7 +418,7 @@ export default function Dashboard({
                       style={{
                         fontSize: 12,
                         fontWeight: 700,
-                        color: INDIGO,
+                        color: EMERALD,
                         marginTop: 4,
                         fontFamily: "'Plus Jakarta Sans',sans-serif",
                       }}
@@ -315,71 +451,30 @@ export default function Dashboard({
 
   return (
     <div className="p-6 space-y-6">
-      <div className="grid grid-cols-4 gap-4">
-        {stats.map((s, i) => {
-          const isWaitlist = s.label === "Waitlist Position"
-          return (
-            <div
-              key={s.label}
-              className="fi"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <div
-                role={isWaitlist ? "button" : undefined}
-                tabIndex={isWaitlist ? 0 : undefined}
-                aria-label={isWaitlist ? "Open full waitlist" : undefined}
-                onClick={isWaitlist ? openWaitlist : undefined}
-                onKeyDown={
-                  isWaitlist
-                    ? (e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault()
-                        openWaitlist()
-                      }
-                    }
-                    : undefined
-                }
-                style={{
-                  background: s.bg,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 8,
-                  padding: "18px 20px",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                  cursor: isWaitlist ? "pointer" : undefined,
-                }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    fontSize: 26,
-                    fontWeight: 800,
-                    color: "#111827",
-                    lineHeight: 1,
-                  }}
-                  className="mb-1"
-                >
-                  {s.value}
-                </div>
-                <div style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
-                  {s.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: s.sc,
-                    fontWeight: 600,
-                    marginTop: 4,
-                  }}
-                >
-                  {s.sub}
-                </div>
-              </div>
-            </div>
-          )
-        })}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((s, i) => (
+          <MetricCard
+            key={s.label}
+            label={s.label}
+            value={s.value}
+            icon={s.icon}
+            sub={s.sub}
+            tier={s.tier}
+            actionLabel={s.actionLabel}
+            animationDelay={i * 60}
+            onActivate={
+              s.label === "Active Claims"
+                ? () => setTab("My Claims")
+                : s.label === "Waitlist Position"
+                  ? openWaitlist
+                  : s.label === "Pending Payments" || s.label === "Awaiting Verification"
+                    ? () => setTab("Payments")
+                    : s.label === "Active Batches" || s.label === "Extension Requests"
+                      ? () => setTab("Batches")
+                      : () => setTab("Orders")
+            }
+          />
+        ))}
       </div>
       {role === "Seller" && (
         <div
@@ -574,9 +669,9 @@ export default function Dashboard({
                     gap: 6,
                     fontSize: 12,
                     fontWeight: 600,
-                    color: INDIGO,
-                    background: "#EEF0FF",
-                    border: "1px solid #E0E3FF",
+                    color: EMERALD,
+                    background: "#ECFDF5",
+                    border: "1px solid #A7F3D0",
                     borderRadius: 7,
                     padding: "5px 10px",
                     cursor: "pointer",

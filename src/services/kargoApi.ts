@@ -237,6 +237,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         amount: Number(row.total_amount),
         status: statusToClaim(row.status),
         hours,
+        createdAt: row.created_at,
         extensionRequested: row.extension_status === "pending",
       })
       orders.push({
@@ -263,6 +264,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         amount: Number(row.total_amount),
         status: statusToClaim(row.status),
         hours,
+        createdAt: row.created_at,
         extensionRequested: row.extension_status === "pending",
       })
       fulfillment.push({

@@ -181,6 +181,7 @@ export default function Batches({
       amount: product.price,
       status: "Pending",
       hours: reserveHrs,
+      createdAt: new Date().toISOString(),
     }
     setClaims((prev) => [newClaim, ...prev])
     const alreadyInToPay = toPay.some((t) => t.product === product.name)
@@ -381,9 +382,8 @@ export default function Batches({
                       <div
                         style={{
                           background: "#fff",
-                          border: `1px solid ${
-                            b.locked ? "#FCA5A5" : "#E5E7EB"
-                          }`,
+                          border: `1px solid ${b.locked ? "#FCA5A5" : "#E5E7EB"
+                            }`,
                           borderRadius: 8,
                           overflow: "hidden",
                           boxShadow: b.locked
@@ -874,132 +874,31 @@ export default function Batches({
             {/* Extension Approval Panel */}
             <Card>
               <SH title="Extension Requests" />
-            {extensionRequests.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  color: "#9CA3AF",
-                  fontSize: 13,
-                  padding: "16px 0",
-                }}
-              >
-                No pending extension requests.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {extensionRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    style={{
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 8,
-                      padding: "12px 14px",
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: "#111827",
-                          }}
-                        >
-                          {req.buyer}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#9CA3AF",
-                            marginTop: 2,
-                          }}
-                        >
-                          {req.product} · {req.batch}
-                        </div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                          Requested {req.requestedAt}
-                        </div>
-                      </div>
-                      {req.status === "pending" ? (
-                        <div className="flex gap-2">
-                          <PrimaryBtn
-                            size="sm"
-                            onClick={() =>
-                              setExtConfirm({ req, action: "approved" })
-                            }
-                          >
-                            Approve
-                          </PrimaryBtn>
-                          <button
-                            onClick={() =>
-                              setExtConfirm({ req, action: "denied" })
-                            }
-                            style={{
-                              fontSize: 12,
-                              color: "#EF4444",
-                              fontWeight: 600,
-                              background: "none",
-                              border: "1px solid #EF4444",
-                              borderRadius: 6,
-                              padding: "4px 10px",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Deny
-                          </button>
-                        </div>
-                      ) : (
-                        <span
-                          style={{
-                            background:
-                              req.status === "approved" ? "#D4F5EA" : "#FEE2E2",
-                            color:
-                              req.status === "approved" ? "#0B7A59" : "#991B1B",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: "3px 9px",
-                            borderRadius: 999,
-                          }}
-                        >
-                          {req.status === "approved" ? "Approved" : "Denied"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
-          {/* Buyer Requests Inbox */}
-          <Card>
-            <SH title="Buyer Requests" />
-            {buyerRequests.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  color: "#9CA3AF",
-                  fontSize: 13,
-                  padding: "16px 0",
-                }}
-              >
-                No buyer requests yet.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {buyerRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    style={{
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 8,
-                      padding: "12px 14px",
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Avatar name={req.buyer} size={20} />
-                          <span
+              {extensionRequests.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "#9CA3AF",
+                    fontSize: 13,
+                    padding: "16px 0",
+                  }}
+                >
+                  No pending extension requests.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {extensionRequests.map((req) => (
+                    <div
+                      key={req.id}
+                      style={{
+                        border: "1px solid #E5E7EB",
+                        borderRadius: 8,
+                        padding: "12px 14px",
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div
                             style={{
                               fontSize: 13,
                               fontWeight: 600,
@@ -1007,85 +906,186 @@ export default function Batches({
                             }}
                           >
                             {req.buyer}
-                          </span>
-                          <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                            · {req.batch}
-                          </span>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#9CA3AF",
+                              marginTop: 2,
+                            }}
+                          >
+                            {req.product} · {req.batch}
+                          </div>
+                          <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                            Requested {req.requestedAt}
+                          </div>
                         </div>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "#374151",
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          <strong>{req.product}</strong>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#6B7280",
-                            marginTop: 3,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {req.message}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#9CA3AF",
-                            marginTop: 4,
-                          }}
-                        >
-                          {req.requestedAt}
-                        </div>
-                      </div>
-                      {req.replied ? (
-                        <span
-                          style={{
-                            background: "#D4F5EA",
-                            color: "#0B7A59",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: "3px 9px",
-                            borderRadius: 999,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          Replied
-                        </span>
-                      ) : (
-                        <SecondaryBtn
-                          onClick={async () => {
-                            if (isSupabaseConfigured) {
-                              try {
-                                await kargoApi.markBuyerRequestReplied(String(req.id))
-                              } catch (error) {
-                                alert(error instanceof Error ? error.message : "Unable to update request.")
-                                return
+                        {req.status === "pending" ? (
+                          <div className="flex gap-2">
+                            <PrimaryBtn
+                              size="sm"
+                              onClick={() =>
+                                setExtConfirm({ req, action: "approved" })
                               }
-                            }
-                            const fbUrl = `https://facebook.com/${req.buyer.toLowerCase().replace(" ", ".")}`
-                            window.open(fbUrl, "_blank", "noopener,noreferrer")
-                            setBuyerRequests((p) =>
-                              p.map((r) =>
-                                r.id === req.id ? { ...r, replied: true } : r,
-                              ),
-                            )
-                          }}
-                        >
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            Reply on FB <ArrowRight size={13} aria-hidden="true" />
+                            >
+                              Approve
+                            </PrimaryBtn>
+                            <button
+                              onClick={() =>
+                                setExtConfirm({ req, action: "denied" })
+                              }
+                              style={{
+                                fontSize: 12,
+                                color: "#EF4444",
+                                fontWeight: 600,
+                                background: "none",
+                                border: "1px solid #EF4444",
+                                borderRadius: 6,
+                                padding: "4px 10px",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Deny
+                            </button>
+                          </div>
+                        ) : (
+                          <span
+                            style={{
+                              background:
+                                req.status === "approved" ? "#D4F5EA" : "#FEE2E2",
+                              color:
+                                req.status === "approved" ? "#0B7A59" : "#991B1B",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "3px 9px",
+                              borderRadius: 999,
+                            }}
+                          >
+                            {req.status === "approved" ? "Approved" : "Denied"}
                           </span>
-                        </SecondaryBtn>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+                  ))}
+                </div>
+              )}
+            </Card>
+            {/* Buyer Requests Inbox */}
+            <Card>
+              <SH title="Buyer Requests" />
+              {buyerRequests.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "#9CA3AF",
+                    fontSize: 13,
+                    padding: "16px 0",
+                  }}
+                >
+                  No buyer requests yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {buyerRequests.map((req) => (
+                    <div
+                      key={req.id}
+                      style={{
+                        border: "1px solid #E5E7EB",
+                        borderRadius: 8,
+                        padding: "12px 14px",
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Avatar name={req.buyer} size={20} />
+                            <span
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                color: "#111827",
+                              }}
+                            >
+                              {req.buyer}
+                            </span>
+                            <span style={{ fontSize: 11, color: "#9CA3AF" }}>
+                              · {req.batch}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#374151",
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            <strong>{req.product}</strong>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#6B7280",
+                              marginTop: 3,
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            {req.message}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#9CA3AF",
+                              marginTop: 4,
+                            }}
+                          >
+                            {req.requestedAt}
+                          </div>
+                        </div>
+                        {req.replied ? (
+                          <span
+                            style={{
+                              background: "#D4F5EA",
+                              color: "#0B7A59",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "3px 9px",
+                              borderRadius: 999,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Replied
+                          </span>
+                        ) : (
+                          <SecondaryBtn
+                            onClick={async () => {
+                              if (isSupabaseConfigured) {
+                                try {
+                                  await kargoApi.markBuyerRequestReplied(String(req.id))
+                                } catch (error) {
+                                  alert(error instanceof Error ? error.message : "Unable to update request.")
+                                  return
+                                }
+                              }
+                              const fbUrl = `https://facebook.com/${req.buyer.toLowerCase().replace(" ", ".")}`
+                              window.open(fbUrl, "_blank", "noopener,noreferrer")
+                              setBuyerRequests((p) =>
+                                p.map((r) =>
+                                  r.id === req.id ? { ...r, replied: true } : r,
+                                ),
+                              )
+                            }}
+                          >
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                              Reply on FB <ArrowRight size={13} aria-hidden="true" />
+                            </span>
+                          </SecondaryBtn>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
           </div>
         </div>
         {showBuyerReqForm && (

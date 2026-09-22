@@ -44,6 +44,7 @@ export type ClaimRow = {
   amount: number
   status: ClaimStatus
   hours: number
+  createdAt?: string
   extensionRequested?: boolean
   // Who placed the order (seller's "Orders Received" view). Falls back to
   // `seller` for legacy rows. `buyerFb` is their contact/Facebook link.
