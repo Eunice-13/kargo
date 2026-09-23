@@ -38,6 +38,9 @@ export default function MyClaims({
   const [payTarget, setPayTarget] = useState<ClaimRow | null>(null)
   const [viewOrder, setViewOrder] = useState<OrderRow | null>(null)
   const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
+  // Transient confirmation that an extension request was sent to the seller
+  // (#Task, buyer toast) — shown alongside the persistent "Extension Requested" badge.
+  const [extToast, setExtToast] = useState(false)
   const [contact, setContact] = useState<ClaimRow | null>(null)
   const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null)
   const [orderFilter, setOrderFilter] = useState<ClaimStatus | "All">("All")
@@ -838,9 +841,33 @@ export default function MyClaims({
               ),
             )
             setExtTarget(null)
+            setExtToast(true)
+            setTimeout(() => setExtToast(false), 2600)
           }}
           onClose={() => setExtTarget(null)}
         />
+      )}
+      {extToast && (
+        <div
+          className="fi"
+          role="status"
+          style={{
+            position: "fixed",
+            bottom: 20,
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#065F46",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+            padding: "10px 16px",
+            borderRadius: 8,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+            zIndex: 2000,
+          }}
+        >
+          Extension request sent to the seller.
+        </div>
       )}
       {cancelTarget && (
         <Modal

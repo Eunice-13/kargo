@@ -14,6 +14,7 @@ export default function Header({
   onNavigate,
   onBatchSelect,
   onSellerSelect,
+  onAboutClick,
 }: {
   user: UserInfo
   onLogout: () => void
@@ -24,6 +25,7 @@ export default function Header({
   onNavigate?: (tab: Tab) => void
   onBatchSelect?: (id: number) => void
   onSellerSelect?: (name: string) => void
+  onAboutClick?: () => void
 }) {
   return (
     <header
@@ -35,9 +37,19 @@ export default function Header({
       }}
       className="kargo-header flex items-center px-6 gap-6 sticky top-0"
     >
-      <div
+      <button
+        type="button"
+        onClick={onAboutClick}
+        aria-label="About KARGO"
+        title="About KARGO"
         className="kargo-brand-lockup flex items-center gap-2 flex-shrink-0"
-        style={{ width: 160 }}
+        style={{
+          width: 160,
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: onAboutClick ? "pointer" : "default",
+        }}
       >
         <div
           className="kargo-brand-mark"
@@ -72,7 +84,7 @@ export default function Header({
         >
           Kargo
         </span>
-      </div>
+      </button>
       <SearchBox
         batches={batches}
         onNavigate={onNavigate}

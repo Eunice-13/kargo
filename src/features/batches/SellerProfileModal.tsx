@@ -90,22 +90,30 @@ export default function SellerProfileModal({
     {
       buyer: "Trisha L.",
       rating: 5,
+      helpful: 12,
       comment:
         "Super responsive seller! Items arrived in perfect condition. Will definitely order again!",
     },
     {
       buyer: "Carlo R.",
       rating: 4,
+      helpful: 3,
       comment:
         "Good communication. Slight delay but overall satisfied with the service.",
     },
     {
       buyer: "Mia S.",
       rating: 5,
+      helpful: 27,
       comment:
         "My fave pasabuy seller. Always gives updates on ETA and packaging is amazing.",
     },
   ]
+  // Show the most relevant reviews first: highest "helpful" (engagement)
+  // signal, breaking ties by rating (#Task 10).
+  const sortedReviews = [...REVIEWS].sort(
+    (a, b) => b.helpful - a.helpful || b.rating - a.rating,
+  )
   const grad =
     CAT_GRAD[sellerBatches[0]?.category || "Mixed"] || CAT_GRAD["Mixed"]
   return (
@@ -644,7 +652,7 @@ export default function SellerProfileModal({
       )}
       {tab === "Reviews" && (
         <div className="space-y-3">
-          {REVIEWS.map((r, i) => (
+          {sortedReviews.map((r, i) => (
             <div
               key={i}
               style={{
@@ -667,6 +675,9 @@ export default function SellerProfileModal({
               </div>
               <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
                 {r.comment}
+              </div>
+              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 6 }}>
+                {r.helpful} found helpful
               </div>
             </div>
           ))}

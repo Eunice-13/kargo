@@ -356,3 +356,50 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
   }
   body.printing-receipt .no-print { display: none !important; }
 }
+
+/* ─── Mobile: collapse fixed inline column layouts (#Task 3) ────────────────── */
+/* The live app sets several page layouts with inline `gridTemplateColumns`
+   (e.g. "1fr 340px" sidebars, "1fr 300px" detail panes, "repeat(3,1fr)" batch
+   grid). Inline styles can't be reached by ordinary CSS, so these panes stayed
+   multi-column and overflowed on phones. These rules collapse them to a single
+   column under 760px only — desktop layout is unchanged. `!important` is
+   required to override the inline style attribute. */
+@media (max-width: 760px) {
+  /* Dashboard main + sidebar ("1fr 340px"), Batch/Shop detail ("1fr 300px"),
+     Payments split ("1fr 1fr"), and any generic two-col content panes. */
+  main [style*="gridTemplateColumns: \"1fr 340px\""],
+  main [style*="grid-template-columns: 1fr 340px"],
+  main [style*="gridTemplateColumns: \"1fr 300px\""],
+  main [style*="grid-template-columns: 1fr 300px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Settings sidebar nav + content ("220px 1fr") stacks; nav sits on top. */
+  main [style*="gridTemplateColumns: \"220px 1fr\""],
+  main [style*="grid-template-columns: 220px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Batch grid ("repeat(3,1fr)") → single column of cards. */
+  main [style*="gridTemplateColumns: \"repeat(3,1fr)\""],
+  main [style*="grid-template-columns: repeat(3,1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Two-up splits used inside forms/pages ("1fr 1fr") and the 2-col claims
+     grid ("repeat(2,1fr)") go single-column so fields aren't crushed. */
+  main .grid[style*="gridTemplateColumns: \"1fr 1fr\""],
+  main .grid[style*="grid-template-columns: 1fr 1fr"],
+  main [style*="gridTemplateColumns: \"repeat(2,1fr)\""],
+  main [style*="grid-template-columns: repeat(2,1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Smaller phones: also relax the batch-grid empty-cell placeholders so a
+   single-column grid doesn't leave dead gaps, and ensure comfortable tap
+   targets on the primary/secondary buttons. */
+@media (max-width: 480px) {
+  .kargo-original-app .kargo-primary,
+  .kargo-original-app .kargo-secondary { min-height: 40px; }
+}

@@ -1171,6 +1171,24 @@ export async function saveBatchExpenses(batchDbId: string, value: BatchExpenses)
   if (error) throw error
 }
 
+// Delegates to the email-batch-history Edge Function (same invoke pattern as
+// verify-bir-badge). Returns the composed log so callers can surface it. (#Task 14)
+async function emailBatchHistory(batchId: string) {
+  const { data, error } = await requireSupabase().functions.invoke("email-batch-history", {
+    body: { batchId },
+  })
+  if (error) throw error
+  return data as {
+    emailed: boolean
+    to: string
+    log: {
+      batchId: string
+      batchTitle: string
+      totals: { products: number; claimed: number; paid: number; revenue: number }
+    }
+  }
+}
+
 export const kargoApi = {
   signIn,
   signUp,
@@ -1217,4 +1235,5 @@ export const kargoApi = {
   getRecordedExpensesForPeriod,
   loadBatchExpenses,
   saveBatchExpenses,
+  emailBatchHistory,
 }

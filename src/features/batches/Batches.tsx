@@ -288,7 +288,17 @@ export default function Batches({
             </SecondaryBtn>
             <PrimaryBtn
               onClick={() => {
+                const isClosing = !lockConfirm.locked
                 toggleBatchLock(setBatches, lockConfirm.id)
+                // Closing a batch (locking it) emails the seller a history log
+                // of the completed batch (#Task 14).
+                if (isClosing && isSupabaseConfigured && lockConfirm.dbId) {
+                  void kargoApi
+                    .emailBatchHistory(lockConfirm.dbId)
+                    .catch((error) =>
+                      alert(error instanceof Error ? error.message : "Unable to email batch history."),
+                    )
+                }
                 setLockConfirm(null)
               }}
             >

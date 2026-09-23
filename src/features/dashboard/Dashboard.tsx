@@ -153,8 +153,14 @@ export default function Dashboard({
     },
   ]
   const stats = role === "Seller" ? sellerStats : buyerStats
+  // Only surface deadlines that are genuinely urgent: under 24 hours remaining
+  // (#Task 9). Still sorted soonest-first and capped at 4.
   const upcoming = useMemo(
-    () => [...payableToPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
+    () =>
+      [...payableToPay]
+        .filter((item) => item.hours < 24)
+        .sort((a, b) => a.hours - b.hours)
+        .slice(0, 4),
     [payableToPay],
   )
 

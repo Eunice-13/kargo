@@ -374,15 +374,20 @@ export default function BatchPage({
                 >
                   <ProductThumb name={p.name} />
                   <div className="flex-1">
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: "#111827",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
-                      }}
-                    >
-                      {p.name}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 700,
+                          color: "#111827",
+                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        }}
+                      >
+                        {p.name}
+                      </div>
+                      {/* Per-item share: copies a link to this item's batch page,
+                          using the item name as the share title (#Task 12). */}
+                      <ShareButton batchId={batch.id} title={p.name} compact />
                     </div>
                     <div
                       style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}
