@@ -32,6 +32,7 @@ export default function MyClaims({
   batches,
   setBatches,
   user,
+  setTab,
   role,
 }: SharedState) {
   const [filter, setFilter] = useState<ClaimStatus | "All">("All")
@@ -102,6 +103,11 @@ export default function MyClaims({
             <Link2 size={15} aria-hidden="true" /> Opening {fbToast}'s Facebook profile…
           </div>
         )}
+        <div className="mb-3">
+          <SecondaryBtn size="sm" onClick={() => setTab("Dashboard")}>
+            Back to Dashboard
+          </SecondaryBtn>
+        </div>
         <h2
           style={{
             fontFamily: "'Plus Jakarta Sans',sans-serif",
@@ -390,6 +396,11 @@ export default function MyClaims({
 
   return (
     <div className="p-6">
+      <div className="mb-3">
+        <SecondaryBtn size="sm" onClick={() => setTab("Dashboard")}>
+          Back to Dashboard
+        </SecondaryBtn>
+      </div>
       <div className="flex items-center gap-2 mb-5 flex-wrap">
         {filters.map((f) => (
           <button

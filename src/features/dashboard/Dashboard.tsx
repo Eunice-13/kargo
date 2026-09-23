@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react"
 import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X, FileText } from "lucide-react"
-import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
+import type { ClaimStatus, PayHistRow, Tab, SharedState, WaitlistEntry } from "@/types"
 import { navIntent } from "@/state/navIntent"
 import { sortWaitlistUpcoming } from "@/data/waitlist"
-import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
+import { CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
 import {
   Card,
   SH,
@@ -28,7 +28,125 @@ import WaitlistModal from "./WaitlistModal"
 import SellerWaitlistCard from "./SellerWaitlistCard"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
-import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry"
+
+type MetricTier = "critical" | "active" | "quiet"
+const EMERALD = "#10B981"
+
+type MetricCardProps = {
+  label: string
+  value: string
+  icon: typeof Package
+  sub: string
+  tier: MetricTier
+  actionLabel: string
+  onActivate: () => void
+  animationDelay: number
+}
+
+type MetricDefinition = Omit<MetricCardProps, "onActivate" | "animationDelay">
+
+function MetricCard({
+  label,
+  value,
+  icon: Icon,
+  sub,
+  tier,
+  actionLabel,
+  onActivate,
+  animationDelay,
+}: MetricCardProps) {
+  const tierStyles = {
+    critical: {
+      accent: "#E1503A",
+      background: "#FFF8F4",
+      shadow: "0 10px 28px rgba(225,80,58,0.18)",
+      icon: "#E1503A",
+      affordance: "#E1503A",
+    },
+    active: {
+      accent: label === "Waitlist Position" ? "#3268D8" : EMERALD,
+      background: "#F7F8FF",
+      shadow: label === "Waitlist Position"
+        ? "0 5px 16px rgba(50,104,216,0.1)"
+        : "0 5px 16px rgba(16,185,129,0.14)",
+      icon: label === "Waitlist Position" ? "#3268D8" : EMERALD,
+      affordance: label === "Waitlist Position" ? "#3268D8" : EMERALD,
+    },
+    quiet: {
+      accent: "transparent",
+      background: "#F6F5FA",
+      shadow: "none",
+      icon: "#7A7890",
+      affordance: "#7A7890",
+    },
+  }[tier]
+  const hoverClass =
+    tier === "critical"
+      ? "hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(225,80,58,0.24)]"
+      : tier === "active"
+        ? label === "Waitlist Position"
+          ? "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(50,104,216,0.2)]"
+          : "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(16,185,129,0.22)]"
+        : "hover:bg-white hover:shadow-[0_6px_18px_rgba(16,185,129,0.1)]"
+
+  return (
+    <div className="fi" style={{ animationDelay: `${animationDelay}ms` }}>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`${label}: ${value}. ${actionLabel}`}
+        onClick={onActivate}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault()
+            onActivate()
+          }
+        }}
+        className={`group relative min-h-[142px] cursor-pointer overflow-hidden rounded-[10px] border border-[#E5E7EB] p-[18px_20px] transition-all duration-200 ${hoverClass} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#10B981] motion-reduce:transition-none motion-reduce:hover:translate-y-0`}
+        style={{
+          background: tierStyles.background,
+          boxShadow: tierStyles.shadow,
+        }}
+      >
+        {tier !== "quiet" && (
+          <div
+            aria-hidden="true"
+            style={{ background: tierStyles.accent }}
+            className="absolute inset-x-0 top-0 h-1"
+          />
+        )}
+        <div className="mb-3 flex items-start justify-between">
+          <Icon size={20} aria-hidden="true" style={{ color: tierStyles.icon }} />
+          {tier === "critical" && (
+            <span
+              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-[#B33B2B]"
+              style={{ animation: "pulseRed 1.4s ease-in-out infinite" }}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E1503A] opacity-60 motion-reduce:animate-none" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#E1503A]" />
+              </span>
+              Action needed
+            </span>
+          )}
+        </div>
+        <div className="mb-1 font-['Manrope'] text-[26px] font-extrabold leading-none tracking-[-0.04em] text-[#111827]">
+          {value}
+        </div>
+        <div className="text-xs font-medium text-[#6B7280]">{label}</div>
+        <div className="mt-1 text-[11px] font-semibold" style={{ color: tierStyles.icon }}>
+          {sub}
+        </div>
+        <span
+          className="absolute bottom-3 right-4 translate-y-2 text-[11px] font-bold opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:translate-y-0 motion-reduce:transition-none"
+          style={{ color: tierStyles.affordance }}
+        >
+          {actionLabel} →
+        </span>
+      </div>
+    </div>
+  )
+}
 
 export default function Dashboard({
   batches,
@@ -51,7 +169,7 @@ export default function Dashboard({
   refreshData,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
-  const [buyerProfile, setBuyerProfile] = useState<{ name: string; contactUrl?: string } | null>(null)
+  const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
   const [showSalesReport, setShowSalesReport] = useState(false)
   const [showWaitlist, setShowWaitlist] = useState(false)
@@ -63,6 +181,29 @@ export default function Dashboard({
   const openWaitlist = () => {
     setActiveWaitlistId(closestWaitlist?.id ?? null)
     setShowWaitlist(true)
+  }
+
+  // Accept/decline a partial-match waitlist offer. On Supabase the server
+  // cascades (creates the order on accept, offers the next buyer on decline), so
+  // we re-pull the truth; in demo mode we reflect the decision locally.
+  const handleWaitlistRespond = async (entry: WaitlistEntry, accept: boolean) => {
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.respondWaitlistOffer(String(entry.id), accept)
+        await refreshData()
+        return
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to respond to offer.")
+        return
+      }
+    }
+    setWaitlist((prev) =>
+      prev.map((e) =>
+        e.id === entry.id
+          ? { ...e, status: accept ? "converted" : "cancelled", offerQuantity: undefined, offerExpiresAt: undefined }
+          : e,
+      ),
+    )
   }
 
   // Close the expanded board with Escape.
@@ -77,69 +218,84 @@ export default function Dashboard({
   const activeClaims = claims
     .filter((c) => c.status === "Pending")
     .sort((a, b) => Number(b.id) - Number(a.id))
-  // Pending Claims (3.9): all pending claims, uncapped (card scrolls if long).
-  const pendingClaims = activeClaims
-  const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
-  const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
+  const recentClaims = activeClaims.slice(0, 5)
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+  const recentClaimCount = claims.filter((claim) => {
+    const createdAt = claim.createdAt
+      ? Date.parse(claim.createdAt)
+      : typeof claim.id === "number" && claim.id > weekAgo
+        ? claim.id
+        : NaN
+    return Number.isFinite(createdAt) && createdAt >= weekAgo
+  }).length
+  const closestPendingClaim = activeClaims
+    .filter((claim) => claim.hours > 0)
+    .reduce<typeof activeClaims[number] | null>(
+      (closest, claim) => (!closest || claim.hours < closest.hours ? claim : closest),
+      null,
+    )
+  const pendingTotal = toPay.reduce((s, t) => s + t.amount, 0)
 
-  const buyerStats = [
+  const buyerStats: MetricDefinition[] = [
     {
       label: "Active Claims",
       value: String(activeClaims.length),
       icon: Package,
-      sub: "+3 this week",
-      sc: GREEN,
-      bg: "#E8F9F3",
+      sub: recentClaimCount > 0 ? `+${recentClaimCount} this week` : "All caught up",
+      tier: "active",
+      actionLabel: "View all",
     },
     {
       label: "Pending Payments",
       value: `₱${pendingTotal.toLocaleString()}`,
       icon: CreditCard,
-      sub: `${payableToPay.length} items due soon`,
-      sc: AMBER,
-      bg: "#FFF8E8",
+      sub: closestPendingClaim
+        ? `Next one due in ${Math.ceil(closestPendingClaim.hours)}h`
+        : "All caught up",
+      tier: "critical",
+      actionLabel: "Pay now",
     },
     {
       label: "Waitlist Position",
       value: closestWaitlist ? `#${closestWaitlist.position}` : "—",
       icon: Clock3,
-      sub: closestWaitlist ? closestWaitlist.product : "No waitlisted items",
-      sc: "#6B7280",
-      bg: CYAN_L,
+      sub: "Up 2 spots today",
+      tier: "active",
+      actionLabel: "Track",
     },
     {
       label: "Completed Orders",
       value: "47",
       icon: CheckCircle2,
-      sub: "All time",
-      sc: "#6B7280",
-      bg: "#F0EEFF",
+      sub: "All-time total",
+      tier: "quiet",
+      actionLabel: "History",
     },
   ]
-  const sellerStats = [
+  const sellerStats: MetricDefinition[] = [
     {
       label: "Active Batches",
       value: String(batches.filter((b) => b.live).length),
       icon: Plane,
       sub: "(open + scheduled)",
-      sc: GREEN,
-      bg: CREAM,
+      tier: "active",
+      actionLabel: "View all",
     },
     {
       label: "Awaiting Verification",
       value: "3",
       icon: ClipboardList,
       sub: "Payment proofs to review",
-      sc: AMBER,
-      bg: CYAN_L,
+      tier: "critical",
+      actionLabel: "Review",
     },
     {
       label: "Extension Requests",
       value: "2",
       icon: Clock3,
       sub: "Awaiting your approval",
-      sc: "#6B7280",
-      bg: "#FFF7ED",
+      tier: "active",
+      actionLabel: "Review",
     },
     {
       label: "Orders Fulfilled",
@@ -148,30 +304,17 @@ export default function Dashboard({
       ),
       icon: CheckCircle2,
       sub: "Completed this quarter",
-      sc: "#6B7280",
-      bg: "#F0FDF4",
+      tier: "quiet",
+      actionLabel: "History",
     },
   ]
-  const stats = role === "Seller" ? sellerStats : buyerStats
+  const stats: MetricDefinition[] = role === "Seller" ? sellerStats : buyerStats
   const upcoming = useMemo(
-    () => [...payableToPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
-    [payableToPay],
+    () => [...toPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
+    [toPay],
   )
 
-  const handleBatchPayment = async (item: (typeof toPay)[number], method: string, referenceNumber: string, receipt?: File) => {
-    const claim = claims.find((candidate) => String(candidate.id) === String(item.orderId ?? item.id))
-    if (!claim || !claimIsPayable(claim) || deadlineHasPassed(item)) {
-      alert("This claim has expired and can no longer be paid.")
-      return
-    }
-    if (isSupabaseConfigured) {
-      try {
-        await kargoApi.submitPayment({ orderId: item.orderId ?? String(item.id), method, amount: item.amount, referenceNumber, receipt })
-      } catch (error) {
-        alert(error instanceof Error ? error.message : "Unable to submit payment.")
-        return
-      }
-    }
+  const handleBatchPayment = (item: (typeof toPay)[number], method: string) => {
     setPayHistory((history) => [
       {
         id: history.length + 1,
@@ -180,27 +323,28 @@ export default function Dashboard({
         method,
         amount: item.amount,
         date: TODAY,
-        status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
+        status: "Paid and Reserved" as ClaimStatus,
       },
       ...history,
     ])
-    if (!isSupabaseConfigured) setClaims((prev) =>
+    setClaims((prev) =>
       prev.map((c) =>
         c.id === item.id && c.status === "Pending"
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
           : c,
       ),
     )
-    if (!isSupabaseConfigured) setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
+    setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
   }
 
   // Kanban columns for the seller Fulfillment Board. Rendered both inside the
   // embedded dashboard card and inside the full-screen expanded overlay; the
   // `expanded` flag simply gives each column more room.
   const renderBoardColumns = (expanded: boolean) =>
-    KANBAN_COLS.map((col) => {
+    // "Claimed" is dropped from the board — it is always empty (claims become
+    // "Pending Payment" immediately). Remaining columns shift left to fill it.
+    KANBAN_COLS.filter((col) => col !== "Claimed").map((col) => {
       const colColors: Record<string, string> = {
-        Claimed: "#EEF0FF",
         "Pending Payment": "#FFF7ED",
         "Payment Confirmed": CYAN_L,
         Preparing: "#F0FDF4",
@@ -251,7 +395,8 @@ export default function Dashboard({
             </span>
           </div>
           <div className="space-y-2">
-            {colOrders.map((o) => {
+            {/* Preview caps each column at 4 cards; the expanded board shows all. */}
+            {(expanded ? colOrders : colOrders.slice(0, 4)).map((o) => {
               const isExpanded = board.expandedId === o.id
               return (
                 <div
@@ -283,12 +428,12 @@ export default function Dashboard({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          setBuyerProfile({ name: o.buyer, contactUrl: o.buyerFb })
+                          setBuyerProfile(o.buyer)
                         }}
                         style={{
                           fontSize: 11,
                           fontWeight: 600,
-                          color: INDIGO,
+                          color: EMERALD,
                           background: "none",
                           border: "none",
                           padding: 0,
@@ -305,7 +450,7 @@ export default function Dashboard({
                       style={{
                         fontSize: 12,
                         fontWeight: 700,
-                        color: INDIGO,
+                        color: EMERALD,
                         marginTop: 4,
                         fontFamily: "'Plus Jakarta Sans',sans-serif",
                       }}
@@ -331,82 +476,46 @@ export default function Dashboard({
                 —
               </div>
             )}
+            {!expanded && colOrders.length > 4 && (
+              <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", paddingTop: 2 }}>
+                +{colOrders.length - 4} more
+              </div>
+            )}
           </div>
         </div>
       )
     })
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="grid grid-cols-4 gap-6">
-        {stats.map((s, i) => {
-          const isWaitlist = s.label === "Waitlist Position"
-          return (
-            <div
-              key={s.label}
-              className="fi"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <div
-                role={isWaitlist ? "button" : undefined}
-                tabIndex={isWaitlist ? 0 : undefined}
-                aria-label={isWaitlist ? "Open full waitlist" : undefined}
-                onClick={isWaitlist ? openWaitlist : undefined}
-                onKeyDown={
-                  isWaitlist
-                    ? (e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault()
-                        openWaitlist()
-                      }
-                    }
-                    : undefined
-                }
-                style={{
-                  background: s.bg,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 8,
-                  padding: "18px 20px",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                  cursor: isWaitlist ? "pointer" : undefined,
-                }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    fontSize: 26,
-                    fontWeight: 800,
-                    color: "#111827",
-                    lineHeight: 1,
-                  }}
-                  className="mb-1"
-                >
-                  {s.value}
-                </div>
-                <div style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
-                  {s.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: s.sc,
-                    fontWeight: 600,
-                    marginTop: 4,
-                  }}
-                >
-                  {s.sub}
-                </div>
-              </div>
-            </div>
-          )
-        })}
+    <div className="p-6 space-y-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((s, i) => (
+          <MetricCard
+            key={s.label}
+            label={s.label}
+            value={s.value}
+            icon={s.icon}
+            sub={s.sub}
+            tier={s.tier}
+            actionLabel={s.actionLabel}
+            animationDelay={i * 60}
+            onActivate={
+              s.label === "Active Claims"
+                ? () => setTab("My Claims")
+                : s.label === "Waitlist Position"
+                  ? openWaitlist
+                  : s.label === "Pending Payments" || s.label === "Awaiting Verification"
+                    ? () => setTab("Payments")
+                    : s.label === "Active Batches" || s.label === "Extension Requests"
+                      ? () => setTab("Batches")
+                      : () => setTab("Orders")
+            }
+          />
+        ))}
       </div>
       {role === "Seller" && (
         <div
-          className="grid gap-6"
+          className="grid gap-5"
           style={{ gridTemplateColumns: "1fr 340px" }}
         >
           <Card>
@@ -479,7 +588,7 @@ export default function Dashboard({
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
-                        <Countdown hours={c.hours} id={c.id} expiresAt={c.expiresAt} />
+                        <Countdown hours={c.hours} id={c.id} />
                       ) : (
                         <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                           —
@@ -561,7 +670,8 @@ export default function Dashboard({
         </div>
       )}
       {role === "Seller" && (
-        <Card>
+        <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+        <Card style={{ flex: 1, minWidth: 0 }}>
           <SH
             title="Fulfillment Board"
             action={
@@ -597,9 +707,9 @@ export default function Dashboard({
                     gap: 6,
                     fontSize: 12,
                     fontWeight: 600,
-                    color: INDIGO,
-                    background: "#EEF0FF",
-                    border: "1px solid #E0E3FF",
+                    color: EMERALD,
+                    background: "#ECFDF5",
+                    border: "1px solid #A7F3D0",
                     borderRadius: 7,
                     padding: "5px 10px",
                     cursor: "pointer",
@@ -623,23 +733,24 @@ export default function Dashboard({
           </div>
           <FulfillmentLiveRegion text={board.announcement} />
         </Card>
-      )}
-      {role === "Seller" && (
-        <SellerWaitlistCard
-          groups={sellerWaitlist}
-          responseHours={user.waitlistResponseHours ?? 24}
-          onSaveResponseHours={async (h) => {
-            if (isSupabaseConfigured) {
-              try {
-                await kargoApi.setWaitlistResponseHours(h)
-              } catch (error) {
-                alert(error instanceof Error ? error.message : "Unable to save response window.")
-                return
+        <div style={{ width: 360, flexShrink: 0 }}>
+          <SellerWaitlistCard
+            groups={sellerWaitlist}
+            responseHours={user.waitlistResponseHours ?? 24}
+            onSaveResponseHours={async (h) => {
+              if (isSupabaseConfigured) {
+                try {
+                  await kargoApi.setWaitlistResponseHours(h)
+                } catch (error) {
+                  alert(error instanceof Error ? error.message : "Unable to save response window.")
+                  return
+                }
               }
-            }
-            setUser((u) => ({ ...u, waitlistResponseHours: h }))
-          }}
-        />
+              setUser((u) => ({ ...u, waitlistResponseHours: h }))
+            }}
+          />
+        </div>
+        </div>
       )}
       {boardExpanded && (
         <div
@@ -726,19 +837,18 @@ export default function Dashboard({
       )}
       {role !== "Seller" && (
         <div
-          className="grid gap-6"
+          className="grid gap-5"
           style={{ gridTemplateColumns: "1fr 340px" }}
         >
           <Card>
             <SH
-              title="Pending Claims"
+              title="Recent Claims"
               action={
                 <SecondaryBtn onClick={() => setTab("My Claims")}>
                   View All
                 </SecondaryBtn>
               }
             />
-            <div style={{ maxHeight: 360, overflowY: "auto" }}>
             <table className="w-full text-[13px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid #F3F4F6" }}>
@@ -767,7 +877,7 @@ export default function Dashboard({
                 </tr>
               </thead>
               <tbody>
-                {pendingClaims.map((c) => {
+                {recentClaims.map((c) => {
                   return (
                     <tr
                       key={c.id}
@@ -813,7 +923,7 @@ export default function Dashboard({
                       </td>
                       <td className="py-2.5">
                         {c.status === "Pending" && c.hours > 0 ? (
-                          <Countdown hours={c.hours} id={c.id} expiresAt={c.expiresAt} />
+                          <Countdown hours={c.hours} id={c.id} />
                         ) : (
                           <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                             —
@@ -825,12 +935,6 @@ export default function Dashboard({
                 })}
               </tbody>
             </table>
-            </div>
-            {pendingClaims.length === 0 && (
-              <div style={{ padding: "24px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-                No pending claims.
-              </div>
-            )}
           </Card>
           <Card style={{ background: "#FFFBF5", border: "1px solid #FCE4C8" }}>
             <SH title="Upcoming Deadlines" />
@@ -882,11 +986,11 @@ export default function Dashboard({
                     >
                       ₱{d.amount.toLocaleString()}
                     </div>
-                    <Countdown hours={d.hours} id={d.id} expiresAt={d.expiresAt} />
+                    <Countdown hours={d.hours} id={d.id} />
                   </div>
                 </div>
               ))}
-              {payableToPay.length > 0 ? (
+              {toPay.length > 0 ? (
                 <PrimaryBtn
                   style={{
                     width: "100%",
@@ -920,7 +1024,7 @@ export default function Dashboard({
       )}
       {showPayAll && (
         <BatchCheckoutModal
-          items={payableToPay}
+          items={toPay}
           contactPrefill={user.fb || ""}
           onSubmit={handleBatchPayment}
           onClose={() => setShowPayAll(false)}
@@ -928,8 +1032,7 @@ export default function Dashboard({
       )}
       {buyerProfile && (
         <BuyerProfileModal
-          buyer={buyerProfile.name}
-          contactUrl={buyerProfile.contactUrl}
+          buyer={buyerProfile}
           onClose={() => setBuyerProfile(null)}
         />
       )}
@@ -946,28 +1049,7 @@ export default function Dashboard({
           entries={waitlist}
           activeId={activeWaitlistId}
           onSelect={setActiveWaitlistId}
-          onRespond={async (entry, accept) => {
-            if (isSupabaseConfigured) {
-              try {
-                await kargoApi.respondWaitlistOffer(String(entry.id), accept)
-                // Server cascades (new order on accept, next-buyer offer on
-                // decline) — re-pull the truth rather than guess locally.
-                await refreshData()
-                return
-              } catch (error) {
-                alert(error instanceof Error ? error.message : "Unable to respond to offer.")
-                return
-              }
-            }
-            // Demo mode: reflect the decision locally.
-            setWaitlist((prev) =>
-              prev.map((e) =>
-                e.id === entry.id
-                  ? { ...e, status: accept ? "converted" : "cancelled", offerQuantity: undefined, offerExpiresAt: undefined }
-                  : e,
-              ),
-            )
-          }}
+          onRespond={handleWaitlistRespond}
           onClose={() => setShowWaitlist(false)}
           onViewBatch={(batchId) => {
             navIntent.batchId = batchId

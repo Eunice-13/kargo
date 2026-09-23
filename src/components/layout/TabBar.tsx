@@ -2,7 +2,7 @@ import type { Role, Tab } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { PrimaryBtn } from "@/components/shared"
 
-export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
+export const TABS: Tab[] = ["Dashboard", "Batches", "Payments"]
 export default function TabBar({
   active,
   setActive,

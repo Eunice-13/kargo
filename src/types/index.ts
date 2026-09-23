@@ -57,6 +57,8 @@ export type ClaimRow = {
   status: ClaimStatus
   hours: number
   expiresAt?: string
+  // When the claim/order was created (ISO) — used by the dashboard to sort/label.
+  createdAt?: string
   extensionRequested?: boolean
   // Who placed the order (seller's "Orders Received" view). Falls back to
   // `seller` for legacy rows. `buyerFb` is their contact/Facebook link.

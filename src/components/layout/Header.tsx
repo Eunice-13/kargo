@@ -1,4 +1,5 @@
 import type { UserInfo, Role, Tab, BatchType } from "@/types"
+import { BarChart3 } from "lucide-react"
 import { INDIGO } from "@/constants/theme"
 import SearchBox from "./SearchBox"
 import NotificationsMenu from "./NotificationsMenu"
@@ -35,39 +36,28 @@ export default function Header({
       }}
       className="kargo-header flex items-center px-6 gap-6 sticky top-0"
     >
-      <div
-        className="kargo-brand-lockup flex items-center gap-2 flex-shrink-0"
-        style={{ width: 160 }}
-      >
+      <div className="kargo-brand-lockup flex items-center gap-2 flex-shrink-0" style={{ width: 160 }}>
         <div
           className="kargo-brand-mark"
           style={{
             background: INDIGO,
-            width: 28,
-            height: 28,
-            borderRadius: 7,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            width: 32,
+            height: 32,
+            borderRadius: 9,
+            display: "grid",
+            placeItems: "center",
+            flexShrink: 0,
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M2 4h12M2 8h8M2 12h10"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
+          <BarChart3 size={17} color="#fff" strokeWidth={2.2} aria-hidden="true" />
         </div>
         <span
           className="kargo-brand-name"
           style={{
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
             color: INDIGO,
+            fontFamily: "'Manrope',sans-serif",
             fontWeight: 800,
             fontSize: 18,
-            letterSpacing: -0.5,
           }}
         >
           Kargo

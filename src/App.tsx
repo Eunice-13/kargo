@@ -25,7 +25,7 @@ import { WAITLIST_INIT } from "@/data/waitlist"
 import { FULFILLMENT_INIT } from "@/features/fulfillment"
 import { Login, SignUp, Onboarding, ApplyToSellModal } from "@/features/auth"
 import { NewBatchModal } from "@/features/batches"
-import { Header, TabBar, TabContent } from "@/components/layout"
+import { Header, Sidebar, TabContent } from "@/components/layout"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
@@ -215,13 +215,19 @@ export default function App() {
       )}
       {stage === "app" && (
         <div
-          className="pu kargo-original-app"
+          className="pu kargo-original-app kargo-app-shell"
           style={{
             background: CREAM,
             minHeight: "100vh",
             fontFamily: "'Inter',sans-serif",
           }}
         >
+          <Sidebar
+            active={tab}
+            setActive={setTab}
+            role={role}
+            onNewBatch={() => setShowNewBatch(true)}
+          />
           <Header
             user={user}
             onLogout={() => {
@@ -242,13 +248,7 @@ export default function App() {
               setTab("Batches")
             }}
           />
-          <TabBar
-            active={tab}
-            setActive={setTab}
-            role={role}
-            onNewBatch={() => setShowNewBatch(true)}
-          />
-          <main style={{ minHeight: "calc(100vh - 100px)" }}>
+          <main className="kargo-main ml-16">
             <TabContent tab={tab} shared={shared} />
           </main>
           {showOnboarding && <Onboarding onDone={() => setOnboard(false)} />}
