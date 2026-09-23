@@ -162,6 +162,7 @@ export default function BatchPage({
         status: "Pending",
         hours: reserveHrs,
         expiresAt,
+        createdAt: new Date().toISOString(),
       },
       ...prev,
     ])
@@ -286,7 +287,7 @@ export default function BatchPage({
               <Plane size={12} aria-hidden="true" /> {batch.trips}
             </span>
             <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
-               48h reservation window
+              48h reservation window
             </span>
           </div>
         </div>

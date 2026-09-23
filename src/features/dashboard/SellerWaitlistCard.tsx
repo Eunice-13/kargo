@@ -115,7 +115,7 @@ export default function SellerWaitlistCard({
         </div>
       ) : (
         <div className="space-y-2">
-          {groups.map((group) => {
+          {groups.slice(0, 4).map((group) => {
             const open = openId === group.productId
             return (
               <div
@@ -257,6 +257,11 @@ export default function SellerWaitlistCard({
               </div>
             )
           })}
+          {groups.length > 4 && (
+            <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", paddingTop: 2 }}>
+              +{groups.length - 4} more waitlisted item{groups.length - 4 !== 1 ? "s" : ""}
+            </div>
+          )}
         </div>
       )}
     </Card>

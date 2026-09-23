@@ -289,6 +289,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         status: deadlineExpired ? "Expired" : statusToClaim(row.status),
         hours,
         expiresAt: row.reservation_expires_at,
+        createdAt: row.created_at,
         extensionRequested: row.extension_status === "pending",
       })
       orders.push({
@@ -323,6 +324,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         status: deadlineExpired ? "Expired" : statusToClaim(row.status),
         hours,
         expiresAt: row.reservation_expires_at,
+        createdAt: row.created_at,
         extensionRequested: row.extension_status === "pending",
       })
       fulfillment.push({
