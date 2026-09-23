@@ -28,6 +28,7 @@ import WaitlistModal from "./WaitlistModal"
 import SellerWaitlistCard from "./SellerWaitlistCard"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
+import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry"
 
 export default function Dashboard({
   batches,
@@ -78,7 +79,8 @@ export default function Dashboard({
     .sort((a, b) => Number(b.id) - Number(a.id))
   // Pending Claims (3.9): all pending claims, uncapped (card scrolls if long).
   const pendingClaims = activeClaims
-  const pendingTotal = toPay.reduce((s, t) => s + t.amount, 0)
+  const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
+  const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
 
   const buyerStats = [
     {
@@ -93,7 +95,7 @@ export default function Dashboard({
       label: "Pending Payments",
       value: `₱${pendingTotal.toLocaleString()}`,
       icon: CreditCard,
-      sub: `${toPay.length} items due soon`,
+      sub: `${payableToPay.length} items due soon`,
       sc: AMBER,
       bg: "#FFF8E8",
     },
@@ -152,11 +154,24 @@ export default function Dashboard({
   ]
   const stats = role === "Seller" ? sellerStats : buyerStats
   const upcoming = useMemo(
-    () => [...toPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
-    [toPay],
+    () => [...payableToPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
+    [payableToPay],
   )
 
-  const handleBatchPayment = (item: (typeof toPay)[number], method: string) => {
+  const handleBatchPayment = async (item: (typeof toPay)[number], method: string, referenceNumber: string, receipt?: File) => {
+    const claim = claims.find((candidate) => String(candidate.id) === String(item.orderId ?? item.id))
+    if (!claim || !claimIsPayable(claim) || deadlineHasPassed(item)) {
+      alert("This claim has expired and can no longer be paid.")
+      return
+    }
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.submitPayment({ orderId: item.orderId ?? String(item.id), method, amount: item.amount, referenceNumber, receipt })
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to submit payment.")
+        return
+      }
+    }
     setPayHistory((history) => [
       {
         id: history.length + 1,
@@ -165,18 +180,18 @@ export default function Dashboard({
         method,
         amount: item.amount,
         date: TODAY,
-        status: "Paid and Reserved" as ClaimStatus,
+        status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
       },
       ...history,
     ])
-    setClaims((prev) =>
+    if (!isSupabaseConfigured) setClaims((prev) =>
       prev.map((c) =>
         c.id === item.id && c.status === "Pending"
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
           : c,
       ),
     )
-    setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
+    if (!isSupabaseConfigured) setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
   }
 
   // Kanban columns for the seller Fulfillment Board. Rendered both inside the
@@ -464,7 +479,7 @@ export default function Dashboard({
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
-                        <Countdown hours={c.hours} id={c.id} />
+                        <Countdown hours={c.hours} id={c.id} expiresAt={c.expiresAt} />
                       ) : (
                         <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                           —
@@ -798,7 +813,7 @@ export default function Dashboard({
                       </td>
                       <td className="py-2.5">
                         {c.status === "Pending" && c.hours > 0 ? (
-                          <Countdown hours={c.hours} id={c.id} />
+                          <Countdown hours={c.hours} id={c.id} expiresAt={c.expiresAt} />
                         ) : (
                           <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                             —
@@ -867,11 +882,11 @@ export default function Dashboard({
                     >
                       ₱{d.amount.toLocaleString()}
                     </div>
-                    <Countdown hours={d.hours} id={d.id} />
+                    <Countdown hours={d.hours} id={d.id} expiresAt={d.expiresAt} />
                   </div>
                 </div>
               ))}
-              {toPay.length > 0 ? (
+              {payableToPay.length > 0 ? (
                 <PrimaryBtn
                   style={{
                     width: "100%",
@@ -905,7 +920,7 @@ export default function Dashboard({
       )}
       {showPayAll && (
         <BatchCheckoutModal
-          items={toPay}
+          items={payableToPay}
           contactPrefill={user.fb || ""}
           onSubmit={handleBatchPayment}
           onClose={() => setShowPayAll(false)}

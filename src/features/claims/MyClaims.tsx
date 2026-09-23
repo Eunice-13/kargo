@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
@@ -18,6 +18,7 @@ import {
 import { PaymentSubmitModal } from "@/features/payments"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
+import { claimIsPayable } from "./claimExpiry"
 
 export default function MyClaims({
   claims,
@@ -41,6 +42,11 @@ export default function MyClaims({
   const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null)
   const [orderFilter, setOrderFilter] = useState<ClaimStatus | "All">("All")
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
+  useEffect(() => {
+    if (!payTarget) return
+    const current = claims.find((claim) => claim.id === payTarget.id)
+    if (!current || !claimIsPayable(current)) setPayTarget(null)
+  }, [claims, payTarget])
   const filters: (ClaimStatus | "All")[] = [
     "All",
     "Pending",
@@ -243,7 +249,7 @@ export default function MyClaims({
                   </td>
                   <td style={{ padding: "10px 14px" }}>
                     {c.status === "Pending" && c.hours > 0 ? (
-                      <Countdown hours={c.hours} />
+                      <Countdown hours={c.hours} expiresAt={c.expiresAt} />
                     ) : (
                       <span style={{ color: "#D1D5DB" }}>—</span>
                     )}
@@ -329,6 +335,12 @@ export default function MyClaims({
 
   const handlePay = async (method: string, refNo: string, receipt?: File) => {
     if (!payTarget) return
+    const currentClaim = claims.find((claim) => claim.id === payTarget.id)
+    if (!currentClaim || !claimIsPayable(currentClaim)) {
+      setPayTarget(null)
+      alert("This claim has expired and can no longer be paid.")
+      return
+    }
     if (isSupabaseConfigured) {
       try {
         await kargoApi.submitPayment({
@@ -516,7 +528,7 @@ export default function MyClaims({
                     >
                       Time remaining
                     </span>
-                    <Countdown hours={c.hours} />
+                    <Countdown hours={c.hours} expiresAt={c.expiresAt} />
                   </div>
                 )}
                 <div
@@ -538,8 +550,8 @@ export default function MyClaims({
                     ₱{c.amount.toLocaleString()}
                   </span>
                   <div style={{ display: "flex", gap: 6 }}>
-                    {c.status === "Pending" && (
-                      <PrimaryBtn size="sm" onClick={() => setPayTarget(c)}>
+                    {claimIsPayable(c) && (
+                      <PrimaryBtn size="sm" onClick={() => claimIsPayable(c) && setPayTarget(c)}>
                         Pay Now
                       </PrimaryBtn>
                     )}
@@ -696,15 +708,15 @@ export default function MyClaims({
                   </td>
                   <td style={{ padding: "10px 14px" }}>
                     {c.status === "Pending" && c.hours > 0 ? (
-                      <Countdown hours={c.hours} />
+                      <Countdown hours={c.hours} expiresAt={c.expiresAt} />
                     ) : (
                       <span style={{ color: "#D1D5DB" }}>—</span>
                     )}
                   </td>
                   <td style={{ padding: "10px 14px" }}>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {c.status === "Pending" && (
-                        <PrimaryBtn size="sm" onClick={() => setPayTarget(c)}>
+                      {claimIsPayable(c) && (
+                        <PrimaryBtn size="sm" onClick={() => claimIsPayable(c) && setPayTarget(c)}>
                           Pay Now
                         </PrimaryBtn>
                       )}

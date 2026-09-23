@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, ProductThumb, SecondaryBtn } from "@/components/shared"
 import PaymentSubmitModal from "./PaymentSubmitModal"
 import { getSellerPaymentDetails } from "./sellerPaymentDetails"
 import type { BuyerPaymentMethod } from "./buyerPaymentMethods"
+import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
 export default function BatchCheckoutModal({
     items,
@@ -20,13 +21,17 @@ export default function BatchCheckoutModal({
     savedMethods?: BuyerPaymentMethod[]
 }) {
     const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
+    const payableItems = items.filter((item) => !deadlineHasPassed(item))
+    useEffect(() => {
+        if (payTarget && deadlineHasPassed(payTarget)) setPayTarget(null)
+    }, [payTarget, items])
     const groups = useMemo(() => {
         const grouped = new Map<string, ToPayRow[]>()
-        for (const item of items) {
+        for (const item of payableItems) {
             grouped.set(item.seller, [...(grouped.get(item.seller) ?? []), item])
         }
         return [...grouped.entries()]
-    }, [items])
+    }, [payableItems])
 
     return (
         <>

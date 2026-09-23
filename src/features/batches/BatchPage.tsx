@@ -148,9 +148,11 @@ export default function BatchPage({
             },
       ),
     )
+    const claimId = Date.now()
+    const expiresAt = new Date(Date.now() + reserveHrs * 3_600_000).toISOString()
     setClaims((prev) => [
       {
-        id: Date.now(),
+        id: claimId,
         productId: product.dbId,
         product: product.name,
         batch: b.title,
@@ -159,19 +161,22 @@ export default function BatchPage({
         amount: product.price * claimQty,
         status: "Pending",
         hours: reserveHrs,
+        expiresAt,
       },
       ...prev,
     ])
     if (!toPay.some((t) => t.product === product.name))
       setToPay((prev) => [
         {
-          id: Date.now(),
+          id: claimId,
+          orderId: String(claimId),
           product: product.name,
           seller: b.seller,
           sellerId: b.sellerId,
           amount: product.price * claimQty,
           qty: claimQty,
           hours: reserveHrs,
+          expiresAt,
         },
         ...prev,
       ])

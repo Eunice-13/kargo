@@ -8,6 +8,7 @@ import { isCashMethod, cashCoordinationReminder } from "./buyerPaymentMethods"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { SellerReceiveMethod } from "@/services/kargoApi"
+import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
 // Cash methods (Meetup / Delivery) carry no online-payment details; the buyer
 // just coordinates with the seller. Keep their real label as the method key.
@@ -25,6 +26,16 @@ export default function PaymentSubmitModal({
   contactPrefill?: string
   savedMethods?: BuyerPaymentMethod[]
 }) {
+  useEffect(() => {
+    const closeIfExpired = () => {
+      if (!deadlineHasPassed(item)) return
+      onClose()
+      alert("This claim has expired and can no longer be paid.")
+    }
+    closeIfExpired()
+    const timer = window.setInterval(closeIfExpired, 1000)
+    return () => window.clearInterval(timer)
+  }, [item, onClose])
   // Method options are filtered to what THIS SELLER accepts (Part 3), loaded
   // below. Until they load (or in demo mode) we fall back to the buyer's saved
   // methods, then to a default set.
@@ -593,13 +604,18 @@ export default function PaymentSubmitModal({
           </SecondaryBtn>
           <PrimaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
-            onClick={() =>
+            onClick={() => {
+              if (deadlineHasPassed(item)) {
+                onClose()
+                alert("This claim has expired and can no longer be paid.")
+                return
+              }
               onConfirm(
                 method,
                 isCash ? handoffAddress.trim() : refNo,
                 uploadedFile ?? undefined,
               )
-            }
+            }}
             disabled={
               isCash
                 ? !handoffAddress.trim()

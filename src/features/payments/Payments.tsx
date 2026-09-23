@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { CheckCircle2, Paperclip, Clock3 } from "lucide-react"
 import type { ToPayRow, PayHistRow, OrderRow, ClaimStatus, SharedState, EntityId } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
@@ -18,6 +18,7 @@ import SellerPaymentVerification from "./SellerPaymentVerification"
 import AddressSection from "./AddressSection"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
+import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
 export default function Payments({
   toPay,
@@ -44,6 +45,12 @@ export default function Payments({
   const [dateFilter2, setDateFilter2] = useState("All")
   const [txDetail, setTxDetail] = useState<PayHistRow | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
+
+  useEffect(() => {
+    if (payTarget && deadlineHasPassed(payTarget)) setPayTarget(null)
+    if (payableToPay.length === 0) setPayAll(false)
+  }, [payTarget, payableToPay.length])
 
   const handleFilePick = (file: File) => {
     setUploading(true)
@@ -55,7 +62,13 @@ export default function Payments({
   }
 
   const handlePay = async (item: ToPayRow | null, method: string, referenceNumber?: string, receipt?: File) => {
-    const targets = item ? [item] : toPay
+    const targets = (item ? [item] : payableToPay).filter((target) => !deadlineHasPassed(target))
+    if (targets.length === 0) {
+      setPayTarget(null)
+      setPayAll(false)
+      alert("This claim has expired and can no longer be paid.")
+      return
+    }
     if (isSupabaseConfigured) {
       try {
         for (const target of targets) {
@@ -112,7 +125,7 @@ export default function Payments({
   // Submit an uploaded receipt against a chosen "To Pay" item: record it as a
   // manual bank/receipt payment (reusing the same flow as Pay Now) and reset.
   const handleSubmitProof = async () => {
-    const item = toPay.find((t) => t.id === proofClaimId)
+    const item = payableToPay.find((t) => t.id === proofClaimId)
     if (!item) return
     await handlePay(item, "Receipt Upload", undefined, uploadedFile ?? undefined)
     setUploaded(null)
@@ -131,7 +144,7 @@ export default function Payments({
         <div>
           <SH title="To Pay" />
           <div className="space-y-3">
-            {toPay.map((t) => (
+            {payableToPay.map((t) => (
               <Card key={t.id} className="flex items-center gap-4">
                 <ProductThumb name={t.product} />
                 <div className="flex-1">
@@ -150,7 +163,7 @@ export default function Payments({
                       {t.seller}
                     </span>
                     <span style={{ fontSize: 11, color: "#D1D5DB" }}>·</span>
-                    <Countdown hours={t.hours} />
+                    <Countdown hours={t.hours} expiresAt={t.expiresAt} />
                   </div>
                 </div>
                 <div
@@ -168,7 +181,7 @@ export default function Payments({
                 </PrimaryBtn>
               </Card>
             ))}
-            {toPay.length > 0 ? (
+            {payableToPay.length > 0 ? (
               <Card
                 style={{ background: CREAM, border: "1px dashed #C7B8B8" }}
                 className="flex items-center justify-between"
@@ -187,7 +200,7 @@ export default function Payments({
                       fontFamily: "'Plus Jakarta Sans',sans-serif",
                     }}
                   >
-                    ₱{toPay.reduce((s, t) => s + t.amount, 0).toLocaleString()}
+                    ₱{payableToPay.reduce((s, t) => s + t.amount, 0).toLocaleString()}
                   </span>
                   <PrimaryBtn onClick={() => setPayAll(true)}>
                     Batch Checkout
@@ -315,7 +328,7 @@ export default function Payments({
                   }}
                 >
                   <option value="">Select claim to attach…</option>
-                  {toPay.map((t) => (
+                  {payableToPay.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.product} — ₱{t.amount.toLocaleString()}
                     </option>
@@ -528,7 +541,7 @@ export default function Payments({
       )}
       {payAll && (
         <BatchCheckoutModal
-          items={toPay}
+          items={payableToPay}
           contactPrefill={user.fb || ""}
           onSubmit={(item, method, refNo, receipt) => handlePay(item, method, refNo, receipt)}
           onClose={() => setPayAll(false)}

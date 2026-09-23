@@ -274,6 +274,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       | undefined
     const expires = new Date(row.reservation_expires_at).getTime()
     const hours = Math.max(0, Math.ceil((expires - Date.now()) / 3_600_000))
+    const deadlineExpired = expires <= Date.now() && ["payment_pending", "insufficient_payment"].includes(row.status)
     if (isBuyer) {
       claims.push({
         id: row.id,
@@ -285,8 +286,9 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         sellerFb: participantLinks.get(row.seller_id),
         qty: row.quantity,
         amount: Number(row.total_amount),
-        status: statusToClaim(row.status),
+        status: deadlineExpired ? "Expired" : statusToClaim(row.status),
         hours,
+        expiresAt: row.reservation_expires_at,
         extensionRequested: row.extension_status === "pending",
       })
       orders.push({
@@ -318,8 +320,9 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         buyerFb: participantLinks.get(row.buyer_id),
         qty: row.quantity,
         amount: Number(row.total_amount),
-        status: statusToClaim(row.status),
+        status: deadlineExpired ? "Expired" : statusToClaim(row.status),
         hours,
+        expiresAt: row.reservation_expires_at,
         extensionRequested: row.extension_status === "pending",
       })
       fulfillment.push({
@@ -342,7 +345,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     const verifiedPaid = (row.payments ?? [])
       .filter((payment: { status: string }) => payment.status === "verified")
       .reduce((sum: number, payment: { amount: number | string }) => sum + Number(payment.amount), 0)
-    if (isBuyer && ["payment_pending", "payment_submitted", "insufficient_payment"].includes(row.status)) {
+    if (isBuyer && !deadlineExpired && ["payment_pending", "insufficient_payment"].includes(row.status)) {
       toPay.push({
         id: row.id,
         orderId: row.id,
@@ -352,6 +355,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         qty: row.quantity,
         amount: Math.max(0, Number(row.total_amount) - verifiedPaid),
         hours,
+        expiresAt: row.reservation_expires_at,
       })
     }
     for (const payment of row.payments ?? []) {
@@ -611,7 +615,9 @@ export async function submitPayment(input: {
     p_buyer_contact_url: input.buyerContactUrl ?? null,
   })
   if (error) throw error
-  return data
+  const result = data as { accepted?: boolean; error?: string } | null
+  if (!result?.accepted) throw new Error(result?.error || "Payment was rejected")
+  return result
 }
 
 export async function requestOrderExtension(orderId: string, hours: number, reason?: string) {
@@ -626,6 +632,12 @@ export async function requestOrderExtension(orderId: string, hours: number, reas
 export async function cancelOrder(orderId: string) {
   const { error } = await requireSupabase().rpc("cancel_order", { p_order_id: orderId })
   if (error) throw error
+}
+
+export async function expireClaim(orderId: string) {
+  const { data, error } = await requireSupabase().rpc("expire_claim_if_due", { p_order_id: orderId })
+  if (error) throw error
+  return Boolean(data)
 }
 
 export async function setFulfillmentStatus(orderId: string, status: string) {
@@ -1171,6 +1183,7 @@ export const kargoApi = {
   submitPayment,
   requestOrderExtension,
   cancelOrder,
+  expireClaim,
   setFulfillmentStatus,
   updateProfile,
   uploadProfileAvatar,

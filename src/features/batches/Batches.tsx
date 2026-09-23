@@ -212,8 +212,10 @@ export default function Batches({
       ),
     )
     const reserveHrs = batch.reserveHours || 48
+    const claimId = Date.now()
+    const expiresAt = new Date(Date.now() + reserveHrs * 3_600_000).toISOString()
     const newClaim: ClaimRow = {
-      id: Date.now(),
+      id: claimId,
       productId: product.dbId,
       product: product.name,
       batch: batch.title.replace("—", "—"),
@@ -222,19 +224,22 @@ export default function Batches({
       amount: product.price * claimQty,
       status: "Pending",
       hours: reserveHrs,
+      expiresAt,
     }
     setClaims((prev) => [newClaim, ...prev])
     const alreadyInToPay = toPay.some((t) => t.product === product.name)
     if (!alreadyInToPay) {
       setToPay((prev) => [
         {
-          id: Date.now(),
+          id: claimId,
+          orderId: String(claimId),
           product: product.name,
           seller: batch.seller,
           sellerId: batch.sellerId,
           amount: product.price * claimQty,
           qty: claimQty,
           hours: reserveHrs,
+          expiresAt,
         },
         ...prev,
       ])

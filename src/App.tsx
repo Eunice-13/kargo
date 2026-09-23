@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type {
   AppStage,
   UserInfo,
@@ -28,6 +28,7 @@ import { NewBatchModal } from "@/features/batches"
 import { Header, TabBar, TabContent } from "@/components/layout"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
+import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
@@ -73,6 +74,58 @@ export default function App() {
   const [fulfillment, setFulfillment] =
     useState<FulfillmentOrder[]>(useSeeds ? FULFILLMENT_INIT : [])
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>(useSeeds ? WAITLIST_INIT : [])
+  const expiringClaims = useRef(new Set<string>())
+
+  useEffect(() => {
+    const initializedAt = Date.now()
+    setClaims((current) => current.map((claim) =>
+      claim.status === "Pending" && !claim.expiresAt
+        ? { ...claim, expiresAt: new Date(initializedAt + Math.max(0, claim.hours) * 3_600_000).toISOString() }
+        : claim,
+    ))
+    setToPay((current) => current.map((item) =>
+      item.expiresAt
+        ? item
+        : { ...item, expiresAt: new Date(initializedAt + Math.max(0, item.hours) * 3_600_000).toISOString() },
+    ))
+  }, [])
+
+  useEffect(() => {
+    const expireDueClaims = () => {
+      const now = Date.now()
+      const due = claims.filter((claim) => claim.status === "Pending" && deadlineHasPassed(claim, now))
+      if (due.length === 0) return
+      const dueIds = new Set(due.map((claim) => String(claim.id)))
+      setClaims((current) => current.map((claim) => dueIds.has(String(claim.id)) ? { ...claim, status: "Expired", hours: 0 } : claim))
+      setToPay((current) => current.filter((item) => !due.some((claim) =>
+        dueIds.has(String(item.orderId ?? item.id)) || (item.product === claim.product && item.seller === claim.seller),
+      )))
+      setBatches((current) => current.map((batch) => {
+        const released = due.filter((claim) => claim.batch === batch.title || batch.products.some((product) => product.dbId === claim.productId))
+        if (released.length === 0) return batch
+        const releasedQty = released.reduce((sum, claim) => sum + claim.qty, 0)
+        return {
+          ...batch,
+          claimed: Math.max(0, batch.claimed - releasedQty),
+          products: batch.products.map((product) => {
+            const productQty = released.filter((claim) => claim.productId ? product.dbId === claim.productId : product.name === claim.product).reduce((sum, claim) => sum + claim.qty, 0)
+            return productQty ? { ...product, claimed: Math.max(0, product.claimed - productQty) } : product
+          }),
+        }
+      }))
+      if (isSupabaseConfigured) {
+        for (const claim of due) {
+          const id = String(claim.id)
+          if (expiringClaims.current.has(id)) continue
+          expiringClaims.current.add(id)
+          void kargoApi.expireClaim(id).finally(() => expiringClaims.current.delete(id))
+        }
+      }
+    }
+    expireDueClaims()
+    const timer = window.setInterval(expireDueClaims, 1000)
+    return () => window.clearInterval(timer)
+  }, [claims])
   const [sellerWaitlist, setSellerWaitlist] = useState<SellerWaitlistGroup[]>([])
 
   const refreshData = useCallback(async () => {

@@ -12,9 +12,9 @@ function getDeadlineTimestamp(key: string, hours: number) {
   return deadline
 }
 
-export default function Countdown({ hours, id }: { hours: number; id?: string | number }) {
+export default function Countdown({ hours, id, expiresAt }: { hours: number; id?: string | number; expiresAt?: string }) {
   const deadlineKey = String(id ?? `hours-${hours}`)
-  const deadline = getDeadlineTimestamp(deadlineKey, hours)
+  const deadline = expiresAt ? new Date(expiresAt).getTime() : getDeadlineTimestamp(deadlineKey, hours)
   const [remaining, setRemaining] = useState(() => Math.max(0, Math.round((deadline - Date.now()) / 1000)))
   useEffect(() => {
     const updateRemaining = () => {
