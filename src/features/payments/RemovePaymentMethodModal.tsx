@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
-import type { PayMethod } from "./types"
+import type { PayMethod } from "./paymentMethodTypes"
 
 type RemovePaymentMethodModalProps = {
   removeTarget: PayMethod

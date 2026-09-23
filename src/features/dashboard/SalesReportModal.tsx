@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { Printer, X } from "lucide-react"
 import type { BatchType, FulfillmentOrder } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
@@ -133,21 +134,24 @@ export default function SalesReportModal({
   }
   const dashed = "1px dashed #D1D5DB"
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Sales Report"
       style={{
         position: "fixed",
-        inset: 0,
-        zIndex: 70,
+        top: 56,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1000,
         background: "rgba(17,24,39,0.45)",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
-        overflowY: "auto",
-        padding: "40px 16px",
+        padding: "16px",
+        boxSizing: "border-box",
       }}
       onClick={onClose}
     >
@@ -157,6 +161,8 @@ export default function SalesReportModal({
         style={{
           width: "100%",
           maxWidth: 460,
+          maxHeight: "calc(100dvh - 88px)",
+          overflowY: "auto",
           background: "#fff",
           borderRadius: 12,
           boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
@@ -401,6 +407,7 @@ export default function SalesReportModal({
           <X size={18} aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

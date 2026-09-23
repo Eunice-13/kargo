@@ -12,6 +12,7 @@ export default function FulfillmentDetails({
 }) {
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [confirmComplete, setConfirmComplete] = useState(false)
+  const [confirmShip, setConfirmShip] = useState(false)
   const selectId = `fulfillment-status-${order.id}`
   return (
     <div
@@ -38,6 +39,7 @@ export default function FulfillmentDetails({
           const next = e.target.value as KanbanCol
           if (next === "Cancelled") setConfirmCancel(true)
           else if (next === "Completed") setConfirmComplete(true)
+          else if (next === "Preparing") setConfirmShip(true)
           else onMove(order, next)
         }}
         style={{
@@ -105,6 +107,31 @@ export default function FulfillmentDetails({
               }}
             >
               Mark Completed
+            </PrimaryBtn>
+          </div>
+        </Modal>
+      )}
+      {confirmShip && (
+        <Modal
+          title="Mark this as shipped?"
+          onClose={() => setConfirmShip(false)}
+          width={420}
+        >
+          <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
+            Are you sure you want to mark {order.product} for {order.buyer} as
+            shipped? This moves the order into Preparing and notifies the buyer.
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <SecondaryBtn onClick={() => setConfirmShip(false)}>
+              Not yet
+            </SecondaryBtn>
+            <PrimaryBtn
+              onClick={() => {
+                setConfirmShip(false)
+                onMove(order, "Preparing")
+              }}
+            >
+              Yes, mark shipped
             </PrimaryBtn>
           </div>
         </Modal>

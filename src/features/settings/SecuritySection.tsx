@@ -1,21 +1,9 @@
 import { useState } from "react"
 import { Check } from "lucide-react"
-import { PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { PrimaryBtn } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 
-type SecuritySectionProps = {
-  twoFAEnabled: boolean
-  setTwoFAEnabled: (v: boolean) => void
-  setShow2FA: (v: boolean) => void
-  setTfaStep: (v: "phone" | "code") => void
-}
-
-export default function SecuritySection({
-  twoFAEnabled,
-  setTwoFAEnabled,
-  setShow2FA,
-  setTfaStep,
-}: SecuritySectionProps) {
+export default function SecuritySection() {
   const [curPw, setCurPw] = useState("")
   const [newPw, setNewPw] = useState("")
   const [pwError, setPwError] = useState("")
@@ -111,67 +99,6 @@ export default function SecuritySection({
             >
               <Check size={13} aria-hidden="true" /> Password updated
             </span>
-          )}
-        </div>
-        <div style={{ borderTop: "1px solid #F3F4F6", paddingTop: 20 }}>
-          <div className="flex items-center justify-between mb-2">
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: "#111827",
-              }}
-            >
-              Two-Factor Authentication
-            </div>
-            {twoFAEnabled ? (
-              <span
-                style={{
-                  background: "#D4F5EA",
-                  color: "#0B7A59",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: "3px 10px",
-                  borderRadius: 999,
-                }}
-              >
-                Enabled
-              </span>
-            ) : (
-              <span
-                style={{
-                  background: "#F3F4F6",
-                  color: "#9CA3AF",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: "3px 10px",
-                  borderRadius: 999,
-                }}
-              >
-                Not enabled
-              </span>
-            )}
-          </div>
-          <div
-            style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 12 }}
-          >
-            {twoFAEnabled
-              ? "Your account is protected with 2FA via SMS."
-              : "Add an extra layer of security with SMS verification."}
-          </div>
-          {twoFAEnabled ? (
-            <SecondaryBtn onClick={() => setTwoFAEnabled(false)}>
-              Disable 2FA
-            </SecondaryBtn>
-          ) : (
-            <PrimaryBtn
-              onClick={() => {
-                setShow2FA(true)
-                setTfaStep("phone")
-              }}
-            >
-              Enable 2FA
-            </PrimaryBtn>
           )}
         </div>
       </div>

@@ -39,7 +39,7 @@ export default function LinkedAccountsSection({
         Social & Contact Links
       </h3>
       <p style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>
-        Add the channels buyers can use to view your shop or contact you. These are public profile references.
+        Add the channels others can use to reach you. These are public profile references shown on your profile.
       </p>
 
       <div className="space-y-3">

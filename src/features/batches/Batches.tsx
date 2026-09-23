@@ -3,7 +3,8 @@ import { BarChart3, Lock, Unlock, Search, FileText, ArrowRight, Star } from "luc
 import type { ClaimRow, BatchType, SharedState, EntityId } from "@/types"
 import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
 import { navIntent } from "@/state/navIntent"
-import { Modal, Card, SH, PrimaryBtn, SecondaryBtn, Avatar, CategoryIcon, Toggle } from "@/components/shared"
+import { Modal, Card, PrimaryBtn, SecondaryBtn, Avatar, CategoryIcon, Toggle, ShareButton, ExtensionRequestModal } from "@/components/shared"
+import { sortSoldOutLast } from "./batchSort"
 import FinancialSummaryModal from "./FinancialSummaryModal"
 import BuyerRequestFormModal from "./BuyerRequestFormModal"
 import ItemClaimModal from "./ItemClaimModal"
@@ -40,6 +41,28 @@ export default function Batches({
   const [ratingFilter, setRatingFilter] = useState("All")
   const [showBuyerReqForm, setShowBuyerReqForm] = useState(false)
   const [sellerDir, setSellerDir] = useState(false)
+  // Request Extension moved to the top of the Batches tab (3.7). A picker of
+  // the buyer's extendable claims → the shared ExtensionRequestModal.
+  const [showExtPicker, setShowExtPicker] = useState(false)
+  const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
+  const extendableClaims = claims.filter(
+    (c) => c.status === "Pending" && !c.extensionRequested,
+  )
+  const submitExtension = async (hours: number, reason: string) => {
+    if (!extTarget) return
+    if (isSupabaseConfigured) {
+      try {
+        await kargoApi.requestOrderExtension(String(extTarget.id), hours, reason)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to request extension.")
+        return
+      }
+    }
+    setClaims((prev) =>
+      prev.map((c) => (c.id === extTarget.id ? { ...c, extensionRequested: true } : c)),
+    )
+    setExtTarget(null)
+  }
   const [profile, setProfile] = useState<string | null>(() => {
     const n = navIntent.sellerName
     navIntent.sellerName = null
@@ -70,6 +93,7 @@ export default function Batches({
   type BuyerReq = {
     id: EntityId
     buyer: string
+    buyerFb?: string
     product: string
     batch: string
     message: string
@@ -116,6 +140,9 @@ export default function Batches({
       replied: false,
     },
   ])
+  // Seller request pop-ups (moved from inline bottom cards to top-of-tab buttons).
+  const [showExtReqModal, setShowExtReqModal] = useState(false)
+  const [showBuyerReqModal, setShowBuyerReqModal] = useState(false)
   // Confirmation target for extension approve/deny (#16)
   const [extConfirm, setExtConfirm] = useState<{
     req: ExtReq
@@ -151,25 +178,39 @@ export default function Batches({
     return true
   })
 
-  const rows: BatchType[][] = []
-  for (let i = 0; i < filtered.length; i += COLS)
-    rows.push(filtered.slice(i, i + COLS))
-
   const handleClaim = async (
     key: string,
     batch: BatchType,
     product: typeof batch.products[0],
+    qty: number = 1,
   ) => {
+    const claimQty = Math.max(1, Math.floor(qty))
     if (isSupabaseConfigured) {
       if (!product.dbId) return
       try {
-        await kargoApi.claimProduct(product.dbId, 1)
+        await kargoApi.claimProduct(product.dbId, claimQty)
       } catch (error) {
         alert(error instanceof Error ? error.message : "Unable to claim this product.")
         return
       }
     }
     setClaimedKeys((c) => ({ ...c, [key]: true }))
+    // Keep batch/product claim counts accurate immediately (2.3).
+    setBatches((prev) =>
+      prev.map((bt) =>
+        bt.id !== batch.id
+          ? bt
+          : {
+              ...bt,
+              claimed: bt.claimed + claimQty,
+              products: bt.products.map((prod) =>
+                (product.dbId && prod.dbId === product.dbId) || prod.name === product.name
+                  ? { ...prod, claimed: prod.claimed + claimQty }
+                  : prod,
+              ),
+            },
+      ),
+    )
     const reserveHrs = batch.reserveHours || 48
     const newClaim: ClaimRow = {
       id: Date.now(),
@@ -177,8 +218,8 @@ export default function Batches({
       product: product.name,
       batch: batch.title.replace("—", "—"),
       seller: batch.seller,
-      qty: 1,
-      amount: product.price,
+      qty: claimQty,
+      amount: product.price * claimQty,
       status: "Pending",
       hours: reserveHrs,
     }
@@ -190,7 +231,9 @@ export default function Batches({
           id: Date.now(),
           product: product.name,
           seller: batch.seller,
-          amount: product.price,
+          sellerId: batch.sellerId,
+          amount: product.price * claimQty,
+          qty: claimQty,
           hours: reserveHrs,
         },
         ...prev,
@@ -198,9 +241,13 @@ export default function Batches({
     }
   }
 
-  const handleProfileClaim = (batchId: number) => {
+  const handleProfileClaim = (batchId: number, productName?: string) => {
     const batch = batches.find((b) => b.id === batchId)
-    const product = batch?.products[0]
+    // Target a specific item when a name is given (per-item claim from the
+    // View-Shop panel); otherwise fall back to the first product.
+    const product = productName
+      ? batch?.products.find((p) => p.name === productName)
+      : batch?.products[0]
     if (!batch || !product) return
     setProfile(null)
     setProfileClaimTarget({ batch, product })
@@ -332,17 +379,19 @@ export default function Batches({
             onClaimFromProfile={handleProfileClaim}
             setTab={setTab}
             profileData={profile === user.name ? user : undefined}
+            role={role}
           />
         )}
         {profileClaimTarget && (
           <ItemClaimModal
             batch={profileClaimTarget.batch}
             product={profileClaimTarget.product}
-            onConfirm={() => {
+            onConfirm={(qty) => {
               handleClaim(
                 `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
                 profileClaimTarget.batch,
                 profileClaimTarget.product,
+                qty,
               )
               setProfileClaimTarget(null)
             }}
@@ -353,9 +402,11 @@ export default function Batches({
     )
 
   const BatchGrid = ({ batchList }: { batchList: BatchType[] }) => {
+    // Sold-out batches sink to the bottom (3.3).
+    const ordered = sortSoldOutLast(batchList)
     const gridRows: BatchType[][] = []
-    for (let i = 0; i < batchList.length; i += COLS)
-      gridRows.push(batchList.slice(i, i + COLS))
+    for (let i = 0; i < ordered.length; i += COLS)
+      gridRows.push(ordered.slice(i, i + COLS))
     return (
       <div className="space-y-0">
         {gridRows.map((row, rowIdx) => {
@@ -667,6 +718,7 @@ export default function Batches({
                                   <BarChart3 size={15} aria-hidden="true" />
                                 </SecondaryBtn>
                               )}
+                              <ShareButton batchId={b.id} title={b.title} compact />
                             </div>
                           )}
                         </div>
@@ -809,20 +861,41 @@ export default function Batches({
   // Full-page seller directory
   if (sellerDir) {
     return (
-      <SellerDirectoryPage
-        batches={batches}
-        onBack={() => setSellerDir(false)}
-        onClaimFromProfile={handleProfileClaim}
-        user={user}
-        onSellerSelect={(name) => {
-          setProfile(name)
-        }}
-      />
+      <>
+        <SellerDirectoryPage
+          batches={batches}
+          onBack={() => setSellerDir(false)}
+          onClaimItem={handleProfileClaim}
+          role={role}
+          user={user}
+          onSellerSelect={(name) => {
+            setProfile(name)
+          }}
+        />
+        {profileClaimTarget && (
+          <ItemClaimModal
+            batch={profileClaimTarget.batch}
+            product={profileClaimTarget.product}
+            onConfirm={(qty) => {
+              handleClaim(
+                `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
+                profileClaimTarget.batch,
+                profileClaimTarget.product,
+                qty,
+              )
+              setProfileClaimTarget(null)
+            }}
+            onClose={() => setProfileClaimTarget(null)}
+          />
+        )}
+      </>
     )
   }
 
   if (role === "Seller") {
     const myBatches = batches.filter((b) => b.seller === user.name)
+    const pendingExtCount = extensionRequests.filter((r) => r.status === "pending").length
+    const unrepliedBuyerCount = buyerRequests.filter((r) => !r.replied).length
     const myFiltered = myBatches.filter((b) => {
       if (catFilter !== "All" && b.category !== catFilter) return false
       if (dateFilter !== "All") {
@@ -853,9 +926,61 @@ export default function Batches({
         >
           My Batches
         </h2>
-        <p style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 20 }}>
-          Manage your pasabuy batches. Toggle lock to pause new orders.
-        </p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            gap: 12,
+            marginBottom: 20,
+          }}
+        >
+          <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>
+            Manage your pasabuy batches. Toggle lock to pause new orders.
+          </p>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <SecondaryBtn size="sm" onClick={() => setShowExtReqModal(true)}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                Extension Requests
+                {pendingExtCount > 0 && (
+                  <span
+                    style={{
+                      background: "#EF4444",
+                      color: "#fff",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      borderRadius: 999,
+                      padding: "1px 6px",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {pendingExtCount}
+                  </span>
+                )}
+              </span>
+            </SecondaryBtn>
+            <SecondaryBtn size="sm" onClick={() => setShowBuyerReqModal(true)}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                Buyer Requests
+                {unrepliedBuyerCount > 0 && (
+                  <span
+                    style={{
+                      background: INDIGO,
+                      color: "#fff",
+                      fontSize: 10,
+                      fontWeight: 700,
+                      borderRadius: 999,
+                      padding: "1px 6px",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {unrepliedBuyerCount}
+                  </span>
+                )}
+              </span>
+            </SecondaryBtn>
+          </div>
+        </div>
         <FilterBar />
         {myBatches.length === 0 ? (
           <Card style={{ textAlign: "center", padding: "32px 24px" }}>
@@ -867,15 +992,13 @@ export default function Batches({
         ) : (
           <BatchGrid batchList={myFiltered} />
         )}
-        {/* Seller panels */}
-        <div className="mt-6" style={{ overflowX: "auto" }}>
-          <div
-            className="grid gap-5"
-            style={{ gridTemplateColumns: "1fr 1fr", minWidth: 560 }}
+        {/* Seller request pop-ups (opened from the header buttons above) */}
+        {showExtReqModal && (
+          <Modal
+            title="Extension Requests"
+            onClose={() => setShowExtReqModal(false)}
+            width={480}
           >
-            {/* Extension Approval Panel */}
-            <Card>
-              <SH title="Extension Requests" />
             {extensionRequests.length === 0 ? (
               <div
                 style={{
@@ -971,10 +1094,14 @@ export default function Batches({
                 ))}
               </div>
             )}
-          </Card>
-          {/* Buyer Requests Inbox */}
-          <Card>
-            <SH title="Buyer Requests" />
+          </Modal>
+        )}
+        {showBuyerReqModal && (
+          <Modal
+            title="Buyer Requests"
+            onClose={() => setShowBuyerReqModal(false)}
+            width={480}
+          >
             {buyerRequests.length === 0 ? (
               <div
                 style={{
@@ -1068,8 +1195,11 @@ export default function Batches({
                                 return
                               }
                             }
-                            const fbUrl = `https://facebook.com/${req.buyer.toLowerCase().replace(" ", ".")}`
-                            window.open(fbUrl, "_blank", "noopener,noreferrer")
+                            if (req.buyerFb) {
+                              window.open(req.buyerFb, "_blank", "noopener,noreferrer")
+                            } else {
+                              alert("This buyer hasn't added a contact link yet.")
+                            }
                             setBuyerRequests((p) =>
                               p.map((r) =>
                                 r.id === req.id ? { ...r, replied: true } : r,
@@ -1087,9 +1217,8 @@ export default function Batches({
                 ))}
               </div>
             )}
-          </Card>
-          </div>
-        </div>
+          </Modal>
+        )}
         {showBuyerReqForm && (
           <BuyerRequestFormModal
             batches={batches}
@@ -1104,17 +1233,19 @@ export default function Batches({
             onClaimFromProfile={handleProfileClaim}
             setTab={setTab}
             profileData={profile === user.name ? user : undefined}
+            role={role}
           />
         )}
         {profileClaimTarget && (
           <ItemClaimModal
             batch={profileClaimTarget.batch}
             product={profileClaimTarget.product}
-            onConfirm={() => {
+            onConfirm={(qty) => {
               handleClaim(
                 `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
                 profileClaimTarget.batch,
                 profileClaimTarget.product,
+                qty,
               )
               setProfileClaimTarget(null)
             }}
@@ -1134,8 +1265,79 @@ export default function Batches({
 
   return (
     <div className="p-6">
+      {/* Request Extension — top of the Batches tab (3.7) */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          background: "#EEF0FF",
+          border: "1px solid #DDE0FF",
+          borderRadius: 8,
+          padding: "10px 14px",
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ fontSize: 12.5, color: "#374151" }}>
+          Need more time to pay for a claim?
+        </div>
+        <SecondaryBtn
+          size="sm"
+          onClick={() => setShowExtPicker(true)}
+          disabled={extendableClaims.length === 0}
+        >
+          Request Extension
+        </SecondaryBtn>
+      </div>
       <FilterBar />
       <BatchGrid batchList={filtered} />
+      {showExtPicker && (
+        <Modal
+          title="Request an extension"
+          onClose={() => setShowExtPicker(false)}
+          width={440}
+        >
+          <div className="space-y-2">
+            <p style={{ fontSize: 12.5, color: "#6B7280", marginBottom: 6 }}>
+              Choose which claim you'd like more time to pay for.
+            </p>
+            {extendableClaims.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => {
+                  setExtTarget(c)
+                  setShowExtPicker(false)
+                }}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 8,
+                  padding: "10px 12px",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
+                  {c.product}
+                </div>
+                <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                  {c.seller} · ₱{c.amount.toLocaleString()}
+                </div>
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
+      {extTarget && (
+        <ExtensionRequestModal
+          claim={extTarget}
+          onSubmit={submitExtension}
+          onClose={() => setExtTarget(null)}
+        />
+      )}
       {showBuyerReqForm && (
         <BuyerRequestFormModal
           batches={batches}
@@ -1150,6 +1352,7 @@ export default function Batches({
           onClaimFromProfile={handleProfileClaim}
           setTab={setTab}
           profileData={profile === user.name ? user : undefined}
+          role={role}
         />
       )}
       {profileClaimTarget && (

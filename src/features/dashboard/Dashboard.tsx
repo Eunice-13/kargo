@@ -25,6 +25,9 @@ import {
 } from "@/features/fulfillment"
 import SalesReportModal from "./SalesReportModal"
 import WaitlistModal from "./WaitlistModal"
+import SellerWaitlistCard from "./SellerWaitlistCard"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function Dashboard({
   batches,
@@ -40,10 +43,14 @@ export default function Dashboard({
   fulfillment,
   setFulfillment,
   waitlist,
+  setWaitlist,
+  sellerWaitlist,
   user,
+  setUser,
+  refreshData,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
-  const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
+  const [buyerProfile, setBuyerProfile] = useState<{ name: string; contactUrl?: string } | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
   const [showSalesReport, setShowSalesReport] = useState(false)
   const [showWaitlist, setShowWaitlist] = useState(false)
@@ -69,7 +76,8 @@ export default function Dashboard({
   const activeClaims = claims
     .filter((c) => c.status === "Pending")
     .sort((a, b) => Number(b.id) - Number(a.id))
-  const recentClaims = activeClaims.slice(0, 5)
+  // Pending Claims (3.9): all pending claims, uncapped (card scrolls if long).
+  const pendingClaims = activeClaims
   const pendingTotal = toPay.reduce((s, t) => s + t.amount, 0)
 
   const buyerStats = [
@@ -260,7 +268,7 @@ export default function Dashboard({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          setBuyerProfile(o.buyer)
+                          setBuyerProfile({ name: o.buyer, contactUrl: o.buyerFb })
                         }}
                         style={{
                           fontSize: 11,
@@ -314,8 +322,8 @@ export default function Dashboard({
     })
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="grid grid-cols-4 gap-4">
+    <div className="p-8 space-y-8">
+      <div className="grid grid-cols-4 gap-6">
         {stats.map((s, i) => {
           const isWaitlist = s.label === "Waitlist Position"
           return (
@@ -383,7 +391,7 @@ export default function Dashboard({
       </div>
       {role === "Seller" && (
         <div
-          className="grid gap-5"
+          className="grid gap-6"
           style={{ gridTemplateColumns: "1fr 340px" }}
         >
           <Card>
@@ -601,6 +609,23 @@ export default function Dashboard({
           <FulfillmentLiveRegion text={board.announcement} />
         </Card>
       )}
+      {role === "Seller" && (
+        <SellerWaitlistCard
+          groups={sellerWaitlist}
+          responseHours={user.waitlistResponseHours ?? 24}
+          onSaveResponseHours={async (h) => {
+            if (isSupabaseConfigured) {
+              try {
+                await kargoApi.setWaitlistResponseHours(h)
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "Unable to save response window.")
+                return
+              }
+            }
+            setUser((u) => ({ ...u, waitlistResponseHours: h }))
+          }}
+        />
+      )}
       {boardExpanded && (
         <div
           role="dialog"
@@ -686,18 +711,19 @@ export default function Dashboard({
       )}
       {role !== "Seller" && (
         <div
-          className="grid gap-5"
+          className="grid gap-6"
           style={{ gridTemplateColumns: "1fr 340px" }}
         >
           <Card>
             <SH
-              title="Recent Claims"
+              title="Pending Claims"
               action={
                 <SecondaryBtn onClick={() => setTab("My Claims")}>
                   View All
                 </SecondaryBtn>
               }
             />
+            <div style={{ maxHeight: 360, overflowY: "auto" }}>
             <table className="w-full text-[13px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid #F3F4F6" }}>
@@ -726,7 +752,7 @@ export default function Dashboard({
                 </tr>
               </thead>
               <tbody>
-                {recentClaims.map((c) => {
+                {pendingClaims.map((c) => {
                   return (
                     <tr
                       key={c.id}
@@ -784,6 +810,12 @@ export default function Dashboard({
                 })}
               </tbody>
             </table>
+            </div>
+            {pendingClaims.length === 0 && (
+              <div style={{ padding: "24px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
+                No pending claims.
+              </div>
+            )}
           </Card>
           <Card style={{ background: "#FFFBF5", border: "1px solid #FCE4C8" }}>
             <SH title="Upcoming Deadlines" />
@@ -881,7 +913,8 @@ export default function Dashboard({
       )}
       {buyerProfile && (
         <BuyerProfileModal
-          buyer={buyerProfile}
+          buyer={buyerProfile.name}
+          contactUrl={buyerProfile.contactUrl}
           onClose={() => setBuyerProfile(null)}
         />
       )}
@@ -898,6 +931,28 @@ export default function Dashboard({
           entries={waitlist}
           activeId={activeWaitlistId}
           onSelect={setActiveWaitlistId}
+          onRespond={async (entry, accept) => {
+            if (isSupabaseConfigured) {
+              try {
+                await kargoApi.respondWaitlistOffer(String(entry.id), accept)
+                // Server cascades (new order on accept, next-buyer offer on
+                // decline) — re-pull the truth rather than guess locally.
+                await refreshData()
+                return
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "Unable to respond to offer.")
+                return
+              }
+            }
+            // Demo mode: reflect the decision locally.
+            setWaitlist((prev) =>
+              prev.map((e) =>
+                e.id === entry.id
+                  ? { ...e, status: accept ? "converted" : "cancelled", offerQuantity: undefined, offerExpiresAt: undefined }
+                  : e,
+              ),
+            )
+          }}
           onClose={() => setShowWaitlist(false)}
           onViewBatch={(batchId) => {
             navIntent.batchId = batchId

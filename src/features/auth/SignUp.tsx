@@ -310,6 +310,95 @@ export default function SignUp({
               </div>
             )}
 
+            {/* Contact / social links — available to BOTH roles (3.2).
+                Optional for buyers, at least one required for sellers. */}
+            <div>
+              <label
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#374151",
+                  display: "block",
+                  marginBottom: 8,
+                }}
+              >
+                Contact &amp; Social Links{" "}
+                <span style={{ color: "#6B7280", fontWeight: 400 }}>
+                  {role === "Seller" ? "(at least one required)" : "(optional)"}
+                </span>
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {(["Facebook", "TikTok", "Instagram"] as const).map(
+                  (platform) => (
+                    <div
+                      key={platform}
+                      style={{ display: "flex", alignItems: "center", gap: 10 }}
+                    >
+                      {socialIcons[platform]}
+                      <span
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 500,
+                          color: "#374151",
+                          flex: 1,
+                        }}
+                      >
+                        {platform}
+                      </span>
+                      <Toggle
+                        on={socials[platform].on}
+                        onChange={(v) =>
+                          setSocials((s) => ({
+                            ...s,
+                            [platform]: { ...s[platform], on: v },
+                          }))
+                        }
+                      />
+                      {socials[platform].on && (
+                        <input
+                          value={socials[platform].url}
+                          onChange={(e) =>
+                            setSocials((s) => ({
+                              ...s,
+                              [platform]: {
+                                ...s[platform],
+                                url: e.target.value,
+                              },
+                            }))
+                          }
+                          placeholder="Profile URL or @username"
+                          style={{
+                            fontSize: 12,
+                            border: "1px solid #E5E7EB",
+                            borderRadius: 6,
+                            padding: "5px 9px",
+                            outline: "none",
+                            color: "#374151",
+                            width: 180,
+                          }}
+                        />
+                      )}
+                    </div>
+                  ),
+                )}
+              </div>
+              {errs.social && (
+                <p
+                  className="fi"
+                  style={{
+                    fontSize: 11.5,
+                    color: "#EF4444",
+                    marginTop: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  {errs.social}
+                </p>
+              )}
+            </div>
+
             {/* Seller: extra fields */}
             {role === "Seller" && (
               <div
@@ -337,114 +426,6 @@ export default function SignUp({
                   onChange={setPhone}
                   placeholder="+63 9XX XXX XXXX"
                 />
-
-                {/* Social accounts */}
-                <div>
-                  <label
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#374151",
-                      display: "block",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Linked Social Accounts{" "}
-                    <span style={{ color: "#6B7280", fontWeight: 400 }}>
-                      (at least one required)
-                    </span>
-                  </label>
-                  <div
-                    style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                  >
-                    {(["Facebook", "TikTok", "Instagram"] as const).map(
-                      (platform) => (
-                        <div
-                          key={platform}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                          }}
-                        >
-                          {socialIcons[platform]}
-                          <span
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 500,
-                              color: "#374151",
-                              flex: 1,
-                            }}
-                          >
-                            {platform}
-                          </span>
-                          <Toggle
-                            on={socials[platform].on}
-                            onChange={(v) =>
-                              setSocials((s) => ({
-                                ...s,
-                                [platform]: { ...s[platform], on: v },
-                              }))
-                            }
-                          />
-                          {socials[platform].on && (
-                            <input
-                              value={socials[platform].url}
-                              onChange={(e) =>
-                                setSocials((s) => ({
-                                  ...s,
-                                  [platform]: {
-                                    ...s[platform],
-                                    url: e.target.value,
-                                  },
-                                }))
-                              }
-                              placeholder="Profile URL or @username"
-                              style={{
-                                fontSize: 12,
-                                border: "1px solid #E5E7EB",
-                                borderRadius: 6,
-                                padding: "5px 9px",
-                                outline: "none",
-                                color: "#374151",
-                                width: 180,
-                              }}
-                            />
-                          )}
-                        </div>
-                      ),
-                    )}
-                  </div>
-                  {errs.social && (
-                    <p
-                      className="fi"
-                      style={{
-                        fontSize: 11.5,
-                        color: "#EF4444",
-                        marginTop: 4,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                      >
-                        <circle cx="6" cy="6" r="5.5" stroke="#EF4444" />
-                        <path
-                          d="M6 3.5v3M6 8h.01"
-                          stroke="#EF4444"
-                          strokeWidth="1.2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      {errs.social}
-                    </p>
-                  )}
-                </div>
 
                 {/* BIR Registration Seal Badge verification */}
                 <div>

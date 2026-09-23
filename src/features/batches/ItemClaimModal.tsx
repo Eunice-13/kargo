@@ -18,14 +18,21 @@ export default function ItemClaimModal({
     claimed: number
     waitlist: number
     locked?: boolean
+    limitPerUser?: number
   }
-  onConfirm: () => void
+  onConfirm: (qty: number) => void
   onClose: () => void
 }) {
   const [qty, setQty] = useState(1)
   const [showReminders, setShowReminders] = useState(false)
   const left = product.qty - product.claimed
-  const maxQty = Math.min(left, 5)
+  // Cap by remaining stock, a hard ceiling of 5, and the seller's optional
+  // per-buyer limit when one is set.
+  const perUser =
+    product.limitPerUser && product.limitPerUser > 0
+      ? product.limitPerUser
+      : Infinity
+  const maxQty = Math.max(1, Math.min(left, 5, perUser))
 
   return (
     <Modal title="Review claim before submitting" onClose={onClose} width={480}>
@@ -201,6 +208,7 @@ export default function ItemClaimModal({
           </div>
           <span style={{ fontSize: 11, color: "#9CA3AF" }}>
             {left} slot{left !== 1 ? "s" : ""} left
+            {perUser !== Infinity ? ` · max ${perUser}/buyer` : ""}
           </span>
         </div>
 
@@ -313,14 +321,14 @@ export default function ItemClaimModal({
 
         <div className="flex gap-3">
           <SecondaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
+            style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
             onClick={onClose}
           >
             Cancel
           </SecondaryBtn>
           <PrimaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
-            onClick={onConfirm}
+            style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
+            onClick={() => onConfirm(qty)}
           >
             Yes, confirm claim
           </PrimaryBtn>

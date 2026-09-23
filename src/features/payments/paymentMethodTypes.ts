@@ -6,4 +6,6 @@ export type PayMethod = {
   detail: string
   icon: string
   verified: boolean
+  // Public URL of the seller's uploaded payment QR image, if any.
+  qrUrl?: string
 }

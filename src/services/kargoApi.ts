@@ -11,8 +11,10 @@ import type {
   PayHistRow,
   ToPayRow,
   UserInfo,
+  SellerWaitlistGroup,
 } from "@/types"
 import { requireSupabase } from "@/lib/supabase"
+import { resolveContactUrl } from "@/components/shared/contactLink"
 
 type DbProfile = {
   id: string
@@ -24,6 +26,8 @@ type DbProfile = {
   can_sell: boolean
   bir_status: "none" | "pending" | "verified" | "flagged"
   account_status: "active" | "suspended"
+  notification_preferences: Record<string, boolean> | null
+  waitlist_response_hours: number | null
 }
 
 export type LoadedAppData = {
@@ -35,6 +39,7 @@ export type LoadedAppData = {
   orders: OrderRow[]
   fulfillment: FulfillmentOrder[]
   waitlist: WaitlistEntry[]
+  sellerWaitlist: SellerWaitlistGroup[]
 }
 
 const birToUi: Record<DbProfile["bir_status"], BirState> = {
@@ -89,7 +94,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
   const client = requireSupabase()
   const { data, error } = await client
     .from("profiles")
-    .select("id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,bir_status,account_status")
+    .select("id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,bir_status,account_status,notification_preferences,waitlist_response_hours")
     .eq("id", id)
     .single()
   if (error) throw error
@@ -110,6 +115,8 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     sellerEnabled: profile.can_sell,
     birState: birToUi[profile.bir_status],
     accountStatus: profile.account_status,
+    notificationPreferences: profile.notification_preferences ?? {},
+    waitlistResponseHours: profile.waitlist_response_hours ?? 24,
   }
 }
 
@@ -194,14 +201,16 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   const participantIds = [...new Set([...(dbOrders ?? []).flatMap((row) => [row.buyer_id, row.seller_id]), ...(catalog ?? []).map((row) => row.seller_id)])]
   const participantNames = new Map<string, string>()
   const verifiedSellers = new Set<string>()
+  const participantLinks = new Map<string, string | undefined>()
   if (participantIds.length > 0) {
     const { data: participants, error: participantsError } = await client
       .from("public_profiles")
-      .select("id,display_name,bir_status")
+      .select("id,display_name,bir_status,social_links")
       .in("id", participantIds)
     if (participantsError) throw participantsError
     for (const participant of participants ?? []) {
       participantNames.set(participant.id, participant.display_name)
+      participantLinks.set(participant.id, resolveContactUrl(participant.social_links ?? undefined))
       if (participant.bir_status === "verified") verifiedSellers.add(participant.id)
     }
   }
@@ -215,6 +224,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       locked: row.batch_status === "locked",
       title: row.batch_title,
       seller: row.seller_name,
+      sellerId: row.seller_id,
+      sellerFb: participantLinks.get(row.seller_id),
       sellerBirVerified: verifiedSellers.has(row.seller_id),
       rating: Number(row.rating ?? 0),
       trips: `${row.starts_on} – ${row.ends_on}`,
@@ -236,6 +247,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       claimed: Number(row.quantity_claimed ?? 0),
       waitlist: Number(row.waitlist_count ?? 0),
       locked: row.product_locked,
+      limitPerUser:
+        row.limit_per_user != null && Number(row.limit_per_user) > 0
+          ? Number(row.limit_per_user)
+          : undefined,
     })
     batchMap.set(row.batch_id, current)
   }
@@ -266,6 +281,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         product: product.name,
         batch: product.batches.title,
         seller: sellerName,
+        sellerId: row.seller_id,
+        sellerFb: participantLinks.get(row.seller_id),
         qty: row.quantity,
         amount: Number(row.total_amount),
         status: statusToClaim(row.status),
@@ -278,6 +295,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         product: product.name,
         batch: product.batches.title,
         seller: sellerName,
+        sellerFb: participantLinks.get(row.seller_id),
         amount: Number(row.total_amount),
         step: statusToStep(row.status),
         trackingNo: row.tracking_number,
@@ -297,6 +315,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         batch: product.batches.title,
         seller: user.name,
         buyer: buyerName,
+        buyerFb: participantLinks.get(row.buyer_id),
         qty: row.quantity,
         amount: Number(row.total_amount),
         status: statusToClaim(row.status),
@@ -308,6 +327,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         dbId: row.id,
         col: statusToColumn(row.status),
         buyer: buyerName,
+        buyerFb: participantLinks.get(row.buyer_id),
         product: product.name,
         qty: row.quantity,
         amount: Number(row.total_amount),
@@ -328,6 +348,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         orderId: row.id,
         product: product.name,
         seller: sellerName,
+        sellerId: row.seller_id,
+        qty: row.quantity,
         amount: Math.max(0, Number(row.total_amount) - verifiedPaid),
         hours,
       })
@@ -347,7 +369,80 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   }
 
   const waitlist = await loadBuyerWaitlist(client, auth.user.id, batchMap)
-  return { user, batches: [...batchMap.values()], claims, toPay, payHistory, orders, fulfillment, waitlist }
+  const sellerWaitlist = user.sellerEnabled
+    ? await loadSellerWaitlist(client, auth.user.id)
+    : []
+  return { user, batches: [...batchMap.values()], claims, toPay, payHistory, orders, fulfillment, waitlist, sellerWaitlist }
+}
+
+// Seller view: every product the seller owns that has waiting buyers, each with
+// its ordered queue (buyer name + contact link + join position). RLS
+// (waitlist_select_buyer_or_seller) already scopes this to the seller's own
+// products, so a non-seller call returns nothing.
+async function loadSellerWaitlist(
+  client: ReturnType<typeof requireSupabase>,
+  sellerId: string,
+): Promise<SellerWaitlistGroup[]> {
+  const { data, error } = await client
+    .from("waitlist_entries")
+    .select("batch_product_id, buyer_id, joined_at, desired_quantity, batch_products(name, batch_id, batches(title, seller_id))")
+    .in("status", ["waiting", "offered"])
+    .order("joined_at", { ascending: true })
+  if (error) throw error
+  type Row = {
+    batch_product_id: string
+    buyer_id: string
+    joined_at: string
+    desired_quantity: number
+    batch_products: {
+      name: string
+      batch_id: string
+      batches: { title: string; seller_id: string } | null
+    } | null
+  }
+  const rows = (data ?? []) as unknown as Row[]
+  // Keep only rows for products owned by this seller.
+  const mine = rows.filter((r) => r.batch_products?.batches?.seller_id === sellerId)
+  if (mine.length === 0) return []
+
+  // Resolve buyer names + contact links.
+  const buyerIds = [...new Set(mine.map((r) => r.buyer_id))]
+  const names = new Map<string, string>()
+  const links = new Map<string, string | undefined>()
+  if (buyerIds.length) {
+    const { data: profiles } = await client
+      .from("public_profiles")
+      .select("id,display_name,social_links")
+      .in("id", buyerIds)
+    for (const profile of profiles ?? []) {
+      names.set(profile.id, profile.display_name)
+      links.set(profile.id, resolveContactUrl(profile.social_links ?? undefined))
+    }
+  }
+
+  // Group by product, preserving join order for queue positions.
+  const groups = new Map<string, SellerWaitlistGroup>()
+  for (const r of mine) {
+    const productId = r.batch_product_id
+    let group = groups.get(productId)
+    if (!group) {
+      group = {
+        productId,
+        product: r.batch_products?.name ?? "Product",
+        batch: r.batch_products?.batches?.title ?? "",
+        queue: [],
+      }
+      groups.set(productId, group)
+    }
+    group.queue.push({
+      buyer: names.get(r.buyer_id) ?? "Buyer",
+      buyerFb: links.get(r.buyer_id),
+      position: group.queue.length + 1,
+      joinedAt: r.joined_at,
+      desiredQuantity: r.desired_quantity ?? 1,
+    })
+  }
+  return [...groups.values()]
 }
 
 async function loadBuyerWaitlist(
@@ -357,14 +452,18 @@ async function loadBuyerWaitlist(
 ): Promise<WaitlistEntry[]> {
   const { data, error } = await client
     .from("waitlist_entries")
-    .select("id, batch_product_id, joined_at, batch_products(name, selling_price, batch_id)")
+    .select("id, batch_product_id, joined_at, status, desired_quantity, offer_quantity, offer_expires_at, batch_products(name, selling_price, batch_id)")
     .eq("buyer_id", userId)
-    .eq("status", "waiting")
+    .in("status", ["waiting", "offered"])
   if (error) throw error
   type WaitlistDbRow = {
     id: string
     batch_product_id: string
     joined_at: string
+    status: "waiting" | "offered" | "converted" | "cancelled"
+    desired_quantity: number
+    offer_quantity: number | null
+    offer_expires_at: string | null
     batch_products: Array<{ name: string; selling_price: number | string; batch_id: string }> | null
   }
   const rows = (data ?? []) as unknown as WaitlistDbRow[]
@@ -397,6 +496,10 @@ async function loadBuyerWaitlist(
       position: Math.max(1, position),
       queueSize: catalogProduct?.waitlist ?? queue.length,
       amount: Number(product?.selling_price ?? catalogProduct?.price ?? 0),
+      desiredQuantity: row.desired_quantity ?? 1,
+      status: row.status,
+      offerQuantity: row.offer_quantity ?? undefined,
+      offerExpiresAt: row.offer_expires_at ?? undefined,
     }
   })
 }
@@ -417,7 +520,7 @@ export async function createBatch(batch: {
   endsOn: string
   reservationHours: number
   notes?: string
-  products: Array<{ name: string; basePrice: number; markup: number; quantity: number }>
+  products: Array<{ name: string; basePrice: number; markup: number; quantity: number; limitPerUser?: number }>
 }) {
   const client = requireSupabase()
   const { data: auth } = await client.auth.getUser()
@@ -444,6 +547,10 @@ export async function createBatch(batch: {
       base_price: product.basePrice,
       markup: product.markup,
       quantity_total: product.quantity,
+      limit_per_user:
+        product.limitPerUser && product.limitPerUser > 0
+          ? product.limitPerUser
+          : null,
     })),
   )
   if (productsError) throw productsError
@@ -538,6 +645,8 @@ export async function updateProfile(values: {
   socialVisibility?: Record<string, boolean>
   canSell?: boolean
   email?: string
+  notificationPreferences?: Record<string, boolean>
+  waitlistResponseHours?: number
 }) {
   const client = requireSupabase()
   const payload: Record<string, unknown> = {}
@@ -546,6 +655,8 @@ export async function updateProfile(values: {
   if (values.socialLinks !== undefined) payload.social_links = values.socialLinks
   if (values.socialVisibility !== undefined) payload.social_visibility = values.socialVisibility
   if (values.canSell !== undefined) payload.can_sell = values.canSell
+  if (values.notificationPreferences !== undefined) payload.notification_preferences = values.notificationPreferences
+  if (values.waitlistResponseHours !== undefined) payload.waitlist_response_hours = values.waitlistResponseHours
   if (values.email) {
     const { error: authError } = await client.auth.updateUser({ email: values.email })
     if (authError) throw authError
@@ -606,16 +717,31 @@ export async function setProductLock(productId: string, locked: boolean) {
   if (error) throw error
 }
 
-export async function joinWaitlist(productId: string) {
-  const client = requireSupabase()
-  const userId = (await client.auth.getUser()).data.user?.id
-  if (!userId) throw new Error("Authentication required")
-  const { error } = await client.from("waitlist_entries").upsert({
-    batch_product_id: productId,
-    buyer_id: userId,
-    status: "waiting",
-  }, { onConflict: "batch_product_id,buyer_id" })
+// Join (or update) a waitlist entry with the buyer's desired quantity. The
+// quantity drives the full-vs-partial match decision when stock later frees up.
+export async function joinWaitlist(productId: string, quantity: number = 1) {
+  const { error } = await requireSupabase().rpc("join_waitlist", {
+    p_product_id: productId,
+    p_quantity: Math.max(1, Math.floor(quantity)),
+  })
   if (error) throw error
+}
+
+// Buyer accepts or declines a partial-match waitlist offer. Accepting claims the
+// offered quantity on their behalf; declining (or timing out) rolls the offer to
+// the next buyer in the queue.
+export async function respondWaitlistOffer(waitlistId: string, accept: boolean) {
+  const { error } = await requireSupabase().rpc("respond_waitlist_offer", {
+    p_waitlist_id: waitlistId,
+    p_accept: accept,
+  })
+  if (error) throw error
+}
+
+// Seller updates how many hours a waitlisted buyer has to respond to a
+// partial-match offer (Dashboard waitlist section).
+export async function setWaitlistResponseHours(hours: number) {
+  return updateProfile({ waitlistResponseHours: Math.max(1, Math.floor(hours)) })
 }
 
 export async function createReview(orderId: string, rating: number, comment?: string, statements: string[] = []) {
@@ -663,22 +789,75 @@ export async function loadPaymentMethods() {
   return data ?? []
 }
 
-export async function addPaymentMethod(methodType: string, accountName: string, accountNumber: string) {
+// Upload a seller's payment QR image to the public payment-qr bucket and return
+// its object path (stored in seller_payment_methods.qr_path).
+export async function uploadPaymentQr(file: File): Promise<string> {
   const client = requireSupabase()
   const userId = (await client.auth.getUser()).data.user?.id
   if (!userId) throw new Error("Authentication required")
+  const extension = file.name.split(".").pop()?.toLowerCase() || "png"
+  const objectPath = `${userId}/qr-${Date.now()}.${extension}`
+  const { error } = await client.storage
+    .from("payment-qr")
+    .upload(objectPath, file, { upsert: true, contentType: file.type || undefined })
+  if (error) throw error
+  return objectPath
+}
+
+export function paymentQrUrl(qrPath?: string | null): string | undefined {
+  if (!qrPath) return undefined
+  return requireSupabase().storage.from("payment-qr").getPublicUrl(qrPath).data.publicUrl
+}
+
+// Buyer-facing: a seller's display-safe receive methods (type, name, number,
+// public QR image URL) via the seller_receive_methods security-definer RPC.
+export type SellerReceiveMethod = {
+  methodType: string
+  accountName: string | null
+  accountNumber: string | null
+  qrUrl?: string
+}
+export async function loadSellerReceiveMethods(sellerId: string): Promise<SellerReceiveMethod[]> {
+  const { data, error } = await requireSupabase().rpc("seller_receive_methods", { p_seller_id: sellerId })
+  if (error) throw error
+  return (data ?? []).map((row: { method_type: string; account_name: string | null; account_number: string | null; qr_path: string | null }) => ({
+    methodType: row.method_type,
+    accountName: row.account_name,
+    accountNumber: row.account_number,
+    qrUrl: paymentQrUrl(row.qr_path),
+  }))
+}
+
+export async function addPaymentMethod(
+  methodType: string,
+  accountName: string,
+  accountNumber: string,
+  qrFile?: File,
+) {
+  const client = requireSupabase()
+  const userId = (await client.auth.getUser()).data.user?.id
+  if (!userId) throw new Error("Authentication required")
+  const qrPath = qrFile ? await uploadPaymentQr(qrFile) : null
   const { error } = await client.from("seller_payment_methods").insert({
     seller_id: userId,
     method_type: methodType,
     account_name: accountName,
     account_number: accountNumber,
+    qr_path: qrPath,
   })
   if (error) throw error
 }
 
-export async function updatePaymentMethod(id: string, methodType: string, accountNumber: string, verified?: boolean) {
+export async function updatePaymentMethod(
+  id: string,
+  methodType: string,
+  accountNumber: string,
+  verified?: boolean,
+  qrFile?: File,
+) {
   const values: Record<string, unknown> = { method_type: methodType, account_number: accountNumber }
   if (verified !== undefined) values.is_verified = verified
+  if (qrFile) values.qr_path = await uploadPaymentQr(qrFile)
   const { error } = await requireSupabase().from("seller_payment_methods").update(values).eq("id", id)
   if (error) throw error
 }
@@ -771,9 +950,13 @@ export async function loadSellerRequests() {
   if (requestError) throw requestError
   const buyerIds = [...new Set([...(extensionRows ?? []).map((row) => row.buyer_id), ...(requestRows ?? []).map((row) => row.buyer_id)])]
   const names = new Map<string, string>()
+  const links = new Map<string, string | undefined>()
   if (buyerIds.length) {
-    const { data: profiles } = await client.from("public_profiles").select("id,display_name").in("id", buyerIds)
-    for (const profile of profiles ?? []) names.set(profile.id, profile.display_name)
+    const { data: profiles } = await client.from("public_profiles").select("id,display_name,social_links").in("id", buyerIds)
+    for (const profile of profiles ?? []) {
+      names.set(profile.id, profile.display_name)
+      links.set(profile.id, resolveContactUrl(profile.social_links ?? undefined))
+    }
   }
   return {
     extensions: (extensionRows ?? []).map((row) => {
@@ -792,6 +975,7 @@ export async function loadSellerRequests() {
       return {
         id: row.id as string,
         buyer: names.get(row.buyer_id) ?? "Buyer",
+        buyerFb: links.get(row.buyer_id),
         product: row.product_name,
         batch: batch?.title ?? "General request",
         message: row.message ?? "",
@@ -996,9 +1180,14 @@ export const kargoApi = {
   setBatchLock,
   setProductLock,
   joinWaitlist,
+  respondWaitlistOffer,
+  setWaitlistResponseHours,
   createReview,
   createBuyerRequest,
   loadPaymentMethods,
+  loadSellerReceiveMethods,
+  uploadPaymentQr,
+  paymentQrUrl,
   addPaymentMethod,
   updatePaymentMethod,
   deactivatePaymentMethod,

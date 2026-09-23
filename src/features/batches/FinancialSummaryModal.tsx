@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { Plus, Trash2, Printer, X } from "lucide-react"
 import type { BatchType, BatchExpenses, ExpenseItem, ExpenseMode } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
@@ -476,21 +477,24 @@ function FinancialReceipt({
       </span>
     </div>
   )
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Batch financial summary receipt"
       style={{
         position: "fixed",
-        inset: 0,
-        zIndex: 70,
+        top: 56,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1000,
         background: "rgba(17,24,39,0.45)",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
-        overflowY: "auto",
-        padding: "40px 16px",
+        padding: "16px",
+        boxSizing: "border-box",
       }}
       onClick={onClose}
     >
@@ -500,6 +504,8 @@ function FinancialReceipt({
         style={{
           width: "100%",
           maxWidth: 480,
+          maxHeight: "calc(100dvh - 88px)",
+          overflowY: "auto",
           background: "#fff",
           borderRadius: 12,
           boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
@@ -621,6 +627,7 @@ function FinancialReceipt({
           </PrimaryBtn>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

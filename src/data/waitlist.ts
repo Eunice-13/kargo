@@ -11,6 +11,8 @@ export const WAITLIST_INIT: WaitlistEntry[] = [
     position: 3,
     queueSize: 5,
     amount: 950,
+    desiredQuantity: 1,
+    status: "waiting",
   },
   {
     id: "wl-pastries",
@@ -22,6 +24,8 @@ export const WAITLIST_INIT: WaitlistEntry[] = [
     position: 1,
     queueSize: 1,
     amount: 560,
+    desiredQuantity: 2,
+    status: "waiting",
   },
   {
     id: "wl-skii",
@@ -33,6 +37,8 @@ export const WAITLIST_INIT: WaitlistEntry[] = [
     position: 2,
     queueSize: 4,
     amount: 4800,
+    desiredQuantity: 1,
+    status: "waiting",
   },
 ]
 

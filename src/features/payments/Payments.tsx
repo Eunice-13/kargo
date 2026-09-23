@@ -10,7 +10,6 @@ import {
   ProductThumb,
   StatusBadge,
   Countdown,
-  PaymentIcon,
 } from "@/components/shared"
 import PaymentSubmitModal from "./PaymentSubmitModal"
 import BatchCheckoutModal from "./BatchCheckoutModal"
@@ -31,7 +30,6 @@ export default function Payments({
   setOrders,
   role,
   user,
-  setTab,
 }: SharedState) {
   const [dragging, setDragging] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
@@ -128,100 +126,6 @@ export default function Payments({
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <SH
-          title="Payment Methods"
-          action={
-            <PrimaryBtn size="sm" onClick={() => setTab("Settings")}>
-              + Add Method
-            </PrimaryBtn>
-          }
-        />
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            {
-              name: "GCash",
-              icon: "",
-              color: "#007AFF",
-              desc: "09XX-XXX-8821",
-              connected: true,
-            },
-            {
-              name: "Maya",
-              icon: "",
-              color: "#6B21A8",
-              desc: "09XX-XXX-5543",
-              connected: true,
-            },
-            {
-              name: "Bank Transfer",
-              icon: "",
-              color: "#065F46",
-              desc: "BDO · •••• 4421",
-              connected: true,
-            },
-            {
-              name: "Cash on Meetup",
-              icon: "",
-              color: "#92400E",
-              desc: "Coordinate with seller",
-              connected: false,
-            },
-          ].map((m) => (
-            <Card
-              key={m.name}
-              style={{ borderLeft: `4px solid ${m.color}` }}
-              className="flex items-center gap-3"
-            >
-              <span className="text-2xl" style={{ color: m.color }}><PaymentIcon method={m.name} size={22} /></span>
-              <div>
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: "#111827",
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
-                  }}
-                >
-                  {m.name}
-                </div>
-                <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                  {m.desc}
-                </div>
-              </div>
-              <div className="ml-auto">
-                {m.connected ? (
-                  <span
-                    style={{
-                      background: "#D4F5EA",
-                      color: "#0B7A59",
-                      fontSize: 10,
-                      fontWeight: 600,
-                      padding: "2px 7px",
-                      borderRadius: 999,
-                    }}
-                  >
-                    Connected
-                  </span>
-                ) : (
-                  <span
-                    style={{
-                      background: "#F3F4F6",
-                      color: "#9CA3AF",
-                      fontSize: 10,
-                      fontWeight: 600,
-                      padding: "2px 7px",
-                      borderRadius: 999,
-                    }}
-                  >
-                    Manual
-                  </span>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
       <AddressSection />
       <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 1fr" }}>
         <div>
@@ -235,6 +139,11 @@ export default function Payments({
                     style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}
                   >
                     {t.product}
+                    {t.qty && t.qty > 1 ? (
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", marginLeft: 6 }}>
+                        ×{t.qty}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span style={{ fontSize: 11, color: "#9CA3AF" }}>
@@ -631,6 +540,7 @@ export default function Payments({
           onClose={() => setTxDetail(null)}
         />
       )}
+
     </div>
   )
 }

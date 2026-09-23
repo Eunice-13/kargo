@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
-import type { BatchType, UserInfo } from "@/types"
+import type { BatchType, Role, UserInfo } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card, PrimaryBtn, Avatar, BIRBadge } from "@/components/shared"
 import SellerShopPage from "./SellerShopPage"
@@ -9,13 +9,15 @@ export default function SellerDirectoryPage({
   batches,
   onBack,
   onSellerSelect,
-  onClaimFromProfile,
+  onClaimItem,
+  role,
   user,
 }: {
   batches: BatchType[]
   onBack: () => void
   onSellerSelect: (name: string) => void
-  onClaimFromProfile: (batchId: number) => void
+  onClaimItem: (batchId: number, productName: string) => void
+  role: Role
   user: UserInfo
 }) {
   const [query, setQuery] = useState("")
@@ -80,7 +82,8 @@ export default function SellerDirectoryPage({
           <SellerShopPage
             seller={shopPage}
             batches={batches}
-            onBatchClick={() => {}}
+            onClaimItem={onClaimItem}
+            role={role}
             profileData={shopPage === user.name ? user : undefined}
           />
         </div>

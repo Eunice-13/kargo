@@ -10,6 +10,8 @@ export type BatchProduct = {
   basePrice: string
   markup: string
   qty: string
+  // Optional per-buyer claim limit. Empty string = no limit.
+  limit: string
 }
 export default function NewBatchModal({
   onCreate,
@@ -21,6 +23,7 @@ export default function NewBatchModal({
   sellerName?: string
 }) {
   const [title, setTitle] = useState("")
+  const [desc, setDesc] = useState("")
   const [cat, setCat] = useState("Mixed")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
@@ -28,13 +31,13 @@ export default function NewBatchModal({
   const [timerVal, setTimerVal] = useState("48")
   const [timerPreset, setTimerPreset] = useState("48h")
   const [products, setProducts] = useState<BatchProduct[]>([
-    { name: "", basePrice: "", markup: "", qty: "" },
+    { name: "", basePrice: "", markup: "", qty: "", limit: "" },
   ])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   const addProduct = () =>
-    setProducts((p) => [...p, { name: "", basePrice: "", markup: "", qty: "" }])
+    setProducts((p) => [...p, { name: "", basePrice: "", markup: "", qty: "", limit: "" }])
   const updateProduct = (i: number, k: keyof BatchProduct, v: string) =>
     setProducts((p) =>
       p.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)),
@@ -101,6 +104,7 @@ export default function NewBatchModal({
               claimed: 0,
               waitlist: 0,
               locked: false,
+              limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
             }))
       const reserveHours =
         timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal)
@@ -111,11 +115,13 @@ export default function NewBatchModal({
           startsOn: startDate,
           endsOn: endDate,
           reservationHours: reserveHours,
+          notes: desc.trim() || undefined,
           products: validProds.map((p) => ({
             name: p.name.trim(),
             basePrice: Number(p.basePrice),
             markup: Number(p.markup),
             quantity: Number(p.qty),
+            limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
           })),
         })
       }
@@ -130,6 +136,7 @@ export default function NewBatchModal({
         items: prods.reduce((s, p) => s + p.qty, 0),
         claimed: 0,
         category: cat,
+        notes: desc.trim() || undefined,
         products: prods,
         reserveHours,
       })
@@ -170,6 +177,38 @@ export default function NewBatchModal({
               color: "#374151",
               fontFamily: "inherit",
               boxSizing: "border-box",
+            }}
+            className="placeholder:text-gray-400"
+          />
+        </div>
+        <div>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#374151",
+              display: "block",
+              marginBottom: 5,
+            }}
+          >
+            Description
+          </label>
+          <textarea
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
+            rows={3}
+            placeholder="Trip details, sourcing notes, payment/pickup instructions…"
+            style={{
+              width: "100%",
+              fontSize: 13,
+              border: "1px solid #E5E7EB",
+              borderRadius: 7,
+              padding: "9px 12px",
+              outline: "none",
+              color: "#374151",
+              fontFamily: "inherit",
+              boxSizing: "border-box",
+              resize: "vertical",
             }}
             className="placeholder:text-gray-400"
           />
@@ -481,6 +520,21 @@ export default function NewBatchModal({
                           updateProduct(i, "qty", e.target.value)
                         }
                         placeholder="qty"
+                        style={numInput}
+                        className="placeholder:text-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <label style={fieldLabel}>Limit / user</label>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min="1"
+                        value={p.limit}
+                        onChange={(e) =>
+                          updateProduct(i, "limit", e.target.value)
+                        }
+                        placeholder="optional"
                         style={numInput}
                         className="placeholder:text-gray-400"
                       />

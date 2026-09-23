@@ -5,6 +5,7 @@ import { INDIGO, CREAM } from "@/constants/theme"
 import { Card, Avatar, ProductThumb } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
 import AddressSection from "./AddressSection"
+import SellerPaymentMethods from "./SellerPaymentMethods"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
@@ -111,6 +112,12 @@ export default function SellerPaymentVerification() {
   ]
     return (
       <div className="p-6">
+        <div style={{ marginBottom: 24 }}>
+          <SellerPaymentMethods />
+        </div>
+        <div style={{ marginBottom: 24 }}>
+          <AddressSection />
+        </div>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2
@@ -507,10 +514,6 @@ export default function SellerPaymentVerification() {
           </table>
           </div>
         </Card>
-
-        <div style={{ marginTop: 24 }}>
-          <AddressSection />
-        </div>
 
         {/* Review submission modal */}
         {reviewTarget && (

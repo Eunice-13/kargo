@@ -3,7 +3,7 @@ import { CREAM, INDIGO } from "@/constants/theme"
 import Modal from "./Modal"
 import Avatar from "./Avatar"
 
-export default function BuyerProfileModal({ buyer, onClose }: { buyer: string; onClose: () => void }) {
+export default function BuyerProfileModal({ buyer, contactUrl, onClose }: { buyer: string; contactUrl?: string; onClose: () => void }) {
   return (
     <Modal title="" onClose={onClose} width={480}>
       <div style={{ margin: "-28px -28px 20px", background: "linear-gradient(135deg,#DEF3FA,#EEF0FF)", borderRadius: "12px 12px 0 0", padding: "24px 24px 16px", textAlign: "center" }}>
@@ -24,10 +24,16 @@ export default function BuyerProfileModal({ buyer, onClose }: { buyer: string; o
       </div>
 
       <div style={{ background: CREAM, borderRadius: 8, padding: "10px 14px", marginBottom: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Facebook</div>
-        <a href={`https://facebook.com/${buyer.toLowerCase().replace(" ", ".")}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: INDIGO }}>
-          facebook.com/{buyer.toLowerCase().replace(" ", ".")}
-        </a>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Contact</div>
+        {contactUrl ? (
+          <a href={contactUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: INDIGO, wordBreak: "break-all" }}>
+            {contactUrl}
+          </a>
+        ) : (
+          <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+            This user hasn't added a contact link yet.
+          </div>
+        )}
       </div>
 
       <div style={{ border: "1px solid #E5E7EB", borderRadius: 10, padding: "12px 14px", fontSize: 12, color: "#6B7280", lineHeight: 1.5 }}>

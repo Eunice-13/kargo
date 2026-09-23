@@ -32,11 +32,16 @@ export type UserInfo = {
   // A user is only a real Seller when birState === "Verified".
   birState?: BirState
   accountStatus?: "active" | "suspended"
+  // Email/notification opt-outs, keyed by NOTIF_DEFAULTS keys (e.g. "waitlist",
+  // "claims"). Missing key = opted in. Persisted to profiles.notification_preferences.
+  notificationPreferences?: Record<string, boolean>
+  // Seller-only: hours a waitlisted buyer has to respond to a partial-match offer.
+  waitlistResponseHours?: number
 }
 export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
 export type Role = "Buyer" | "Seller"
 export type ClaimStatus = "Pending" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
-export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Payment Methods" | "Security"
+export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Security"
 
 export type ClaimRow = {
   id: EntityId
@@ -44,6 +49,8 @@ export type ClaimRow = {
   product: string
   batch: string
   seller: string
+  // Seller's user id — used to load the methods THIS seller accepts when paying.
+  sellerId?: string
   sellerBirVerified?: boolean
   qty: number
   amount: number
@@ -54,12 +61,16 @@ export type ClaimRow = {
   // `seller` for legacy rows. `buyerFb` is their contact/Facebook link.
   buyer?: string
   buyerFb?: string
+  // Seller's contact/Facebook link (buyer's "My Claims" view).
+  sellerFb?: string
 }
 export type ToPayRow = {
   id: EntityId
   orderId?: string
   product: string
   seller: string
+  sellerId?: string
+  qty?: number
   amount: number
   hours: number
 }
@@ -78,6 +89,7 @@ export type OrderRow = {
   product: string
   batch: string
   seller: string
+  sellerFb?: string
   amount: number
   step: number
   trackingNo: string | null
@@ -102,6 +114,9 @@ export interface BatchStoredProduct {
   claimed: number
   waitlist: number
   locked: boolean
+  // Optional cap on how many units a single buyer may claim for this item.
+  // Undefined/0 means no per-user limit.
+  limitPerUser?: number
 }
 export interface BatchItem {
   id: number
@@ -110,6 +125,9 @@ export interface BatchItem {
   locked: boolean
   title: string
   seller: string
+  sellerId?: string
+  sellerFb?: string
+  sellerBirVerified?: boolean
   rating: number
   trips: string
   items: number
@@ -145,6 +163,7 @@ export type FulfillmentOrder = {
   dbId?: string
   col: KanbanCol
   buyer: string
+  buyerFb?: string
   product: string
   qty: number
   amount: number
@@ -159,6 +178,7 @@ export type FulfillmentOrder = {
 // Buyer's place in a sold-out product queue. Dashboard and BatchPage share
 // the same live array so the overview card and the waitlist modal never
 // snapshot a stale entry.
+export type WaitlistStatus = "waiting" | "offered" | "converted" | "cancelled"
 export type WaitlistEntry = {
   id: string
   productId?: string
@@ -170,6 +190,29 @@ export type WaitlistEntry = {
   position: number
   queueSize: number
   amount: number
+  // Quantity the buyer asked for when joining (Part 1 of the offer flow).
+  desiredQuantity: number
+  status: WaitlistStatus
+  // Populated when status === "offered": the partial amount on offer and the
+  // deadline (ISO) by which the buyer must accept/decline.
+  offerQuantity?: number
+  offerExpiresAt?: string
+}
+
+// Seller-facing view of who is waiting for one of their products, in join
+// order. Buyers only ever see their own position (WaitlistEntry above).
+export type SellerWaitlistEntry = {
+  buyer: string
+  buyerFb?: string
+  position: number
+  joinedAt: string
+  desiredQuantity: number
+}
+export type SellerWaitlistGroup = {
+  productId: string
+  product: string
+  batch: string
+  queue: SellerWaitlistEntry[]
 }
 
 // ─── Shared types for cross-tab props ─────────────────────────────────────────
@@ -188,8 +231,13 @@ export type SharedState = {
   setFulfillment: React.Dispatch<React.SetStateAction<FulfillmentOrder[]>>
   waitlist: WaitlistEntry[]
   setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>
+  sellerWaitlist: SellerWaitlistGroup[]
+  setSellerWaitlist: React.Dispatch<React.SetStateAction<SellerWaitlistGroup[]>>
   user: UserInfo
   setUser: React.Dispatch<React.SetStateAction<UserInfo>>
   setTab: (t: Tab) => void
   role: Role
+  // Re-pull all app data from the backend (no-op in demo mode). Used after
+  // server-side cascades like accepting a waitlist offer.
+  refreshData: () => Promise<void>
 }

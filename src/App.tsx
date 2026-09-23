@@ -11,6 +11,7 @@ import type {
   BatchType,
   FulfillmentOrder,
   WaitlistEntry,
+  SellerWaitlistGroup,
   SharedState,
 } from "@/types"
 import { CREAM } from "@/constants/theme"
@@ -30,11 +31,20 @@ import { kargoApi } from "@/services"
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export default function App() {
-  const originalPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("preview") === "original"
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null
+  const originalPreview = searchParams?.get("preview") === "original"
+  // Shareable batch deep link: ?batch=<id> boots into the Batches tab and opens
+  // that batch's claim page via the existing navIntent hook (3.1).
+  const sharedBatchId = (() => {
+    const raw = searchParams?.get("batch")
+    const n = raw ? Number(raw) : NaN
+    return Number.isFinite(n) && n > 0 ? n : null
+  })()
+  if (sharedBatchId !== null) navIntent.batchId = sharedBatchId
   const [stage, setStage] = useState<AppStage>(originalPreview ? "app" : "login")
   const [booting, setBooting] = useState(isSupabaseConfigured && !originalPreview)
   const [showOnboarding, setOnboard] = useState(false)
-  const [tab, setTab] = useState<Tab>("Dashboard")
+  const [tab, setTab] = useState<Tab>(sharedBatchId !== null ? "Batches" : "Dashboard")
   const [user, setUser] = useState<UserInfo>({
     name: originalPreview ? "Alex Jordan" : "",
     email: originalPreview ? "alex@kargo.demo" : "",
@@ -49,8 +59,9 @@ export default function App() {
   const [showNewBatch, setShowNewBatch] = useState(false)
   const [showApplyToSell, setShowApplyToSell] = useState(false)
 
-  // Workspace access is independent from the optional BIR trust badge.
-  const role: Role = user.role === "Seller" && user.sellerEnabled ? "Seller" : "Buyer"
+  // Role is fixed by seller capability (can_sell). There is no in-app role
+  // switch: a seller-capable account is always a Seller, everyone else a Buyer.
+  const role: Role = user.sellerEnabled ? "Seller" : "Buyer"
 
   // Shared mutable data
   const useSeeds = originalPreview || !isSupabaseConfigured
@@ -62,6 +73,7 @@ export default function App() {
   const [fulfillment, setFulfillment] =
     useState<FulfillmentOrder[]>(useSeeds ? FULFILLMENT_INIT : [])
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>(useSeeds ? WAITLIST_INIT : [])
+  const [sellerWaitlist, setSellerWaitlist] = useState<SellerWaitlistGroup[]>([])
 
   const refreshData = useCallback(async () => {
     if (!isSupabaseConfigured) return
@@ -78,6 +90,7 @@ export default function App() {
     setOrders(data.orders)
     setFulfillment(data.fulfillment)
     setWaitlist(data.waitlist)
+    setSellerWaitlist(data.sellerWaitlist)
     setStage("app")
   }, [])
 
@@ -105,10 +118,13 @@ export default function App() {
     setFulfillment,
     waitlist,
     setWaitlist,
+    sellerWaitlist,
+    setSellerWaitlist,
     user,
     setUser,
     setTab,
     role,
+    refreshData,
   }
 
   const handleSignupSuccess = (u: UserInfo) => {
@@ -162,11 +178,6 @@ export default function App() {
             onSettings={() => setTab("Settings")}
             onApplyToSell={() => setShowApplyToSell(true)}
             role={role}
-            sellerEnabled={Boolean(user.sellerEnabled)}
-            onRoleChange={(nextRole) => {
-              setUser((current) => ({ ...current, role: nextRole }))
-              setTab("Dashboard")
-            }}
             batches={batches}
             onNavigate={setTab}
             onBatchSelect={(id) => {

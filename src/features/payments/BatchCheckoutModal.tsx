@@ -4,17 +4,20 @@ import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, ProductThumb, SecondaryBtn } from "@/components/shared"
 import PaymentSubmitModal from "./PaymentSubmitModal"
 import { getSellerPaymentDetails } from "./sellerPaymentDetails"
+import type { BuyerPaymentMethod } from "./buyerPaymentMethods"
 
 export default function BatchCheckoutModal({
     items,
     contactPrefill,
     onSubmit,
     onClose,
+    savedMethods = [],
 }: {
     items: ToPayRow[]
     contactPrefill?: string
     onSubmit: (item: ToPayRow, method: string, refNo: string, receipt?: File) => void
     onClose: () => void
+    savedMethods?: BuyerPaymentMethod[]
 }) {
     const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
     const groups = useMemo(() => {
@@ -91,6 +94,7 @@ export default function BatchCheckoutModal({
                 <PaymentSubmitModal
                     item={payTarget}
                     contactPrefill={contactPrefill}
+                    savedMethods={savedMethods}
                     onConfirm={(method, refNo, receipt) => {
                         onSubmit(payTarget, method, refNo, receipt)
                         setPayTarget(null)

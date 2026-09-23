@@ -11,11 +11,11 @@ import {
   ProductThumb,
   StatusBadge,
   Countdown,
-  PayModal,
   TrackOrderModal,
   BuyerProfileModal,
+  ExtensionRequestModal,
 } from "@/components/shared"
-import ExtensionRequestModal from "./ExtensionRequestModal"
+import { PaymentSubmitModal } from "@/features/payments"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 
@@ -28,6 +28,9 @@ export default function MyClaims({
   setPayHistory,
   orders,
   setOrders,
+  batches,
+  setBatches,
+  user,
   role,
 }: SharedState) {
   const [filter, setFilter] = useState<ClaimStatus | "All">("All")
@@ -56,6 +59,18 @@ export default function MyClaims({
         ? claims
         : claims.filter((c) => c.status === orderFilter)
     const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
+    const [shipTarget, setShipTarget] = useState<ClaimRow | null>(null)
+    const confirmShip = () => {
+      if (!shipTarget) return
+      setClaims((prev) =>
+        prev.map((cl) =>
+          cl.id === shipTarget.id
+            ? { ...cl, status: "Paid and Reserved" as ClaimStatus }
+            : cl,
+        ),
+      )
+      setShipTarget(null)
+    }
     return (
       <div className="p-6">
         {fbToast && (
@@ -236,22 +251,7 @@ export default function MyClaims({
                   <td style={{ padding: "10px 14px" }}>
                     <div className="flex items-center gap-1.5">
                       {c.status === "Pending" && (
-                        <PrimaryBtn
-                          size="sm"
-                          onClick={() =>
-                            setClaims((prev) =>
-                              prev.map((cl) =>
-                                cl.id === c.id
-                                  ? {
-                                      ...cl,
-                                      status:
-                                        "Paid and Reserved" as ClaimStatus,
-                                    }
-                                  : cl,
-                              ),
-                            )
-                          }
-                        >
+                        <PrimaryBtn size="sm" onClick={() => setShipTarget(c)}>
                           Mark Shipped
                         </PrimaryBtn>
                       )}
@@ -305,11 +305,29 @@ export default function MyClaims({
             onClose={() => setBuyerProfile(null)}
           />
         )}
+        {shipTarget && (
+          <Modal
+            title="Mark this as shipped?"
+            onClose={() => setShipTarget(null)}
+            width={420}
+          >
+            <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
+              Are you sure you want to mark {shipTarget.product} for{" "}
+              {shipTarget.buyer || "this buyer"} as shipped?
+            </p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <SecondaryBtn onClick={() => setShipTarget(null)}>
+                Not yet
+              </SecondaryBtn>
+              <PrimaryBtn onClick={confirmShip}>Yes, mark shipped</PrimaryBtn>
+            </div>
+          </Modal>
+        )}
       </div>
     )
   }
 
-  const handlePay = async (method: string) => {
+  const handlePay = async (method: string, refNo: string, receipt?: File) => {
     if (!payTarget) return
     if (isSupabaseConfigured) {
       try {
@@ -317,6 +335,8 @@ export default function MyClaims({
           orderId: String(payTarget.id),
           method,
           amount: payTarget.amount,
+          referenceNumber: refNo,
+          receipt,
         })
       } catch (error) {
         alert(error instanceof Error ? error.message : "Unable to submit payment.")
@@ -769,9 +789,19 @@ export default function MyClaims({
         </Card>
       )}
       {payTarget && (
-        <PayModal
-          items={[{ product: payTarget.product, amount: payTarget.amount }]}
-          onConfirm={handlePay}
+        <PaymentSubmitModal
+          item={{
+            id: payTarget.id,
+            orderId: String(payTarget.id),
+            product: payTarget.product,
+            seller: payTarget.seller,
+            sellerId: payTarget.sellerId,
+            qty: payTarget.qty,
+            amount: payTarget.amount,
+            hours: payTarget.hours,
+          }}
+          contactPrefill={user.fb || ""}
+          onConfirm={(method, refNo, receipt) => handlePay(method, refNo, receipt)}
           onClose={() => setPayTarget(null)}
         />
       )}
@@ -846,11 +876,46 @@ export default function MyClaims({
                       return
                     }
                   }
+                  const releasedQty = Math.max(1, cancelTarget.qty || 1)
                   setClaims((prev) =>
                     prev.map((c) =>
                       c.id === cancelTarget.id
                         ? { ...c, status: "Cancelled" as ClaimStatus }
                         : c,
+                    ),
+                  )
+                  // Return the reserved stock to the batch/product so the slots
+                  // free up immediately for other buyers.
+                  setBatches((prev) =>
+                    prev.map((bt) => {
+                      const hasProduct = bt.products.some(
+                        (p) =>
+                          (cancelTarget.productId && p.dbId === cancelTarget.productId) ||
+                          (p.name === cancelTarget.product && bt.title === cancelTarget.batch),
+                      )
+                      if (!hasProduct) return bt
+                      return {
+                        ...bt,
+                        claimed: Math.max(0, bt.claimed - releasedQty),
+                        products: bt.products.map((p) =>
+                          (cancelTarget.productId && p.dbId === cancelTarget.productId) ||
+                          (p.name === cancelTarget.product && bt.title === cancelTarget.batch)
+                            ? { ...p, claimed: Math.max(0, p.claimed - releasedQty) }
+                            : p,
+                        ),
+                      }
+                    }),
+                  )
+                  // Drop any outstanding "to pay" entry for the cancelled claim.
+                  // A claim's id equals its order id, which is what toPay.orderId
+                  // stores in Supabase mode; fall back to product name for demo rows.
+                  setToPay((prev) =>
+                    prev.filter(
+                      (t) =>
+                        !(
+                          t.orderId === String(cancelTarget.id) ||
+                          t.product === cancelTarget.product
+                        ),
                     ),
                   )
                   setCancelTarget(null)

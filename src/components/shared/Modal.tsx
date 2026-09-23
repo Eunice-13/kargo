@@ -1,5 +1,10 @@
 import { useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 import type React from "react"
+
+// Height of the sticky nav header — popups start below this so they never
+// cover the nav bar (keep in sync with Header.tsx height).
+const HEADER_HEIGHT = 56
 
 export default function Modal({
   title,
@@ -21,6 +26,16 @@ export default function Modal({
     triggerElRef.current = document.activeElement as HTMLElement | null
     return () => {
       triggerElRef.current?.focus?.()
+    }
+  }, [])
+
+  // Lock the background page from scrolling while the modal is open, so nothing
+  // behind the popup moves. Restore the previous overflow on close.
+  useEffect(() => {
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previous
     }
   }, [])
 
@@ -65,17 +80,26 @@ export default function Modal({
     return () => document.removeEventListener("keydown", handleKeyDown, true)
   }, [onClose])
 
-  return (
+  return createPortal(
     <div
       className="fi"
       style={{
+        // Portaled to document.body so `position: fixed` resolves against the
+        // viewport, not the transform-animated app wrapper (.pu). The overlay
+        // starts BELOW the 56px nav header so a popup never covers the nav, and
+        // centers the dialog within the area beneath it.
         position: "fixed",
-        inset: 0,
+        top: HEADER_HEIGHT,
+        left: 0,
+        right: 0,
+        bottom: 0,
         background: "rgba(0,0,0,0.45)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 100,
+        padding: "16px",
+        boxSizing: "border-box",
+        zIndex: 1000,
         backdropFilter: "blur(2px)",
       }}
       onClick={(e) => {
@@ -92,15 +116,18 @@ export default function Modal({
         style={{
           background: "#fff",
           borderRadius: 12,
-          width,
-          maxHeight: "90vh",
-          overflowY: "auto",
+          width: "100%",
+          maxWidth: width,
+          maxHeight: `calc(100dvh - ${HEADER_HEIGHT + 32}px)`,
+          display: "flex",
+          flexDirection: "column",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
           padding: 28,
           outline: "none",
+          boxSizing: "border-box",
         }}
       >
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-5" style={{ flexShrink: 0 }}>
           <h3
             id={titleId}
             style={{
@@ -129,8 +156,12 @@ export default function Modal({
             ×
           </button>
         </div>
-        {children}
+        {/* Only the content scrolls; the header and the dialog stay put. */}
+        <div style={{ overflowY: "auto", flex: "1 1 auto", minHeight: 0, marginRight: -4, paddingRight: 4 }}>
+          {children}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

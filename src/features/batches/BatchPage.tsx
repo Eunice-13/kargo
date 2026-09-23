@@ -2,8 +2,9 @@ import { useState } from "react"
 import { Lock, ArrowLeft, Plane, Check, Link2, Star } from "lucide-react"
 import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo, WaitlistEntry } from "@/types"
 import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD } from "@/constants/theme"
-import { Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge, CategoryIcon, Toggle, ContactSellerModal } from "@/components/shared"
+import { Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge, CategoryIcon, Toggle, ContactModal, ShareButton } from "@/components/shared"
 import ItemClaimModal from "./ItemClaimModal"
+import JoinWaitlistModal from "./JoinWaitlistModal"
 import { toggleBatchLock } from "./toggleBatchLock"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
@@ -43,25 +44,110 @@ export default function BatchPage({
     p: typeof batch.products[0]
     key: string
   } | null>(null)
+  const [waitlistTarget, setWaitlistTarget] = useState<{
+    p: typeof batch.products[0]
+    pIdx: number
+  } | null>(null)
   const [contact, setContact] = useState(false)
   const pct = Math.round((batch.claimed / batch.items) * 100)
   const grad = CAT_GRAD[batch.category] || CAT_GRAD["Mixed"]
   const reserveHrs = batch.reserveHours || 48
+
+  // Join a waitlist with the buyer's chosen quantity (from JoinWaitlistModal).
+  const handleJoinWaitlist = async (
+    p: typeof batch.products[0],
+    pIdx: number,
+    qty: number,
+  ) => {
+    if (isSupabaseConfigured) {
+      if (!p.dbId) return
+      try {
+        await kargoApi.joinWaitlist(p.dbId, qty)
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Unable to join waitlist.")
+        return
+      }
+    }
+    setWaitlist((prev) => {
+      if (
+        prev.some(
+          (e) =>
+            (p.dbId && e.productId === p.dbId) ||
+            (e.batchId === batch.id && e.product === p.name),
+        )
+      ) {
+        return prev
+      }
+      const nextPos = p.waitlist + 1
+      return [
+        ...prev.map((e) =>
+          e.batchId === batch.id && e.product === p.name
+            ? { ...e, queueSize: nextPos, desiredQuantity: qty }
+            : e,
+        ),
+        {
+          id: p.dbId ?? `wl-${batch.id}-${p.name}`,
+          productId: p.dbId,
+          product: p.name,
+          batchId: batch.id,
+          batch: batch.title,
+          seller: batch.seller,
+          trips: batch.trips,
+          position: nextPos,
+          queueSize: nextPos,
+          amount: p.price,
+          desiredQuantity: qty,
+          status: "waiting",
+        },
+      ]
+    })
+    setBatches((prev) =>
+      prev.map((b) =>
+        b.id !== batch.id
+          ? b
+          : {
+              ...b,
+              products: b.products.map((prod, i) =>
+                i === pIdx ? { ...prod, waitlist: prod.waitlist + 1 } : prod,
+              ),
+            },
+      ),
+    )
+  }
   const handleClaim = async (
     key: string,
     b: BatchType,
     product: typeof batch.products[0],
+    qty: number = 1,
   ) => {
+    const claimQty = Math.max(1, Math.floor(qty))
     if (isSupabaseConfigured) {
       if (!product.dbId) return
       try {
-        await kargoApi.claimProduct(product.dbId, 1)
+        await kargoApi.claimProduct(product.dbId, claimQty)
       } catch (error) {
         alert(error instanceof Error ? error.message : "Unable to claim this product.")
         return
       }
     }
     setClaimedKeys((c) => ({ ...c, [key]: true }))
+    // Keep the batch/product claim counts accurate immediately (2.3) instead of
+    // waiting for the next full data refresh.
+    setBatches((prev) =>
+      prev.map((bt) =>
+        bt.id !== b.id
+          ? bt
+          : {
+              ...bt,
+              claimed: bt.claimed + claimQty,
+              products: bt.products.map((prod) =>
+                (product.dbId && prod.dbId === product.dbId) || prod.name === product.name
+                  ? { ...prod, claimed: prod.claimed + claimQty }
+                  : prod,
+              ),
+            },
+      ),
+    )
     setClaims((prev) => [
       {
         id: Date.now(),
@@ -69,8 +155,8 @@ export default function BatchPage({
         product: product.name,
         batch: b.title,
         seller: b.seller,
-        qty: 1,
-        amount: product.price,
+        qty: claimQty,
+        amount: product.price * claimQty,
         status: "Pending",
         hours: reserveHrs,
       },
@@ -82,7 +168,9 @@ export default function BatchPage({
           id: Date.now(),
           product: product.name,
           seller: b.seller,
-          amount: product.price,
+          sellerId: b.sellerId,
+          amount: product.price * claimQty,
+          qty: claimQty,
           hours: reserveHrs,
         },
         ...prev,
@@ -91,25 +179,35 @@ export default function BatchPage({
 
   return (
     <div className="p-6 fi" style={{ maxWidth: 900, margin: "0 auto" }}>
-      {/* Breadcrumb */}
-      <button
-        onClick={onBack}
+      {/* Breadcrumb + share */}
+      <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 6,
-          fontSize: 13,
-          fontWeight: 600,
-          color: INDIGO,
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: "0 0 16px",
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
+          justifyContent: "space-between",
+          paddingBottom: 16,
         }}
       >
-        <ArrowLeft size={14} aria-hidden="true" /> Back to Batches
-      </button>
+        <button
+          onClick={onBack}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 13,
+            fontWeight: 600,
+            color: INDIGO,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            fontFamily: "'Plus Jakarta Sans',sans-serif",
+          }}
+        >
+          <ArrowLeft size={14} aria-hidden="true" /> Back to Batches
+        </button>
+        <ShareButton batchId={batch.id} title={batch.title} label="Share batch" />
+      </div>
 
       {/* Hero header */}
       <div
@@ -189,6 +287,33 @@ export default function BatchPage({
         </div>
       </div>
 
+      {batch.notes && (
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #E5E7EB",
+            borderRadius: 12,
+            padding: "16px 18px",
+            marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "#9CA3AF",
+              letterSpacing: 0.8,
+              marginBottom: 8,
+            }}
+          >
+            DESCRIPTION
+          </div>
+          <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+            {batch.notes}
+          </p>
+        </div>
+      )}
+
       <div
         style={{
           display: "grid",
@@ -227,7 +352,9 @@ export default function BatchPage({
             {batch.products.map((p, pIdx) => {
               const pKey = `${batch.id}-${pIdx}`
               const isClaimed = claimedKeys[pKey]
-              const left = p.qty - p.claimed - (isClaimed ? 1 : 0)
+              // p.claimed is bumped by the claimed quantity on confirm, so it is
+              // already authoritative — no extra manual offset needed.
+              const left = p.qty - p.claimed
               const soldOut = left <= 0
               const waitEntry = waitlist.find(
                 (e) =>
@@ -309,7 +436,7 @@ export default function BatchPage({
                           Claimed
                         </span>
                       )}
-                      {onWaitlist && (
+                      {role !== "Seller" && onWaitlist && (
                         <span
                           style={{
                             fontSize: 10,
@@ -367,62 +494,7 @@ export default function BatchPage({
                       ) : (
                         <PrimaryBtn
                           size="sm"
-                          onClick={async () => {
-                            if (isSupabaseConfigured) {
-                              if (!p.dbId) return
-                              try {
-                                await kargoApi.joinWaitlist(p.dbId)
-                              } catch (error) {
-                                alert(error instanceof Error ? error.message : "Unable to join waitlist.")
-                                return
-                              }
-                            }
-                            setWaitlist((prev) => {
-                              if (
-                                prev.some(
-                                  (e) =>
-                                    (p.dbId && e.productId === p.dbId) ||
-                                    (e.batchId === batch.id && e.product === p.name),
-                                )
-                              ) {
-                                return prev
-                              }
-                              const nextPos = p.waitlist + 1
-                              return [
-                                ...prev.map((e) =>
-                                  e.batchId === batch.id && e.product === p.name
-                                    ? { ...e, queueSize: nextPos }
-                                    : e,
-                                ),
-                                {
-                                  id: p.dbId ?? `wl-${batch.id}-${p.name}`,
-                                  productId: p.dbId,
-                                  product: p.name,
-                                  batchId: batch.id,
-                                  batch: batch.title,
-                                  seller: batch.seller,
-                                  trips: batch.trips,
-                                  position: nextPos,
-                                  queueSize: nextPos,
-                                  amount: p.price,
-                                },
-                              ]
-                            })
-                            setBatches((prev) =>
-                              prev.map((b) =>
-                                b.id !== batch.id
-                                  ? b
-                                  : {
-                                      ...b,
-                                      products: b.products.map((prod, i) =>
-                                        i === pIdx
-                                          ? { ...prod, waitlist: prod.waitlist + 1 }
-                                          : prod,
-                                      ),
-                                    },
-                              ),
-                            )
-                          }}
+                          onClick={() => setWaitlistTarget({ p, pIdx })}
                         >
                           Join Waitlist
                         </PrimaryBtn>
@@ -606,17 +678,31 @@ export default function BatchPage({
         <ItemClaimModal
           batch={batch}
           product={claimTarget.p}
-          onConfirm={() => {
-            handleClaim(claimTarget.key, batch, claimTarget.p)
+          onConfirm={(qty) => {
+            handleClaim(claimTarget.key, batch, claimTarget.p, qty)
             setClaimTarget(null)
           }}
           onClose={() => setClaimTarget(null)}
         />
       )}
+
+      {waitlistTarget && (
+        <JoinWaitlistModal
+          productName={waitlistTarget.p.name}
+          batchTitle={batch.title}
+          price={waitlistTarget.p.price}
+          onConfirm={(qty) => {
+            handleJoinWaitlist(waitlistTarget.p, waitlistTarget.pIdx, qty)
+            setWaitlistTarget(null)
+          }}
+          onClose={() => setWaitlistTarget(null)}
+        />
+      )}
       {contact && (
-        <ContactSellerModal
-          seller={batch.seller}
-          product={batch.title}
+        <ContactModal
+          name={batch.seller}
+          context={batch.title}
+          contactUrl={batch.sellerFb}
           onClose={() => setContact(false)}
         />
       )}

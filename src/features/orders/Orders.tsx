@@ -8,7 +8,7 @@ import {
   SecondaryBtn,
   Avatar,
   TrackOrderModal,
-  ContactSellerModal,
+  ContactModal,
   BuyerProfileModal,
   ORDER_STEPS,
 } from "@/components/shared"
@@ -40,7 +40,7 @@ export default function Orders({
   const [contactOrder, setContact] = useState<OrderRow | null>(null)
   const [rateTarget, setRateTarget] = useState<OrderRow | null>(null)
   const [sellerRateTarget, setSellerRateTarget] = useState<FulfillmentOrder | null>(null)
-  const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
+  const [buyerProfile, setBuyerProfile] = useState<{ name: string; contactUrl?: string } | null>(null)
 
   if (role === "Seller") {
     return (
@@ -137,7 +137,7 @@ export default function Orders({
                       <div className="flex items-center gap-2 mb-2">
                         <Avatar name={o.buyer} size={20} />
                         <button
-                          onClick={() => setBuyerProfile(o.buyer)}
+                          onClick={() => setBuyerProfile({ name: o.buyer, contactUrl: o.buyerFb })}
                           style={{
                             background: "none",
                             border: "none",
@@ -246,7 +246,8 @@ export default function Orders({
         <FulfillmentLiveRegion text={board.announcement} />
         {buyerProfile && (
           <BuyerProfileModal
-            buyer={buyerProfile}
+            buyer={buyerProfile.name}
+            contactUrl={buyerProfile.contactUrl}
             onClose={() => setBuyerProfile(null)}
           />
         )}
@@ -549,9 +550,10 @@ export default function Orders({
         />
       )}
       {contactOrder && (
-        <ContactSellerModal
-          seller={contactOrder.seller}
-          product={contactOrder.product}
+        <ContactModal
+          name={contactOrder.seller}
+          context={contactOrder.product}
+          contactUrl={contactOrder.sellerFb}
           onClose={() => setContact(null)}
         />
       )}

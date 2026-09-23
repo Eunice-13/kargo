@@ -1,6 +1,8 @@
 import { useState } from "react"
 import type { ClaimRow } from "@/types"
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import Modal from "./Modal"
+import PrimaryBtn from "./PrimaryBtn"
+import SecondaryBtn from "./SecondaryBtn"
 
 export default function ExtensionRequestModal({
   claim,

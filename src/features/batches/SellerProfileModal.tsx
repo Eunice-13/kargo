@@ -1,8 +1,11 @@
-import { useState } from "react"
-import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight, Star } from "lucide-react"
-import type { BatchType, Tab, UserInfo } from "@/types"
+import { useState, useEffect } from "react"
+import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight, Star, Wallet } from "lucide-react"
+import type { BatchType, Role, Tab, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Modal, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
+import { sortSoldOutLast } from "./batchSort"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 import BIRInfoModal from "./BIRInfoModal"
 
 export default function SellerProfileModal({
@@ -12,6 +15,7 @@ export default function SellerProfileModal({
   onClaimFromProfile,
   setTab: setAppTab,
   profileData,
+  role,
 }: {
   seller: string
   batches: BatchType[]
@@ -19,7 +23,29 @@ export default function SellerProfileModal({
   onClaimFromProfile?: (batchId: number) => void
   setTab?: (t: Tab) => void
   profileData?: UserInfo
+  role?: Role
 }) {
+  // Sellers cannot claim/waitlist — claiming is a buyer-only action.
+  const canClaim = role !== "Seller"
+
+  // Real, visible contact links only — no fabricated fallback URLs.
+  const sellerLinks = Object.entries(profileData?.socialLinks ?? {})
+    .filter(([label, url]) => url && url.trim() && profileData?.socialVisibility?.[label] !== false)
+    .map(([label, url]) => ({
+      bg:
+        label === "Facebook"
+          ? "#1877F2"
+          : label === "Instagram"
+            ? "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)"
+            : "#374151",
+      label,
+      icon: (
+        <span style={{ color: "#fff", fontWeight: 800, fontSize: 11 }}>
+          {label.slice(0, 2).toUpperCase()}
+        </span>
+      ),
+      url,
+    }))
   const [tab, setTab] = useState<"Shop" | "Reviews" | "About">("Shop")
   const [shopCat, setShopCat] = useState("All")
   const [shopSort, setShopSort] = useState("Newest")
@@ -27,20 +53,38 @@ export default function SellerProfileModal({
   const [showPast, setShowPast] = useState(false)
   const [showBIR, setShowBIR] = useState(false)
   const sellerBatches = batches.filter((b) => b.seller === seller)
+  // Accepted payment method names (names only), auto-generated + public.
+  const sellerId = sellerBatches.find((b) => b.sellerId)?.sellerId
+  const [acceptedMethods, setAcceptedMethods] = useState<string[]>([])
+  useEffect(() => {
+    if (!isSupabaseConfigured || !sellerId) return
+    let active = true
+    kargoApi
+      .loadSellerReceiveMethods(sellerId)
+      .then((rows) => {
+        if (active) setAcceptedMethods(rows.map((r) => r.methodType))
+      })
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [sellerId])
   const avgRating = sellerBatches.length
     ? (
         sellerBatches.reduce((s, b) => s + b.rating, 0) / sellerBatches.length
       ).toFixed(1)
     : "5.0"
-  const activeBatches = sellerBatches
-    .filter((b) => !b.locked && (shopCat === "All" || b.category === shopCat))
-    .sort((a, b) =>
-      shopSort === "Most Claimed"
-        ? b.claimed - a.claimed
-        : shopSort === "Ending Soonest"
-          ? a.id - b.id
-          : b.id - a.id,
-    )
+  const activeBatches = sortSoldOutLast(
+    sellerBatches
+      .filter((b) => !b.locked && (shopCat === "All" || b.category === shopCat))
+      .sort((a, b) =>
+        shopSort === "Most Claimed"
+          ? b.claimed - a.claimed
+          : shopSort === "Ending Soonest"
+            ? a.id - b.id
+            : b.id - a.id,
+      ),
+  )
   const pastBatches = sellerBatches.filter((b) => b.locked)
   const REVIEWS = [
     {
@@ -472,7 +516,7 @@ export default function SellerProfileModal({
                             >
                               ₱{p.price.toLocaleString()}
                             </div>
-                            {soldOut ? (
+                            {canClaim && (soldOut ? (
                               <button
                                 onClick={() => {
                                   onClose()
@@ -512,7 +556,7 @@ export default function SellerProfileModal({
                               >
                                 Claim this Item
                               </button>
-                            )}
+                            ))}
                           </div>
                         )
                       })}
@@ -654,45 +698,12 @@ export default function SellerProfileModal({
               Social Accounts
             </div>
             <div className="space-y-2">
-              {(profileData?.socialLinks && Object.keys(profileData.socialLinks).length > 0
-                ? Object.entries(profileData.socialLinks).filter(([label]) => profileData.socialVisibility?.[label] !== false).map(([label, url]) => ({
-                    bg: label === "Facebook" ? "#1877F2" : label === "Instagram" ? "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)" : "#374151",
-                    label,
-                    icon: <span style={{ color: "#fff", fontWeight: 800, fontSize: 11 }}>{label.slice(0, 2).toUpperCase()}</span>,
-                    url,
-                  }))
-                : [
-                {
-                  bg: "#1877F2",
-                  label: "Facebook",
-                  icon: (
-                    <span
-                      style={{ color: "#fff", fontWeight: 800, fontSize: 13 }}
-                    >
-                      f
-                    </span>
-                  ),
-                  url: `https://facebook.com/${seller.toLowerCase().replace(" ", ".")}`,
-                },
-                {
-                  bg: "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)",
-                  label: "Instagram",
-                  icon: <span style={{ color: "#fff", fontWeight: 800, fontSize: 13 }}>IG</span>,
-                  url: `https://instagram.com/${seller.toLowerCase().replace(" ", "_")}.pasabuy`,
-                },
-                {
-                  bg: "#000",
-                  label: "TikTok",
-                  icon: (
-                    <span
-                      style={{ color: "#fff", fontWeight: 800, fontSize: 13 }}
-                    >
-                      T
-                    </span>
-                  ),
-                  url: `https://tiktok.com/@${seller.toLowerCase().replace(" ", "_")}`,
-                },
-              ]).map((s) => (
+              {sellerLinks.length === 0 && (
+                <div style={{ fontSize: 12, color: "#9CA3AF" }}>
+                  This seller hasn't added a contact link yet.
+                </div>
+              )}
+              {sellerLinks.map((s) => (
                 <a
                   key={s.label}
                   href={s.url}
@@ -754,6 +765,36 @@ export default function SellerProfileModal({
                 </a>
               ))}
             </div>
+            {acceptedMethods.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#111827",
+                    marginBottom: 8,
+                  }}
+                >
+                  Accepted Payment
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 8,
+                    background: CREAM,
+                    borderRadius: 8,
+                    padding: "9px 12px",
+                  }}
+                >
+                  <Wallet size={15} color={INDIGO} aria-hidden="true" style={{ marginTop: 1, flexShrink: 0 }} />
+                  <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
+                    <span style={{ fontWeight: 700, color: "#111827" }}>Accepting: </span>
+                    {acceptedMethods.join(", ")}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

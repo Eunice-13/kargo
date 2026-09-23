@@ -1,21 +1,47 @@
-import { useState } from "react"
-import { ArrowRight, Star, ChevronDown, ChevronUp } from "lucide-react"
-import type { BatchType, UserInfo } from "@/types"
+import { useState, useEffect } from "react"
+import { Star, ChevronDown, ChevronUp, Wallet } from "lucide-react"
+import type { BatchType, Role, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
-import { Card, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
+import { Card, Avatar, ProductThumb, BIRBadge, CategoryIcon, PrimaryBtn } from "@/components/shared"
+import { sortSoldOutLast } from "./batchSort"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function SellerShopPage({
   seller,
   batches,
-  onBatchClick,
+  onClaimItem,
+  role,
   profileData,
 }: {
   seller: string
   batches: BatchType[]
-  onBatchClick: (id: number) => void
+  onClaimItem?: (batchId: number, productName: string) => void
+  role?: Role
   profileData?: UserInfo
 }) {
+  // Buyers claim per item; sellers viewing a shop don't get claim actions.
+  const canClaim = role !== "Seller" && Boolean(onClaimItem)
   const sellerBatches = batches.filter((b) => b.seller === seller)
+  // Accepted payment method names, auto-generated from the seller's saved
+  // methods (names only — never account numbers). Public via seller_receive_methods.
+  const sellerId = sellerBatches.find((b) => b.sellerId)?.sellerId
+  const [acceptedMethods, setAcceptedMethods] = useState<string[]>([])
+  useEffect(() => {
+    if (!isSupabaseConfigured || !sellerId) return
+    let active = true
+    kargoApi
+      .loadSellerReceiveMethods(sellerId)
+      .then((rows) => {
+        if (active) setAcceptedMethods(rows.map((r) => r.methodType))
+      })
+      .catch(() => {
+        /* leave empty on failure */
+      })
+    return () => {
+      active = false
+    }
+  }, [sellerId])
   const avgRating = sellerBatches.length
     ? (
         sellerBatches.reduce((s, b) => s + b.rating, 0) / sellerBatches.length
@@ -37,15 +63,17 @@ export default function SellerShopPage({
     ...Array.from(new Set(sellerBatches.map((b) => b.category))),
   ]
 
-  const filtered = sellerBatches
-    .filter((b) => catFilter === "All" || b.category === catFilter)
-    .sort((a, b_) =>
-      sortBy === "Most Claimed"
-        ? b_.claimed - a.claimed
-        : sortBy === "Ending Soonest"
-          ? a.id - b_.id
-          : b_.id - a.id,
-    )
+  const filtered = sortSoldOutLast(
+    sellerBatches
+      .filter((b) => catFilter === "All" || b.category === catFilter)
+      .sort((a, b_) =>
+        sortBy === "Most Claimed"
+          ? b_.claimed - a.claimed
+          : sortBy === "Ending Soonest"
+            ? a.id - b_.id
+            : b_.id - a.id,
+      ),
+  )
 
   return (
     <div
@@ -318,7 +346,7 @@ export default function SellerShopPage({
                               : ""}
                           </div>
                         </div>
-                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
                           <div
                             style={{
                               fontSize: 14,
@@ -360,6 +388,36 @@ export default function SellerShopPage({
                               {left} available
                             </span>
                           )}
+                          {canClaim &&
+                            (soldOut ? (
+                              <button
+                                onClick={() => onClaimItem?.(b.id, p.name)}
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "5px 10px",
+                                  borderRadius: 6,
+                                  border: "none",
+                                  cursor: "pointer",
+                                  background: INDIGO,
+                                  color: "#fff",
+                                  whiteSpace: "nowrap" as const,
+                                }}
+                              >
+                                Join Waitlist
+                              </button>
+                            ) : (
+                              <PrimaryBtn
+                                size="sm"
+                                onClick={() => onClaimItem?.(b.id, p.name)}
+                                style={{
+                                  background: "#C81E62",
+                                  boxShadow: "0 2px 8px rgba(200,30,98,0.35)",
+                                }}
+                              >
+                                Claim
+                              </PrimaryBtn>
+                            ))}
                         </div>
                       </div>
                     )
@@ -372,29 +430,9 @@ export default function SellerShopPage({
                   }}
                 >
                   <button
-                    onClick={() => onBatchClick(b.id)}
-                    style={{
-                      width: "100%",
-                      background: "#C81E62",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 8,
-                      padding: "10px 0",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    }}
-                  >
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      Claim from this batch <ArrowRight size={13} aria-hidden="true" />
-                    </span>
-                  </button>
-                  <button
                     onClick={() => toggleBatch(b.id)}
                     style={{
                       width: "100%",
-                      marginTop: 8,
                       background: "none",
                       color: "#6B7280",
                       border: "none",
@@ -480,6 +518,25 @@ export default function SellerShopPage({
               This is a credibility reference only — not a payment guarantee.
             </div>
           </div>
+          {acceptedMethods.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
+                background: CREAM,
+                borderRadius: 8,
+                padding: "8px 12px",
+                marginBottom: 12,
+              }}
+            >
+              <Wallet size={15} color={INDIGO} aria-hidden="true" style={{ marginTop: 1, flexShrink: 0 }} />
+              <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
+                <span style={{ fontWeight: 700, color: "#111827" }}>Accepting: </span>
+                {acceptedMethods.join(", ")}
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             {[
               ["Completed", "47", "#0B7A59"],

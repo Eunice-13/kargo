@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="460" viewBox="0 0 720 460" role="img" aria-labelledby="title desc">
+  <title id="title">Sample BIR registration seal badge</title>
+  <desc id="desc">A placeholder badge for development and demonstration only.</desc>
+  <rect width="720" height="460" rx="28" fill="#fffdf7"/>
+  <rect x="14" y="14" width="692" height="432" rx="22" fill="none" stroke="#243b74" stroke-width="8"/>
+  <circle cx="180" cy="210" r="112" fill="#eef0ff" stroke="#243b74" stroke-width="8"/>
+  <circle cx="180" cy="210" r="82" fill="#fff" stroke="#e2b63d" stroke-width="6"/>
+  <path d="M180 142l18 44 48 4-37 31 12 47-41-25-41 25 12-47-37-31 48-4z" fill="#e2b63d"/>
+  <text x="180" y="306" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#243b74">BIR SEAL</text>
+  <text x="335" y="125" font-family="Arial, sans-serif" font-size="34" font-weight="800" fill="#1f2937">REGISTRATION</text>
+  <text x="335" y="171" font-family="Arial, sans-serif" font-size="34" font-weight="800" fill="#1f2937">SEAL BADGE</text>
+  <text x="335" y="220" font-family="Arial, sans-serif" font-size="18" fill="#4b5563">Placeholder reference image</text>
+  <rect x="335" y="252" width="292" height="70" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="481" y="282" text-anchor="middle" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#92400e">SAMPLE ONLY</text>
+  <text x="481" y="307" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#92400e">Not an official or verified badge</text>
+  <text x="360" y="382" font-family="Arial, sans-serif" font-size="14" fill="#6b7280">Real verified badge imagery will be added later.</text>
+</svg>
