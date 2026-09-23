@@ -1,10 +1,13 @@
 import { useState } from "react"
-import { CreditCard, LayoutDashboard, Package, Plus } from "lucide-react"
+import { CreditCard, LayoutDashboard, Package, Plus, ClipboardList } from "lucide-react"
 import type { Role, Tab } from "@/types"
 
-const NAV_ITEMS: Array<{ tab: Tab; label: string; icon: typeof LayoutDashboard }> = [
+// Primary nav. "My Claims" is shown for everyone but relabeled "Orders Received"
+// for sellers (matching the TabBar); it sits between Batches and Payments.
+const navItemsForRole = (role: Role): Array<{ tab: Tab; label: string; icon: typeof LayoutDashboard }> => [
     { tab: "Dashboard", label: "Dashboard", icon: LayoutDashboard },
     { tab: "Batches", label: "Batches", icon: Package },
+    { tab: "My Claims", label: role === "Seller" ? "Orders Received" : "My Claims", icon: ClipboardList },
     { tab: "Payments", label: "Payments", icon: CreditCard },
 ]
 
@@ -33,7 +36,7 @@ export default function Sidebar({
             onMouseLeave={() => setIsExpanded(false)}
         >
             <nav className="kargo-sidebar-nav">
-                {NAV_ITEMS.map(({ tab, label, icon: Icon }) => {
+                {navItemsForRole(role).map(({ tab, label, icon: Icon }) => {
                     const isActive = active === tab
                     return (
                         <button
