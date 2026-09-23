@@ -148,6 +148,25 @@ export default function NewBatchModal({
     }
   }
 
+  // E13: mirror the required checks in `submit` so the button gates instead of
+  // letting the seller submit and then bounce back an error. Does not change
+  // what counts as valid — same title / product / date rules.
+  const hasValidProduct = products.some(
+    (p) =>
+      p.name.trim() &&
+      Number(p.basePrice) + Number(p.markup) > 0 &&
+      Number(p.qty) > 0,
+  )
+  const needsDates = isSupabaseConfigured && (!startDate || !endDate)
+  const canSubmit = Boolean(title.trim()) && hasValidProduct && !needsDates
+  const submitHint = !title.trim()
+    ? "Add a batch title to publish."
+    : !hasValidProduct
+      ? "Add at least one product with a name, price, and quantity."
+      : needsDates
+        ? "Choose both the start and end date to publish."
+        : ""
+
   return (
     <Modal title="Create New Batch" onClose={onClose} width={560}>
       <div className="space-y-4">
@@ -351,6 +370,8 @@ export default function NewBatchModal({
             <div className="flex gap-2">
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min="1"
                 max="365"
                 value={timerVal}
@@ -567,6 +588,9 @@ export default function NewBatchModal({
             {error}
           </div>
         )}
+        {!error && !canSubmit && submitHint && (
+          <div style={{ fontSize: 12, color: "#6B7280" }}>{submitHint}</div>
+        )}
         <div className="flex gap-3 pt-1">
           <SecondaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center" }}
@@ -578,7 +602,7 @@ export default function NewBatchModal({
             style={{ flex: 1, display: "flex", justifyContent: "center" }}
             onClick={submit}
             loading={loading}
-            disabled={!title.trim()}
+            disabled={!canSubmit}
           >
             {loading ? "Creating…" : "Create Batch"}
           </PrimaryBtn>

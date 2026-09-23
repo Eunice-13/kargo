@@ -842,7 +842,11 @@ export default function MyClaims({
             )
             setExtTarget(null)
             setExtToast(true)
-            setTimeout(() => setExtToast(false), 2600)
+            // E15: on phones the toast stays until tapped closed (touch users
+            // often miss a 2.6s auto-dismiss); desktop keeps the timed dismiss.
+            if (typeof window === "undefined" || window.innerWidth > 760) {
+              setTimeout(() => setExtToast(false), 2600)
+            }
           }}
           onClose={() => setExtTarget(null)}
         />
@@ -864,9 +868,28 @@ export default function MyClaims({
             borderRadius: 8,
             boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
             zIndex: 2000,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
           }}
         >
-          Extension request sent to the seller.
+          <span>Extension request sent to the seller.</span>
+          <button
+            type="button"
+            aria-label="Dismiss notification"
+            onClick={() => setExtToast(false)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: 18,
+              lineHeight: 1,
+              padding: "0 2px",
+            }}
+          >
+            ×
+          </button>
         </div>
       )}
       {cancelTarget && (

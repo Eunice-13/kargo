@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { CheckCircle2, Paperclip } from "lucide-react"
+import { CheckCircle2, Paperclip, Camera, ImageUp } from "lucide-react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import { getSellerPaymentDetails } from "./sellerPaymentDetails"
@@ -58,6 +58,7 @@ export default function PaymentSubmitModal({
   const [uploaded, setUploaded] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
 
   const sellerDetails = getSellerPaymentDetails(item.seller)
   const paymentMethods = {
@@ -482,6 +483,8 @@ export default function PaymentSubmitModal({
               </label>
               <input
                 type="number"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={amountPaid}
                 onChange={(e) => setAmountPaid(e.target.value)}
                 placeholder={String(item.amount)}
@@ -511,10 +514,24 @@ export default function PaymentSubmitModal({
               >
                 Upload Receipt / Screenshot
               </label>
+              {/* Browse (any file) — used by the drop zone / "Upload Photo". */}
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*,application/pdf"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) handleFile(f)
+                }}
+              />
+              {/* Camera-forward capture — on phones this opens the camera so the
+                  buyer can snap the receipt directly instead of hunting a file. */}
+              <input
+                ref={cameraRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
                 style={{ display: "none" }}
                 onChange={(e) => {
                   const f = e.target.files?.[0]
@@ -591,9 +608,79 @@ export default function PaymentSubmitModal({
                   </>
                 )}
               </div>
+              {/* Explicit capture affordances. "Take Photo" is camera-forward on
+                  mobile (shown on phones); "Upload Photo" browses the library. */}
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                <button
+                  type="button"
+                  className="kargo-take-photo"
+                  onClick={() => cameraRef.current?.click()}
+                  style={{
+                    display: "none",
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    minHeight: 44,
+                    borderRadius: 8,
+                    border: "1px solid #C7C9F5",
+                    background: "#EEF0FF",
+                    color: "#191BA9",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  }}
+                >
+                  <Camera size={16} aria-hidden="true" /> Take Photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  style={{
+                    display: "flex",
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    minHeight: 44,
+                    borderRadius: 8,
+                    border: "1px solid #E5E7EB",
+                    background: "#fff",
+                    color: "#374151",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  }}
+                >
+                  <ImageUp size={16} aria-hidden="true" /> Upload Photo
+                </button>
+              </div>
             </div>
           </>
         )}
+
+        {/* E13: explain what still blocks submit, so the disabled button never
+            looks broken. Same required checks as the button's disabled prop. */}
+        {(() => {
+          const missing = isCash
+            ? !handoffAddress.trim()
+              ? [method === "Cash on Delivery" ? "delivery address" : "meetup location"]
+              : []
+            : [
+                !refNo.trim() && "reference number",
+                !amountPaid.trim() && "amount paid",
+                !phone.trim() && "mobile number",
+                !uploaded && "receipt photo",
+              ].filter(Boolean)
+          if (missing.length === 0) return null
+          return (
+            <div style={{ fontSize: 12, color: "#92400E" }}>
+              To submit, add your {missing.join(", ")}.
+            </div>
+          )
+        })()}
 
         <div className="flex gap-3 pt-1">
           <SecondaryBtn

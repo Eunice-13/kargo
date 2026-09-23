@@ -75,11 +75,47 @@ export default function SellerShopPage({
       ),
   )
 
+  const birVerified = profileData
+    ? profileData.birState === "Verified"
+    : sellerBatches[0]?.sellerBirVerified !== false
+
   return (
     <div
       className="grid gap-6"
       style={{ gridTemplateColumns: "1fr 300px", alignItems: "start" }}
     >
+      {/* F16: mobile-only trust header. On phones the seller panel (with the BIR
+          badge) collapses below the whole item list, so surface the seller
+          identity + BIR badge above the fold here. Hidden on desktop, where the
+          sticky right-hand panel already carries this. */}
+      <div className="kargo-mobile-trust" style={{ gridColumn: "1 / -1" }}>
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Avatar name={seller} size={44} imageUrl={profileData?.avatarUrl} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: "#111827",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}
+              >
+                {seller}
+                {birVerified && <BIRBadge size={16} />}
+              </div>
+              <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {avgRating} · Member since Jan 2024
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
       {/* Left — items */}
       <div>
         <div
@@ -266,12 +302,15 @@ export default function SellerShopPage({
                     </div>
                   </div>
                 </div>
-                {/* Collapsed affordance — "Check this batch" */}
+                {/* Collapsed affordance — a single, obvious tap-through into
+                    the item list (Task B6: keep the browse→claim path short and
+                    discoverable, especially for low-tech mobile users). Sized as
+                    a full-width >=44px target on mobile via .kargo-shop-open. */}
                 {!isExpanded && (
                   <div
                     role="button"
                     tabIndex={0}
-                    aria-label={`Check ${b.title}`}
+                    aria-label={`View items in ${b.title}`}
                     onClick={() => toggleBatch(b.id)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -279,6 +318,7 @@ export default function SellerShopPage({
                         toggleBatch(b.id)
                       }
                     }}
+                    className="kargo-shop-open"
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -294,7 +334,7 @@ export default function SellerShopPage({
                       fontFamily: "'Plus Jakarta Sans',sans-serif",
                     }}
                   >
-                    Check this batch
+                    View items
                     <ChevronDown size={14} aria-hidden="true" />
                   </div>
                 )}

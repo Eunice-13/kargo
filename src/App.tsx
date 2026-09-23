@@ -26,7 +26,7 @@ import { FULFILLMENT_INIT } from "@/features/fulfillment"
 import { Login, SignUp, Onboarding, ApplyToSellModal } from "@/features/auth"
 import { NewBatchModal } from "@/features/batches"
 import { AboutUsModal } from "@/components/shared"
-import { Header, TabBar, TabContent } from "@/components/layout"
+import { Header, TabBar, MobileTabBar, TabContent } from "@/components/layout"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
@@ -251,9 +251,15 @@ export default function App() {
             role={role}
             onNewBatch={() => setShowNewBatch(true)}
           />
-          <main style={{ minHeight: "calc(100vh - 100px)" }}>
+          <main className="kargo-main" style={{ minHeight: "calc(100vh - 100px)" }}>
             <TabContent tab={tab} shared={shared} />
           </main>
+          <MobileTabBar
+            active={tab}
+            setActive={setTab}
+            role={role}
+            onMore={() => setTab("Settings")}
+          />
           {showOnboarding && <Onboarding onDone={() => setOnboard(false)} />}
           {showAbout && <AboutUsModal onClose={() => setShowAbout(false)} />}
           {showNewBatch && (

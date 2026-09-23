@@ -132,7 +132,11 @@ export default function Payments({
     setUploadedFile(null)
     setProofClaimId("")
     setProofToast(true)
-    setTimeout(() => setProofToast(false), 2400)
+    // E15: keep the confirmation up until tapped closed on phones; desktop
+    // keeps the timed auto-dismiss.
+    if (typeof window === "undefined" || window.innerWidth > 760) {
+      setTimeout(() => setProofToast(false), 2400)
+    }
   }
 
   if (role === "Seller") return <SellerPaymentVerification />
@@ -176,9 +180,13 @@ export default function Payments({
                 >
                   ₱{t.amount.toLocaleString()}
                 </div>
-                <PrimaryBtn size="sm" onClick={() => setPayTarget(t)}>
-                  Pay Now
-                </PrimaryBtn>
+                {/* C8: on mobile the aggregate "Batch Checkout" is the single
+                    primary; per-row Pay Now demotes to a secondary look. */}
+                <span className="kargo-demote-mobile">
+                  <PrimaryBtn size="sm" onClick={() => setPayTarget(t)}>
+                    Pay Now
+                  </PrimaryBtn>
+                </span>
               </Card>
             ))}
             {payableToPay.length > 0 ? (
@@ -355,9 +363,29 @@ export default function Payments({
                       background: "#D4F5EA",
                       borderRadius: 6,
                       padding: "6px 10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 8,
                     }}
                   >
-                    Payment proof submitted — moved to Payment History.
+                    <span>Payment proof submitted — moved to Payment History.</span>
+                    <button
+                      type="button"
+                      aria-label="Dismiss notification"
+                      onClick={() => setProofToast(false)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#065F46",
+                        cursor: "pointer",
+                        fontSize: 16,
+                        lineHeight: 1,
+                        padding: "0 2px",
+                      }}
+                    >
+                      ×
+                    </button>
                   </div>
                 )}
               </div>

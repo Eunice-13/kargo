@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, lazy, Suspense } from "react"
 import type { Tab, SharedState } from "@/types"
 import { TABS } from "./TabBar"
 import { Dashboard } from "@/features/dashboard"
@@ -6,7 +6,22 @@ import { Batches } from "@/features/batches"
 import { MyClaims } from "@/features/claims"
 import { Payments } from "@/features/payments"
 import { Orders } from "@/features/orders"
-import { Settings } from "@/features/settings"
+
+// G18: Settings is a secondary destination reached from the profile menu, not
+// part of the primary buy/pay flow. Code-split it so it is fetched only when a
+// user actually opens it, trimming the initial (mobile) bundle. The named
+// export is adapted to the default shape React.lazy expects.
+const Settings = lazy(() =>
+  import("@/features/settings").then((m) => ({ default: m.Settings })),
+)
+
+function TabFallback() {
+  return (
+    <div style={{ padding: 40, textAlign: "center", color: "#6B7280", fontSize: 13 }}>
+      Loading…
+    </div>
+  )
+}
 
 export default function TabContent({ tab, shared }: { tab: Tab; shared: SharedState }) {
   const [displayed, setDisplayed] = useState(tab)
@@ -31,8 +46,7 @@ export default function TabContent({ tab, shared }: { tab: Tab; shared: SharedSt
   }
   return (
     <div key={displayed} className={animClass}>
-      {map[displayed]}
+      <Suspense fallback={<TabFallback />}>{map[displayed]}</Suspense>
     </div>
   )
 }
-

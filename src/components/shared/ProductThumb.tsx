@@ -25,9 +25,16 @@ export default function ProductThumb({ name }: { name: string }) {
     PROD_IMG[name] ||
     "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=60&h=60&fit=crop&auto=format"
   return (
+    // Remote thumbnails: give explicit intrinsic dimensions (the source is
+    // requested at 60x60, rendered at 36px) plus lazy/async decoding so
+    // off-screen thumbnails don't block the initial mobile render.
     <img
       src={url}
       alt={name}
+      width={36}
+      height={36}
+      loading="lazy"
+      decoding="async"
       className="w-9 h-9 rounded-lg object-cover bg-gray-100 flex-shrink-0"
     />
   )

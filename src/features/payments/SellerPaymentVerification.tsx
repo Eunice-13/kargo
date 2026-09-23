@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import type React from "react"
 import { CreditCard, Check, Megaphone } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
-import { Card, Avatar, ProductThumb } from "@/components/shared"
+import { Card, Avatar, ProductThumb, Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
 import AddressSection from "./AddressSection"
 import SellerPaymentMethods from "./SellerPaymentMethods"
@@ -70,6 +70,14 @@ export default function SellerPaymentVerification() {
   const [rejectCustom, setRejectCustom] = useState("")
   const [insuffTarget, setInsuffTarget] = useState<VerifyItem | null>(null)
   const [insuffAmtPaid, setInsuffAmtPaid] = useState("")
+  // E14: confirming a payment marks it Verified and releases the buyer's
+  // reservation, so gate it behind an are-you-sure step (same pattern as
+  // "mark as shipped"). The underlying verify action is unchanged.
+  const [confirmTarget, setConfirmTarget] = useState<VerifyItem | null>(null)
+  const markVerified = (id: VerifyItem["id"]) =>
+    updateVerifyItems((p) =>
+      p.map((v) => (v.id === id ? { ...v, status: "Verified" as const } : v)),
+    )
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -438,18 +446,7 @@ export default function SellerPaymentVerification() {
                                   </button>
                                 )}
                                 <button
-                                  onClick={() =>
-                                    updateVerifyItems((p) =>
-                                      p.map((v) =>
-                                        v.id === item.id
-                                          ? {
-                                              ...v,
-                                              status: "Verified" as const,
-                                            }
-                                          : v,
-                                      ),
-                                    )
-                                  }
+                                  onClick={() => setConfirmTarget(item)}
                                   style={{
                                     ...btnBase,
                                     background: INDIGO,
@@ -464,18 +461,7 @@ export default function SellerPaymentVerification() {
                               item.status === "Pending" && (
                                 <>
                                   <button
-                                    onClick={() =>
-                                      updateVerifyItems((p) =>
-                                        p.map((v) =>
-                                          v.id === item.id
-                                            ? {
-                                                ...v,
-                                                status: "Verified" as const,
-                                              }
-                                            : v,
-                                        ),
-                                      )
-                                    }
+                                    onClick={() => setConfirmTarget(item)}
                                     style={{
                                       ...btnBase,
                                       background: INDIGO,
@@ -536,6 +522,35 @@ export default function SellerPaymentVerification() {
             setInsuffAmtPaid={setInsuffAmtPaid}
             setVerifyItems={updateVerifyItems}
           />
+        )}
+
+        {/* E14: confirm-payment are-you-sure step */}
+        {confirmTarget && (
+          <Modal
+            title="Confirm this payment?"
+            onClose={() => setConfirmTarget(null)}
+            width={420}
+          >
+            <p style={{ fontSize: 13, color: "#374151", marginBottom: 16, lineHeight: 1.6 }}>
+              You are about to mark {confirmTarget.buyer}&apos;s payment for{" "}
+              <strong>{confirmTarget.product}</strong> (₱
+              {confirmTarget.amount.toLocaleString()}) as verified. This confirms
+              the order for the buyer and can&apos;t be undone here.
+            </p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <SecondaryBtn onClick={() => setConfirmTarget(null)}>
+                Not yet
+              </SecondaryBtn>
+              <PrimaryBtn
+                onClick={() => {
+                  markVerified(confirmTarget.id)
+                  setConfirmTarget(null)
+                }}
+              >
+                Yes, confirm payment
+              </PrimaryBtn>
+            </div>
+          </Modal>
         )}
 
         {/* Reject with reason modal */}

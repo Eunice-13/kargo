@@ -403,3 +403,217 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
   .kargo-original-app .kargo-primary,
   .kargo-original-app .kargo-secondary { min-height: 40px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE UX PASS (phone cutoff = 760px)
+   Responsive-only. Desktop layout, copy, and visual design are unchanged.
+   All rules are scoped to .kargo-original-app so the concept prototypes and
+   auth screens outside the app shell are unaffected.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 760px) {
+  /* ── A1: 44–48px tap targets ────────────────────────────────────────────
+     Increase the HIT AREA (padding / min box size), not just the glyph, so
+     touch targets clear the 44px minimum without changing desktop sizing. */
+
+  /* Primary/secondary buttons — the sm variant is only py-1.5 on desktop. */
+  .kargo-original-app .kargo-primary,
+  .kargo-original-app .kargo-secondary {
+    min-height: 44px !important;
+  }
+
+  /* TabBar tab buttons: the bar is 44px tall; ensure each tab fills it and has
+     a comfortable horizontal hit area. */
+  .kargo-original-app .kargo-tabbar { height: 48px !important; }
+  .kargo-original-app .kargo-tabbar button {
+    min-height: 48px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Header trigger buttons: notifications bell, user menu, search affordances.
+     The bell is 36px; grow its box and pad the user-menu trigger. */
+  .kargo-original-app .kargo-header button {
+    min-height: 44px;
+  }
+  .kargo-original-app .kargo-mobile-tap {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Modal close X: enlarge the invisible hit box around the glyph. */
+  .kargo-original-app [aria-label^="Close "] {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Toggle: the switch keeps its 40x22 visual size; the component adds a
+     transparent 44px padded hit area on mobile via .kargo-toggle-hit. */
+  .kargo-original-app .kargo-toggle-hit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    margin: -11px -2px;
+  }
+
+  /* ── A2: base body text ≥16px on phones ─────────────────────────────────
+     The app runs a compact 13px scale (.kargo-original-app). On phones bump
+     the base reading size to 16px and restore body-copy sizes that the compact
+     scale shrank below comfortable reading, without enlarging headings. */
+  .kargo-original-app { font-size: 16px !important; }
+  .kargo-original-app main table { font-size: 14px !important; }
+  .kargo-original-app main .text-\[15px\],
+  .kargo-original-app main .text-\[13px\],
+  .kargo-original-app main .text-\[12px\] { font-size: 16px !important; }
+  .kargo-original-app main .text-\[11px\],
+  .kargo-original-app main .text-\[10px\] { font-size: 13px !important; }
+  /* Headings keep their own scale (set elsewhere) — do not shrink them. */
+
+  /* ── A3: raise contrast for muted/secondary text ────────────────────────
+     Metadata uses light grays (#9CA3AF ≈ gray-400, #6B7280 ≈ gray-500). On
+     phones darken them within the grayscale toward gray-600/700 for legibility
+     against white/cream. Both inline styles and Tailwind classes are covered. */
+  .kargo-original-app .text-gray-400,
+  .kargo-original-app .text-gray-500,
+  .kargo-original-app .placeholder\:text-gray-400::placeholder {
+    color: #4b5563 !important; /* gray-600 */
+  }
+  .kargo-original-app main [style*="#9CA3AF"] { color: #4b5563 !important; }
+  .kargo-original-app main [style*="#6B7280"],
+  .kargo-original-app main [style*="#6b7280"] { color: #374151 !important; }
+
+  /* ── A4: no hover-only affordances on touch ─────────────────────────────
+     Elements whose action/state is only revealed on :hover must be visible at
+     rest on phones. Reveal any opacity/visibility-gated hover content and keep
+     row separation visible without needing a hover. */
+  .kargo-original-app .group:hover .group-hover\:opacity-100,
+  .kargo-original-app [class*="group-hover\:opacity-100"],
+  .kargo-original-app [class*="hover\:opacity-100"] {
+    opacity: 1 !important;
+  }
+  .kargo-original-app [class*="group-hover\:visible"],
+  .kargo-original-app [class*="hover\:visible"] {
+    visibility: visible !important;
+  }
+  /* Table rows: give a persistent zebra separation instead of hover-only cue. */
+  .kargo-original-app main table tbody tr:nth-child(even) { background: #fafbfc; }
+}
+
+/* C9: icon-only compact actions get a text label on phones. */
+.kargo-sharebtn-label { display: none; }
+@media (max-width: 760px) {
+  .kargo-original-app .kargo-sharebtn-compact {
+    width: auto !important;
+    height: 44px !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px !important;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .kargo-original-app .kargo-sharebtn-compact .kargo-sharebtn-label { display: inline; }
+}
+
+/* F17: deadline display. Desktop = live ticking countdown only. Phones show a
+   concrete "Pay by <date/time>" label instead, which is far easier to parse. */
+.kargo-countdown-date { display: none; }
+@media (max-width: 760px) {
+  .kargo-original-app .kargo-countdown-timer { display: none; }
+  .kargo-original-app .kargo-countdown-date { display: inline; white-space: nowrap; }
+}
+
+/* D11: quantity stepper buttons reach 44px touch targets on phones. */
+@media (max-width: 760px) {
+  .kargo-original-app .kargo-stepper-btn {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 20px !important;
+  }
+}
+
+/* D12: camera-forward "Take Photo" button is revealed on phones (where a
+   real camera exists); desktop keeps the browse/drop affordance only. */
+@media (max-width: 760px) {
+  .kargo-original-app .kargo-take-photo { display: flex !important; }
+}
+
+/* C8: one primary action per mobile screen. Wrapping a PrimaryBtn in
+   .kargo-demote-mobile keeps it fully functional but gives it the secondary
+   (quiet) appearance on phones, so a single primary button leads each screen.
+   Desktop is untouched. */
+@media (max-width: 760px) {
+  .kargo-original-app .kargo-demote-mobile .kargo-primary {
+    background: #fff !important;
+    color: #374151 !important;
+    border: 1px solid #c7d4dc !important;
+    box-shadow: none !important;
+  }
+  .kargo-original-app .kargo-demote-mobile .kargo-primary:disabled {
+    background: #f3f4f6 !important;
+    color: #9ca3af !important;
+  }
+}
+
+/* F16: seller trust header. The full seller panel (with BIR badge) sits in the
+   right rail on desktop; on phones that rail collapses below the item list, so
+   a compact trust header is shown above the fold instead. */
+.kargo-mobile-trust { display: none; }
+@media (max-width: 760px) {
+  .kargo-original-app .kargo-mobile-trust { display: block; }
+}
+
+/* ─── Mobile bottom navigation (Task B5) ────────────────────────────────────── */
+/* Desktop: the bottom bar is hidden and the top TabBar is the nav. Mobile: the
+   top TabBar is hidden and a fixed bottom bar with 4 primary destinations + a
+   "More" entry takes over, sized for thumb reach. Desktop layout is untouched. */
+.kargo-mobile-tabbar { display: none; }
+
+@media (max-width: 760px) {
+  /* Hide the desktop top tab strip on phones; the bottom bar replaces it. */
+  .kargo-original-app .kargo-tabbar { display: none !important; }
+
+  .kargo-mobile-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    height: 60px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .kargo-mobile-tab {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    padding: 6px 2px;
+    line-height: 1.1;
+  }
+  .kargo-mobile-tab:active { background: #F3F4F6; }
+
+  /* Keep content clear of the fixed bottom bar so nothing hides behind it. */
+  .kargo-original-app .kargo-main {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* Task B6: on mobile, the "View items" tap-through into a batch's item list is a
+   comfortable full-width target, keeping the browse -> claim path short. */
+@media (max-width: 760px) {
+  .kargo-shop-open { min-height: 48px; font-size: 14px !important; }
+}

@@ -29,16 +29,20 @@ export default function ShareButton({
 
   if (compact) {
     return (
+      // Icon-only on desktop; on phones (.kargo-sharebtn-compact rules) it grows
+      // to a 44px labelled control so the action is discoverable and tappable.
       <button
         type="button"
         onClick={onShare}
         aria-label={`Share ${title ?? "batch"}`}
         title="Copy shareable link"
+        className="kargo-sharebtn-compact"
         style={{
           width: 30,
           height: 30,
           display: "grid",
           placeItems: "center",
+          gap: 6,
           borderRadius: 7,
           border: "1px solid #E5E7EB",
           background: "#fff",
@@ -52,6 +56,8 @@ export default function ShareButton({
         ) : (
           <Share2 size={14} aria-hidden="true" />
         )}
+        {/* Hidden on desktop; revealed beside the icon on mobile via CSS. */}
+        <span className="kargo-sharebtn-label">{copied ? "Copied" : "Share"}</span>
       </button>
     )
   }

@@ -159,14 +159,19 @@ export default function ItemClaimModal({
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
+              type="button"
+              aria-label="Decrease quantity"
               onClick={() => setQty((q) => Math.max(1, q - 1))}
+              disabled={qty <= 1}
+              className="kargo-stepper-btn"
               style={{
                 width: 28,
                 height: 28,
                 borderRadius: "50%",
                 border: "1px solid #E5E7EB",
                 background: "#fff",
-                cursor: "pointer",
+                cursor: qty <= 1 ? "not-allowed" : "pointer",
+                opacity: qty <= 1 ? 0.45 : 1,
                 fontSize: 16,
                 display: "flex",
                 alignItems: "center",
@@ -188,14 +193,19 @@ export default function ItemClaimModal({
               {qty}
             </span>
             <button
+              type="button"
+              aria-label="Increase quantity"
               onClick={() => setQty((q) => Math.min(maxQty, q + 1))}
+              disabled={qty >= maxQty}
+              className="kargo-stepper-btn"
               style={{
                 width: 28,
                 height: 28,
                 borderRadius: "50%",
                 border: "1px solid #E5E7EB",
                 background: "#fff",
-                cursor: "pointer",
+                cursor: qty >= maxQty ? "not-allowed" : "pointer",
+                opacity: qty >= maxQty ? 0.45 : 1,
                 fontSize: 16,
                 display: "flex",
                 alignItems: "center",

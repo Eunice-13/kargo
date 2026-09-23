@@ -34,14 +34,24 @@ export default function Countdown({ hours, id, expiresAt }: { hours: number; id?
   const label = days > 0
     ? `${days}d ${String(clockHours).padStart(2, "0")}h`
     : `${String(clockHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+  // Concrete human deadline for the mobile "Pay by …" label — a live ticking
+  // clock is hard to read on a phone, so on small screens we also spell out the
+  // actual date/time the countdown ends. Desktop keeps only the live timer.
+  const dateLabel = new Date(deadline).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })
   return (
     <span
       role="timer"
-      aria-label={`${label} remaining`}
-      className={`text-xs font-medium tabular-nums${urgent ? " cu" : ""}`}
+      aria-label={`${label} remaining, due ${dateLabel}`}
+      className={`kargo-countdown text-xs font-medium tabular-nums${urgent ? " cu" : ""}`}
       style={{ color: remaining === 0 || urgent ? "#EF4444" : warn ? AMBER : "#6B7280" }}
     >
-      {label}
+      <span className="kargo-countdown-timer">{label}</span>
+      <span className="kargo-countdown-date">Pay by {dateLabel}</span>
     </span>
   )
 }

@@ -103,6 +103,23 @@ export default function SignUp({
     onSuccess,
   ])
 
+  // E13: gate the submit button on the same required checks used in `submit`,
+  // with a short hint, instead of allowing submit-then-error. Validity rules are
+  // unchanged — this only mirrors them to enable/disable the button.
+  const baseValid =
+    name.trim().split(" ").filter(Boolean).length >= 2 &&
+    email.includes("@") &&
+    password.length >= 8
+  const sellerValid =
+    role !== "Seller" ||
+    (shopName.trim().length > 0 && Object.values(socials).some((s) => s.on) && terms)
+  const canSubmit = baseValid && sellerValid
+  const signupHint = !baseValid
+    ? "Enter your full name, a valid email, and a password of at least 8 characters."
+    : !sellerValid
+      ? "Add your shop name, link at least one social account, and agree to the terms."
+      : ""
+
   const socialIcons: Record<string, React.ReactNode> = {
     Facebook: (
       <span
@@ -592,9 +609,15 @@ export default function SignUp({
                 {errs.general}
               </p>
             )}
+            {!canSubmit && signupHint && (
+              <p style={{ fontSize: 12, color: "#6B7280", margin: 0 }}>
+                {signupHint}
+              </p>
+            )}
             <PrimaryBtn
               onClick={submit}
               loading={loading}
+              disabled={!canSubmit}
               style={{
                 width: "100%",
                 padding: "11px 0",
