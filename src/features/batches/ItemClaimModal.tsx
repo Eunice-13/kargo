@@ -93,7 +93,8 @@ export default function ItemClaimModal({
                 gap: 5,
               }}
             >
-              <Star size={12} aria-hidden="true" /> {batch.rating} · Verified Seller <BIRBadge />
+              <Star size={12} aria-hidden="true" /> {batch.rating}
+              {batch.sellerBirVerified !== false && <> · Verified Seller <BIRBadge /></>}
             </div>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>

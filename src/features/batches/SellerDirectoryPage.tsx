@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
-import type { BatchType } from "@/types"
+import type { BatchType, UserInfo } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card, PrimaryBtn, Avatar, BIRBadge } from "@/components/shared"
 import SellerShopPage from "./SellerShopPage"
@@ -10,11 +10,13 @@ export default function SellerDirectoryPage({
   onBack,
   onSellerSelect,
   onClaimFromProfile,
+  user,
 }: {
   batches: BatchType[]
   onBack: () => void
   onSellerSelect: (name: string) => void
   onClaimFromProfile: (batchId: number) => void
+  user: UserInfo
 }) {
   const [query, setQuery] = useState("")
   const [chip, setChip] = useState<"All" | "4.5+" | "Has Active Batch">("All")
@@ -79,6 +81,7 @@ export default function SellerDirectoryPage({
             seller={shopPage}
             batches={batches}
             onBatchClick={() => {}}
+            profileData={shopPage === user.name ? user : undefined}
           />
         </div>
       </div>
@@ -232,7 +235,7 @@ export default function SellerDirectoryPage({
                       >
                         {name}
                       </span>
-                      <BIRBadge size={12} />
+                      {(name !== user.name || user.birState === "Verified") && <BIRBadge size={12} />}
                     </div>
                     <div style={{ fontSize: 12, color: "#6B7280" }}>
                        {data.rating} · {data.batches.length} batch

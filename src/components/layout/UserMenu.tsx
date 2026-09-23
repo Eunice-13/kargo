@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { UserRound, Settings as SettingsIcon, LogOut, Store, Clock3, AlertTriangle } from "lucide-react"
 import type { UserInfo } from "@/types"
-import { Avatar } from "@/components/shared"
+import { Avatar, BIRBadge } from "@/components/shared"
 
 export default function UserMenu({
   user,
@@ -40,7 +40,7 @@ export default function UserMenu({
           borderRadius: 8,
         }}
       >
-        <Avatar name={user.name || "User"} size={32} />
+        <Avatar name={user.name || "User"} size={32} imageUrl={user.avatarUrl} />
         <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>
           {user.name.split(" ")[0] || "User"}
         </span>
@@ -107,10 +107,11 @@ export default function UserMenu({
                     fontWeight: 600,
                   }}
                 >
-                  <Store size={15} aria-hidden="true" /> Verified Seller
+                  <Store size={15} aria-hidden="true" /> Verified Seller <BIRBadge size={14} />
                 </div>
               )
             }
+            if (user.sellerEnabled) return null
             if (s === "Flagged") {
               return (
                 <div
@@ -178,7 +179,7 @@ export default function UserMenu({
                 className="hover:bg-gray-50 transition-colors"
               >
                 <Store size={16} aria-hidden="true" />
-                Apply to Become a Seller
+                Start Selling
               </button>
             )
           })()}

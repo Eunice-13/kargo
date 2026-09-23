@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight, Star } from "lucide-react"
-import type { BatchType, Tab } from "@/types"
+import type { BatchType, Tab, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Modal, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
 import BIRInfoModal from "./BIRInfoModal"
@@ -11,12 +11,14 @@ export default function SellerProfileModal({
   onClose,
   onClaimFromProfile,
   setTab: setAppTab,
+  profileData,
 }: {
   seller: string
   batches: BatchType[]
   onClose: () => void
   onClaimFromProfile?: (batchId: number) => void
   setTab?: (t: Tab) => void
+  profileData?: UserInfo
 }) {
   const [tab, setTab] = useState<"Shop" | "Reviews" | "About">("Shop")
   const [shopCat, setShopCat] = useState("All")
@@ -82,7 +84,7 @@ export default function SellerProfileModal({
           }}
         >
           <div style={{ textAlign: "center" }}>
-            <Avatar name={seller} size={52} />
+            <Avatar name={seller} size={52} imageUrl={profileData?.avatarUrl} />
           </div>
         </div>
         <div
@@ -106,7 +108,9 @@ export default function SellerProfileModal({
             }}
           >
             {seller}
-            <BIRBadge size={18} onClick={() => setShowBIR(true)} />
+            {(profileData ? profileData.birState === "Verified" : sellerBatches[0]?.sellerBirVerified !== false) && (
+              <BIRBadge size={18} onClick={() => setShowBIR(true)} />
+            )}
           </div>
           <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
             <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {avgRating} · {sellerBatches.length} batch
@@ -636,10 +640,7 @@ export default function SellerProfileModal({
               padding: "12px 14px",
             }}
           >
-            Trusted pasabuy seller since 2024. I travel frequently to Japan,
-            Korea, and Southeast Asia. I specialize in K-beauty, Japanese
-            snacks, and luxury items at competitive prices. All items are 100%
-            authentic with receipts upon request.
+            {profileData?.bio || "Trusted pasabuy seller. Add a shop bio from Settings to tell buyers what you sell and what they can expect."}
           </div>
           <div>
             <div
@@ -653,7 +654,14 @@ export default function SellerProfileModal({
               Social Accounts
             </div>
             <div className="space-y-2">
-              {[
+              {(profileData?.socialLinks && Object.keys(profileData.socialLinks).length > 0
+                ? Object.entries(profileData.socialLinks).filter(([label]) => profileData.socialVisibility?.[label] !== false).map(([label, url]) => ({
+                    bg: label === "Facebook" ? "#1877F2" : label === "Instagram" ? "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)" : "#374151",
+                    label,
+                    icon: <span style={{ color: "#fff", fontWeight: 800, fontSize: 11 }}>{label.slice(0, 2).toUpperCase()}</span>,
+                    url,
+                  }))
+                : [
                 {
                   bg: "#1877F2",
                   label: "Facebook",
@@ -684,7 +692,7 @@ export default function SellerProfileModal({
                   ),
                   url: `https://tiktok.com/@${seller.toLowerCase().replace(" ", "_")}`,
                 },
-              ].map((s) => (
+              ]).map((s) => (
                 <a
                   key={s.label}
                   href={s.url}

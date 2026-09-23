@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { ArrowRight, Star, ChevronDown, ChevronUp } from "lucide-react"
-import type { BatchType } from "@/types"
+import type { BatchType, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
 import { Card, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
 
@@ -8,10 +8,12 @@ export default function SellerShopPage({
   seller,
   batches,
   onBatchClick,
+  profileData,
 }: {
   seller: string
   batches: BatchType[]
   onBatchClick: (id: number) => void
+  profileData?: UserInfo
 }) {
   const sellerBatches = batches.filter((b) => b.seller === seller)
   const avgRating = sellerBatches.length
@@ -429,7 +431,7 @@ export default function SellerShopPage({
               marginBottom: 12,
             }}
           >
-            <Avatar name={seller} size={56} />
+            <Avatar name={seller} size={56} imageUrl={profileData?.avatarUrl} />
             <div
               style={{
                 fontFamily: "'Plus Jakarta Sans',sans-serif",
@@ -444,7 +446,7 @@ export default function SellerShopPage({
               }}
             >
               {seller}
-              <BIRBadge size={14} />
+              {(profileData ? profileData.birState === "Verified" : sellerBatches[0]?.sellerBirVerified !== false) && <BIRBadge size={14} />}
             </div>
             <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
               <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {avgRating} · Member since Jan 2024
@@ -461,15 +463,12 @@ export default function SellerShopPage({
               lineHeight: 1.5,
             }}
           >
-            Trusted pasabuy seller. Linked Facebook account:{" "}
-            <a
-              href={`https://facebook.com/${seller.toLowerCase().replace(" ", ".")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: INDIGO }}
-            >
-              facebook.com/{seller.toLowerCase().replace(" ", ".")}
-            </a>
+            {profileData?.bio || "Trusted pasabuy seller."}
+            {profileData?.socialLinks && Object.entries(profileData.socialLinks).filter(([label]) => profileData.socialVisibility?.[label] !== false).map(([label, url]) => (
+              <a key={label} href={url} target="_blank" rel="noopener noreferrer" style={{ color: INDIGO, display: "block", marginTop: 4 }}>
+                {label}: {url}
+              </a>
+            ))}
             <div
               style={{
                 fontSize: 10,

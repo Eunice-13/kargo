@@ -24,6 +24,10 @@ export type UserInfo = {
   role: Role
   bio?: string
   fb?: string
+  avatarUrl?: string
+  socialLinks?: Record<string, string>
+  socialVisibility?: Record<string, boolean>
+  sellerEnabled?: boolean
   // Verified seller status is the single source of truth for seller access.
   // A user is only a real Seller when birState === "Verified".
   birState?: BirState
@@ -40,6 +44,7 @@ export type ClaimRow = {
   product: string
   batch: string
   seller: string
+  sellerBirVerified?: boolean
   qty: number
   amount: number
   status: ClaimStatus
@@ -79,6 +84,10 @@ export type OrderRow = {
   eta: string
   rated: boolean
   rating?: number
+  reviewComment?: string
+  reviewStatements?: string[]
+  reviewCreatedAt?: string
+  reviewUpdatedAt?: string
 }
 
 // ─── Batch data models ────────────────────────────────────────────────────────
@@ -133,11 +142,18 @@ export type BatchExpenses = {
 // ─── Fulfillment data model ───────────────────────────────────────────────────
 export type FulfillmentOrder = {
   id: string
+  dbId?: string
   col: KanbanCol
   buyer: string
   product: string
   qty: number
   amount: number
+  rated?: boolean
+  rating?: number
+  reviewComment?: string
+  reviewStatements?: string[]
+  reviewCreatedAt?: string
+  reviewUpdatedAt?: string
 }
 
 // Buyer's place in a sold-out product queue. Dashboard and BatchPage share

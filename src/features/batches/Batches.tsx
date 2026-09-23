@@ -331,6 +331,7 @@ export default function Batches({
             onClose={() => setProfile(null)}
             onClaimFromProfile={handleProfileClaim}
             setTab={setTab}
+            profileData={profile === user.name ? user : undefined}
           />
         )}
         {profileClaimTarget && (
@@ -812,6 +813,7 @@ export default function Batches({
         batches={batches}
         onBack={() => setSellerDir(false)}
         onClaimFromProfile={handleProfileClaim}
+        user={user}
         onSellerSelect={(name) => {
           setProfile(name)
         }}
@@ -1101,6 +1103,7 @@ export default function Batches({
             onClose={() => setProfile(null)}
             onClaimFromProfile={handleProfileClaim}
             setTab={setTab}
+            profileData={profile === user.name ? user : undefined}
           />
         )}
         {profileClaimTarget && (
@@ -1146,6 +1149,7 @@ export default function Batches({
           onClose={() => setProfile(null)}
           onClaimFromProfile={handleProfileClaim}
           setTab={setTab}
+          profileData={profile === user.name ? user : undefined}
         />
       )}
       {profileClaimTarget && (

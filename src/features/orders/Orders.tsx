@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Check, Package, Star } from "lucide-react"
-import type { OrderRow, SharedState } from "@/types"
+import type { FulfillmentOrder, OrderRow, SharedState } from "@/types"
 import { INDIGO, CREAM, CYAN_L, SKY, GREEN, AMBER } from "@/constants/theme"
 import {
   Card,
@@ -23,6 +23,9 @@ import RateOrderModal from "./RateOrderModal"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 
+const reviewIsEditable = (createdAt?: string) =>
+  Boolean(createdAt && Date.now() - new Date(createdAt).getTime() <= 24 * 60 * 60 * 1000)
+
 export default function Orders({
   orders,
   setOrders,
@@ -36,6 +39,7 @@ export default function Orders({
   const [trackOrder, setTrackOrder] = useState<OrderRow | null>(null)
   const [contactOrder, setContact] = useState<OrderRow | null>(null)
   const [rateTarget, setRateTarget] = useState<OrderRow | null>(null)
+  const [sellerRateTarget, setSellerRateTarget] = useState<FulfillmentOrder | null>(null)
   const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
 
   if (role === "Seller") {
@@ -199,6 +203,27 @@ export default function Orders({
                           <FulfillmentDetails order={o} onMove={board.move} />
                         </div>
                       )}
+                      {o.col === "Completed" && (
+                        <div style={{ marginTop: 8 }}>
+                          {o.rated ? (
+                            <div className="space-y-1">
+                              <span style={{ fontSize: 11, color: AMBER, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                                <Star size={12} fill={AMBER} aria-hidden="true" /> {o.rating}/5 · Buyer rated
+                                {o.reviewCreatedAt && o.reviewUpdatedAt !== o.reviewCreatedAt ? " · Edited" : ""}
+                              </span>
+                              {reviewIsEditable(o.reviewCreatedAt) ? (
+                                <button type="button" onClick={() => setSellerRateTarget(o)} style={{ display: "block", border: "none", background: "none", color: INDIGO, fontSize: 10.5, fontWeight: 700, padding: 0, cursor: "pointer" }}>Edit review</button>
+                              ) : o.reviewCreatedAt ? (
+                                <span style={{ display: "block", fontSize: 9.5, color: "#9CA3AF" }}>Editing period ended</span>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <PrimaryBtn size="sm" onClick={() => setSellerRateTarget(o)}>
+                              Rate buyer
+                            </PrimaryBtn>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                   {colOrders.length === 0 && (
@@ -223,6 +248,34 @@ export default function Orders({
           <BuyerProfileModal
             buyer={buyerProfile}
             onClose={() => setBuyerProfile(null)}
+          />
+        )}
+        {sellerRateTarget && (
+          <RateOrderModal
+            subjectName={sellerRateTarget.buyer}
+            subjectRole="Buyer"
+            initialRating={sellerRateTarget.rating ?? 5}
+            initialComment={sellerRateTarget.reviewComment ?? ""}
+            initialStatements={sellerRateTarget.reviewStatements ?? []}
+            onRate={async (rating, comment, statements) => {
+              if (isSupabaseConfigured) {
+                if (!sellerRateTarget.dbId) return
+                try {
+                  await kargoApi.createReview(sellerRateTarget.dbId, rating, comment, statements)
+                } catch (error) {
+                  alert(error instanceof Error ? error.message : "Unable to submit rating.")
+                  return
+                }
+              }
+              const now = new Date().toISOString()
+              setFulfillment((current) => current.map((order) =>
+                order.id === sellerRateTarget.id
+                  ? { ...order, rated: true, rating, reviewComment: comment, reviewStatements: statements, reviewCreatedAt: order.reviewCreatedAt ?? now, reviewUpdatedAt: now }
+                  : order,
+              ))
+              setSellerRateTarget(null)
+            }}
+            onClose={() => setSellerRateTarget(null)}
           />
         )}
       </div>
@@ -463,18 +516,18 @@ export default function Orders({
                     </PrimaryBtn>
                   </div>
                 )}
-                {order.step >= 4 &&
-                  !delivered &&
-                  !order.rated &&
-                  !(myR > 0) && (
-                    <PrimaryBtn size="sm" onClick={() => setRateTarget(order)}>
-                      Rate
-                    </PrimaryBtn>
-                  )}
                 {(order.rated || myR > 0) && (
-                  <span style={{ fontSize: 12, color: AMBER, display: "inline-flex", alignItems: "center", gap: 3 }}>
-                    <Star size={12} aria-hidden="true" fill={AMBER} /> {order.rating || myR}/5 Rated
-                  </span>
+                  <div>
+                    <span style={{ fontSize: 12, color: AMBER, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                      <Star size={12} aria-hidden="true" fill={AMBER} /> {order.rating || myR}/5 Rated
+                      {order.reviewCreatedAt && order.reviewUpdatedAt !== order.reviewCreatedAt ? " · Edited" : ""}
+                    </span>
+                    {reviewIsEditable(order.reviewCreatedAt) ? (
+                      <button type="button" onClick={() => setRateTarget(order)} style={{ display: "block", marginLeft: "auto", border: "none", background: "none", color: INDIGO, fontSize: 10.5, fontWeight: 700, padding: 0, cursor: "pointer" }}>Edit review</button>
+                    ) : order.reviewCreatedAt ? (
+                      <span style={{ display: "block", fontSize: 9.5, color: "#9CA3AF", textAlign: "right" }}>Editing period ended</span>
+                    ) : null}
+                  </div>
                 )}
                 {!delivered && (
                   <SecondaryBtn onClick={() => setTrackOrder(order)}>
@@ -504,21 +557,28 @@ export default function Orders({
       )}
       {rateTarget && (
         <RateOrderModal
-          order={rateTarget}
-          onRate={async (rating, comment) => {
+          subjectName={rateTarget.seller}
+          subjectRole="Seller"
+          initialRating={rateTarget.rating ?? 5}
+          initialComment={rateTarget.reviewComment ?? ""}
+          initialStatements={rateTarget.reviewStatements ?? []}
+          onRate={async (rating, comment, statements) => {
             if (isSupabaseConfigured) {
               if (!rateTarget.dbId) return
               try {
-                await kargoApi.createReview(rateTarget.dbId, rating, comment)
+                await kargoApi.createReview(rateTarget.dbId, rating, comment, statements)
               } catch (error) {
                 alert(error instanceof Error ? error.message : "Unable to submit rating.")
                 return
               }
             }
             setRatings((r) => ({ ...r, [rateTarget.id]: rating }))
+            const now = new Date().toISOString()
             setOrders((prev) =>
               prev.map((o) =>
-                o.id === rateTarget.id ? { ...o, rated: true, rating } : o,
+                o.id === rateTarget.id
+                  ? { ...o, rated: true, rating, reviewComment: comment, reviewStatements: statements, reviewCreatedAt: o.reviewCreatedAt ?? now, reviewUpdatedAt: now }
+                  : o,
               ),
             )
             setRateTarget(null)

@@ -3,7 +3,6 @@ import { UserRound, Link2, Bell, CreditCard, Lock } from "lucide-react"
 import type { SettingsSection, SharedState } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card } from "@/components/shared"
-import SocialConnectModal from "./SocialConnectModal"
 import ProfileSection from "./ProfileSection"
 import LinkedAccountsSection from "./LinkedAccountsSection"
 import NotificationsSection from "./NotificationsSection"
@@ -28,12 +27,8 @@ const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
 
 export default function Settings({ user, setUser, role }: SharedState) {
   const [section, setSection] = useState<SettingsSection>("Profile")
-  const [fbConn, setFbConn] = useState(false)
-  const [fbUser, setFbUser] = useState("")
-  const [igConn, setIgConn] = useState(false)
-  const [igUser, setIgUser] = useState("")
-  const [socialModal, setSocialModal] =
-    useState<"Facebook" | "Instagram" | null>(null)
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>(user.socialLinks ?? (user.fb ? { Facebook: user.fb } : {}))
+  const [socialVisibility, setSocialVisibility] = useState<Record<string, boolean>>(user.socialVisibility ?? {})
   const [notifs, setNotifs] = useState<Record<string, boolean>>({
     payments: true,
     claims: true,
@@ -49,6 +44,11 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [email, setEmail] = useState(user.email || "")
   const [bio, setBio] = useState(user.bio || "")
   const [saved, setSaved] = useState(false)
+  const [linksSaved, setLinksSaved] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [savingLinks, setSavingLinks] = useState(false)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl)
   const sections: SettingsSection[] =
     role === "Seller"
       ? [
@@ -125,17 +125,41 @@ export default function Settings({ user, setUser, role }: SharedState) {
 
   const saveProfile = async () => {
     const newName = [firstName, lastName].filter(Boolean).join(" ") || user.name
+    setSavingProfile(true)
+    let savedAvatarUrl = user.avatarUrl
     if (isSupabaseConfigured) {
       try {
         await kargoApi.updateProfile({ displayName: newName, bio, email })
+        if (avatarFile) savedAvatarUrl = await kargoApi.uploadProfileAvatar(avatarFile)
       } catch (error) {
+        setSavingProfile(false)
         alert(error instanceof Error ? error.message : "Unable to save profile.")
         return
       }
     }
-    setUser((u) => ({ ...u, name: newName, email, bio }))
+    setUser((u) => ({ ...u, name: newName, email, bio, avatarUrl: savedAvatarUrl || avatarPreview }))
+    setAvatarFile(null)
+    setSavingProfile(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const saveSocialLinks = async () => {
+    const cleaned = Object.fromEntries(Object.entries(socialLinks).map(([key, value]) => [key, value.trim()]).filter(([, value]) => value))
+    const cleanedVisibility = Object.fromEntries(Object.keys(cleaned).map((key) => [key, socialVisibility[key] !== false]))
+    setSavingLinks(true)
+    try {
+      if (isSupabaseConfigured) await kargoApi.updateProfile({ socialLinks: cleaned, socialVisibility: cleanedVisibility })
+      setSocialLinks(cleaned)
+      setSocialVisibility(cleanedVisibility)
+      setUser((current) => ({ ...current, socialLinks: cleaned, socialVisibility: cleanedVisibility, fb: cleaned.Facebook }))
+      setLinksSaved(true)
+      setTimeout(() => setLinksSaved(false), 2000)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Unable to save social links.")
+    } finally {
+      setSavingLinks(false)
+    }
   }
 
   const addPayMethod = async () => {
@@ -335,19 +359,26 @@ export default function Settings({ user, setUser, role }: SharedState) {
               setBio={setBio}
               saved={saved}
               saveProfile={saveProfile}
+              avatarPreview={avatarPreview}
+              avatarFileName={avatarFile?.name}
+              onAvatarSelected={(file) => {
+                setAvatarFile(file)
+                setAvatarPreview(URL.createObjectURL(file))
+              }}
+              saving={savingProfile}
+              sellerEnabled={Boolean(user.sellerEnabled)}
+              onBirState={(birState) => setUser((current) => ({ ...current, birState }))}
             />
           )}
           {section === "Linked Accounts" && (
             <LinkedAccountsSection
-              fbConn={fbConn}
-              fbUser={fbUser}
-              setFbConn={setFbConn}
-              setFbUser={setFbUser}
-              igConn={igConn}
-              igUser={igUser}
-              setIgConn={setIgConn}
-              setIgUser={setIgUser}
-              setSocialModal={setSocialModal}
+              links={socialLinks}
+              setLinks={setSocialLinks}
+              visibility={socialVisibility}
+              setVisibility={setSocialVisibility}
+              onSave={saveSocialLinks}
+              saved={linksSaved}
+              saving={savingLinks}
             />
           )}
           {section === "Notifications" && (
@@ -438,27 +469,6 @@ export default function Settings({ user, setUser, role }: SharedState) {
         />
       )}
 
-      {socialModal && (
-        <SocialConnectModal
-          platform={socialModal}
-          onConnect={(u) => {
-            if (socialModal === "Facebook") {
-              setFbConn(true)
-              setFbUser(u)
-              // Persist the linked Facebook handle on the user so other flows
-              // (e.g. the Pay Now contact-link field, #20) can prefill it.
-              const fbUrl = u.startsWith("http")
-                ? u
-                : `https://facebook.com/${u.replace(/^@/, "")}`
-              setUser((prev) => ({ ...prev, fb: fbUrl }))
-            } else {
-              setIgConn(true)
-              setIgUser(u)
-            }
-          }}
-          onClose={() => setSocialModal(null)}
-        />
-      )}
     </div>
   )
 }

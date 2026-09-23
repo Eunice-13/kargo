@@ -1,4 +1,5 @@
 import type { UserInfo, Role, Tab, BatchType } from "@/types"
+import { BarChart3, ShoppingBag, Store } from "lucide-react"
 import { INDIGO } from "@/constants/theme"
 import SearchBox from "./SearchBox"
 import NotificationsMenu from "./NotificationsMenu"
@@ -10,6 +11,8 @@ export default function Header({
   onSettings,
   onApplyToSell,
   role,
+  sellerEnabled,
+  onRoleChange,
   batches,
   onNavigate,
   onBatchSelect,
@@ -20,6 +23,8 @@ export default function Header({
   onSettings: () => void
   onApplyToSell?: () => void
   role?: Role
+  sellerEnabled?: boolean
+  onRoleChange?: (role: Role) => void
   batches?: BatchType[]
   onNavigate?: (tab: Tab) => void
   onBatchSelect?: (id: number) => void
@@ -80,6 +85,19 @@ export default function Header({
         onSellerSelect={onSellerSelect}
       />
       <div className="flex items-center gap-3 flex-shrink-0">
+        {sellerEnabled && role && onRoleChange && (
+          <div role="group" aria-label="Workspace" style={{ display: "flex", padding: 3, background: "#F3F4F6", borderRadius: 8 }}>
+            {(["Buyer", "Seller"] as const).map((workspace) => {
+              const active = role === workspace
+              const Icon = workspace === "Buyer" ? ShoppingBag : Store
+              return (
+                <button key={workspace} type="button" aria-pressed={active} onClick={() => onRoleChange(workspace)} style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "none", borderRadius: 6, background: active ? "#fff" : "transparent", color: active ? INDIGO : "#6B7280", padding: "6px 9px", fontSize: 11, fontWeight: 700, cursor: "pointer", boxShadow: active ? "0 1px 3px rgba(0,0,0,.08)" : "none" }}>
+                  <Icon size={13} aria-hidden="true" /> {workspace}
+                </button>
+              )
+            })}
+          </div>
+        )}
         <NotificationsMenu role={role} onNavigate={onNavigate} />
         <UserMenu
           user={user}

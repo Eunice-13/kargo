@@ -1,62 +1,42 @@
-import { CheckCircle2 } from "lucide-react"
+import { useState } from "react"
 import type { BirState } from "@/types"
-import { Modal, PrimaryBtn } from "@/components/shared"
+import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import BirVerifier from "./BirVerifier"
 
-// Standalone "Apply to Become a Seller" flow for existing Buyer accounts.
-// Reuses the same BIR upload + verification pipeline as Sign Up. On Verified,
-// closing the modal leaves the account with birState = "Verified", which the app
-// reads to unlock Seller access.
-export default function ApplyToSellModal({
-  birState,
-  onBirState,
-  onClose,
-}: {
+export default function ApplyToSellModal({ birState, onBirState, onEnableSeller, onClose }: {
   birState: BirState
-  onBirState: (s: BirState) => void
+  onBirState: (state: BirState) => void
+  onEnableSeller: () => void | Promise<void>
   onClose: () => void
 }) {
-  const verified = birState === "Verified"
+  const [loading, setLoading] = useState(false)
   return (
-    <Modal title="Apply to Become a Seller" onClose={onClose} width={480}>
+    <Modal title="Start Selling on KARGO" onClose={onClose} width={500}>
       <div className="space-y-4">
-        <p
-          style={{
-            fontSize: 13,
-            color: "#6B7280",
-            lineHeight: 1.55,
-            margin: 0,
-          }}
-        >
-          Selling on KARGO requires a verified BIR Registration Seal Badge. Your
-          badge is checked automatically — once verified, seller tools unlock
-          right away.
+        <p style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.55, margin: 0 }}>
+          Open your seller workspace now. BIR verification is optional, but a verified badge can help buyers trust your shop.
         </p>
-
         <BirVerifier birState={birState} setBirState={onBirState} />
-
-        {verified ? (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              fontSize: 12,
-              color: "#065F46",
-              fontWeight: 600,
+        <div className="flex gap-3">
+          <SecondaryBtn style={{ flex: 1, display: "flex", justifyContent: "center" }} onClick={onClose}>Cancel</SecondaryBtn>
+          <PrimaryBtn
+            style={{ flex: 1, display: "flex", justifyContent: "center" }}
+            disabled={loading}
+            onClick={async () => {
+              setLoading(true)
+              try {
+                await onEnableSeller()
+                onClose()
+              } catch (error) {
+                alert(error instanceof Error ? error.message : "Unable to enable selling.")
+              } finally {
+                setLoading(false)
+              }
             }}
           >
-            <CheckCircle2 size={15} aria-hidden="true" />
-            Seller access unlocked. You can close this window.
-          </div>
-        ) : null}
-
-        <PrimaryBtn
-          style={{ width: "100%", display: "flex", justifyContent: "center" }}
-          onClick={onClose}
-        >
-          {verified ? "Start Selling" : "Done"}
-        </PrimaryBtn>
+            {loading ? "Enabling…" : "Enable Selling"}
+          </PrimaryBtn>
+        </div>
       </div>
     </Modal>
   )

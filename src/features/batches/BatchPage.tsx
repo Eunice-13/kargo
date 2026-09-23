@@ -492,7 +492,7 @@ export default function BatchPage({
                   }}
                 >
                   {batch.seller}
-                  <BIRBadge verified />
+                  {batch.sellerBirVerified !== false && <BIRBadge verified />}
                 </div>
                 <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 4 }}>
                   <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {batch.rating} · Tap to view shop

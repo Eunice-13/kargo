@@ -1,8 +1,9 @@
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { Check } from "lucide-react"
 import { Avatar, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 import type { UserInfo } from "@/types"
+import { BirVerifier } from "@/features/auth"
 
 type ProfileSectionProps = {
   user: UserInfo
@@ -16,6 +17,12 @@ type ProfileSectionProps = {
   setBio: (v: string) => void
   saved: boolean
   saveProfile: () => void
+  avatarPreview?: string
+  avatarFileName?: string
+  onAvatarSelected: (file: File) => void
+  saving: boolean
+  sellerEnabled: boolean
+  onBirState: (state: NonNullable<UserInfo["birState"]>) => void
 }
 
 export default function ProfileSection({
@@ -30,9 +37,14 @@ export default function ProfileSection({
   setBio,
   saved,
   saveProfile,
+  avatarPreview,
+  avatarFileName,
+  onAvatarSelected,
+  saving,
+  sellerEnabled,
+  onBirState,
 }: ProfileSectionProps) {
   const photoRef = useRef<HTMLInputElement>(null)
-  const [photoName, setPhotoName] = useState<string | null>(null)
   return (
     <div className="pr">
       <h3
@@ -47,7 +59,7 @@ export default function ProfileSection({
         Profile
       </h3>
       <div className="flex items-center gap-5 mb-6">
-        <Avatar name={user.name || "User"} size={64} />
+        <Avatar name={user.name || "User"} size={64} imageUrl={avatarPreview || user.avatarUrl} />
         <div>
           <div
             style={{
@@ -73,14 +85,14 @@ export default function ProfileSection({
             style={{ display: "none" }}
             onChange={(e) => {
               const f = e.target.files?.[0]
-              if (f) setPhotoName(f.name)
+              if (f) onAvatarSelected(f)
             }}
           />
           <div className="flex items-center gap-2" style={{ marginTop: 8 }}>
             <SecondaryBtn onClick={() => photoRef.current?.click()}>
               Change Photo
             </SecondaryBtn>
-            {photoName && (
+            {avatarFileName && (
               <span
                 className="fi"
                 style={{
@@ -92,7 +104,7 @@ export default function ProfileSection({
                   gap: 4,
                 }}
               >
-                <Check size={13} aria-hidden="true" /> {photoName} selected
+                <Check size={13} aria-hidden="true" /> {avatarFileName} selected
               </span>
             )}
           </div>
@@ -205,8 +217,19 @@ export default function ProfileSection({
             <Check size={13} aria-hidden="true" /> Changes saved!
           </span>
         )}
-        <PrimaryBtn onClick={saveProfile}>Save Changes</PrimaryBtn>
+        <PrimaryBtn onClick={saveProfile} disabled={saving}>
+          {saving ? "Updating…" : "Update Profile"}
+        </PrimaryBtn>
       </div>
+      {sellerEnabled && (
+        <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid #E5E7EB" }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "#111827", marginBottom: 4 }}>Optional BIR trust badge</div>
+          <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 12px", lineHeight: 1.5 }}>
+            You can sell without this badge. Verification adds a public trust reference to your shop profile.
+          </p>
+          <BirVerifier birState={user.birState ?? "None"} setBirState={onBirState} />
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { INDIGO } from "@/constants/theme"
 
-export default function Avatar({ name, size = 28 }: { name: string; size?: number }) {
+export default function Avatar({ name, size = 28, imageUrl }: { name: string; size?: number; imageUrl?: string }) {
   const ini = name
     .split(" ")
     .map((n) => n[0])
@@ -16,12 +16,15 @@ export default function Avatar({ name, size = 28 }: { name: string; size?: numbe
         width: size,
         height: size,
         background: bg,
+        backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         fontSize: size * 0.38,
         flexShrink: 0,
       }}
       className="rounded-full flex items-center justify-center text-white font-semibold select-none"
     >
-      {ini}
+      {imageUrl ? <span className="sr-only">{name}</span> : ini}
     </span>
   )
 }

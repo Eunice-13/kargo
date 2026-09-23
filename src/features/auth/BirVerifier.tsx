@@ -1,10 +1,11 @@
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { Lock, FileText, Clock3, CheckCircle2, AlertTriangle } from "lucide-react"
 import type { BirState } from "@/types"
 import { CREAM } from "@/constants/theme"
 import { clientHasDetectableQr, runBirVerification } from "./birVerification"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
+import { BIRBadge } from "@/components/shared"
 
 // Shared BIR Registration Seal Badge upload + verification UI. Used by both the
 // Sign Up seller flow and the standalone "Apply to Become a Seller" modal so the
@@ -17,24 +18,29 @@ export default function BirVerifier({
   setBirState: (s: BirState) => void
 }) {
   const birRef = useRef<HTMLInputElement>(null)
+  const [error, setError] = useState("")
 
   const handleFile = async (file: File) => {
+    setError("")
     setBirState("Uploading")
     // Client pre-check only — never grants access, just catches obviously
     // unreadable images before we send them down the pipeline.
     const hasQr = await clientHasDetectableQr(file)
     if (!hasQr) {
-      setBirState("Flagged")
-      window.setTimeout(() => {}, 0)
-      alert(
-        "We couldn't detect a QR code in that image. Please upload a clearer, correctly-cropped badge.",
-      )
+      setBirState("None")
+      setError("We couldn't detect a QR code. Upload a clearer, correctly cropped badge and try again.")
       return
     }
     if (isSupabaseConfigured) {
       setBirState("Scanning")
-      const outcome = await kargoApi.uploadBirBadge(file)
-      setBirState(outcome.status === "verified" ? "Verified" : "Flagged")
+      try {
+        const outcome = await kargoApi.uploadBirBadge(file)
+        setBirState(outcome.status === "verified" ? "Verified" : "None")
+        if (outcome.status !== "verified") setError("We couldn't verify this badge. Check the image and try again.")
+      } catch (uploadError) {
+        setBirState("None")
+        setError(uploadError instanceof Error ? uploadError.message : "Badge verification failed. Please try again.")
+      }
       return
     }
     const outcome = await runBirVerification(file, (stage) =>
@@ -200,12 +206,13 @@ export default function BirVerifier({
           />
           <div style={{ fontSize: 12, fontWeight: 600, color: "#065F46" }}>
             Badge Verified — QR links to the official verify.bir.gov.ph domain.
+            <div style={{ marginTop: 7 }}><BIRBadge size={15} /></div>
           </div>
         </div>
       )}
 
       {/* Flagged */}
-      {birState === "Flagged" && (
+      {error && (
         <div
           style={{
             background: "#FEE2E2",
@@ -234,12 +241,15 @@ export default function BirVerifier({
                 lineHeight: 1.5,
               }}
             >
-              We couldn't verify this badge — please check the upload guidance
-              and try again.
+              {error}
             </div>
             <button
               type="button"
-              onClick={() => setBirState("None")}
+              onClick={() => {
+                setError("")
+                setBirState("None")
+                birRef.current?.click()
+              }}
               style={{
                 marginTop: 8,
                 fontSize: 11,

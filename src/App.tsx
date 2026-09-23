@@ -39,6 +39,9 @@ export default function App() {
     name: originalPreview ? "Alex Jordan" : "",
     email: originalPreview ? "alex@kargo.demo" : "",
     role: "Buyer",
+    sellerEnabled: originalPreview,
+    bio: originalPreview ? "Curated pasabuy finds with careful packing and clear trip updates." : "",
+    socialLinks: originalPreview ? { Facebook: "https://facebook.com/alex.jordan", Instagram: "https://instagram.com/alexjordan" } : {},
     // The "original" preview retains seller access so the seller screens remain
     // viewable; real accounts start with no verified badge.
     birState: originalPreview ? "Verified" : "None",
@@ -46,9 +49,8 @@ export default function App() {
   const [showNewBatch, setShowNewBatch] = useState(false)
   const [showApplyToSell, setShowApplyToSell] = useState(false)
 
-  // Role is derived from verification status — it is NOT user-flippable.
-  // Seller access is unlocked only when the BIR badge is Verified.
-  const role: Role = user.birState === "Verified" ? "Seller" : "Buyer"
+  // Workspace access is independent from the optional BIR trust badge.
+  const role: Role = user.role === "Seller" && user.sellerEnabled ? "Seller" : "Buyer"
 
   // Shared mutable data
   const useSeeds = originalPreview || !isSupabaseConfigured
@@ -113,7 +115,6 @@ export default function App() {
     setUser(u)
     setStage("app")
     setOnboard(true)
-    if (u.role === "Seller" && u.birState !== "Verified") setShowApplyToSell(true)
   }
   const handleLoginSuccess = (u: UserInfo) => {
     setUser(u)
@@ -161,6 +162,11 @@ export default function App() {
             onSettings={() => setTab("Settings")}
             onApplyToSell={() => setShowApplyToSell(true)}
             role={role}
+            sellerEnabled={Boolean(user.sellerEnabled)}
+            onRoleChange={(nextRole) => {
+              setUser((current) => ({ ...current, role: nextRole }))
+              setTab("Dashboard")
+            }}
             batches={batches}
             onNavigate={setTab}
             onBatchSelect={(id) => {
@@ -193,6 +199,11 @@ export default function App() {
             <ApplyToSellModal
               birState={user.birState ?? "None"}
               onBirState={(s) => setUser((u) => ({ ...u, birState: s }))}
+              onEnableSeller={async () => {
+                if (isSupabaseConfigured) await kargoApi.updateProfile({ canSell: true })
+                setUser((current) => ({ ...current, sellerEnabled: true, role: "Seller" }))
+                setTab("Dashboard")
+              }}
               onClose={() => setShowApplyToSell(false)}
             />
           )}

@@ -7,16 +7,19 @@ export default function SecondaryBtn({
   style = {},
   size = "md",
   ariaLabel,
+  disabled = false,
 }: {
   children: React.ReactNode
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void
   style?: React.CSSProperties
   size?: "sm" | "md"
   ariaLabel?: string
+  disabled?: boolean
 }) {
   return (
     <button
       aria-label={ariaLabel}
+      disabled={disabled}
       onClick={onClick}
       style={{
         background: "#fff",
@@ -25,6 +28,8 @@ export default function SecondaryBtn({
         borderRadius: 7,
         fontFamily: "'Plus Jakarta Sans',sans-serif",
         transition: "background 0.15s,transform 0.1s",
+        cursor: disabled ? "not-allowed" : undefined,
+        opacity: disabled ? 0.6 : 1,
         ...style,
       }}
       className={`kargo-secondary font-semibold hover:bg-gray-50 bp ${

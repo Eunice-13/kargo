@@ -19,6 +19,9 @@ type DbProfile = {
   display_name: string
   bio: string | null
   social_links: Record<string, string> | null
+  social_visibility: Record<string, boolean> | null
+  avatar_path: string | null
+  can_sell: boolean
   bir_status: "none" | "pending" | "verified" | "flagged"
   account_status: "active" | "suspended"
 }
@@ -38,7 +41,7 @@ const birToUi: Record<DbProfile["bir_status"], BirState> = {
   none: "None",
   pending: "Verifying",
   verified: "Verified",
-  flagged: "Flagged",
+  flagged: "None",
 }
 
 function statusToClaim(status: string): ClaimRow["status"] {
@@ -86,18 +89,25 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
   const client = requireSupabase()
   const { data, error } = await client
     .from("profiles")
-    .select("id,display_name,bio,social_links,bir_status,account_status")
+    .select("id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,bir_status,account_status")
     .eq("id", id)
     .single()
   if (error) throw error
   const profile = data as DbProfile
+  const avatarUrl = profile.avatar_path
+    ? client.storage.from("profile-avatars").getPublicUrl(profile.avatar_path).data.publicUrl
+    : undefined
   return {
     id,
     name: profile.display_name,
     email,
-    role: profile.bir_status === "verified" ? "Seller" : "Buyer",
+    role: profile.can_sell ? "Seller" : "Buyer",
     bio: profile.bio ?? undefined,
     fb: profile.social_links?.Facebook,
+    socialLinks: profile.social_links ?? {},
+    socialVisibility: profile.social_visibility ?? {},
+    avatarUrl,
+    sellerEnabled: profile.can_sell,
     birState: birToUi[profile.bir_status],
     accountStatus: profile.account_status,
   }
@@ -117,6 +127,7 @@ export async function signUp(input: {
   shopName?: string
   phone?: string
   socials?: Record<string, { on: boolean; url: string }>
+  role?: "Buyer" | "Seller"
 }) {
   const client = requireSupabase()
   const { data, error } = await client.auth.signUp({
@@ -140,6 +151,8 @@ export async function signUp(input: {
       shop_name: input.shopName || null,
       phone: input.phone || null,
       social_links: links,
+      social_visibility: Object.fromEntries(Object.keys(links).map((key) => [key, true])),
+      can_sell: input.role === "Seller",
     })
     .eq("id", data.user.id)
   if (updateError) throw updateError
@@ -172,11 +185,26 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       client.from("batch_catalog").select("*"),
       client
         .from("orders")
-        .select("*,batch_products(name,batch_id,batches(title)),payments(amount,status,method_type,submitted_at)")
+        .select("*,batch_products(name,batch_id,batches(title)),payments(amount,status,method_type,submitted_at),reviews(*)")
         .order("created_at", { ascending: false }),
     ])
   if (catalogError) throw catalogError
   if (ordersError) throw ordersError
+
+  const participantIds = [...new Set([...(dbOrders ?? []).flatMap((row) => [row.buyer_id, row.seller_id]), ...(catalog ?? []).map((row) => row.seller_id)])]
+  const participantNames = new Map<string, string>()
+  const verifiedSellers = new Set<string>()
+  if (participantIds.length > 0) {
+    const { data: participants, error: participantsError } = await client
+      .from("public_profiles")
+      .select("id,display_name,bir_status")
+      .in("id", participantIds)
+    if (participantsError) throw participantsError
+    for (const participant of participants ?? []) {
+      participantNames.set(participant.id, participant.display_name)
+      if (participant.bir_status === "verified") verifiedSellers.add(participant.id)
+    }
+  }
 
   const batchMap = new Map<string, BatchType>()
   for (const row of catalog ?? []) {
@@ -187,6 +215,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       locked: row.batch_status === "locked",
       title: row.batch_title,
       seller: row.seller_name,
+      sellerBirVerified: verifiedSellers.has(row.seller_id),
       rating: Number(row.rating ?? 0),
       trips: `${row.starts_on} – ${row.ends_on}`,
       items: Number(row.batch_total_items ?? 0),
@@ -223,7 +252,11 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       batches: { title: string }
     }
     const isBuyer = row.buyer_id === auth.user.id
-    const sellerName = batchMap.get(product.batch_id)?.seller ?? "Seller"
+    const sellerName = participantNames.get(row.seller_id) ?? batchMap.get(product.batch_id)?.seller ?? "Seller"
+    const buyerName = participantNames.get(row.buyer_id) ?? "Buyer"
+    const ownReview = (row.reviews ?? []).find((review: { reviewer_id: string }) => review.reviewer_id === auth.user.id) as
+      | { rating: number; comment: string | null; quick_statements?: string[] | null; created_at: string; updated_at: string }
+      | undefined
     const expires = new Date(row.reservation_expires_at).getTime()
     const hours = Math.max(0, Math.ceil((expires - Date.now()) / 3_600_000))
     if (isBuyer) {
@@ -249,7 +282,12 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         step: statusToStep(row.status),
         trackingNo: row.tracking_number,
         eta: row.eta ? new Date(row.eta).toLocaleDateString() : "Pending",
-        rated: false,
+        rated: Boolean(ownReview),
+        rating: ownReview?.rating,
+        reviewComment: ownReview?.comment ?? undefined,
+        reviewStatements: ownReview?.quick_statements ?? undefined,
+        reviewCreatedAt: ownReview?.created_at,
+        reviewUpdatedAt: ownReview?.updated_at,
       })
     } else {
       claims.push({
@@ -258,7 +296,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         product: product.name,
         batch: product.batches.title,
         seller: user.name,
-        buyer: "Buyer",
+        buyer: buyerName,
         qty: row.quantity,
         amount: Number(row.total_amount),
         status: statusToClaim(row.status),
@@ -267,11 +305,18 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       })
       fulfillment.push({
         id: row.id,
+        dbId: row.id,
         col: statusToColumn(row.status),
-        buyer: "Buyer",
+        buyer: buyerName,
         product: product.name,
         qty: row.quantity,
         amount: Number(row.total_amount),
+        rated: Boolean(ownReview),
+        rating: ownReview?.rating,
+        reviewComment: ownReview?.comment ?? undefined,
+        reviewStatements: ownReview?.quick_statements ?? undefined,
+        reviewCreatedAt: ownReview?.created_at,
+        reviewUpdatedAt: ownReview?.updated_at,
       })
     }
     const verifiedPaid = (row.payments ?? [])
@@ -316,7 +361,13 @@ async function loadBuyerWaitlist(
     .eq("buyer_id", userId)
     .eq("status", "waiting")
   if (error) throw error
-  const rows = data ?? []
+  type WaitlistDbRow = {
+    id: string
+    batch_product_id: string
+    joined_at: string
+    batch_products: Array<{ name: string; selling_price: number | string; batch_id: string }> | null
+  }
+  const rows = (data ?? []) as unknown as WaitlistDbRow[]
   const productIds = [...new Set(rows.map((row: { batch_product_id: string }) => row.batch_product_id))]
   let peers: { batch_product_id: string; joined_at: string }[] = []
   if (productIds.length > 0) {
@@ -328,13 +379,8 @@ async function loadBuyerWaitlist(
     if (peerError) throw peerError
     peers = peerRows ?? []
   }
-  return rows.map((row: {
-    id: string
-    batch_product_id: string
-    joined_at: string
-    batch_products: { name: string; selling_price: number | string; batch_id: string } | null
-  }) => {
-    const product = row.batch_products
+  return rows.map((row) => {
+    const product = row.batch_products?.[0]
     const batch = product ? batchMap.get(product.batch_id) : undefined
     const joined = new Date(row.joined_at).getTime()
     const queue = peers.filter((p) => p.batch_product_id === row.batch_product_id)
@@ -422,7 +468,7 @@ export async function uploadBirBadge(file: File) {
     body: { objectPath },
   })
   if (error) throw error
-  return data as { status: "verified" | "flagged"; reason: "unreadable" | "bad_domain" | null }
+  return data as { status: "verified" | "none"; reason: "unreadable" | "bad_domain" | null }
 }
 
 export async function submitPayment(input: {
@@ -489,6 +535,8 @@ export async function updateProfile(values: {
   displayName?: string
   bio?: string
   socialLinks?: Record<string, string>
+  socialVisibility?: Record<string, boolean>
+  canSell?: boolean
   email?: string
 }) {
   const client = requireSupabase()
@@ -496,6 +544,8 @@ export async function updateProfile(values: {
   if (values.displayName !== undefined) payload.display_name = values.displayName
   if (values.bio !== undefined) payload.bio = values.bio
   if (values.socialLinks !== undefined) payload.social_links = values.socialLinks
+  if (values.socialVisibility !== undefined) payload.social_visibility = values.socialVisibility
+  if (values.canSell !== undefined) payload.can_sell = values.canSell
   if (values.email) {
     const { error: authError } = await client.auth.updateUser({ email: values.email })
     if (authError) throw authError
@@ -568,13 +618,29 @@ export async function joinWaitlist(productId: string) {
   if (error) throw error
 }
 
-export async function createReview(orderId: string, rating: number, comment?: string) {
+export async function createReview(orderId: string, rating: number, comment?: string, statements: string[] = []) {
   const { error } = await requireSupabase().rpc("create_order_review", {
     p_order_id: orderId,
     p_rating: rating,
     p_comment: comment ?? null,
+    p_quick_statements: statements,
   })
   if (error) throw error
+}
+
+export async function uploadProfileAvatar(file: File) {
+  const client = requireSupabase()
+  const userId = (await client.auth.getUser()).data.user?.id
+  if (!userId) throw new Error("Authentication required")
+  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg"
+  const objectPath = `${userId}/avatar.${extension}`
+  const { error: uploadError } = await client.storage
+    .from("profile-avatars")
+    .upload(objectPath, file, { upsert: true, contentType: file.type || undefined })
+  if (uploadError) throw uploadError
+  const { error: profileError } = await client.from("profiles").update({ avatar_path: objectPath }).eq("id", userId)
+  if (profileError) throw profileError
+  return client.storage.from("profile-avatars").getPublicUrl(objectPath).data.publicUrl
 }
 
 export async function createBuyerRequest(batchId: string, productName: string, quantity: number, message?: string) {
@@ -923,6 +989,7 @@ export const kargoApi = {
   cancelOrder,
   setFulfillmentStatus,
   updateProfile,
+  uploadProfileAvatar,
   loadAddresses,
   saveAddress,
   deleteAddress,

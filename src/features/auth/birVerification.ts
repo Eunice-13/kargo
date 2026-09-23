@@ -118,7 +118,7 @@ export async function decodeBadgeQr(file: File): Promise<DecodeResult> {
 
 export type PipelineOutcome =
   | { status: "Verified"; decoded: string }
-  | { status: "Flagged"; reason: "unreadable" | "bad-domain" }
+  | { status: "None"; reason: "unreadable" | "bad-domain" }
 
 /**
  * Run the full verification pipeline for an uploaded badge image, reporting each
@@ -133,13 +133,13 @@ export async function runBirVerification(
   onStage("Scanning")
   const decode = await decodeBadgeQr(file)
   if (!decode.ok) {
-    return { status: "Flagged", reason: "unreadable" }
+    return { status: "None", reason: "unreadable" }
   }
   // Stage 2 — strict base-domain check (deterministic, real).
   onStage("Verifying")
   await delay(700)
   if (!isOfficialBirUrl(decode.decoded)) {
-    return { status: "Flagged", reason: "bad-domain" }
+    return { status: "None", reason: "bad-domain" }
   }
   // (Optional future step: server-side vision tamper-likelihood check.)
   return { status: "Verified", decoded: decode.decoded }

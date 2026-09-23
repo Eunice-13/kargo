@@ -52,8 +52,6 @@ export default function SignUp({
       if (!shopName.trim()) e.shopName = "Shop name is required."
       if (!Object.values(socials).some((s) => s.on))
         e.social = "Link at least one social account."
-      if (!isSupabaseConfigured && birState !== "Verified")
-        e.bir = "Your BIR badge must be verified before you can sell."
       if (!terms) e.terms = "You must agree to the Terms and Privacy Policy."
     }
     setErrs(e)
@@ -66,7 +64,9 @@ export default function SignUp({
           name: name.trim(),
           email,
           role,
+          sellerEnabled: role === "Seller",
           birState: role === "Seller" ? birState : "None",
+          socialLinks: Object.fromEntries(Object.entries(socials).filter(([, value]) => value.on && value.url.trim()).map(([key, value]) => [key, value.url.trim()])),
         })
       }, 600)
       return
@@ -79,6 +79,7 @@ export default function SignUp({
         shopName,
         phone,
         socials,
+        role,
       })
       setLoading(false)
       if (result.needsEmailConfirmation || !result.user) {
@@ -449,11 +450,16 @@ export default function SignUp({
                 <div>
                   {isSupabaseConfigured ? (
                     <div style={{ fontSize: 12, color: "#6B7280", lineHeight: 1.5 }}>
-                      Create your account first. KARGO will open the secure BIR
-                      verification step immediately after sign-up.
+                      BIR verification is optional. After creating your shop,
+                      you can submit a badge from Settings to build buyer trust.
                     </div>
                   ) : (
+                    <>
+                    <div style={{ marginBottom: 8, fontSize: 11.5, color: "#6B7280", lineHeight: 1.5 }}>
+                      Optional — a verified BIR badge can make your shop more trustworthy, but it is not required to start selling.
+                    </div>
                     <BirVerifier birState={birState} setBirState={setBirState} />
+                    </>
                   )}
                   {errs.bir && (
                     <p
