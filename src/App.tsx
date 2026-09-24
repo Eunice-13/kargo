@@ -25,8 +25,7 @@ import { WAITLIST_INIT } from "@/data/waitlist"
 import { FULFILLMENT_INIT } from "@/features/fulfillment"
 import { Login, SignUp, Onboarding, ApplyToSellModal } from "@/features/auth"
 import { NewBatchModal } from "@/features/batches"
-import { AboutUsModal } from "@/components/shared"
-import { Header, TabBar, MobileTabBar, TabContent } from "@/components/layout"
+import { Footer, Header, TabBar, TabContent } from "@/components/layout"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
@@ -60,7 +59,6 @@ export default function App() {
   })
   const [showNewBatch, setShowNewBatch] = useState(false)
   const [showApplyToSell, setShowApplyToSell] = useState(false)
-  const [showAbout, setShowAbout] = useState(false)
 
   // Role is fixed by seller capability (can_sell). There is no in-app role
   // switch: a seller-capable account is always a Seller, everyone else a Buyer.
@@ -217,7 +215,7 @@ export default function App() {
       )}
       {stage === "app" && (
         <div
-          className="pu kargo-original-app"
+          className="kargo-original-app"
           style={{
             background: CREAM,
             minHeight: "100vh",
@@ -243,7 +241,6 @@ export default function App() {
               navIntent.sellerName = name
               setTab("Batches")
             }}
-            onAboutClick={() => setShowAbout(true)}
           />
           <TabBar
             active={tab}
@@ -251,17 +248,11 @@ export default function App() {
             role={role}
             onNewBatch={() => setShowNewBatch(true)}
           />
-          <main className="kargo-main" style={{ minHeight: "calc(100vh - 100px)" }}>
+          <main style={{ minHeight: "calc(100vh - 100px)" }}>
             <TabContent tab={tab} shared={shared} />
           </main>
-          <MobileTabBar
-            active={tab}
-            setActive={setTab}
-            role={role}
-            onMore={() => setTab("Settings")}
-          />
+          <Footer />
           {showOnboarding && <Onboarding onDone={() => setOnboard(false)} />}
-          {showAbout && <AboutUsModal onClose={() => setShowAbout(false)} />}
           {showNewBatch && (
             <NewBatchModal
               onCreate={(b) => setBatches((prev) => [b, ...prev])}

@@ -14,11 +14,9 @@ import {
   StatusBadge,
   Countdown,
   BuyerProfileModal,
-  ORDER_STEPS,
 } from "@/components/shared"
 import BatchCheckoutModal from "@/features/payments/BatchCheckoutModal"
 import {
-  KANBAN_COLS,
   PRIOR_FULFILLED,
   useFulfillmentBoard,
   FulfillmentLiveRegion,
@@ -30,6 +28,14 @@ import SellerWaitlistCard from "./SellerWaitlistCard"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry"
+
+const SELLER_BOARD_COLUMNS = [
+  "Pending Payment",
+  "Payment Confirmed",
+  "Preparing",
+  "Completed",
+  "Cancelled",
+] as const
 
 export default function Dashboard({
   batches,
@@ -82,19 +88,13 @@ export default function Dashboard({
   const pendingClaims = activeClaims
   const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
-  // Completed orders for this account: orders that reached the final
-  // "Delivered" step (ORDER_STEPS index 5) — i.e. fulfilled and completed.
-  const completedOrders = orders.filter((o) => o.step === ORDER_STEPS.length)
 
   const buyerStats = [
     {
       label: "Active Claims",
       value: String(activeClaims.length),
       icon: Package,
-      sub:
-        activeClaims.length === 0
-          ? "No active claims"
-          : `${activeClaims.length} awaiting payment or reservation`,
+      sub: "+3 this week",
       sc: GREEN,
       bg: "#E8F9F3",
     },
@@ -116,9 +116,9 @@ export default function Dashboard({
     },
     {
       label: "Completed Orders",
-      value: String(completedOrders.length),
+      value: "47",
       icon: CheckCircle2,
-      sub: "Fulfilled and delivered",
+      sub: "All time",
       sc: "#6B7280",
       bg: "#F0EEFF",
     },
@@ -128,25 +128,25 @@ export default function Dashboard({
       label: "Active Batches",
       value: String(batches.filter((b) => b.live).length),
       icon: Plane,
-      sub: "(open + scheduled)",
-      sc: GREEN,
-      bg: CREAM,
+      sub: "Open + Scheduled",
+      sc: "#64E894",
+      bg: "#ECFFF4",
     },
     {
       label: "Awaiting Verification",
       value: "3",
-      icon: ClipboardList,
+      icon: Clock3,
       sub: "Payment proofs to review",
-      sc: AMBER,
-      bg: CYAN_L,
+      sc: "#F4D85D",
+      bg: "#FFFBE3",
     },
     {
       label: "Extension Requests",
       value: "2",
-      icon: Clock3,
+      icon: ClipboardList,
       sub: "Awaiting your approval",
-      sc: "#6B7280",
-      bg: "#FFF7ED",
+      sc: "#E62B48",
+      bg: "#FFF0F2",
     },
     {
       label: "Orders Fulfilled",
@@ -156,18 +156,12 @@ export default function Dashboard({
       icon: CheckCircle2,
       sub: "Completed this quarter",
       sc: "#6B7280",
-      bg: "#F0FDF4",
+      bg: "#FFFFFF",
     },
   ]
   const stats = role === "Seller" ? sellerStats : buyerStats
-  // Only surface deadlines that are genuinely urgent: under 24 hours remaining
-  // (#Task 9). Still sorted soonest-first and capped at 4.
   const upcoming = useMemo(
-    () =>
-      [...payableToPay]
-        .filter((item) => item.hours < 24)
-        .sort((a, b) => a.hours - b.hours)
-        .slice(0, 4),
+    () => [...payableToPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
     [payableToPay],
   )
 
@@ -211,7 +205,7 @@ export default function Dashboard({
   // embedded dashboard card and inside the full-screen expanded overlay; the
   // `expanded` flag simply gives each column more room.
   const renderBoardColumns = (expanded: boolean) =>
-    KANBAN_COLS.map((col) => {
+    SELLER_BOARD_COLUMNS.map((col) => {
       const colColors: Record<string, string> = {
         Claimed: "#EEF0FF",
         "Pending Payment": "#FFF7ED",
@@ -220,26 +214,23 @@ export default function Dashboard({
         Completed: "#D4F5EA",
         Cancelled: "#FEE2E2",
       }
-      const colOrders = fulfillment.filter((o) => o.col === col)
+      // "Claimed" is the existing pre-payment state. The reference combines
+      // it with Pending Payment visually; the underlying status is untouched.
+      const colOrders = fulfillment.filter((o) =>
+        col === "Pending Payment"
+          ? o.col === "Claimed" || o.col === "Pending Payment"
+          : o.col === col,
+      )
+      const visibleOrders = expanded ? colOrders : colOrders.slice(0, 3)
       return (
         <div
           key={col}
-          style={{
-            minWidth: expanded ? 260 : 180,
-            width: expanded ? 260 : undefined,
-            flexShrink: 0,
-          }}
+          className="seller-board-column"
+          style={{ minWidth: expanded ? 260 : undefined }}
         >
           <div
-            style={{
-              background: colColors[col] || CREAM,
-              borderRadius: "8px 8px 0 0",
-              padding: "8px 12px",
-              marginBottom: 8,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+            className="seller-board-column__head"
+            style={{ background: colColors[col] || CREAM }}
           >
             <span
               style={{
@@ -263,18 +254,13 @@ export default function Dashboard({
               {colOrders.length}
             </span>
           </div>
-          <div className="space-y-2">
-            {colOrders.map((o) => {
+          <div className="seller-board-column__cards space-y-2">
+            {visibleOrders.map((o) => {
               const isExpanded = board.expandedId === o.id
               return (
                 <div
                   key={o.id}
-                  style={{
-                    background: "#fff",
-                    borderRadius: 8,
-                    border: "1px solid #E5E7EB",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                  }}
+                  className="seller-board-card"
                 >
                   <div
                     onClick={() => board.toggle(o.id)}
@@ -318,7 +304,7 @@ export default function Dashboard({
                       style={{
                         fontSize: 12,
                         fontWeight: 700,
-                        color: INDIGO,
+                        color: GREEN,
                         marginTop: 4,
                         fontFamily: "'Plus Jakarta Sans',sans-serif",
                       }}
@@ -332,6 +318,16 @@ export default function Dashboard({
                 </div>
               )
             })}
+            {!expanded && colOrders.length > 3 && (
+              <button
+                type="button"
+                className="seller-board-more"
+                onClick={() => setBoardExpanded(true)}
+                aria-label={`Show ${colOrders.length - 3} more ${col} orders`}
+              >
+                +{colOrders.length - 3} more
+              </button>
+            )}
             {colOrders.length === 0 && (
               <div
                 style={{
@@ -348,6 +344,192 @@ export default function Dashboard({
         </div>
       )
     })
+
+  if (String(role) === "Seller") {
+    return (
+      <div className="seller-dashboard">
+        <section className="seller-stats" aria-label="Seller summary">
+          {sellerStats.map((stat, index) => (
+            <article
+              key={stat.label}
+              className={`seller-stat seller-stat--${index + 1} fi`}
+              style={{ animationDelay: `${index * 60}ms`, background: stat.bg }}
+            >
+              <stat.icon size={20} aria-hidden="true" style={{ color: stat.sc }} />
+              <strong>{stat.value}</strong>
+              <span>{stat.label}</span>
+              <small style={{ color: stat.sc }}>{stat.sub}</small>
+            </article>
+          ))}
+        </section>
+
+        <div className="seller-orders-layout">
+          <section className="seller-recent-orders">
+            <div className="seller-section-heading">
+              <h2>Recent Orders</h2>
+              <button type="button" onClick={() => setTab("My Claims")}>
+                View All
+              </button>
+            </div>
+            <div className="seller-orders-table-wrap">
+              <table className="seller-orders-table">
+                <thead>
+                  <tr>
+                    {[
+                      "Products",
+                      "Batch",
+                      "Buyer",
+                      "Amount",
+                      "Status",
+                      "Deadline",
+                    ].map((heading) => (
+                      <th key={heading}>{heading}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {claims.slice(0, 7).map((claim, index) => {
+                    const buyerName = claim.buyer || claim.seller
+                    return (
+                      <tr key={claim.id} onClick={() => setTab("My Claims")}>
+                        <td>
+                          <div className="seller-product-cell">
+                            <ProductThumb name={claim.product} />
+                            <span>{claim.product}</span>
+                          </div>
+                        </td>
+                        <td>{claim.batch}</td>
+                        <td>
+                          <div className="seller-buyer-cell">
+                            <Avatar name={buyerName} size={21} />
+                            <span>{buyerName}</span>
+                          </div>
+                        </td>
+                        <td className="seller-order-amount">
+                          ₱{claim.amount.toLocaleString()}
+                        </td>
+                        <td><StatusBadge status={claim.status} /></td>
+                        <td className={claim.hours > 0 && claim.hours < 6 ? "is-urgent" : index === 1 ? "is-warning" : ""}>
+                          {claim.status === "Pending" && claim.hours > 0 ? (
+                            <Countdown hours={claim.hours} id={claim.id} expiresAt={claim.expiresAt} />
+                          ) : (
+                            <span>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <aside className="seller-dashboard-sidebar">
+            <section className="seller-side-card seller-pending-actions">
+              <h2>Pending Actions</h2>
+              {[
+                {
+                  icon: Clock3,
+                  label: "Payments to Verify",
+                  count: 3,
+                  tab: "Payments" as Tab,
+                },
+                {
+                  icon: ClipboardList,
+                  label: "Extension Requests",
+                  count: 2,
+                  tab: "Batches" as Tab,
+                },
+              ].map((action) => (
+                <div className="seller-action-row" key={action.label}>
+                  <action.icon size={19} aria-hidden="true" />
+                  <div>
+                    <strong>{action.label}</strong>
+                    <small>{action.count} Pending</small>
+                  </div>
+                  <button type="button" onClick={() => setTab(action.tab)}>
+                    View All
+                  </button>
+                </div>
+              ))}
+            </section>
+
+            <SellerWaitlistCard
+              groups={sellerWaitlist}
+              responseHours={user.waitlistResponseHours ?? 24}
+              onSaveResponseHours={async (hours) => {
+                if (isSupabaseConfigured) {
+                  try {
+                    await kargoApi.setWaitlistResponseHours(hours)
+                  } catch (error) {
+                    alert(error instanceof Error ? error.message : "Unable to save response window.")
+                    return
+                  }
+                }
+                setUser((current) => ({ ...current, waitlistResponseHours: hours }))
+              }}
+            />
+          </aside>
+        </div>
+
+        <section className="seller-fulfillment-section">
+          <div className="seller-section-heading seller-board-heading">
+            <h2>Fulfillment Board</h2>
+            <div>
+              <button type="button" onClick={() => setShowSalesReport(true)}>
+                <FileText size={14} aria-hidden="true" />
+                Sales Report
+              </button>
+              <button type="button" onClick={() => setBoardExpanded(true)}>
+                <Maximize2 size={14} aria-hidden="true" />
+                Expand
+              </button>
+            </div>
+          </div>
+          <div className="seller-board-preview">
+            {renderBoardColumns(false)}
+          </div>
+          <FulfillmentLiveRegion text={board.announcement} />
+        </section>
+
+        {boardExpanded && (
+          <div className="seller-board-dialog" role="dialog" aria-modal="true" aria-label="Fulfillment Board — expanded view">
+            <header>
+              <div>
+                <button type="button" onClick={() => setBoardExpanded(false)}>
+                  <X size={16} aria-hidden="true" /> Back to Dashboard
+                </button>
+                <h2>Fulfillment Board</h2>
+              </div>
+              <span>Track all orders across fulfillment stages</span>
+            </header>
+            <div className="seller-board-dialog__body">
+              <div className="seller-board-dialog__columns">
+                {renderBoardColumns(true)}
+              </div>
+            </div>
+            <FulfillmentLiveRegion text={board.announcement} />
+          </div>
+        )}
+
+        {buyerProfile && (
+          <BuyerProfileModal
+            buyer={buyerProfile.name}
+            contactUrl={buyerProfile.contactUrl}
+            onClose={() => setBuyerProfile(null)}
+          />
+        )}
+        {showSalesReport && (
+          <SalesReportModal
+            batches={batches}
+            fulfillment={fulfillment}
+            shopName={user?.name || "My Shop"}
+            onClose={() => setShowSalesReport(false)}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="p-8 space-y-8">

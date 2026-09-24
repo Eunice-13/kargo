@@ -14,7 +14,6 @@ export default function Header({
   onNavigate,
   onBatchSelect,
   onSellerSelect,
-  onAboutClick,
 }: {
   user: UserInfo
   onLogout: () => void
@@ -25,7 +24,6 @@ export default function Header({
   onNavigate?: (tab: Tab) => void
   onBatchSelect?: (id: number) => void
   onSellerSelect?: (name: string) => void
-  onAboutClick?: () => void
 }) {
   return (
     <header
@@ -35,41 +33,20 @@ export default function Header({
         height: 56,
         zIndex: 50,
       }}
-      className="kargo-header flex items-center px-6 gap-6 sticky top-0"
+      className={`kargo-header flex items-center px-6 gap-6 sticky top-0${
+        role === "Seller" ? " seller-shell-header" : ""
+      }`}
     >
-      <button
-        type="button"
-        onClick={onAboutClick}
-        aria-label="About KARGO"
-        title="About KARGO"
+      <div
         className="kargo-brand-lockup flex items-center gap-2 flex-shrink-0"
-        style={{
-          width: 160,
-          background: "none",
-          border: "none",
-          padding: 0,
-          cursor: onAboutClick ? "pointer" : "default",
-        }}
+        style={{ width: 160 }}
       >
-        <div
-          className="kargo-brand-mark"
-          style={{
-            background: INDIGO,
-            width: 28,
-            height: 28,
-            borderRadius: 7,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path
-              d="M2 4h12M2 8h8M2 12h10"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
+        <div className="kargo-brand-mark" style={{ color: "#fff" }}>
+          <svg width="35" height="35" viewBox="0 0 42 42" fill="none" aria-hidden="true">
+            <path d="M8 23V11L21 3l13 8v12" stroke="currentColor" strokeWidth="2.4" />
+            <path d="M21 8v3M16 14l5-3 5 3M13 19l8-4 8 4" stroke="currentColor" strokeWidth="2.4" />
+            <path d="M10 24l11-3 11 3-3 9-8 3-8-3-3-9Z" fill="currentColor" />
+            <path d="M4 36c7-2 11-1 17 1 6 1 11 1 17-1M7 40c6-1 9 0 14 1 5 0 9 0 14-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </svg>
         </div>
         <span
@@ -82,9 +59,9 @@ export default function Header({
             letterSpacing: -0.5,
           }}
         >
-          Kargo
+          KARGO
         </span>
-      </button>
+      </div>
       <SearchBox
         batches={batches}
         onNavigate={onNavigate}
@@ -98,6 +75,7 @@ export default function Header({
           onSettings={onSettings}
           onLogout={onLogout}
           onApplyToSell={onApplyToSell}
+          displayLabel={role === "Seller" ? "User" : undefined}
         />
       </div>
     </header>
