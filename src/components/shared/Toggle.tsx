@@ -4,11 +4,18 @@ export default function Toggle({
   on,
   onChange,
   label = "Toggle setting",
+  compact = false,
 }: {
   on: boolean
   onChange: (v: boolean) => void
   label?: string
+  compact?: boolean
 }) {
+  const width = compact ? 34 : 40
+  const height = compact ? 18 : 22
+  const knob = compact ? 14 : 16
+  const inset = 3
+
   return (
     <button
       type="button"
@@ -17,8 +24,8 @@ export default function Toggle({
       aria-label={label}
       onClick={() => onChange(!on)}
       style={{
-        width: 40,
-        height: 22,
+        width,
+        height,
         borderRadius: 999,
         background: on ? INDIGO : "#E5E7EB",
         position: "relative",
@@ -31,13 +38,13 @@ export default function Toggle({
     >
       <div
         style={{
-          width: 16,
-          height: 16,
+          width: knob,
+          height: knob,
           borderRadius: "50%",
           background: "#fff",
           position: "absolute",
-          top: 3,
-          left: on ? 21 : 3,
+          top: compact ? 2 : inset,
+          left: on ? width - knob - (compact ? 2 : inset) : compact ? 2 : inset,
           transition: "left 0.2s cubic-bezier(.22,1,.36,1)",
           boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
         }}
