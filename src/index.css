@@ -265,6 +265,49 @@ button {
   background: rgba(25, 27, 169, .08);
 }
 
+/* Demo vs Live session picker on the login screen (only shown when Supabase
+   credentials are present). Mirrors the role-option look for consistency. */
+.auth-mode-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 22px auto 0;
+}
+
+.auth-mode-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #6b7280;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+.auth-mode-option:hover {
+  border-color: #c7c9f0;
+}
+
+.auth-mode-option.is-active {
+  border-color: #191ba9;
+  background: #eef0ff;
+  color: #191ba9;
+}
+
+.auth-mode-option strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-mode-option small {
+  font-size: 10.5px;
+  font-weight: 400;
+}
+
 .auth-page--signup .auth-heading {
   margin-bottom: 36px;
 }

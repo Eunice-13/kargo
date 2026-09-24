@@ -1,7 +1,12 @@
 import { useCallback, useState } from "react"
 import type { UserInfo } from "@/types"
 import { PrimaryBtn } from "@/components/shared"
-import { isSupabaseConfigured } from "@/lib/supabase"
+import {
+  hasSupabaseCredentials,
+  isDemoSession,
+  isSupabaseConfigured,
+  setDemoMode,
+} from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import AuthInput from "./AuthInput"
 import AuthLayout from "./AuthLayout"
@@ -98,148 +103,6 @@ export default function Login({
               error={passErr}
               placeholder="••••••••"
             />
-<<<<<<< HEAD
-            <div>
-              <AuthInput
-                label="Password"
-                type="password"
-                value={password}
-                onChange={setPassword}
-                error={passErr}
-                placeholder="••••••••"
-              />
-              <div style={{ textAlign: "right", marginTop: 6 }}>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setForgotSent(true)
-                    if (isSupabaseConfigured && email.includes("@")) {
-                      await kargoApi.requestPasswordReset(email)
-                    }
-                  }}
-                  style={{
-                    fontSize: 12,
-                    color: INDIGO,
-                    fontWeight: 600,
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  Forgot password?
-                </button>
-                {forgotSent && (
-                  <div role="status" style={{ marginTop: 7, color: "#0B7A59", fontSize: 11 }}>
-                    If this email is registered, recovery instructions will be sent shortly.
-                  </div>
-                )}
-              </div>
-            </div>
-            <PrimaryBtn
-              onClick={submit}
-              loading={loading}
-              style={{
-                width: "100%",
-                padding: "11px 0",
-                fontSize: 14,
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
-              {loading ? "Signing in…" : "Log In"}
-            </PrimaryBtn>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                margin: "2px 0",
-              }}
-            >
-              <span style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
-              <span style={{ fontSize: 11, color: "#9CA3AF" }}>or</span>
-              <span style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
-            </div>
-            <button
-              type="button"
-              onClick={continueWithFacebook}
-              disabled={fbLoading}
-              style={{
-                width: "100%",
-                padding: "11px 0",
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#fff",
-                background: "#1877F2",
-                border: "none",
-                borderRadius: 8,
-                cursor: fbLoading ? "default" : "pointer",
-                opacity: fbLoading ? 0.7 : 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: "50%",
-                  background: "#fff",
-                  color: "#1877F2",
-                  fontSize: 13,
-                  fontWeight: 800,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                f
-              </span>
-              {fbLoading ? "Connecting…" : "Continue with Facebook"}
-            </button>
-          </div>
-          <div style={{ marginTop: 20, textAlign: "center" }}>
-            <span style={{ fontSize: 13, color: "#9CA3AF" }}>
-              Don't have an account?{" "}
-            </span>
-            <button
-              onClick={onSignUp}
-              style={{
-                fontSize: 13,
-                color: INDIGO,
-                fontWeight: 700,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Sign up
-            </button>
-          </div>
-          {!isSupabaseConfigured && <div
-            style={{
-              background: CYAN_L,
-              border: `1px solid ${SKY}`,
-              borderRadius: 7,
-              padding: "8px 12px",
-              marginTop: 16,
-            }}
-          >
-            <p
-              style={{ fontSize: 11.5, color: "#0369A1", textAlign: "center" }}
-            >
-              <strong>Demo:</strong> any email + password{" "}
-              <code
-                style={{
-                  background: "rgba(0,0,0,0.07)",
-                  borderRadius: 3,
-                  padding: "1px 4px",
-=======
             <div className="auth-forgot-row">
               <button
                 type="button"
@@ -248,7 +111,6 @@ export default function Login({
                   if (isSupabaseConfigured && email.includes("@")) {
                     await kargoApi.requestPasswordReset(email)
                   }
->>>>>>> 96b71d11d204fbcc5df700d934b20472000ca4ea
                 }}
                 className="auth-link-button"
               >
@@ -264,6 +126,61 @@ export default function Login({
           <PrimaryBtn onClick={submit} loading={loading} style={{ width: "100%" }}>
             {loading ? "Signing in…" : "Login"}
           </PrimaryBtn>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              margin: "2px 0",
+            }}
+          >
+            <span style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
+            <span style={{ fontSize: 11, color: "#9CA3AF" }}>or</span>
+            <span style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
+          </div>
+          <button
+            type="button"
+            onClick={continueWithFacebook}
+            disabled={fbLoading}
+            style={{
+              width: "100%",
+              padding: "11px 0",
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#fff",
+              background: "#1877F2",
+              border: "none",
+              borderRadius: 8,
+              cursor: fbLoading ? "default" : "pointer",
+              opacity: fbLoading ? 0.7 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              fontFamily: "'Plus Jakarta Sans',sans-serif",
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                background: "#fff",
+                color: "#1877F2",
+                fontSize: 13,
+                fontWeight: 800,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              f
+            </span>
+            {fbLoading ? "Connecting…" : "Continue with Facebook"}
+          </button>
         </div>
 
         <div className="auth-switch-copy">
@@ -273,6 +190,35 @@ export default function Login({
           </button>
         </div>
 
+        {/* When a real backend is configured, let the user choose per session
+            between the seeded demo (password123, in-memory) and a live run
+            against Supabase. Absent credentials, the app is always in demo mode
+            and only the demo hint is shown. */}
+        {hasSupabaseCredentials && (
+          <div className="auth-mode-switch" role="group" aria-label="Choose sign-in mode">
+            <button
+              type="button"
+              className={`auth-mode-option${isDemoSession ? " is-active" : ""}`}
+              aria-pressed={isDemoSession}
+              onClick={() => setDemoMode(true)}
+            >
+              <strong>Demo</strong>
+              <small>Explore with seed data</small>
+            </button>
+            <button
+              type="button"
+              className={`auth-mode-option${!isDemoSession ? " is-active" : ""}`}
+              aria-pressed={!isDemoSession}
+              onClick={() => setDemoMode(false)}
+            >
+              <strong>Live</strong>
+              <small>Sign in to Supabase</small>
+            </button>
+          </div>
+        )}
+
+        {/* Shown whenever the app is effectively in demo mode: either no
+            credentials at all, or the user picked "Demo" above. */}
         {!isSupabaseConfigured && (
           <div className="auth-demo-note">
             <p>

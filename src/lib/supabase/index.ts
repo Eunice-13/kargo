@@ -1,1 +1,8 @@
-export { isSupabaseConfigured, requireSupabase, supabase } from "./client"
+export {
+  hasSupabaseCredentials,
+  isDemoSession,
+  isSupabaseConfigured,
+  requireSupabase,
+  setDemoMode,
+  supabase,
+} from "./client"
