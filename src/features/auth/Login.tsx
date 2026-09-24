@@ -1,11 +1,10 @@
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 import type { UserInfo } from "@/types"
-import { INDIGO, CREAM, CYAN_L, SKY } from "@/constants/theme"
 import { PrimaryBtn } from "@/components/shared"
-import AuthInput from "./AuthInput"
-import LogoMark from "./LogoMark"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
+import AuthInput from "./AuthInput"
+import AuthLayout from "./AuthLayout"
 
 export default function Login({
   onSignUp,
@@ -74,61 +73,32 @@ export default function Login({
   }, [email, onSuccess])
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: CREAM,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
-      <div className="pu" style={{ width: "100%", maxWidth: 400 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <LogoMark size={52} />
-        </div>
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 12,
-            border: "1px solid #E5E7EB",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
-            padding: 32,
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
-              fontSize: 22,
-              fontWeight: 800,
-              color: "#111827",
-              marginBottom: 6,
-              textAlign: "center",
-            }}
-          >
-            Welcome back
-          </h2>
-          <p
-            style={{
-              fontSize: 13,
-              color: "#9CA3AF",
-              textAlign: "center",
-              marginBottom: 24,
-            }}
-          >
-            Sign in to your Kargo account
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <AuthLayout page="login">
+      <div className="auth-content pu">
+        <header className="auth-heading">
+          <h1>Welcome back!</h1>
+          <p>Sign in to your Kargo account</p>
+        </header>
+
+        <div className="auth-login-fields">
+          <AuthInput
+            label="Email address"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            error={emailErr}
+            placeholder="juan@gmail.com"
+          />
+          <div className="auth-password-group">
             <AuthInput
-              label="Email address"
-              type="email"
-              value={email}
-              onChange={setEmail}
-              error={emailErr}
-              placeholder="juan@email.com"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={setPassword}
+              error={passErr}
+              placeholder="••••••••"
             />
+<<<<<<< HEAD
             <div>
               <AuthInput
                 label="Password"
@@ -269,15 +239,48 @@ export default function Login({
                   background: "rgba(0,0,0,0.07)",
                   borderRadius: 3,
                   padding: "1px 4px",
+=======
+            <div className="auth-forgot-row">
+              <button
+                type="button"
+                onClick={async () => {
+                  setForgotSent(true)
+                  if (isSupabaseConfigured && email.includes("@")) {
+                    await kargoApi.requestPasswordReset(email)
+                  }
+>>>>>>> 96b71d11d204fbcc5df700d934b20472000ca4ea
                 }}
+                className="auth-link-button"
               >
-                password123
-              </code>
-            </p>
-          </div>}
+                Forgot password?
+              </button>
+              {forgotSent && (
+                <div role="status" className="auth-recovery-status">
+                  If this email is registered, recovery instructions will be sent shortly.
+                </div>
+              )}
+            </div>
+          </div>
+          <PrimaryBtn onClick={submit} loading={loading} style={{ width: "100%" }}>
+            {loading ? "Signing in…" : "Login"}
+          </PrimaryBtn>
         </div>
+
+        <div className="auth-switch-copy">
+          <span>Don’t have an account? </span>
+          <button onClick={onSignUp} className="auth-link-button">
+            Sign up
+          </button>
+        </div>
+
+        {!isSupabaseConfigured && (
+          <div className="auth-demo-note">
+            <p>
+              <strong>Demo:</strong> any email + password <code>password123</code>
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+    </AuthLayout>
   )
 }
-

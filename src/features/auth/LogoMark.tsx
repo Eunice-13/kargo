@@ -1,52 +1,50 @@
 import { INDIGO } from "@/constants/theme"
 
-export default function LogoMark({ size = 40 }: { size?: number }) {
+export default function LogoMark({
+  size = 40,
+  inverse = false,
+}: {
+  size?: number
+  inverse?: boolean
+}) {
+  const color = inverse ? "#FFFFFF" : INDIGO
+
   return (
     <div
       style={{
         display: "inline-flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 6,
+        gap: size * 0.05,
+        color,
       }}
     >
-      <div
-        style={{
-          width: size,
-          height: size,
-          background: INDIGO,
-          borderRadius: size * 0.22,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 4px 14px rgba(25,27,169,0.28)",
-        }}
+      <svg
+        width={size}
+        height={size * 0.78}
+        viewBox="0 0 180 142"
+        fill="none"
+        aria-hidden="true"
       >
-        <svg
-          width={size * 0.5}
-          height={size * 0.5}
-          viewBox="0 0 20 20"
-          fill="none"
-        >
-          <path
-            d="M2 5h16M2 10h10M2 15h13"
-            stroke="#fff"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
+        <path d="M31 91V42L90 7l59 35v49" stroke="currentColor" strokeWidth="6" />
+        <path d="M42 86V48L90 20l48 28v38" stroke="currentColor" strokeWidth="2.5" opacity=".55" />
+        <path d="M90 28v7M79 42l11-6 11 6M69 55l21-11 21 11M60 70l30-15 30 15M51 86l39-17 39 17" stroke="currentColor" strokeWidth="6" strokeLinejoin="round" />
+        <path d="M38 90l53-9 51 9-13 37-39 8-39-8-13-37Z" fill="currentColor" />
+        <path d="M91 82v50l38-8 11-31-49-11Z" fill={inverse ? "#668ED1" : "#FFFFFF"} opacity=".9" />
+        <circle cx="72" cy="96" r="5" fill={inverse ? "#668ED1" : "#FFFFFF"} />
+        <path d="M17 128c28-5 49-2 73 3 25 5 48 6 73-1M25 137c26-3 44 0 65 3 24 3 43 2 65-1" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity=".9" />
+      </svg>
       <span
         style={{
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
-          color: INDIGO,
-          fontWeight: 800,
-          fontSize: size * 0.52,
-          letterSpacing: -0.8,
+          color,
+          fontFamily: "'Manrope', sans-serif",
+          fontWeight: 700,
+          fontSize: size * 0.31,
+          letterSpacing: size * 0.005,
           lineHeight: 1,
         }}
       >
-        Kargo
+        KARGO
       </span>
     </div>
   )
