@@ -17,7 +17,6 @@ import {
 } from "@/components/shared"
 import BatchCheckoutModal from "@/features/payments/BatchCheckoutModal"
 import {
-  PRIOR_FULFILLED,
   useFulfillmentBoard,
   FulfillmentLiveRegion,
   FulfillmentDetails,
@@ -88,13 +87,34 @@ export default function Dashboard({
   const pendingClaims = activeClaims
   const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
+  // Buyer: orders that reached the final "Delivered" step (order.step === 5)
+  // are fulfilled and completed. Per-account, since `orders` is the current
+  // buyer's order list.
+  const completedOrders = orders.filter((o) => o.step === 5)
+
+  // ─── Seller stat sources (derived from live data, not hardcoded) ───────────
+  // Scope to the signed-in seller's own batches.
+  const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name)
+  // Payment proofs awaiting the seller's review = orders sitting in the
+  // "Pending Payment" column of the fulfillment board.
+  const paymentsToVerify = fulfillment.filter((o) => o.col === "Pending Payment")
+  // Extension requests awaiting this seller's approval: claims on their orders
+  // that requested an extension and are still pending a decision.
+  const pendingExtensions = claims.filter(
+    (c) => c.extensionRequested && c.status === "Pending" && c.seller === user.name,
+  )
+  // Orders fulfilled = orders moved to the board's "Completed" column.
+  const ordersFulfilled = fulfillment.filter((o) => o.col === "Completed")
 
   const buyerStats = [
     {
       label: "Active Claims",
       value: String(activeClaims.length),
       icon: Package,
-      sub: "+3 this week",
+      sub:
+        activeClaims.length === 0
+          ? "No active claims"
+          : `${activeClaims.length} awaiting payment or reservation`,
       sc: GREEN,
       bg: "#E8F9F3",
     },
@@ -116,9 +136,9 @@ export default function Dashboard({
     },
     {
       label: "Completed Orders",
-      value: "47",
+      value: String(completedOrders.length),
       icon: CheckCircle2,
-      sub: "All time",
+      sub: "Fulfilled and delivered",
       sc: "#6B7280",
       bg: "#F0EEFF",
     },
@@ -126,7 +146,7 @@ export default function Dashboard({
   const sellerStats = [
     {
       label: "Active Batches",
-      value: String(batches.filter((b) => b.live).length),
+      value: String(myLiveBatches.length),
       icon: Plane,
       sub: "Open + Scheduled",
       sc: "#64E894",
@@ -134,7 +154,7 @@ export default function Dashboard({
     },
     {
       label: "Awaiting Verification",
-      value: "3",
+      value: String(paymentsToVerify.length),
       icon: Clock3,
       sub: "Payment proofs to review",
       sc: "#F4D85D",
@@ -142,7 +162,7 @@ export default function Dashboard({
     },
     {
       label: "Extension Requests",
-      value: "2",
+      value: String(pendingExtensions.length),
       icon: ClipboardList,
       sub: "Awaiting your approval",
       sc: "#E62B48",
@@ -150,9 +170,7 @@ export default function Dashboard({
     },
     {
       label: "Orders Fulfilled",
-      value: String(
-        PRIOR_FULFILLED + fulfillment.filter((o) => o.col === "Completed").length,
-      ),
+      value: String(ordersFulfilled.length),
       icon: CheckCircle2,
       sub: "Completed this quarter",
       sc: "#6B7280",
@@ -431,13 +449,13 @@ export default function Dashboard({
                 {
                   icon: Clock3,
                   label: "Payments to Verify",
-                  count: 3,
+                  count: paymentsToVerify.length,
                   tab: "Payments" as Tab,
                 },
                 {
                   icon: ClipboardList,
                   label: "Extension Requests",
-                  count: 2,
+                  count: pendingExtensions.length,
                   tab: "Batches" as Tab,
                 },
               ].map((action) => (
@@ -693,13 +711,13 @@ export default function Dashboard({
                 {
                   icon: ClipboardList,
                   label: "Payments to Verify",
-                  count: 3,
+                  count: paymentsToVerify.length,
                   tab: "Payments" as Tab,
                 },
                 {
                   icon: Clock3,
                   label: "Extension Requests",
-                  count: 2,
+                  count: pendingExtensions.length,
                   tab: "Batches" as Tab,
                 },
               ].map((item) => (
