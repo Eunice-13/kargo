@@ -14,6 +14,7 @@ import {
   StatusBadge,
   Countdown,
   BuyerProfileModal,
+  ORDER_STEPS,
 } from "@/components/shared"
 import BatchCheckoutModal from "@/features/payments/BatchCheckoutModal"
 import {
@@ -81,13 +82,19 @@ export default function Dashboard({
   const pendingClaims = activeClaims
   const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
+  // Completed orders for this account: orders that reached the final
+  // "Delivered" step (ORDER_STEPS index 5) — i.e. fulfilled and completed.
+  const completedOrders = orders.filter((o) => o.step === ORDER_STEPS.length)
 
   const buyerStats = [
     {
       label: "Active Claims",
       value: String(activeClaims.length),
       icon: Package,
-      sub: "+3 this week",
+      sub:
+        activeClaims.length === 0
+          ? "No active claims"
+          : `${activeClaims.length} awaiting payment or reservation`,
       sc: GREEN,
       bg: "#E8F9F3",
     },
@@ -109,9 +116,9 @@ export default function Dashboard({
     },
     {
       label: "Completed Orders",
-      value: "47",
+      value: String(completedOrders.length),
       icon: CheckCircle2,
-      sub: "All time",
+      sub: "Fulfilled and delivered",
       sc: "#6B7280",
       bg: "#F0EEFF",
     },
