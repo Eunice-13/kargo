@@ -11,11 +11,13 @@ export default function Modal({
   onClose,
   children,
   width = 480,
+  topOffset = HEADER_HEIGHT,
 }: {
   title: string
   onClose: () => void
   children: React.ReactNode
   width?: number
+  topOffset?: number
 }) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useRef(`modal-title-${Math.random().toString(36).slice(2, 9)}`).current
@@ -86,10 +88,10 @@ export default function Modal({
       style={{
         // Portaled to document.body so `position: fixed` resolves against the
         // viewport, not the transform-animated app wrapper (.pu). The overlay
-        // starts BELOW the 56px nav header so a popup never covers the nav, and
+        // starts below the configured nav header so a popup never covers it, and
         // centers the dialog within the area beneath it.
         position: "fixed",
-        top: HEADER_HEIGHT,
+        top: topOffset,
         left: 0,
         right: 0,
         bottom: 0,
@@ -118,7 +120,7 @@ export default function Modal({
           borderRadius: 12,
           width: "100%",
           maxWidth: width,
-          maxHeight: `calc(100dvh - ${HEADER_HEIGHT + 32}px)`,
+          maxHeight: `calc(100dvh - ${topOffset + 32}px)`,
           display: "flex",
           flexDirection: "column",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",

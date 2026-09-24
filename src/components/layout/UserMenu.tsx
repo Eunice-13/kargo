@@ -8,11 +8,13 @@ export default function UserMenu({
   onSettings,
   onLogout,
   onApplyToSell,
+  displayLabel,
 }: {
   user: UserInfo
   onSettings: () => void
   onLogout: () => void
   onApplyToSell?: () => void
+  displayLabel?: string
 }) {
   const [showUser, setShowUser] = useState(false)
   const userRef = useRef<HTMLDivElement>(null)
@@ -42,7 +44,7 @@ export default function UserMenu({
       >
         <Avatar name={user.name || "User"} size={32} imageUrl={user.avatarUrl} />
         <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>
-          {user.name.split(" ")[0] || "User"}
+          {displayLabel || user.name.split(" ")[0] || "User"}
         </span>
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path

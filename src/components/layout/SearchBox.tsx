@@ -30,15 +30,6 @@ export default function SearchBox({
         }}
         className="kargo-search flex items-center gap-2 px-3 py-2"
       >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-          <circle cx="7" cy="7" r="5" stroke="#9CA3AF" strokeWidth="1.5" />
-          <path
-            d="M11 11l3 3"
-            stroke="#9CA3AF"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
         <input
           aria-label="Search batches, products, and sellers"
           value={searchQ}
@@ -46,7 +37,7 @@ export default function SearchBox({
             setSearchQ(e.target.value)
             setSearchOpen(e.target.value.length > 0)
           }}
-          placeholder="Search batches, products, sellers…"
+          placeholder="Search products, batches, and buyers here..."
           style={{
             background: "transparent",
             fontSize: 13,
@@ -56,6 +47,17 @@ export default function SearchBox({
           }}
           className="placeholder:text-gray-400"
         />
+        <button
+          type="button"
+          className="kargo-search-submit"
+          aria-label="Search"
+          onClick={() => setSearchOpen(searchQ.trim().length > 0)}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M10.5 10.5 14 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
       </div>
       {searchOpen && searchQ && (
         <div

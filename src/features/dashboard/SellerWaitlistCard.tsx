@@ -1,12 +1,74 @@
 import { useState } from "react"
-import { ChevronDown, ChevronUp, Users, ArrowUpRight, Check } from "lucide-react"
+import { ArrowUpRight, Check, ChevronDown, ChevronUp, Users } from "lucide-react"
 import type { SellerWaitlistGroup } from "@/types"
-import { INDIGO, CYAN_L, GREEN } from "@/constants/theme"
-import { Card, Avatar, PrimaryBtn } from "@/components/shared"
+import { Avatar, Card, Modal, PrimaryBtn } from "@/components/shared"
 
-// Seller-facing waitlist: one row per product that has waiting buyers. Each row
-// expands to reveal the ordered queue (join order) with a contact link where
-// the buyer has one. Buyers never see this — they only see their own position.
+function WaitlistGroups({
+  groups,
+  openId,
+  onToggle,
+}: {
+  groups: SellerWaitlistGroup[]
+  openId: string | null
+  onToggle: (id: string) => void
+}) {
+  return (
+    <div className="seller-waitlist-groups space-y-2">
+      {groups.map((group) => {
+        const open = openId === group.productId
+        return (
+          <div className="seller-waitlist-group" key={group.productId}>
+            <button
+              type="button"
+              onClick={() => onToggle(group.productId)}
+              aria-expanded={open}
+              className="seller-waitlist-group__toggle"
+            >
+              <div>
+                <strong>{group.product}</strong>
+                {group.batch && <small>{group.batch}</small>}
+              </div>
+              <span className="seller-waitlist-count">
+                {group.queue.length} waiting
+              </span>
+              {open ? (
+                <ChevronUp size={16} aria-hidden="true" />
+              ) : (
+                <ChevronDown size={16} aria-hidden="true" />
+              )}
+            </button>
+
+            {open && (
+              <div className="seller-waitlist-queue fi">
+                {group.queue.map((entry) => (
+                  <div
+                    className="seller-waitlist-entry"
+                    key={`${group.productId}-${entry.position}`}
+                  >
+                    <span>#{entry.position}</span>
+                    <Avatar name={entry.buyer} size={26} />
+                    <div>
+                      <strong>{entry.buyer}</strong>
+                      <small>wants ×{entry.desiredQuantity}</small>
+                    </div>
+                    {entry.buyerFb ? (
+                      <a href={entry.buyerFb} target="_blank" rel="noopener noreferrer">
+                        Contact <ArrowUpRight size={12} aria-hidden="true" />
+                      </a>
+                    ) : (
+                      <small>No link</small>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function SellerWaitlistCard({
   groups,
   responseHours,
@@ -20,6 +82,7 @@ export default function SellerWaitlistCard({
   const [hours, setHours] = useState(String(responseHours || 24))
   const [savingHours, setSavingHours] = useState(false)
   const [savedHours, setSavedHours] = useState(false)
+  const [showAll, setShowAll] = useState(false)
   const dirty = Number(hours) > 0 && Number(hours) !== responseHours
 
   const saveHours = async () => {
@@ -34,74 +97,33 @@ export default function SellerWaitlistCard({
     }
   }
 
+  const toggleGroup = (id: string) => setOpenId((current) => (current === id ? null : id))
+
   return (
-    <Card>
-      <div
-        style={{
-          fontSize: 13,
-          fontWeight: 700,
-          color: "#111827",
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
-          marginBottom: 14,
-          display: "flex",
-          alignItems: "center",
-          gap: 7,
-        }}
-      >
-        <Users size={15} aria-hidden="true" /> Waitlisted Items
+    <Card className="seller-waitlist-card">
+      <div className="seller-waitlist-card__header">
+        <h2><Users size={16} aria-hidden="true" /> Waitlisted Items</h2>
+        {groups.length > 0 && (
+          <button type="button" onClick={() => setShowAll(true)}>
+            View All
+          </button>
+        )}
       </div>
 
-      {/* Seller-configurable response window for partial-match offers. */}
-      <div
-        style={{
-          background: "#F9FAFB",
-          border: "1px solid #E5E7EB",
-          borderRadius: 8,
-          padding: "10px 12px",
-          marginBottom: 14,
-        }}
-      >
-        <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-          Waitlist response window
-        </div>
-        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2, marginBottom: 8 }}>
-          How long a waitlisted buyer has to accept a partial-stock offer before
-          it passes to the next person. Full-match offers are claimed
-          automatically and are not affected.
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="seller-waitlist-window">
+        <strong>Waitlist response window</strong>
+        <div>
           <input
             type="number"
             min="1"
             max="168"
             value={hours}
-            onChange={(e) => setHours(e.target.value)}
-            style={{
-              width: 72,
-              fontSize: 13,
-              border: "1px solid #E5E7EB",
-              borderRadius: 7,
-              padding: "7px 10px",
-              outline: "none",
-              color: "#374151",
-            }}
+            onChange={(event) => setHours(event.target.value)}
+            aria-label="Waitlist response hours"
           />
-          <span style={{ fontSize: 12, color: "#6B7280" }}>hours</span>
-          <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8 }}>
-            {savedHours && (
-              <span
-                style={{
-                  fontSize: 11,
-                  color: GREEN,
-                  fontWeight: 700,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 3,
-                }}
-              >
-                <Check size={12} aria-hidden="true" /> Saved
-              </span>
-            )}
+          <span>hours</span>
+          <span className="seller-waitlist-save">
+            {savedHours && <em><Check size={12} aria-hidden="true" /> Saved</em>}
             <PrimaryBtn size="sm" onClick={saveHours} disabled={!dirty || savingHours}>
               {savingHours ? "Saving…" : "Save"}
             </PrimaryBtn>
@@ -109,155 +131,29 @@ export default function SellerWaitlistCard({
         </div>
       </div>
 
-      {groups.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: "#9CA3AF", padding: "8px 0" }}>
-          No one is waitlisted on your items yet.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {groups.map((group) => {
-            const open = openId === group.productId
-            return (
-              <div
-                key={group.productId}
-                style={{
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 8,
-                  overflow: "hidden",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenId(open ? null : group.productId)}
-                  aria-expanded={open}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "10px 12px",
-                    background: open ? "#F9FAFB" : "#fff",
-                    border: "none",
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "#111827",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {group.product}
-                    </div>
-                    {group.batch && (
-                      <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                        {group.batch}
-                      </div>
-                    )}
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "#0369A1",
-                      background: CYAN_L,
-                      borderRadius: 999,
-                      padding: "2px 9px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {group.queue.length} waiting
-                  </span>
-                  <span style={{ color: "#9CA3AF", display: "flex" }}>
-                    {open ? (
-                      <ChevronUp size={16} aria-hidden="true" />
-                    ) : (
-                      <ChevronDown size={16} aria-hidden="true" />
-                    )}
-                  </span>
-                </button>
+      <div className="seller-waitlist-preview">
+        {groups.length === 0 ? (
+          <p className="seller-waitlist-empty">No one is waitlisted on your items yet.</p>
+        ) : (
+          <WaitlistGroups
+            groups={groups.slice(0, 2)}
+            openId={openId}
+            onToggle={toggleGroup}
+          />
+        )}
+      </div>
 
-                {open && (
-                  <div
-                    className="fi"
-                    style={{ borderTop: "1px solid #E5E7EB", padding: "6px 12px 10px" }}
-                  >
-                    {group.queue.map((entry) => (
-                      <div
-                        key={`${group.productId}-${entry.position}`}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 10,
-                          padding: "7px 0",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 800,
-                            color: INDIGO,
-                            width: 22,
-                            flexShrink: 0,
-                          }}
-                        >
-                          #{entry.position}
-                        </span>
-                        <Avatar name={entry.buyer} size={26} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontSize: 12.5,
-                              fontWeight: 600,
-                              color: "#111827",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {entry.buyer}
-                          </div>
-                          <div style={{ fontSize: 10.5, color: "#9CA3AF" }}>
-                            wants ×{entry.desiredQuantity}
-                          </div>
-                        </div>
-                        {entry.buyerFb ? (
-                          <a
-                            href={entry.buyerFb}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 600,
-                              color: INDIGO,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 3,
-                              textDecoration: "none",
-                              flexShrink: 0,
-                            }}
-                          >
-                            Contact <ArrowUpRight size={12} aria-hidden="true" />
-                          </a>
-                        ) : (
-                          <span style={{ fontSize: 10.5, color: "#B0B7C3", flexShrink: 0 }}>
-                            No link
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+      {showAll && (
+        <Modal
+          title="All Waitlisted Items"
+          onClose={() => setShowAll(false)}
+          width={680}
+          topOffset={92}
+        >
+          <div className="seller-waitlist-modal-list">
+            <WaitlistGroups groups={groups} openId={openId} onToggle={toggleGroup} />
+          </div>
+        </Modal>
       )}
     </Card>
   )

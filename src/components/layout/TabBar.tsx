@@ -1,8 +1,15 @@
 import type { Role, Tab } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { PrimaryBtn } from "@/components/shared"
+import { ClipboardList, History, LayoutGrid, Package } from "lucide-react"
 
 export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
+const TAB_ICONS = {
+  Dashboard: LayoutGrid,
+  Batches: Package,
+  "My Claims": ClipboardList,
+  Payments: History,
+} as const
 export default function TabBar({
   active,
   setActive,
@@ -22,11 +29,17 @@ export default function TabBar({
         zIndex: 40,
         height: 44,
       }}
-      className="kargo-tabbar flex items-center sticky top-14"
+      className={`kargo-tabbar flex items-center ${
+        role === "Seller"
+          ? "seller-tabbar"
+          : "sticky top-14"
+      }`}
     >
       {/* Tabs — equally distributed across available width */}
       <div style={{ display: "flex", flex: 1, height: "100%", minWidth: 0 }}>
-        {TABS.map((tab) => (
+        {TABS.map((tab) => {
+          const Icon = TAB_ICONS[tab as keyof typeof TAB_ICONS]
+          return (
           <button
             key={tab}
             data-spotlight={
@@ -62,18 +75,21 @@ export default function TabBar({
               textOverflow: "ellipsis",
             }}
             className="hover:text-gray-800"
+            aria-label={tab === "My Claims" && role === "Seller" ? "Orders Received" : tab}
           >
-            {tab === "My Claims"
-              ? role === "Seller"
-                ? "Orders Received"
-                : "My Claims"
+            {role === "Seller" ? (
+              <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
+            ) : tab === "My Claims"
+              ? "My Claims"
               : tab}
           </button>
-        ))}
+          )
+        })}
       </div>
       {/* Right group — only shown for verified sellers (New Batch) */}
       {role === "Seller" && (
         <div
+          className="seller-new-batch"
           style={{
             display: "flex",
             alignItems: "center",
