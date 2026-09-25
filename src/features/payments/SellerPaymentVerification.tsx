@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import type React from "react"
 import { CreditCard, Check, Megaphone } from "lucide-react"
 import { INDIGO, CREAM } from "@/constants/theme"
-import { Card, Avatar, ProductThumb } from "@/components/shared"
+import { Card, Avatar, ProductThumb, Countdown } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
 import AddressSection from "./AddressSection"
 import SellerPaymentMethods from "./SellerPaymentMethods"
@@ -24,7 +24,6 @@ export default function SellerPaymentVerification() {
       status: "Pending",
       method: "GCash",
       acctName: "Anna C. Cruz",
-      acctNum: "0917-823-4410",
       receipt: "receipt_gcash.jpg",
       phone: "0917-823-4410",
       amountPaid: "750",
@@ -40,7 +39,6 @@ export default function SellerPaymentVerification() {
       status: "Pending",
       method: "Maya",
       acctName: "Benedicto Santos",
-      acctNum: "0918-554-2291",
       receipt: "maya_proof.png",
       phone: "0918-554-2291",
       amountPaid: "4800",
@@ -56,7 +54,6 @@ export default function SellerPaymentVerification() {
       status: "Verified",
       method: "Bank Transfer",
       acctName: "Carla M. Reyes",
-      acctNum: "BDO-0044-2109",
       receipt: "bdo_receipt.pdf",
       phone: "0916-001-2109",
       amountPaid: "480",
@@ -93,7 +90,10 @@ export default function SellerPaymentVerification() {
             decision = "verified"
           }
           if (decision) {
-            void kargoApi.reviewPayment(String(item.id), decision, item.rejectReason).catch((error) =>
+            const deadlineHours = item.rejectionDeadline
+              ? Math.max(0, (new Date(item.rejectionDeadline).getTime() - Date.now()) / 3_600_000)
+              : undefined
+            void kargoApi.reviewPayment(String(item.id), decision, item.rejectReason, deadlineHours).catch((error) =>
               alert(error instanceof Error ? error.message : "Unable to review payment."),
             )
           }
@@ -361,6 +361,11 @@ export default function SellerPaymentVerification() {
                               }}
                             >
                               {item.rejectReason}
+                            </div>
+                          )}
+                          {item.rejectionDeadline && (
+                            <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4, whiteSpace: "nowrap" }}>
+                              Resubmit in <Countdown hours={0} id={`seller-reject-${item.id}`} expiresAt={item.rejectionDeadline} />
                             </div>
                           )}
                         </div>

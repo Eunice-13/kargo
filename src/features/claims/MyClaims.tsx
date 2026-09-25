@@ -14,8 +14,9 @@ import {
   TrackOrderModal,
   BuyerProfileModal,
   ExtensionRequestModal,
+  PaymentSuccessToast,
 } from "@/components/shared"
-import { PaymentSubmitModal } from "@/features/payments"
+import { PaymentSubmitModal, type PaymentSubmissionDetails } from "@/features/payments"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { claimIsPayable } from "./claimExpiry"
@@ -33,6 +34,7 @@ export default function MyClaims({
   setBatches,
   user,
   role,
+  refreshData,
 }: SharedState) {
   const [filter, setFilter] = useState<ClaimStatus | "All">("All")
   const [payTarget, setPayTarget] = useState<ClaimRow | null>(null)
@@ -42,6 +44,12 @@ export default function MyClaims({
   const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null)
   const [orderFilter, setOrderFilter] = useState<ClaimStatus | "All">("All")
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
+  useEffect(() => {
+    if (!paymentSuccess) return
+    const timer = window.setTimeout(() => setPaymentSuccess(false), 6000)
+    return () => window.clearTimeout(timer)
+  }, [paymentSuccess])
   useEffect(() => {
     if (!payTarget) return
     const current = claims.find((claim) => claim.id === payTarget.id)
@@ -333,7 +341,12 @@ export default function MyClaims({
     )
   }
 
-  const handlePay = async (method: string, refNo: string, receipt?: File) => {
+  const handlePay = async (
+    method: string,
+    refNo: string,
+    receipt: File | undefined,
+    details: PaymentSubmissionDetails,
+  ) => {
     if (!payTarget) return
     const currentClaim = claims.find((claim) => claim.id === payTarget.id)
     if (!currentClaim || !claimIsPayable(currentClaim)) {
@@ -346,23 +359,34 @@ export default function MyClaims({
         await kargoApi.submitPayment({
           orderId: String(payTarget.id),
           method,
-          amount: payTarget.amount,
+          amount: details.amountPaid,
           referenceNumber: refNo,
           receipt,
+          payerAccountName: details.payerAccountName,
+          payerPhone: details.payerPhone,
+          buyerContactUrl: details.buyerContactUrl,
         })
       } catch (error) {
         alert(error instanceof Error ? error.message : "Unable to submit payment.")
         return
       }
+      await refreshData()
+      setPayTarget(null)
+      setPaymentSuccess(true)
+      return
     }
     const newHist: PayHistRow = {
       id: payHistory.length + 1,
       product: payTarget.product,
       batch: payTarget.batch,
       method,
-      amount: payTarget.amount,
+      amount: details.amountPaid,
       date: TODAY,
       status: isSupabaseConfigured ? "Pending" : "Paid and Reserved",
+      referenceNumber: refNo || undefined,
+      payerAccountName: details.payerAccountName,
+      payerPhone: details.payerPhone,
+      buyerContactUrl: details.buyerContactUrl,
     }
     setPayHistory((h) => [newHist, ...h])
     if (!isSupabaseConfigured) setClaims((prev) =>
@@ -386,6 +410,7 @@ export default function MyClaims({
     }
     if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev])
     setPayTarget(null)
+    setPaymentSuccess(true)
   }
 
   return (
@@ -813,7 +838,7 @@ export default function MyClaims({
             hours: payTarget.hours,
           }}
           contactPrefill={user.fb || ""}
-          onConfirm={(method, refNo, receipt) => handlePay(method, refNo, receipt)}
+          onConfirm={(method, refNo, receipt, details) => handlePay(method, refNo, receipt, details)}
           onClose={() => setPayTarget(null)}
         />
       )}
@@ -842,6 +867,7 @@ export default function MyClaims({
           onClose={() => setExtTarget(null)}
         />
       )}
+      {paymentSuccess && <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />}
       {cancelTarget && (
         <Modal
           title="Cancel this claim?"

@@ -10,9 +10,10 @@ export type VerifyItem = {
   status: "Pending" | "Verified" | "Rejected"
   method: string
   acctName: string
-  acctNum: string
   receipt: string
+  receiptPath?: string
   rejectReason?: string
+  rejectionDeadline?: string
   phone?: string
   amountPaid?: string
   contact?: string

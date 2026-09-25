@@ -3,6 +3,7 @@ import { QRCodeSVG } from "qrcode.react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, ProductThumb, SecondaryBtn } from "@/components/shared"
 import PaymentSubmitModal from "./PaymentSubmitModal"
+import type { PaymentSubmissionDetails } from "./PaymentSubmitModal"
 import { getSellerPaymentDetails } from "./sellerPaymentDetails"
 import type { BuyerPaymentMethod } from "./buyerPaymentMethods"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
@@ -16,14 +17,23 @@ export default function BatchCheckoutModal({
 }: {
     items: ToPayRow[]
     contactPrefill?: string
-    onSubmit: (item: ToPayRow, method: string, refNo: string, receipt?: File) => void
+    onSubmit: (
+        item: ToPayRow,
+        method: string,
+        refNo: string,
+        receipt: File | undefined,
+        details: PaymentSubmissionDetails,
+    ) => Promise<boolean | undefined>
     onClose: () => void
     savedMethods?: BuyerPaymentMethod[]
 }) {
     const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
     const payableItems = items.filter((item) => !deadlineHasPassed(item))
     useEffect(() => {
-        if (payTarget && deadlineHasPassed(payTarget)) setPayTarget(null)
+        if (payTarget && (
+            deadlineHasPassed(payTarget) ||
+            !items.some((item) => item.id === payTarget.id)
+        )) setPayTarget(null)
     }, [payTarget, items])
     const groups = useMemo(() => {
         const grouped = new Map<string, ToPayRow[]>()
@@ -100,9 +110,10 @@ export default function BatchCheckoutModal({
                     item={payTarget}
                     contactPrefill={contactPrefill}
                     savedMethods={savedMethods}
-                    onConfirm={(method, refNo, receipt) => {
-                        onSubmit(payTarget, method, refNo, receipt)
-                        setPayTarget(null)
+                    onConfirm={async (method, refNo, receipt, paymentDetails) => {
+                        const submitted = await onSubmit(payTarget, method, refNo, receipt, paymentDetails)
+                        if (submitted) setPayTarget(null)
+                        return submitted
                     }}
                     onClose={() => setPayTarget(null)}
                 />

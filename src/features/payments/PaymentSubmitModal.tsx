@@ -13,6 +13,13 @@ import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 // Cash methods (Meetup / Delivery) carry no online-payment details; the buyer
 // just coordinates with the seller. Keep their real label as the method key.
 
+export type PaymentSubmissionDetails = {
+  amountPaid: number
+  payerAccountName?: string
+  payerPhone?: string
+  buyerContactUrl?: string
+}
+
 export default function PaymentSubmitModal({
   item,
   onConfirm,
@@ -21,7 +28,12 @@ export default function PaymentSubmitModal({
   savedMethods = [],
 }: {
   item: ToPayRow
-  onConfirm: (method: string, refNo: string, receipt?: File) => void
+  onConfirm: (
+    method: string,
+    refNo: string,
+    receipt: File | undefined,
+    details: PaymentSubmissionDetails,
+  ) => unknown | Promise<unknown>
   onClose: () => void
   contactPrefill?: string
   savedMethods?: BuyerPaymentMethod[]
@@ -57,6 +69,7 @@ export default function PaymentSubmitModal({
   const [uploading, setUploading] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const sellerDetails = getSellerPaymentDetails(item.seller)
@@ -104,6 +117,8 @@ export default function PaymentSubmitModal({
   }, [methodOptions, method])
 
   const isCash = isCashMethod(method)
+  const numericAmountPaid = Number(amountPaid)
+  const hasValidAmount = Number.isFinite(numericAmountPaid) && numericAmountPaid > 0
   // Match the selected method to a seller-uploaded one (case-insensitive).
   const sellerMethod = sellerMethods.find(
     (m) => m.methodType.toLowerCase() === method.toLowerCase(),
@@ -482,6 +497,8 @@ export default function PaymentSubmitModal({
               </label>
               <input
                 type="number"
+                min="0.01"
+                step="0.01"
                 value={amountPaid}
                 onChange={(e) => setAmountPaid(e.target.value)}
                 placeholder={String(item.amount)}
@@ -604,28 +621,39 @@ export default function PaymentSubmitModal({
           </SecondaryBtn>
           <PrimaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
-            onClick={() => {
+            onClick={async () => {
               if (deadlineHasPassed(item)) {
                 onClose()
                 alert("This claim has expired and can no longer be paid.")
                 return
               }
-              onConfirm(
-                method,
-                isCash ? handoffAddress.trim() : refNo,
-                uploadedFile ?? undefined,
-              )
+              setSubmitting(true)
+              try {
+                await onConfirm(
+                  method,
+                  isCash ? handoffAddress.trim() : refNo,
+                  uploadedFile ?? undefined,
+                  {
+                    amountPaid: isCash ? item.amount : numericAmountPaid,
+                    payerAccountName: acctName.trim() || undefined,
+                    payerPhone: phone.trim() || undefined,
+                    buyerContactUrl: contactLink.trim() || undefined,
+                  },
+                )
+              } finally {
+                setSubmitting(false)
+              }
             }}
             disabled={
-              isCash
+              submitting || (isCash
                 ? !handoffAddress.trim()
                 : !refNo.trim() ||
                   !uploaded ||
                   !phone.trim() ||
-                  !amountPaid.trim()
+                  !hasValidAmount)
             }
           >
-            {isCash ? "Confirm Order" : "Submit Payment"}
+            {submitting ? "Submittingâ€¦" : isCash ? "Confirm Order" : "Submit Payment"}
           </PrimaryBtn>
         </div>
       </div>

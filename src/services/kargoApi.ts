@@ -49,6 +49,16 @@ const birToUi: Record<DbProfile["bir_status"], BirState> = {
   flagged: "None",
 }
 
+const PAYMENT_METHOD_TYPES = new Set([
+  "GCash",
+  "Maya",
+  "Bank Transfer",
+  "Cash on Meetup",
+  "Cash on Delivery",
+  "Others",
+  "Receipt Upload",
+])
+
 function statusToClaim(status: string): ClaimRow["status"] {
   if (status === "expired") return "Expired"
   if (status === "cancelled" || status === "incomplete") return "Cancelled"
@@ -192,7 +202,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       client.from("batch_catalog").select("*"),
       client
         .from("orders")
-        .select("*,batch_products(name,batch_id,batches(title)),payments(amount,status,method_type,submitted_at),reviews(*)")
+        .select("*,batch_products(name,batch_id,batches(title)),payments(id,amount,status,method_type,submitted_at,reference_number,receipt_path,payer_account_name,payer_phone,buyer_contact_url,rejection_reason,rejection_deadline),reviews(*)")
         .order("created_at", { ascending: false }),
     ])
   if (catalogError) throw catalogError
@@ -361,13 +371,25 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     for (const payment of row.payments ?? []) {
       if (!isBuyer) continue
       payHistory.push({
-        id: `${row.id}-${payment.submitted_at}`,
+        id: payment.id ?? `${row.id}-${payment.submitted_at}`,
         product: product.name,
         batch: product.batches.title,
         method: payment.method_type,
         amount: Number(payment.amount),
         date: new Date(payment.submitted_at).toLocaleDateString(),
-        status: statusToClaim(row.status),
+        status:
+          payment.status === "rejected"
+            ? "Rejected"
+            : payment.status === "verified"
+              ? "Paid and Reserved"
+              : "Pending",
+        referenceNumber: payment.reference_number ?? undefined,
+        receiptPath: payment.receipt_path ?? undefined,
+        payerAccountName: payment.payer_account_name ?? undefined,
+        payerPhone: payment.payer_phone ?? undefined,
+        buyerContactUrl: payment.buyer_contact_url ?? undefined,
+        rejectionReason: payment.rejection_reason ?? undefined,
+        rejectionDeadline: payment.rejection_deadline ?? undefined,
       })
     }
   }
@@ -592,6 +614,9 @@ export async function submitPayment(input: {
   payerPhone?: string
   buyerContactUrl?: string
 }) {
+  if (!PAYMENT_METHOD_TYPES.has(input.method)) {
+    throw new Error("Invalid payment method. Please select GCash, Maya, bank transfer, or cash.")
+  }
   const client = requireSupabase()
   const { data: auth } = await client.auth.getUser()
   if (!auth.user) throw new Error("Authentication required")
@@ -821,6 +846,15 @@ export function paymentQrUrl(qrPath?: string | null): string | undefined {
   return requireSupabase().storage.from("payment-qr").getPublicUrl(qrPath).data.publicUrl
 }
 
+export async function paymentReceiptUrl(receiptPath: string): Promise<string> {
+  const { data, error } = await requireSupabase()
+    .storage
+    .from("payment-receipts")
+    .createSignedUrl(receiptPath, 600)
+  if (error) throw error
+  return data.signedUrl
+}
+
 // Buyer-facing: a seller's display-safe receive methods (type, name, number,
 // public QR image URL) via the seller_receive_methods security-definer RPC.
 export type SellerReceiveMethod = {
@@ -832,12 +866,14 @@ export type SellerReceiveMethod = {
 export async function loadSellerReceiveMethods(sellerId: string): Promise<SellerReceiveMethod[]> {
   const { data, error } = await requireSupabase().rpc("seller_receive_methods", { p_seller_id: sellerId })
   if (error) throw error
-  return (data ?? []).map((row: { method_type: string; account_name: string | null; account_number: string | null; qr_path: string | null }) => ({
-    methodType: row.method_type,
-    accountName: row.account_name,
-    accountNumber: row.account_number,
-    qrUrl: paymentQrUrl(row.qr_path),
-  }))
+  return (data ?? [])
+    .filter((row: { method_type: string }) => PAYMENT_METHOD_TYPES.has(row.method_type))
+    .map((row: { method_type: string; account_name: string | null; account_number: string | null; qr_path: string | null }) => ({
+      methodType: row.method_type,
+      accountName: row.account_name,
+      accountNumber: row.account_number,
+      qrUrl: paymentQrUrl(row.qr_path),
+    }))
 }
 
 export async function addPaymentMethod(
@@ -921,20 +957,27 @@ export async function loadSellerPaymentSubmissions() {
     status: row.status === "verified" ? "Verified" as const : row.status === "rejected" ? "Rejected" as const : "Pending" as const,
     method: row.method_type,
     acctName: row.payer_account_name ?? "—",
-    acctNum: row.payer_phone ?? "—",
-    receipt: row.receipt_path ?? "No receipt",
+    receipt: row.receipt_path?.split("/").pop() ?? "No receipt",
+    receiptPath: row.receipt_path ?? undefined,
     rejectReason: row.rejection_reason ?? undefined,
+    rejectionDeadline: row.rejection_deadline ?? undefined,
     phone: row.payer_phone ?? undefined,
     amountPaid: String(row.amount),
     contact: row.buyer_contact_url ?? undefined,
   }))
 }
 
-export async function reviewPayment(paymentId: string, decision: "verified" | "rejected", reason?: string) {
+export async function reviewPayment(
+  paymentId: string,
+  decision: "verified" | "rejected",
+  reason?: string,
+  deadlineHours?: number,
+) {
   const { error } = await requireSupabase().rpc("review_order_payment", {
     p_payment_id: paymentId,
     p_decision: decision,
     p_reason: reason ?? null,
+    p_deadline_hours: deadlineHours ?? null,
   })
   if (error) throw error
 }
@@ -1201,6 +1244,7 @@ export const kargoApi = {
   loadSellerReceiveMethods,
   uploadPaymentQr,
   paymentQrUrl,
+  paymentReceiptUrl,
   addPaymentMethod,
   updatePaymentMethod,
   deactivatePaymentMethod,

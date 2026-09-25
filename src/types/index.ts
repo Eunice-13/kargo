@@ -41,6 +41,7 @@ export type UserInfo = {
 export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
 export type Role = "Buyer" | "Seller"
 export type ClaimStatus = "Pending" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
+export type PaymentHistoryStatus = ClaimStatus | "Rejected"
 export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Security"
 
 export type ClaimRow = {
@@ -83,7 +84,14 @@ export type PayHistRow = {
   method: string
   amount: number
   date: string
-  status: ClaimStatus
+  status: PaymentHistoryStatus
+  referenceNumber?: string
+  receiptPath?: string
+  payerAccountName?: string
+  payerPhone?: string
+  buyerContactUrl?: string
+  rejectionReason?: string
+  rejectionDeadline?: string
 }
 export type OrderRow = {
   id: string

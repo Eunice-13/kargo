@@ -14,8 +14,9 @@ import {
   StatusBadge,
   Countdown,
   BuyerProfileModal,
+  PaymentSuccessToast,
 } from "@/components/shared"
-import BatchCheckoutModal from "@/features/payments/BatchCheckoutModal"
+import { BatchCheckoutModal, type PaymentSubmissionDetails } from "@/features/payments"
 import {
   PRIOR_FULFILLED,
   useFulfillmentBoard,
@@ -63,6 +64,7 @@ export default function Dashboard({
   const [showSalesReport, setShowSalesReport] = useState(false)
   const [showWaitlist, setShowWaitlist] = useState(false)
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
   const board = useFulfillmentBoard(setFulfillment)
 
   const waitlistSorted = useMemo(() => sortWaitlistUpcoming(waitlist), [waitlist])
@@ -73,6 +75,12 @@ export default function Dashboard({
   }
 
   // Close the expanded board with Escape.
+  useEffect(() => {
+    if (!paymentSuccess) return
+    const timer = window.setTimeout(() => setPaymentSuccess(false), 6000)
+    return () => window.clearTimeout(timer)
+  }, [paymentSuccess])
+
   useEffect(() => {
     if (!boardExpanded) return
     const onKey = (e: KeyboardEvent) => {
@@ -165,19 +173,43 @@ export default function Dashboard({
     [payableToPay],
   )
 
-  const handleBatchPayment = async (item: (typeof toPay)[number], method: string, referenceNumber: string, receipt?: File) => {
+  const handleBatchPayment = async (
+    item: (typeof toPay)[number],
+    method: string,
+    referenceNumber: string,
+    receipt: File | undefined,
+    details: PaymentSubmissionDetails,
+  ) => {
     const claim = claims.find((candidate) => String(candidate.id) === String(item.orderId ?? item.id))
     if (!claim || !claimIsPayable(claim) || deadlineHasPassed(item)) {
       alert("This claim has expired and can no longer be paid.")
-      return
+      return false
     }
     if (isSupabaseConfigured) {
       try {
-        await kargoApi.submitPayment({ orderId: item.orderId ?? String(item.id), method, amount: item.amount, referenceNumber, receipt })
+        await kargoApi.submitPayment({
+          orderId: item.orderId ?? String(item.id),
+          method,
+          amount: details.amountPaid,
+          referenceNumber,
+          receipt,
+          payerAccountName: details.payerAccountName,
+          payerPhone: details.payerPhone,
+          buyerContactUrl: details.buyerContactUrl,
+        })
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Unable to submit payment.")
-        return
+        const message = error instanceof Error ? error.message : "Unable to submit payment."
+        if (message === "Order is not payable") {
+          await refreshData()
+          alert("This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.")
+          return false
+        }
+        alert(message)
+        return false
       }
+      await refreshData()
+      setPaymentSuccess(true)
+      return true
     }
     setPayHistory((history) => [
       {
@@ -185,12 +217,13 @@ export default function Dashboard({
         product: item.product,
         batch: "",
         method,
-        amount: item.amount,
+        amount: details.amountPaid,
         date: TODAY,
         status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
       },
       ...history,
     ])
+    setPaymentSuccess(true)
     if (!isSupabaseConfigured) setClaims((prev) =>
       prev.map((c) =>
         c.id === item.id && c.status === "Pending"
@@ -199,6 +232,7 @@ export default function Dashboard({
       ),
     )
     if (!isSupabaseConfigured) setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
+    return true
   }
 
   // Kanban columns for the seller Fulfillment Board. Rendered both inside the
@@ -1171,6 +1205,7 @@ export default function Dashboard({
           }}
         />
       )}
+      {paymentSuccess && <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />}
     </div>
   )
 }

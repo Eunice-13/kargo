@@ -1,4 +1,4 @@
-import type { ClaimStatus } from "@/types"
+import type { PaymentHistoryStatus } from "@/types"
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 export const RETRO_THEME = false
@@ -36,10 +36,11 @@ export const CAT_GRAD: Record<string, string> = RETRO_THEME
     }
 
 // ─── Status colours ───────────────────────────────────────────────────────────
-export const STATUS_C: Record<ClaimStatus, { bg: string; text: string; dot: string }> = {
+export const STATUS_C: Record<PaymentHistoryStatus, { bg: string; text: string; dot: string }> = {
   Pending: { bg: "#FEF3C7", text: "#92400E", dot: AMBER },
   "Paid and Reserved": { bg: "#D4F5EA", text: "#0B7A59", dot: GREEN },
   Expired: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
   Cancelled: { bg: "#F3F4F6", text: "#6B7280", dot: "#9CA3AF" },
   "Insufficient Payment": { bg: "#FFF7ED", text: "#92400E", dot: "#FCD34D" },
+  Rejected: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
 }

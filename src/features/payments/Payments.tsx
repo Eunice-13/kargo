@@ -10,13 +10,15 @@ import {
   ProductThumb,
   StatusBadge,
   Countdown,
+  PaymentSuccessToast,
 } from "@/components/shared"
 import PaymentSubmitModal from "./PaymentSubmitModal"
+import type { PaymentSubmissionDetails } from "./PaymentSubmitModal"
 import BatchCheckoutModal from "./BatchCheckoutModal"
 import TransactionDetailModal from "./TransactionDetailModal"
 import SellerPaymentVerification from "./SellerPaymentVerification"
 import AddressSection from "./AddressSection"
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
@@ -31,6 +33,7 @@ export default function Payments({
   setOrders,
   role,
   user,
+  refreshData,
 }: SharedState) {
   const [dragging, setDragging] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
@@ -38,6 +41,7 @@ export default function Payments({
   const [uploading, setUploading] = useState(false)
   const [proofClaimId, setProofClaimId] = useState<EntityId | "">("")
   const [proofToast, setProofToast] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
   const [payAll, setPayAll] = useState(false)
   const [histFilter, setHistFilter] =
@@ -48,9 +52,37 @@ export default function Payments({
   const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
 
   useEffect(() => {
+    if (!isSupabaseConfigured || role !== "Buyer") return
+    const refresh = () => void refreshData().catch(() => {})
+    refresh()
+    const refreshOnFocus = () => refresh()
+    window.addEventListener("focus", refreshOnFocus)
+    const channel = user.id && supabase
+      ? supabase
+          .channel(`buyer-payment-history-${user.id}`)
+          .on(
+            "postgres_changes",
+            { event: "UPDATE", schema: "public", table: "payments", filter: `submitted_by=eq.${user.id}` },
+            refresh,
+          )
+          .subscribe()
+      : null
+    return () => {
+      window.removeEventListener("focus", refreshOnFocus)
+      if (channel && supabase) void supabase.removeChannel(channel)
+    }
+  }, [refreshData, role, user.id])
+
+  useEffect(() => {
     if (payTarget && deadlineHasPassed(payTarget)) setPayTarget(null)
     if (payableToPay.length === 0) setPayAll(false)
   }, [payTarget, payableToPay.length])
+
+  useEffect(() => {
+    if (!paymentSuccess) return
+    const timer = window.setTimeout(() => setPaymentSuccess(false), 6000)
+    return () => window.clearTimeout(timer)
+  }, [paymentSuccess])
 
   const handleFilePick = (file: File) => {
     setUploading(true)
@@ -61,13 +93,19 @@ export default function Payments({
     }, 1200)
   }
 
-  const handlePay = async (item: ToPayRow | null, method: string, referenceNumber?: string, receipt?: File) => {
+  const handlePay = async (
+    item: ToPayRow | null,
+    method: string,
+    referenceNumber?: string,
+    receipt?: File,
+    details?: PaymentSubmissionDetails,
+  ) => {
     const targets = (item ? [item] : payableToPay).filter((target) => !deadlineHasPassed(target))
     if (targets.length === 0) {
       setPayTarget(null)
       setPayAll(false)
       alert("This claim has expired and can no longer be paid.")
-      return
+      return false
     }
     if (isSupabaseConfigured) {
       try {
@@ -76,22 +114,38 @@ export default function Payments({
           await kargoApi.submitPayment({
             orderId,
             method,
-            amount: target.amount,
+            amount: details?.amountPaid ?? target.amount,
             referenceNumber,
             receipt,
+            payerAccountName: details?.payerAccountName,
+            payerPhone: details?.payerPhone,
+            buyerContactUrl: details?.buyerContactUrl,
           })
         }
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Unable to submit payment.")
-        return
+        const message = error instanceof Error ? error.message : "Unable to submit payment."
+        if (message === "Order is not payable") {
+          await refreshData()
+          setPayTarget(null)
+          setPayAll(false)
+          alert("This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.")
+          return false
+        }
+        alert(message)
+        return false
       }
+      await refreshData()
+      setPayTarget(null)
+      setPayAll(false)
+      setPaymentSuccess(true)
+      return true
     }
     const newHist: PayHistRow[] = targets.map((t, i) => ({
       id: payHistory.length + i + 1,
       product: t.product,
       batch: "",
       method,
-      amount: t.amount,
+      amount: details?.amountPaid ?? t.amount,
       date: TODAY,
       status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
     }))
@@ -120,6 +174,8 @@ export default function Payments({
     }
     setPayTarget(null)
     setPayAll(false)
+    setPaymentSuccess(true)
+    return true
   }
 
   // Submit an uploaded receipt against a chosen "To Pay" item: record it as a
@@ -127,7 +183,8 @@ export default function Payments({
   const handleSubmitProof = async () => {
     const item = payableToPay.find((t) => t.id === proofClaimId)
     if (!item) return
-    await handlePay(item, "Receipt Upload", undefined, uploadedFile ?? undefined)
+    const submitted = await handlePay(item, "Receipt Upload", undefined, uploadedFile ?? undefined)
+    if (!submitted) return
     setUploaded(null)
     setUploadedFile(null)
     setProofClaimId("")
@@ -518,6 +575,11 @@ export default function Payments({
                       </td>
                       <td style={{ padding: "10px 14px" }}>
                         <StatusBadge status={p.status} />
+                        {p.status === "Rejected" && p.rejectionDeadline && (
+                          <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4, whiteSpace: "nowrap" }}>
+                            Resubmit in <Countdown hours={0} id={`buyer-reject-${p.id}`} expiresAt={p.rejectionDeadline} />
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: "10px 14px" }}>
                         <SecondaryBtn size="sm" onClick={() => setTxDetail(p)}>
@@ -535,7 +597,9 @@ export default function Payments({
         <PaymentSubmitModal
           item={payTarget}
           contactPrefill={user.fb || ""}
-          onConfirm={(method, refNo) => handlePay(payTarget, method, refNo)}
+          onConfirm={(method, refNo, receipt, paymentDetails) =>
+            handlePay(payTarget, method, refNo, receipt, paymentDetails)
+          }
           onClose={() => setPayTarget(null)}
         />
       )}
@@ -543,7 +607,9 @@ export default function Payments({
         <BatchCheckoutModal
           items={payableToPay}
           contactPrefill={user.fb || ""}
-          onSubmit={(item, method, refNo, receipt) => handlePay(item, method, refNo, receipt)}
+          onSubmit={(item, method, refNo, receipt, paymentDetails) =>
+            handlePay(item, method, refNo, receipt, paymentDetails)
+          }
           onClose={() => setPayAll(false)}
         />
       )}
@@ -553,6 +619,7 @@ export default function Payments({
           onClose={() => setTxDetail(null)}
         />
       )}
+      {paymentSuccess && <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />}
 
     </div>
   )

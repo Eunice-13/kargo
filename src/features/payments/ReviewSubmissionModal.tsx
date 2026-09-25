@@ -4,6 +4,7 @@ import { CreditCard, Paperclip, Check, X, ExternalLink, Image as ImageIcon } fro
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Modal, Avatar } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
+import { kargoApi } from "@/services"
 
 export default function ReviewSubmissionModal({
   reviewTarget,
@@ -21,7 +22,28 @@ export default function ReviewSubmissionModal({
   setRejectCustom: (v: string) => void
 }) {
   const [showReceipt, setShowReceipt] = useState(false)
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
+  const [receiptLoading, setReceiptLoading] = useState(false)
+  const [receiptError, setReceiptError] = useState<string | null>(null)
+
+  const openReceipt = async () => {
+    if (!reviewTarget.receiptPath) {
+      setReceiptError("No receipt file was attached to this payment.")
+      return
+    }
+    setReceiptLoading(true)
+    setReceiptError(null)
+    try {
+      setReceiptUrl(await kargoApi.paymentReceiptUrl(reviewTarget.receiptPath))
+      setShowReceipt(true)
+    } catch (error) {
+      setReceiptError(error instanceof Error ? error.message : "Unable to open the receipt.")
+    } finally {
+      setReceiptLoading(false)
+    }
+  }
   return (
+    <>
     <Modal
       title="Payment Submission Details"
       onClose={() => setReviewTarget(null)}
@@ -96,9 +118,11 @@ export default function ReviewSubmissionModal({
           {([
             ["Reference ID", reviewTarget.ref],
             ["Account Name", reviewTarget.acctName],
-            ["Account Number", reviewTarget.acctNum],
             ["Date Submitted", reviewTarget.date],
             ["Phone Number", reviewTarget.phone || "—"],
+            ...(reviewTarget.rejectionDeadline
+              ? [["Resubmission Deadline", new Date(reviewTarget.rejectionDeadline).toLocaleString()] as [string, string]]
+              : []),
             [
               "Amount Paid",
               reviewTarget.amountPaid
@@ -232,15 +256,19 @@ export default function ReviewSubmissionModal({
             <div
               style={{ display: "flex", alignItems: "center", gap: 8 }}
             >
-              <span
-                style={{ fontSize: 12, fontWeight: 600, color: INDIGO }}
+              <button
+                type="button"
+                onClick={openReceipt}
+                disabled={receiptLoading || !reviewTarget.receiptPath}
+                style={{ fontSize: 12, fontWeight: 600, color: INDIGO, border: 0, background: "transparent", cursor: reviewTarget.receiptPath ? "pointer" : "default", padding: 0 }}
               >
                 <Paperclip size={12} aria-hidden="true" style={{ display: "inline", verticalAlign: -1, marginRight: 3 }} />
                 {reviewTarget.receipt}
-              </span>
+              </button>
               <button
-                onClick={() => setShowReceipt((v) => !v)}
+                onClick={openReceipt}
                 aria-expanded={showReceipt}
+                disabled={receiptLoading || !reviewTarget.receiptPath}
                 style={{
                   fontSize: 11,
                   color: "#fff",
@@ -253,11 +281,16 @@ export default function ReviewSubmissionModal({
                   fontFamily: "'Plus Jakarta Sans',sans-serif",
                 }}
               >
-                {showReceipt ? "Hide" : "View"}
+                {receiptLoading ? "Opening…" : "View"}
               </button>
             </div>
           </div>
-          {showReceipt && (
+          {receiptError && (
+            <div style={{ padding: "8px 14px", background: "#FEF2F2", color: "#B91C1C", fontSize: 11 }}>
+              {receiptError}
+            </div>
+          )}
+          {showReceipt && !receiptUrl && (
             <div
               className="fi"
               style={{
@@ -384,5 +417,20 @@ export default function ReviewSubmissionModal({
         })()}
       </div>
     </Modal>
+    {showReceipt && receiptUrl && (
+      <Modal title="Receipt Preview" onClose={() => setShowReceipt(false)} width={760} topOffset={0}>
+        <div style={{ textAlign: "center" }}>
+          {reviewTarget.receipt.toLowerCase().endsWith(".pdf") ? (
+            <iframe title="Payment receipt" src={receiptUrl} style={{ width: "100%", height: "70dvh", border: 0 }} />
+          ) : (
+            <img src={receiptUrl} alt="Buyer-submitted payment receipt" style={{ display: "block", maxWidth: "100%", maxHeight: "72dvh", margin: "0 auto", objectFit: "contain", borderRadius: 8 }} />
+          )}
+          <a href={receiptUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 12, color: INDIGO, fontSize: 12, fontWeight: 700 }}>
+            <ExternalLink size={13} aria-hidden="true" /> Open in new tab
+          </a>
+        </div>
+      </Modal>
+    )}
+    </>
   )
 }

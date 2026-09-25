@@ -1,7 +1,7 @@
-import type { ClaimStatus } from "@/types"
+import type { PaymentHistoryStatus } from "@/types"
 import { STATUS_C } from "@/constants/theme"
 
-export default function StatusBadge({ status }: { status: ClaimStatus }) {
+export default function StatusBadge({ status }: { status: PaymentHistoryStatus }) {
   const c = STATUS_C[status]
   return (
     <span

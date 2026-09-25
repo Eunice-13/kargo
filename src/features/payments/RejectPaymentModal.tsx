@@ -1,3 +1,4 @@
+import { useState } from "react"
 import type React from "react"
 import { AlertTriangle } from "lucide-react"
 import { INDIGO } from "@/constants/theme"
@@ -27,10 +28,13 @@ export default function RejectPaymentModal({
   setVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>>
   REJECT_REASONS: string[]
 }) {
+  const [deadlineHours, setDeadlineHours] = useState("24")
+  const parsedDeadlineHours = Number(deadlineHours)
   const isWrongAmt = rejectReason === "Wrong amount transferred"
   const isOther = rejectReason === "Other"
+  const deadlineValid = Number.isFinite(parsedDeadlineHours) && parsedDeadlineHours > 0
   const canProceed =
-    !!rejectReason && (!isOther || rejectCustom.trim().length > 0)
+    !!rejectReason && (!isOther || rejectCustom.trim().length > 0) && (isWrongAmt || deadlineValid)
   return (
     <Modal
       title="Reject Payment"
@@ -160,6 +164,46 @@ export default function RejectPaymentModal({
             />
           </div>
         )}
+        {!isWrongAmt && (
+          <div>
+            <label
+              htmlFor="rejection-deadline-hours"
+              style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}
+            >
+              Resubmission deadline <span style={{ color: "#E11D2E" }}>*</span>
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                id="rejection-deadline-hours"
+                type="number"
+                min="0"
+                step="0.25"
+                value={deadlineHours}
+                onChange={(event) => setDeadlineHours(event.target.value)}
+                aria-invalid={!deadlineValid}
+                style={{
+                  width: 110,
+                  fontSize: 13,
+                  border: `1.5px solid ${deadlineValid ? "#E5E7EB" : "#EF4444"}`,
+                  borderRadius: 7,
+                  padding: "9px 12px",
+                  outline: "none",
+                  color: "#374151",
+                  fontFamily: "inherit",
+                }}
+              />
+              <span style={{ fontSize: 12, color: "#6B7280" }}>hours</span>
+            </div>
+            {!deadlineValid && (
+              <div role="alert" style={{ fontSize: 11, color: "#DC2626", marginTop: 5 }}>
+                Enter a deadline greater than 0 hours.
+              </div>
+            )}
+            <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 5 }}>
+              The buyer must submit a replacement proof before this window closes.
+            </div>
+          </div>
+        )}
         {isWrongAmt && rejectReason && (
           <div
             style={{
@@ -209,6 +253,7 @@ export default function RejectPaymentModal({
                           ...v,
                           status: "Rejected" as const,
                           rejectReason: finalReason,
+                          rejectionDeadline: new Date(Date.now() + parsedDeadlineHours * 3_600_000).toISOString(),
                         }
                       : v,
                   ),
