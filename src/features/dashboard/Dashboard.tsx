@@ -14,12 +14,10 @@ import {
   StatusBadge,
   Countdown,
   BuyerProfileModal,
-  PaymentSuccessToast,
-  ratingFor,
 } from "@/components/shared"
-import { BatchCheckoutModal, type PaymentSubmissionDetails } from "@/features/payments"
+import BatchCheckoutModal from "@/features/payments/BatchCheckoutModal"
+import type { PaymentSubmissionDetails } from "@/features/payments"
 import {
-  PRIOR_FULFILLED,
   useFulfillmentBoard,
   FulfillmentLiveRegion,
   FulfillmentDetails,
@@ -28,7 +26,6 @@ import SalesReportModal from "./SalesReportModal"
 import WaitlistModal from "./WaitlistModal"
 import SellerWaitlistCard from "./SellerWaitlistCard"
 import { isSupabaseConfigured } from "@/lib/supabase"
-import { trustCounts } from "@/lib/ratings"
 import { kargoApi } from "@/services"
 import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry"
 
@@ -59,8 +56,6 @@ export default function Dashboard({
   user,
   setUser,
   refreshData,
-  ratings,
-  profileIdByName,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
   const [buyerProfile, setBuyerProfile] = useState<{ name: string; contactUrl?: string } | null>(null)
@@ -68,7 +63,6 @@ export default function Dashboard({
   const [showSalesReport, setShowSalesReport] = useState(false)
   const [showWaitlist, setShowWaitlist] = useState(false)
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
-  const [paymentSuccess, setPaymentSuccess] = useState(false)
   const board = useFulfillmentBoard(setFulfillment)
 
   const waitlistSorted = useMemo(() => sortWaitlistUpcoming(waitlist), [waitlist])
@@ -80,12 +74,6 @@ export default function Dashboard({
 
   // Close the expanded board with Escape.
   useEffect(() => {
-    if (!paymentSuccess) return
-    const timer = window.setTimeout(() => setPaymentSuccess(false), 6000)
-    return () => window.clearTimeout(timer)
-  }, [paymentSuccess])
-
-  useEffect(() => {
     if (!boardExpanded) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setBoardExpanded(false)
@@ -96,17 +84,44 @@ export default function Dashboard({
   const activeClaims = claims
     .filter((c) => c.status === "Pending")
     .sort((a, b) => Number(b.id) - Number(a.id))
-  // Pending Claims (3.9): all pending claims, uncapped (card scrolls if long).
-  const pendingClaims = activeClaims
+  // Recent Claims preview: a fixed number of the most recent claims, shown in
+  // full with NO internal scroll. Anything beyond this is reached via "View
+  // All", matching the Seller Dashboard's Recent Orders preview pattern.
+  const RECENT_CLAIMS_PREVIEW = 5
+  const recentClaims = claims
+    .slice()
+    .sort((a, b) => Number(b.id) - Number(a.id))
+    .slice(0, RECENT_CLAIMS_PREVIEW)
   const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
+  // Buyer: orders that reached the final "Delivered" step (order.step === 5)
+  // are fulfilled and completed. Per-account, since `orders` is the current
+  // buyer's order list.
+  const completedOrders = orders.filter((o) => o.step === 5)
+
+  // ─── Seller stat sources (derived from live data, not hardcoded) ───────────
+  // Scope to the signed-in seller's own batches.
+  const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name)
+  // Payment proofs awaiting the seller's review = orders sitting in the
+  // "Pending Payment" column of the fulfillment board.
+  const paymentsToVerify = fulfillment.filter((o) => o.col === "Pending Payment")
+  // Extension requests awaiting this seller's approval: claims on their orders
+  // that requested an extension and are still pending a decision.
+  const pendingExtensions = claims.filter(
+    (c) => c.extensionRequested && c.status === "Pending" && c.seller === user.name,
+  )
+  // Orders fulfilled = orders moved to the board's "Completed" column.
+  const ordersFulfilled = fulfillment.filter((o) => o.col === "Completed")
 
   const buyerStats = [
     {
       label: "Active Claims",
       value: String(activeClaims.length),
       icon: Package,
-      sub: "+3 this week",
+      sub:
+        activeClaims.length === 0
+          ? "No active claims"
+          : `${activeClaims.length} awaiting payment or reservation`,
       sc: GREEN,
       bg: "#E8F9F3",
     },
@@ -122,15 +137,17 @@ export default function Dashboard({
       label: "Waitlist Position",
       value: closestWaitlist ? `#${closestWaitlist.position}` : "—",
       icon: Clock3,
-      sub: closestWaitlist ? closestWaitlist.product : "No waitlisted items",
+      sub: closestWaitlist
+        ? `${closestWaitlist.product} — ${closestWaitlist.batch}`
+        : "No waitlisted items",
       sc: "#6B7280",
       bg: CYAN_L,
     },
     {
       label: "Completed Orders",
-      value: "47",
+      value: String(completedOrders.length),
       icon: CheckCircle2,
-      sub: "All time",
+      sub: "Fulfilled and delivered",
       sc: "#6B7280",
       bg: "#F0EEFF",
     },
@@ -138,7 +155,7 @@ export default function Dashboard({
   const sellerStats = [
     {
       label: "Active Batches",
-      value: String(batches.filter((b) => b.live).length),
+      value: String(myLiveBatches.length),
       icon: Plane,
       sub: "Open + Scheduled",
       sc: "#64E894",
@@ -146,7 +163,7 @@ export default function Dashboard({
     },
     {
       label: "Awaiting Verification",
-      value: "3",
+      value: String(paymentsToVerify.length),
       icon: Clock3,
       sub: "Payment proofs to review",
       sc: "#F4D85D",
@@ -154,7 +171,7 @@ export default function Dashboard({
     },
     {
       label: "Extension Requests",
-      value: "2",
+      value: String(pendingExtensions.length),
       icon: ClipboardList,
       sub: "Awaiting your approval",
       sc: "#E62B48",
@@ -162,9 +179,7 @@ export default function Dashboard({
     },
     {
       label: "Orders Fulfilled",
-      value: String(
-        PRIOR_FULFILLED + fulfillment.filter((o) => o.col === "Completed").length,
-      ),
+      value: String(ordersFulfilled.length),
       icon: CheckCircle2,
       sub: "Completed this quarter",
       sc: "#6B7280",
@@ -172,9 +187,17 @@ export default function Dashboard({
     },
   ]
   const stats = role === "Seller" ? sellerStats : buyerStats
+  // Upcoming Deadlines is driven by the buyer's real pending, still-payable
+  // claims — the SAME "Waiting for payment" rows shown in Recent Claims — so
+  // the panel never renders empty when there are outstanding payments. Sorted
+  // soonest-first and capped to a short preview.
   const upcoming = useMemo(
-    () => [...payableToPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
-    [payableToPay],
+    () =>
+      activeClaims
+        .filter((c) => claimIsPayable(c))
+        .sort((a, b) => a.hours - b.hours)
+        .slice(0, 4),
+    [activeClaims],
   )
 
   const handleBatchPayment = async (
@@ -212,7 +235,6 @@ export default function Dashboard({
         return false
       }
       await refreshData()
-      setPaymentSuccess(true)
       return true
     }
     setPayHistory((history) => [
@@ -227,7 +249,6 @@ export default function Dashboard({
       },
       ...history,
     ])
-    setPaymentSuccess(true)
     if (!isSupabaseConfigured) setClaims((prev) =>
       prev.map((c) =>
         c.id === item.id && c.status === "Pending"
@@ -344,7 +365,7 @@ export default function Dashboard({
                         fontWeight: 700,
                         color: GREEN,
                         marginTop: 4,
-                        fontFamily: "'Josefin Sans',sans-serif",
+                        fontFamily: "'Plus Jakarta Sans',sans-serif",
                       }}
                     >
                       ₱{o.amount.toLocaleString()}
@@ -469,13 +490,13 @@ export default function Dashboard({
                 {
                   icon: Clock3,
                   label: "Payments to Verify",
-                  count: 3,
+                  count: paymentsToVerify.length,
                   tab: "Payments" as Tab,
                 },
                 {
                   icon: ClipboardList,
                   label: "Extension Requests",
-                  count: 2,
+                  count: pendingExtensions.length,
                   tab: "Batches" as Tab,
                 },
               ].map((action) => (
@@ -553,10 +574,6 @@ export default function Dashboard({
         {buyerProfile && (
           <BuyerProfileModal
             buyer={buyerProfile.name}
-            rating={ratingFor(ratings, profileIdByName[buyerProfile.name])}
-            orderCounts={trustCounts(
-              fulfillment.filter((f) => f.buyer === buyerProfile.name).map((f) => f.col),
-            )}
             contactUrl={buyerProfile.contactUrl}
             onClose={() => setBuyerProfile(null)}
           />
@@ -613,7 +630,7 @@ export default function Dashboard({
                 </div>
                 <div
                   style={{
-                    fontFamily: "'Josefin Sans',sans-serif",
+                    fontFamily: "'Plus Jakarta Sans',sans-serif",
                     fontSize: 26,
                     fontWeight: 800,
                     color: "#111827",
@@ -706,7 +723,7 @@ export default function Dashboard({
                       style={{
                         color: "#111827",
                         fontWeight: 700,
-                        fontFamily: "'Josefin Sans',sans-serif",
+                        fontFamily: "'Plus Jakarta Sans',sans-serif",
                       }}
                     >
                       ₱{c.amount.toLocaleString()}
@@ -735,13 +752,13 @@ export default function Dashboard({
                 {
                   icon: ClipboardList,
                   label: "Payments to Verify",
-                  count: 3,
+                  count: paymentsToVerify.length,
                   tab: "Payments" as Tab,
                 },
                 {
                   icon: Clock3,
                   label: "Extension Requests",
-                  count: 2,
+                  count: pendingExtensions.length,
                   tab: "Batches" as Tab,
                 },
               ].map((item) => (
@@ -930,7 +947,7 @@ export default function Dashboard({
                   fontSize: 16,
                   fontWeight: 700,
                   color: "#111827",
-                  fontFamily: "'Josefin Sans',sans-serif",
+                  fontFamily: "'Plus Jakarta Sans',sans-serif",
                 }}
               >
                 Fulfillment Board
@@ -968,14 +985,13 @@ export default function Dashboard({
         >
           <Card>
             <SH
-              title="Pending Claims"
+              title="Recent Claims"
               action={
                 <SecondaryBtn onClick={() => setTab("My Claims")}>
                   View All
                 </SecondaryBtn>
               }
             />
-            <div style={{ maxHeight: 360, overflowY: "auto" }}>
             <table className="w-full text-[13px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid #F3F4F6" }}>
@@ -1004,7 +1020,7 @@ export default function Dashboard({
                 </tr>
               </thead>
               <tbody>
-                {pendingClaims.map((c) => {
+                {recentClaims.map((c) => {
                   return (
                     <tr
                       key={c.id}
@@ -1040,7 +1056,7 @@ export default function Dashboard({
                         style={{
                           color: "#111827",
                           fontWeight: 700,
-                          fontFamily: "'Josefin Sans',sans-serif",
+                          fontFamily: "'Plus Jakarta Sans',sans-serif",
                         }}
                       >
                         ₱{c.amount.toLocaleString()}
@@ -1062,10 +1078,9 @@ export default function Dashboard({
                 })}
               </tbody>
             </table>
-            </div>
-            {pendingClaims.length === 0 && (
+            {recentClaims.length === 0 && (
               <div style={{ padding: "24px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-                No pending claims.
+                No recent claims.
               </div>
             )}
           </Card>
@@ -1114,7 +1129,7 @@ export default function Dashboard({
                         fontSize: 13,
                         fontWeight: 700,
                         color: "#111827",
-                        fontFamily: "'Josefin Sans',sans-serif",
+                        fontFamily: "'Plus Jakarta Sans',sans-serif",
                       }}
                     >
                       ₱{d.amount.toLocaleString()}
@@ -1123,7 +1138,7 @@ export default function Dashboard({
                   </div>
                 </div>
               ))}
-              {payableToPay.length > 0 ? (
+              {upcoming.length > 0 ? (
                 <PrimaryBtn
                   style={{
                     width: "100%",
@@ -1133,7 +1148,7 @@ export default function Dashboard({
                   }}
                   onClick={() => setShowPayAll(true)}
                 >
-                  Batch Checkout
+                  Pay All Pending
                 </PrimaryBtn>
               ) : (
                 <div
@@ -1166,10 +1181,6 @@ export default function Dashboard({
       {buyerProfile && (
         <BuyerProfileModal
           buyer={buyerProfile.name}
-          rating={ratingFor(ratings, profileIdByName[buyerProfile.name])}
-          orderCounts={trustCounts(
-              fulfillment.filter((f) => f.buyer === buyerProfile.name).map((f) => f.col),
-            )}
           contactUrl={buyerProfile.contactUrl}
           onClose={() => setBuyerProfile(null)}
         />
@@ -1217,7 +1228,6 @@ export default function Dashboard({
           }}
         />
       )}
-      {paymentSuccess && <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />}
     </div>
   )
 }
