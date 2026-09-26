@@ -215,7 +215,7 @@ export default function App() {
       )}
       {stage === "app" && (
         <div
-          className="kargo-original-app"
+          className={`kargo-original-app${role === "Buyer" ? " kargo-buyer-shell" : ""}`}
           style={{
             background: CREAM,
             minHeight: "100vh",

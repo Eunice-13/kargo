@@ -3,7 +3,23 @@ import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximi
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
 import { navIntent } from "@/state/navIntent"
 import { sortWaitlistUpcoming } from "@/data/waitlist"
-import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
+import {
+  INDIGO,
+  CREAM,
+  CYAN_L,
+  GREEN,
+  AMBER,
+  TODAY,
+  STAT_GREEN_BG,
+  STAT_GREEN_FG,
+  STAT_AMBER_BG,
+  STAT_AMBER_FG,
+  STAT_CORAL_BG,
+  STAT_CORAL_FG,
+  STAT_NEUTRAL_BG,
+  SIDEBAR_LAVENDER,
+  SIDEBAR_LAVENDER_LINE,
+} from "@/constants/theme"
 import {
   Card,
   SH,
@@ -22,6 +38,7 @@ import {
   FulfillmentDetails,
 } from "@/features/fulfillment"
 import SalesReportModal from "./SalesReportModal"
+import StatCard from "./StatCard"
 import WaitlistModal from "./WaitlistModal"
 import SellerWaitlistCard from "./SellerWaitlistCard"
 import { isSupabaseConfigured } from "@/lib/supabase"
@@ -83,14 +100,18 @@ export default function Dashboard({
   const activeClaims = claims
     .filter((c) => c.status === "Pending")
     .sort((a, b) => Number(b.id) - Number(a.id))
-  // Pending Claims (3.9): all pending claims, uncapped (card scrolls if long).
-  const pendingClaims = activeClaims
+  // Recent Claims (reference, Option B): show the buyer's most recent claims
+  // regardless of status, newest first — the label matches the content.
+  const recentClaims = [...claims].sort((a, b) => Number(b.id) - Number(a.id))
+  // Completed orders come from real order state: an order reaches its final
+  // step (5 = Delivered) when fulfilled. Per-account, since `orders` is the
+  // current buyer's list. `.length` because the stat card renders a count.
+  // NOTE: merge resolution — upstream also declared `completedOrders` as the
+  // filtered array (no `.length`); kept the count form since its only consumer
+  // is the "Completed Orders" stat value below (String(completedOrders)).
+  const completedOrders = orders.filter((o) => o.step === 5).length
   const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
-  // Buyer: orders that reached the final "Delivered" step (order.step === 5)
-  // are fulfilled and completed. Per-account, since `orders` is the current
-  // buyer's order list.
-  const completedOrders = orders.filter((o) => o.step === 5)
 
   // ─── Seller stat sources (derived from live data, not hardcoded) ───────────
   // Scope to the signed-in seller's own batches.
@@ -106,41 +127,41 @@ export default function Dashboard({
   // Orders fulfilled = orders moved to the board's "Completed" column.
   const ordersFulfilled = fulfillment.filter((o) => o.col === "Completed")
 
+  const soonestPayableHours = payableToPay.length
+    ? Math.max(0, Math.round(Math.min(...payableToPay.map((item) => item.hours))))
+    : null
   const buyerStats = [
     {
       label: "Active Claims",
       value: String(activeClaims.length),
       icon: Package,
-      sub:
-        activeClaims.length === 0
-          ? "No active claims"
-          : `${activeClaims.length} awaiting payment or reservation`,
-      sc: GREEN,
-      bg: "#E8F9F3",
+      sub: activeClaims.length > 0 ? `${activeClaims.length} awaiting action` : "All caught up",
+      sc: STAT_GREEN_FG,
+      bg: STAT_GREEN_BG,
     },
     {
-      label: "Pending Payments",
+      label: "Pending Payment",
       value: `₱${pendingTotal.toLocaleString()}`,
       icon: CreditCard,
-      sub: `${payableToPay.length} items due soon`,
-      sc: AMBER,
-      bg: "#FFF8E8",
+      sub: soonestPayableHours !== null ? `Next one due in ${soonestPayableHours}h` : "Nothing due",
+      sc: STAT_AMBER_FG,
+      bg: STAT_AMBER_BG,
     },
     {
       label: "Waitlist Position",
       value: closestWaitlist ? `#${closestWaitlist.position}` : "—",
       icon: Clock3,
       sub: closestWaitlist ? closestWaitlist.product : "No waitlisted items",
-      sc: "#6B7280",
-      bg: CYAN_L,
+      sc: STAT_CORAL_FG,
+      bg: STAT_CORAL_BG,
     },
     {
       label: "Completed Orders",
-      value: String(completedOrders.length),
+      value: String(completedOrders),
       icon: CheckCircle2,
-      sub: "Fulfilled and delivered",
+      sub: "All caught up",
       sc: "#6B7280",
-      bg: "#F0EEFF",
+      bg: STAT_NEUTRAL_BG,
     },
   ]
   const sellerStats = [
@@ -177,9 +198,14 @@ export default function Dashboard({
       bg: "#FFFFFF",
     },
   ]
-  const stats = role === "Seller" ? sellerStats : buyerStats
+  // Upcoming Deadlines: only items due within the next 24 hours (scoped task),
+  // soonest first, capped to keep the sidebar compact.
   const upcoming = useMemo(
-    () => [...payableToPay].sort((a, b) => a.hours - b.hours).slice(0, 4),
+    () =>
+      payableToPay
+        .filter((item) => item.hours < 24)
+        .sort((a, b) => a.hours - b.hours)
+        .slice(0, 4),
     [payableToPay],
   )
 
@@ -551,71 +577,19 @@ export default function Dashboard({
 
   return (
     <div className="p-8 space-y-8">
-      <div className="grid grid-cols-4 gap-6">
-        {stats.map((s, i) => {
-          const isWaitlist = s.label === "Waitlist Position"
-          return (
-            <div
-              key={s.label}
-              className="fi"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <div
-                role={isWaitlist ? "button" : undefined}
-                tabIndex={isWaitlist ? 0 : undefined}
-                aria-label={isWaitlist ? "Open full waitlist" : undefined}
-                onClick={isWaitlist ? openWaitlist : undefined}
-                onKeyDown={
-                  isWaitlist
-                    ? (e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault()
-                        openWaitlist()
-                      }
-                    }
-                    : undefined
-                }
-                style={{
-                  background: s.bg,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 8,
-                  padding: "18px 20px",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                  cursor: isWaitlist ? "pointer" : undefined,
-                }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    fontSize: 26,
-                    fontWeight: 800,
-                    color: "#111827",
-                    lineHeight: 1,
-                  }}
-                  className="mb-1"
-                >
-                  {s.value}
-                </div>
-                <div style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
-                  {s.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: s.sc,
-                    fontWeight: 600,
-                    marginTop: 4,
-                  }}
-                >
-                  {s.sub}
-                </div>
-              </div>
-            </div>
-          )
-        })}
+      <div className="buyer-stat-grid">
+        {buyerStats.map((s) => (
+          <StatCard
+            key={s.label}
+            value={s.value}
+            label={s.label}
+            sub={s.sub}
+            accent={s.sc}
+            bg={s.bg}
+            icon={s.icon}
+            onClick={s.label === "Waitlist Position" ? openWaitlist : undefined}
+          />
+        ))}
       </div>
       {role === "Seller" && (
         <div
@@ -938,40 +912,42 @@ export default function Dashboard({
         </div>
       )}
       {role !== "Seller" && (
-        <div
-          className="grid gap-6"
-          style={{ gridTemplateColumns: "1fr 340px" }}
-        >
+        <div className="buyer-dashboard-layout grid gap-6">
           <Card>
             <SH
-              title="Pending Claims"
+              title="Recent Claims"
               action={
-                <SecondaryBtn onClick={() => setTab("My Claims")}>
+                <PrimaryBtn size="sm" onClick={() => setTab("My Claims")}>
                   View All
-                </SecondaryBtn>
+                </PrimaryBtn>
               }
             />
-            <div style={{ maxHeight: 360, overflowY: "auto" }}>
+            <div className="overflow-x-auto" style={{ maxHeight: 360, overflowY: "auto" }}>
             <table className="w-full text-[13px]">
               <thead>
-                <tr style={{ borderBottom: "1px solid #F3F4F6" }}>
+                <tr style={{ background: INDIGO }}>
                   {[
-                    "Product",
+                    "Products",
                     "Batch",
                     "Seller",
                     "Amount",
                     "Status",
                     "Deadline",
-                  ].map((h) => (
+                  ].map((h, hi, arr) => (
                     <th
                       key={h}
                       style={{
-                        color: "#9CA3AF",
-                        fontWeight: 600,
+                        color: "#fff",
+                        fontWeight: 700,
                         fontSize: 11,
-                        paddingBottom: 8,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        padding: "10px 12px",
                         textAlign: "left",
-                        paddingRight: 12,
+                        borderTopLeftRadius: hi === 0 ? 8 : 0,
+                        borderBottomLeftRadius: hi === 0 ? 8 : 0,
+                        borderTopRightRadius: hi === arr.length - 1 ? 8 : 0,
+                        borderBottomRightRadius: hi === arr.length - 1 ? 8 : 0,
                       }}
                     >
                       {h}
@@ -980,15 +956,17 @@ export default function Dashboard({
                 </tr>
               </thead>
               <tbody>
-                {pendingClaims.map((c) => {
+                {recentClaims.map((c, ri) => {
+                  // Zebra striping (reference): alternating white / light-gray.
+                  const stripe = ri % 2 === 1 ? "#F9FAFB" : "#fff"
                   return (
                     <tr
                       key={c.id}
-                      style={{ borderBottom: "1px solid #F9FAFB" }}
+                      style={{ background: stripe, borderBottom: "1px solid #F3F4F6" }}
                       className="hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => setTab("My Claims")}
                     >
-                      <td className="py-2.5 pr-3">
+                      <td className="py-2.5" style={{ padding: "10px 12px" }}>
                         <div className="flex items-center gap-2">
                           <ProductThumb name={c.product} />
                           <span style={{ color: "#111827", fontWeight: 500 }}>
@@ -996,14 +974,14 @@ export default function Dashboard({
                           </span>
                         </div>
                       </td>
-                      <td className="py-2.5 pr-3">
+                      <td style={{ padding: "10px 12px" }}>
                         <div className="flex items-center gap-1.5">
                           <span style={{ color: "#6B7280", fontSize: 12 }}>
                             {c.batch}
                           </span>
                         </div>
                       </td>
-                      <td className="py-2.5 pr-3">
+                      <td style={{ padding: "10px 12px" }}>
                         <div className="flex items-center gap-1.5">
                           <Avatar name={c.seller} size={20} />
                           <span style={{ color: "#374151", fontSize: 12 }}>
@@ -1012,8 +990,8 @@ export default function Dashboard({
                         </div>
                       </td>
                       <td
-                        className="py-2.5 pr-3"
                         style={{
+                          padding: "10px 12px",
                           color: "#111827",
                           fontWeight: 700,
                           fontFamily: "'Plus Jakarta Sans',sans-serif",
@@ -1021,10 +999,10 @@ export default function Dashboard({
                       >
                         ₱{c.amount.toLocaleString()}
                       </td>
-                      <td className="py-2.5 pr-3">
+                      <td style={{ padding: "10px 12px" }}>
                         <StatusBadge status={c.status} />
                       </td>
-                      <td className="py-2.5">
+                      <td style={{ padding: "10px 12px" }}>
                         {c.status === "Pending" && c.hours > 0 ? (
                           <Countdown hours={c.hours} id={c.id} expiresAt={c.expiresAt} />
                         ) : (
@@ -1039,32 +1017,23 @@ export default function Dashboard({
               </tbody>
             </table>
             </div>
-            {pendingClaims.length === 0 && (
+            {recentClaims.length === 0 && (
               <div style={{ padding: "24px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-                No pending claims.
+                No claims yet.
               </div>
             )}
           </Card>
-          <Card style={{ background: "#FFFBF5", border: "1px solid #FCE4C8" }}>
+          <Card style={{ background: SIDEBAR_LAVENDER, border: `1px solid ${SIDEBAR_LAVENDER_LINE}` }}>
             <SH title="Upcoming Deadlines" />
             <div className="space-y-3">
               {upcoming.map((d, i) => (
                 <div
                   key={i}
                   style={{
-                    background:
-                      d.hours < 6
-                        ? "#FFF7ED"
-                        : d.hours < 24
-                          ? "#FFFBF0"
-                          : "#fff",
+                    background: "#fff",
                     borderRadius: 8,
-                    border: `1px solid ${d.hours < 6
-                      ? "#FED7AA"
-                      : d.hours < 24
-                        ? "#FDE68A"
-                        : "#F3F4F6"
-                      }`,
+                    border: "1px solid #E5E7EB",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
                   }}
                   className="p-3 flex items-center justify-between"
                 >
@@ -1109,7 +1078,7 @@ export default function Dashboard({
                   }}
                   onClick={() => setShowPayAll(true)}
                 >
-                  Batch Checkout
+                  Pay All Pending
                 </PrimaryBtn>
               ) : (
                 <div

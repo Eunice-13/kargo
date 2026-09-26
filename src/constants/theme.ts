@@ -12,6 +12,22 @@ export const AMBER = RETRO_THEME ? "#D59B2C" : "#FFC24B"
 
 export const TODAY = "Sep 10, 2026"
 
+// ─── Buyer dashboard mockup palette (Buyer_-_Dashboard.png) ───────────────────
+// These are pale card fills / accents and a lavender sidebar taken from the
+// reference image. The existing saturated tokens (GREEN/AMBER/CORAL/SKY/CYAN_L)
+// are accent/brand colors and are visibly darker/more saturated than the card
+// tints in the mockup, so we add dedicated tokens rather than approximate.
+// INDIGO already matches the header/footer gradient dark end, so it is reused.
+export const STAT_GREEN_BG = "#C9F2DE" // Active Claims card fill
+export const STAT_GREEN_FG = "#0B9E6E" // Active Claims accent text
+export const STAT_AMBER_BG = "#FBEFC6" // Pending Payment card fill
+export const STAT_AMBER_FG = "#C08A1E" // Pending Payment accent text
+export const STAT_CORAL_BG = "#FBD9DE" // Waitlist Position card fill
+export const STAT_CORAL_FG = "#E62B48" // Waitlist Position accent text
+export const STAT_NEUTRAL_BG = "#EDEFF2" // Completed Orders card fill
+export const SIDEBAR_LAVENDER = "#DCE6FA" // Upcoming Deadlines panel fill
+export const SIDEBAR_LAVENDER_LINE = "#C3D3F5" // panel border
+
 // ─── Category gradients ───────────────────────────────────────────────────────
 export const CAT_GRAD: Record<string, string> = RETRO_THEME
   ? {

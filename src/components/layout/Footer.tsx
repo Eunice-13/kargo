@@ -56,7 +56,7 @@ export default function Footer() {
           </nav>
         </section>
       </div>
-      <p>© 2026 Kargo. All Rights Reserved.</p>
+      <p>© {new Date().getFullYear()} Kargo. All Rights Reserved.</p>
     </footer>
   )
 }

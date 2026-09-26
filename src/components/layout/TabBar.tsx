@@ -1,14 +1,24 @@
 import type { Role, Tab } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { PrimaryBtn } from "@/components/shared"
-import { ClipboardList, History, LayoutGrid, Package } from "lucide-react"
+import { ClipboardList, History, Home, LayoutGrid, Package, ShoppingCart, WalletCards } from "lucide-react"
 
-export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
+// Buyers see the Dashboard as the THIRD tab; sellers keep Dashboard first.
+const BUYER_TABS: Tab[] = ["Batches", "My Claims", "Dashboard", "Payments"]
+const SELLER_TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
+export const TABS: Tab[] = SELLER_TABS
 const TAB_ICONS = {
   Dashboard: LayoutGrid,
   Batches: Package,
   "My Claims": ClipboardList,
   Payments: History,
+} as const
+// Buyer nav mirrors the reference: home, cart, layout-grid, card icons.
+const BUYER_TAB_ICONS = {
+  Batches: Home,
+  "My Claims": ShoppingCart,
+  Dashboard: LayoutGrid,
+  Payments: WalletCards,
 } as const
 export default function TabBar({
   active,
@@ -37,8 +47,11 @@ export default function TabBar({
     >
       {/* Tabs — equally distributed across available width */}
       <div style={{ display: "flex", flex: 1, height: "100%", minWidth: 0 }}>
-        {TABS.map((tab) => {
-          const Icon = TAB_ICONS[tab as keyof typeof TAB_ICONS]
+        {(role === "Seller" ? SELLER_TABS : BUYER_TABS).map((tab) => {
+          const Icon =
+            role === "Seller"
+              ? TAB_ICONS[tab as keyof typeof TAB_ICONS]
+              : BUYER_TAB_ICONS[tab as keyof typeof BUYER_TAB_ICONS]
           return (
           <button
             key={tab}
@@ -73,15 +86,15 @@ export default function TabBar({
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
             }}
             className="hover:text-gray-800"
             aria-label={tab === "My Claims" && role === "Seller" ? "Orders Received" : tab}
           >
-            {role === "Seller" ? (
-              <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
-            ) : tab === "My Claims"
-              ? "My Claims"
-              : tab}
+            <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
           </button>
           )
         })}
