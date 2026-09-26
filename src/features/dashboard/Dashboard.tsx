@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
-import { Package, CreditCard, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X, FileText } from "lucide-react"
+import { Package, PackagePlus, CreditCard, CalendarX2, ReceiptText, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X, FileText } from "lucide-react"
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
 import { navIntent } from "@/state/navIntent"
 import { sortWaitlistUpcoming } from "@/data/waitlist"
@@ -87,7 +87,7 @@ export default function Dashboard({
   // Recent Claims preview: a fixed number of the most recent claims, shown in
   // full with NO internal scroll. Anything beyond this is reached via "View
   // All", matching the Seller Dashboard's Recent Orders preview pattern.
-  const RECENT_CLAIMS_PREVIEW = 5
+  const RECENT_CLAIMS_PREVIEW = 7
   const recentClaims = claims
     .slice()
     .sort((a, b) => Number(b.id) - Number(a.id))
@@ -113,11 +113,16 @@ export default function Dashboard({
   // Orders fulfilled = orders moved to the board's "Completed" column.
   const ordersFulfilled = fulfillment.filter((o) => o.col === "Completed")
 
+  const waitlistSub = closestWaitlist
+    ? closestWaitlist.product && closestWaitlist.product !== "Product"
+      ? `${closestWaitlist.product}${closestWaitlist.batch ? ` — ${closestWaitlist.batch}` : ""}`
+      : closestWaitlist.batch || "Waitlisted item"
+    : "No waitlisted items"
   const buyerStats = [
     {
       label: "Active Claims",
       value: String(activeClaims.length),
-      icon: Package,
+      icon: PackagePlus,
       sub:
         activeClaims.length === 0
           ? "No active claims"
@@ -126,7 +131,7 @@ export default function Dashboard({
       bg: "#E8F9F3",
     },
     {
-      label: "Pending Payments",
+      label: "Pending Payment",
       value: `₱${pendingTotal.toLocaleString()}`,
       icon: CreditCard,
       sub: `${payableToPay.length} items due soon`,
@@ -136,20 +141,18 @@ export default function Dashboard({
     {
       label: "Waitlist Position",
       value: closestWaitlist ? `#${closestWaitlist.position}` : "—",
-      icon: Clock3,
-      sub: closestWaitlist
-        ? `${closestWaitlist.product} — ${closestWaitlist.batch}`
-        : "No waitlisted items",
-      sc: "#6B7280",
-      bg: CYAN_L,
+      icon: CalendarX2,
+      sub: waitlistSub,
+      sc: "#EF4444",
+      bg: "#FDECEC",
     },
     {
       label: "Completed Orders",
       value: String(completedOrders.length),
-      icon: CheckCircle2,
+      icon: ReceiptText,
       sub: "Fulfilled and delivered",
       sc: "#6B7280",
-      bg: "#F0EEFF",
+      bg: "#FFFFFF",
     },
   ]
   const sellerStats = [
@@ -365,7 +368,7 @@ export default function Dashboard({
                         fontWeight: 700,
                         color: GREEN,
                         marginTop: 4,
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
                       ₱{o.amount.toLocaleString()}
@@ -591,68 +594,37 @@ export default function Dashboard({
   }
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="grid grid-cols-4 gap-6">
+    <div className="bdash">
+      <div className="bdash-stats">
         {stats.map((s, i) => {
           const isWaitlist = s.label === "Waitlist Position"
           return (
             <div
               key={s.label}
-              className="fi"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <div
-                role={isWaitlist ? "button" : undefined}
-                tabIndex={isWaitlist ? 0 : undefined}
-                aria-label={isWaitlist ? "Open full waitlist" : undefined}
-                onClick={isWaitlist ? openWaitlist : undefined}
-                onKeyDown={
-                  isWaitlist
-                    ? (e) => {
+              className={`bdash-stat bdash-stat--${i + 1} fi${isWaitlist ? " bdash-stat--interactive" : ""}`}
+              style={{ background: s.bg, animationDelay: `${i * 60}ms` }}
+              role={isWaitlist ? "button" : undefined}
+              tabIndex={isWaitlist ? 0 : undefined}
+              aria-label={isWaitlist ? "Open full waitlist" : undefined}
+              onClick={isWaitlist ? openWaitlist : undefined}
+              onKeyDown={
+                isWaitlist
+                  ? (e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault()
                         openWaitlist()
                       }
                     }
-                    : undefined
-                }
-                style={{
-                  background: s.bg,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 8,
-                  padding: "18px 20px",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                  cursor: isWaitlist ? "pointer" : undefined,
-                }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <s.icon size={20} aria-hidden="true" style={{ color: s.sc }} />
-                </div>
-                <div
-                  style={{
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    fontSize: 26,
-                    fontWeight: 800,
-                    color: "#111827",
-                    lineHeight: 1,
-                  }}
-                  className="mb-1"
-                >
-                  {s.value}
-                </div>
-                <div style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
-                  {s.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: s.sc,
-                    fontWeight: 600,
-                    marginTop: 4,
-                  }}
-                >
-                  {s.sub}
-                </div>
+                  : undefined
+              }
+            >
+              <div className="bdash-stat__icon" style={{ color: s.sc }}>
+                <s.icon size={22} aria-hidden="true" />
+              </div>
+              <div className="bdash-stat__value">{s.value}</div>
+              <div className="bdash-stat__label">{s.label}</div>
+              <div className="bdash-stat__sub" style={{ color: s.sc }}>
+                {s.sub}
               </div>
             </div>
           )
@@ -723,7 +695,7 @@ export default function Dashboard({
                       style={{
                         color: "#111827",
                         fontWeight: 700,
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
                       ₱{c.amount.toLocaleString()}
@@ -947,7 +919,7 @@ export default function Dashboard({
                   fontSize: 16,
                   fontWeight: 700,
                   color: "#111827",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 Fulfillment Board
@@ -979,94 +951,71 @@ export default function Dashboard({
         </div>
       )}
       {role !== "Seller" && (
-        <div
-          className="grid gap-6"
-          style={{ gridTemplateColumns: "1fr 340px" }}
-        >
-          <Card>
-            <SH
-              title="Recent Claims"
-              action={
-                <SecondaryBtn onClick={() => setTab("My Claims")}>
-                  View All
-                </SecondaryBtn>
-              }
-            />
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr style={{ borderBottom: "1px solid #F3F4F6" }}>
-                  {[
-                    "Product",
-                    "Batch",
-                    "Seller",
-                    "Amount",
-                    "Status",
-                    "Deadline",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        color: "#9CA3AF",
-                        fontWeight: 600,
-                        fontSize: 11,
-                        paddingBottom: 8,
-                        textAlign: "left",
-                        paddingRight: 12,
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {recentClaims.map((c) => {
-                  return (
+        <div className="bdash-main">
+          <div className="bdash-card">
+            <div className="bdash-section-head">
+              <h2>Recent Claims</h2>
+              <button
+                type="button"
+                className="bdash-viewall"
+                onClick={() => setTab("My Claims")}
+              >
+                View All
+              </button>
+            </div>
+            <div className="bdash-table-wrap">
+              <table className="bdash-table">
+                <thead>
+                  <tr>
+                    {[
+                      "Products",
+                      "Batch",
+                      "Seller",
+                      "Amount",
+                      "Status",
+                      "Deadline",
+                    ].map((h) => (
+                      <th key={h}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentClaims.map((c) => (
                     <tr
                       key={c.id}
-                      style={{ borderBottom: "1px solid #F9FAFB" }}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                      className="cursor-pointer"
                       onClick={() => setTab("My Claims")}
                     >
-                      <td className="py-2.5 pr-3">
-                        <div className="flex items-center gap-2">
+                      <td>
+                        <div className="bdash-cell-product">
                           <ProductThumb name={c.product} />
-                          <span style={{ color: "#111827", fontWeight: 500 }}>
-                            {c.product}
-                          </span>
+                          <span>{c.product}</span>
                         </div>
                       </td>
-                      <td className="py-2.5 pr-3">
-                        <div className="flex items-center gap-1.5">
-                          <span style={{ color: "#6B7280", fontSize: 12 }}>
-                            {c.batch}
-                          </span>
-                        </div>
+                      <td>
+                        <span className="bdash-cell-batch">{c.batch}</span>
                       </td>
-                      <td className="py-2.5 pr-3">
-                        <div className="flex items-center gap-1.5">
+                      <td>
+                        <div className="bdash-cell-seller">
                           <Avatar name={c.seller} size={20} />
-                          <span style={{ color: "#374151", fontSize: 12 }}>
-                            {c.seller}
-                          </span>
+                          <span>{c.seller}</span>
                         </div>
                       </td>
-                      <td
-                        className="py-2.5 pr-3"
-                        style={{
-                          color: "#111827",
-                          fontWeight: 700,
-                          fontFamily: "'Plus Jakarta Sans',sans-serif",
-                        }}
-                      >
-                        ₱{c.amount.toLocaleString()}
+                      <td>
+                        <span className="bdash-cell-amount">
+                          ₱{c.amount.toLocaleString()}
+                        </span>
                       </td>
-                      <td className="py-2.5 pr-3">
+                      <td>
                         <StatusBadge status={c.status} />
                       </td>
-                      <td className="py-2.5">
+                      <td>
                         {c.status === "Pending" && c.hours > 0 ? (
-                          <Countdown hours={c.hours} id={c.id} expiresAt={c.expiresAt} />
+                          <Countdown
+                            hours={c.hours}
+                            id={c.id}
+                            expiresAt={c.expiresAt}
+                          />
                         ) : (
                           <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                             —
@@ -1074,100 +1023,51 @@ export default function Dashboard({
                         )}
                       </td>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {recentClaims.length === 0 && (
-              <div style={{ padding: "24px 0", textAlign: "center", color: "#9CA3AF", fontSize: 13 }}>
-                No recent claims.
-              </div>
+              <div className="bdash-empty">No recent claims.</div>
             )}
-          </Card>
-          <Card style={{ background: "#FFFBF5", border: "1px solid #FCE4C8" }}>
-            <SH title="Upcoming Deadlines" />
-            <div className="space-y-3">
-              {upcoming.map((d, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background:
-                      d.hours < 6
-                        ? "#FFF7ED"
-                        : d.hours < 24
-                          ? "#FFFBF0"
-                          : "#fff",
-                    borderRadius: 8,
-                    border: `1px solid ${d.hours < 6
-                      ? "#FED7AA"
-                      : d.hours < 24
-                        ? "#FDE68A"
-                        : "#F3F4F6"
-                      }`,
-                  }}
-                  className="p-3 flex items-center justify-between"
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: "#111827",
-                      }}
-                    >
-                      {d.product}
-                    </div>
-                    <div
-                      style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}
-                    >
-                      {d.seller}
-                    </div>
+          </div>
+
+          <aside className="bdash-side">
+            <h2>Upcoming Deadlines</h2>
+            {upcoming.map((d, i) => (
+              <div
+                key={i}
+                className={`bdash-deadline${d.hours < 6 ? " bdash-deadline--urgent" : ""}`}
+              >
+                <div>
+                  <div className="bdash-deadline__name">{d.product}</div>
+                  <div className="bdash-deadline__seller">{d.seller}</div>
+                </div>
+                <div>
+                  <div className="bdash-deadline__amount">
+                    ₱{d.amount.toLocaleString()}
                   </div>
-                  <div className="text-right">
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "#111827",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
-                      }}
-                    >
-                      ₱{d.amount.toLocaleString()}
-                    </div>
+                  <div className="bdash-deadline__time">
                     <Countdown hours={d.hours} id={d.id} expiresAt={d.expiresAt} />
                   </div>
                 </div>
-              ))}
-              {upcoming.length > 0 ? (
-                <PrimaryBtn
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                    marginTop: 4,
-                  }}
-                  onClick={() => setShowPayAll(true)}
-                >
-                  Pay All Pending
-                </PrimaryBtn>
-              ) : (
-                <div
-                  style={{
-                    background: "#D4F5EA",
-                    borderRadius: 8,
-                    padding: "10px 14px",
-                    textAlign: "center",
-                    fontSize: 12,
-                    color: "#065F46",
-                    fontWeight: 600,
-                  }}
-                >
-                  <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
-                  All payments cleared!
-                </div>
-              )}
-            </div>
-          </Card>
+              </div>
+            ))}
+            {upcoming.length > 0 ? (
+              <button
+                type="button"
+                className="bdash-payall"
+                onClick={() => setShowPayAll(true)}
+              >
+                Pay All Pending
+              </button>
+            ) : (
+              <div className="bdash-cleared">
+                <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                All payments cleared!
+              </div>
+            )}
+          </aside>
         </div>
       )}
       {showPayAll && (

@@ -7,8 +7,15 @@ export function deadlineHasPassed(item: Pick<Expirable, "hours" | "expiresAt">, 
   return item.hours <= 0
 }
 
+// A claim is payable when the seller is waiting for (re)payment: a fresh
+// "Pending" claim, or one the seller marked "Insufficient Payment" (a short
+// payment the buyer can top up). "Awaiting Verification" — proof submitted,
+// pending the seller's decision — is intentionally NOT payable.
 export function claimIsPayable(claim: Expirable, now = Date.now()) {
-  return claim.status === "Pending" && !deadlineHasPassed(claim, now)
+  return (
+    (claim.status === "Pending" || claim.status === "Insufficient Payment") &&
+    !deadlineHasPassed(claim, now)
+  )
 }
 
 export function expireClaimRows(claims: ClaimRow[], now = Date.now()) {

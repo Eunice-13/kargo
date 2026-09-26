@@ -60,18 +60,21 @@ export default function MyClaims({
   }, [claims, payTarget])
   const filters: (ClaimStatus | "All")[] = [
     "All",
+    "Awaiting Verification",
     "Paid and Reserved",
     "Expired",
     "Cancelled",
   ]
-  const filtered =
-    filter === "All" ? claims : claims.filter((c) => c.status === filter)
-
-  // Single source of truth: the "My Claims To Pay" table above is derived from
-  // the SAME `claims` rows shown in the table below (the payable/pending ones),
-  // not a separate list. So every row here also appears under the "All" filter,
-  // and once paid it naturally moves to "Paid and Reserved".
+  // Payable claims (fresh "Pending" or "Insufficient Payment") live ONLY in the
+  // upper "My Claims To Pay" table. The filtered table below never shows a
+  // payable row, so there's exactly one place to pay from.
   const claimsToPay = claims.filter(claimIsPayable)
+
+  const nonPayableClaims = claims.filter((c) => !claimIsPayable(c))
+  const filtered =
+    filter === "All"
+      ? nonPayableClaims
+      : nonPayableClaims.filter((c) => c.status === filter)
 
   const [fbToast, setFbToast] = useState<string | null>(null)
 
@@ -377,7 +380,22 @@ export default function MyClaims({
           buyerContactUrl: details.buyerContactUrl,
         })
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Unable to submit payment.")
+        const message =
+          error instanceof Error ? error.message : "Unable to submit payment."
+        // Re-sync the client snapshot on ANY failure so a stale `claims`
+        // snapshot can't send a second doomed submit. Without this refresh the
+        // guard `claimIsPayable` keeps reading the pre-failure "Pending" row,
+        // which is what made proof-of-payment fail "every other time".
+        await refreshData()
+        // Close the modal so the reused stale `payTarget` can't be resubmitted.
+        setPayTarget(null)
+        if (message === "Order is not payable") {
+          alert(
+            "This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.",
+          )
+        } else {
+          alert(message)
+        }
         return
       }
       await refreshData()

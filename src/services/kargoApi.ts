@@ -210,6 +210,14 @@ function statusToClaim(status: string): ClaimRow["status"] {
 
   if (status === "insufficient_payment") return "Insufficient Payment"
 
+  // `payment_submitted` = the buyer submitted proof and is awaiting the
+  // seller's verification. It gets its OWN status so it shows in the filtered
+  // table (as "Awaiting Verification") but is NOT payable — the buyer can't pay
+  // again until the seller acts. Rejection sends the order back to
+  // `payment_pending` (→ "Pending", payable) and a short payment lands on
+  // `insufficient_payment` (→ "Insufficient Payment", payable again).
+  if (status === "payment_submitted") return "Awaiting Verification"
+
   if (["payment_confirmed", "preparing", "completed"].includes(status)) {
     return "Paid and Reserved"
   }

@@ -143,7 +143,7 @@ export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" 
 
 export type Role = "Buyer" | "Seller"
 
-export type ClaimStatus = "Pending" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
+export type ClaimStatus = "Pending" | "Awaiting Verification" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
 export type PaymentHistoryStatus = ClaimStatus | "Rejected"
 export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Security"
 

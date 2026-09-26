@@ -124,14 +124,17 @@ export default function Payments({
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to submit payment."
+        // Re-sync on ANY failure so a stale snapshot can't drive a second
+        // doomed submit (the "fails every other time" bug), then close the
+        // modal so the reused stale targets can't be resubmitted.
+        await refreshData()
+        setPayTarget(null)
+        setPayAll(false)
         if (message === "Order is not payable") {
-          await refreshData()
-          setPayTarget(null)
-          setPayAll(false)
           alert("This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.")
-          return false
+        } else {
+          alert(message)
         }
-        alert(message)
         return false
       }
       await refreshData()
