@@ -936,8 +936,9 @@ export default function Dashboard({
                 }
               />
             </div>
-            <Card style={{ padding: 0, overflow: "hidden" }}>
-            <div className="overflow-x-auto" style={{ maxHeight: 360, overflowY: "auto" }}>
+            {/* No card behind the table (matches the seller "Recent Orders"):
+                the table sits directly on the page with square corners. */}
+            <div className="buyer-claims-table overflow-x-auto" style={{ maxHeight: 360, overflowY: "auto" }}>
             <table className="w-full text-[13px]">
               <thead>
                 <tr style={{ background: TABLE_HEADER_BLUE }}>
@@ -948,7 +949,7 @@ export default function Dashboard({
                     "Amount",
                     "Status",
                     "Deadline",
-                  ].map((h, hi, arr) => (
+                  ].map((h) => (
                     <th
                       key={h}
                       style={{
@@ -959,10 +960,6 @@ export default function Dashboard({
                         textTransform: "uppercase",
                         padding: "10px 12px",
                         textAlign: "left",
-                        borderTopLeftRadius: hi === 0 ? 8 : 0,
-                        borderBottomLeftRadius: hi === 0 ? 8 : 0,
-                        borderTopRightRadius: hi === arr.length - 1 ? 8 : 0,
-                        borderBottomRightRadius: hi === arr.length - 1 ? 8 : 0,
                       }}
                     >
                       {h}
@@ -972,8 +969,9 @@ export default function Dashboard({
               </thead>
               <tbody>
                 {recentClaims.map((c, ri) => {
-                  // Zebra striping (reference): alternating white / light-gray.
-                  const stripe = ri % 2 === 1 ? "#F9FAFB" : "#fff"
+                  // Zebra striping matched to the seller orders table:
+                  // odd rows #eeeeee, even rows white.
+                  const stripe = ri % 2 === 1 ? "#EEEEEE" : "#fff"
                   return (
                     <tr
                       key={c.id}
@@ -1037,7 +1035,6 @@ export default function Dashboard({
                 No claims yet.
               </div>
             )}
-            </Card>
           </div>
           <Card style={{ background: SIDEBAR_PANEL, border: "none" }}>
             <SH title="Upcoming Deadlines" />

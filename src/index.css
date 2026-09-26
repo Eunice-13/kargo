@@ -2297,7 +2297,7 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
 /* Claims table (left) + Upcoming Deadlines sidebar (right) ~70/30 on desktop;
    stack vertically (sidebar below the table) on mobile per DESIGN.md. */
 .buyer-dashboard-layout {
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 310px;
 }
 @media (max-width: 860px) {
   .buyer-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2311,8 +2311,20 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
    Scoped to .kargo-buyer-shell (added on the app wrapper only for buyers) so
    the seller shell is untouched. Reuses the same brand gradient as the footer
    and the seller header. */
+/* The buyer header is 92px tall, so the sticky tab bar must stick BELOW it
+   (Tailwind's `top-14` = 56px assumes the default 56px header and left the bar
+   overlapping content on scroll). Pin it to the header height instead. */
+.kargo-buyer-shell .kargo-tabbar.sticky {
+  top: 92px !important;
+}
+
 .kargo-buyer-shell .kargo-header {
-  height: 72px !important;
+  /* Pin the header to the top while scrolling. (The computed `top` was `auto`,
+     so the sticky header scrolled away and the tab bar appeared detached.) */
+  position: sticky !important;
+  top: 0 !important;
+  /* Header height matched to the seller shell (92px) for a consistent chrome. */
+  height: 92px !important;
   padding-left: clamp(20px, 3vw, 40px) !important;
   padding-right: clamp(20px, 3vw, 40px) !important;
   border: 0 !important;
@@ -2371,20 +2383,20 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
    16px corners, and the soft shared shadow (no border). The box background is
    set inline per-card; the bright accent lives only on icon/subtext. */
 .kargo-buyer-shell main .buyer-stat-grid .kargo-card {
-  padding: 22px 24px !important;
-  /* Sides/bottom borderless; the bright top edge is set inline per card, so
-     don't let the shared card border override its color. */
-  border-left-color: transparent !important;
-  border-right-color: transparent !important;
-  border-bottom-color: transparent !important;
-  border-radius: 16px !important;
-  box-shadow: var(--buyer-card-shadow) !important;
+  /* Matched to the seller stat card: 44px top padding clears the 10px strip,
+     10px radius, defined lift shadow. */
+  padding: 44px 30px 24px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 13px rgba(18, 30, 71, .21) !important;
 }
 .kargo-buyer-shell main .buyer-stat-grid .stat-card-value {
-  font-family: 'Manrope', sans-serif !important;
-  font-size: 42px !important;
+  /* Size matched to the seller stat number ramp. Font family is overridden to
+     Josefin Sans elsewhere per the page font choice. */
+  font-size: clamp(30px, 3vw, 43px) !important;
   font-weight: 800 !important;
-  letter-spacing: -.035em;
+  letter-spacing: -.02em;
+  margin-top: 0 !important;
 }
 
 /* Recent Claims heading now sits ABOVE the card; give it breathing room and
@@ -2392,20 +2404,29 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
 .kargo-buyer-shell main .buyer-claims-head { margin-bottom: 12px; }
 .kargo-buyer-shell main .buyer-claims-head .flex { margin-bottom: 0 !important; }
 
-/* Claims table container (the card now wraps ONLY the table, starting at the
-   "Products" header row): 16px radius + soft lift, header row flush to top. */
-.kargo-buyer-shell main .buyer-claims-col > .kargo-card {
-  border-radius: 16px !important;
-  box-shadow: var(--buyer-card-shadow) !important;
-}
-/* Sidebar OUTER panel: rounded, essentially flat (little/no shadow). */
-.kargo-buyer-shell main .buyer-dashboard-layout > .kargo-card:last-child {
-  border-radius: 16px !important;
+/* No card behind the Recent Claims table (matches the seller "Recent Orders"):
+   the table sits directly on the page with SQUARE corners — no wrapper
+   background, no radius, no shadow. */
+.kargo-buyer-shell main .buyer-claims-table,
+.kargo-buyer-shell main .buyer-claims-table table,
+.kargo-buyer-shell main .buyer-claims-table thead th {
+  border-radius: 0 !important;
   box-shadow: none !important;
+  background-color: transparent;
+}
+.kargo-buyer-shell main .buyer-claims-table thead th { background-color: #6995d7 !important; }
+/* Sidebar OUTER panel: matched to the seller side card — pale blue, 10px
+   radius, defined lift (the seller panel is NOT flat). */
+.kargo-buyer-shell main .buyer-dashboard-layout > .kargo-card:last-child {
+  background: #cadcf8 !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 13px rgba(18, 30, 71, .18) !important;
 }
 /* Individual deadline item cards inside the sidebar sit above the panel. */
 .kargo-buyer-shell main .buyer-dashboard-layout > .kargo-card:last-child .space-y-3 > div {
-  box-shadow: var(--buyer-item-shadow) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 3px 6px rgba(24, 41, 72, .2) !important;
 }
 
 /* Page canvas: cool light gray so cards visibly lift (confirmed direction,
@@ -2432,12 +2453,20 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
   font-family: 'Josefin Sans', sans-serif !important;
 }
 
-/* Section headings (Recent Claims, Upcoming Deadlines) — Manrope bold ~22px. */
+/* Section headings (Recent Claims, Upcoming Deadlines) — matched to the seller
+   heading ramp. Font family is overridden to Josefin Sans below. */
 .kargo-buyer-shell main .buyer-dashboard-layout h2 {
-  font-family: 'Manrope', sans-serif !important;
   font-weight: 700 !important;
-  font-size: 22px !important;
-  color: #161B22 !important;
+  font-size: clamp(22px, 2.1vw, 30px) !important;
+  color: #080808 !important;
+  letter-spacing: .01em !important;
+}
+/* "View All" button matched to the seller: 10px radius, #1d20b5, 10/24 pad. */
+.kargo-buyer-shell main .buyer-claims-head .kargo-primary {
+  border-radius: 10px !important;
+  background: #1d20b5 !important;
+  padding: 10px 24px !important;
+  box-shadow: none !important;
 }
 /* Stat card label (muted) + subtext (accent) sizing. */
 .kargo-buyer-shell main .buyer-stat-grid .stat-card-value + div { font-size: 13px !important; }
@@ -2463,8 +2492,10 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
   table-layout: fixed;
   width: 100%;
 }
-.kargo-buyer-shell main .buyer-dashboard-layout thead th,
-.kargo-buyer-shell main .buyer-dashboard-layout tbody td { padding: 9px 8px !important; }
+.kargo-buyer-shell main .buyer-dashboard-layout thead th { padding: 15px 8px !important; }
+.kargo-buyer-shell main .buyer-dashboard-layout tbody td { padding: 12px 8px !important; }
+/* Row hover matched to the seller orders table (#e4ebf7). */
+.kargo-buyer-shell main .buyer-dashboard-layout tbody tr:hover { background: #e4ebf7 !important; }
 .kargo-buyer-shell main .buyer-dashboard-layout thead th:first-child,
 .kargo-buyer-shell main .buyer-dashboard-layout tbody td:first-child { padding-left: 12px !important; }
 .kargo-buyer-shell main .buyer-dashboard-layout thead th:last-child,

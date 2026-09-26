@@ -46,7 +46,7 @@ export default function StatCard({
           top: 0,
           left: 0,
           right: 0,
-          height: 5,
+          height: 10,
           background: edge,
         }}
       />
@@ -73,8 +73,8 @@ export default function StatCard({
             color: accent,
             opacity: 0.55,
             position: "absolute",
-            top: 2,
-            right: 2,
+            top: 18,
+            right: 18,
           }}
         />
         <div

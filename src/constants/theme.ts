@@ -23,10 +23,12 @@ export const BUYER_GRADIENT = "linear-gradient(to right, #1B1EAA, #6690D4)"
 export const BUYER_GRADIENT_DARK = "#1B1EAA" // confirmed dark stop (accent/buttons candidate)
 export const BUYER_GRADIENT_LIGHT = "#6690D4" // confirmed light stop
 
-// Recent Claims table header fill (confirmed): solid, white text on top.
-export const TABLE_HEADER_BLUE = "#6892D5"
-// Upcoming Deadlines sidebar panel fill (confirmed): pale lavender-blue.
-export const SIDEBAR_PANEL = "#C7D8F4"
+// Recent Claims table header fill: matched to the seller orders table header
+// (.seller-orders-table thead = #6995d7) so both tables read identically.
+export const TABLE_HEADER_BLUE = "#6995D7"
+// Upcoming Deadlines sidebar panel fill: matched to the seller side card
+// (.seller-side-card = #cadcf8).
+export const SIDEBAR_PANEL = "#CADCF8"
 
 // Stat card muted boxes + bright accents. Accent is used ONLY for the icon
 // glyph, subtext, and (cards 2-3) the leading dot — never the box fill. [VERIFY]
@@ -40,12 +42,12 @@ export const STAT_NEUTRAL_BG = "#F1F2F4" // [VERIFY] Completed Orders box (near-
 export const STAT_NEUTRAL_FG = "#8B95A1" // [VERIFY] Completed Orders accent (muted gray)
 
 // Bright saturated top-edge strip on each stat card (the vivid band above the
-// muted box in the reference). Brighter/more saturated than the *_FG accents,
-// which are used for text. [VERIFY] exact hues against Figma.
-export const STAT_GREEN_EDGE = "#5FD39A" // Active Claims (bright green)
-export const STAT_AMBER_EDGE = "#F5D64E" // Pending Payment (bright yellow)
-export const STAT_CORAL_EDGE = "#E23B4E" // Waitlist Position (bright red)
-export const STAT_NEUTRAL_EDGE = "#D8DBE0" // Completed Orders (light gray)
+// muted box). Values matched to the seller dashboard's strip colors so buyer
+// and seller stat cards read as one system (.seller-stat--N::before).
+export const STAT_GREEN_EDGE = "#75EEA3" // Active Claims (bright green)
+export const STAT_AMBER_EDGE = "#FFE873" // Pending Payment (bright yellow)
+export const STAT_CORAL_EDGE = "#E52B49" // Waitlist Position (bright red)
+export const STAT_NEUTRAL_EDGE = "#D1D1D1" // Completed Orders (light gray)
 
 // Neutrals / text [VERIFY]
 export const INK = "#161B22" // headings + large numbers
