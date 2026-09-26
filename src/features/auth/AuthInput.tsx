@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Eye, LockKeyhole, UserRound } from "lucide-react"
+import { Eye, EyeOff, UserRound } from "lucide-react"
 
 export default function AuthInput({
   label,
@@ -18,7 +18,8 @@ export default function AuthInput({
 }) {
   const [showPassword, setShowPassword] = useState(false)
   const isPassword = type === "password"
-  const Icon = isPassword ? (showPassword ? Eye : LockKeyhole) : type === "email" ? UserRound : null
+  const PasswordIcon = showPassword ? Eye : EyeOff
+  const Icon = isPassword ? PasswordIcon : type === "email" ? UserRound : null
 
   return (
     <div className={`auth-field${error ? " auth-field--error" : ""}`}>
@@ -40,10 +41,10 @@ export default function AuthInput({
             aria-pressed={showPassword}
             title={showPassword ? "Hide password" : "Show password"}
           >
-            <Icon size={19} strokeWidth={2.4} aria-hidden="true" />
+            <PasswordIcon size={17} strokeWidth={2.4} aria-hidden="true" />
           </button>
         ) : (
-          Icon && <Icon size={19} strokeWidth={2.6} aria-hidden="true" />
+          Icon && <Icon size={17} strokeWidth={2.4} aria-hidden="true" />
         )}
       </div>
       {error && (

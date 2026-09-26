@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { Check, Eye, LockKeyhole } from "lucide-react"
-import { PrimaryBtn } from "@/components/shared"
+import { Check, Eye, EyeOff } from "lucide-react"
+import { PrimaryBtn, SH } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 
 export default function SecuritySection() {
@@ -92,7 +92,7 @@ export default function SecuritySection() {
                   transform: "translateY(-50%)",
                 }}
               >
-                {visiblePasswords[label] ? <Eye size={17} aria-hidden="true" /> : <LockKeyhole size={17} aria-hidden="true" />}
+                {visiblePasswords[label] ? <Eye size={16} aria-hidden="true" /> : <EyeOff size={16} aria-hidden="true" />}
               </button>
             </div>
           </div>

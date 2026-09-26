@@ -55,7 +55,7 @@ export default function Login({
     <AuthLayout page="login">
       <div className="auth-content pu">
         <header className="auth-heading">
-          <h1>Welcome back!</h1>
+          <h1>Your Budol, Our Kargo!</h1>
           <p>Sign in to your Kargo account</p>
         </header>
 

@@ -108,7 +108,7 @@ export default function SignUp({
     <AuthLayout page="signup" condensed={role === "Seller"}>
       <div className="auth-content auth-signup-content pl">
         <header className="auth-heading">
-          <h1>Create your account</h1>
+          <h1>Start your Pasabuy Journey!</h1>
           <p>Join Kargo to buy or sell pasabuy items</p>
         </header>
 

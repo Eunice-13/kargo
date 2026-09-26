@@ -735,6 +735,15 @@ body:has(.auth-page) #root {
   right: clamp(.45rem, 1dvh, 1rem);
 }
 
+/* Match the password-toggle eye to the person/email icon so they read the
+   same size. The two lucide glyphs fill their viewbox differently — the eye
+   is wider than UserRound at the same box — so the eye box is scaled down a
+   touch (~88%) to keep the visible glyphs proportional at every viewport. */
+.auth-password-toggle > svg {
+  width: clamp(.7rem, 1.04dvh, 1.05rem);
+  height: clamp(.7rem, 1.04dvh, 1.05rem);
+}
+
 .auth-error {
   position: absolute;
   z-index: 2;
