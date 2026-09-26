@@ -11,6 +11,7 @@ export default function StatCard({
   sub,
   accent,
   bg,
+  edge,
   icon: Icon,
   onClick,
 }: {
@@ -19,19 +20,36 @@ export default function StatCard({
   sub: string
   accent: string
   bg: string
+  // Bright saturated strip along the top edge of the card (per the reference).
+  edge: string
   icon: LucideIcon
   onClick?: () => void
 }) {
   const interactive = typeof onClick === "function"
   return (
     <Card
-      className="fi"
+      className="fi stat-card"
       style={{
         position: "relative",
         background: bg,
+        overflow: "hidden",
         cursor: interactive ? "pointer" : undefined,
       }}
     >
+      {/* Bright saturated top strip (per the reference). Rendered as an element
+          rather than a border so the shared .kargo-card `border !important`
+          rule can't override its color. */}
+      <span
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 5,
+          background: edge,
+        }}
+      />
       <div
         role={interactive ? "button" : undefined}
         tabIndex={interactive ? 0 : undefined}

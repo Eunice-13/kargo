@@ -17,8 +17,13 @@ import {
   STAT_CORAL_BG,
   STAT_CORAL_FG,
   STAT_NEUTRAL_BG,
-  SIDEBAR_LAVENDER,
-  SIDEBAR_LAVENDER_LINE,
+  STAT_NEUTRAL_FG,
+  STAT_GREEN_EDGE,
+  STAT_AMBER_EDGE,
+  STAT_CORAL_EDGE,
+  STAT_NEUTRAL_EDGE,
+  SIDEBAR_PANEL,
+  TABLE_HEADER_BLUE,
 } from "@/constants/theme"
 import {
   Card,
@@ -138,6 +143,7 @@ export default function Dashboard({
       sub: activeClaims.length > 0 ? `${activeClaims.length} awaiting action` : "All caught up",
       sc: STAT_GREEN_FG,
       bg: STAT_GREEN_BG,
+      edge: STAT_GREEN_EDGE,
     },
     {
       label: "Pending Payment",
@@ -146,6 +152,7 @@ export default function Dashboard({
       sub: soonestPayableHours !== null ? `Next one due in ${soonestPayableHours}h` : "Nothing due",
       sc: STAT_AMBER_FG,
       bg: STAT_AMBER_BG,
+      edge: STAT_AMBER_EDGE,
     },
     {
       label: "Waitlist Position",
@@ -154,14 +161,16 @@ export default function Dashboard({
       sub: closestWaitlist ? closestWaitlist.product : "No waitlisted items",
       sc: STAT_CORAL_FG,
       bg: STAT_CORAL_BG,
+      edge: STAT_CORAL_EDGE,
     },
     {
       label: "Completed Orders",
       value: String(completedOrders),
       icon: CheckCircle2,
       sub: "All caught up",
-      sc: "#6B7280",
+      sc: STAT_NEUTRAL_FG,
       bg: STAT_NEUTRAL_BG,
+      edge: STAT_NEUTRAL_EDGE,
     },
   ]
   const sellerStats = [
@@ -586,6 +595,7 @@ export default function Dashboard({
             sub={s.sub}
             accent={s.sc}
             bg={s.bg}
+            edge={s.edge}
             icon={s.icon}
             onClick={s.label === "Waitlist Position" ? openWaitlist : undefined}
           />
@@ -913,19 +923,24 @@ export default function Dashboard({
       )}
       {role !== "Seller" && (
         <div className="buyer-dashboard-layout grid gap-6">
-          <Card>
-            <SH
-              title="Recent Claims"
-              action={
-                <PrimaryBtn size="sm" onClick={() => setTab("My Claims")}>
-                  View All
-                </PrimaryBtn>
-              }
-            />
+          {/* Recent Claims: heading + View All sit ABOVE the card; the card
+              (white surface) begins at the table's "Products" header row. */}
+          <div className="buyer-claims-col">
+            <div className="buyer-claims-head">
+              <SH
+                title="Recent Claims"
+                action={
+                  <PrimaryBtn size="sm" onClick={() => setTab("My Claims")}>
+                    View All
+                  </PrimaryBtn>
+                }
+              />
+            </div>
+            <Card style={{ padding: 0, overflow: "hidden" }}>
             <div className="overflow-x-auto" style={{ maxHeight: 360, overflowY: "auto" }}>
             <table className="w-full text-[13px]">
               <thead>
-                <tr style={{ background: INDIGO }}>
+                <tr style={{ background: TABLE_HEADER_BLUE }}>
                   {[
                     "Products",
                     "Batch",
@@ -1022,8 +1037,9 @@ export default function Dashboard({
                 No claims yet.
               </div>
             )}
-          </Card>
-          <Card style={{ background: SIDEBAR_LAVENDER, border: `1px solid ${SIDEBAR_LAVENDER_LINE}` }}>
+            </Card>
+          </div>
+          <Card style={{ background: SIDEBAR_PANEL, border: "none" }}>
             <SH title="Upcoming Deadlines" />
             <div className="space-y-3">
               {upcoming.map((d, i) => (

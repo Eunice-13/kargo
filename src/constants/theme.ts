@@ -12,21 +12,50 @@ export const AMBER = RETRO_THEME ? "#D59B2C" : "#FFC24B"
 
 export const TODAY = "Sep 10, 2026"
 
-// ─── Buyer dashboard mockup palette (Buyer_-_Dashboard.png) ───────────────────
-// These are pale card fills / accents and a lavender sidebar taken from the
-// reference image. The existing saturated tokens (GREEN/AMBER/CORAL/SKY/CYAN_L)
-// are accent/brand colors and are visibly darker/more saturated than the card
-// tints in the mockup, so we add dedicated tokens rather than approximate.
-// INDIGO already matches the header/footer gradient dark end, so it is reused.
-export const STAT_GREEN_BG = "#C9F2DE" // Active Claims card fill
-export const STAT_GREEN_FG = "#0B9E6E" // Active Claims accent text
-export const STAT_AMBER_BG = "#FBEFC6" // Pending Payment card fill
-export const STAT_AMBER_FG = "#C08A1E" // Pending Payment accent text
-export const STAT_CORAL_BG = "#FBD9DE" // Waitlist Position card fill
-export const STAT_CORAL_FG = "#E62B48" // Waitlist Position accent text
-export const STAT_NEUTRAL_BG = "#EDEFF2" // Completed Orders card fill
-export const SIDEBAR_LAVENDER = "#DCE6FA" // Upcoming Deadlines panel fill
-export const SIDEBAR_LAVENDER_LINE = "#C3D3F5" // panel border
+// ─── Buyer dashboard mockup palette (Buyer_-_Dashboard.png / Kargo 2.0 Figma) ─
+// Values marked "confirmed" came from the Figma design spec; values marked
+// [VERIFY] are estimated from the reference screenshot and should be
+// reconciled against the Figma file (file key gogP2hBUGuDncq5X72GBYP) once the
+// Figma MCP server is connected.
+
+// Header + footer gradient (confirmed): deep indigo-violet -> mid periwinkle.
+export const BUYER_GRADIENT = "linear-gradient(to right, #1B1EAA, #6690D4)"
+export const BUYER_GRADIENT_DARK = "#1B1EAA" // confirmed dark stop (accent/buttons candidate)
+export const BUYER_GRADIENT_LIGHT = "#6690D4" // confirmed light stop
+
+// Recent Claims table header fill (confirmed): solid, white text on top.
+export const TABLE_HEADER_BLUE = "#6892D5"
+// Upcoming Deadlines sidebar panel fill (confirmed): pale lavender-blue.
+export const SIDEBAR_PANEL = "#C7D8F4"
+
+// Stat card muted boxes + bright accents. Accent is used ONLY for the icon
+// glyph, subtext, and (cards 2-3) the leading dot — never the box fill. [VERIFY]
+export const STAT_GREEN_BG = "#C9F2DE" // [VERIFY] Active Claims box (pale mint)
+export const STAT_GREEN_FG = "#0B9E6E" // [VERIFY] Active Claims accent (green)
+export const STAT_AMBER_BG = "#FBEFC6" // [VERIFY] Pending Payment box (pale cream)
+export const STAT_AMBER_FG = "#C08A1E" // [VERIFY] Pending Payment accent (amber)
+export const STAT_CORAL_BG = "#FBD9DE" // [VERIFY] Waitlist box (soft coral-pink)
+export const STAT_CORAL_FG = "#E62B48" // [VERIFY] Waitlist accent (red-coral)
+export const STAT_NEUTRAL_BG = "#F1F2F4" // [VERIFY] Completed Orders box (near-white)
+export const STAT_NEUTRAL_FG = "#8B95A1" // [VERIFY] Completed Orders accent (muted gray)
+
+// Bright saturated top-edge strip on each stat card (the vivid band above the
+// muted box in the reference). Brighter/more saturated than the *_FG accents,
+// which are used for text. [VERIFY] exact hues against Figma.
+export const STAT_GREEN_EDGE = "#5FD39A" // Active Claims (bright green)
+export const STAT_AMBER_EDGE = "#F5D64E" // Pending Payment (bright yellow)
+export const STAT_CORAL_EDGE = "#E23B4E" // Waitlist Position (bright red)
+export const STAT_NEUTRAL_EDGE = "#D8DBE0" // Completed Orders (light gray)
+
+// Neutrals / text [VERIFY]
+export const INK = "#161B22" // headings + large numbers
+export const INK_BODY = "#2B3440" // body / table values
+export const INK_META = "#8B95A1" // secondary / meta labels
+export const CANVAS = "#F4F6F9" // page background (cool light gray)
+export const ROW_STRIPE = "#F7F8FA" // table zebra alt row
+
+// Circular search button (confirmed distinct teal, exact hex [VERIFY]).
+export const SEARCH_TEAL = "#3FC5E0"
 
 // ─── Category gradients ───────────────────────────────────────────────────────
 export const CAT_GRAD: Record<string, string> = RETRO_THEME
