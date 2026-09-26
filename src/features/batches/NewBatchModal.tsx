@@ -5,6 +5,7 @@ import type { BatchType } from "@/types"
 import { INDIGO, CAT_GRAD } from "@/constants/theme"
 import { BATCH_CATEGORIES } from "@/constants/categories"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import BatchCover from "./BatchCover"
 
 import { isSupabaseConfigured } from "@/lib/supabase"
 
@@ -41,7 +42,9 @@ export default function NewBatchModal({
 
   const [desc, setDesc] = useState("")
 
-  const [cat, setCat] = useState("Mixed")
+  const [coverImage, setCoverImage] = useState("")
+
+  const [cat, setCat] = useState("Food")
 
   const [startDate, setStartDate] = useState("")
 
@@ -236,6 +239,8 @@ export default function NewBatchModal({
 
         notes: desc.trim() || undefined,
 
+        coverImage: coverImage.trim() || undefined,
+
         products: prods,
 
         reserveHours,
@@ -339,6 +344,46 @@ export default function NewBatchModal({
               boxSizing: "border-box",
 
               resize: "vertical",
+            }}
+            className="placeholder:text-gray-400"
+          />
+        </div>
+        <div>
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#374151",
+              display: "block",
+              marginBottom: 5,
+            }}
+          >
+            Cover Photo{" "}
+            <span style={{ color: "#9CA3AF", fontWeight: 500 }}>(optional)</span>
+          </label>
+          {/* Live preview — the exact banner buyers see on the Home card and the
+              batch detail hero. Empty falls back to the category gradient + icon. */}
+          <BatchCover
+            category={cat}
+            coverImage={coverImage.trim() || undefined}
+            height={110}
+            radius={8}
+          />
+          <input
+            value={coverImage}
+            onChange={(e) => setCoverImage(e.target.value)}
+            placeholder="Paste an image URL (or leave blank to use the category banner)"
+            style={{
+              width: "100%",
+              marginTop: 8,
+              fontSize: 13,
+              border: "1px solid #E5E7EB",
+              borderRadius: 7,
+              padding: "9px 12px",
+              outline: "none",
+              color: "#374151",
+              fontFamily: "inherit",
+              boxSizing: "border-box",
             }}
             className="placeholder:text-gray-400"
           />

@@ -338,6 +338,11 @@ export interface BatchItem {
 
   notes?: string
 
+  // Optional seller-set cover photo. A single image field used identically by
+  // the Home batch card banner and the batch detail hero. When absent, both
+  // fall back to the category gradient + CategoryIcon.
+  coverImage?: string
+
   products: BatchStoredProduct[]
 }
 

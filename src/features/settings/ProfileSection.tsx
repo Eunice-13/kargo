@@ -1,6 +1,6 @@
 import { useRef } from "react"
 import { Check } from "lucide-react"
-import { Avatar, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { Avatar, PrimaryBtn, SecondaryBtn, SH } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 import type { UserInfo } from "@/types"
 import { BirVerifier } from "@/features/auth"
@@ -47,17 +47,7 @@ export default function ProfileSection({
   const photoRef = useRef<HTMLInputElement>(null)
   return (
     <div className="pr">
-      <h3
-        style={{
-          fontFamily: "'Josefin Sans',sans-serif",
-          fontSize: 16,
-          fontWeight: 700,
-          color: "#111827",
-          marginBottom: 20,
-        }}
-      >
-        Profile
-      </h3>
+      <SH title="Profile" />
       <div className="flex items-center gap-5 mb-6">
         <Avatar name={user.name || "User"} size={64} imageUrl={avatarPreview || user.avatarUrl} />
         <div>

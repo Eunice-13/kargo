@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { Lock, ArrowLeft, Plane, Check, Link2, Star } from "lucide-react"
 import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo, WaitlistEntry } from "@/types"
-import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD } from "@/constants/theme"
-import { Card, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge, CategoryIcon, Toggle, ContactModal, ShareButton } from "@/components/shared"
+import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
+import { Card, PrimaryBtn, SecondaryBtn, SH, Avatar, ProductThumb, BIRBadge, Toggle, ContactModal, ShareButton } from "@/components/shared"
 import ItemClaimModal from "./ItemClaimModal"
 import JoinWaitlistModal from "./JoinWaitlistModal"
 import { toggleBatchLock } from "./toggleBatchLock"
@@ -183,7 +183,7 @@ export default function BatchPage({
   }
 
   return (
-    <div className="p-6 fi" style={{ maxWidth: 900, margin: "0 auto" }}>
+    <div className="p-6 fi">
       {/* Breadcrumb + share */}
       <div
         style={{
@@ -214,10 +214,11 @@ export default function BatchPage({
         <ShareButton batchId={batch.id} title={batch.title} label="Share batch" />
       </div>
 
-      {/* Hero header */}
+      {/* Hero header — same cover photo the Home batch card shows (seller upload
+          or category default), with a scrim so the white title stays legible. */}
       <div
         style={{
-          height: 180,
+          height: 220,
           background: grad,
           borderRadius: 12,
           display: "flex",
@@ -228,18 +229,27 @@ export default function BatchPage({
           overflow: "hidden",
         }}
       >
-        <span
+        <img
+          src={batchCoverSrc(batch.coverImage, batch.category)}
+          alt=""
+          aria-hidden="true"
           style={{
             position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%,-60%)",
-            fontSize: 72,
-            opacity: 0.18,
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
           }}
-        >
-          <CategoryIcon category={batch.category} size={44} color="#fff" />
-        </span>
+        />
+        {/* Scrim keeps the white title legible over the photo. */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0) 75%)",
+          }}
+        />
         {batch.locked && role === "Buyer" && (
           <span
             style={{
@@ -257,7 +267,7 @@ export default function BatchPage({
             <><Lock size={14} aria-hidden="true" /> Not Accepting Orders</>
           </span>
         )}
-        <div>
+        <div style={{ position: "relative" }}>
           <h1
             style={{
               fontFamily: "'Josefin Sans',sans-serif",
@@ -329,30 +339,16 @@ export default function BatchPage({
       >
         {/* Left: products */}
         <div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-          >
-            <h2
-              style={{
-                fontFamily: "'Josefin Sans',sans-serif",
-                fontSize: 16,
-                fontWeight: 700,
-                color: "#111827",
-              }}
-            >
-              Items in this Batch
-            </h2>
-            {role === "Buyer" && (
-              <SecondaryBtn onClick={() => setContact(true)}>
-                Contact Seller
-              </SecondaryBtn>
-            )}
-          </div>
+          <SH
+            title="Items in this Batch"
+            action={
+              role === "Buyer" ? (
+                <SecondaryBtn onClick={() => setContact(true)}>
+                  Contact Seller
+                </SecondaryBtn>
+              ) : undefined
+            }
+          />
           <div className="space-y-3">
             {batch.products.map((p, pIdx) => {
               const pKey = `${batch.id}-${pIdx}`

@@ -6,6 +6,7 @@ import {
   Card,
   PrimaryBtn,
   SecondaryBtn,
+  SH,
   Avatar,
   TrackOrderModal,
   ContactModal,
@@ -52,18 +53,8 @@ export default function Orders({
   if (role === "Seller") {
     return (
       <div className="p-6">
-        <h2
-          style={{
-            fontFamily: "'Josefin Sans',sans-serif",
-            fontSize: 18,
-            fontWeight: 800,
-            color: "#111827",
-            marginBottom: 4,
-          }}
-        >
-          Fulfillment Board
-        </h2>
-        <p style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 20 }}>
+        <SH title="Fulfillment Board" />
+        <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: -8, marginBottom: 20 }}>
           Track all orders across fulfillment stages.
         </p>
         <div
@@ -176,12 +167,10 @@ export default function Orders({
                         </span>
                         <span
                           style={{
-                            background: CYAN_L,
-                            color: "#0369A1",
-                            fontSize: 10,
+                            color: GREEN,
+                            fontSize: 12,
                             fontWeight: 700,
-                            padding: "2px 7px",
-                            borderRadius: 999,
+                            fontFamily: "'Josefin Sans',sans-serif",
                           }}
                         >
                           ₱{o.amount.toLocaleString()}

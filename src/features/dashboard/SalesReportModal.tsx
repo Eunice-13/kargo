@@ -3,6 +3,7 @@ import { createPortal } from "react-dom"
 import { Printer, X } from "lucide-react"
 import type { BatchType, FulfillmentOrder } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
+import { PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { PeriodOrder } from "@/services"
@@ -346,45 +347,19 @@ export default function SalesReportModal({
 
         {/* Actions — not printed */}
         <div className="no-print" style={{ display: "flex", gap: 10, padding: "0 24px 20px" }}>
-          <button
-            type="button"
+          <SecondaryBtn
             onClick={onClose}
-            style={{
-              flex: 1,
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#374151",
-              background: "#F3F4F6",
-              border: "1px solid #E5E7EB",
-              borderRadius: 8,
-              padding: "10px 12px",
-              cursor: "pointer",
-            }}
+            style={{ flex: 1, display: "flex", justifyContent: "center" }}
           >
             Close
-          </button>
-          <button
-            type="button"
+          </SecondaryBtn>
+          <PrimaryBtn
             onClick={handlePrint}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 7,
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#fff",
-              background: INDIGO,
-              border: "none",
-              borderRadius: 8,
-              padding: "10px 12px",
-              cursor: "pointer",
-            }}
+            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
           >
             <Printer size={16} aria-hidden="true" />
             Print
-          </button>
+          </PrimaryBtn>
         </div>
 
         {/* Close (X) top-right for parity — not printed */}

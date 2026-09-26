@@ -190,7 +190,7 @@ const BATCHES = [
   {
     seller: "ana",
     title: "Seoul Skincare Run — October 2026",
-    category: "Skincare",
+    category: "Beauty",
     startsOn: "2026-10-18",
     endsOn: "2026-10-27",
     createdAt: "2026-09-03T10:30:00+08:00",
@@ -207,7 +207,7 @@ const BATCHES = [
   {
     seller: "paolo",
     title: "US Holiday Grocery Haul — November 2026",
-    category: "Grocery & Snacks",
+    category: "Food",
     startsOn: "2026-11-05",
     endsOn: "2026-11-20",
     createdAt: "2026-09-05T14:10:00+08:00",
@@ -222,7 +222,7 @@ const BATCHES = [
   {
     seller: "kristine",
     title: "Bangkok Market Mix — November 2026",
-    category: "Mixed",
+    category: "Others",
     startsOn: "2026-11-12",
     endsOn: "2026-11-19",
     createdAt: "2026-09-07T09:45:00+08:00",
@@ -238,7 +238,7 @@ const BATCHES = [
   {
     seller: "jade",
     title: "Singapore Skincare Edit — December 2026",
-    category: "Skincare",
+    category: "Beauty",
     startsOn: "2026-12-02",
     endsOn: "2026-12-10",
     createdAt: "2026-09-10T11:20:00+08:00",
@@ -254,7 +254,7 @@ const BATCHES = [
   {
     seller: "maria",
     title: "Australia Snack Run — December 2026",
-    category: "Grocery & Snacks",
+    category: "Food",
     startsOn: "2026-12-14",
     endsOn: "2026-12-23",
     createdAt: "2026-09-12T16:05:00+08:00",
@@ -333,7 +333,7 @@ const BATCHES = [
   {
     seller: "jade",
     title: "Vietnam Market Mix — November 2026",
-    category: "Mixed",
+    category: "Others",
     startsOn: "2026-11-25",
     endsOn: "2026-12-02",
     createdAt: "2026-09-24T10:05:00+08:00",
@@ -356,7 +356,7 @@ const BATCHES = [
   {
     seller: "ana",
     title: "Seoul Glow Edit — November 2026",
-    category: "Skincare",
+    category: "Beauty",
     startsOn: "2026-11-02",
     endsOn: "2026-11-10",
     createdAt: "2026-09-25T08:20:00+08:00",
@@ -368,7 +368,7 @@ const BATCHES = [
   {
     seller: "paolo",
     title: "California Pantry Run — November 2026",
-    category: "Grocery & Snacks",
+    category: "Food",
     startsOn: "2026-11-08",
     endsOn: "2026-11-18",
     createdAt: "2026-09-25T09:30:00+08:00",
@@ -400,7 +400,7 @@ const BATCHES = [
   {
     seller: "maria",
     title: "Tokyo Variety Run — December 2026",
-    category: "Mixed",
+    category: "Others",
     startsOn: "2026-12-18",
     endsOn: "2026-12-27",
     createdAt: "2026-09-25T13:00:00+08:00",
@@ -424,7 +424,7 @@ const BATCHES = [
   {
     seller: "ana",
     title: "Busan Barrier Care — January 2027",
-    category: "Skincare",
+    category: "Beauty",
     startsOn: "2027-01-13",
     endsOn: "2027-01-21",
     createdAt: "2026-09-25T15:20:00+08:00",
@@ -436,7 +436,7 @@ const BATCHES = [
   {
     seller: "paolo",
     title: "New York Snack Drop — January 2027",
-    category: "Grocery & Snacks",
+    category: "Food",
     startsOn: "2027-01-17",
     endsOn: "2027-01-28",
     createdAt: "2026-09-25T16:30:00+08:00",
@@ -472,7 +472,7 @@ const BATCHES = [
   {
     seller: "maria",
     title: "Kyoto Seasonal Mix — February 2027",
-    category: "Mixed",
+    category: "Others",
     startsOn: "2027-02-12",
     endsOn: "2027-02-20",
     createdAt: "2026-09-25T20:00:00+08:00",
@@ -496,7 +496,7 @@ const BATCHES = [
   {
     seller: "ana",
     title: "Incheon Skincare Run — March 2027",
-    category: "Skincare",
+    category: "Beauty",
     startsOn: "2027-03-03",
     endsOn: "2027-03-11",
     createdAt: "2026-09-25T22:20:00+08:00",
@@ -508,7 +508,7 @@ const BATCHES = [
   {
     seller: "paolo",
     title: "Seattle Grocery Haul — March 2027",
-    category: "Grocery & Snacks",
+    category: "Food",
     startsOn: "2027-03-07",
     endsOn: "2027-03-18",
     createdAt: "2026-09-25T23:30:00+08:00",
@@ -544,13 +544,52 @@ const BATCHES = [
   {
     seller: "maria",
     title: "Japan Spring Mix — April 2027",
-    category: "Mixed",
+    category: "Others",
     startsOn: "2027-04-02",
     endsOn: "2027-04-12",
     createdAt: "2026-09-26T03:00:00+08:00",
     reservationHours: 32,
     products: [
       { name: "Sakura Lifestyle Box", base: 1400, markup: 280, qty: 20 },
+    ],
+  },
+  {
+    seller: "maria",
+    title: "Tokyo Streetwear Drop — April 2027",
+    category: "Apparel",
+    startsOn: "2027-04-14",
+    endsOn: "2027-04-22",
+    createdAt: "2026-09-26T04:00:00+08:00",
+    reservationHours: 40,
+    products: [
+      { name: "Uniqlo U Collection Tee", base: 720, markup: 170, qty: 18 },
+      { name: "GU Wide Trousers", base: 980, markup: 220, qty: 12 },
+    ],
+  },
+  {
+    seller: "ana",
+    title: "Seoul Fashion Week Finds — May 2027",
+    category: "Apparel",
+    startsOn: "2027-05-05",
+    endsOn: "2027-05-14",
+    createdAt: "2026-09-26T05:00:00+08:00",
+    reservationHours: 48,
+    products: [
+      { name: "Korean Oversized Knit", base: 1100, markup: 250, qty: 16 },
+      { name: "Musinsa Cargo Pants", base: 1350, markup: 300, qty: 10 },
+    ],
+  },
+  {
+    seller: "kristine",
+    title: "Bangkok Thrift Haul — May 2027",
+    category: "Apparel",
+    startsOn: "2027-05-18",
+    endsOn: "2027-05-25",
+    createdAt: "2026-09-26T06:00:00+08:00",
+    reservationHours: 36,
+    products: [
+      { name: "Chatuchak Vintage Denim", base: 950, markup: 230, qty: 20 },
+      { name: "Platinum Mall Graphic Tee", base: 480, markup: 120, qty: 24 },
     ],
   },
 ]
@@ -1206,11 +1245,10 @@ const ORDERS = [
 function validateSeedDefinitions() {
   const allowedCategories = new Set([
     "Food",
-    "Skincare",
-    "Grocery & Snacks",
     "Beauty",
     "Luxury",
-    "Mixed",
+    "Apparel",
+    "Others",
   ])
   if (BATCHES.length < 30) throw new Error("At least 30 batches are required")
 

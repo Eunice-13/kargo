@@ -2,7 +2,7 @@ import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
 import type { BatchType, Role, UserInfo, UserRating } from "@/types"
 import { INDIGO } from "@/constants/theme"
-import { Card, PrimaryBtn, Avatar, BIRBadge, RatingDisplay, ratingFor } from "@/components/shared"
+import { Card, PrimaryBtn, SH, Avatar, BIRBadge, RatingDisplay, ratingFor } from "@/components/shared"
 import SellerShopPage from "./SellerShopPage"
 
 export default function SellerDirectoryPage({
@@ -137,18 +137,8 @@ export default function SellerDirectoryPage({
       </div>
       <div className="p-6">
         <div style={{ marginBottom: 20 }}>
-          <h2
-            style={{
-              fontFamily: "'Josefin Sans',sans-serif",
-              fontSize: 20,
-              fontWeight: 800,
-              color: "#111827",
-              marginBottom: 4,
-            }}
-          >
-            Seller Directory
-          </h2>
-          <p style={{ fontSize: 13, color: "#9CA3AF" }}>
+          <SH title="Seller Directory" />
+          <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: -8 }}>
             Browse verified pasabuy sellers and their active batches.
           </p>
         </div>

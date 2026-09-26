@@ -1,8 +1,6 @@
 import {
-  Banknote,
   Gem,
   Globe2,
-  HandCoins,
   Shirt,
   ShoppingBasket,
   Smartphone,
@@ -24,13 +22,13 @@ export default function CategoryIcon({
   color?: string
 }) {
   const Icon =
-    category === "Electronics"
-      ? Smartphone
-      : category === "Fashion"
-        ? Shirt
+    category === "Apparel" || category === "Fashion"
+      ? Shirt
+      : category === "Electronics"
+        ? Smartphone
         : category === "Luxury"
           ? Gem
-          : category === "Skincare" || category === "Beauty"
+          : category === "Beauty" || category === "Skincare"
             ? Sparkles
             : category === "Grocery & Snacks"
               ? ShoppingBasket

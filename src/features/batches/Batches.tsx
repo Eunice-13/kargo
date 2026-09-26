@@ -7,12 +7,13 @@ import {
   Search,
   FileText,
   ArrowRight,
+  ArrowLeft,
   Star,
 } from "lucide-react"
 
 import type { ClaimRow, BatchType, SharedState, EntityId } from "@/types"
 
-import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
+import { INDIGO, CORAL, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
 
 import { BATCH_CATEGORIES } from "@/constants/categories"
 
@@ -38,7 +39,7 @@ import BuyerRequestFormModal from "./BuyerRequestFormModal"
 
 import ItemClaimModal from "./ItemClaimModal"
 
-import SellerProfileModal from "./SellerProfileModal"
+import SellerShopPage from "./SellerShopPage"
 
 import SellerDirectoryPage from "./SellerDirectoryPage"
 
@@ -580,7 +581,9 @@ export default function Batches({
 
     if (!batch || !product) return
 
-    setProfile(null)
+    // Keep the seller storefront mounted so the claim modal overlays it (the
+    // page reads from `profile`); clearing it here would drop the page behind
+    // the modal and lose the buyer's place.
 
     setProfileClaimTarget({ batch, product })
   }
@@ -696,6 +699,75 @@ export default function Batches({
     </>
   )
 
+  // Dedicated seller storefront page (replaces the old popup). Opened by any
+  // seller name/avatar click via the shared `profile` state. Full-screen with a
+  // back breadcrumb; tapping a batch card navigates to the batch detail page.
+  if (profile)
+    return (
+      <>
+        <div
+          style={{
+            background: "#fff",
+            borderBottom: "1px solid #E5E7EB",
+            padding: "10px 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <button
+            onClick={() => setProfile(null)}
+            style={{
+              fontSize: 13,
+              color: INDIGO,
+              fontWeight: 600,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            <ArrowLeft size={13} aria-hidden="true" style={{ display: "inline", marginRight: 4, verticalAlign: -2 }} />
+            Back
+          </button>
+          <span style={{ fontSize: 12, color: "#D1D5DB" }}>/</span>
+          <span style={{ fontSize: 13, color: "#6B7280" }}>{profile}</span>
+        </div>
+        <div className="p-6">
+          <SellerShopPage
+            seller={profile}
+            batches={batches}
+            role={role}
+            profileData={profile === user.name ? user : undefined}
+            ratings={ratings}
+            onClaimItem={handleProfileClaim}
+            onBatchOpen={(id) => {
+              const b = batches.find((x) => x.id === id)
+              if (b) {
+                setProfile(null)
+                setBatchPage(b)
+              }
+            }}
+          />
+        </div>
+        {profileClaimTarget && (
+          <ItemClaimModal
+            batch={profileClaimTarget.batch}
+            product={profileClaimTarget.product}
+            onConfirm={(qty) => {
+              handleClaim(
+                `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
+                profileClaimTarget.batch,
+                profileClaimTarget.product,
+                qty,
+              )
+              setProfileClaimTarget(null)
+            }}
+            onClose={() => setProfileClaimTarget(null)}
+          />
+        )}
+      </>
+    )
+
   if (batchPage)
     return (
       <>
@@ -714,18 +786,6 @@ export default function Batches({
           waitlist={waitlist}
           setWaitlist={setWaitlist}
         />
-        {profile && (
-          <SellerProfileModal
-            seller={profile}
-            batches={batches}
-            onClose={() => setProfile(null)}
-            onClaimFromProfile={handleProfileClaim}
-            setTab={setTab}
-            profileData={profile === user.name ? user : undefined}
-            ratings={ratings}
-            role={role}
-          />
-        )}
         {profileClaimTarget && (
           <ItemClaimModal
             batch={profileClaimTarget.batch}
@@ -835,10 +895,17 @@ export default function Batches({
                             justifyContent: "center",
                           }}
                         >
-                          <CategoryIcon
-                            category={b.category}
-                            size={40}
-                            color="rgba(255,255,255,.78)"
+                          <img
+                            src={batchCoverSrc(b.coverImage, b.category)}
+                            alt=""
+                            aria-hidden="true"
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
                           />
                           {role === "Seller" ? (
                             <button
@@ -1876,18 +1943,6 @@ export default function Batches({
             onClose={() => setShowBuyerReqForm(false)}
           />
         )}
-        {profile && (
-          <SellerProfileModal
-            seller={profile}
-            batches={batches}
-            onClose={() => setProfile(null)}
-            onClaimFromProfile={handleProfileClaim}
-            setTab={setTab}
-            profileData={profile === user.name ? user : undefined}
-            ratings={ratings}
-            role={role}
-          />
-        )}
         {profileClaimTarget && (
           <ItemClaimModal
             batch={profileClaimTarget.batch}
@@ -2024,18 +2079,6 @@ export default function Batches({
         <BuyerRequestFormModal
           batches={batches}
           onClose={() => setShowBuyerReqForm(false)}
-        />
-      )}
-      {profile && (
-        <SellerProfileModal
-          seller={profile}
-          batches={batches}
-          onClose={() => setProfile(null)}
-          onClaimFromProfile={handleProfileClaim}
-          setTab={setTab}
-          profileData={profile === user.name ? user : undefined}
-          ratings={ratings}
-          role={role}
         />
       )}
       {profileClaimTarget && (

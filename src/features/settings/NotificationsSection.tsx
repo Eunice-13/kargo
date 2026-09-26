@@ -2,7 +2,7 @@ import type React from "react"
 import { Check } from "lucide-react"
 import type { Role } from "@/types"
 import { GREEN } from "@/constants/theme"
-import { Toggle, PrimaryBtn } from "@/components/shared"
+import { Toggle, PrimaryBtn, SH } from "@/components/shared"
 import { NOTIF_GROUPS } from "./notifDefaults"
 
 type NotificationsSectionProps = {
@@ -29,18 +29,8 @@ export default function NotificationsSection({
 
   return (
     <div className="pr">
-      <h3
-        style={{
-          fontFamily: "'Josefin Sans',sans-serif",
-          fontSize: 16,
-          fontWeight: 700,
-          color: "#111827",
-          marginBottom: 6,
-        }}
-      >
-        Notification Preferences
-      </h3>
-      <p style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 18 }}>
+      <SH title="Notification Preferences" />
+      <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: -8, marginBottom: 18 }}>
         These control both in-app alerts and emails. Turning one off opts you out
         of that category.
       </p>

@@ -422,13 +422,6 @@ export default function BuyerHome({
         <section className="buyer-home-section buyer-category-section">
           <div className="buyer-home-section__heading">
             <h2>Shop By Categories</h2>
-            <CarouselControls
-              label="categories"
-              onPrevious={() => categoryCarousel.scroll(-1)}
-              onNext={() => categoryCarousel.scroll(1)}
-              canPrevious={categoryCarousel.canPrevious}
-              canNext={categoryCarousel.canNext}
-            />
           </div>
           <div
             ref={categoryCarousel.trackRef}

@@ -27,6 +27,9 @@ const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[
       category: "Food",
       reserveHours: 48,
 
+      coverImage:
+        "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&h=400&fit=crop&auto=format",
+
       notes:
         "Trip runs Mar 10–18. Items will be ordered by Mar 3. All prices are in PHP and include local sourcing cost. QR/BDO preferred.",
 
@@ -106,9 +109,12 @@ const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[
 
       claimed: 22,
 
-      category: "Skincare",
+      category: "Beauty",
 
       reserveHours: 48,
+
+      coverImage:
+        "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&h=400&fit=crop&auto=format",
 
       products: [
         {
@@ -186,7 +192,7 @@ const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[
 
       claimed: 9,
 
-      category: "Grocery & Snacks",
+      category: "Food",
 
       reserveHours: 48,
 
@@ -290,7 +296,7 @@ const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[
 
       claimed: 11,
 
-      category: "Mixed",
+      category: "Others",
 
       reserveHours: 48,
 
@@ -397,7 +403,7 @@ const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[
 
       claimed: 8,
 
-      category: "Grocery & Snacks",
+      category: "Food",
 
       reserveHours: 48,
 
@@ -500,7 +506,7 @@ const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[
 
       claimed: 14,
 
-      category: "Skincare",
+      category: "Beauty",
 
       reserveHours: 48,
 
@@ -566,7 +572,7 @@ const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[
 
       claimed: 4,
 
-      category: "Grocery & Snacks",
+      category: "Food",
 
       reserveHours: 48,
 
@@ -722,7 +728,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "Seoul Glow Edit — November 2026",
     "Ana Reyes",
     "Nov 2–10, 2026",
-    "Skincare",
+    "Beauty",
     "Round Lab Sunscreen",
     980,
     20,
@@ -733,7 +739,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "California Pantry Run — November 2026",
     "Paolo Garcia",
     "Nov 8–18, 2026",
-    "Grocery & Snacks",
+    "Food",
     "Trader Joe's Cookie Box",
     850,
     24,
@@ -766,7 +772,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "Tokyo Variety Run — December 2026",
     "Maria Santos",
     "Dec 18–27, 2026",
-    "Mixed",
+    "Others",
     "Don Quijote Favorites",
     1250,
     20,
@@ -788,7 +794,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "Busan Barrier Care — January 2027",
     "Ana Reyes",
     "Jan 13–21, 2027",
-    "Skincare",
+    "Beauty",
     "Etude SoonJung Set",
     1580,
     15,
@@ -799,7 +805,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "New York Snack Drop — January 2027",
     "Paolo Garcia",
     "Jan 17–28, 2027",
-    "Grocery & Snacks",
+    "Food",
     "Whole Foods Snack Bag",
     1180,
     18,
@@ -832,7 +838,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "Kyoto Seasonal Mix — February 2027",
     "Maria Santos",
     "Feb 12–20, 2027",
-    "Mixed",
+    "Others",
     "Kyoto Market Bundle",
     1380,
     18,
@@ -854,7 +860,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "Incheon Skincare Run — March 2027",
     "Ana Reyes",
     "Mar 3–11, 2027",
-    "Skincare",
+    "Beauty",
     "Anua Heartleaf Kit",
     1490,
     16,
@@ -865,7 +871,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "Seattle Grocery Haul — March 2027",
     "Paolo Garcia",
     "Mar 7–18, 2027",
-    "Grocery & Snacks",
+    "Food",
     "Seattle Coffee Sampler",
     1320,
     18,
@@ -898,11 +904,44 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
     "Japan Spring Mix — April 2027",
     "Maria Santos",
     "Apr 2–12, 2027",
-    "Mixed",
+    "Others",
     "Sakura Lifestyle Box",
     1680,
     20,
     10,
+  ],
+  [
+    31,
+    "Tokyo Streetwear Drop — April 2027",
+    "Maria Santos",
+    "Apr 14–22, 2027",
+    "Apparel",
+    "Uniqlo U Collection Tee",
+    890,
+    18,
+    6,
+  ],
+  [
+    32,
+    "Seoul Fashion Week Finds — May 2027",
+    "Ana Reyes",
+    "May 5–14, 2027",
+    "Apparel",
+    "Korean Oversized Knit",
+    1350,
+    16,
+    9,
+  ],
+  [
+    33,
+    "Bangkok Thrift Haul — May 2027",
+    "Kristine Aquino",
+    "May 18–25, 2027",
+    "Apparel",
+    "Chatuchak Vintage Denim",
+    1180,
+    20,
+    7,
   ],
 ] as const
 

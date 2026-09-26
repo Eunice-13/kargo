@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Check } from "lucide-react"
-import { PrimaryBtn } from "@/components/shared"
+import { PrimaryBtn, SH } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 
 export default function SecuritySection() {
@@ -27,17 +27,7 @@ export default function SecuritySection() {
 
   return (
     <div className="pr">
-      <h3
-        style={{
-          fontFamily: "'Josefin Sans',sans-serif",
-          fontSize: 16,
-          fontWeight: 700,
-          color: "#111827",
-          marginBottom: 20,
-        }}
-      >
-        Security
-      </h3>
+      <SH title="Security" />
       <div className="space-y-5">
         {(
           [

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Check, Eye, EyeOff, Link2, Plus, Trash2 } from "lucide-react"
-import { PrimaryBtn } from "@/components/shared"
+import { PrimaryBtn, SH } from "@/components/shared"
 import { GREEN, INDIGO } from "@/constants/theme"
 
 const PLATFORMS = ["Facebook", "Instagram", "TikTok", "Viber", "Messenger", "Website", "Other"]
@@ -35,10 +35,8 @@ export default function LinkedAccountsSection({
 
   return (
     <div className="pr">
-      <h3 style={{ fontFamily: "'Josefin Sans',sans-serif", fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
-        Social & Contact Links
-      </h3>
-      <p style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>
+      <SH title="Social & Contact Links" />
+      <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: -8, marginBottom: 20 }}>
         Add the channels others can use to reach you. These are public profile references shown on your profile.
       </p>
 
