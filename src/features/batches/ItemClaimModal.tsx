@@ -26,13 +26,12 @@ export default function ItemClaimModal({
   const [qty, setQty] = useState(1)
   const [showReminders, setShowReminders] = useState(false)
   const left = product.qty - product.claimed
-  // Cap by remaining stock, a hard ceiling of 5, and the seller's optional
-  // per-buyer limit when one is set.
+  // Keep the legacy cap only for products without a valid seller-configured limit.
   const perUser =
     product.limitPerUser && product.limitPerUser > 0
       ? product.limitPerUser
-      : Infinity
-  const maxQty = Math.max(1, Math.min(left, 5, perUser))
+      : 5
+  const maxQty = Math.max(1, Math.min(left, perUser))
 
   return (
     <Modal title="Review claim before submitting" onClose={onClose} width={480}>
@@ -208,7 +207,7 @@ export default function ItemClaimModal({
           </div>
           <span style={{ fontSize: 11, color: "#9CA3AF" }}>
             {left} slot{left !== 1 ? "s" : ""} left
-            {perUser !== Infinity ? ` · max ${perUser}/buyer` : ""}
+            {` · max ${perUser}/buyer`}
           </span>
         </div>
 
