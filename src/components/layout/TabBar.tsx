@@ -1,88 +1,138 @@
 import type { Role, Tab } from "@/types"
+
 import { INDIGO } from "@/constants/theme"
+
 import { PrimaryBtn } from "@/components/shared"
-import { ClipboardList, History, LayoutGrid, Package } from "lucide-react"
+
+import {
+  ClipboardList,
+  Grid2X2,
+  History,
+  Home,
+  LayoutGrid,
+  Package,
+  ShoppingCart,
+} from "lucide-react"
 
 export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
+
 const TAB_ICONS = {
   Dashboard: LayoutGrid,
+
   Batches: Package,
+
   "My Claims": ClipboardList,
+
   Payments: History,
 } as const
+
 export default function TabBar({
   active,
+
   setActive,
+
   role,
+
   onNewBatch,
 }: {
   active: Tab
+
   setActive: (t: Tab) => void
+
   role: Role
+
   onNewBatch: () => void
 }) {
+  const visibleTabs =
+    role === "Seller"
+      ? TABS.map((tab) => ({
+          tab,
+          label: tab,
+          icon: TAB_ICONS[(tab as keyof typeof TAB_ICONS)],
+        }))
+      : [
+          { tab: "Batches" as Tab, label: "Home", icon: Home },
+          { tab: "Dashboard" as Tab, label: "Cart", icon: ShoppingCart },
+          { tab: "My Claims" as Tab, label: "Batches", icon: Grid2X2 },
+          { tab: "Payments" as Tab, label: "History", icon: History },
+        ]
   return (
     <div
       style={{
         background: "#fff",
+
         borderBottom: "1px solid #E5E7EB",
+
         zIndex: 40,
+
         height: 44,
       }}
-      className={`kargo-tabbar flex items-center ${
-        role === "Seller"
-          ? "seller-tabbar"
-          : "sticky top-14"
+      className={`kargo-tabbar icon-tabbar flex items-center ${
+        role === "Seller" ? "seller-tabbar" : "sticky top-14"
       }`}
     >
       {/* Tabs — equally distributed across available width */}
       <div style={{ display: "flex", flex: 1, height: "100%", minWidth: 0 }}>
-        {TABS.map((tab) => {
-          const Icon = TAB_ICONS[tab as keyof typeof TAB_ICONS]
+        {visibleTabs.map(({ tab, label, icon: Icon }) => {
           return (
-          <button
-            key={tab}
-            data-spotlight={
-              tab === "Dashboard"
-                ? "dashboard-tab"
-                : tab === "Batches"
-                  ? "batches-tab"
-                  : tab === "Payments"
-                    ? "payments-tab"
-                    : undefined
-            }
-            onClick={() => setActive(tab)}
-            aria-current={active === tab ? "page" : undefined}
-            style={{
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
-              color: active === tab ? INDIGO : "#6B7280",
-              fontWeight: active === tab ? 700 : 500,
-              fontSize: 13,
-              borderBottom:
-                active === tab
-                  ? `2px solid ${INDIGO}`
-                  : "2px solid transparent",
-              height: 44,
-              flex: 1,
-              paddingLeft: 4,
-              paddingRight: 4,
-              borderRadius: 0,
-              background: "transparent",
-              transition: "color 0.15s,border-color 0.15s",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-            className="hover:text-gray-800"
-            aria-label={tab === "My Claims" && role === "Seller" ? "Orders Received" : tab}
-          >
-            {role === "Seller" ? (
+            <button
+              key={tab}
+              data-spotlight={
+                tab === "Dashboard"
+                  ? "dashboard-tab"
+                  : tab === "Batches"
+                    ? "batches-tab"
+                    : tab === "Payments"
+                      ? "payments-tab"
+                      : undefined
+              }
+              onClick={() => setActive(tab)}
+              aria-current={active === tab ? "page" : undefined}
+              style={{
+                fontFamily: "'Plus Jakarta Sans',sans-serif",
+
+                color: active === tab ? INDIGO : "#6B7280",
+
+                fontWeight: active === tab ? 700 : 500,
+
+                fontSize: 13,
+
+                borderBottom:
+                  active === tab
+                    ? `2px solid ${INDIGO}`
+                    : "2px solid transparent",
+
+                height: 44,
+
+                flex: 1,
+
+                paddingLeft: 4,
+
+                paddingRight: 4,
+
+                borderRadius: 0,
+
+                background: "transparent",
+
+                transition: "color 0.15s,border-color 0.15s",
+
+                cursor: "pointer",
+
+                whiteSpace: "nowrap",
+
+                overflow: "hidden",
+
+                textOverflow: "ellipsis",
+              }}
+              className="hover:text-gray-800"
+              aria-label={
+                tab === "My Claims" && role === "Seller"
+                  ? "Orders Received"
+                  : label
+              }
+            >
               <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
-            ) : tab === "My Claims"
-              ? "My Claims"
-              : tab}
-          </button>
+            </button>
           )
         })}
       </div>
@@ -92,12 +142,19 @@ export default function TabBar({
           className="seller-new-batch"
           style={{
             display: "flex",
+
             alignItems: "center",
+
             gap: 12,
+
             paddingLeft: 24,
+
             paddingRight: 20,
+
             borderLeft: "1px solid #E5E7EB",
+
             height: "100%",
+
             flexShrink: 0,
           }}
         >

@@ -1,43 +1,72 @@
 import { useState } from "react"
+
 import type { BatchType } from "@/types"
+
 import { INDIGO, CAT_GRAD } from "@/constants/theme"
+import { BATCH_CATEGORIES } from "@/constants/categories"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+
 import { isSupabaseConfigured } from "@/lib/supabase"
+
 import { kargoApi } from "@/services"
 
 export type BatchProduct = {
   name: string
+
   basePrice: string
+
   markup: string
+
   qty: string
+
   // Optional per-buyer claim limit. Empty string = no limit.
+
   limit: string
 }
+
 export default function NewBatchModal({
   onCreate,
+
   onClose,
+
   sellerName,
 }: {
   onCreate: (b: BatchType) => void
+
   onClose: () => void
+
   sellerName?: string
 }) {
   const [title, setTitle] = useState("")
+
   const [desc, setDesc] = useState("")
+
   const [cat, setCat] = useState("Mixed")
+
   const [startDate, setStartDate] = useState("")
+
   const [endDate, setEndDate] = useState("")
+
   const [timerUnit, setTimerUnit] = useState<"hours" | "days">("hours")
+
   const [timerVal, setTimerVal] = useState("48")
+
   const [timerPreset, setTimerPreset] = useState("48h")
+
   const [products, setProducts] = useState<BatchProduct[]>([
     { name: "", basePrice: "", markup: "", qty: "", limit: "" },
   ])
+
   const [loading, setLoading] = useState(false)
+
   const [error, setError] = useState("")
 
   const addProduct = () =>
-    setProducts((p) => [...p, { name: "", basePrice: "", markup: "", qty: "", limit: "" }])
+    setProducts((p) => [
+      ...p,
+      { name: "", basePrice: "", markup: "", qty: "", limit: "" },
+    ])
+
   const updateProduct = (i: number, k: keyof BatchProduct, v: string) =>
     setProducts((p) =>
       p.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)),
@@ -45,31 +74,55 @@ export default function NewBatchModal({
 
   const formatDateRange = (s: string, e: string) => {
     if (!s) return "TBD"
+
     const start = new Date(s + "T00:00:00")
+
     const end = e ? new Date(e + "T00:00:00") : null
+
     const months = [
       "Jan",
+
       "Feb",
+
       "Mar",
+
       "Apr",
+
       "May",
+
       "Jun",
+
       "Jul",
+
       "Aug",
+
       "Sep",
+
       "Oct",
+
       "Nov",
+
       "Dec",
     ]
+
     const sm = months[start.getMonth()]
+
     const sd = start.getDate()
+
     const sy = start.getFullYear()
+
     if (!end) return `${sm} ${sd}, ${sy}`
+
     const em = months[end.getMonth()]
+
     const ed = end.getDate()
+
     const ey = end.getFullYear()
+
     if (sm === em && sy === ey) return `${sm} ${sd}–${ed}, ${sy}`
+
     if (sy === ey) return `${sm} ${sd} – ${em} ${ed}, ${sy}`
+
     return `${sm} ${sd}, ${sy} – ${em} ${ed}, ${ey}`
   }
 
@@ -80,71 +133,118 @@ export default function NewBatchModal({
         Number(p.basePrice) + Number(p.markup) > 0 &&
         Number(p.qty) > 0,
     )
+
     if (!title.trim()) {
       setError("Add a batch title before publishing.")
+
       return
     }
+
     if (validProds.length === 0) {
       setError("Add at least one product with a name, price, and quantity.")
+
       return
     }
+
     if (isSupabaseConfigured && (!startDate || !endDate)) {
       setError("Choose both the start and end date before publishing.")
+
       return
     }
+
     setError("")
+
     setLoading(true)
+
     try {
       const prods = validProds.map((p) => ({
-              name: p.name.trim(),
-              basePrice: Number(p.basePrice),
-              markup: Number(p.markup),
-              price: Number(p.basePrice) + Number(p.markup),
-              qty: Number(p.qty),
-              claimed: 0,
-              waitlist: 0,
-              locked: false,
-              limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
-            }))
+        name: p.name.trim(),
+
+        basePrice: Number(p.basePrice),
+
+        markup: Number(p.markup),
+
+        price: Number(p.basePrice) + Number(p.markup),
+
+        qty: Number(p.qty),
+
+        claimed: 0,
+
+        waitlist: 0,
+
+        locked: false,
+
+        limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
+      }))
+
       const reserveHours =
         timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal)
+
       if (isSupabaseConfigured) {
         await kargoApi.createBatch({
           title: title.trim(),
+
           category: cat,
+
           startsOn: startDate,
+
           endsOn: endDate,
+
           reservationHours: reserveHours,
+
           notes: desc.trim() || undefined,
+
           products: validProds.map((p) => ({
             name: p.name.trim(),
+
             basePrice: Number(p.basePrice),
+
             markup: Number(p.markup),
+
             quantity: Number(p.qty),
+
             limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
           })),
         })
       }
+
       onCreate({
         id: Date.now(),
+
         live: isSupabaseConfigured,
+
         locked: false,
+
         title: title.trim(),
+
         seller: sellerName || "You",
+
         rating: 0,
+
         trips: formatDateRange(startDate, endDate),
+
         items: prods.reduce((s, p) => s + p.qty, 0),
+
         claimed: 0,
+
         category: cat,
+
         notes: desc.trim() || undefined,
+
         products: prods,
+
         reserveHours,
       })
+
       setLoading(false)
+
       onClose()
     } catch (caught) {
       setLoading(false)
-      setError(caught instanceof Error ? caught.message : "Unable to create batch.")
+
+      setError(
+        caught instanceof Error ? caught.message : "Unable to create batch.",
+      )
     }
   }
 
@@ -155,9 +255,13 @@ export default function NewBatchModal({
           <label
             style={{
               fontSize: 12,
+
               fontWeight: 600,
+
               color: "#374151",
+
               display: "block",
+
               marginBottom: 5,
             }}
           >
@@ -169,13 +273,21 @@ export default function NewBatchModal({
             placeholder="e.g. Japan Trip — Oct 2026"
             style={{
               width: "100%",
+
               fontSize: 13,
+
               border: "1px solid #E5E7EB",
+
               borderRadius: 7,
+
               padding: "9px 12px",
+
               outline: "none",
+
               color: "#374151",
+
               fontFamily: "inherit",
+
               boxSizing: "border-box",
             }}
             className="placeholder:text-gray-400"
@@ -185,9 +297,13 @@ export default function NewBatchModal({
           <label
             style={{
               fontSize: 12,
+
               fontWeight: 600,
+
               color: "#374151",
+
               display: "block",
+
               marginBottom: 5,
             }}
           >
@@ -200,14 +316,23 @@ export default function NewBatchModal({
             placeholder="Trip details, sourcing notes, payment/pickup instructions…"
             style={{
               width: "100%",
+
               fontSize: 13,
+
               border: "1px solid #E5E7EB",
+
               borderRadius: 7,
+
               padding: "9px 12px",
+
               outline: "none",
+
               color: "#374151",
+
               fontFamily: "inherit",
+
               boxSizing: "border-box",
+
               resize: "vertical",
             }}
             className="placeholder:text-gray-400"
@@ -218,9 +343,13 @@ export default function NewBatchModal({
             <label
               style={{
                 fontSize: 12,
+
                 fontWeight: 600,
+
                 color: "#374151",
+
                 display: "block",
+
                 marginBottom: 5,
               }}
             >
@@ -231,16 +360,23 @@ export default function NewBatchModal({
               onChange={(e) => setCat(e.target.value)}
               style={{
                 width: "100%",
+
                 fontSize: 13,
+
                 border: "1px solid #E5E7EB",
+
                 borderRadius: 7,
+
                 padding: "9px 12px",
+
                 outline: "none",
+
                 color: "#374151",
+
                 background: "#fff",
               }}
             >
-              {Object.keys(CAT_GRAD).map((c) => (
+              {BATCH_CATEGORIES.map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
@@ -249,9 +385,13 @@ export default function NewBatchModal({
             <label
               style={{
                 fontSize: 12,
+
                 fontWeight: 600,
+
                 color: "#374151",
+
                 display: "block",
+
                 marginBottom: 5,
               }}
             >
@@ -270,13 +410,21 @@ export default function NewBatchModal({
                   onChange={(e) => setStartDate(e.target.value)}
                   style={{
                     width: "100%",
+
                     fontSize: 12,
+
                     border: "1px solid #E5E7EB",
+
                     borderRadius: 7,
+
                     padding: "8px 10px",
+
                     outline: "none",
+
                     color: "#374151",
+
                     fontFamily: "inherit",
+
                     boxSizing: "border-box" as const,
                   }}
                 />
@@ -293,13 +441,21 @@ export default function NewBatchModal({
                   onChange={(e) => setEndDate(e.target.value)}
                   style={{
                     width: "100%",
+
                     fontSize: 12,
+
                     border: "1px solid #E5E7EB",
+
                     borderRadius: 7,
+
                     padding: "8px 10px",
+
                     outline: "none",
+
                     color: "#374151",
+
                     fontFamily: "inherit",
+
                     boxSizing: "border-box" as const,
                   }}
                 />
@@ -311,9 +467,13 @@ export default function NewBatchModal({
           <label
             style={{
               fontSize: 12,
+
               fontWeight: 600,
+
               color: "#374151",
+
               display: "block",
+
               marginBottom: 6,
             }}
           >
@@ -325,21 +485,32 @@ export default function NewBatchModal({
                 key={p}
                 onClick={() => {
                   setTimerPreset(p)
+
                   if (p !== "Custom") {
                     const isDay = p.endsWith("d")
+
                     setTimerUnit(isDay ? "days" : "hours")
+
                     setTimerVal(p.replace(/[hd]/, ""))
                   }
                 }}
                 style={{
                   padding: "4px 12px",
+
                   fontSize: 12,
+
                   fontWeight: 600,
+
                   borderRadius: 999,
+
                   border: `1px solid ${timerPreset === p ? INDIGO : "#E5E7EB"}`,
+
                   background: timerPreset === p ? "#EEF0FF" : "#fff",
+
                   color: timerPreset === p ? INDIGO : "#6B7280",
+
                   cursor: "pointer",
+
                   transition: "all 0.15s",
                 }}
               >
@@ -357,11 +528,17 @@ export default function NewBatchModal({
                 onChange={(e) => setTimerVal(e.target.value)}
                 style={{
                   width: 80,
+
                   fontSize: 13,
+
                   border: "1px solid #E5E7EB",
+
                   borderRadius: 7,
+
                   padding: "8px 10px",
+
                   outline: "none",
+
                   color: "#374151",
                 }}
               />
@@ -372,11 +549,17 @@ export default function NewBatchModal({
                 }
                 style={{
                   fontSize: 13,
+
                   border: "1px solid #E5E7EB",
+
                   borderRadius: 7,
+
                   padding: "8px 10px",
+
                   outline: "none",
+
                   color: "#374151",
+
                   background: "#fff",
                 }}
               >
@@ -394,9 +577,13 @@ export default function NewBatchModal({
           <label
             style={{
               fontSize: 12,
+
               fontWeight: 600,
+
               color: "#374151",
+
               display: "block",
+
               marginBottom: 8,
             }}
           >
@@ -405,31 +592,49 @@ export default function NewBatchModal({
           <div className="space-y-3">
             {products.map((p, i) => {
               const selling = Number(p.basePrice || 0) + Number(p.markup || 0)
+
               const fieldLabel = {
                 fontSize: 10,
+
                 fontWeight: 600 as const,
+
                 color: "#9CA3AF",
+
                 display: "block" as const,
+
                 marginBottom: 3,
               }
+
               const numInput = {
                 width: "100%",
+
                 fontSize: 12,
+
                 border: "1px solid #E5E7EB",
+
                 borderRadius: 6,
+
                 padding: "7px 8px",
+
                 outline: "none",
+
                 color: "#374151",
+
                 fontFamily: "inherit",
+
                 boxSizing: "border-box" as const,
               }
+
               return (
                 <div
                   key={i}
                   style={{
                     border: "1px solid #F3F4F6",
+
                     borderRadius: 8,
+
                     padding: 10,
+
                     background: "#FCFCFD",
                   }}
                 >
@@ -442,13 +647,21 @@ export default function NewBatchModal({
                       placeholder="Product name"
                       style={{
                         width: "100%",
+
                         fontSize: 12,
+
                         border: "1px solid #E5E7EB",
+
                         borderRadius: 6,
+
                         padding: "7px 10px",
+
                         outline: "none",
+
                         color: "#374151",
+
                         fontFamily: "inherit",
+
                         boxSizing: "border-box" as const,
                       }}
                       className="placeholder:text-gray-400"
@@ -458,8 +671,10 @@ export default function NewBatchModal({
                   <div
                     style={{
                       display: "grid",
+
                       gridTemplateColumns:
                         "repeat(auto-fit, minmax(78px, 1fr))",
+
                       gap: 8,
                     }}
                   >
@@ -496,14 +711,23 @@ export default function NewBatchModal({
                       <div
                         style={{
                           fontSize: 12,
+
                           fontWeight: 700,
+
                           color: INDIGO,
+
                           background: "#EEF0FF",
+
                           borderRadius: 6,
+
                           padding: "7px 8px",
+
                           fontFamily: "'Plus Jakarta Sans',sans-serif",
+
                           whiteSpace: "nowrap",
+
                           overflow: "hidden",
+
                           textOverflow: "ellipsis",
                         }}
                       >
@@ -548,14 +772,23 @@ export default function NewBatchModal({
             onClick={addProduct}
             style={{
               marginTop: 8,
+
               fontSize: 12,
+
               color: INDIGO,
+
               fontWeight: 600,
+
               background: "none",
+
               border: `1px dashed ${INDIGO}`,
+
               borderRadius: 6,
+
               padding: "5px 12px",
+
               cursor: "pointer",
+
               width: "100%",
             }}
           >
@@ -563,7 +796,17 @@ export default function NewBatchModal({
           </button>
         </div>
         {error && (
-          <div role="alert" style={{ color: "#B91C1C", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 6, padding: "8px 10px", fontSize: 11 }}>
+          <div
+            role="alert"
+            style={{
+              color: "#B91C1C",
+              background: "#FEF2F2",
+              border: "1px solid #FECACA",
+              borderRadius: 6,
+              padding: "8px 10px",
+              fontSize: 11,
+            }}
+          >
             {error}
           </div>
         )}
@@ -587,4 +830,3 @@ export default function NewBatchModal({
     </Modal>
   )
 }
-
