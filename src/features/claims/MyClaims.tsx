@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
+import { List, LayoutGrid, Link2 } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import {
@@ -45,7 +45,6 @@ export default function MyClaims({
   const [viewOrder, setViewOrder] = useState<OrderRow | null>(null)
   const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
   const [contact, setContact] = useState<ClaimRow | null>(null)
-  const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null)
   const [orderFilter, setOrderFilter] = useState<ClaimStatus | "All">("All")
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
   const [paymentSuccess, setPaymentSuccess] = useState(false)
@@ -61,13 +60,18 @@ export default function MyClaims({
   }, [claims, payTarget])
   const filters: (ClaimStatus | "All")[] = [
     "All",
-    "Pending",
     "Paid and Reserved",
     "Expired",
     "Cancelled",
   ]
   const filtered =
     filter === "All" ? claims : claims.filter((c) => c.status === filter)
+
+  // Single source of truth: the "My Claims To Pay" table above is derived from
+  // the SAME `claims` rows shown in the table below (the payable/pending ones),
+  // not a separate list. So every row here also appears under the "All" filter,
+  // and once paid it naturally moves to "Paid and Reserved".
+  const claimsToPay = claims.filter(claimIsPayable)
 
   const [fbToast, setFbToast] = useState<string | null>(null)
 
@@ -421,7 +425,7 @@ export default function MyClaims({
 
   return (
     <div className="p-6">
-      {toPay.length > 0 && (
+      {claimsToPay.length > 0 && (
         <>
           <h2
             style={{
@@ -459,8 +463,8 @@ export default function MyClaims({
                   </tr>
                 </thead>
                 <tbody>
-                  {toPay.map((t, i) => (
-                    <tr key={t.orderId ?? t.id} style={{ background: i % 2 ? "#FAFAFA" : "#fff" }}>
+                  {claimsToPay.map((t, i) => (
+                    <tr key={t.id} style={{ background: i % 2 ? "#FAFAFA" : "#fff" }}>
                       <td style={{ padding: "10px 14px" }}>
                         <div className="flex items-center gap-2.5">
                           <ProductThumb name={t.product} />
@@ -489,12 +493,7 @@ export default function MyClaims({
                       <td style={{ padding: "10px 14px" }}>
                         <PrimaryBtn
                           size="sm"
-                          onClick={() => {
-                            const claim = claims.find(
-                              (c) => c.id === (t.orderId ?? t.id) || c.product === t.product,
-                            )
-                            if (claim) setPayTarget(claim)
-                          }}
+                          onClick={() => setPayTarget(t)}
                         >
                           Pay Now
                         </PrimaryBtn>
@@ -525,7 +524,7 @@ export default function MyClaims({
                 fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
-              ₱{toPay.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}
+              ₱{claimsToPay.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}
             </span>
             <PrimaryBtn size="sm">Batch Checkout</PrimaryBtn>
           </div>
@@ -716,20 +715,6 @@ export default function MyClaims({
                         Extension Requested
                       </span>
                     )}
-                    {(c.status === "Pending" ||
-                      c.status === "Paid and Reserved") && (
-                      <SecondaryBtn
-                        size="sm"
-                        onClick={() => setCancelTarget(c)}
-                        style={{
-                          color: "#EF4444",
-                          borderColor: "#FECACA",
-                          background: "#FEF2F2",
-                        }}
-                      >
-                        Cancel
-                      </SecondaryBtn>
-                    )}
                     {c.status === "Paid and Reserved" && (
                       <SecondaryBtn
                         size="sm"
@@ -907,20 +892,6 @@ export default function MyClaims({
                           View Order
                         </SecondaryBtn>
                       )}
-                      {(c.status === "Pending" ||
-                        c.status === "Paid and Reserved") && (
-                        <SecondaryBtn
-                          size="sm"
-                          onClick={() => setCancelTarget(c)}
-                          style={{
-                            color: "#EF4444",
-                            borderColor: "#FECACA",
-                            background: "#FEF2F2",
-                          }}
-                        >
-                          Cancel
-                        </SecondaryBtn>
-                      )}
                     </div>
                   </td>
                 </tr>
@@ -985,115 +956,6 @@ export default function MyClaims({
         />
       )}
       {paymentSuccess && <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />}
-      {cancelTarget && (
-        <Modal
-          title="Cancel this claim?"
-          onClose={() => setCancelTarget(null)}
-          width={420}
-        >
-          <div className="space-y-4">
-            <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
-              You are about to cancel your claim for{" "}
-              <strong>{cancelTarget.product}</strong>.
-              {cancelTarget.status === "Paid and Reserved" && (
-                <div
-                  style={{
-                    marginTop: 8,
-                    background: "#FFF7ED",
-                    border: "1px solid #FCD34D",
-                    borderRadius: 8,
-                    padding: "10px 14px",
-                    fontSize: 12,
-                    color: "#92400E",
-                  }}
-                >
-                  <AlertTriangle size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
-                  This item has already been paid. A refund will be processed
-                  to the phone number and payment method on file within 3–5
-                  business days.
-                </div>
-              )}
-            </div>
-            <div className="flex gap-3">
-              <SecondaryBtn
-                style={{ flex: 1, display: "flex", justifyContent: "center" }}
-                onClick={() => setCancelTarget(null)}
-              >
-                Keep Claim
-              </SecondaryBtn>
-              <button
-                onClick={async () => {
-                  if (isSupabaseConfigured) {
-                    try {
-                      await kargoApi.cancelOrder(String(cancelTarget.id))
-                    } catch (error) {
-                      alert(error instanceof Error ? error.message : "Unable to cancel order.")
-                      return
-                    }
-                  }
-                  const releasedQty = Math.max(1, cancelTarget.qty || 1)
-                  setClaims((prev) =>
-                    prev.map((c) =>
-                      c.id === cancelTarget.id
-                        ? { ...c, status: "Cancelled" as ClaimStatus }
-                        : c,
-                    ),
-                  )
-                  // Return the reserved stock to the batch/product so the slots
-                  // free up immediately for other buyers.
-                  setBatches((prev) =>
-                    prev.map((bt) => {
-                      const hasProduct = bt.products.some(
-                        (p) =>
-                          (cancelTarget.productId && p.dbId === cancelTarget.productId) ||
-                          (p.name === cancelTarget.product && bt.title === cancelTarget.batch),
-                      )
-                      if (!hasProduct) return bt
-                      return {
-                        ...bt,
-                        claimed: Math.max(0, bt.claimed - releasedQty),
-                        products: bt.products.map((p) =>
-                          (cancelTarget.productId && p.dbId === cancelTarget.productId) ||
-                          (p.name === cancelTarget.product && bt.title === cancelTarget.batch)
-                            ? { ...p, claimed: Math.max(0, p.claimed - releasedQty) }
-                            : p,
-                        ),
-                      }
-                    }),
-                  )
-                  // Drop any outstanding "to pay" entry for the cancelled claim.
-                  // A claim's id equals its order id, which is what toPay.orderId
-                  // stores in Supabase mode; fall back to product name for demo rows.
-                  setToPay((prev) =>
-                    prev.filter(
-                      (t) =>
-                        !(
-                          t.orderId === String(cancelTarget.id) ||
-                          t.product === cancelTarget.product
-                        ),
-                    ),
-                  )
-                  setCancelTarget(null)
-                }}
-                style={{
-                  flex: 1,
-                  background: "#EF4444",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 7,
-                  padding: "8px 0",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "'Josefin Sans',sans-serif",
-                }}
-              >
-                Yes, Cancel
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   )
 }

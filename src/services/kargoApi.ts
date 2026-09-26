@@ -1279,6 +1279,44 @@ export async function uploadBirBadge(file: File) {
   }
 }
 
+// Translate a raw Supabase/Postgres error from submit_order_payment into a
+// clear, actionable message for the buyer. The live DB enforces:
+//   - unique (order_id, reference_number)  -> 23505 duplicate reference number
+//   - method_type CHECK                    -> 23514 unsupported method
+//   - amount > 0 CHECK                      -> 23514 invalid amount
+// Anything else falls back to the DB message so we never hide a real error.
+function paymentErrorMessage(error: {
+  code?: string
+  message?: string
+  details?: string
+}): string {
+  const code = error.code ?? ""
+  const raw = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase()
+
+  // Unique violation on the reference number for this order.
+  if (code === "23505" || raw.includes("payments_order_reference_uidx")) {
+    return "A payment with this reference number was already submitted for this order. Enter the exact reference number from your latest transaction — each submission needs its own reference."
+  }
+
+  // Check-constraint violations.
+  if (code === "23514" || raw.includes("violates check constraint")) {
+    if (raw.includes("method_type")) {
+      return "That payment method is not supported. Choose GCash, Maya, Bank Transfer, Cash on Meetup, or Cash on Delivery."
+    }
+    if (raw.includes("amount")) {
+      return "Enter a payment amount greater than zero."
+    }
+    return "Some of the payment details are not in the expected format. Please review the fields and try again."
+  }
+
+  // Not-null violation — a required field was left blank.
+  if (code === "23502") {
+    return "A required payment detail is missing. Fill in the reference number and amount, then submit again."
+  }
+
+  return error.message || "Payment was rejected"
+}
+
 export async function submitPayment(input: {
   orderId: string
 
@@ -1318,7 +1356,10 @@ export async function submitPayment(input: {
 
       .upload(receiptPath, input.receipt)
 
-    if (uploadError) throw uploadError
+    if (uploadError)
+      throw new Error(
+        "We could not upload your receipt image. Please try a different photo (JPG or PNG) and submit again.",
+      )
   }
 
   const { data, error } = await client.rpc("submit_order_payment", {
@@ -1337,7 +1378,7 @@ export async function submitPayment(input: {
     p_buyer_contact_url: input.buyerContactUrl ?? null,
   })
 
-  if (error) throw error
+  if (error) throw new Error(paymentErrorMessage(error))
 
   const result = data as { accepted?: boolean; error?: string } | null
 

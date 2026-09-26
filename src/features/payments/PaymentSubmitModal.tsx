@@ -387,6 +387,11 @@ export default function PaymentSubmitModal({
                 }}
                 className="placeholder:text-gray-400"
               />
+              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 5 }}>
+                Enter the exact reference from your transaction. Each payment
+                needs its own reference — you cannot reuse one already submitted
+                for this order.
+              </div>
             </div>
             <div>
               <label

@@ -6,7 +6,6 @@ import { PrimaryBtn } from "@/components/shared"
 
 import {
   ClipboardList,
-  Grid2X2,
   History,
   Home,
   LayoutGrid,
@@ -52,8 +51,8 @@ export default function TabBar({
         }))
       : [
           { tab: "Batches" as Tab, label: "Home", icon: Home },
-          { tab: "Dashboard" as Tab, label: "Cart", icon: ShoppingCart },
-          { tab: "My Claims" as Tab, label: "Batches", icon: Grid2X2 },
+          { tab: "My Claims" as Tab, label: "Cart", icon: ShoppingCart },
+          { tab: "Dashboard" as Tab, label: "Dashboard", icon: LayoutGrid },
           { tab: "Payments" as Tab, label: "History", icon: History },
         ]
   return (
