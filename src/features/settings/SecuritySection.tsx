@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { Check } from "lucide-react"
-import { PrimaryBtn, SH } from "@/components/shared"
+import { Check, Eye, LockKeyhole } from "lucide-react"
+import { PrimaryBtn } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 
 export default function SecuritySection() {
@@ -8,6 +8,7 @@ export default function SecuritySection() {
   const [newPw, setNewPw] = useState("")
   const [pwError, setPwError] = useState("")
   const [pwSaved, setPwSaved] = useState(false)
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
 
   const updatePassword = () => {
     if (!curPw || !newPw) {
@@ -47,25 +48,53 @@ export default function SecuritySection() {
             >
               {label}
             </label>
-            <input
-              type="password"
-              value={val}
-              onChange={(e) => set(e.target.value)}
-              placeholder={
-                label === "New Password" ? "At least 8 characters" : undefined
-              }
-              style={{
-                width: "100%",
-                maxWidth: 360,
-                fontSize: 13,
-                border: "1px solid #E5E7EB",
-                borderRadius: 7,
-                padding: "8px 12px",
-                outline: "none",
-                color: "#374151",
-              }}
-              className="placeholder:text-gray-400"
-            />
+            <div style={{ position: "relative", maxWidth: 360 }}>
+              <input
+                type={visiblePasswords[label] ? "text" : "password"}
+                value={val}
+                onChange={(e) => set(e.target.value)}
+                placeholder={
+                  label === "New Password" ? "At least 8 characters" : undefined
+                }
+                style={{
+                  width: "100%",
+                  fontSize: 13,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 7,
+                  padding: "8px 42px 8px 12px",
+                  outline: "none",
+                  color: "#374151",
+                }}
+                className="placeholder:text-gray-400"
+              />
+              <button
+                type="button"
+                onClick={() => setVisiblePasswords((current) => ({
+                  ...current,
+                  [label]: !current[label],
+                }))}
+                aria-label={`${visiblePasswords[label] ? "Hide" : "Show"} ${label.toLowerCase()}`}
+                aria-pressed={Boolean(visiblePasswords[label])}
+                title={`${visiblePasswords[label] ? "Hide" : "Show"} password`}
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  right: 6,
+                  display: "grid",
+                  width: 32,
+                  height: 32,
+                  placeItems: "center",
+                  border: 0,
+                  borderRadius: 6,
+                  background: "transparent",
+                  color: "#748391",
+                  cursor: "pointer",
+                  transform: "translateY(-50%)",
+                }}
+              >
+                {visiblePasswords[label] ? <Eye size={17} aria-hidden="true" /> : <LockKeyhole size={17} aria-hidden="true" />}
+              </button>
+            </div>
           </div>
         ))}
         {pwError && (
