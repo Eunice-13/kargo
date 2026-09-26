@@ -61,7 +61,7 @@ export default function BirVerifier({
             fontSize: 13,
             fontWeight: 700,
             color: "#111827",
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
+            fontFamily: "'Josefin Sans',sans-serif",
             marginBottom: 6,
           }}
         >

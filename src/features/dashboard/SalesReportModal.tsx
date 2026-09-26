@@ -229,7 +229,7 @@ export default function SalesReportModal({
                 fontSize: 17,
                 fontWeight: 800,
                 color: "#111827",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
                 letterSpacing: 0.5,
               }}
             >
@@ -332,7 +332,7 @@ export default function SalesReportModal({
                 fontSize: 20,
                 fontWeight: 800,
                 color: kita >= 0 ? "#065F46" : "#991B1B",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
               ₱{kita.toLocaleString()}

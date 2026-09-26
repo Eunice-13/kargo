@@ -47,7 +47,7 @@ export default function Orders({
       <div className="p-6">
         <h2
           style={{
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
+            fontFamily: "'Josefin Sans',sans-serif",
             fontSize: 18,
             fontWeight: 800,
             color: "#111827",
@@ -350,7 +350,7 @@ export default function Orders({
                 <div className="flex items-center gap-2 mb-1">
                   <span
                     style={{
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                       fontSize: 15,
                       fontWeight: 700,
                       color: "#111827",
@@ -385,7 +385,7 @@ export default function Orders({
                   fontSize: 16,
                   fontWeight: 800,
                   color: "#111827",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 ₱{order.amount.toLocaleString()}

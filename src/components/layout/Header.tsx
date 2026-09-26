@@ -92,8 +92,12 @@ export default function Header({
         <span
           className="kargo-brand-name"
           style={{
+<<<<<<< HEAD
             fontFamily: "'Plus Jakarta Sans',sans-serif",
 
+=======
+            fontFamily: "'Josefin Sans',sans-serif",
+>>>>>>> 207cc56381af34589078152184378a406354a1b1
             color: INDIGO,
 
             fontWeight: 800,

@@ -29,7 +29,7 @@ export default function TrackOrderModal({
               fontSize: 14,
               fontWeight: 700,
               color: "#111827",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             {order.product}

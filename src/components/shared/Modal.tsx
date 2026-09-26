@@ -133,7 +133,7 @@ export default function Modal({
           <h3
             id={titleId}
             style={{
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
               fontSize: 17,
               fontWeight: 700,
               color: "#111827",

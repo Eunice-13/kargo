@@ -55,7 +55,7 @@ export default function ItemClaimModal({
                 fontSize: 15,
                 fontWeight: 700,
                 color: "#111827",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
               {product.name}
@@ -69,7 +69,7 @@ export default function ItemClaimModal({
               fontSize: 18,
               fontWeight: 800,
               color: INDIGO,
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             ₱{product.price.toLocaleString()}
@@ -313,7 +313,7 @@ export default function ItemClaimModal({
             fontWeight: 700,
             color: "#111827",
             textAlign: "right",
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
+            fontFamily: "'Josefin Sans',sans-serif",
           }}
         >
           Total: ₱{(product.price * qty).toLocaleString()}

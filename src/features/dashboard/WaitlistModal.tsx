@@ -155,7 +155,7 @@ export default function WaitlistModal({
                       fontSize: 14,
                       fontWeight: 700,
                       color: "#111827",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                     }}
                   >
                     {active.product}
@@ -170,7 +170,7 @@ export default function WaitlistModal({
                       fontSize: 22,
                       fontWeight: 800,
                       color: INDIGO,
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                       lineHeight: 1,
                     }}
                   >
@@ -238,7 +238,7 @@ export default function WaitlistModal({
                       fontSize: 13,
                       fontWeight: 800,
                       color: INDIGO,
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                     }}
                   >
                     #{entry.position}

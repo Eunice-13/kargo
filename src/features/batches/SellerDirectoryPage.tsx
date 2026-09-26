@@ -127,7 +127,7 @@ export default function SellerDirectoryPage({
         <div style={{ marginBottom: 20 }}>
           <h2
             style={{
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
               fontSize: 20,
               fontWeight: 800,
               color: "#111827",
@@ -233,7 +233,7 @@ export default function SellerDirectoryPage({
                           fontSize: 14,
                           fontWeight: 700,
                           color: "#111827",
-                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          fontFamily: "'Josefin Sans',sans-serif",
                         }}
                       >
                         {name}

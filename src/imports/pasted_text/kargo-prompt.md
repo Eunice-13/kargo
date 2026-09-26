@@ -15,7 +15,7 @@ Every element below is tagged:
 
 ## DO NOT CHANGE (preserve exactly as-is)
 - **Color palette:** Indigo `#191BA9` (primary/brand), Cream `#F7F3F3` (background), Cyan `#DEF3FA`, Sky `#5CC2F2`, Coral `#FF8A65`, Live Red `#E11D2E`, Green `#3FBF8F`, Amber `#FFC24B`
-- **Typography:** Headings/buttons in "Plus Jakarta Sans", body text in "Inter"
+- **Typography:** Headings/buttons in "Josefin Sans", body text in "Inter"
 - **Existing components:** Card, PrimaryBtn, SecondaryBtn, Toggle, StatusBadge, ReportBadge, Avatar, ProductThumb, Countdown, LiveBadge
 - **Existing tab structure:** Dashboard, Batches, My Claims, Payments, Orders, Reports, Settings
 - **Existing Buyer/Seller role toggle** in the tab bar

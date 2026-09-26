@@ -206,7 +206,7 @@ export default function BatchPage({
             border: "none",
             cursor: "pointer",
             padding: 0,
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
+            fontFamily: "'Josefin Sans',sans-serif",
           }}
         >
           <ArrowLeft size={14} aria-hidden="true" /> Back to Batches
@@ -260,7 +260,7 @@ export default function BatchPage({
         <div>
           <h1
             style={{
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
               fontSize: 22,
               fontWeight: 800,
               color: "#fff",
@@ -339,7 +339,7 @@ export default function BatchPage({
           >
             <h2
               style={{
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
                 fontSize: 16,
                 fontWeight: 700,
                 color: "#111827",
@@ -379,7 +379,7 @@ export default function BatchPage({
                         fontSize: 14,
                         fontWeight: 700,
                         color: "#111827",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
                       {p.name}
@@ -463,7 +463,7 @@ export default function BatchPage({
                         fontSize: 16,
                         fontWeight: 800,
                         color: INDIGO,
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                         marginBottom: 8,
                       }}
                     >
@@ -562,7 +562,7 @@ export default function BatchPage({
                     fontSize: 14,
                     fontWeight: 700,
                     color: "#111827",
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    fontFamily: "'Josefin Sans',sans-serif",
                     display: "flex",
                     alignItems: "center",
                     gap: 6,

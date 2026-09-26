@@ -8,7 +8,7 @@ export default function BuyerProfileModal({ buyer, contactUrl, onClose }: { buye
     <Modal title="" onClose={onClose} width={480}>
       <div style={{ margin: "-28px -28px 20px", background: "linear-gradient(135deg,#DEF3FA,#EEF0FF)", borderRadius: "12px 12px 0 0", padding: "24px 24px 16px", textAlign: "center" }}>
         <Avatar name={buyer} size={56} />
-        <div style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 17, fontWeight: 800, color: "#111827", marginTop: 10 }}>{buyer}</div>
+        <div style={{ fontFamily: "'Josefin Sans',sans-serif", fontSize: 17, fontWeight: 800, color: "#111827", marginTop: 10 }}>{buyer}</div>
         <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2, display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
           <Star size={13} fill="#9CA3AF" aria-hidden="true" /> 4.8 average · Member since Mar 2025
         </div>
@@ -17,7 +17,7 @@ export default function BuyerProfileModal({ buyer, contactUrl, onClose }: { buye
       <div className="grid grid-cols-4 gap-2 mb-4">
         {[["Completed", "12", "#0B7A59"], ["Cancelled", "1", "#EF4444"], ["Incomplete", "0", "#92400E"], ["Disputes", "0", "#6B7280"]].map(([label, value, color]) => (
           <div key={label} style={{ background: "#F9FAFB", borderRadius: 8, padding: "8px 6px", textAlign: "center", border: "1px solid #E5E7EB" }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color, fontFamily: "'Plus Jakarta Sans',sans-serif" }}>{value}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color, fontFamily: "'Josefin Sans',sans-serif" }}>{value}</div>
             <div style={{ fontSize: 9, color: "#9CA3AF", fontWeight: 500 }}>{label}</div>
           </div>
         ))}

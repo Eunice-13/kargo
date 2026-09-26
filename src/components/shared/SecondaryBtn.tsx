@@ -26,7 +26,7 @@ export default function SecondaryBtn({
         color: "#374151",
         border: "1px solid #D1D5DB",
         borderRadius: 7,
-        fontFamily: "'Plus Jakarta Sans',sans-serif",
+        fontFamily: "'Josefin Sans',sans-serif",
         transition: "background 0.15s,transform 0.1s",
         cursor: disabled ? "not-allowed" : undefined,
         opacity: disabled ? 0.6 : 1,

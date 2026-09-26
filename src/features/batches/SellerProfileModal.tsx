@@ -140,7 +140,7 @@ export default function SellerProfileModal({
         >
           <div
             style={{
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
               fontSize: 17,
               fontWeight: 800,
               color: "#111827",
@@ -232,7 +232,7 @@ export default function SellerProfileModal({
                     fontSize: 18,
                     fontWeight: 800,
                     color: "#111827",
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    fontFamily: "'Josefin Sans',sans-serif",
                   }}
                 >
                   {st.value}
@@ -342,7 +342,7 @@ export default function SellerProfileModal({
                           fontSize: 13,
                           fontWeight: 700,
                           color: "#fff",
-                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          fontFamily: "'Josefin Sans',sans-serif",
                         }}
                       >
                         {b.title}
@@ -511,7 +511,7 @@ export default function SellerProfileModal({
                                 fontSize: 13,
                                 fontWeight: 700,
                                 color: "#111827",
-                                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                                fontFamily: "'Josefin Sans',sans-serif",
                               }}
                             >
                               ₱{p.price.toLocaleString()}

@@ -5,7 +5,7 @@ This is a **refinement prompt** for the existing KARGO app, not a redesign. The 
 
 ## DO NOT CHANGE (preserve exactly as-is)
 - Color palette: Indigo `#191BA9` (primary/brand), Cream `#F7F3F3` (background), Cyan `#DEF3FA`, Sky `#5CC2F2`, Coral/Pink `#C81E62` (claim CTA), Live Red `#E11D2E`, Green `#3FBF8F`, Amber `#FFC24B`
-- Typography: headings/buttons in "Plus Jakarta Sans", body text in "Inter"
+- Typography: headings/buttons in "Josefin Sans", body text in "Inter"
 - Existing components: Card, PrimaryBtn, SecondaryBtn, Toggle, StatusBadge, Avatar, ProductThumb, Countdown
 - The existing Buyer/Seller role toggle
 

@@ -1018,8 +1018,7 @@ export default function Batches({
                         <div style={{ padding: "14px 16px" }}>
                           <h3
                             style={{
-                              fontFamily: "'Plus Jakarta Sans',sans-serif",
-
+                              fontFamily: "'Josefin Sans',sans-serif",
                               fontSize: 13.5,
 
                               fontWeight: 700,
@@ -1410,8 +1409,7 @@ export default function Batches({
       <div className="p-6">
         <h2
           style={{
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
-
+            fontFamily: "'Josefin Sans',sans-serif",
             fontSize: 18,
 
             fontWeight: 800,

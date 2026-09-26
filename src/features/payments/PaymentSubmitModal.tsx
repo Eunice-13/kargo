@@ -184,7 +184,7 @@ export default function PaymentSubmitModal({
               fontSize: 16,
               fontWeight: 800,
               color: "#111827",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             ₱{item.amount.toLocaleString()}
@@ -223,7 +223,7 @@ export default function PaymentSubmitModal({
                   background: method === m.key ? "#EEF0FF" : "#fff",
                   color: method === m.key ? "#191BA9" : "#6B7280",
                   transition: "all 0.15s",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 {m.label}

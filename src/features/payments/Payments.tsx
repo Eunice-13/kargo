@@ -228,7 +228,7 @@ export default function Payments({
                     fontSize: 15,
                     fontWeight: 800,
                     color: "#111827",
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    fontFamily: "'Josefin Sans',sans-serif",
                   }}
                 >
                   ₱{t.amount.toLocaleString()}
@@ -254,7 +254,7 @@ export default function Payments({
                       fontSize: 18,
                       fontWeight: 800,
                       color: INDIGO,
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                     }}
                   >
                     ₱{payableToPay.reduce((s, t) => s + t.amount, 0).toLocaleString()}
@@ -559,7 +559,7 @@ export default function Payments({
                           padding: "10px 14px",
                           fontWeight: 700,
                           color: "#111827",
-                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          fontFamily: "'Josefin Sans',sans-serif",
                         }}
                       >
                         ₱{p.amount.toLocaleString()}

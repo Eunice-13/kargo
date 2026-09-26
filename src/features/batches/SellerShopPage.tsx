@@ -198,7 +198,7 @@ export default function SellerShopPage({
                           fontSize: 14,
                           fontWeight: 700,
                           color: "#fff",
-                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          fontFamily: "'Josefin Sans',sans-serif",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
@@ -291,7 +291,7 @@ export default function SellerShopPage({
                       fontSize: 12,
                       fontWeight: 700,
                       cursor: "pointer",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                     }}
                   >
                     Check this batch
@@ -352,7 +352,7 @@ export default function SellerShopPage({
                               fontSize: 14,
                               fontWeight: 800,
                               color: INDIGO,
-                              fontFamily: "'Plus Jakarta Sans',sans-serif",
+                              fontFamily: "'Josefin Sans',sans-serif",
                             }}
                           >
                             ₱{p.price.toLocaleString()}
@@ -472,7 +472,7 @@ export default function SellerShopPage({
             <Avatar name={seller} size={56} imageUrl={profileData?.avatarUrl} />
             <div
               style={{
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
                 fontSize: 16,
                 fontWeight: 800,
                 color: "#111827",
@@ -559,7 +559,7 @@ export default function SellerShopPage({
                     fontSize: 16,
                     fontWeight: 800,
                     color,
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    fontFamily: "'Josefin Sans',sans-serif",
                   }}
                 >
                   {val}
@@ -619,7 +619,7 @@ export default function SellerShopPage({
                 style={{
                   fontWeight: 700,
                   color: "#111827",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 {val}

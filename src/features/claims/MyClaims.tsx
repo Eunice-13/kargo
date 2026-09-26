@@ -112,7 +112,7 @@ export default function MyClaims({
         )}
         <h2
           style={{
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
+            fontFamily: "'Josefin Sans',sans-serif",
             fontSize: 18,
             fontWeight: 800,
             color: "#111827",
@@ -143,7 +143,7 @@ export default function MyClaims({
                 fontWeight: 600,
                 padding: "5px 14px",
                 transition: "all 0.15s",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
                 cursor: "pointer",
               }}
             >
@@ -247,7 +247,7 @@ export default function MyClaims({
                       padding: "10px 14px",
                       fontWeight: 700,
                       color: "#111827",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                     }}
                   >
                     ₱{c.amount.toLocaleString()}
@@ -415,6 +415,117 @@ export default function MyClaims({
 
   return (
     <div className="p-6">
+      {toPay.length > 0 && (
+        <>
+          <h2
+            style={{
+              fontFamily: "'Josefin Sans',sans-serif",
+              fontSize: 20,
+              fontWeight: 800,
+              color: "#111827",
+              marginBottom: 14,
+            }}
+          >
+            My Claims To Pay
+          </h2>
+          <Card className="!p-0 overflow-hidden mb-3">
+            <div style={{ overflowX: "auto" }}>
+              <table className="w-full text-[13px]">
+                <thead style={{ background: "#6892D5" }}>
+                  <tr>
+                    {["Product", "Seller", "Deadline", "Amount", "Actions"].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: 11,
+                          letterSpacing: "0.04em",
+                          textTransform: "uppercase",
+                          padding: "12px 14px",
+                          textAlign: "left",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {toPay.map((t, i) => (
+                    <tr key={t.orderId ?? t.id} style={{ background: i % 2 ? "#FAFAFA" : "#fff" }}>
+                      <td style={{ padding: "10px 14px" }}>
+                        <div className="flex items-center gap-2.5">
+                          <ProductThumb name={t.product} />
+                          <span style={{ fontWeight: 700, color: "#111827" }}>{t.product}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "10px 14px" }}>
+                        <div className="flex items-center gap-1.5">
+                          <Avatar name={t.seller} size={20} />
+                          <span style={{ fontSize: 12, color: "#374151" }}>{t.seller}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "10px 14px" }}>
+                        <Countdown hours={t.hours} expiresAt={t.expiresAt} />
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px 14px",
+                          fontWeight: 700,
+                          color: "#111827",
+                          fontFamily: "'Josefin Sans',sans-serif",
+                        }}
+                      >
+                        ₱{t.amount.toLocaleString()}
+                      </td>
+                      <td style={{ padding: "10px 14px" }}>
+                        <PrimaryBtn
+                          size="sm"
+                          onClick={() => {
+                            const claim = claims.find(
+                              (c) => c.id === (t.orderId ?? t.id) || c.product === t.product,
+                            )
+                            if (claim) setPayTarget(claim)
+                          }}
+                        >
+                          Pay Now
+                        </PrimaryBtn>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+          <div
+            className="flex items-center justify-end gap-4 mb-6"
+            style={{
+              background: "#fff",
+              borderRadius: 10,
+              boxShadow: "0 4px 14px rgba(18,30,71,0.08)",
+              padding: "14px 20px",
+            }}
+          >
+            <strong style={{ color: INDIGO, fontSize: 13, fontWeight: 700, marginRight: "auto" }}>
+              TOTAL DUE:
+            </strong>
+            <span
+              style={{
+                color: INDIGO,
+                fontSize: 18,
+                fontWeight: 800,
+                fontFamily: "'Josefin Sans',sans-serif",
+              }}
+            >
+              ₱{toPay.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}
+            </span>
+            <PrimaryBtn size="sm">Batch Checkout</PrimaryBtn>
+          </div>
+        </>
+      )}
+
       <div className="flex items-center gap-2 mb-5 flex-wrap">
         {filters.map((f) => (
           <button
@@ -429,7 +540,7 @@ export default function MyClaims({
               fontWeight: 600,
               padding: "5px 14px",
               transition: "all 0.15s",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
               cursor: "pointer",
             }}
           >
@@ -514,7 +625,7 @@ export default function MyClaims({
                         fontSize: 13,
                         fontWeight: 700,
                         color: "#111827",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
                       {c.product}
@@ -569,7 +680,7 @@ export default function MyClaims({
                       fontSize: 14,
                       fontWeight: 800,
                       color: "#111827",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                     }}
                   >
                     ₱{c.amount.toLocaleString()}
@@ -646,7 +757,7 @@ export default function MyClaims({
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
           <table className="w-full text-[13px]">
-            <thead style={{ background: CREAM }}>
+            <thead style={{ background: "#6892D5" }}>
               <tr>
                 {[
                   "Product",
@@ -661,7 +772,7 @@ export default function MyClaims({
                   <th
                     key={h}
                     style={{
-                      color: "#9CA3AF",
+                      color: "#fff",
                       fontWeight: 600,
                       fontSize: 11,
                       padding: "10px 14px",
@@ -723,7 +834,7 @@ export default function MyClaims({
                       padding: "10px 14px",
                       fontWeight: 700,
                       color: "#111827",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
+                      fontFamily: "'Josefin Sans',sans-serif",
                     }}
                   >
                     ₱{c.amount.toLocaleString()}
@@ -968,7 +1079,7 @@ export default function MyClaims({
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: "pointer",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 Yes, Cancel

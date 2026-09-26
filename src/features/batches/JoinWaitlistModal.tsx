@@ -44,7 +44,7 @@ export default function JoinWaitlistModal({
                 fontSize: 15,
                 fontWeight: 700,
                 color: "#111827",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
               {productName}
@@ -58,7 +58,7 @@ export default function JoinWaitlistModal({
               fontSize: 16,
               fontWeight: 800,
               color: INDIGO,
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             ₱{price.toLocaleString()}
