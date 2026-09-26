@@ -86,6 +86,7 @@ if (!URL || !SERVICE_KEY || !ANON_KEY) {
 
 const RESET = process.argv.includes("--reset")
 const VALIDATE_ONLY = process.argv.includes("--validate-only")
+const ENSURE_BATCHES = process.argv.includes("--ensure-batches")
 
 const PASSWORD = "KargoDemo123!"
 
@@ -340,6 +341,216 @@ const BATCHES = [
     products: [
       { name: "Vietnamese Coffee Set", base: 520, markup: 100, qty: 10 },
       { name: "Herbal Skincare Kit", base: 760, markup: 140, qty: 8 },
+    ],
+  },
+  {
+    seller: "maria",
+    title: "Osaka Street Food — October 2026",
+    category: "Food",
+    startsOn: "2026-10-14",
+    endsOn: "2026-10-21",
+    createdAt: "2026-09-25T07:10:00+08:00",
+    reservationHours: 24,
+    products: [{ name: "Osaka Takoyaki Kit", base: 560, markup: 120, qty: 18 }],
+  },
+  {
+    seller: "ana",
+    title: "Seoul Glow Edit — November 2026",
+    category: "Skincare",
+    startsOn: "2026-11-02",
+    endsOn: "2026-11-10",
+    createdAt: "2026-09-25T08:20:00+08:00",
+    reservationHours: 36,
+    products: [
+      { name: "Round Lab Sunscreen", base: 820, markup: 160, qty: 20 },
+    ],
+  },
+  {
+    seller: "paolo",
+    title: "California Pantry Run — November 2026",
+    category: "Grocery & Snacks",
+    startsOn: "2026-11-08",
+    endsOn: "2026-11-18",
+    createdAt: "2026-09-25T09:30:00+08:00",
+    reservationHours: 48,
+    products: [
+      { name: "Trader Joe's Cookie Box", base: 690, markup: 160, qty: 24 },
+    ],
+  },
+  {
+    seller: "kristine",
+    title: "Bangkok Beauty Picks — November 2026",
+    category: "Beauty",
+    startsOn: "2026-11-20",
+    endsOn: "2026-11-27",
+    createdAt: "2026-09-25T10:40:00+08:00",
+    reservationHours: 48,
+    products: [{ name: "Cathy Doll Lip Set", base: 590, markup: 130, qty: 16 }],
+  },
+  {
+    seller: "jade",
+    title: "Singapore Luxe Finds — December 2026",
+    category: "Luxury",
+    startsOn: "2026-12-05",
+    endsOn: "2026-12-12",
+    createdAt: "2026-09-25T11:50:00+08:00",
+    reservationHours: 60,
+    products: [{ name: "TWG Tea Gift Box", base: 2080, markup: 370, qty: 12 }],
+  },
+  {
+    seller: "maria",
+    title: "Tokyo Variety Run — December 2026",
+    category: "Mixed",
+    startsOn: "2026-12-18",
+    endsOn: "2026-12-27",
+    createdAt: "2026-09-25T13:00:00+08:00",
+    reservationHours: 30,
+    products: [
+      { name: "Don Quijote Favorites", base: 1050, markup: 200, qty: 20 },
+    ],
+  },
+  {
+    seller: "ana",
+    title: "Jeju Local Flavors — January 2027",
+    category: "Food",
+    startsOn: "2027-01-04",
+    endsOn: "2027-01-11",
+    createdAt: "2026-09-25T14:10:00+08:00",
+    reservationHours: 42,
+    products: [
+      { name: "Jeju Tangerine Sweets", base: 460, markup: 100, qty: 22 },
+    ],
+  },
+  {
+    seller: "ana",
+    title: "Busan Barrier Care — January 2027",
+    category: "Skincare",
+    startsOn: "2027-01-13",
+    endsOn: "2027-01-21",
+    createdAt: "2026-09-25T15:20:00+08:00",
+    reservationHours: 54,
+    products: [
+      { name: "Etude SoonJung Set", base: 1320, markup: 260, qty: 15 },
+    ],
+  },
+  {
+    seller: "paolo",
+    title: "New York Snack Drop — January 2027",
+    category: "Grocery & Snacks",
+    startsOn: "2027-01-17",
+    endsOn: "2027-01-28",
+    createdAt: "2026-09-25T16:30:00+08:00",
+    reservationHours: 48,
+    products: [
+      { name: "Whole Foods Snack Bag", base: 960, markup: 220, qty: 18 },
+    ],
+  },
+  {
+    seller: "kristine",
+    title: "Phuket Beauty Market — February 2027",
+    category: "Beauty",
+    startsOn: "2027-02-02",
+    endsOn: "2027-02-09",
+    createdAt: "2026-09-25T17:40:00+08:00",
+    reservationHours: 36,
+    products: [
+      { name: "Srichand Powder Duo", base: 520, markup: 120, qty: 20 },
+    ],
+  },
+  {
+    seller: "jade",
+    title: "Singapore Designer Edit — February 2027",
+    category: "Luxury",
+    startsOn: "2027-02-08",
+    endsOn: "2027-02-16",
+    createdAt: "2026-09-25T18:50:00+08:00",
+    reservationHours: 72,
+    products: [
+      { name: "Charles & Keith Wallet", base: 2520, markup: 430, qty: 10 },
+    ],
+  },
+  {
+    seller: "maria",
+    title: "Kyoto Seasonal Mix — February 2027",
+    category: "Mixed",
+    startsOn: "2027-02-12",
+    endsOn: "2027-02-20",
+    createdAt: "2026-09-25T20:00:00+08:00",
+    reservationHours: 40,
+    products: [
+      { name: "Kyoto Market Bundle", base: 1160, markup: 220, qty: 18 },
+    ],
+  },
+  {
+    seller: "maria",
+    title: "Nagoya Food Finds — February 2027",
+    category: "Food",
+    startsOn: "2027-02-22",
+    endsOn: "2027-03-02",
+    createdAt: "2026-09-25T21:10:00+08:00",
+    reservationHours: 28,
+    products: [
+      { name: "Nagoya Miso Snack Set", base: 610, markup: 130, qty: 20 },
+    ],
+  },
+  {
+    seller: "ana",
+    title: "Incheon Skincare Run — March 2027",
+    category: "Skincare",
+    startsOn: "2027-03-03",
+    endsOn: "2027-03-11",
+    createdAt: "2026-09-25T22:20:00+08:00",
+    reservationHours: 46,
+    products: [
+      { name: "Anua Heartleaf Kit", base: 1240, markup: 250, qty: 16 },
+    ],
+  },
+  {
+    seller: "paolo",
+    title: "Seattle Grocery Haul — March 2027",
+    category: "Grocery & Snacks",
+    startsOn: "2027-03-07",
+    endsOn: "2027-03-18",
+    createdAt: "2026-09-25T23:30:00+08:00",
+    reservationHours: 50,
+    products: [
+      { name: "Seattle Coffee Sampler", base: 1100, markup: 220, qty: 18 },
+    ],
+  },
+  {
+    seller: "kristine",
+    title: "Chiang Mai Beauty Finds — March 2027",
+    category: "Beauty",
+    startsOn: "2027-03-12",
+    endsOn: "2027-03-20",
+    createdAt: "2026-09-26T00:40:00+08:00",
+    reservationHours: 38,
+    products: [
+      { name: "Oriental Princess Set", base: 730, markup: 160, qty: 14 },
+    ],
+  },
+  {
+    seller: "jade",
+    title: "Orchard Road Luxury — March 2027",
+    category: "Luxury",
+    startsOn: "2027-03-18",
+    endsOn: "2027-03-27",
+    createdAt: "2026-09-26T01:50:00+08:00",
+    reservationHours: 64,
+    products: [
+      { name: "Bacha Coffee Gift Set", base: 2260, markup: 390, qty: 12 },
+    ],
+  },
+  {
+    seller: "maria",
+    title: "Japan Spring Mix — April 2027",
+    category: "Mixed",
+    startsOn: "2027-04-02",
+    endsOn: "2027-04-12",
+    createdAt: "2026-09-26T03:00:00+08:00",
+    reservationHours: 32,
+    products: [
+      { name: "Sakura Lifestyle Box", base: 1400, markup: 280, qty: 20 },
     ],
   },
 ]
@@ -738,6 +949,256 @@ const ORDERS = [
     advance: "confirmed",
     method: "Bank Transfer",
   },
+
+  // One varied active claim per supplemental batch keeps every Home card tied
+  // to real order data instead of displaying a fabricated frontend count.
+  {
+    buyer: "trisha",
+    seller: "maria",
+    product: "Osaka Takoyaki Kit",
+    qty: 5,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "carlo",
+    seller: "ana",
+    product: "Round Lab Sunscreen",
+    qty: 8,
+    advance: "confirmed",
+    method: "Maya",
+  },
+  {
+    buyer: "anna",
+    seller: "paolo",
+    product: "Trader Joe's Cookie Box",
+    qty: 11,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "mia",
+    seller: "kristine",
+    product: "Cathy Doll Lip Set",
+    qty: 7,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "ben",
+    seller: "jade",
+    product: "TWG Tea Gift Box",
+    qty: 4,
+    advance: "confirmed",
+    method: "Bank Transfer",
+  },
+  {
+    buyer: "grace",
+    seller: "maria",
+    product: "Don Quijote Favorites",
+    qty: 9,
+    advance: "confirmed",
+    method: "Bank Transfer",
+  },
+  {
+    buyer: "trisha",
+    seller: "ana",
+    product: "Jeju Tangerine Sweets",
+    qty: 6,
+    advance: "confirmed",
+    method: "Maya",
+  },
+  {
+    buyer: "carlo",
+    seller: "ana",
+    product: "Etude SoonJung Set",
+    qty: 10,
+    advance: "confirmed",
+    method: "Maya",
+  },
+  {
+    buyer: "anna",
+    seller: "paolo",
+    product: "Whole Foods Snack Bag",
+    qty: 7,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "mia",
+    seller: "kristine",
+    product: "Srichand Powder Duo",
+    qty: 12,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "ben",
+    seller: "jade",
+    product: "Charles & Keith Wallet",
+    qty: 3,
+    advance: "confirmed",
+    method: "Bank Transfer",
+  },
+  {
+    buyer: "grace",
+    seller: "maria",
+    product: "Kyoto Market Bundle",
+    qty: 8,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "trisha",
+    seller: "maria",
+    product: "Nagoya Miso Snack Set",
+    qty: 13,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "carlo",
+    seller: "ana",
+    product: "Anua Heartleaf Kit",
+    qty: 5,
+    advance: "confirmed",
+    method: "Maya",
+  },
+  {
+    buyer: "anna",
+    seller: "paolo",
+    product: "Seattle Coffee Sampler",
+    qty: 9,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "mia",
+    seller: "kristine",
+    product: "Oriental Princess Set",
+    qty: 6,
+    advance: "confirmed",
+    method: "GCash",
+  },
+  {
+    buyer: "ben",
+    seller: "jade",
+    product: "Bacha Coffee Gift Set",
+    qty: 7,
+    advance: "confirmed",
+    method: "Bank Transfer",
+  },
+  {
+    buyer: "grace",
+    seller: "maria",
+    product: "Sakura Lifestyle Box",
+    qty: 10,
+    advance: "confirmed",
+    method: "Bank Transfer",
+  },
+
+  // ── Additional completed history ────────────────────────────────────────────
+  // Reviews can only be left on a completed order, so a marketplace with any
+  // rating history needs completed transactions to hang them on. These twelve
+  // spread across every buyer/seller pair so each account accumulates 3-5
+  // reviews — enough for a computed average to mean something, and varied
+  // enough that the directory is not a column of identical scores.
+  {
+    buyer: "trisha",
+    seller: "ana",
+    product: "Laneige Lip Mask",
+    qty: 2,
+    advance: "completed",
+    method: "Maya",
+  },
+  {
+    buyer: "trisha",
+    seller: "kristine",
+    product: "Pineapple Cake Box",
+    qty: 2,
+    advance: "completed",
+    method: "GCash",
+  },
+  {
+    buyer: "grace",
+    seller: "maria",
+    product: "KitKat Sakura",
+    qty: 3,
+    advance: "completed",
+    method: "GCash",
+  },
+  {
+    buyer: "grace",
+    seller: "paolo",
+    product: "Muji Skincare",
+    qty: 2,
+    advance: "completed",
+    method: "Bank Transfer",
+  },
+  {
+    buyer: "anna",
+    seller: "maria",
+    product: "Liberty Beauty Box",
+    qty: 2,
+    advance: "completed",
+    method: "Bank Transfer",
+  },
+  {
+    buyer: "anna",
+    seller: "jade",
+    product: "Innisfree Sheet Mask",
+    qty: 1,
+    advance: "completed",
+    method: "GCash",
+  },
+  {
+    buyer: "carlo",
+    seller: "ana",
+    product: "COSRX Snail Cream",
+    qty: 3,
+    advance: "completed",
+    method: "Maya",
+  },
+  {
+    buyer: "carlo",
+    seller: "kristine",
+    product: "Thai Snack Box",
+    qty: 2,
+    advance: "completed",
+    method: "GCash",
+  },
+  {
+    buyer: "mia",
+    seller: "jade",
+    product: "Vietnamese Coffee Set",
+    qty: 3,
+    advance: "completed",
+    method: "Bank Transfer",
+  },
+  {
+    buyer: "mia",
+    seller: "paolo",
+    product: "Nars Blush",
+    qty: 2,
+    advance: "completed",
+    method: "GCash",
+  },
+  {
+    buyer: "ben",
+    seller: "ana",
+    product: "Korean Skincare Set",
+    qty: 2,
+    advance: "completed",
+    method: "Maya",
+  },
+  {
+    buyer: "ben",
+    seller: "kristine",
+    product: "Mistine Sunscreen",
+    qty: 2,
+    advance: "completed",
+    method: "GCash",
+  },
 ]
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -751,7 +1212,7 @@ function validateSeedDefinitions() {
     "Luxury",
     "Mixed",
   ])
-  if (BATCHES.length < 10) throw new Error("At least 10 batches are required")
+  if (BATCHES.length < 30) throw new Error("At least 30 batches are required")
 
   const represented = new Set()
   const createdDates = new Set()
@@ -835,6 +1296,71 @@ function validateSeedDefinitions() {
       )
     if (!waitlistedSellers.has(seller.key))
       throw new Error(`Seller has no waitlisted product: ${seller.key}`)
+  }
+
+  // Every completed order must carry a rating in both directions, otherwise the
+  // seed would silently fall back to a default score.
+  for (const order of completedOrders) {
+    const key = `${order.buyer}::${order.seller}::${order.product}`
+    const entry = REVIEW_RATINGS[key]
+    if (!entry) throw new Error(`Missing REVIEW_RATINGS entry for ${key}`)
+    for (const direction of ["buyer", "seller"]) {
+      const score = entry[direction]
+      if (!Number.isInteger(score) || score < 1 || score > 5) {
+        throw new Error(
+          `REVIEW_RATINGS[${key}].${direction} must be 1-5, got ${score}`,
+        )
+      }
+    }
+  }
+  const orphanRatings = Object.keys(REVIEW_RATINGS).filter(
+    (key) =>
+      !completedOrders.some(
+        (o) => `${o.buyer}::${o.seller}::${o.product}` === key,
+      ),
+  )
+  if (orphanRatings.length > 0) {
+    throw new Error(
+      `REVIEW_RATINGS has entries for non-completed orders: ${orphanRatings.join(", ")}`,
+    )
+  }
+
+  // A realistic marketplace is not uniformly perfect. Fail the seed if every
+  // seeded review is 5, which is the bug this table replaced.
+  const allScores = completedOrders.flatMap((o) => {
+    const entry = REVIEW_RATINGS[`${o.buyer}::${o.seller}::${o.product}`]
+    return [entry.buyer, entry.seller]
+  })
+  const distinct = new Set(allScores)
+  if (distinct.size < 3) {
+    throw new Error(
+      `Seeded ratings lack variation (only ${[...distinct].join(", ")})`,
+    )
+  }
+  if (allScores.every((score) => score === 5)) {
+    throw new Error("Seeded ratings are all 5 stars — unrealistic")
+  }
+  for (const buyer of BUYERS) {
+    const scores = completedOrders
+      .filter((o) => o.buyer === buyer.key)
+      .map(
+        (o) => REVIEW_RATINGS[`${o.buyer}::${o.seller}::${o.product}`].seller,
+      )
+    if (scores.length < 3) {
+      throw new Error(
+        `Buyer ${buyer.key} has only ${scores.length} review(s) — too few for a meaningful average`,
+      )
+    }
+  }
+  for (const seller of SELLERS) {
+    const scores = completedOrders
+      .filter((o) => o.seller === seller.key)
+      .map((o) => REVIEW_RATINGS[`${o.buyer}::${o.seller}::${o.product}`].buyer)
+    if (scores.length < 3) {
+      throw new Error(
+        `Seller ${seller.key} has only ${scores.length} review(s) — too few for a meaningful average`,
+      )
+    }
   }
 
   console.log(
@@ -1123,8 +1649,74 @@ async function seedSellerOwned() {
   console.log(`  + addresses`)
 }
 
-async function seedOrders() {
-  for (const [orderIndex, o] of ORDERS.entries()) {
+async function ensureMissingBatches() {
+  const sellerIds = [...SELLERS.map((seller) => userIds.get(seller.key))]
+  const { data: existing, error: existingError } = await admin
+    .from("batches")
+    .select("id,seller_id,title")
+    .in("seller_id", sellerIds)
+  if (existingError)
+    throw new Error(`existing batches lookup: ${existingError.message}`)
+
+  const existingKeys = new Set(
+    (existing ?? []).map((batch) => `${batch.seller_id}::${batch.title}`),
+  )
+  const addedProductKeys = new Set()
+
+  for (const batchDefinition of BATCHES) {
+    const sellerId = userIds.get(batchDefinition.seller)
+    const key = `${sellerId}::${batchDefinition.title}`
+    if (existingKeys.has(key)) continue
+
+    const client = await signIn(batchDefinition.seller)
+    const { data: batch, error: batchError } = await client
+      .from("batches")
+      .insert({
+        seller_id: sellerId,
+        title: batchDefinition.title,
+        status: "live",
+        starts_on: batchDefinition.startsOn,
+        ends_on: batchDefinition.endsOn,
+        category: batchDefinition.category,
+        reservation_hours: batchDefinition.reservationHours,
+        notes: batchDefinition.notes ?? null,
+        created_at: batchDefinition.createdAt,
+      })
+      .select("id")
+      .single()
+    if (batchError)
+      throw new Error(`batch ${batchDefinition.title}: ${batchError.message}`)
+
+    const { data: products, error: productsError } = await client
+      .from("batch_products")
+      .insert(
+        batchDefinition.products.map((product) => ({
+          batch_id: batch.id,
+          name: product.name,
+          base_price: product.base,
+          markup: product.markup,
+          quantity_total: product.qty,
+        })),
+      )
+      .select("id,name")
+    if (productsError)
+      throw new Error(
+        `products ${batchDefinition.title}: ${productsError.message}`,
+      )
+
+    for (const product of products ?? []) {
+      const productKey = `${batchDefinition.seller}::${product.name}`
+      productIds.set(productKey, product.id)
+      addedProductKeys.add(productKey)
+    }
+    console.log(`  + missing batch "${batchDefinition.title}"`)
+  }
+
+  return addedProductKeys
+}
+
+async function seedOrders(ordersToSeed = ORDERS) {
+  for (const [orderIndex, o] of ordersToSeed.entries()) {
     const productId = productIds.get(`${o.seller}::${o.product}`)
 
     if (!productId) {
@@ -1274,52 +1866,194 @@ async function seedOrders() {
   }
 }
 
+// ── Review ratings ───────────────────────────────────────────────────────────
+//
+// The score for each direction of each completed order. Previously every seeded
+// review was hardcoded to 5, which made every seller and buyer in the database
+// read as a perfect 5.0 regardless of how much history they had — the exact
+// "unrealistic rating" problem this table exists to fix.
+//
+// The scores are deliberately uneven. Most transactions land on 4 or 5, a few
+// are 3, and no account is uniform, so the averages `public.profile_ratings`
+// computes come out looking earned:
+//
+//   sellers  maria 4.5 (n=4) · jade 4.8 (n=5) · ana 4.2 (n=4)
+//            kristine 4.2 (n=4) · paolo 3.7 (n=3)
+//   buyers   trisha 4.8 (n=4) · mia 4.7 (n=3) · grace 4.5 (n=4)
+//            anna 4.3 (n=3) · carlo 3.7 (n=3) · ben 3.7 (n=3)
+//
+// Accounts with no completed transaction (the signed-in user, Sean Dee) are
+// deliberately absent: they must end up with no reviews at all, so the app
+// shows "New seller" / "New buyer" rather than a fabricated score.
+//
+// Keyed by `buyer::seller::product`, which is unique across ORDERS.
+const REVIEW_RATINGS = {
+  // ── maria · 5, 5, 4, 4 → 4.5 ────────────────────────────────────────────────
+  "mia::maria::Meiji Chocolate": { buyer: 5, seller: 5 },
+  "trisha::maria::Tim Tam Assorted": { buyer: 5, seller: 4 },
+  "grace::maria::KitKat Sakura": { buyer: 4, seller: 5 },
+  "anna::maria::Liberty Beauty Box": { buyer: 4, seller: 4 },
+
+  // ── jade · 5, 5, 4, 5, 5 → 4.8 ─────────────────────────────────────────────
+  "carlo::jade::Hada Labo Serum": { buyer: 5, seller: 4 },
+  "grace::jade::Charlotte Tilbury Set": { buyer: 5, seller: 5 },
+  "ben::jade::Rare Beauty Blush": { buyer: 4, seller: 4 },
+  "anna::jade::Innisfree Sheet Mask": { buyer: 5, seller: 5 },
+  "mia::jade::Vietnamese Coffee Set": { buyer: 5, seller: 4 },
+
+  // ── ana · 5, 4, 5, 3 → 4.2 ─────────────────────────────────────────────────
+  "grace::ana::French Pharmacy Set": { buyer: 5, seller: 4 },
+  "trisha::ana::Laneige Lip Mask": { buyer: 4, seller: 5 },
+  "carlo::ana::COSRX Snail Cream": { buyer: 5, seller: 3 },
+  "ben::ana::Korean Skincare Set": { buyer: 3, seller: 4 },
+
+  // ── kristine · 4, 4, 5, 4 → 4.2 ────────────────────────────────────────────
+  "trisha::kristine::Dr. Wu Serum": { buyer: 4, seller: 5 },
+  "trisha::kristine::Pineapple Cake Box": { buyer: 4, seller: 5 },
+  "carlo::kristine::Thai Snack Box": { buyer: 5, seller: 4 },
+  "ben::kristine::Mistine Sunscreen": { buyer: 4, seller: 3 },
+
+  // ── paolo · 4, 3, 4 → 3.7 ──────────────────────────────────────────────────
+  "anna::paolo::MAC Lipstick Set": { buyer: 4, seller: 4 },
+  "grace::paolo::Muji Skincare": { buyer: 3, seller: 4 },
+  "mia::paolo::Nars Blush": { buyer: 4, seller: 5 },
+}
+
+// Comment pools keyed by score, so the written review always matches the stars
+// instead of praising a 3-star transaction. Cycled deterministically so repeat
+// runs produce identical data.
+const BUYER_REVIEW_COMMENTS = {
+  5: [
+    "Legit seller, exactly as described. Items arrived sealed and intact. Will order again!",
+    "Super smooth transaction. Seller kept me updated the whole way and the packaging was solid.",
+    "Salamat! Item was exactly as listed and the seller was very easy to coordinate with.",
+    "Great experience overall. Fair price, fast replies, and the item passed all my checks.",
+  ],
+  4: [
+    "Good transaction. Item was as described, though updates came in a bit late during the holidays.",
+    "No notes. Product is legit and the seller was polite. Would happily buy again.",
+    "Fair value and the item was well packed. Communication was okay, not outstanding.",
+    "Solid seller. Took a couple of days to confirm the meetup but everything else was smooth.",
+  ],
+  3: [
+    "Item was usable but not great. Had to follow up twice about the shipping delay, and the packaging was thin.",
+    "Mixed experience. The product itself was fine, but the price came out higher than the range I was quoted and replies were slow.",
+  ],
+}
+
+const SELLER_REVIEW_COMMENTS = {
+  5: [
+    "Responsive buyer with clear payment and pickup coordination. A pleasure to transact with.",
+    "Paid on time and confirmed the item count right away. Recommended buyer.",
+    "Smooth buyer, easy to schedule with and settled everything promptly.",
+    "Very organized. Confirmed before handoff and was happy to meet at a different location.",
+  ],
+  4: [
+    "Good transaction overall. Payment cleared a little later than agreed but no issues.",
+    "Courteous buyer who arrived on time for the meetup. Happy to transact again.",
+    "Easy to coordinate. Took a while to reply during work hours but settled everything.",
+    "Polite buyer, no problems at all during handoff.",
+  ],
+  3: [
+    "Buyer was fine but needed several reminders before sending payment. Would prefer a faster payer next time.",
+    "Transaction went through, though coordinating the meetup took more back and forth than usual.",
+  ],
+}
+
+// Quick statements drawn from the same vocabulary the in-app rating modal offers
+// (src/features/orders/ratingOptions.ts), so seeded rows look like real ones.
+const BUYER_STATEMENTS = {
+  5: [
+    ["Mabilis magbayad", "Smooth ang transaction"],
+    ["Maayos kausap", "Makikipag-transact ulit"],
+    ["Malinaw kausap", "Mabilis mag-reply"],
+  ],
+  4: [
+    ["Mabilis magbayad", "Malinaw kausap"],
+    ["Easy to communicate with!", "Smooth ang transaction"],
+  ],
+  3: [["Malinaw kausap", "Smooth ang transaction"]],
+}
+
+const SELLER_STATEMENTS = {
+  5: [
+    ["Mabilis magbayad", "Smooth transaction"],
+    ["Maayos kausap", "Oorder ulit ako"],
+    ["Accurate ang batch updates", "Maingat ang packaging"],
+  ],
+  4: [
+    ["Mabilis magbayad", "Maayos kausap"],
+    ["Sakto sa description ang item", "Smooth transaction"],
+  ],
+  3: [["Maayos kausap", "Sakto sa description ang item"]],
+}
+
+function reviewPlanFor(key, direction, cursor) {
+  const entry = REVIEW_RATINGS[key]
+  if (!entry) {
+    throw new Error(
+      `No seeded rating for completed order ${key} (${direction})`,
+    )
+  }
+  const score = entry[direction]
+  if (score < 1 || score > 5) {
+    throw new Error(`Rating out of range for ${key}: ${score}`)
+  }
+  const isBuyer = direction === "buyer"
+  const comments = isBuyer ? BUYER_REVIEW_COMMENTS : SELLER_REVIEW_COMMENTS
+  const statements = isBuyer ? BUYER_STATEMENTS : SELLER_STATEMENTS
+  return {
+    score,
+    comment: comments[score][cursor % comments[score].length],
+    statements: statements[score][cursor % statements[score].length],
+  }
+}
+
 async function seedEngagement() {
-  // Reviews — buyer reviews their completed orders (create_order_review RPC).
-
-  const reviewComments = [
-    "Super smooth transaction, items well packed. Salamat!",
-
-    "Legit seller, exactly as described. Will order again.",
-
-    "Fast updates and safe packaging. Highly recommended!",
-  ]
-
-  let ri = 0
+  // Reviews — left through `create_order_review`, which requires a completed
+  // order and a participant, so every seeded rating is backed by a real
+  // transaction. Scores come from REVIEW_RATINGS, not a constant.
+  const buyerCursor = {}
+  const sellerCursor = {}
 
   for (const co of completedOrders) {
+    const key = `${co.buyer}::${co.seller}::${co.product}`
+
+    const buyerPlan = reviewPlanFor(key, "buyer", buyerCursor[key] ?? 0)
+    buyerCursor[key] = (buyerCursor[key] ?? 0) + 1
+
     const buyer = await signIn(co.buyer)
 
     const { error } = await buyer.rpc("create_order_review", {
       p_order_id: co.orderId,
-      p_rating: 5,
-      p_comment: reviewComments[ri % reviewComments.length],
-      p_quick_statements: ["Well packed", "Great communication"],
+      p_rating: buyerPlan.score,
+      p_comment: buyerPlan.comment,
+      p_quick_statements: buyerPlan.statements,
     })
 
     if (error) throw new Error(`review ${co.product}: ${error.message}`)
 
-    ri += 1
+    const sellerPlan = reviewPlanFor(key, "seller", sellerCursor[key] ?? 0)
+    sellerCursor[key] = (sellerCursor[key] ?? 0) + 1
 
-    console.log(`  + review on ${co.product}`)
+    console.log(
+      `  + buyer ${buyerPlan.score}★ / seller ${sellerPlan.score}★ on ${co.product}`,
+    )
 
     const seller = await signIn(co.seller)
     const { error: sellerReviewError } = await seller.rpc(
       "create_order_review",
       {
         p_order_id: co.orderId,
-        p_rating: 5,
-        p_comment:
-          "Responsive buyer with clear payment and pickup coordination.",
-        p_quick_statements: ["Paid on time", "Easy to coordinate"],
+        p_rating: sellerPlan.score,
+        p_comment: sellerPlan.comment,
+        p_quick_statements: sellerPlan.statements,
       },
     )
     if (sellerReviewError)
       throw new Error(
         `seller review ${co.product}: ${sellerReviewError.message}`,
       )
-
-    console.log(`  + seller review on ${co.product}`)
   }
 
   // Batch reactions — unique per buyer/batch via the composite primary key.
@@ -1407,6 +2141,23 @@ async function main() {
   for (const s of SELLERS) await ensureUser(s, true)
 
   for (const b of BUYERS) await ensureUser(b, false)
+
+  if (ENSURE_BATCHES) {
+    console.log("Adding only missing batches and their claims:")
+    const addedProductKeys = await ensureMissingBatches()
+    const newOrders = ORDERS.filter((order) =>
+      addedProductKeys.has(`${order.seller}::${order.product}`),
+    )
+    if (newOrders.length) await seedOrders(newOrders)
+
+    const { count, error } = await admin
+      .from("batches")
+      .select("*", { count: "exact", head: true })
+      .neq("status", "draft")
+    if (error) throw new Error(`final batch count: ${error.message}`)
+    console.log(`Done. The database now has ${count ?? 0} visible batches.`)
+    return
+  }
 
   if (RESET) await reset()
   else if (await alreadySeeded()) {

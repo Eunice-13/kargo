@@ -9,14 +9,18 @@ import type {
   FulfillmentOrder,
   OrderRow,
   PayHistRow,
+  ReviewRecord,
   ToPayRow,
   UserInfo,
+  UserRating,
   SellerWaitlistGroup,
 } from "@/types"
 
 import { requireSupabase } from "@/lib/supabase"
 
 import { resolveContactUrl } from "@/components/shared/contactLink"
+
+import { buildUserRating, emptyUserRating } from "@/lib/ratings"
 
 type DbProfile = {
   id: string
@@ -40,6 +44,8 @@ type DbProfile = {
   notification_preferences: Record<string, boolean> | null
 
   waitlist_response_hours: number | null
+
+  created_at: string
 }
 
 export type LoadedAppData = {
@@ -60,6 +66,124 @@ export type LoadedAppData = {
   waitlist: WaitlistEntry[]
 
   sellerWaitlist: SellerWaitlistGroup[]
+
+  // Every participant's computed rating, keyed by profile id. Built from
+  // `public.profile_ratings` + `public.reviews` so the seller dashboard, shop
+  // page, directory and public profile all read one source of truth.
+  ratings: Record<string, UserRating>
+
+  // display name -> profile id, so a surface holding only a name can still
+  // resolve the right rating.
+  profileIdByName: Record<string, string>
+}
+
+// `reviews.quick_statements` is text[]; the select() shape is untyped.
+type DbReview = {
+  id: string
+  order_id: string
+  reviewer_id: string
+  reviewee_id: string
+  rating: number
+  comment: string | null
+  quick_statements: string[] | null
+  created_at: string
+  updated_at: string
+}
+
+function toReviewRecord(row: DbReview): ReviewRecord {
+  return {
+    id: row.id,
+    orderId: row.order_id,
+    reviewerId: row.reviewer_id,
+    revieweeId: row.reviewee_id,
+    rating: Number(row.rating),
+    comment: row.comment,
+    quickStatements: row.quick_statements ?? [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+// Assembles the shared rating map: the SQL aggregate supplies the canonical
+// average/count, and the raw rows supply the review list. The JS aggregation is
+// applied to the same rows so both paths produce identical numbers.
+function buildRatingsMap(
+  aggregates: {
+    profile_id: string
+    average_rating: number | null
+    review_count: number | null
+    member_since?: string | null
+  }[],
+  reviews: DbReview[],
+  nameById: Map<string, string>,
+): Record<string, UserRating> {
+  const byReviewee = new Map<string, DbReview[]>()
+  for (const review of reviews) {
+    if (!byReviewee.has(review.reviewee_id)) byReviewee.set(review.reviewee_id, [])
+    byReviewee.get(review.reviewee_id)!.push(review)
+  }
+
+  const ratings: Record<string, UserRating> = {}
+  for (const aggregate of aggregates) {
+    ratings[aggregate.profile_id] = {
+      ...buildUserRating(
+        (byReviewee.get(aggregate.profile_id) ?? []).map(toReviewRecord),
+        nameById,
+      ),
+      memberSince: aggregate.member_since ?? null,
+    }
+  }
+
+  // A reviewee who somehow has rows but no aggregate row (e.g. the aggregate
+  // view filtered their profile) still gets a correct computed entry.
+  for (const [profileId, rows] of byReviewee) {
+    if (ratings[profileId]) continue
+    ratings[profileId] = buildUserRating(rows.map(toReviewRecord), nameById)
+  }
+
+  return ratings
+}
+
+// Public read of one user's reviews + aggregate. Used by surfaces that mount
+// outside the main data load (e.g. a profile opened directly).
+export async function loadUserRating(
+  profileId: string,
+): Promise<UserRating> {
+  if (!profileId) return emptyUserRating()
+  const client = requireSupabase()
+
+  const [{ data: aggregate }, { data: rows, error }] = await Promise.all([
+    client
+      .from("profile_ratings")
+      .select("profile_id,average_rating,review_count")
+      .eq("profile_id", profileId)
+      .maybeSingle(),
+    client
+      .from("reviews")
+      .select(
+        "id,order_id,reviewer_id,reviewee_id,rating,comment,quick_statements,created_at,updated_at",
+      )
+      .eq("reviewee_id", profileId),
+  ])
+
+  if (error) throw error
+
+  const reviews = ((rows ?? []) as DbReview[]).map(toReviewRecord)
+
+  // Display names for the reviewer, resolved in one round trip.
+  const reviewerIds = [...new Set(reviews.map((r) => r.reviewerId))]
+  const nameById = new Map<string, string>()
+  if (reviewerIds.length > 0) {
+    const { data: reviewers } = await client
+      .from("public_profiles")
+      .select("id,display_name")
+      .in("id", reviewerIds)
+    for (const reviewer of reviewers ?? []) {
+      nameById.set(reviewer.id, reviewer.display_name)
+    }
+  }
+
+  return buildUserRating(reviews, nameById)
 }
 
 const birToUi: Record<DbProfile["bir_status"], BirState> = {
@@ -150,7 +274,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     .from("profiles")
 
     .select(
-      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,bir_status,account_status,notification_preferences,waitlist_response_hours",
+      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,bir_status,account_status,notification_preferences,waitlist_response_hours,created_at",
     )
 
     .eq("id", id)
@@ -184,6 +308,8 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     socialVisibility: profile.social_visibility ?? {},
 
     avatarUrl,
+
+    memberSince: profile.created_at,
 
     sellerEnabled: profile.can_sell,
 
@@ -427,6 +553,29 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     }
   }
 
+  // Ratings come from the same load as everything else so no screen has to
+  // fetch (and potentially disagree about) a user's score. `profile_ratings` is
+  // the canonical aggregate; the raw rows back the review lists.
+  const { data: ratingAggregates, error: ratingAggregateError } = await client
+    .from("profile_ratings")
+    .select("profile_id,average_rating,review_count,member_since")
+
+  if (ratingAggregateError) throw ratingAggregateError
+
+  const { data: ratingRows, error: ratingRowsError } = await client
+    .from("reviews")
+    .select(
+      "id,order_id,reviewer_id,reviewee_id,rating,comment,quick_statements,created_at,updated_at",
+    )
+
+  if (ratingRowsError) throw ratingRowsError
+
+  const ratings = buildRatingsMap(
+    ratingAggregates ?? [],
+    (ratingRows ?? []) as DbReview[],
+    participantNames,
+  )
+
   const batchMap = new Map<string, BatchType>()
   for (const row of catalog ?? []) {
     const reactions = reactionMetadata.get(row.batch_id)
@@ -449,7 +598,11 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       sellerBirVerified: verifiedSellers.has(row.seller_id),
 
-      rating: Number(row.rating ?? 0),
+      // NULL when the seller has no reviews yet — deliberately not 0, so the
+      // UI renders "New seller" instead of a 0-star badge.
+      rating: row.rating == null ? null : Number(row.rating),
+
+      ratingCount: Number(row.rating_count ?? 0),
 
       trips: formatBatchDateRange(row.starts_on, row.ends_on),
       items: Number(row.batch_total_items ?? 0),
@@ -737,6 +890,11 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     ? await loadSellerWaitlist(client, auth.user.id)
     : []
 
+  const profileIdByName: Record<string, string> = {}
+  for (const [id, name] of participantNames) {
+    if (name) profileIdByName[name] = id
+  }
+
   return {
     user,
     batches: [...batchMap.values()],
@@ -747,6 +905,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     fulfillment,
     waitlist,
     sellerWaitlist,
+    ratings,
+    profileIdByName,
   }
 }
 
@@ -2202,6 +2362,8 @@ export const kargoApi = {
   requestPasswordReset,
 
   loadCurrentAppData,
+
+  loadUserRating,
 
   claimProduct,
 

@@ -1,16 +1,18 @@
 import { useState } from "react"
 import { Search } from "lucide-react"
-import type { BatchType } from "@/types"
+import type { BatchType, UserRating } from "@/types"
 import { INDIGO } from "@/constants/theme"
-import { Modal, SecondaryBtn, Avatar, BIRBadge } from "@/components/shared"
+import { Modal, SecondaryBtn, Avatar, BIRBadge, RatingDisplay, ratingFor } from "@/components/shared"
 import SellerProfileModal from "@/features/batches/SellerProfileModal"
 
 export default function SellerSearchModal({
   batches,
+  ratings,
   onClose,
   onClaimFromProfile,
 }: {
   batches: BatchType[]
+  ratings: Record<string, UserRating>
   onClose: () => void
   onClaimFromProfile?: (batchId: number) => void
 }) {
@@ -20,22 +22,26 @@ export default function SellerSearchModal({
   )
   const [profile, setProfile] = useState<string | null>(null)
 
-  const sellerMap: Record<string, { batches: BatchType[]; rating: number }> = {}
+  // Ratings are read from the shared computed aggregate, not averaged from
+  // per-batch scores.
+  const sellerBatches = new Map<string, BatchType[]>()
   batches.forEach((b) => {
-    if (!sellerMap[b.seller]) sellerMap[b.seller] = { batches: [], rating: 0 }
-    sellerMap[b.seller].batches.push(b)
+    if (!sellerBatches.has(b.seller)) sellerBatches.set(b.seller, [])
+    sellerBatches.get(b.seller)!.push(b)
   })
-  Object.values(sellerMap).forEach((s) => {
-    s.rating = parseFloat(
-      (
-        s.batches.reduce((sum, b) => sum + b.rating, 0) / s.batches.length
-      ).toFixed(1),
-    )
-  })
+  const sellerMap = Object.fromEntries(
+    [...sellerBatches].map(([name, list]) => [
+      name,
+      {
+        batches: list,
+        rating: ratingFor(ratings, list.find((b) => b.sellerId)?.sellerId),
+      },
+    ]),
+  )
 
   const sellers = Object.entries(sellerMap).filter(([name, data]) => {
     if (query && !name.toLowerCase().includes(query.toLowerCase())) return false
-    if (chipFilter === "4.5+" && data.rating < 4.5) return false
+    if (chipFilter === "4.5+" && (data.rating.average ?? 0) < 4.5) return false
     if (chipFilter === "Has Active Batch" && !data.batches.some((b) => b.live))
       return false
     return true
@@ -130,10 +136,21 @@ export default function SellerSearchModal({
                       <BIRBadge />
                     </div>
                     <div
-                      style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}
+                      style={{
+                        fontSize: 12,
+                        color: "#6B7280",
+                        marginTop: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        flexWrap: "wrap",
+                      }}
                     >
-                       {data.rating} · {data.batches.length} batch
-                      {data.batches.length !== 1 ? "es" : ""}
+                      <RatingDisplay summary={data.rating} subject="seller" />
+                      <span>
+                        · {data.batches.length} batch
+                        {data.batches.length !== 1 ? "es" : ""}
+                      </span>
                     </div>
                   </div>
                   <SecondaryBtn onClick={() => setProfile(name)}>
@@ -149,6 +166,7 @@ export default function SellerSearchModal({
         <SellerProfileModal
           seller={profile}
           batches={batches}
+          ratings={ratings}
           onClose={() => setProfile(null)}
           onClaimFromProfile={onClaimFromProfile}
         />

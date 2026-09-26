@@ -10,7 +10,7 @@ export default function RateOrderModal({
   subjectRole,
   onRate,
   onClose,
-  initialRating = 5,
+  initialRating = 0,
   initialComment = "",
   initialStatements = [],
 }: {
@@ -18,6 +18,8 @@ export default function RateOrderModal({
   subjectRole: Role
   onRate: (rating: number, comment: string, statements: string[]) => void | Promise<void>
   onClose: () => void
+  // Defaults to 0 so the reviewer must actually choose. Defaulting to 5 would
+  // silently inflate the recipient's average with accidental perfect scores.
   initialRating?: number
   initialComment?: string
   initialStatements?: string[]
@@ -72,7 +74,7 @@ export default function RateOrderModal({
             })}
           </div>
           <div style={{ fontSize: 12, color: INDIGO, fontWeight: 700, marginTop: 7 }}>
-            {stars}/5 stars
+            {stars === 0 ? "Tap a star to rate" : `${stars}/5 stars`}
           </div>
         </div>
 
@@ -139,6 +141,10 @@ export default function RateOrderModal({
             style={{ flex: 1, display: "flex", justifyContent: "center" }}
             disabled={submitting}
             onClick={async () => {
+              if (stars < 1) {
+                setError("Choose a star rating first.")
+                return
+              }
               if (statements.length < 1) {
                 setError("Select at least one quick statement.")
                 return

@@ -1,31 +1,99 @@
 import { useState } from "react"
+
 import { Package, ShoppingBasket, UserRound } from "lucide-react"
+
 import type { Tab, BatchType } from "@/types"
+
 import { CREAM } from "@/constants/theme"
 
 export default function SearchBox({
   batches,
+
   onNavigate,
+
   onBatchSelect,
+
   onSellerSelect,
 }: {
   batches?: BatchType[]
+
   onNavigate?: (tab: Tab) => void
+
   onBatchSelect?: (id: number) => void
+
   onSellerSelect?: (name: string) => void
 }) {
   const [searchQ, setSearchQ] = useState("")
   const [searchOpen, setSearchOpen] = useState(false)
+
+  const openBatch = (batchId: number) => {
+    setSearchOpen(false)
+    setSearchQ("")
+    if (onBatchSelect) onBatchSelect(batchId)
+    else onNavigate?.("Batches")
+  }
+
+  const openSeller = (seller: string) => {
+    setSearchOpen(false)
+    setSearchQ("")
+    if (onSellerSelect) onSellerSelect(seller)
+    else onNavigate?.("Batches")
+  }
+
+  const submitSearch = () => {
+    const query = searchQ.trim().toLowerCase()
+    if (!query) {
+      setSearchOpen(false)
+      return
+    }
+
+    const allBatches = batches ?? []
+    const matchingBatch = allBatches.find(
+      (batch) =>
+        batch.title.toLowerCase().includes(query) ||
+        batch.category.toLowerCase().includes(query),
+    )
+    if (matchingBatch) {
+      openBatch(matchingBatch.id)
+      return
+    }
+
+    const productBatch = allBatches.find((batch) =>
+      batch.products.some((product) =>
+        product.name.toLowerCase().includes(query),
+      ),
+    )
+    if (productBatch) {
+      openBatch(productBatch.id)
+      return
+    }
+
+    const sellerBatch = allBatches.find((batch) =>
+      batch.seller.toLowerCase().includes(query),
+    )
+    if (sellerBatch) {
+      openSeller(sellerBatch.seller)
+      return
+    }
+
+    setSearchOpen(true)
+  }
 
   return (
     <div
       className="kargo-search-wrap flex-1 max-w-lg mx-auto"
       style={{ position: "relative" }}
     >
-      <div
+      <form
+        onSubmit={(event) => {
+          event.preventDefault()
+          submitSearch()
+        }}
         style={{
           background: CREAM,
+
           border: "1px solid #E5E7EB",
+
           borderRadius: 8,
         }}
         className="kargo-search flex items-center gap-2 px-3 py-2"
@@ -35,14 +103,19 @@ export default function SearchBox({
           value={searchQ}
           onChange={(e) => {
             setSearchQ(e.target.value)
+
             setSearchOpen(e.target.value.length > 0)
           }}
-          placeholder="Search products, batches, and buyers here..."
+          placeholder="Search products, batches, and sellers here..."
           style={{
             background: "transparent",
+
             fontSize: 13,
+
             color: "#374151",
+
             outline: "none",
+
             width: "100%",
           }}
           className="placeholder:text-gray-400"
@@ -51,37 +124,69 @@ export default function SearchBox({
           type="button"
           className="kargo-search-submit"
           aria-label="Search"
-          onClick={() => setSearchOpen(searchQ.trim().length > 0)}
+          onClick={submitSearch}
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.8" />
-            <path d="M10.5 10.5 14 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="7"
+              cy="7"
+              r="4.5"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            />
+            <path
+              d="M10.5 10.5 14 14"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
           </svg>
         </button>
-      </div>
+      </form>
       {searchOpen && searchQ && (
         <div
           style={{
             position: "absolute",
+
             top: "100%",
+
             left: 0,
+
             right: 0,
+
             background: "#fff",
+
             border: "1px solid #E5E7EB",
+
             borderRadius: 8,
+
             boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+
             zIndex: 50,
+
             overflow: "hidden",
+
             marginTop: 4,
           }}
         >
           <div
             style={{
               padding: "8px 12px",
+
               fontSize: 11,
+
               fontWeight: 700,
+
               color: "#9CA3AF",
+
               letterSpacing: 0.5,
+
               borderBottom: "1px solid #F3F4F6",
             }}
           >
@@ -89,15 +194,25 @@ export default function SearchBox({
           </div>
           {(() => {
             const q = searchQ.toLowerCase()
+
             const allBatches = batches || []
+
             const batchResults = allBatches
-              .filter((b) => b.title.toLowerCase().includes(q))
+              .filter(
+                (b) =>
+                  b.title.toLowerCase().includes(q) ||
+                  b.category.toLowerCase().includes(q),
+              )
               .slice(0, 3)
+
             const productResults: {
               name: string
+
               batchId: number
+
               batchTitle: string
             }[] = []
+
             for (const b of allBatches) {
               for (const p of b.products) {
                 if (
@@ -106,14 +221,19 @@ export default function SearchBox({
                 ) {
                   productResults.push({
                     name: p.name,
+
                     batchId: b.id,
+
                     batchTitle: b.title,
                   })
                 }
               }
             }
+
             const sellerSet = new Set<string>()
+
             const sellerResults: string[] = []
+
             for (const b of allBatches) {
               if (
                 b.seller.toLowerCase().includes(q) &&
@@ -121,26 +241,33 @@ export default function SearchBox({
                 sellerResults.length < 3
               ) {
                 sellerSet.add(b.seller)
+
                 sellerResults.push(b.seller)
               }
             }
+
             const hasAny =
               batchResults.length ||
               productResults.length ||
               sellerResults.length
+
             if (!hasAny)
               return (
                 <div
                   style={{
                     padding: "14px",
+
                     fontSize: 13,
+
                     color: "#9CA3AF",
+
                     textAlign: "center",
                   }}
                 >
                   No results found.
                 </div>
               )
+
             return (
               <>
                 {batchResults.length > 0 && (
@@ -148,9 +275,13 @@ export default function SearchBox({
                     <div
                       style={{
                         padding: "6px 14px 2px",
+
                         fontSize: 10,
+
                         fontWeight: 700,
+
                         color: "#9CA3AF",
+
                         letterSpacing: 0.5,
                       }}
                     >
@@ -161,7 +292,9 @@ export default function SearchBox({
                         key={b.id}
                         onClick={() => {
                           setSearchOpen(false)
+
                           setSearchQ("")
+
                           if (onBatchSelect) {
                             onBatchSelect(b.id)
                           } else {
@@ -174,8 +307,11 @@ export default function SearchBox({
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault()
+
                             setSearchOpen(false)
+
                             setSearchQ("")
+
                             if (onBatchSelect) {
                               onBatchSelect(b.id)
                             } else {
@@ -185,12 +321,19 @@ export default function SearchBox({
                         }}
                         style={{
                           padding: "9px 14px",
+
                           fontSize: 13,
+
                           color: "#374151",
+
                           cursor: "pointer",
+
                           borderBottom: "1px solid #F9FAFB",
+
                           display: "flex",
+
                           alignItems: "center",
+
                           gap: 8,
                         }}
                         onMouseEnter={(e) =>
@@ -212,9 +355,13 @@ export default function SearchBox({
                     <div
                       style={{
                         padding: "6px 14px 2px",
+
                         fontSize: 10,
+
                         fontWeight: 700,
+
                         color: "#9CA3AF",
+
                         letterSpacing: 0.5,
                       }}
                     >
@@ -225,7 +372,9 @@ export default function SearchBox({
                         key={idx}
                         onClick={() => {
                           setSearchOpen(false)
+
                           setSearchQ("")
+
                           if (onBatchSelect) {
                             onBatchSelect(p.batchId)
                           } else {
@@ -238,8 +387,11 @@ export default function SearchBox({
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault()
+
                             setSearchOpen(false)
+
                             setSearchQ("")
+
                             if (onBatchSelect) {
                               onBatchSelect(p.batchId)
                             } else {
@@ -249,12 +401,19 @@ export default function SearchBox({
                         }}
                         style={{
                           padding: "9px 14px",
+
                           fontSize: 13,
+
                           color: "#374151",
+
                           cursor: "pointer",
+
                           borderBottom: "1px solid #F9FAFB",
+
                           display: "flex",
+
                           alignItems: "center",
+
                           gap: 8,
                         }}
                         onMouseEnter={(e) =>
@@ -279,9 +438,13 @@ export default function SearchBox({
                     <div
                       style={{
                         padding: "6px 14px 2px",
+
                         fontSize: 10,
+
                         fontWeight: 700,
+
                         color: "#9CA3AF",
+
                         letterSpacing: 0.5,
                       }}
                     >
@@ -292,7 +455,9 @@ export default function SearchBox({
                         key={idx}
                         onClick={() => {
                           setSearchOpen(false)
+
                           setSearchQ("")
+
                           if (onSellerSelect) {
                             onSellerSelect(s)
                           } else {
@@ -305,8 +470,11 @@ export default function SearchBox({
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault()
+
                             setSearchOpen(false)
+
                             setSearchQ("")
+
                             if (onSellerSelect) {
                               onSellerSelect(s)
                             } else {
@@ -316,12 +484,19 @@ export default function SearchBox({
                         }}
                         style={{
                           padding: "9px 14px",
+
                           fontSize: 13,
+
                           color: "#374151",
+
                           cursor: "pointer",
+
                           borderBottom: "1px solid #F9FAFB",
+
                           display: "flex",
+
                           alignItems: "center",
+
                           gap: 8,
                         }}
                         onMouseEnter={(e) =>

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react"
-import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight, Star, Wallet } from "lucide-react"
-import type { BatchType, Role, Tab, UserInfo } from "@/types"
+import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight, Wallet } from "lucide-react"
+import type { BatchType, Role, Tab, UserInfo, UserRating } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
-import { Modal, Avatar, ProductThumb, BIRBadge, CategoryIcon } from "@/components/shared"
+import { Modal, Avatar, ProductThumb, BIRBadge, CategoryIcon, RatingDisplay, ReviewList, ratingFor } from "@/components/shared"
 import { sortSoldOutLast } from "./batchSort"
 import { isSupabaseConfigured } from "@/lib/supabase"
+import { memberSince } from "@/lib/ratings"
 import { kargoApi } from "@/services"
 import BIRInfoModal from "./BIRInfoModal"
 
@@ -16,6 +17,7 @@ export default function SellerProfileModal({
   setTab: setAppTab,
   profileData,
   role,
+  ratings,
 }: {
   seller: string
   batches: BatchType[]
@@ -24,6 +26,9 @@ export default function SellerProfileModal({
   setTab?: (t: Tab) => void
   profileData?: UserInfo
   role?: Role
+  // Every rating shown here is read from the shared computed map, the same one
+  // the batch cards and the seller's own dashboard use.
+  ratings: Record<string, UserRating>
 }) {
   // Sellers cannot claim/waitlist — claiming is a buyer-only action.
   const canClaim = role !== "Seller"
@@ -53,8 +58,13 @@ export default function SellerProfileModal({
   const [showPast, setShowPast] = useState(false)
   const [showBIR, setShowBIR] = useState(false)
   const sellerBatches = batches.filter((b) => b.seller === seller)
-  // Accepted payment method names (names only), auto-generated + public.
+  // The seller's rating comes from the shared computed map — the same
+  // aggregate behind their batch cards and shop page. It is `null` when they
+  // have no reviews, which renders as "New seller" rather than a fake 5.0.
   const sellerId = sellerBatches.find((b) => b.sellerId)?.sellerId
+  const sellerRating = ratingFor(ratings, sellerId)
+  const joined = memberSince(sellerRating.memberSince ?? profileData?.memberSince)
+  // Accepted payment method names (names only), auto-generated + public.
   const [acceptedMethods, setAcceptedMethods] = useState<string[]>([])
   useEffect(() => {
     if (!isSupabaseConfigured || !sellerId) return
@@ -69,11 +79,6 @@ export default function SellerProfileModal({
       active = false
     }
   }, [sellerId])
-  const avgRating = sellerBatches.length
-    ? (
-        sellerBatches.reduce((s, b) => s + b.rating, 0) / sellerBatches.length
-      ).toFixed(1)
-    : "5.0"
   const activeBatches = sortSoldOutLast(
     sellerBatches
       .filter((b) => !b.locked && (shopCat === "All" || b.category === shopCat))
@@ -86,26 +91,6 @@ export default function SellerProfileModal({
       ),
   )
   const pastBatches = sellerBatches.filter((b) => b.locked)
-  const REVIEWS = [
-    {
-      buyer: "Trisha L.",
-      rating: 5,
-      comment:
-        "Super responsive seller! Items arrived in perfect condition. Will definitely order again!",
-    },
-    {
-      buyer: "Carlo R.",
-      rating: 4,
-      comment:
-        "Good communication. Slight delay but overall satisfied with the service.",
-    },
-    {
-      buyer: "Mia S.",
-      rating: 5,
-      comment:
-        "My fave pasabuy seller. Always gives updates on ETA and packaging is amazing.",
-    },
-  ]
   const grad =
     CAT_GRAD[sellerBatches[0]?.category || "Mixed"] || CAT_GRAD["Mixed"]
   return (
@@ -156,9 +141,10 @@ export default function SellerProfileModal({
               <BIRBadge size={18} onClick={() => setShowBIR(true)} />
             )}
           </div>
-          <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-            <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {avgRating} · {sellerBatches.length} batch
-            {sellerBatches.length !== 1 ? "es" : ""}
+          <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
+            <RatingDisplay summary={sellerRating} subject="seller" />
+            <span>· {sellerBatches.length} batch{sellerBatches.length !== 1 ? "es" : ""}</span>
+            {joined && <span>· Member since {joined}</span>}
           </div>
         </div>
       </div>
@@ -644,32 +630,16 @@ export default function SellerProfileModal({
       )}
       {tab === "Reviews" && (
         <div className="space-y-3">
-          {REVIEWS.map((r, i) => (
-            <div
-              key={i}
-              style={{
-                border: "1px solid #E5E7EB",
-                borderRadius: 8,
-                padding: "12px 14px",
-              }}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <Avatar name={r.buyer} size={24} />
-                <span
-                  style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}
-                >
-                  {r.buyer}
-                </span>
-                <span style={{ fontSize: 12, color: AMBER }}>
-                  {"".repeat(r.rating)}
-                  {"☆".repeat(5 - r.rating)}
-                </span>
-              </div>
-              <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
-                {r.comment}
-              </div>
-            </div>
-          ))}
+          {/* Real review rows from `public.reviews` (or the demo review seed),
+              newest first. The aggregate above and this list come from the same
+              rows, so the score can never disagree with what is shown here. */}
+          <RatingDisplay
+            summary={sellerRating}
+            tone="stack"
+            fontSize={13}
+            subject="seller"
+          />
+          <ReviewList reviews={sellerRating.reviews} />
         </div>
       )}
       {tab === "About" && (

@@ -32,7 +32,7 @@ A claim must reference `batch_item_id`, `buyer_id`, and `seller_id`; product nam
 | `payments` | Submitted payment evidence and seller decision | `id`, `claim_id`, `amount_paid`, `amount_due`, `phone`, `reference`, `status`, `reviewed_at` |
 | `extension_requests` | Buyer request / seller decision | `id`, `claim_id`, `requested_hours`, `status`, `reviewed_by` |
 | `fulfillment_orders` | Seller-facing fulfillment state | `id`, `claim_id`, `status`, `tracking_number`, `eta` |
-| `ratings` | Transaction-backed reviews | `id`, `order_id`, `from_profile_id`, `to_profile_id`, `score`, `comment` |
+| `ratings` | Transaction-backed reviews | Built as `reviews` (`id`, `order_id`, `reviewer_id`, `reviewee_id`, `rating`, `comment`, `quick_statements`) plus the `profile_ratings` aggregate view |
 | `notifications` | Durable cross-role updates | `id`, `profile_id`, `type`, `payload`, `read_at` |
 
 ## Repair sequence
@@ -48,6 +48,15 @@ Enforce seller ownership through Supabase Row Level Security and server-side mut
 
 ### Phase 4 — Fulfillment and ratings
 Make the fulfillment board a view over `fulfillment_orders`, with status changes producing fulfillment events. Aggregate ratings from completed transaction records; do not stamp new batches with a default 5.0 rating. Keep BIR approval as a visible prototype flag until an admin surface is added.
+
+> Ratings are now wired this way. `public.reviews` holds the individual
+> reviews, `public.profile_ratings` is the per-user aggregate every screen
+> reads, and `batch_catalog.rating` points at that same aggregate so a seller's
+> score cannot differ between their batch card, shop page and profile. A user
+> with no reviews has a `NULL` average and renders as "New seller" / "New
+> buyer" — never a placeholder score. See
+> `supabase/migrations/202609290001_profile_ratings.sql` and
+> `src/lib/ratings.ts`.
 
 ### Phase 5 — Session, timers, and accessibility
 Add Supabase Auth session persistence. Use a shared time source and re-render countdowns on an interval. Add accessible names, keyboard interaction, non-color status markers, real image alt text, and error/empty/loading states across the repaired flows.

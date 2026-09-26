@@ -15,6 +15,7 @@ import {
   Countdown,
   BuyerProfileModal,
   PaymentSuccessToast,
+  ratingFor,
 } from "@/components/shared"
 import { BatchCheckoutModal, type PaymentSubmissionDetails } from "@/features/payments"
 import {
@@ -27,6 +28,7 @@ import SalesReportModal from "./SalesReportModal"
 import WaitlistModal from "./WaitlistModal"
 import SellerWaitlistCard from "./SellerWaitlistCard"
 import { isSupabaseConfigured } from "@/lib/supabase"
+import { trustCounts } from "@/lib/ratings"
 import { kargoApi } from "@/services"
 import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry"
 
@@ -57,6 +59,8 @@ export default function Dashboard({
   user,
   setUser,
   refreshData,
+  ratings,
+  profileIdByName,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
   const [buyerProfile, setBuyerProfile] = useState<{ name: string; contactUrl?: string } | null>(null)
@@ -549,6 +553,10 @@ export default function Dashboard({
         {buyerProfile && (
           <BuyerProfileModal
             buyer={buyerProfile.name}
+            rating={ratingFor(ratings, profileIdByName[buyerProfile.name])}
+            orderCounts={trustCounts(
+              fulfillment.filter((f) => f.buyer === buyerProfile.name).map((f) => f.col),
+            )}
             contactUrl={buyerProfile.contactUrl}
             onClose={() => setBuyerProfile(null)}
           />
@@ -1158,6 +1166,10 @@ export default function Dashboard({
       {buyerProfile && (
         <BuyerProfileModal
           buyer={buyerProfile.name}
+          rating={ratingFor(ratings, profileIdByName[buyerProfile.name])}
+          orderCounts={trustCounts(
+              fulfillment.filter((f) => f.buyer === buyerProfile.name).map((f) => f.col),
+            )}
           contactUrl={buyerProfile.contactUrl}
           onClose={() => setBuyerProfile(null)}
         />

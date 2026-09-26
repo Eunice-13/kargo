@@ -15,9 +15,11 @@ import {
   BuyerProfileModal,
   ExtensionRequestModal,
   PaymentSuccessToast,
+  ratingFor,
 } from "@/components/shared"
 import { PaymentSubmitModal, type PaymentSubmissionDetails } from "@/features/payments"
 import { isSupabaseConfigured } from "@/lib/supabase"
+import { trustCounts } from "@/lib/ratings"
 import { kargoApi } from "@/services"
 import { claimIsPayable } from "./claimExpiry"
 
@@ -35,6 +37,8 @@ export default function MyClaims({
   user,
   role,
   refreshData,
+  ratings,
+  profileIdByName,
 }: SharedState) {
   const [filter, setFilter] = useState<ClaimStatus | "All">("All")
   const [payTarget, setPayTarget] = useState<ClaimRow | null>(null)
@@ -316,6 +320,8 @@ export default function MyClaims({
         {buyerProfile && (
           <BuyerProfileModal
             buyer={buyerProfile}
+            rating={ratingFor(ratings, profileIdByName[buyerProfile])}
+            orderCounts={trustCounts(claims.filter((c) => c.buyer === buyerProfile).map((c) => c.status))}
             onClose={() => setBuyerProfile(null)}
           />
         )}

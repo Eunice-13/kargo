@@ -100,7 +100,16 @@ export default function ItemClaimModal({
                 gap: 5,
               }}
             >
-              <Star size={12} aria-hidden="true" /> {batch.rating}
+              {/* The seller's computed rating. A seller with no completed
+                  transactions yet reads as "New seller", not a 0 or a 5. */}
+              {batch.rating === null ? (
+                "New seller"
+              ) : (
+                <>
+                  <Star size={12} aria-hidden="true" fill="#FFC24B" color="#FFC24B" />{" "}
+                  {batch.rating.toFixed(1)}
+                </>
+              )}
               {batch.sellerBirVerified !== false && <> · Verified Seller <BIRBadge /></>}
             </div>
           </div>

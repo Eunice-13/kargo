@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react"
-import { Star, ChevronDown, ChevronUp, Wallet } from "lucide-react"
-import type { BatchType, Role, UserInfo } from "@/types"
+import { ChevronDown, ChevronUp, Wallet } from "lucide-react"
+import type { BatchType, Role, UserInfo, UserRating } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
-import { Card, Avatar, ProductThumb, BIRBadge, CategoryIcon, PrimaryBtn } from "@/components/shared"
+import { Card, Avatar, ProductThumb, BIRBadge, CategoryIcon, PrimaryBtn, RatingDisplay, ReviewList, ratingFor } from "@/components/shared"
 import { sortSoldOutLast } from "./batchSort"
 import { isSupabaseConfigured } from "@/lib/supabase"
+import { memberSince, pluralizeReviews } from "@/lib/ratings"
 import { kargoApi } from "@/services"
 
 export default function SellerShopPage({
@@ -13,12 +14,15 @@ export default function SellerShopPage({
   onClaimItem,
   role,
   profileData,
+  ratings,
 }: {
   seller: string
   batches: BatchType[]
   onClaimItem?: (batchId: number, productName: string) => void
   role?: Role
   profileData?: UserInfo
+  // Shared computed ratings — the same source the batch cards and profile use.
+  ratings: Record<string, UserRating>
 }) {
   // Buyers claim per item; sellers viewing a shop don't get claim actions.
   const canClaim = role !== "Seller" && Boolean(onClaimItem)
@@ -26,6 +30,7 @@ export default function SellerShopPage({
   // Accepted payment method names, auto-generated from the seller's saved
   // methods (names only — never account numbers). Public via seller_receive_methods.
   const sellerId = sellerBatches.find((b) => b.sellerId)?.sellerId
+  const sellerRating = ratingFor(ratings, sellerId)
   const [acceptedMethods, setAcceptedMethods] = useState<string[]>([])
   useEffect(() => {
     if (!isSupabaseConfigured || !sellerId) return
@@ -42,11 +47,13 @@ export default function SellerShopPage({
       active = false
     }
   }, [sellerId])
-  const avgRating = sellerBatches.length
-    ? (
-        sellerBatches.reduce((s, b) => s + b.rating, 0) / sellerBatches.length
-      ).toFixed(1)
-    : "5.0"
+  // Completion rate is measured from this seller's own recorded transactions,
+  // not a hardcoded percentage. Null when nothing has completed yet.
+  const completedOrders = sellerBatches.reduce((s, b) => s + b.claimed, 0)
+  const trackedOrders = sellerBatches.reduce((s, b) => s + b.items, 0)
+  const completionRate =
+    trackedOrders > 0 ? Math.round((completedOrders / trackedOrders) * 100) : null
+  const joined = memberSince(sellerRating.memberSince ?? profileData?.memberSince)
   const totalItems = sellerBatches.reduce((s, b) => s + b.products.length, 0)
   const totalClaimed = sellerBatches.reduce((s, b) => s + b.claimed, 0)
   const totalAvail = sellerBatches.reduce((s, b) => s + b.items, 0)
@@ -486,8 +493,9 @@ export default function SellerShopPage({
               {seller}
               {(profileData ? profileData.birState === "Verified" : sellerBatches[0]?.sellerBirVerified !== false) && <BIRBadge size={14} />}
             </div>
-            <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
-              <Star size={11} aria-hidden="true" fill="#9CA3AF" /> {avgRating} · Member since Jan 2024
+            <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <RatingDisplay summary={sellerRating} subject="seller" />
+              {joined && <span>· Member since {joined}</span>}
             </div>
           </div>
           <div
@@ -583,8 +591,19 @@ export default function SellerShopPage({
               lineHeight: 1.5,
             }}
           >
-            94% of this seller's tracked transactions reached Completed. These
-            numbers come from recorded transactions, not self-reported ratings.
+            {completionRate === null ? (
+              <>
+                No completed transactions recorded yet. These numbers come from
+                recorded transactions, not self-reported ratings.
+              </>
+            ) : (
+              <>
+                {completionRate}% of this seller's tracked transactions reached
+                Completed, across {pluralizeReviews(sellerRating.count)} from
+                buyers. These numbers come from recorded transactions, not
+                self-reported ratings.
+              </>
+            )}
           </div>
         </Card>
         <Card>

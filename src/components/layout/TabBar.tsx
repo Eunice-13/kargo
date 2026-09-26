@@ -73,8 +73,7 @@ export default function TabBar({
     >
       {/* Tabs — equally distributed across available width */}
       <div style={{ display: "flex", flex: 1, height: "100%", minWidth: 0 }}>
-        {visibleTabs.map(({ tab, label, icon: Icon }) => {
-          return (
+        {visibleTabs.map(({ tab, label, icon: Icon }) => (
           <button
             key={tab}
             data-spotlight={
@@ -110,13 +109,15 @@ export default function TabBar({
               textOverflow: "ellipsis",
             }}
             className="hover:text-gray-800"
-            aria-label={tab === "My Claims" && role === "Seller" ? "Orders Received" : tab}
+            aria-label={
+              tab === "My Claims" && role === "Seller"
+                ? "Orders Received"
+                : label
+            }
           >
-            {role === "Seller" ? (
-              <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
-            </button>
-          )
-        })}
+            <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        ))}
       </div>
       {/* Right group — only shown for verified sellers (New Batch) */}
       {role === "Seller" && (

@@ -79,7 +79,7 @@ export default function BatchDetailPanel({
               >
                 {batch.seller}
               </button>
-              <BIRBadge /> ·  {batch.rating} · {batch.trips}
+              <BIRBadge /> · {batch.rating === null ? "New seller" : batch.rating.toFixed(1)} · {batch.trips}
             </span>
           </div>
         </div>

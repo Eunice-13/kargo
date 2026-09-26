@@ -18,6 +18,82 @@ export type EntityId = string | number
 
 export type BirState = "None" | "Uploading" | "Scanning" | "Verifying" | "Verified" | "Flagged"
 
+// ─── Ratings ─────────────────────────────────────────────────────────────────
+
+// A single review row, as stored in `public.reviews`. Both directions of a
+// completed order are reviewable, so `reviewerId !== revieweeId` always.
+export type ReviewRecord = {
+  id: string
+
+  orderId: string
+
+  reviewerId: string
+
+  revieweeId: string
+
+  rating: number
+
+  comment: string | null
+
+  quickStatements: string[]
+
+  createdAt: string
+
+  updatedAt: string
+}
+
+// The computed aggregate for one user. `average` is `null` — never 0, never a
+// placeholder like 5 — when the user has no reviews, so callers are forced to
+// render an explicit "no ratings yet" state instead of a fabricated score.
+export type RatingSummary = {
+  average: number | null
+
+  count: number
+
+  breakdown: Record<1 | 2 | 3 | 4 | 5, number>
+}
+
+export type ReviewSummaryItem = {
+  id: string
+
+  reviewerName: string
+
+  rating: number
+
+  comment: string | null
+
+  quickStatements: string[]
+
+  createdAt: string
+}
+
+// The shared, read-only view of a user's review record: enough to render the
+// average and list reviews without leaking reviewer ids.
+export type UserRating = {
+  average: number | null
+
+  count: number
+
+  breakdown: Record<1 | 2 | 3 | 4 | 5, number>
+
+  reviews: ReviewSummaryItem[]
+
+  // profiles.created_at, for "Member since …". Null when unknown, in which case
+  // the line is omitted rather than filled with a placeholder date.
+
+  memberSince?: string | null
+}
+
+// The empty aggregate. `average: null` is the signal for "no ratings yet", so
+// no screen ever falls back to a fabricated 0 or 5.
+export const EMPTY_RATING_SUMMARY: RatingSummary = {
+  average: null,
+
+  count: 0,
+
+  breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+}
+
 export type UserInfo = {
   id?: string
 
@@ -56,6 +132,11 @@ export type UserInfo = {
   // Seller-only: hours a waitlisted buyer has to respond to a partial-match offer.
 
   waitlistResponseHours?: number
+
+  // profiles.created_at. Formatted for display by `memberSince()`; a profile
+  // with no value shows no "Member since" text rather than an invented date.
+
+  memberSince?: string
 }
 
 export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
@@ -233,7 +314,17 @@ export interface BatchItem {
 
   sellerBirVerified?: boolean
 
-  rating: number
+  // The seller's computed rating, carried from `public.profile_ratings`.
+
+  // `null` when the seller has no reviews yet — never 0, never a placeholder.
+
+  rating: number | null
+
+  // How many reviews that average is computed from, so a lone 5★ on a new
+
+  // seller is distinguishable from a well-established 5★.
+
+  ratingCount: number
 
   trips: string
 
@@ -387,6 +478,21 @@ export type SellerWaitlistGroup = {
 // ─── Shared types for cross-tab props ─────────────────────────────────────────
 
 export type SharedState = {
+  // Every user's computed rating, keyed by profile id. The single source of
+  // truth every screen reads from — in Supabase mode it is loaded from
+  // `public.profile_ratings`, in demo mode derived from the review seed, and
+  // both go through the same `summarizeReviews` aggregation.
+
+  ratings: Record<string, UserRating>
+
+  setRatings: React.Dispatch<React.SetStateAction<Record<string, UserRating>>>
+
+  // display name -> profile id, for every user this account transacts with.
+  // Lets a surface that only knows a name (a claim's buyer, a kanban card)
+  // still resolve the right computed rating instead of guessing.
+
+  profileIdByName: Record<string, string>
+
   claims: ClaimRow[]
 
   setClaims: React.Dispatch<React.SetStateAction<ClaimRow[]>>

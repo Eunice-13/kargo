@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
-import type { BatchType, Role, UserInfo } from "@/types"
+import type { BatchType, Role, UserInfo, UserRating } from "@/types"
 import { INDIGO } from "@/constants/theme"
-import { Card, PrimaryBtn, Avatar, BIRBadge } from "@/components/shared"
+import { Card, PrimaryBtn, Avatar, BIRBadge, RatingDisplay, ratingFor } from "@/components/shared"
 import SellerShopPage from "./SellerShopPage"
 
 export default function SellerDirectoryPage({
@@ -12,6 +12,7 @@ export default function SellerDirectoryPage({
   onClaimItem,
   role,
   user,
+  ratings,
 }: {
   batches: BatchType[]
   onBack: () => void
@@ -19,27 +20,37 @@ export default function SellerDirectoryPage({
   onClaimItem: (batchId: number, productName: string) => void
   role: Role
   user: UserInfo
+  // Shared computed ratings, so a directory row shows the same score as the
+  // seller's own shop page and profile.
+  ratings: Record<string, UserRating>
 }) {
   const [query, setQuery] = useState("")
   const [chip, setChip] = useState<"All" | "4.5+" | "Has Active Batch">("All")
   const [shopPage, setShopPage] = useState<string | null>(null)
 
-  const sellerMap: Record<string, { batches: BatchType[]; rating: number }> = {}
+  // Group batches by seller, then read each seller's rating from the shared
+  // aggregate. Previously this averaged per-batch scores, which invented a
+  // number no review supported.
+  const sellerBatches = new Map<string, BatchType[]>()
   batches.forEach((b) => {
-    if (!sellerMap[b.seller]) sellerMap[b.seller] = { batches: [], rating: 0 }
-    sellerMap[b.seller].batches.push(b)
+    if (!sellerBatches.has(b.seller)) sellerBatches.set(b.seller, [])
+    sellerBatches.get(b.seller)!.push(b)
   })
-  Object.values(sellerMap).forEach((s) => {
-    s.rating = parseFloat(
-      (
-        s.batches.reduce((sum, b) => sum + b.rating, 0) / s.batches.length
-      ).toFixed(1),
-    )
-  })
+  const sellerMap = Object.fromEntries(
+    [...sellerBatches].map(([name, list]) => [
+      name,
+      {
+        batches: list,
+        rating: ratingFor(ratings, list.find((b) => b.sellerId)?.sellerId),
+      },
+    ]),
+  )
 
   const sellers = Object.entries(sellerMap).filter(([name, data]) => {
     if (query && !name.toLowerCase().includes(query.toLowerCase())) return false
-    if (chip === "4.5+" && data.rating < 4.5) return false
+    // "4.5+" only matches sellers who actually have reviews. An unreviewed
+    // seller has no average, so it cannot satisfy a minimum-rating filter.
+    if (chip === "4.5+" && (data.rating.average ?? 0) < 4.5) return false
     if (chip === "Has Active Batch" && !data.batches.some((b) => b.live))
       return false
     return true
@@ -85,6 +96,7 @@ export default function SellerDirectoryPage({
             onClaimItem={onClaimItem}
             role={role}
             profileData={shopPage === user.name ? user : undefined}
+            ratings={ratings}
           />
         </div>
       </div>
@@ -240,9 +252,9 @@ export default function SellerDirectoryPage({
                       </span>
                       {(name !== user.name || user.birState === "Verified") && <BIRBadge size={12} />}
                     </div>
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>
-                       {data.rating} · {data.batches.length} batch
-                      {data.batches.length !== 1 ? "es" : ""}
+                    <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                      <RatingDisplay summary={data.rating} subject="seller" />
+                      <span>· {data.batches.length} batch{data.batches.length !== 1 ? "es" : ""}</span>
                     </div>
                   </div>
                 </div>

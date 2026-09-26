@@ -2179,23 +2179,57 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
   background: #1e23b5;
 }
 
-.buyer-carousel-controls button:hover {
+.buyer-carousel-controls button:hover:not(:disabled) {
   transform: translateY(-1px);
   background: #4e7fc8;
 }
 
+.buyer-carousel-controls button:disabled {
+  background: #c9ced7;
+  color: #f5f6f8;
+  cursor: not-allowed;
+  opacity: .58;
+  pointer-events: none;
+  transform: none;
+}
+
+.buyer-carousel-track {
+  overflow-x: auto;
+  padding: 4px 4px 16px;
+  margin: -4px -4px -16px;
+  overscroll-behavior-inline: contain;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+  cursor: grab;
+}
+
+.buyer-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.buyer-carousel-track.is-dragging {
+  scroll-behavior: auto;
+  scroll-snap-type: none;
+  cursor: grabbing;
+  user-select: none;
+}
+
 .buyer-category-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
   gap: 20px;
 }
 
 .buyer-category-grid button {
+  flex: 0 0 calc((100% - 80px) / 5);
   min-width: 0;
   padding: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .buyer-category-grid img {
@@ -2228,9 +2262,17 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
 }
 
 .buyer-batch-grid {
+  display: flex;
+  gap: 20px;
+}
+
+.buyer-batch-page {
   display: grid;
+  flex: 0 0 100%;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 22px 20px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .buyer-batch-card {
@@ -2394,16 +2436,16 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
 }
 
 @media (max-width: 1050px) {
-  .buyer-batch-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .buyer-category-grid { grid-template-columns: repeat(4, minmax(165px, 1fr)); overflow-x: auto; padding-bottom: 8px; }
+  .buyer-batch-page { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .buyer-category-grid button { flex-basis: calc((100% - 60px) / 4); }
 }
 
 @media (max-width: 800px) {
   .buyer-home-filter { flex-wrap: wrap; gap: 10px; }
   .buyer-home-filter select { width: calc(50% - 42px); flex: 1; }
   .buyer-home-filter__request { width: 100%; justify-content: center; }
-  .buyer-batch-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .buyer-category-grid { grid-template-columns: repeat(3, minmax(145px, 1fr)); }
+  .buyer-batch-page { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .buyer-category-grid button { flex-basis: calc((100% - 40px) / 3); }
 }
 
 @media (max-width: 480px) {
@@ -2413,7 +2455,8 @@ input::placeholder, textarea::placeholder { color: #94a3ad !important; }
   .buyer-home-section { margin-top: 52px; }
   .buyer-home-section__heading h2 { font-size: 18px; }
   .buyer-carousel-controls button { width: 32px; height: 32px; }
-  .buyer-batch-grid { grid-template-columns: 1fr; }
+  .buyer-batch-page { grid-template-columns: 1fr; }
+  .buyer-category-grid button { flex-basis: 72%; }
   .buyer-batch-card__image-wrap { height: 220px; }
 }
 

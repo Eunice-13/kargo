@@ -13,8 +13,10 @@ import {
 import type { ClaimRow, BatchType, SharedState, EntityId } from "@/types"
 
 import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
+
 import { BATCH_CATEGORIES } from "@/constants/categories"
-import { navIntent } from "@/state/navIntent"
+
+import { navIntent, subscribeNavIntent } from "@/state/navIntent"
 
 import {
   Modal,
@@ -41,7 +43,9 @@ import SellerProfileModal from "./SellerProfileModal"
 import SellerDirectoryPage from "./SellerDirectoryPage"
 
 import BatchPage from "./BatchPage"
+
 import BuyerHome from "./BuyerHome"
+
 import { toggleBatchLock } from "./toggleBatchLock"
 
 import { isSupabaseConfigured } from "@/lib/supabase"
@@ -72,6 +76,8 @@ export default function Batches({
   waitlist,
 
   setWaitlist,
+
+  ratings,
 }: SharedState) {
   const [batchPage, setBatchPage] = useState<BatchType | null>(() => {
     const id = navIntent.batchId
@@ -92,6 +98,7 @@ export default function Batches({
   const [ratingFilter, setRatingFilter] = useState("All")
 
   const [showBuyerReqForm, setShowBuyerReqForm] = useState(false)
+
   const [reactingBatchIds, setReactingBatchIds] = useState<Set<number>>(
     () => new Set(),
   )
@@ -117,7 +124,9 @@ export default function Batches({
       try {
         await kargoApi.requestOrderExtension(
           String(extTarget.id),
+
           hours,
+
           reason,
         )
       } catch (error) {
@@ -149,6 +158,30 @@ export default function Batches({
   })
 
   const [contact, setContact] = useState<BatchType | null>(null)
+
+  useEffect(
+    () =>
+      subscribeNavIntent(() => {
+        if (navIntent.batchId !== null) {
+          const requestedBatch = batches.find(
+            (batch) => batch.id === navIntent.batchId,
+          )
+          navIntent.batchId = null
+          if (requestedBatch) {
+            setProfile(null)
+            setBatchPage(requestedBatch)
+          }
+        }
+
+        if (navIntent.sellerName !== null) {
+          const requestedSeller = navIntent.sellerName
+          navIntent.sellerName = null
+          setBatchPage(null)
+          setProfile(requestedSeller)
+        }
+      }),
+    [batches],
+  )
 
   const [claimTarget, setClaimTarget] = useState<{
     p: typeof batches[0]["products"][0]
@@ -333,9 +366,9 @@ export default function Batches({
       if (!b.trips.includes(mm[dateFilter] || "")) return false
     }
 
-    if (ratingFilter === "4.8+" && b.rating < 4.8) return false
+    if (ratingFilter === "4.8+" && (b.rating ?? 0) < 4.8) return false
 
-    if (ratingFilter === "4.5+" && b.rating < 4.5) return false
+    if (ratingFilter === "4.5+" && (b.rating ?? 0) < 4.5) return false
 
     return true
   })
@@ -344,17 +377,23 @@ export default function Batches({
     if (reactingBatchIds.has(batch.id)) return
 
     const wasReacted = Boolean(batch.reactedByCurrentUser)
+
     const previousCount = batch.reactionCount ?? 0
+
     const nextReacted = !wasReacted
+
     const nextCount = Math.max(0, previousCount + (nextReacted ? 1 : -1))
 
     setReactingBatchIds((current) => new Set(current).add(batch.id))
+
     setBatches((current) =>
       current.map((item) =>
         item.id === batch.id
           ? {
               ...item,
+
               reactedByCurrentUser: nextReacted,
+
               reactionCount: nextCount,
             }
           : item,
@@ -365,16 +404,21 @@ export default function Batches({
       if (isSupabaseConfigured) {
         if (!batch.dbId)
           throw new Error("This batch is missing its database identifier.")
+
         const confirmed = await kargoApi.setBatchReaction(
           batch.dbId,
+
           nextReacted,
         )
+
         setBatches((current) =>
           current.map((item) =>
             item.id === batch.id
               ? {
                   ...item,
+
                   reactedByCurrentUser: confirmed.reacted,
+
                   reactionCount: confirmed.reactionCount,
                 }
               : item,
@@ -387,12 +431,15 @@ export default function Batches({
           item.id === batch.id
             ? {
                 ...item,
+
                 reactedByCurrentUser: wasReacted,
+
                 reactionCount: previousCount,
               }
             : item,
         ),
       )
+
       alert(
         error instanceof Error
           ? error.message
@@ -401,7 +448,9 @@ export default function Batches({
     } finally {
       setReactingBatchIds((current) => {
         const next = new Set(current)
+
         next.delete(batch.id)
+
         return next
       })
     }
@@ -673,6 +722,7 @@ export default function Batches({
             onClaimFromProfile={handleProfileClaim}
             setTab={setTab}
             profileData={profile === user.name ? user : undefined}
+            ratings={ratings}
             role={role}
           />
         )}
@@ -960,8 +1010,22 @@ export default function Batches({
                                 gap: 4,
                               }}
                             >
-                              <Star size={11} aria-hidden="true" fill="#fff" />{" "}
-                              {b.rating}
+                              {/* The seller's computed rating, carried on the batch
+                                  from `public.profile_ratings` so it always matches
+                                  their shop page and profile. Unreviewed sellers show
+                                  "New" instead of a fabricated score. */}
+                              {b.rating === null ? (
+                                "New seller"
+                              ) : (
+                                <>
+                                  <Star
+                                    size={11}
+                                    aria-hidden="true"
+                                    fill="#fff"
+                                  />{" "}
+                                  {b.rating.toFixed(1)}
+                                </>
+                              )}
                             </span>
                           )}
                           {pct >= 90 && (
@@ -1019,6 +1083,7 @@ export default function Batches({
                           <h3
                             style={{
                               fontFamily: "'Josefin Sans',sans-serif",
+
                               fontSize: 13.5,
 
                               fontWeight: 700,
@@ -1135,7 +1200,9 @@ export default function Batches({
                                 <span
                                   style={{
                                     display: "inline-flex",
+
                                     alignItems: "center",
+
                                     gap: 4,
                                   }}
                                 >
@@ -1340,6 +1407,7 @@ export default function Batches({
           onClaimItem={handleProfileClaim}
           role={role}
           user={user}
+          ratings={ratings}
           onSellerSelect={(name) => {
             setProfile(name)
           }}
@@ -1398,9 +1466,9 @@ export default function Batches({
         if (!b.trips.includes(mm[dateFilter] || "")) return false
       }
 
-      if (ratingFilter === "4.8+" && b.rating < 4.8) return false
+      if (ratingFilter === "4.8+" && (b.rating ?? 0) < 4.8) return false
 
-      if (ratingFilter === "4.5+" && b.rating < 4.5) return false
+      if (ratingFilter === "4.5+" && (b.rating ?? 0) < 4.5) return false
 
       return true
     })
@@ -1410,6 +1478,7 @@ export default function Batches({
         <h2
           style={{
             fontFamily: "'Josefin Sans',sans-serif",
+
             fontSize: 18,
 
             fontWeight: 800,
@@ -1762,7 +1831,9 @@ export default function Batches({
                             if (req.buyerFb) {
                               window.open(
                                 req.buyerFb,
+
                                 "_blank",
+
                                 "noopener,noreferrer",
                               )
                             } else {
@@ -1781,7 +1852,9 @@ export default function Batches({
                           <span
                             style={{
                               display: "inline-flex",
+
                               alignItems: "center",
+
                               gap: 4,
                             }}
                           >
@@ -1811,6 +1884,7 @@ export default function Batches({
             onClaimFromProfile={handleProfileClaim}
             setTab={setTab}
             profileData={profile === user.name ? user : undefined}
+            ratings={ratings}
             role={role}
           />
         )}
@@ -1851,6 +1925,7 @@ export default function Batches({
       <div
         style={{
           display: "none",
+
           alignItems: "center",
 
           justifyContent: "space-between",
@@ -1858,6 +1933,7 @@ export default function Batches({
           gap: 12,
 
           background: "#EEF0FF",
+
           border: "1px solid #DDE0FF",
 
           borderRadius: 8,
@@ -1958,6 +2034,7 @@ export default function Batches({
           onClaimFromProfile={handleProfileClaim}
           setTab={setTab}
           profileData={profile === user.name ? user : undefined}
+          ratings={ratings}
           role={role}
         />
       )}

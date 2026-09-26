@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,14 +14,103 @@ import {
 } from "@/constants/categories"
 import type { BatchType } from "@/types"
 
-const PAGE_SIZE = 10
+function useHorizontalCarousel(itemCount: number) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const drag = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 })
+  const suppressClick = useRef(false)
+  const [canPrevious, setCanPrevious] = useState(false)
+  const [canNext, setCanNext] = useState(false)
 
-function circularPage<T>(items: T[], start: number, count: number) {
-  if (items.length <= count) return items
-  return Array.from(
-    { length: count },
-    (_, index) => items[(start + index) % items.length],
-  )
+  const updateBounds = useCallback(() => {
+    const track = trackRef.current
+    if (!track) return
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth)
+    setCanPrevious(track.scrollLeft > 2)
+    setCanNext(track.scrollLeft < maxScroll - 2)
+  }, [])
+
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+    track.scrollTo({ left: 0 })
+    const frame = window.requestAnimationFrame(updateBounds)
+    const observer = new ResizeObserver(updateBounds)
+    observer.observe(track)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [itemCount, updateBounds])
+
+  const scroll = (direction: -1 | 1) => {
+    const track = trackRef.current
+    if (!track) return
+    track.scrollBy({
+      left: direction * Math.max(240, track.clientWidth * 0.92),
+      behavior: "smooth",
+    })
+  }
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse" || event.button !== 0) return
+    const track = trackRef.current
+    if (!track) return
+    drag.current = {
+      active: true,
+      moved: false,
+      startX: event.clientX,
+      scrollLeft: track.scrollLeft,
+    }
+  }
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const track = trackRef.current
+    if (!track || !drag.current.active) return
+    const distance = event.clientX - drag.current.startX
+    if (!drag.current.moved && Math.abs(distance) > 5) {
+      drag.current.moved = true
+      track.setPointerCapture(event.pointerId)
+      track.classList.add("is-dragging")
+    }
+    if (drag.current.moved)
+      track.scrollLeft = drag.current.scrollLeft - distance
+  }
+
+  const finishDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const track = trackRef.current
+    if (!track || !drag.current.active) return
+    suppressClick.current = drag.current.moved
+    drag.current.active = false
+    if (drag.current.moved) {
+      track.classList.remove("is-dragging")
+      if (track.hasPointerCapture(event.pointerId)) {
+        track.releasePointerCapture(event.pointerId)
+      }
+    }
+    window.requestAnimationFrame(updateBounds)
+    window.setTimeout(() => {
+      suppressClick.current = false
+    }, 0)
+  }
+
+  return {
+    trackRef,
+    canPrevious,
+    canNext,
+    scroll,
+    trackProps: {
+      onScroll: updateBounds,
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: finishDrag,
+      onPointerCancel: finishDrag,
+      onClickCapture: (event: React.MouseEvent<HTMLDivElement>) => {
+        if (!suppressClick.current) return
+        event.preventDefault()
+        event.stopPropagation()
+      },
+    },
+  }
 }
 
 function BatchCard({
@@ -64,6 +153,7 @@ function BatchCard({
         <img
           src={batchImage(batch.category, batch.id)}
           alt=""
+          draggable={false}
           className="buyer-batch-card__image"
         />
         <span className="buyer-batch-card__category">{batch.category}</span>
@@ -121,10 +211,14 @@ function BatchCard({
 function CarouselControls({
   onPrevious,
   onNext,
+  canPrevious,
+  canNext,
   label,
 }: {
   onPrevious: () => void
   onNext: () => void
+  canPrevious: boolean
+  canNext: boolean
   label: string
 }) {
   return (
@@ -133,10 +227,16 @@ function CarouselControls({
         type="button"
         aria-label={`Previous ${label}`}
         onClick={onPrevious}
+        disabled={!canPrevious}
       >
         <ArrowLeft size={20} strokeWidth={2.8} />
       </button>
-      <button type="button" aria-label={`Next ${label}`} onClick={onNext}>
+      <button
+        type="button"
+        aria-label={`Next ${label}`}
+        onClick={onNext}
+        disabled={!canNext}
+      >
         <ArrowRight size={20} strokeWidth={2.8} />
       </button>
     </div>
@@ -146,45 +246,64 @@ function CarouselControls({
 function BatchSection({
   title,
   batches,
-  start,
-  onPrevious,
-  onNext,
+  showControls = true,
   reactionPending,
   onToggleFavorite,
   onOpenBatch,
 }: {
   title: string
   batches: BatchType[]
-  start: number
-  onPrevious: () => void
-  onNext: () => void
+  showControls?: boolean
   reactionPending: Set<number>
   onToggleFavorite: (batch: BatchType) => void
   onOpenBatch: (batch: BatchType) => void
 }) {
-  const visible = circularPage(batches, start, PAGE_SIZE)
+  const pages = useMemo(
+    () =>
+      Array.from({ length: Math.ceil(batches.length / 10) }, (_, index) =>
+        batches.slice(index * 10, index * 10 + 10),
+      ),
+    [batches],
+  )
+  const carousel = useHorizontalCarousel(pages.length)
   return (
     <section className="buyer-home-section">
       <div className="buyer-home-section__heading">
         <h2>{title}</h2>
-        <CarouselControls
-          label={title}
-          onPrevious={onPrevious}
-          onNext={onNext}
-        />
+        {showControls && (
+          <CarouselControls
+            label={title}
+            onPrevious={() => carousel.scroll(-1)}
+            onNext={() => carousel.scroll(1)}
+            canPrevious={carousel.canPrevious}
+            canNext={carousel.canNext}
+          />
+        )}
       </div>
-      {visible.length > 0 ? (
-        <div className="buyer-batch-grid">
-          {visible.map((batch) => (
-            <BatchCard
-              key={batch.id}
-              batch={batch}
-              favorited={Boolean(batch.reactedByCurrentUser)}
-              reactionCount={batch.reactionCount ?? 0}
-              reactionPending={reactionPending.has(batch.id)}
-              onFavorite={() => onToggleFavorite(batch)}
-              onOpen={() => onOpenBatch(batch)}
-            />
+      {batches.length > 0 ? (
+        <div
+          ref={carousel.trackRef}
+          className="buyer-batch-grid buyer-carousel-track"
+          aria-label={`${title} carousel`}
+          {...carousel.trackProps}
+        >
+          {pages.map((page, pageIndex) => (
+            <div
+              className="buyer-batch-page"
+              key={page.map((batch) => batch.id).join("-") || pageIndex}
+            >
+              {page.map((batch) => (
+                <BatchCard
+                  key={batch.id}
+                  batch={batch}
+                  favorited={Boolean(batch.reactedByCurrentUser)}
+                  reactionCount={batch.reactionCount ?? 0}
+                  reactionPending={reactionPending.has(batch.id)}
+                  onFavorite={() => onToggleFavorite(batch)}
+                  onOpen={() => onOpenBatch(batch)}
+                />
+              ))}
+            </div>
           ))}
         </div>
       ) : (
@@ -215,9 +334,7 @@ export default function BuyerHome({
   onToggleReaction: (batch: BatchType) => void
   reactionPending: Set<number>
 }) {
-  const [categoryStart, setCategoryStart] = useState(0)
-  const [latestStart, setLatestStart] = useState(0)
-  const [popularStart, setPopularStart] = useState(0)
+  const categoryCarousel = useHorizontalCarousel(BATCH_CATEGORIES.length)
 
   const dates = useMemo(() => {
     const values = new Set<string>()
@@ -267,24 +384,9 @@ export default function BuyerHome({
           if (createdDifference !== 0) return createdDifference
           return Number(b.id) - Number(a.id)
         })
-        .slice(0, PAGE_SIZE),
+        .slice(0, 10),
     [filtered],
   )
-
-  const visibleCategories = circularPage(
-    [...BATCH_CATEGORIES],
-    categoryStart,
-    5,
-  )
-  const advance = (
-    setter: React.Dispatch<React.SetStateAction<number>>,
-    length: number,
-    direction: number,
-    step = 1,
-  ) => {
-    if (length <= 1) return
-    setter((current) => (current + direction * step + length) % length)
-  }
   return (
     <div className="buyer-home">
       <div className="buyer-home-filter">
@@ -322,16 +424,19 @@ export default function BuyerHome({
             <h2>Shop By Categories</h2>
             <CarouselControls
               label="categories"
-              onPrevious={() =>
-                advance(setCategoryStart, BATCH_CATEGORIES.length, -1)
-              }
-              onNext={() =>
-                advance(setCategoryStart, BATCH_CATEGORIES.length, 1)
-              }
+              onPrevious={() => categoryCarousel.scroll(-1)}
+              onNext={() => categoryCarousel.scroll(1)}
+              canPrevious={categoryCarousel.canPrevious}
+              canNext={categoryCarousel.canNext}
             />
           </div>
-          <div className="buyer-category-grid">
-            {visibleCategories.map((item) => (
+          <div
+            ref={categoryCarousel.trackRef}
+            className="buyer-category-grid buyer-carousel-track"
+            aria-label="Shop by categories carousel"
+            {...categoryCarousel.trackProps}
+          >
+            {BATCH_CATEGORIES.map((item) => (
               <button
                 type="button"
                 key={item}
@@ -341,7 +446,7 @@ export default function BuyerHome({
                   onCategoryChange(category === item ? "All" : item)
                 }
               >
-                <img src={categoryImage(item)} alt="" />
+                <img src={categoryImage(item)} alt="" draggable={false} />
                 <span>{item}</span>
               </button>
             ))}
@@ -351,11 +456,6 @@ export default function BuyerHome({
         <BatchSection
           title="Latest Batches"
           batches={latest}
-          start={latestStart}
-          onPrevious={() =>
-            advance(setLatestStart, latest.length, -1, PAGE_SIZE)
-          }
-          onNext={() => advance(setLatestStart, latest.length, 1, PAGE_SIZE)}
           reactionPending={reactionPending}
           onToggleFavorite={onToggleReaction}
           onOpenBatch={onOpenBatch}
@@ -363,11 +463,7 @@ export default function BuyerHome({
         <BatchSection
           title="Popular Batches"
           batches={popular}
-          start={popularStart}
-          onPrevious={() =>
-            advance(setPopularStart, popular.length, -1, PAGE_SIZE)
-          }
-          onNext={() => advance(setPopularStart, popular.length, 1, PAGE_SIZE)}
+          showControls={false}
           reactionPending={reactionPending}
           onToggleFavorite={onToggleReaction}
           onOpenBatch={onOpenBatch}

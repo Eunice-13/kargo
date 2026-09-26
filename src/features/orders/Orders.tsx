@@ -11,6 +11,7 @@ import {
   ContactModal,
   BuyerProfileModal,
   ORDER_STEPS,
+  ratingFor,
 } from "@/components/shared"
 import {
   KANBAN_COLS,
@@ -21,6 +22,7 @@ import {
 } from "@/features/fulfillment"
 import RateOrderModal from "./RateOrderModal"
 import { isSupabaseConfigured } from "@/lib/supabase"
+import { trustCounts } from "@/lib/ratings"
 import { kargoApi } from "@/services"
 
 const reviewIsEditable = (createdAt?: string) =>
@@ -32,6 +34,11 @@ export default function Orders({
   role,
   fulfillment,
   setFulfillment,
+  // Computed per-user ratings from `public.reviews`. Aliased because the local
+  // `ratings` state below is the in-progress star selection for the inline
+  // rating row, which is a different thing entirely.
+  ratings: profileRatings,
+  profileIdByName,
 }: SharedState) {
   const board = useFulfillmentBoard(setFulfillment)
   const [ratings, setRatings] = useState<Record<string, number>>({})
@@ -247,6 +254,10 @@ export default function Orders({
         {buyerProfile && (
           <BuyerProfileModal
             buyer={buyerProfile.name}
+            rating={ratingFor(profileRatings, profileIdByName[buyerProfile.name])}
+            orderCounts={trustCounts(
+              fulfillment.filter((f) => f.buyer === buyerProfile.name).map((f) => f.col),
+            )}
             contactUrl={buyerProfile.contactUrl}
             onClose={() => setBuyerProfile(null)}
           />
@@ -255,7 +266,7 @@ export default function Orders({
           <RateOrderModal
             subjectName={sellerRateTarget.buyer}
             subjectRole="Buyer"
-            initialRating={sellerRateTarget.rating ?? 5}
+            initialRating={sellerRateTarget.rating ?? 0}
             initialComment={sellerRateTarget.reviewComment ?? ""}
             initialStatements={sellerRateTarget.reviewStatements ?? []}
             onRate={async (rating, comment, statements) => {
@@ -561,7 +572,7 @@ export default function Orders({
         <RateOrderModal
           subjectName={rateTarget.seller}
           subjectRole="Seller"
-          initialRating={rateTarget.rating ?? 5}
+          initialRating={rateTarget.rating ?? 0}
           initialComment={rateTarget.reviewComment ?? ""}
           initialStatements={rateTarget.reviewStatements ?? []}
           onRate={async (rating, comment, statements) => {

@@ -1,724 +1,959 @@
 import type { BatchItem } from "@/types"
+import { DEMO_RATINGS, demoProfileId } from "./reviews"
 
-export const BATCHES_INIT: BatchItem[] = [
-  {
-    id: 1,
+// Batches carry no rating of their own. `rating` / `ratingCount` are filled in
+// from DEMO_RATINGS at the bottom of this file, so a seller's score on a batch
+// card is the same computed aggregate their shop page and profile show. It is
+// `null` — not 0, not 5 — for a seller with no reviews yet.
+const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[] =
+  [
+    {
+      id: 1,
 
-    live: true,
+      live: true,
 
-    locked: false,
+      locked: false,
 
-    title: "Japan Trip — March 2026",
+      title: "Japan Trip — March 2026",
 
-    seller: "Maria Santos",
+      seller: "Maria Santos",
 
-    rating: 4.9,
+      trips: "Mar 10–18, 2026",
 
-    trips: "Mar 10–18, 2026",
+      items: 24,
 
-    items: 24,
+      claimed: 19,
 
-    claimed: 19,
+      category: "Food",
+      reserveHours: 48,
 
-    category: "Food",
-    reserveHours: 48,
+      notes:
+        "Trip runs Mar 10–18. Items will be ordered by Mar 3. All prices are in PHP and include local sourcing cost. QR/BDO preferred.",
 
-    notes:
-      "Trip runs Mar 10–18. Items will be ordered by Mar 3. All prices are in PHP and include local sourcing cost. QR/BDO preferred.",
+      products: [
+        {
+          name: "Tokyo Banana",
 
-    products: [
-      {
-        name: "Tokyo Banana",
+          price: 480,
 
-        price: 480,
+          qty: 6,
 
-        qty: 6,
+          claimed: 6,
 
-        claimed: 6,
+          waitlist: 2,
 
-        waitlist: 2,
+          locked: false,
+        },
 
-        locked: false,
-      },
+        {
+          name: "KitKat Sakura",
 
-      {
-        name: "KitKat Sakura",
+          price: 320,
 
-        price: 320,
+          qty: 8,
 
-        qty: 8,
+          claimed: 5,
 
-        claimed: 5,
+          waitlist: 0,
 
-        waitlist: 0,
+          locked: false,
+        },
 
-        locked: false,
-      },
+        {
+          name: "Shiseido Sunscreen",
 
-      {
-        name: "Shiseido Sunscreen",
+          price: 1650,
 
-        price: 1650,
+          qty: 4,
 
-        qty: 4,
+          claimed: 4,
 
-        claimed: 4,
+          waitlist: 3,
 
-        waitlist: 3,
+          locked: false,
+        },
 
-        locked: false,
-      },
+        {
+          name: "Meiji Chocolate",
 
-      {
-        name: "Meiji Chocolate",
+          price: 290,
 
-        price: 290,
+          qty: 6,
 
-        qty: 6,
+          claimed: 4,
 
-        claimed: 4,
+          waitlist: 0,
 
-        waitlist: 0,
+          locked: false,
+        },
+      ],
+    },
 
-        locked: false,
-      },
-    ],
-  },
+    {
+      id: 2,
 
-  {
-    id: 2,
+      live: false,
 
-    live: false,
+      locked: false,
 
-    locked: false,
+      title: "Korea Haul — April 2026",
 
-    title: "Korea Haul — April 2026",
+      seller: "Ana Reyes",
 
-    seller: "Ana Reyes",
+      trips: "Apr 3–12, 2026",
 
-    rating: 4.7,
+      items: 31,
 
-    trips: "Apr 3–12, 2026",
+      claimed: 22,
 
-    items: 31,
+      category: "Skincare",
 
-    claimed: 22,
+      reserveHours: 48,
 
-    category: "Skincare",
+      products: [
+        {
+          name: "Laneige Lip Mask",
 
-    reserveHours: 48,
+          price: 950,
 
-    products: [
-      {
-        name: "Laneige Lip Mask",
+          qty: 10,
 
-        price: 950,
+          claimed: 10,
 
-        qty: 10,
+          waitlist: 5,
 
-        claimed: 10,
+          locked: false,
+        },
 
-        waitlist: 5,
+        {
+          name: "COSRX Snail Cream",
 
-        locked: false,
-      },
+          price: 780,
 
-      {
-        name: "COSRX Snail Cream",
+          qty: 8,
 
-        price: 780,
+          claimed: 6,
 
-        qty: 8,
+          waitlist: 0,
 
-        claimed: 6,
+          locked: false,
+        },
 
-        waitlist: 0,
+        {
+          name: "Korean Skincare Set",
 
-        locked: false,
-      },
+          price: 2400,
 
-      {
-        name: "Korean Skincare Set",
+          qty: 5,
 
-        price: 2400,
+          claimed: 4,
 
-        qty: 5,
+          waitlist: 1,
 
-        claimed: 4,
+          locked: false,
+        },
 
-        waitlist: 1,
+        {
+          name: "Paldo Bibimmyeon",
 
-        locked: false,
-      },
+          price: 380,
 
-      {
-        name: "Paldo Bibimmyeon",
+          qty: 8,
 
-        price: 380,
+          claimed: 2,
 
-        qty: 8,
+          waitlist: 0,
 
-        claimed: 2,
+          locked: false,
+        },
+      ],
+    },
 
-        waitlist: 0,
+    {
+      id: 3,
 
-        locked: false,
-      },
-    ],
-  },
+      live: false,
 
-  {
-    id: 3,
+      locked: false,
 
-    live: false,
+      title: "US Pasabuy — May 2026",
 
-    locked: false,
+      seller: "Paolo Garcia",
 
-    title: "US Pasabuy — May 2026",
+      trips: "May 5–20, 2026",
 
-    seller: "Paolo Garcia",
+      items: 18,
 
-    rating: 4.8,
+      claimed: 9,
 
-    trips: "May 5–20, 2026",
+      category: "Grocery & Snacks",
 
-    items: 18,
+      reserveHours: 48,
 
-    claimed: 9,
+      products: [
+        {
+          name: "Trader Joe's Snacks",
 
-    category: "Grocery & Snacks",
+          price: 1200,
 
-    reserveHours: 48,
+          qty: 10,
 
-    products: [
-      {
-        name: "Trader Joe's Snacks",
+          claimed: 8,
 
-        price: 1200,
+          waitlist: 0,
 
-        qty: 10,
+          locked: false,
+        },
 
-        claimed: 8,
+        {
+          name: "Muji Skincare",
 
-        waitlist: 0,
+          price: 890,
 
-        locked: false,
-      },
+          qty: 8,
 
-      {
-        name: "Muji Skincare",
+          claimed: 1,
 
-        price: 890,
+          waitlist: 0,
 
-        qty: 8,
+          locked: false,
+        },
+      ],
+    },
 
-        claimed: 1,
+    {
+      id: 4,
 
-        waitlist: 0,
+      live: false,
 
-        locked: false,
-      },
-    ],
-  },
+      locked: false,
 
-  {
-    id: 4,
+      title: "HK Beauty Run — June 2026",
 
-    live: false,
+      seller: "Liza Mendoza",
 
-    locked: false,
+      trips: "Jun 14–20, 2026",
 
-    title: "HK Beauty Run — June 2026",
+      items: 15,
 
-    seller: "Liza Mendoza",
+      claimed: 4,
 
-    rating: 4.6,
+      category: "Beauty",
 
-    trips: "Jun 14–20, 2026",
+      reserveHours: 48,
 
-    items: 15,
+      products: [
+        {
+          name: "Muji Skincare",
 
-    claimed: 4,
+          price: 890,
 
-    category: "Beauty",
+          qty: 8,
 
-    reserveHours: 48,
+          claimed: 3,
 
-    products: [
-      {
-        name: "Muji Skincare",
+          waitlist: 0,
 
-        price: 890,
+          locked: false,
+        },
 
-        qty: 8,
+        {
+          name: "Shiseido Sunscreen",
 
-        claimed: 3,
+          price: 1650,
 
-        waitlist: 0,
+          qty: 7,
 
-        locked: false,
-      },
+          claimed: 1,
 
-      {
-        name: "Shiseido Sunscreen",
+          waitlist: 0,
 
-        price: 1650,
+          locked: false,
+        },
+      ],
+    },
 
-        qty: 7,
+    {
+      id: 5,
 
-        claimed: 1,
+      live: true,
 
-        waitlist: 0,
+      locked: false,
 
-        locked: false,
-      },
-    ],
-  },
+      title: "Bangkok Haul — June 2026",
 
-  {
-    id: 5,
+      seller: "Kristine Aquino",
 
-    live: true,
+      trips: "Jun 2–8, 2026",
 
-    locked: false,
+      items: 20,
 
-    title: "Bangkok Haul — June 2026",
+      claimed: 11,
 
-    seller: "Kristine Aquino",
+      category: "Mixed",
 
-    rating: 4.5,
+      reserveHours: 48,
 
-    trips: "Jun 2–8, 2026",
+      notes:
+        "Bangkok haul — snacks and skincare mainly. Trustworthy sellers only. If item is OOS, full refund processed within 48h.",
 
-    items: 20,
+      products: [
+        {
+          name: "Thai Snack Box",
 
-    claimed: 11,
+          price: 650,
 
-    category: "Mixed",
+          qty: 10,
 
-    reserveHours: 48,
+          claimed: 7,
 
-    notes:
-      "Bangkok haul — snacks and skincare mainly. Trustworthy sellers only. If item is OOS, full refund processed within 48h.",
+          waitlist: 0,
 
-    products: [
-      {
-        name: "Thai Snack Box",
+          locked: false,
+        },
 
-        price: 650,
+        {
+          name: "Mistine Sunscreen",
 
-        qty: 10,
+          price: 420,
 
-        claimed: 7,
+          qty: 10,
 
-        waitlist: 0,
+          claimed: 4,
 
-        locked: false,
-      },
+          waitlist: 0,
 
-      {
-        name: "Mistine Sunscreen",
+          locked: false,
+        },
+      ],
+    },
 
-        price: 420,
+    {
+      id: 6,
 
-        qty: 10,
+      live: false,
 
-        claimed: 4,
+      locked: false,
 
-        waitlist: 0,
+      title: "Dubai Pasabuy — July 2026",
 
-        locked: false,
-      },
-    ],
-  },
+      seller: "Mark Villanueva",
 
-  {
-    id: 6,
+      trips: "Jul 10–18, 2026",
 
-    live: false,
+      items: 12,
 
-    locked: false,
+      claimed: 3,
 
-    title: "Dubai Pasabuy — July 2026",
+      category: "Luxury",
 
-    seller: "Mark Villanueva",
+      reserveHours: 48,
 
-    rating: 4.3,
+      products: [
+        {
+          name: "Nars Blush",
 
-    trips: "Jul 10–18, 2026",
+          price: 2800,
 
-    items: 12,
+          qty: 6,
 
-    claimed: 3,
+          claimed: 2,
 
-    category: "Luxury",
+          waitlist: 0,
 
-    reserveHours: 48,
+          locked: false,
+        },
 
-    products: [
-      {
-        name: "Nars Blush",
+        {
+          name: "MAC Lipstick Set",
 
-        price: 2800,
+          price: 3200,
 
-        qty: 6,
+          qty: 6,
 
-        claimed: 2,
+          claimed: 1,
 
-        waitlist: 0,
+          waitlist: 0,
 
-        locked: false,
-      },
+          locked: false,
+        },
+      ],
+    },
 
-      {
-        name: "MAC Lipstick Set",
+    {
+      id: 7,
 
-        price: 3200,
+      live: false,
 
-        qty: 6,
+      locked: false,
 
-        claimed: 1,
+      title: "UK Trip — August 2026",
 
-        waitlist: 0,
+      seller: "Ella Torres",
 
-        locked: false,
-      },
-    ],
-  },
+      trips: "Aug 5–18, 2026",
 
-  {
-    id: 7,
+      items: 22,
 
-    live: false,
+      claimed: 8,
 
-    locked: false,
+      category: "Grocery & Snacks",
 
-    title: "UK Trip — August 2026",
+      reserveHours: 48,
 
-    seller: "Ella Torres",
+      products: [
+        {
+          name: "Cadbury Hamper",
 
-    rating: 4.8,
+          price: 980,
 
-    trips: "Aug 5–18, 2026",
+          qty: 12,
 
-    items: 22,
+          claimed: 6,
 
-    claimed: 8,
+          waitlist: 0,
 
-    category: "Grocery & Snacks",
+          locked: false,
+        },
 
-    reserveHours: 48,
+        {
+          name: "Boots Skincare",
 
-    products: [
-      {
-        name: "Cadbury Hamper",
+          price: 1450,
 
-        price: 980,
+          qty: 10,
 
-        qty: 12,
+          claimed: 2,
 
-        claimed: 6,
+          waitlist: 0,
 
-        waitlist: 0,
+          locked: false,
+        },
+      ],
+    },
 
-        locked: false,
-      },
+    {
+      id: 8,
 
-      {
-        name: "Boots Skincare",
+      live: true,
 
-        price: 1450,
+      locked: false,
 
-        qty: 10,
+      title: "Taiwan Finds — July 2026",
 
-        claimed: 2,
+      seller: "Rico Santos",
 
-        waitlist: 0,
+      trips: "Jul 20–28, 2026",
 
-        locked: false,
-      },
-    ],
-  },
+      items: 16,
 
-  {
-    id: 8,
+      claimed: 6,
 
-    live: true,
+      category: "Food",
+      reserveHours: 48,
 
-    locked: false,
+      products: [
+        {
+          name: "85°C Pastries",
 
-    title: "Taiwan Finds — July 2026",
+          price: 560,
 
-    seller: "Rico Santos",
+          qty: 8,
 
-    rating: 4.6,
+          claimed: 5,
 
-    trips: "Jul 20–28, 2026",
+          waitlist: 1,
 
-    items: 16,
+          locked: false,
+        },
 
-    claimed: 6,
+        {
+          name: "Dr. Wu Serum",
 
-    category: "Food",
-    reserveHours: 48,
+          price: 1100,
 
-    products: [
-      {
-        name: "85°C Pastries",
+          qty: 8,
 
-        price: 560,
+          claimed: 1,
 
-        qty: 8,
+          waitlist: 0,
 
-        claimed: 5,
+          locked: false,
+        },
+      ],
+    },
 
-        waitlist: 1,
+    {
+      id: 9,
 
-        locked: false,
-      },
+      live: false,
 
-      {
-        name: "Dr. Wu Serum",
+      locked: false,
 
-        price: 1100,
+      title: "Singapore Haul — Aug 2026",
 
-        qty: 8,
+      seller: "Jade Bautista",
 
-        claimed: 1,
+      trips: "Aug 20–27, 2026",
 
-        waitlist: 0,
+      items: 19,
 
-        locked: false,
-      },
-    ],
-  },
+      claimed: 14,
 
-  {
-    id: 9,
+      category: "Skincare",
 
-    live: false,
+      reserveHours: 48,
 
-    locked: false,
+      products: [
+        {
+          name: "SK-II Essence",
 
-    title: "Singapore Haul — Aug 2026",
+          price: 4800,
 
-    seller: "Jade Bautista",
+          qty: 6,
 
-    rating: 4.9,
+          claimed: 6,
 
-    trips: "Aug 20–27, 2026",
+          waitlist: 4,
 
-    items: 19,
+          locked: false,
+        },
 
-    claimed: 14,
+        {
+          name: "Hada Labo Serum",
 
-    category: "Skincare",
+          price: 780,
 
-    reserveHours: 48,
+          qty: 8,
 
-    products: [
-      {
-        name: "SK-II Essence",
+          claimed: 5,
 
-        price: 4800,
+          waitlist: 0,
 
-        qty: 6,
+          locked: false,
+        },
 
-        claimed: 6,
+        {
+          name: "Innisfree Sheet Mask",
 
-        waitlist: 4,
+          price: 390,
 
-        locked: false,
-      },
+          qty: 5,
 
-      {
-        name: "Hada Labo Serum",
+          claimed: 3,
 
-        price: 780,
+          waitlist: 0,
 
-        qty: 8,
+          locked: false,
+        },
+      ],
+    },
 
-        claimed: 5,
+    {
+      id: 10,
 
-        waitlist: 0,
+      live: false,
 
-        locked: false,
-      },
+      locked: false,
 
-      {
-        name: "Innisfree Sheet Mask",
+      title: "Australia Run — Sep 2026",
 
-        price: 390,
+      seller: "Maria Santos",
 
-        qty: 5,
+      trips: "Sep 1–10, 2026",
 
-        claimed: 3,
+      items: 14,
 
-        waitlist: 0,
+      claimed: 4,
 
-        locked: false,
-      },
-    ],
-  },
+      category: "Grocery & Snacks",
 
-  {
-    id: 10,
+      reserveHours: 48,
 
-    live: false,
+      products: [
+        {
+          name: "Tim Tam Assorted",
 
-    locked: false,
+          price: 720,
 
-    title: "Australia Run — Sep 2026",
+          qty: 8,
 
-    seller: "Maria Santos",
+          claimed: 3,
 
-    rating: 4.9,
+          waitlist: 0,
 
-    trips: "Sep 1–10, 2026",
+          locked: false,
+        },
 
-    items: 14,
+        {
+          name: "Aesop Hand Cream",
 
-    claimed: 4,
+          price: 2600,
 
-    category: "Grocery & Snacks",
+          qty: 6,
 
-    reserveHours: 48,
+          claimed: 1,
 
-    products: [
-      {
-        name: "Tim Tam Assorted",
+          waitlist: 0,
 
-        price: 720,
+          locked: false,
+        },
+      ],
+    },
 
-        qty: 8,
+    {
+      id: 11,
 
-        claimed: 3,
+      live: false,
 
-        waitlist: 0,
+      locked: false,
 
-        locked: false,
-      },
+      title: "France Luxury — Oct 2026",
 
-      {
-        name: "Aesop Hand Cream",
+      seller: "Ana Reyes",
 
-        price: 2600,
+      trips: "Oct 5–15, 2026",
 
-        qty: 6,
+      items: 10,
 
-        claimed: 1,
+      claimed: 2,
 
-        waitlist: 0,
+      category: "Luxury",
 
-        locked: false,
-      },
-    ],
-  },
+      reserveHours: 48,
 
-  {
-    id: 11,
+      products: [
+        {
+          name: "L'Occitane Set",
 
-    live: false,
+          price: 3800,
 
-    locked: false,
+          qty: 5,
 
-    title: "France Luxury — Oct 2026",
+          claimed: 1,
 
-    seller: "Ana Reyes",
+          waitlist: 0,
 
-    rating: 4.7,
+          locked: false,
+        },
 
-    trips: "Oct 5–15, 2026",
+        {
+          name: "Lancôme Serum",
 
-    items: 10,
+          price: 5200,
 
-    claimed: 2,
+          qty: 5,
 
-    category: "Luxury",
+          claimed: 1,
 
-    reserveHours: 48,
+          waitlist: 0,
 
-    products: [
-      {
-        name: "L'Occitane Set",
+          locked: false,
+        },
+      ],
+    },
 
-        price: 3800,
+    {
+      id: 12,
 
-        qty: 5,
+      live: false,
 
-        claimed: 1,
+      locked: false,
 
-        waitlist: 0,
+      title: "Vietnam Haul — May 2026",
 
-        locked: false,
-      },
+      seller: "Paolo Garcia",
 
-      {
-        name: "Lancôme Serum",
+      trips: "May 22–28, 2026",
 
-        price: 5200,
+      items: 18,
 
-        qty: 5,
+      claimed: 7,
 
-        claimed: 1,
+      category: "Food",
+      reserveHours: 48,
 
-        waitlist: 0,
+      products: [
+        {
+          name: "Lacvert Sheet Mask",
 
-        locked: false,
-      },
-    ],
-  },
+          price: 290,
 
-  {
-    id: 12,
+          qty: 10,
 
-    live: false,
+          claimed: 5,
 
-    locked: false,
+          waitlist: 0,
 
-    title: "Vietnam Haul — May 2026",
+          locked: false,
+        },
 
-    seller: "Paolo Garcia",
+        {
+          name: "X-Men Serum",
 
-    rating: 4.8,
+          price: 420,
 
-    trips: "May 22–28, 2026",
+          qty: 8,
 
-    items: 18,
+          claimed: 2,
 
-    claimed: 7,
+          waitlist: 0,
 
-    category: "Food",
-    reserveHours: 48,
+          locked: false,
+        },
+      ],
+    },
+  ]
 
-    products: [
-      {
-        name: "Lacvert Sheet Mask",
+const ADDITIONAL_BATCH_DEFINITIONS = [
+  [
+    13,
+    "Osaka Street Food — October 2026",
+    "Maria Santos",
+    "Oct 14–21, 2026",
+    "Food",
+    "Osaka Takoyaki Kit",
+    680,
+    18,
+    5,
+  ],
+  [
+    14,
+    "Seoul Glow Edit — November 2026",
+    "Ana Reyes",
+    "Nov 2–10, 2026",
+    "Skincare",
+    "Round Lab Sunscreen",
+    980,
+    20,
+    8,
+  ],
+  [
+    15,
+    "California Pantry Run — November 2026",
+    "Paolo Garcia",
+    "Nov 8–18, 2026",
+    "Grocery & Snacks",
+    "Trader Joe's Cookie Box",
+    850,
+    24,
+    11,
+  ],
+  [
+    16,
+    "Bangkok Beauty Picks — November 2026",
+    "Kristine Aquino",
+    "Nov 20–27, 2026",
+    "Beauty",
+    "Cathy Doll Lip Set",
+    720,
+    16,
+    7,
+  ],
+  [
+    17,
+    "Singapore Luxe Finds — December 2026",
+    "Jade Bautista",
+    "Dec 5–12, 2026",
+    "Luxury",
+    "TWG Tea Gift Box",
+    2450,
+    12,
+    4,
+  ],
+  [
+    18,
+    "Tokyo Variety Run — December 2026",
+    "Maria Santos",
+    "Dec 18–27, 2026",
+    "Mixed",
+    "Don Quijote Favorites",
+    1250,
+    20,
+    9,
+  ],
+  [
+    19,
+    "Jeju Local Flavors — January 2027",
+    "Ana Reyes",
+    "Jan 4–11, 2027",
+    "Food",
+    "Jeju Tangerine Sweets",
+    560,
+    22,
+    6,
+  ],
+  [
+    20,
+    "Busan Barrier Care — January 2027",
+    "Ana Reyes",
+    "Jan 13–21, 2027",
+    "Skincare",
+    "Etude SoonJung Set",
+    1580,
+    15,
+    10,
+  ],
+  [
+    21,
+    "New York Snack Drop — January 2027",
+    "Paolo Garcia",
+    "Jan 17–28, 2027",
+    "Grocery & Snacks",
+    "Whole Foods Snack Bag",
+    1180,
+    18,
+    7,
+  ],
+  [
+    22,
+    "Phuket Beauty Market — February 2027",
+    "Kristine Aquino",
+    "Feb 2–9, 2027",
+    "Beauty",
+    "Srichand Powder Duo",
+    640,
+    20,
+    12,
+  ],
+  [
+    23,
+    "Singapore Designer Edit — February 2027",
+    "Jade Bautista",
+    "Feb 8–16, 2027",
+    "Luxury",
+    "Charles & Keith Wallet",
+    2950,
+    10,
+    3,
+  ],
+  [
+    24,
+    "Kyoto Seasonal Mix — February 2027",
+    "Maria Santos",
+    "Feb 12–20, 2027",
+    "Mixed",
+    "Kyoto Market Bundle",
+    1380,
+    18,
+    8,
+  ],
+  [
+    25,
+    "Nagoya Food Finds — February 2027",
+    "Maria Santos",
+    "Feb 22–Mar 2, 2027",
+    "Food",
+    "Nagoya Miso Snack Set",
+    740,
+    20,
+    13,
+  ],
+  [
+    26,
+    "Incheon Skincare Run — March 2027",
+    "Ana Reyes",
+    "Mar 3–11, 2027",
+    "Skincare",
+    "Anua Heartleaf Kit",
+    1490,
+    16,
+    5,
+  ],
+  [
+    27,
+    "Seattle Grocery Haul — March 2027",
+    "Paolo Garcia",
+    "Mar 7–18, 2027",
+    "Grocery & Snacks",
+    "Seattle Coffee Sampler",
+    1320,
+    18,
+    9,
+  ],
+  [
+    28,
+    "Chiang Mai Beauty Finds — March 2027",
+    "Kristine Aquino",
+    "Mar 12–20, 2027",
+    "Beauty",
+    "Oriental Princess Set",
+    890,
+    14,
+    6,
+  ],
+  [
+    29,
+    "Orchard Road Luxury — March 2027",
+    "Jade Bautista",
+    "Mar 18–27, 2027",
+    "Luxury",
+    "Bacha Coffee Gift Set",
+    2650,
+    12,
+    7,
+  ],
+  [
+    30,
+    "Japan Spring Mix — April 2027",
+    "Maria Santos",
+    "Apr 2–12, 2027",
+    "Mixed",
+    "Sakura Lifestyle Box",
+    1680,
+    20,
+    10,
+  ],
+] as const
 
-        price: 290,
+const ADDITIONAL_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[] =
+  ADDITIONAL_BATCH_DEFINITIONS.map(
+    ([
+      id,
+      title,
+      seller,
+      trips,
+      category,
+      productName,
+      price,
+      items,
+      claimed,
+    ]) => ({
+      id,
+      live: true,
+      locked: false,
+      title,
+      seller,
+      trips,
+      items,
+      claimed,
+      category,
+      reserveHours: 48,
+      products: [
+        {
+          name: productName,
+          price,
+          qty: items,
+          claimed,
+          waitlist: 0,
+          locked: false,
+        },
+      ],
+    }),
+  )
 
-        qty: 10,
+const BATCHES_SEED = [...BASE_BATCHES_SEED, ...ADDITIONAL_BATCHES_SEED]
 
-        claimed: 5,
-
-        waitlist: 0,
-
-        locked: false,
-      },
-
-      {
-        name: "X-Men Serum",
-
-        price: 420,
-
-        qty: 8,
-
-        claimed: 2,
-
-        waitlist: 0,
-
-        locked: false,
-      },
-    ],
-  },
-]
+// A seller's rating is looked up, never authored. `DEMO_RATINGS` is computed
+// from the review seed in `reviews.ts`, which is the demo stand-in for the
+// `public.profile_ratings` view.
+export const BATCHES_INIT: BatchItem[] = BATCHES_SEED.map((batch) => {
+  const sellerId = demoProfileId(batch.seller)
+  const summary = sellerId ? DEMO_RATINGS[sellerId] : undefined
+  return {
+    ...batch,
+    sellerId,
+    rating: summary?.average ?? null,
+    ratingCount: summary?.count ?? 0,
+  }
+})
