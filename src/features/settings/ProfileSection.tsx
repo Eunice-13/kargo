@@ -49,7 +49,7 @@ export default function ProfileSection({
     <div className="pr">
       <h3
         style={{
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
+          fontFamily: "'Josefin Sans',sans-serif",
           fontSize: 16,
           fontWeight: 700,
           color: "#111827",
@@ -66,7 +66,7 @@ export default function ProfileSection({
               fontSize: 16,
               fontWeight: 700,
               color: "#111827",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             {user.name || "—"}

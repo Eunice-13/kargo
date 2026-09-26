@@ -24,7 +24,7 @@ export default function PrimaryBtn({
         background: disabled ? "#9CA3AF" : INDIGO,
         color: "#fff",
         borderRadius: 7,
-        fontFamily: "'Plus Jakarta Sans',sans-serif",
+        fontFamily: "'Josefin Sans',sans-serif",
         transition: "opacity 0.15s,transform 0.1s",
         ...style,
       }}

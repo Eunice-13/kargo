@@ -181,7 +181,7 @@ export default function FinancialSummaryModal({
                 fontSize: 14,
                 fontWeight: 700,
                 color: "#111827",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
               ₱{totalOrders.toLocaleString()}
@@ -392,7 +392,7 @@ export default function FinancialSummaryModal({
               fontSize: 16,
               fontWeight: 800,
               color: profit >= 0 ? "#065F46" : "#991B1B",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             ₱{profit.toLocaleString()}
@@ -470,7 +470,7 @@ function FinancialReceipt({
         style={{
           color,
           fontWeight: strong ? 800 : 600,
-          fontFamily: "'Plus Jakarta Sans',sans-serif",
+          fontFamily: "'Josefin Sans',sans-serif",
         }}
       >
         {value}
@@ -530,7 +530,7 @@ function FinancialReceipt({
               fontSize: 17,
               fontWeight: 800,
               color: "#111827",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             {batch.seller}
@@ -603,7 +603,7 @@ function FinancialReceipt({
               fontSize: 20,
               fontWeight: 800,
               color: profit >= 0 ? "#065F46" : "#991B1B",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             ₱{profit.toLocaleString()}

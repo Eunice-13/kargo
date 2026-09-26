@@ -66,7 +66,7 @@ export default function InsufficientPaymentModal({
                 background: "#F9FAFB",
                 borderRadius: 7,
                 border: "1px solid #E5E7EB",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
               ₱{insuffTarget.amount.toLocaleString()}
@@ -137,7 +137,7 @@ export default function InsufficientPaymentModal({
                   fontSize: 16,
                   fontWeight: 800,
                   color: "#92400E",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 ₱{shortAmt.toLocaleString()}
@@ -209,7 +209,7 @@ export default function InsufficientPaymentModal({
               fontSize: 13,
               fontWeight: 600,
               cursor: "pointer",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
               opacity: !isValid ? 0.45 : 1,
               transition: "opacity 0.15s",
             }}

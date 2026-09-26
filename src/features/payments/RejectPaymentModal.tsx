@@ -271,7 +271,7 @@ export default function RejectPaymentModal({
               fontSize: 13,
               fontWeight: 600,
               cursor: "pointer",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
               opacity: !canProceed ? 0.45 : 1,
               transition: "all 0.15s",
             }}

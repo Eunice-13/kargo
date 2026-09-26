@@ -340,7 +340,7 @@ export default function Dashboard({
                         fontWeight: 700,
                         color: GREEN,
                         marginTop: 4,
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
                       ₱{o.amount.toLocaleString()}
@@ -605,7 +605,7 @@ export default function Dashboard({
                 </div>
                 <div
                   style={{
-                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    fontFamily: "'Josefin Sans',sans-serif",
                     fontSize: 26,
                     fontWeight: 800,
                     color: "#111827",
@@ -698,7 +698,7 @@ export default function Dashboard({
                       style={{
                         color: "#111827",
                         fontWeight: 700,
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
                       ₱{c.amount.toLocaleString()}
@@ -922,7 +922,7 @@ export default function Dashboard({
                   fontSize: 16,
                   fontWeight: 700,
                   color: "#111827",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 Fulfillment Board
@@ -1032,7 +1032,7 @@ export default function Dashboard({
                         style={{
                           color: "#111827",
                           fontWeight: 700,
-                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          fontFamily: "'Josefin Sans',sans-serif",
                         }}
                       >
                         ₱{c.amount.toLocaleString()}
@@ -1106,7 +1106,7 @@ export default function Dashboard({
                         fontSize: 13,
                         fontWeight: 700,
                         color: "#111827",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
                       ₱{d.amount.toLocaleString()}

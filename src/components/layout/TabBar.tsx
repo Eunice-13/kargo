@@ -54,7 +54,7 @@ export default function TabBar({
             onClick={() => setActive(tab)}
             aria-current={active === tab ? "page" : undefined}
             style={{
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
               color: active === tab ? INDIGO : "#6B7280",
               fontWeight: active === tab ? 700 : 500,
               fontSize: 13,

@@ -28,7 +28,7 @@ export default function BuyerRequestFormModal({
               fontSize: 15,
               fontWeight: 700,
               color: "#111827",
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             Request Sent!

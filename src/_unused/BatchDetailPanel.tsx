@@ -43,7 +43,7 @@ export default function BatchDetailPanel({
           <div className="flex items-center gap-2">
             <h3
               style={{
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
                 fontSize: 16,
                 fontWeight: 700,
                 color: "#111827",
@@ -228,7 +228,7 @@ export default function BatchDetailPanel({
                   fontSize: 14,
                   fontWeight: 700,
                   color: "#111827",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                   minWidth: 70,
                   textAlign: "right",
                 }}

@@ -3,7 +3,7 @@
 Paste everything below into Figma (Figma Make / First Draft). This describes changes to an **existing** pasabuy/order-fulfillment web app called KARGO. Keep the current design system — do not restyle what isn't mentioned here.
 
 ## Existing design system (keep consistent)
-- Fonts: "Plus Jakarta Sans" (headings, bold labels, numbers) + "Inter" (body text).
+- Fonts: "Josefin Sans" (headings, bold labels, numbers) + "Inter" (body text).
 - Primary color: Indigo `#191BA9`. Primary-tint background: `#EEF0FF`.
 - Accent/brand pink-red (used for CTAs like "Claim this item"): magenta/crimson `#C81E62`-family.
 - Neutrals: text `#111827` (headings), `#374151` (body), `#6B7280` (secondary), `#9CA3AF` (muted/placeholder).

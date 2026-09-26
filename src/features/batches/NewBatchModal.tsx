@@ -501,7 +501,7 @@ export default function NewBatchModal({
                           background: "#EEF0FF",
                           borderRadius: 6,
                           padding: "7px 8px",
-                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          fontFamily: "'Josefin Sans',sans-serif",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",

@@ -80,7 +80,7 @@ export default function UserMenu({
           >
             <div
               style={{
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
                 fontSize: 13,
                 fontWeight: 700,
                 color: "#111827",

@@ -122,7 +122,7 @@ export default function SellerPaymentVerification() {
           <div>
             <h2
               style={{
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
                 fontSize: 18,
                 fontWeight: 800,
                 color: "#111827",
@@ -237,7 +237,7 @@ export default function SellerPaymentVerification() {
                         padding: "12px 14px",
                         fontWeight: 700,
                         color: "#111827",
-                        fontFamily: "'Plus Jakarta Sans',sans-serif",
+                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
                       ₱{item.amount.toLocaleString()}

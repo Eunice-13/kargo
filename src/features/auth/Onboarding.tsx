@@ -210,7 +210,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             <div key={contentKey} className={dir === "l" ? "pl" : "pr"}>
               <h3
                 style={{
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                   fontSize: 16,
                   fontWeight: 800,
                   color: "#111827",

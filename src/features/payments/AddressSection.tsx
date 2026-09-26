@@ -394,7 +394,7 @@ export default function AddressSection() {
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: "pointer",
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 Delete Address

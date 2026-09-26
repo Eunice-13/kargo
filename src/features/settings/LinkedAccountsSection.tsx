@@ -35,7 +35,7 @@ export default function LinkedAccountsSection({
 
   return (
     <div className="pr">
-      <h3 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
+      <h3 style={{ fontFamily: "'Josefin Sans',sans-serif", fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
         Social & Contact Links
       </h3>
       <p style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>

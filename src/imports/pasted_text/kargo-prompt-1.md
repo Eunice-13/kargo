@@ -9,7 +9,7 @@ This is a refinement prompt for the existing KARGO app. Do not change the establ
 
 ## DO NOT CHANGE (preserve exactly as-is)
 - **Color palette:** Indigo `#191BA9`, Cream `#F7F3F3`, Cyan `#DEF3FA`, Sky `#5CC2F2`, Coral `#FF8A65`, Live Red `#E11D2E`, Green `#3FBF8F`, Amber `#FFC24B`
-- **Typography:** "Plus Jakarta Sans" for headings/buttons, "Inter" for body text
+- **Typography:** "Josefin Sans" for headings/buttons, "Inter" for body text
 - **Existing components:** Card, PrimaryBtn, SecondaryBtn, Toggle, StatusBadge, ReportBadge, Avatar, ProductThumb, Countdown, LiveBadge, BIRBadge, Modal
 - **Existing tab structure and Buyer/Seller role toggle**
 

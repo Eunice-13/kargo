@@ -68,7 +68,7 @@ export default function ReviewSubmissionModal({
                 fontSize: 14,
                 fontWeight: 700,
                 color: "#111827",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
               {reviewTarget.buyer}
@@ -82,7 +82,7 @@ export default function ReviewSubmissionModal({
               fontSize: 18,
               fontWeight: 800,
               color: INDIGO,
-              fontFamily: "'Plus Jakarta Sans',sans-serif",
+              fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
             ₱{reviewTarget.amount.toLocaleString()}
@@ -226,7 +226,7 @@ export default function ReviewSubmissionModal({
                   padding: "4px 10px",
                   cursor: "pointer",
                   fontWeight: 600,
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                   textDecoration: "none",
                   display: "inline-flex",
                   alignItems: "center",
@@ -278,7 +278,7 @@ export default function ReviewSubmissionModal({
                   padding: "3px 10px",
                   cursor: "pointer",
                   fontWeight: 600,
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
                 {receiptLoading ? "Opening…" : "View"}
