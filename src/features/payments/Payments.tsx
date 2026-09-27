@@ -1,55 +1,27 @@
-import { useEffect, useState, useRef } from "react"
-import { CheckCircle2, Paperclip, Clock3 } from "lucide-react"
-import type { ToPayRow, PayHistRow, OrderRow, ClaimStatus, SharedState, EntityId } from "@/types"
-import { INDIGO, CREAM, TODAY } from "@/constants/theme"
+import { useEffect, useState } from "react"
+import type { PayHistRow, SharedState } from "@/types"
 import {
   Card,
   SH,
-  PrimaryBtn,
   SecondaryBtn,
   ProductThumb,
   StatusBadge,
   Countdown,
-  PaymentSuccessToast,
 } from "@/components/shared"
-import PaymentSubmitModal from "./PaymentSubmitModal"
-import type { PaymentSubmissionDetails } from "./PaymentSubmitModal"
-import BatchCheckoutModal from "./BatchCheckoutModal"
 import TransactionDetailModal from "./TransactionDetailModal"
 import SellerPaymentVerification from "./SellerPaymentVerification"
-import AddressSection from "./AddressSection"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
-import { kargoApi } from "@/services"
-import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
 export default function Payments({
-  toPay,
-  setToPay,
   payHistory,
-  setPayHistory,
-  claims,
-  setClaims,
-  orders,
-  setOrders,
   role,
   user,
   refreshData,
 }: SharedState) {
-  const [dragging, setDragging] = useState(false)
-  const [uploaded, setUploaded] = useState<string | null>(null)
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [proofClaimId, setProofClaimId] = useState<EntityId | "">("")
-  const [proofToast, setProofToast] = useState(false)
-  const [paymentSuccess, setPaymentSuccess] = useState(false)
-  const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
-  const [payAll, setPayAll] = useState(false)
   const [histFilter, setHistFilter] =
-    useState<"All" | "Paid and Reserved" | "Pending" | "Rejected">("All")
+    useState<"All" | "Paid and Reserved" | "Rejected" | "Cancelled">("All")
   const [dateFilter2, setDateFilter2] = useState("All")
   const [txDetail, setTxDetail] = useState<PayHistRow | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
-  const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
 
   useEffect(() => {
     if (!isSupabaseConfigured || role !== "Buyer") return
@@ -73,358 +45,10 @@ export default function Payments({
     }
   }, [refreshData, role, user.id])
 
-  useEffect(() => {
-    if (payTarget && deadlineHasPassed(payTarget)) setPayTarget(null)
-    if (payableToPay.length === 0) setPayAll(false)
-  }, [payTarget, payableToPay.length])
-
-  useEffect(() => {
-    if (!paymentSuccess) return
-    const timer = window.setTimeout(() => setPaymentSuccess(false), 6000)
-    return () => window.clearTimeout(timer)
-  }, [paymentSuccess])
-
-  const handleFilePick = (file: File) => {
-    setUploading(true)
-    setTimeout(() => {
-      setUploading(false)
-      setUploaded(file.name)
-      setUploadedFile(file)
-    }, 1200)
-  }
-
-  const handlePay = async (
-    item: ToPayRow | null,
-    method: string,
-    referenceNumber?: string,
-    receipt?: File,
-    details?: PaymentSubmissionDetails,
-  ) => {
-    const targets = (item ? [item] : payableToPay).filter((target) => !deadlineHasPassed(target))
-    if (targets.length === 0) {
-      setPayTarget(null)
-      setPayAll(false)
-      alert("This claim has expired and can no longer be paid.")
-      return false
-    }
-    if (isSupabaseConfigured) {
-      try {
-        for (const target of targets) {
-          const orderId = target.orderId ?? String(target.id)
-          await kargoApi.submitPayment({
-            orderId,
-            method,
-            amount: details?.amountPaid ?? target.amount,
-            referenceNumber,
-            receipt,
-            payerAccountName: details?.payerAccountName,
-            payerPhone: details?.payerPhone,
-            buyerContactUrl: details?.buyerContactUrl,
-          })
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Unable to submit payment."
-        // Re-sync on ANY failure so a stale snapshot can't drive a second
-        // doomed submit (the "fails every other time" bug), then close the
-        // modal so the reused stale targets can't be resubmitted.
-        await refreshData()
-        setPayTarget(null)
-        setPayAll(false)
-        if (message === "Order is not payable") {
-          alert("This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.")
-        } else {
-          alert(message)
-        }
-        return false
-      }
-      await refreshData()
-      setPayTarget(null)
-      setPayAll(false)
-      setPaymentSuccess(true)
-      return true
-    }
-    const newHist: PayHistRow[] = targets.map((t, i) => ({
-      id: payHistory.length + i + 1,
-      product: t.product,
-      batch: "",
-      method,
-      amount: details?.amountPaid ?? t.amount,
-      date: TODAY,
-      status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
-    }))
-    setPayHistory((h) => [...newHist, ...h])
-    if (!isSupabaseConfigured) setClaims((prev) =>
-      prev.map((c) =>
-        targets.some((t) => t.product === c.product) && c.status === "Pending"
-          ? { ...c, status: "Paid and Reserved" as ClaimStatus }
-          : c,
-      ),
-    )
-    const newOrders: OrderRow[] = targets.map((t, i) => ({
-      id: `ORD-2026-${String(orders.length + 60 + i).padStart(4, "0")}`,
-      product: t.product,
-      batch: "",
-      seller: t.seller,
-      amount: t.amount,
-      step: 3,
-      trackingNo: null,
-      eta: "Est. Oct 2026",
-      rated: false,
-    }))
-    if (!isSupabaseConfigured) {
-      setOrders((prev) => [...newOrders, ...prev])
-      setToPay((prev) => (item ? prev.filter((x) => x.id !== item.id) : []))
-    }
-    setPayTarget(null)
-    setPayAll(false)
-    setPaymentSuccess(true)
-    return true
-  }
-
-  // Submit an uploaded receipt against a chosen "To Pay" item: record it as a
-  // manual bank/receipt payment (reusing the same flow as Pay Now) and reset.
-  const handleSubmitProof = async () => {
-    const item = payableToPay.find((t) => t.id === proofClaimId)
-    if (!item) return
-    const submitted = await handlePay(item, "Receipt Upload", undefined, uploadedFile ?? undefined)
-    if (!submitted) return
-    setUploaded(null)
-    setUploadedFile(null)
-    setProofClaimId("")
-    setProofToast(true)
-    setTimeout(() => setProofToast(false), 2400)
-  }
-
   if (role === "Seller") return <SellerPaymentVerification />
 
   return (
     <div className="p-6 space-y-6">
-      <AddressSection />
-      <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 1fr" }}>
-        <div>
-          <SH title="To Pay" />
-          <div className="space-y-3">
-            {payableToPay.map((t) => (
-              <Card key={t.id} className="flex items-center gap-4">
-                <ProductThumb name={t.product} />
-                <div className="flex-1">
-                  <div
-                    style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}
-                  >
-                    {t.product}
-                    {t.qty && t.qty > 1 ? (
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", marginLeft: 6 }}>
-                        ×{t.qty}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                      {t.seller}
-                    </span>
-                    <span style={{ fontSize: 11, color: "#D1D5DB" }}>·</span>
-                    <Countdown hours={t.hours} expiresAt={t.expiresAt} />
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 800,
-                    color: "#111827",
-                    fontFamily: "'Josefin Sans',sans-serif",
-                  }}
-                >
-                  ₱{t.amount.toLocaleString()}
-                </div>
-                <PrimaryBtn size="sm" onClick={() => setPayTarget(t)}>
-                  Pay Now
-                </PrimaryBtn>
-              </Card>
-            ))}
-            {payableToPay.length > 0 ? (
-              <Card
-                style={{ background: CREAM, border: "1px dashed #C7B8B8" }}
-                className="flex items-center justify-between"
-              >
-                <span
-                  style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}
-                >
-                  Total Due
-                </span>
-                <div className="flex items-center gap-3">
-                  <span
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 800,
-                      color: INDIGO,
-                      fontFamily: "'Josefin Sans',sans-serif",
-                    }}
-                  >
-                    ₱{payableToPay.reduce((s, t) => s + t.amount, 0).toLocaleString()}
-                  </span>
-                  <PrimaryBtn onClick={() => setPayAll(true)}>
-                    Batch Checkout
-                  </PrimaryBtn>
-                </div>
-              </Card>
-            ) : (
-              <div
-                style={{
-                  background: "#D4F5EA",
-                  borderRadius: 8,
-                  padding: "14px 18px",
-                  textAlign: "center",
-                  fontSize: 13,
-                  color: "#065F46",
-                  fontWeight: 600,
-                }}
-              >
-                <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
-                All payments cleared!
-              </div>
-            )}
-          </div>
-        </div>
-        <div>
-          <SH title="Upload Proof of Payment" />
-          <Card className="!p-0 overflow-hidden">
-            <div
-              onDragOver={(e) => {
-                e.preventDefault()
-                setDragging(true)
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(e) => {
-                e.preventDefault()
-                setDragging(false)
-                const f = e.dataTransfer.files[0]
-                if (f) handleFilePick(f)
-              }}
-              onClick={() => fileRef.current?.click()}
-              role="button"
-              tabIndex={0}
-              aria-label="Upload proof of payment"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
-                  fileRef.current?.click()
-                }
-              }}
-              style={{
-                border: `2px dashed ${dragging ? INDIGO : "#D1D5DB"}`,
-                background: dragging ? "#EEF0FF" : CREAM,
-                borderRadius: 8,
-                padding: 32,
-                textAlign: "center",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                margin: 16,
-                transform: dragging ? "scale(1.01)" : "scale(1)",
-              }}
-            >
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*,application/pdf"
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  if (f) handleFilePick(f)
-                }}
-              />
-              {uploading ? (
-                <>
-                  <div style={{ color: INDIGO, marginBottom: 8, display: "flex", justifyContent: "center" }}><Clock3 size={32} aria-hidden="true" /></div>
-                  <div
-                    style={{ fontSize: 13, fontWeight: 600, color: INDIGO }}
-                    className="lsh"
-                  >
-                    Uploading…
-                  </div>
-                </>
-              ) : uploaded ? (
-                <>
-                  <div style={{ color: "#0B7A59", marginBottom: 8, display: "flex", justifyContent: "center" }}><CheckCircle2 size={32} aria-hidden="true" /></div>
-                  <div
-                    style={{ fontSize: 13, fontWeight: 600, color: "#065F46" }}
-                  >
-                    {uploaded}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
-                    Click to replace
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div style={{ color: "#9CA3AF", marginBottom: 8, display: "flex", justifyContent: "center" }}><Paperclip size={32} aria-hidden="true" /></div>
-                  <div
-                    style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}
-                  >
-                    Drag & drop your receipt here
-                  </div>
-                  <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 4 }}>
-                    or click to browse — JPG, PNG, PDF
-                  </div>
-                </>
-              )}
-            </div>
-            {uploaded && !uploading && (
-              <div className="px-4 pb-4">
-                <select
-                  value={proofClaimId}
-                  onChange={(e) =>
-                    setProofClaimId(
-                      e.target.value ? Number(e.target.value) : "",
-                    )
-                  }
-                  style={{
-                    width: "100%",
-                    fontSize: 12,
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 6,
-                    padding: "7px 10px",
-                    marginBottom: 8,
-                    outline: "none",
-                  }}
-                >
-                  <option value="">Select claim to attach…</option>
-                  {payableToPay.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.product} — ₱{t.amount.toLocaleString()}
-                    </option>
-                  ))}
-                </select>
-                <PrimaryBtn
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                  }}
-                  disabled={proofClaimId === ""}
-                  onClick={handleSubmitProof}
-                >
-                  Submit Payment Proof
-                </PrimaryBtn>
-                {proofToast && (
-                  <div
-                    className="fi"
-                    style={{
-                      marginTop: 8,
-                      fontSize: 11,
-                      color: "#065F46",
-                      background: "#D4F5EA",
-                      borderRadius: 6,
-                      padding: "6px 10px",
-                    }}
-                  >
-                    Payment proof submitted — moved to Payment History.
-                  </div>
-                )}
-              </div>
-            )}
-          </Card>
-        </div>
-      </div>
       <div>
         <SH title="Payment History" />
         <div
@@ -439,7 +63,7 @@ export default function Payments({
           <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
             Filter:
           </span>
-          {(["All", "Paid and Reserved", "Pending", "Rejected"] as const).map(
+          {(["All", "Paid and Reserved", "Rejected", "Cancelled"] as const).map(
             (f) => (
               <button
                 key={f}
@@ -484,7 +108,7 @@ export default function Payments({
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
             <table className="w-full text-[13px]">
-              <thead style={{ background: CREAM }}>
+              <thead style={{ background: "#6892D5" }}>
                 <tr>
                   {[
                     "Product",
@@ -498,7 +122,7 @@ export default function Payments({
                     <th
                       key={h}
                       style={{
-                        color: "#9CA3AF",
+                        color: "#fff",
                         fontWeight: 600,
                         fontSize: 11,
                         padding: "10px 14px",
@@ -596,34 +220,12 @@ export default function Payments({
           </div>
         </Card>
       </div>
-      {payTarget && (
-        <PaymentSubmitModal
-          item={payTarget}
-          contactPrefill={user.fb || ""}
-          onConfirm={(method, refNo, receipt, paymentDetails) =>
-            handlePay(payTarget, method, refNo, receipt, paymentDetails)
-          }
-          onClose={() => setPayTarget(null)}
-        />
-      )}
-      {payAll && (
-        <BatchCheckoutModal
-          items={payableToPay}
-          contactPrefill={user.fb || ""}
-          onSubmit={(item, method, refNo, receipt, paymentDetails) =>
-            handlePay(item, method, refNo, receipt, paymentDetails)
-          }
-          onClose={() => setPayAll(false)}
-        />
-      )}
       {txDetail && (
         <TransactionDetailModal
           tx={txDetail}
           onClose={() => setTxDetail(null)}
         />
       )}
-      {paymentSuccess && <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />}
-
     </div>
   )
 }
