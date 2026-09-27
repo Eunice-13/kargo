@@ -253,7 +253,6 @@ export default function SellerShopPage({
         >
           {/* Left — batches */}
           <div>
-            {/* On Home, a light "About" strip mirrors Shopee's shop intro. */}
             <div
               className="flex items-center justify-between"
               style={{ marginBottom: 14 }}

@@ -58,6 +58,8 @@ export default function MyClaims({
 }: SharedState) {
   const [filter, setFilter] = useState<ClaimStatus | "All">("All")
   const [payTarget, setPayTarget] = useState<ClaimRow | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null)
+  const [cancelling, setCancelling] = useState(false)
   const [viewOrder, setViewOrder] = useState<OrderRow | null>(null)
   const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
   const [contact, setContact] = useState<ClaimRow | null>(null)
@@ -95,6 +97,73 @@ export default function MyClaims({
       : nonPayableClaims.filter((c) => c.status === filter)
 
   const [fbToast, setFbToast] = useState<string | null>(null)
+
+  const handleCancelClaim = async () => {
+    if (!cancelTarget || cancelling) return
+
+    const currentClaim = claims.find((claim) => claim.id === cancelTarget.id)
+    if (!currentClaim || currentClaim.status !== "Pending") {
+      setCancelTarget(null)
+      if (isSupabaseConfigured) await refreshData()
+      alert("This claim is no longer pending and cannot be cancelled.")
+      return
+    }
+
+    setCancelling(true)
+    try {
+      if (isSupabaseConfigured) {
+        await kargoApi.cancelOrder(String(currentClaim.id))
+        await refreshData()
+      } else {
+        setClaims((previous) =>
+          previous.map((claim) =>
+            claim.id === currentClaim.id
+              ? { ...claim, status: "Cancelled" as ClaimStatus }
+              : claim,
+          ),
+        )
+        setToPay((previous) =>
+          previous.filter((payment) => {
+            const sameOrder =
+              String(payment.orderId ?? payment.id) === String(currentClaim.id)
+            const sameLegacyClaim =
+              !payment.orderId &&
+              payment.product === currentClaim.product &&
+              payment.seller === currentClaim.seller
+            return !sameOrder && !sameLegacyClaim
+          }),
+        )
+        setBatches((previous) =>
+          previous.map((batch) => {
+            if (batch.title !== currentClaim.batch) return batch
+
+            return {
+              ...batch,
+              claimed: Math.max(0, batch.claimed - currentClaim.qty),
+              products: batch.products.map((product) => {
+                const matchesProduct = currentClaim.productId
+                  ? product.dbId === currentClaim.productId
+                  : product.name === currentClaim.product
+
+                return matchesProduct
+                  ? {
+                      ...product,
+                      claimed: Math.max(0, product.claimed - currentClaim.qty),
+                    }
+                  : product
+              }),
+            }
+          }),
+        )
+      }
+      setCancelTarget(null)
+    } catch (error) {
+      await refreshData()
+      alert(error instanceof Error ? error.message : "Unable to cancel claim.")
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   if (role === "Seller") {
     const ordFiltered =
@@ -497,12 +566,27 @@ export default function MyClaims({
                         ₱{t.amount.toLocaleString()}
                       </td>
                       <td style={{ padding: "10px 14px" }}>
-                        <PrimaryBtn
-                          size="sm"
-                          onClick={() => setPayTarget(t)}
-                        >
-                          Pay Now
-                        </PrimaryBtn>
+                        <div className="flex items-center gap-2">
+                          <PrimaryBtn
+                            size="sm"
+                            onClick={() => setPayTarget(t)}
+                          >
+                            Pay Now
+                          </PrimaryBtn>
+                          {t.status === "Pending" && (
+                            <SecondaryBtn
+                              size="sm"
+                              onClick={() => setCancelTarget(t)}
+                              style={{
+                                color: "#DC2626",
+                                borderColor: "#FCA5A5",
+                                background: "#FEF2F2",
+                              }}
+                            >
+                              Cancel
+                            </SecondaryBtn>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -935,6 +1019,41 @@ export default function MyClaims({
           onConfirm={(method, refNo, receipt, details) => handlePay(method, refNo, receipt, details)}
           onClose={() => setPayTarget(null)}
         />
+      )}
+      {cancelTarget && (
+        <Modal
+          title="Cancel this claim?"
+          onClose={() => !cancelling && setCancelTarget(null)}
+          width={420}
+        >
+          <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
+            Cancel your claim for <strong>{cancelTarget.product}</strong>? This
+            cannot be undone, and the quantity will become available to other
+            buyers.
+          </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 10,
+              marginTop: 20,
+            }}
+          >
+            <SecondaryBtn
+              onClick={() => setCancelTarget(null)}
+              disabled={cancelling}
+            >
+              Keep Claim
+            </SecondaryBtn>
+            <PrimaryBtn
+              onClick={handleCancelClaim}
+              disabled={cancelling}
+              style={{ background: "#DC2626" }}
+            >
+              {cancelling ? "Cancelling…" : "Cancel Claim"}
+            </PrimaryBtn>
+          </div>
+        </Modal>
       )}
       {viewOrder && (
         <TrackOrderModal order={viewOrder} onClose={() => setViewOrder(null)} />
