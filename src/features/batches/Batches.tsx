@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import type { ClaimRow, BatchType, SharedState, EntityId } from "@/types";
 import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme";
-import { navIntent } from "@/state/navIntent";
+import { navIntent, subscribeNavIntent } from "@/state/navIntent";
 import {
   Modal,
   Card,
@@ -31,6 +31,7 @@ import ItemClaimModal from "./ItemClaimModal";
 import SellerProfileModal from "./SellerProfileModal";
 import SellerDirectoryPage from "./SellerDirectoryPage";
 import BatchPage from "./BatchPage";
+import BuyerHome from "./BuyerHome";
 import { toggleBatchLock } from "./toggleBatchLock";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { kargoApi } from "@/services";
@@ -63,6 +64,9 @@ export default function Batches({
   const [dateFilter, setDateFilter] = useState("All");
   const [ratingFilter, setRatingFilter] = useState("All");
   const [showBuyerReqForm, setShowBuyerReqForm] = useState(false);
+  const [reactingBatchIds, setReactingBatchIds] = useState<Set<number>>(
+    () => new Set(),
+  );
   const [sellerDir, setSellerDir] = useState(false);
   // Request Extension moved to the top of the Batches tab (3.7). A picker of
   // the buyer's extendable claims → the shared ExtensionRequestModal.
@@ -102,6 +106,29 @@ export default function Batches({
     return n;
   });
   const [contact, setContact] = useState<BatchType | null>(null);
+  useEffect(
+    () =>
+      subscribeNavIntent(() => {
+        if (navIntent.batchId !== null) {
+          const requestedBatch = batches.find(
+            (batch) => batch.id === navIntent.batchId,
+          );
+          navIntent.batchId = null;
+          if (requestedBatch) {
+            setProfile(null);
+            setBatchPage(requestedBatch);
+          }
+        }
+
+        if (navIntent.sellerName !== null) {
+          const requestedSeller = navIntent.sellerName;
+          navIntent.sellerName = null;
+          setBatchPage(null);
+          setProfile(requestedSeller);
+        }
+      }),
+    [batches],
+  );
   const [claimTarget, setClaimTarget] = useState<{
     p: (typeof batches)[0]["products"][0];
     key: string;
@@ -224,6 +251,74 @@ export default function Batches({
     if (ratingFilter === "4.5+" && (b.rating ?? 0) < 4.5) return false;
     return true;
   });
+
+  const handleToggleReaction = async (batch: BatchType) => {
+    if (reactingBatchIds.has(batch.id)) return;
+
+    const wasReacted = Boolean(batch.reactedByCurrentUser);
+    const previousCount = batch.reactionCount ?? 0;
+    const nextReacted = !wasReacted;
+    const nextCount = Math.max(0, previousCount + (nextReacted ? 1 : -1));
+
+    setReactingBatchIds((current) => new Set(current).add(batch.id));
+    setBatches((current) =>
+      current.map((item) =>
+        item.id === batch.id
+          ? {
+              ...item,
+              reactedByCurrentUser: nextReacted,
+              reactionCount: nextCount,
+            }
+          : item,
+      ),
+    );
+
+    try {
+      if (isSupabaseConfigured) {
+        if (!batch.dbId)
+          throw new Error("This batch is missing its database identifier.");
+
+        const confirmed = await kargoApi.setBatchReaction(
+          batch.dbId,
+          nextReacted,
+        );
+        setBatches((current) =>
+          current.map((item) =>
+            item.id === batch.id
+              ? {
+                  ...item,
+                  reactedByCurrentUser: confirmed.reacted,
+                  reactionCount: confirmed.reactionCount,
+                }
+              : item,
+          ),
+        );
+      }
+    } catch (error) {
+      setBatches((current) =>
+        current.map((item) =>
+          item.id === batch.id
+            ? {
+                ...item,
+                reactedByCurrentUser: wasReacted,
+                reactionCount: previousCount,
+              }
+            : item,
+        ),
+      );
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to update this reaction.",
+      );
+    } finally {
+      setReactingBatchIds((current) => {
+        const next = new Set(current);
+        next.delete(batch.id);
+        return next;
+      });
+    }
+  };
 
   const handleClaim = async (
     key: string,
@@ -1473,7 +1568,7 @@ export default function Batches({
       {/* Request Extension — top of the Batches tab (3.7) */}
       <div
         style={{
-          display: "flex",
+          display: "none",
           alignItems: "center",
           justifyContent: "space-between",
           gap: 12,
@@ -1495,8 +1590,17 @@ export default function Batches({
           Request Extension
         </SecondaryBtn>
       </div>
-      <FilterBar />
-      <BatchGrid batchList={filtered} />
+      <BuyerHome
+        batches={batches}
+        category={catFilter}
+        date={dateFilter}
+        onCategoryChange={setCatFilter}
+        onDateChange={setDateFilter}
+        onRequestItem={() => setShowBuyerReqForm(true)}
+        onOpenBatch={setBatchPage}
+        onToggleReaction={handleToggleReaction}
+        reactionPending={reactingBatchIds}
+      />
       {showExtPicker && (
         <Modal
           title="Request an extension"
