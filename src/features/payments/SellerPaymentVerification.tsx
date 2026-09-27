@@ -3,7 +3,6 @@ import type React from "react"
 import { INDIGO } from "@/constants/theme"
 import { Card, Avatar, ProductThumb, Countdown, PaymentIcon, StatusBadge, SecondaryBtn } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
-import AddressSection from "./AddressSection"
 import SellerPaymentMethods from "./SellerPaymentMethods"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
@@ -272,10 +271,6 @@ export default function SellerPaymentVerification() {
           </table>
         </div>
       </Card>
-
-      <div className="mt-6">
-        <AddressSection />
-      </div>
 
       {/* Review submission modal */}
       {reviewTarget && (
