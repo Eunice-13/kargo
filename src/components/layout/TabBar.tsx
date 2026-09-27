@@ -3,10 +3,10 @@ import type { Role, Tab } from "@/types"
 import { INDIGO } from "@/constants/theme"
 
 import { PrimaryBtn } from "@/components/shared"
+import CreditCardClockIcon from "@/components/shared/CreditCardClockIcon"
 
 import {
   ClipboardList,
-  History,
   Home,
   LayoutGrid,
   Package,
@@ -22,7 +22,7 @@ const TAB_ICONS = {
 
   "My Claims": ClipboardList,
 
-  Payments: History,
+  Payments: CreditCardClockIcon,
 } as const
 
 export default function TabBar({
@@ -45,16 +45,16 @@ export default function TabBar({
   const visibleTabs =
     role === "Seller"
       ? TABS.map((tab) => ({
-          tab,
-          label: tab,
-          icon: TAB_ICONS[(tab as keyof typeof TAB_ICONS)],
-        }))
+        tab,
+        label: tab,
+        icon: TAB_ICONS[(tab as keyof typeof TAB_ICONS)],
+      }))
       : [
-          { tab: "Batches" as Tab, label: "Home", icon: Home },
-          { tab: "My Claims" as Tab, label: "Cart", icon: ShoppingCart },
-          { tab: "Dashboard" as Tab, label: "Dashboard", icon: LayoutGrid },
-          { tab: "Payments" as Tab, label: "History", icon: History },
-        ]
+        { tab: "Batches" as Tab, label: "Home", icon: Home },
+        { tab: "My Claims" as Tab, label: "Cart", icon: ShoppingCart },
+        { tab: "Dashboard" as Tab, label: "Dashboard", icon: LayoutGrid },
+        { tab: "Payments" as Tab, label: "History", icon: CreditCardClockIcon },
+      ]
   return (
     <div
       style={{
@@ -66,9 +66,8 @@ export default function TabBar({
 
         height: 44,
       }}
-      className={`kargo-tabbar icon-tabbar flex items-center ${
-        role === "Seller" ? "seller-tabbar" : "sticky top-14"
-      }`}
+      className={`kargo-tabbar icon-tabbar flex items-center ${role === "Seller" ? "seller-tabbar" : "sticky top-14"
+        }`}
     >
       {/* Tabs — equally distributed across available width */}
       <div style={{ display: "flex", flex: 1, height: "100%", minWidth: 0 }}>

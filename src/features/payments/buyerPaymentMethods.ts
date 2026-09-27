@@ -16,6 +16,7 @@ export type BuyerMethodType = (typeof BUYER_METHOD_CATALOG)[number]
 export type BuyerPaymentMethod = {
   id: number
   type: BuyerMethodType
+  accountName?: string
   // Account number / mobile / free note depending on type. Optional for the
   // cash methods which need no detail.
   detail: string

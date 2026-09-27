@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react"
 import type React from "react"
-import { CreditCard, Check, Megaphone } from "lucide-react"
-import { INDIGO, CREAM } from "@/constants/theme"
-import { Card, Avatar, ProductThumb, Countdown } from "@/components/shared"
+import { INDIGO } from "@/constants/theme"
+import { Card, Avatar, ProductThumb, Countdown, PaymentIcon, StatusBadge, SecondaryBtn } from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
 import AddressSection from "./AddressSection"
 import SellerPaymentMethods from "./SellerPaymentMethods"
@@ -61,6 +60,7 @@ export default function SellerPaymentVerification() {
     },
   ]
   const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(isSupabaseConfigured ? [] : VERIFY_SEED)
+  const [statusFilter, setStatusFilter] = useState<VerifyItem["status"] | "All">("All")
   const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null)
   const [rejectTarget, setRejectTarget] = useState<VerifyItem | null>(null)
   const [rejectReason, setRejectReason] = useState("")
@@ -110,82 +110,77 @@ export default function SellerPaymentVerification() {
     "Duplicate submission",
     "Other",
   ]
-    return (
-      <div className="p-6">
-        <div style={{ marginBottom: 24 }}>
-          <SellerPaymentMethods />
+  const filteredItems = statusFilter === "All"
+    ? verifyItems
+    : verifyItems.filter((item) => item.status === statusFilter)
+  return (
+    <div className="p-6 space-y-6">
+      <SellerPaymentMethods />
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2
+            style={{
+              fontFamily: "'Josefin Sans',sans-serif",
+              fontSize: 18,
+              fontWeight: 800,
+              color: "#111827",
+            }}
+          >
+            Payment Verification
+          </h2>
+          <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 2 }}>
+            Review buyer submissions and confirm or reject each payment.
+          </p>
         </div>
-        <div style={{ marginBottom: 24 }}>
-          <AddressSection />
-        </div>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="mr-1 text-xs font-semibold text-[#526170]">Filter:</span>
+        {(["All", "Pending", "Verified", "Rejected"] as const).map((filter) => {
+          const selected = statusFilter === filter
+          const count = filter === "All"
+            ? verifyItems.length
+            : verifyItems.filter((item) => item.status === filter).length
+          return (
+            <button
+              key={filter}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => setStatusFilter(filter)}
+              className="rounded-full border px-3 py-1 text-[10px] font-semibold transition-colors"
               style={{
-                fontFamily: "'Josefin Sans',sans-serif",
-                fontSize: 18,
-                fontWeight: 800,
-                color: "#111827",
+                background: selected ? INDIGO : "#fff",
+                borderColor: selected ? INDIGO : "#E5E7EB",
+                color: selected ? "#fff" : "#6B7280",
               }}
             >
-              Payment Verification
-            </h2>
-            <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 2 }}>
-              Review buyer submissions and confirm or reject each payment.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {(["Pending", "Verified", "Rejected"] as const).map((s) => (
-              <span
-                key={s}
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  padding: "4px 12px",
-                  borderRadius: 999,
-                  background:
-                    s === "Pending"
-                      ? "#FEF3C7"
-                      : s === "Verified"
-                        ? "#D4F5EA"
-                        : "#FEE2E2",
-                  color:
-                    s === "Pending"
-                      ? "#92400E"
-                      : s === "Verified"
-                        ? "#0B7A59"
-                        : "#991B1B",
-                }}
-              >
-                {verifyItems.filter((v) => v.status === s).length} {s}
-              </span>
-            ))}
-          </div>
-        </div>
-        <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
-          <table className="w-full text-[13px]">
-            <thead style={{ background: CREAM }}>
+              {filter} <span className="ml-1 opacity-75">{count}</span>
+            </button>
+          )
+        })}
+      </div>
+      <Card className="!p-0 overflow-hidden">
+        <div style={{ overflowX: "auto" }}>
+          <table className="seller-payment-history w-full text-[12px]">
+            <thead style={{ background: "#5D87D1" }}>
               <tr>
                 {[
-                  "Buyer",
                   "Product",
+                  "Buyers",
                   "Method",
                   "Amount",
-                  "Amount Paid",
-                  "Submitted",
+                  "Date",
                   "Status",
                   "Actions",
                 ].map((h) => (
                   <th
                     key={h}
                     style={{
-                      color: "#9CA3AF",
+                      color: "#fff",
                       fontWeight: 600,
-                      fontSize: 11,
-                      padding: "10px 14px",
+                      fontSize: 10,
                       textAlign: "left",
                       whiteSpace: "nowrap",
+                      letterSpacing: "0.04em",
                     }}
                   >
                     {h}
@@ -194,163 +189,57 @@ export default function SellerPaymentVerification() {
               </tr>
             </thead>
             <tbody>
-              {verifyItems.map((item, i) => {
+              {filteredItems.map((item) => {
                 const paidNum =
                   item.amountPaid != null ? Number(item.amountPaid) : null
                 const isShort = paidNum != null && paidNum < item.amount
                 return (
-                  <tr
-                    key={item.id}
-                    style={{
-                      borderTop: "1px solid #F3F4F6",
-                      background: i % 2 ? "#FAFAFA" : "#fff",
-                    }}
-                  >
-                    <td style={{ padding: "12px 14px" }}>
-                      <div className="flex items-center gap-2">
-                        <Avatar name={item.buyer} size={22} />
-                        <span style={{ fontWeight: 500, color: "#111827" }}>
-                          {item.buyer}
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ padding: "12px 14px" }}>
+                  <tr key={item.id}>
+                    <td>
                       <div className="flex items-center gap-2">
                         <ProductThumb name={item.product} />
-                        <span style={{ color: "#374151" }}>{item.product}</span>
+                        <span style={{ color: "#111827", fontWeight: 600 }}>{item.product}</span>
                       </div>
                     </td>
-                    <td style={{ padding: "12px 14px" }}>
+                    <td>
+                      <div className="flex items-center gap-2 whitespace-nowrap">
+                        <Avatar name={item.buyer} size={18} />
+                        <span style={{ fontSize: 11, color: "#526170" }}>{item.buyer}</span>
+                      </div>
+                    </td>
+                    <td>
                       <span
                         style={{
-                          fontSize: 12,
-                          display: "flex",
+                          fontSize: 11,
+                          display: "inline-flex",
                           alignItems: "center",
                           gap: 4,
                         }}
                       >
-                        <CreditCard size={13} aria-hidden="true" /> {item.method}
+                        <PaymentIcon method={item.method} size={15} /> {item.method}
                       </span>
                     </td>
-                    <td
-                      style={{
-                        padding: "12px 14px",
-                        fontWeight: 700,
-                        color: "#111827",
-                        fontFamily: "'Josefin Sans',sans-serif",
-                      }}
-                    >
-                      ₱{item.amount.toLocaleString()}
-                    </td>
-                    <td style={{ padding: "12px 14px" }}>
-                      {paidNum != null ? (
-                        <div>
-                          <div
-                            style={{
-                              fontWeight: 700,
-                              color: isShort ? "#D97706" : "#111827",
-                            }}
-                          >
-                            ₱{paidNum.toLocaleString()}
-                          </div>
-                          {isShort && (
-                            <div
-                              style={{
-                                fontSize: 10,
-                                color: "#92400E",
-                                background: "#FFF7ED",
-                                borderRadius: 999,
-                                padding: "1px 7px",
-                                marginTop: 2,
-                                display: "inline-block",
-                              }}
-                            >
-                              Short ₱{(item.amount - paidNum).toLocaleString()}
-                            </div>
-                          )}
+                    <td>
+                      <div className="whitespace-nowrap font-bold text-[#111827]">
+                        ₱{item.amount.toLocaleString()}
+                      </div>
+                      {paidNum != null && (
+                        <div className={`mt-0.5 whitespace-nowrap text-[10px] ${isShort ? "text-[#B45309]" : "text-[#748391]"}`}>
+                          Paid ₱{paidNum.toLocaleString()}
+                          {isShort ? ` · short ₱${(item.amount - paidNum).toLocaleString()}` : ""}
                         </div>
-                      ) : (
-                        <span style={{ color: "#9CA3AF" }}>—</span>
                       )}
                     </td>
-                    <td
-                      style={{
-                        padding: "12px 14px",
-                        color: "#9CA3AF",
-                        fontSize: 12,
-                      }}
-                    >
+                    <td className="whitespace-nowrap text-[11px] text-[#748391]">
                       {item.date}
                     </td>
-                    <td style={{ padding: "12px 14px" }}>
-                      {item.status === "Pending" && (
-                        <div>
-                          <span
-                            style={{
-                              background: "#FEF3C7",
-                              color: "#92400E",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              padding: "3px 9px",
-                              borderRadius: 999,
-                            }}
-                          >
-                            Pending
-                          </span>
-                          {isShort && (
-                            <div
-                              style={{
-                                fontSize: 10,
-                                color: "#92400E",
-                                fontWeight: 600,
-                                marginTop: 3,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 3,
-                              }}
-                            >
-                              <span
-                                style={{
-                                  background: "#FCD34D",
-                                  borderRadius: 999,
-                                  width: 5,
-                                  height: 5,
-                                  display: "inline-block",
-                                }}
-                              />
-                              Awaiting balance
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {item.status === "Verified" && (
-                        <span
-                          style={{
-                            background: "#D4F5EA",
-                            color: "#0B7A59",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: "3px 9px",
-                            borderRadius: 999,
-                          }}
-                        >
-                          Verified
-                        </span>
+                    <td>
+                      <StatusBadge status={item.status === "Verified" ? "Paid and Reserved" : item.status} />
+                      {item.status === "Pending" && isShort && (
+                        <div className="mt-1 text-[10px] font-semibold text-[#92400E]">Awaiting balance</div>
                       )}
                       {item.status === "Rejected" && (
                         <div>
-                          <span
-                            style={{
-                              background: "#FEE2E2",
-                              color: "#991B1B",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              padding: "3px 9px",
-                              borderRadius: 999,
-                            }}
-                          >
-                            Rejected
-                          </span>
                           {item.rejectReason && (
                             <div
                               style={{
@@ -371,193 +260,61 @@ export default function SellerPaymentVerification() {
                         </div>
                       )}
                     </td>
-                    <td style={{ padding: "12px 14px" }}>
-                      {(() => {
-                        const btnBase: React.CSSProperties = {
-                          fontSize: 12,
-                          fontWeight: 600,
-                          padding: "5px 12px",
-                          borderRadius: 6,
-                          border: "1px solid",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap" as const,
-                        }
-                        return (
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: 6,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <button
-                              onClick={() => setReviewTarget(item)}
-                              style={{
-                                ...btnBase,
-                                background: "#fff",
-                                color: "#374151",
-                                borderColor: "#E5E7EB",
-                              }}
-                            >
-                              Review
-                            </button>
-                            {item.status === "Pending" && isShort ? (
-                              <>
-                                {item.rejectReason?.includes(
-                                  "buyer notified",
-                                ) ? (
-                                  <span
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: 600,
-                                      color: "#0B7A59",
-                                      background: "#D4F5EA",
-                                      border: "1px solid #6EE7B7",
-                                      borderRadius: 6,
-                                      padding: "5px 12px",
-                                      whiteSpace: "nowrap" as const,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 5,
-                                    }}
-                                  >
-                                    <Check size={12} aria-hidden="true" /> Notified
-                                  </span>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      setInsuffTarget(item)
-                                      setInsuffAmtPaid(item.amountPaid || "")
-                                    }}
-                                    style={{
-                                      ...btnBase,
-                                      background: "#FEF3C7",
-                                      color: "#92400E",
-                                      borderColor: "#FCD34D",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 5,
-                                    }}
-                                  >
-                                    <Megaphone size={12} aria-hidden="true" /> Notify Buyer
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() =>
-                                    updateVerifyItems((p) =>
-                                      p.map((v) =>
-                                        v.id === item.id
-                                          ? {
-                                              ...v,
-                                              status: "Verified" as const,
-                                            }
-                                          : v,
-                                      ),
-                                    )
-                                  }
-                                  style={{
-                                    ...btnBase,
-                                    background: INDIGO,
-                                    color: "#fff",
-                                    borderColor: INDIGO,
-                                  }}
-                                >
-                                  Mark Paid
-                                </button>
-                              </>
-                            ) : (
-                              item.status === "Pending" && (
-                                <>
-                                  <button
-                                    onClick={() =>
-                                      updateVerifyItems((p) =>
-                                        p.map((v) =>
-                                          v.id === item.id
-                                            ? {
-                                                ...v,
-                                                status: "Verified" as const,
-                                              }
-                                            : v,
-                                        ),
-                                      )
-                                    }
-                                    style={{
-                                      ...btnBase,
-                                      background: INDIGO,
-                                      color: "#fff",
-                                      borderColor: INDIGO,
-                                    }}
-                                  >
-                                    Confirm
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setRejectTarget(item)
-                                      setRejectReason("")
-                                      setRejectCustom("")
-                                    }}
-                                    style={{
-                                      ...btnBase,
-                                      background: "#fff",
-                                      color: "#EF4444",
-                                      borderColor: "#EF4444",
-                                    }}
-                                  >
-                                    Reject
-                                  </button>
-                                </>
-                              )
-                            )}
-                          </div>
-                        )
-                      })()}
+                    <td>
+                      <SecondaryBtn size="sm" onClick={() => setReviewTarget(item)}>
+                        Review
+                      </SecondaryBtn>
                     </td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
-          </div>
-        </Card>
+        </div>
+      </Card>
 
-        {/* Review submission modal */}
-        {reviewTarget && (
-          <ReviewSubmissionModal
-            reviewTarget={reviewTarget}
-            setReviewTarget={setReviewTarget}
-            setVerifyItems={updateVerifyItems}
-            setRejectTarget={setRejectTarget}
-            setRejectReason={setRejectReason}
-            setRejectCustom={setRejectCustom}
-          />
-        )}
-
-        {/* Insufficient Payment modal */}
-        {insuffTarget && (
-          <InsufficientPaymentModal
-            insuffTarget={insuffTarget}
-            setInsuffTarget={setInsuffTarget}
-            insuffAmtPaid={insuffAmtPaid}
-            setInsuffAmtPaid={setInsuffAmtPaid}
-            setVerifyItems={updateVerifyItems}
-          />
-        )}
-
-        {/* Reject with reason modal */}
-        {rejectTarget && (
-          <RejectPaymentModal
-            rejectTarget={rejectTarget}
-            setRejectTarget={setRejectTarget}
-            rejectReason={rejectReason}
-            setRejectReason={setRejectReason}
-            rejectCustom={rejectCustom}
-            setRejectCustom={setRejectCustom}
-            setInsuffTarget={setInsuffTarget}
-            setInsuffAmtPaid={setInsuffAmtPaid}
-            setVerifyItems={updateVerifyItems}
-            REJECT_REASONS={REJECT_REASONS}
-          />
-        )}
+      <div className="mt-6">
+        <AddressSection />
       </div>
-    )
+
+      {/* Review submission modal */}
+      {reviewTarget && (
+        <ReviewSubmissionModal
+          reviewTarget={reviewTarget}
+          setReviewTarget={setReviewTarget}
+          setVerifyItems={updateVerifyItems}
+          setRejectTarget={setRejectTarget}
+          setRejectReason={setRejectReason}
+          setRejectCustom={setRejectCustom}
+        />
+      )}
+
+      {/* Insufficient Payment modal */}
+      {insuffTarget && (
+        <InsufficientPaymentModal
+          insuffTarget={insuffTarget}
+          setInsuffTarget={setInsuffTarget}
+          insuffAmtPaid={insuffAmtPaid}
+          setInsuffAmtPaid={setInsuffAmtPaid}
+          setVerifyItems={updateVerifyItems}
+        />
+      )}
+
+      {/* Reject with reason modal */}
+      {rejectTarget && (
+        <RejectPaymentModal
+          rejectTarget={rejectTarget}
+          setRejectTarget={setRejectTarget}
+          rejectReason={rejectReason}
+          setRejectReason={setRejectReason}
+          rejectCustom={rejectCustom}
+          setRejectCustom={setRejectCustom}
+          setInsuffTarget={setInsuffTarget}
+          setInsuffAmtPaid={setInsuffAmtPaid}
+          setVerifyItems={updateVerifyItems}
+          REJECT_REASONS={REJECT_REASONS}
+        />
+      )}
+    </div>
+  )
 }

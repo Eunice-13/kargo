@@ -24,33 +24,33 @@ export const TODAY = "Sep 10, 2026"
 
 export const CAT_GRAD: Record<string, string> = RETRO_THEME
   ? {
-      "Food": "linear-gradient(135deg,#D9A05A 0%,#B6533D 100%)",
+    "Food": "linear-gradient(135deg,#D9A05A 0%,#B6533D 100%)",
 
-      Beauty: "linear-gradient(135deg,#C98368 0%,#E4C19B 100%)",
+    Beauty: "linear-gradient(135deg,#C98368 0%,#E4C19B 100%)",
 
-      Luxury: "linear-gradient(135deg,#A84D38 0%,#D9A05A 100%)",
-      Apparel: "linear-gradient(135deg,#8C6E63 0%,#D9C2A5 100%)",
-      Others: "linear-gradient(135deg,#7DA294 0%,#DCE9DF 100%)",
+    Luxury: "linear-gradient(135deg,#A84D38 0%,#D9A05A 100%)",
+    Apparel: "linear-gradient(135deg,#8C6E63 0%,#D9C2A5 100%)",
+    Others: "linear-gradient(135deg,#7DA294 0%,#DCE9DF 100%)",
 
-      // Legacy fallbacks (data remapped, kept for safety)
-      Skincare: "linear-gradient(135deg,#A8C4B4 0%,#DCE4D1 100%)",
-      "Grocery & Snacks": "linear-gradient(135deg,#D9A05A 0%,#F1D58B 100%)",
-      Mixed: "linear-gradient(135deg,#7DA294 0%,#DCE9DF 100%)",
-    }
+    // Legacy fallbacks (data remapped, kept for safety)
+    Skincare: "linear-gradient(135deg,#A8C4B4 0%,#DCE4D1 100%)",
+    "Grocery & Snacks": "linear-gradient(135deg,#D9A05A 0%,#F1D58B 100%)",
+    Mixed: "linear-gradient(135deg,#7DA294 0%,#DCE9DF 100%)",
+  }
   : {
-      "Food": "linear-gradient(135deg,#FFD9B3 0%,#FFBCB3 100%)",
+    "Food": "linear-gradient(135deg,#FFD9B3 0%,#FFBCB3 100%)",
 
-      Beauty: "linear-gradient(135deg,#E8D3F7 0%,#F7D3E8 100%)",
+    Beauty: "linear-gradient(135deg,#E8D3F7 0%,#F7D3E8 100%)",
 
-      Luxury: "linear-gradient(135deg,#F7E8D3 0%,#F7D3D3 100%)",
-      Apparel: "linear-gradient(135deg,#D9C7F7 0%,#C0D0F7 100%)",
-      Others: "linear-gradient(135deg,#C0F7D9 0%,#C0EFF7 100%)",
+    Luxury: "linear-gradient(135deg,#F7E8D3 0%,#F7D3D3 100%)",
+    Apparel: "linear-gradient(135deg,#D9C7F7 0%,#C0D0F7 100%)",
+    Others: "linear-gradient(135deg,#C0F7D9 0%,#C0EFF7 100%)",
 
-      // Legacy fallbacks (data remapped, kept for safety)
-      Skincare: "linear-gradient(135deg,#B3EDE8 0%,#B3D9F7 100%)",
-      "Grocery & Snacks": "linear-gradient(135deg,#FFF7C0 0%,#FFE8B3 100%)",
-      Mixed: "linear-gradient(135deg,#C0F7D9 0%,#C0EFF7 100%)",
-    }
+    // Legacy fallbacks (data remapped, kept for safety)
+    Skincare: "linear-gradient(135deg,#B3EDE8 0%,#B3D9F7 100%)",
+    "Grocery & Snacks": "linear-gradient(135deg,#FFF7C0 0%,#FFE8B3 100%)",
+    Mixed: "linear-gradient(135deg,#C0F7D9 0%,#C0EFF7 100%)",
+  }
 
 // ─── Category cover photos ────────────────────────────────────────────────────
 
@@ -103,7 +103,7 @@ export const STATUS_C: Record<PaymentHistoryStatus, {
 
   Expired: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
 
-  Cancelled: { bg: "#F3F4F6", text: "#6B7280", dot: "#9CA3AF" },
+  Cancelled: { bg: "#FFE4E6", text: "#9F1239", dot: "#FB7185" },
 
   "Insufficient Payment": { bg: "#FFF7ED", text: "#92400E", dot: "#FCD34D" },
   Rejected: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },

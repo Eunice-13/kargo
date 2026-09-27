@@ -7,20 +7,28 @@ import {
   SH,
   PrimaryBtn,
   SecondaryBtn,
+  Avatar,
   ProductThumb,
   StatusBadge,
   Countdown,
   PaymentSuccessToast,
+  PaymentIcon,
+  PaymentMethodCard,
 } from "@/components/shared"
 import PaymentSubmitModal from "./PaymentSubmitModal"
 import type { PaymentSubmissionDetails } from "./PaymentSubmitModal"
 import BatchCheckoutModal from "./BatchCheckoutModal"
 import TransactionDetailModal from "./TransactionDetailModal"
 import SellerPaymentVerification from "./SellerPaymentVerification"
-import AddressSection from "./AddressSection"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
+import { BUYER_METHOD_CATALOG, METHOD_COLORS } from "./buyerPaymentMethods"
+import type { BuyerMethodType, BuyerPaymentMethod } from "./buyerPaymentMethods"
+import type { PayMethod } from "./paymentMethodTypes"
+import AddPaymentMethodModal from "./AddPaymentMethodModal"
+import EditPaymentMethodModal from "./EditPaymentMethodModal"
+import RemovePaymentMethodModal from "./RemovePaymentMethodModal"
 
 export default function Payments({
   toPay,
@@ -45,27 +53,86 @@ export default function Payments({
   const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
   const [payAll, setPayAll] = useState(false)
   const [histFilter, setHistFilter] =
-    useState<"All" | "Paid and Reserved" | "Pending" | "Rejected">("All")
-  const [dateFilter2, setDateFilter2] = useState("All")
+    useState<"All" | "Paid and Reserved" | "Rejected" | "Cancelled">("All")
   const [txDetail, setTxDetail] = useState<PayHistRow | null>(null)
+  const [buyerMethods, setBuyerMethods] = useState<BuyerPaymentMethod[]>(() =>
+    BUYER_METHOD_CATALOG.filter((method) => method === "GCash" || method === "Maya").map((type, index) => ({
+      id: index + 1,
+      type,
+      detail: index === 0 ? "0917-555-8821" : "0918-555-5543",
+      accountName: user.name,
+    })),
+  )
+  const [showAddPM, setShowAddPM] = useState(false)
+  const [removeTarget, setRemoveTarget] = useState<PayMethod | null>(null)
+  const [editTarget, setEditTarget] = useState<PayMethod | null>(null)
+  const [pmType, setPmType] = useState<BuyerMethodType>("GCash")
+  const [pmName, setPmName] = useState(user.name)
+  const [pmNum, setPmNum] = useState("")
+  const [pmQr, setPmQr] = useState<File | null>(null)
+  const [editName, setEditName] = useState("")
+  const [editNum, setEditNum] = useState("")
   const fileRef = useRef<HTMLInputElement>(null)
   const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
 
+  const saveBuyerMethod = () => {
+    if (!BUYER_METHOD_CATALOG.includes(pmType)) return
+    setBuyerMethods((methods) => [
+      ...methods,
+      {
+        id: Date.now(),
+        type: pmType,
+        detail: pmNum.trim(),
+        accountName: pmName.trim(),
+      },
+    ])
+    setPmName(user.name)
+    setPmNum("")
+    setPmQr(null)
+    setShowAddPM(false)
+  }
+
+  const openBuyerMethodEdit = (method: BuyerPaymentMethod) => {
+    setEditTarget({
+      id: method.id,
+      name: method.type,
+      detail: method.detail,
+      icon: "",
+      verified: true,
+    })
+    setEditName(method.accountName ?? user.name)
+    setEditNum(method.detail)
+  }
+
+  const saveBuyerMethodEdit = () => {
+    if (!editTarget) return
+    setBuyerMethods((methods) => methods.map((method) => method.id === editTarget.id
+      ? { ...method, accountName: editName.trim(), detail: editNum.trim() }
+      : method))
+    setEditTarget(null)
+  }
+
+  const removeBuyerMethod = () => {
+    if (!removeTarget) return
+    setBuyerMethods((methods) => methods.filter((method) => method.id !== removeTarget.id))
+    setRemoveTarget(null)
+  }
+
   useEffect(() => {
     if (!isSupabaseConfigured || role !== "Buyer") return
-    const refresh = () => void refreshData().catch(() => {})
+    const refresh = () => void refreshData().catch(() => { })
     refresh()
     const refreshOnFocus = () => refresh()
     window.addEventListener("focus", refreshOnFocus)
     const channel = user.id && supabase
       ? supabase
-          .channel(`buyer-payment-history-${user.id}`)
-          .on(
-            "postgres_changes",
-            { event: "UPDATE", schema: "public", table: "payments", filter: `submitted_by=eq.${user.id}` },
-            refresh,
-          )
-          .subscribe()
+        .channel(`buyer-payment-history-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "payments", filter: `submitted_by=eq.${user.id}` },
+          refresh,
+        )
+        .subscribe()
       : null
     return () => {
       window.removeEventListener("focus", refreshOnFocus)
@@ -198,9 +265,41 @@ export default function Payments({
   if (role === "Seller") return <SellerPaymentVerification />
 
   return (
-    <div className="p-6 space-y-6">
-      <AddressSection />
-      <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 1fr" }}>
+    <div className="p-6 space-y-8">
+      <section>
+        <SH
+          title="Payment Methods"
+          action={
+            <PrimaryBtn size="sm" onClick={() => setShowAddPM(true)}>
+              + Add Payment Method
+            </PrimaryBtn>
+          }
+        />
+        <div className="grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
+          {buyerMethods.map((method) => {
+            const color = METHOD_COLORS[method.type] ?? "#4B5563"
+            return (
+              <PaymentMethodCard
+                key={method.id}
+                name={method.type}
+                detail={method.detail}
+                color={color}
+                onEdit={() => openBuyerMethodEdit(method)}
+                onDelete={() => setRemoveTarget({
+                  id: method.id,
+                  name: method.type,
+                  detail: method.detail,
+                  icon: "",
+                  verified: true,
+                })}
+                deleteDisabled={buyerMethods.length <= 1}
+                deleteTitle={buyerMethods.length <= 1 ? "Keep at least one payment method" : undefined}
+              />
+            )
+          })}
+        </div>
+      </section>
+      <div className="hidden" aria-hidden="true">
         <div>
           <SH title="To Pay" />
           <div className="space-y-3">
@@ -439,7 +538,7 @@ export default function Payments({
           <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
             Filter:
           </span>
-          {(["All", "Paid and Reserved", "Pending", "Rejected"] as const).map(
+          {(["All", "Paid and Reserved", "Rejected", "Cancelled"] as const).map(
             (f) => (
               <button
                 key={f}
@@ -450,9 +549,9 @@ export default function Payments({
                   border: `1px solid ${histFilter === f ? "#191BA9" : "#E5E7EB"
                     }`,
                   borderRadius: 999,
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: 600,
-                  padding: "4px 12px",
+                  padding: "4px 10px",
                   cursor: "pointer",
                 }}
               >
@@ -460,35 +559,15 @@ export default function Payments({
               </button>
             ),
           )}
-          <div style={{ flex: 1 }} />
-          <select
-            value={dateFilter2}
-            onChange={(e) => setDateFilter2(e.target.value)}
-            style={{
-              fontSize: 12,
-              color: "#374151",
-              border: "1px solid #E5E7EB",
-              borderRadius: 6,
-              padding: "5px 8px",
-              background: "#fff",
-              outline: "none",
-            }}
-          >
-            {["All", "Sep 2026", "Aug 2026", "Jul 2026", "Jun 2026"].map(
-              (o) => (
-                <option key={o}>{o}</option>
-              ),
-            )}
-          </select>
         </div>
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-            <table className="w-full text-[13px]">
-              <thead style={{ background: CREAM }}>
+            <table className="buyer-payment-history w-full text-[12px]">
+              <thead style={{ background: "#5D87D1" }}>
                 <tr>
                   {[
                     "Product",
-                    "Batch",
+                    "Buyers",
                     "Method",
                     "Amount",
                     "Date",
@@ -498,11 +577,13 @@ export default function Payments({
                     <th
                       key={h}
                       style={{
-                        color: "#9CA3AF",
+                        color: "#fff",
                         fontWeight: 600,
-                        fontSize: 11,
-                        padding: "10px 14px",
+                        fontSize: 10,
+                        padding: "8px 10px",
                         textAlign: "left",
+                        whiteSpace: "nowrap",
+                        letterSpacing: "0.04em",
                       }}
                     >
                       {h}
@@ -515,68 +596,33 @@ export default function Payments({
                   .filter((h) => {
                     if (histFilter !== "All" && h.status !== histFilter)
                       return false
-                    if (
-                      dateFilter2 !== "All" &&
-                      !h.date.includes(dateFilter2.split(" ")[0])
-                    )
-                      return false
                     return true
                   })
-                  .map((p, i) => (
-                    <tr
-                      key={p.id}
-                      style={{
-                        borderTop: "1px solid #F3F4F6",
-                        background: i % 2 ? "#FAFAFA" : "#fff",
-                      }}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td style={{ padding: "10px 14px" }}>
+                  .map((p) => (
+                    <tr key={p.id}>
+                      <td>
                         <div className="flex items-center gap-2">
                           <ProductThumb name={p.product} />
-                          <span style={{ fontWeight: 500, color: "#111827" }}>
-                            {p.product}
-                          </span>
+                          <span className="font-semibold text-[#111827]">{p.product}</span>
                         </div>
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 14px",
-                          color: "#6B7280",
-                          fontSize: 12,
-                        }}
-                      >
-                        {p.batch || "—"}
+                      <td>
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                          <Avatar name={user.name} size={18} />
+                          <span className="text-[11px] text-[#526170]">{user.name}</span>
+                        </div>
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 14px",
-                          fontSize: 12,
-                          color: "#374151",
-                        }}
-                      >
-                        {p.method}
+                      <td>
+                        <span className="inline-flex items-center gap-1.5 text-[11px] text-[#526170]">
+                          <PaymentIcon method={p.method} size={15} />
+                          {p.method}
+                        </span>
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 14px",
-                          fontWeight: 700,
-                          color: "#111827",
-                          fontFamily: "'Josefin Sans',sans-serif",
-                        }}
-                      >
+                      <td className="whitespace-nowrap font-bold text-[#111827]">
                         ₱{p.amount.toLocaleString()}
                       </td>
-                      <td
-                        style={{
-                          padding: "10px 14px",
-                          color: "#9CA3AF",
-                          fontSize: 12,
-                        }}
-                      >
-                        {p.date}
-                      </td>
-                      <td style={{ padding: "10px 14px" }}>
+                      <td className="whitespace-nowrap text-[11px] text-[#748391]">{p.date}</td>
+                      <td>
                         <StatusBadge status={p.status} />
                         {p.status === "Rejected" && p.rejectionDeadline && (
                           <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4, whiteSpace: "nowrap" }}>
@@ -584,13 +630,20 @@ export default function Payments({
                           </div>
                         )}
                       </td>
-                      <td style={{ padding: "10px 14px" }}>
+                      <td>
                         <SecondaryBtn size="sm" onClick={() => setTxDetail(p)}>
                           View Details
                         </SecondaryBtn>
                       </td>
                     </tr>
                   ))}
+                {payHistory.filter((history) => histFilter === "All" || history.status === histFilter).length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-xs text-[#748391]">
+                      No payment history for this status.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -620,6 +673,44 @@ export default function Payments({
         <TransactionDetailModal
           tx={txDetail}
           onClose={() => setTxDetail(null)}
+        />
+      )}
+      {showAddPM && (
+        <AddPaymentMethodModal
+          pmType={pmType}
+          setPmType={(value) => {
+            const method = BUYER_METHOD_CATALOG.find((candidate) => candidate === value)
+            if (method) setPmType(method)
+          }}
+          pmName={pmName}
+          setPmName={setPmName}
+          pmNum={pmNum}
+          setPmNum={setPmNum}
+          pmQr={pmQr}
+          setPmQr={setPmQr}
+          pmLoading={false}
+          addPayMethod={saveBuyerMethod}
+          setShowAddPM={setShowAddPM}
+        />
+      )}
+      {editTarget && (
+        <EditPaymentMethodModal
+          editTarget={editTarget}
+          editName={editName}
+          setEditName={setEditName}
+          editNum={editNum}
+          setEditNum={setEditNum}
+          pmLoading={false}
+          saveEdit={saveBuyerMethodEdit}
+          onClose={() => setEditTarget(null)}
+        />
+      )}
+      {removeTarget && (
+        <RemovePaymentMethodModal
+          removeTarget={removeTarget}
+          setRemoveTarget={setRemoveTarget}
+          confirmRemove={removeBuyerMethod}
+          isLastMethod={buyerMethods.length <= 1}
         />
       )}
       {paymentSuccess && <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />}

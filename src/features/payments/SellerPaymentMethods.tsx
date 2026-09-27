@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
-import { Pencil, Trash2 } from "lucide-react"
-import { Card, SH, PrimaryBtn, PaymentIcon } from "@/components/shared"
+import { Card, SH, PrimaryBtn, PaymentMethodCard } from "@/components/shared"
 import { METHOD_COLORS, isCashMethod } from "./buyerPaymentMethods"
 import type { PayMethod } from "./paymentMethodTypes"
 import AddPaymentMethodModal from "./AddPaymentMethodModal"
@@ -17,9 +16,9 @@ export default function SellerPaymentMethods() {
     isSupabaseConfigured
       ? []
       : [
-          { id: 1, name: "GCash", detail: "09XX-XXX-8821", icon: "", verified: true },
-          { id: 2, name: "Maya", detail: "09XX-XXX-5543", icon: "", verified: true },
-        ],
+        { id: 1, name: "GCash", detail: "09XX-XXX-8821", icon: "", verified: true },
+        { id: 2, name: "Maya", detail: "09XX-XXX-5543", icon: "", verified: true },
+      ],
   )
   const [showAddPM, setShowAddPM] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<PayMethod | null>(null)
@@ -148,7 +147,7 @@ export default function SellerPaymentMethods() {
         title="Payment Methods"
         action={
           <PrimaryBtn size="sm" onClick={() => setShowAddPM(true)}>
-            + Add Method
+            + Add Payment Method
           </PrimaryBtn>
         }
       />
@@ -159,84 +158,21 @@ export default function SellerPaymentMethods() {
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2">
           {payMethods.map((m) => {
             const color = METHOD_COLORS[m.name] ?? "#4B5563"
             return (
-              <Card
+              <PaymentMethodCard
                 key={m.id}
-                style={{ borderLeft: `4px solid ${color}` }}
-                className="flex items-center gap-3"
-              >
-                {m.qrUrl ? (
-                  <img
-                    src={m.qrUrl}
-                    alt={`${m.name} QR`}
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 6,
-                      objectFit: "cover",
-                      border: "1px solid #E5E7EB",
-                      flexShrink: 0,
-                    }}
-                  />
-                ) : (
-                  <span className="text-2xl" style={{ color }}>
-                    <PaymentIcon method={m.name} size={22} />
-                  </span>
-                )}
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: "#111827",
-                      fontFamily: "'Josefin Sans',sans-serif",
-                    }}
-                  >
-                    {m.name}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: "#9CA3AF",
-                      marginTop: 2,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {m.detail || "—"}
-                  </div>
-                </div>
-                <div className="ml-auto flex items-center gap-1">
-                  <button
-                    type="button"
-                    aria-label={`Edit ${m.name}`}
-                    onClick={() => openEdit(m)}
-                    style={{ border: "none", background: "none", cursor: "pointer", color: "#6B7280", padding: 4 }}
-                  >
-                    <Pencil size={14} aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${m.name}`}
-                    onClick={() => setRemoveTarget(m)}
-                    disabled={payMethods.length <= 1}
-                    title={payMethods.length <= 1 ? "Keep at least one payment method" : undefined}
-                    style={{
-                      border: "none",
-                      background: "none",
-                      cursor: payMethods.length <= 1 ? "not-allowed" : "pointer",
-                      color: payMethods.length <= 1 ? "#D1D5DB" : "#B91C1C",
-                      padding: 4,
-                    }}
-                  >
-                    <Trash2 size={14} aria-hidden="true" />
-                  </button>
-                </div>
-              </Card>
+                name={m.name}
+                detail={m.detail}
+                color={color}
+                qrUrl={m.qrUrl}
+                onEdit={() => openEdit(m)}
+                onDelete={() => setRemoveTarget(m)}
+                deleteDisabled={payMethods.length <= 1}
+                deleteTitle={payMethods.length <= 1 ? "Keep at least one payment method" : undefined}
+              />
             )
           })}
         </div>

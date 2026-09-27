@@ -1,5 +1,7 @@
 export { default as CategoryIcon } from "./CategoryIcon"
 export { default as PaymentIcon } from "./PaymentIcon"
+export { default as CreditCardClockIcon } from "./CreditCardClockIcon"
+export { default as PaymentMethodCard } from "./PaymentMethodCard"
 export { default as StatusBadge } from "./StatusBadge"
 export { default as Avatar } from "./Avatar"
 export { default as ProductThumb, PROD_IMG } from "./ProductThumb"
