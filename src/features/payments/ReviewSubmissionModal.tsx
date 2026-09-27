@@ -458,16 +458,7 @@ export default function ReviewSubmissionModal({
                       </>
                     )}
                     <button
-                      onClick={() => {
-                        setVerifyItems((p) =>
-                          p.map((v) =>
-                            v.id === reviewTarget.id
-                              ? { ...v, status: "Verified" as const }
-                              : v,
-                          ),
-                        )
-                        setReviewTarget(null)
-                      }}
+                      onClick={() => onMarkPaid(reviewTarget)}
                       style={{
                         ...btnBase,
                         flex: 1,

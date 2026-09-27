@@ -60,6 +60,31 @@ function newestFirst<T extends { id: string | number; createdAt?: string }>(
   return rightTime - leftTime
 }
 
+function paidAt(claim: ClaimRow, payHistory: PayHistRow[]) {
+  if (claim.status !== "Paid and Reserved") return undefined
+  return payHistory
+    .filter(
+      (payment) =>
+        payment.product === claim.product &&
+        payment.batch === claim.batch &&
+        payment.status === "Paid and Reserved" &&
+        payment.submittedAt,
+    )
+    .reduce((latest, payment) => {
+      const timestamp = new Date(payment.submittedAt as string).getTime()
+      return timestamp > latest ? timestamp : latest
+    }, 0)
+}
+
+function hasRejectedPayment(claim: ClaimRow, payHistory: PayHistRow[]) {
+  return payHistory.some(
+    (payment) =>
+      payment.product === claim.product &&
+      payment.batch === claim.batch &&
+      payment.status === "Rejected",
+  )
+}
+
 export default function MyClaims({
   claims,
   setClaims,
@@ -162,9 +187,13 @@ export default function MyClaims({
   // payable row, so there's exactly one place to pay from.
   const claimsToPay = claims.filter(claimIsPayable).sort(newestFirst)
 
-  const nonPayableClaims = claims
-    .filter((c) => !claimIsPayable(c))
-    .sort(newestFirst)
+  const nonPayableClaims = claims.filter((c) => !claimIsPayable(c)).sort((left, right) => {
+    const leftPaidAt = paidAt(left, payHistory)
+    const rightPaidAt = paidAt(right, payHistory)
+    const leftTime = leftPaidAt || (left.createdAt ? new Date(left.createdAt).getTime() : Number(left.id) || 0)
+    const rightTime = rightPaidAt || (right.createdAt ? new Date(right.createdAt).getTime() : Number(right.id) || 0)
+    return rightTime - leftTime
+  })
   const filtered =
     filter === "All"
       ? nonPayableClaims
@@ -248,12 +277,27 @@ export default function MyClaims({
       if (payment?.status === "Rejected") return "Rejected"
       return orderReceivedStatus(claim, payHistory)
     }
+    const orderReceivedSort = (left: ClaimRow, right: ClaimRow) => {
+      const leftStatus = statusForOrder(left)
+      const rightStatus = statusForOrder(right)
+      if (leftStatus === "Pending" && rightStatus !== "Pending") return -1
+      if (rightStatus === "Pending" && leftStatus !== "Pending") return 1
+      const leftPaymentTime = paymentForOrder(left)?.submittedAt
+        ? new Date(paymentForOrder(left)!.submittedAt!).getTime()
+        : 0
+      const rightPaymentTime = paymentForOrder(right)?.submittedAt
+        ? new Date(paymentForOrder(right)!.submittedAt!).getTime()
+        : 0
+      const leftTime = leftPaymentTime || (left.createdAt ? new Date(left.createdAt).getTime() : Number(left.id) || 0)
+      const rightTime = rightPaymentTime || (right.createdAt ? new Date(right.createdAt).getTime() : Number(right.id) || 0)
+      return rightTime - leftTime
+    }
     const ordFiltered =
       orderFilter === "All"
-        ? [...claims].sort(newestFirst)
+        ? [...claims].sort(orderReceivedSort)
         : claims
             .filter((claim) => statusForOrder(claim) === orderFilter)
-            .sort(newestFirst)
+            .sort(orderReceivedSort)
     const orderFilters: OrderReceivedFilter[] = [
       "All",
       "Pending",
@@ -727,6 +771,22 @@ export default function MyClaims({
                       </td>
                       <td style={{ padding: "10px 14px" }}>
                         <div className="flex items-center gap-2">
+                          {hasRejectedPayment(t, payHistory) && (
+                            <span
+                              style={{
+                                padding: "3px 7px",
+                                borderRadius: 999,
+                                background: "#FEF2F2",
+                                border: "1px solid #FECACA",
+                                color: "#B91C1C",
+                                fontSize: 10,
+                                fontWeight: 700,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              Payment Rejected
+                            </span>
+                          )}
                           <PrimaryBtn
                             size="sm"
                             onClick={() => setPayTarget(t)}

@@ -1,8 +1,11 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Clock3, ClipboardList } from "lucide-react"
 import type { BatchType } from "@/types"
 import { INDIGO, CREAM } from "@/constants/theme"
 import { Modal, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb } from "@/components/shared"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
+import type { SellerReceiveMethod } from "@/services/kargoApi"
 
 export default function ItemClaimModal({
   batch,
@@ -26,6 +29,9 @@ export default function ItemClaimModal({
   const [qty, setQty] = useState(1)
   const [showReminders, setShowReminders] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [paymentMethods, setPaymentMethods] = useState<SellerReceiveMethod[]>([])
+  const [paymentMethodsLoading, setPaymentMethodsLoading] = useState(true)
+  const [paymentMethodsError, setPaymentMethodsError] = useState<string | null>(null)
   const left = product.qty - product.claimed
   // Keep the legacy cap only for products without a valid seller-configured limit.
   const perUser =
@@ -33,6 +39,36 @@ export default function ItemClaimModal({
       ? product.limitPerUser
       : 5
   const maxQty = Math.max(1, Math.min(left, perUser))
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setPaymentMethodsLoading(false)
+      return
+    }
+    if (!batch.sellerId) {
+      setPaymentMethodsLoading(false)
+      setPaymentMethodsError("The seller's payment methods are unavailable.")
+      return
+    }
+    kargoApi
+      .loadSellerReceiveMethods(batch.sellerId)
+      .then((methods) => {
+        setPaymentMethods(methods)
+        setPaymentMethodsError(
+          methods.length === 0
+            ? "This seller has not configured any payment methods."
+            : null,
+        )
+      })
+      .catch((error) =>
+        setPaymentMethodsError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load the seller's payment methods.",
+        ),
+      )
+      .finally(() => setPaymentMethodsLoading(false))
+  }, [batch.sellerId])
 
   return (
     <Modal title="Review claim before submitting" onClose={onClose} width={480}>
@@ -214,22 +250,32 @@ export default function ItemClaimModal({
             Accepted Payments
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {["GCash", "Maya", "Bank Transfer", "COD"].map((m) => (
-              <span
-                key={m}
-                style={{
-                  background: "#F3F4F6",
-                  color: "#374151",
-                  fontSize: 11,
-                  fontWeight: 500,
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  border: "1px solid #E5E7EB",
-                }}
-              >
-                {m}
+            {paymentMethodsLoading ? (
+              <span style={{ color: "#9CA3AF", fontSize: 11 }}>
+                Loading seller payment methods...
               </span>
-            ))}
+            ) : paymentMethods.length > 0 ? (
+              paymentMethods.map((method) => (
+                <span
+                  key={method.methodType}
+                  style={{
+                    background: "#F3F4F6",
+                    color: "#374151",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    padding: "4px 10px",
+                    borderRadius: 999,
+                    border: "1px solid #E5E7EB",
+                  }}
+                >
+                  {method.methodType}
+                </span>
+              ))
+            ) : (
+              <span style={{ color: "#B45309", fontSize: 11 }}>
+                {paymentMethodsError ?? "No payment methods available."}
+              </span>
+            )}
           </div>
         </div>
 

@@ -11,7 +11,7 @@ import {
   PaymentIcon,
   StatusBadge,
 } from "@/components/shared"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Pencil, Plus, Trash2, Upload } from "lucide-react"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { VerifyItem } from "./verifyTypes"
@@ -214,7 +214,17 @@ export default function SellerPaymentVerification({
     "Other",
   ]
   const pendingItems = verifyItems.filter((item) => item.status === "Pending")
-  const historyItems = verifyItems.filter((item) => item.status !== "Pending")
+  const historyItems = verifyItems
+    .filter((item) => item.status !== "Pending")
+    .sort((left, right) => {
+      const leftTime = left.submittedAt
+        ? new Date(left.submittedAt).getTime()
+        : Number(left.id) || 0
+      const rightTime = right.submittedAt
+        ? new Date(right.submittedAt).getTime()
+        : Number(right.id) || 0
+      return rightTime - leftTime
+    })
   const filteredHistory = historyItems.filter(
     (item) =>
       historyFilter === "All" ||
@@ -362,18 +372,6 @@ export default function SellerPaymentVerification({
                         Awaiting balance
                       </div>
                     )}
-                    {item.status === "Rejected" && item.rejectReason && (
-                      <div
-                        style={{
-                          marginTop: 3,
-                          maxWidth: 160,
-                          color: "#9CA3AF",
-                          fontSize: 10,
-                        }}
-                      >
-                        {item.rejectReason}
-                      </div>
-                    )}
                     {item.status === "Rejected" && item.rejectionDeadline && (
                       <div
                         style={{
@@ -474,21 +472,45 @@ export default function SellerPaymentVerification({
           >
             Payment Methods
           </h2>
-          <PrimaryBtn size="sm" onClick={() => openMethodEditor()}>
+          <PrimaryBtn
+            size="sm"
+            onClick={() => openMethodEditor()}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              minHeight: 36,
+              padding: "8px 12px",
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+            }}
+          >
             <Plus size={14} aria-hidden="true" /> Add Payment Method
           </PrimaryBtn>
         </div>
         <Card>
           {paymentMethods.length > 0 ? (
-            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))" }}>
+            <div
+              className="grid gap-3"
+              style={{
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 350px), 425px))",
+                columnGap: 36,
+                rowGap: 16,
+                justifyContent: "start",
+              }}
+            >
               {paymentMethods.map((method) => (
                 <div
                   key={`${method.methodType}-${method.accountNumber ?? "cash"}`}
                   style={{
                     border: "1px solid #E5E7EB",
-                    borderRadius: 9,
-                    padding: "12px 14px",
-                    background: "#FAFAFA",
+                    borderRadius: 10,
+                    minHeight: 84,
+                    padding: "16px 20px",
+                    background: "#fff",
+                    boxShadow: "0 2px 8px rgba(17, 24, 39, 0.10)",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -619,10 +641,23 @@ export default function SellerPaymentVerification({
               Account Number / Instructions
               <input value={methodNumber} onChange={(event) => setMethodNumber(event.target.value)} style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", boxSizing: "border-box" }} />
             </label>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
-              QR image (optional)
-              <input type="file" accept="image/*" onChange={(event) => setMethodQr(event.target.files?.[0])} style={{ display: "block", marginTop: 6, fontSize: 12 }} />
-            </label>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
+              <div>QR image (optional)</div>
+              <label
+                htmlFor="payment-method-qr"
+                className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-3 text-xs font-semibold text-gray-500 transition-colors hover:border-[#191BA9] hover:text-[#191BA9]"
+              >
+                <Upload size={16} aria-hidden="true" />
+                <span>{methodQr ? methodQr.name : "Upload Image"}</span>
+                <input
+                  id="payment-method-qr"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setMethodQr(event.target.files?.[0])}
+                  className="sr-only"
+                />
+              </label>
+            </div>
             <div className="flex justify-end gap-2">
               <SecondaryBtn onClick={() => setMethodEditor(null)} disabled={savingMethod}>Cancel</SecondaryBtn>
               <PrimaryBtn onClick={savePaymentMethod} disabled={savingMethod}>{savingMethod ? "Saving…" : "Save Method"}</PrimaryBtn>

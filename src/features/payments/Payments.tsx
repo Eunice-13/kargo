@@ -22,7 +22,7 @@ export default function Payments({
   const resolvedPayments = payHistory
     .filter(
       (payment) =>
-        payment.status === "Paid and Reserved" || payment.status === "Rejected",
+        payment.status === "Paid and Reserved",
     )
     .sort((left, right) => {
       const leftTime = left.submittedAt
