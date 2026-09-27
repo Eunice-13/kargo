@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import type { Tab, SharedState } from "@/types"
-import { TABS } from "./TabBar"
+import { SELLER_TABS, TABS } from "./TabBar"
 import { Dashboard } from "@/features/dashboard"
 import { Batches } from "@/features/batches"
 import { MyClaims } from "@/features/claims"
@@ -8,22 +8,31 @@ import { Payments } from "@/features/payments"
 import { Orders } from "@/features/orders"
 import { Settings } from "@/features/settings"
 
-export default function TabContent({ tab, shared }: { tab: Tab; shared: SharedState }) {
+export default function TabContent({
+  tab,
+  shared,
+  onNewBatch,
+}: {
+  tab: Tab
+  shared: SharedState
+  onNewBatch: () => void
+}) {
   const [displayed, setDisplayed] = useState(tab)
   const [animClass, setAnimClass] = useState("fi")
   const prev = useRef(tab)
+  const tabOrder = shared.role === "Seller" ? SELLER_TABS : TABS
 
   useEffect(() => {
     if (tab !== prev.current) {
-      setAnimClass(TABS.indexOf(tab) > TABS.indexOf(prev.current) ? "pl" : "pr")
+      setAnimClass(tabOrder.indexOf(tab) > tabOrder.indexOf(prev.current) ? "pl" : "pr")
       setDisplayed(tab)
       prev.current = tab
     }
-  }, [tab])
+  }, [tab, tabOrder])
 
   const map: Record<Tab, React.ReactNode> = {
     Dashboard: <Dashboard {...shared} />,
-    Batches: <Batches {...shared} />,
+    Batches: <Batches {...shared} onNewBatch={onNewBatch} />,
     "My Claims": <MyClaims {...shared} />,
     Payments: <Payments {...shared} />,
     Orders: <Orders {...shared} />,

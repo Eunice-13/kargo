@@ -1,10 +1,10 @@
-import { useRef, useEffect } from "react"
-import { createPortal } from "react-dom"
-import type React from "react"
+import { useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import type React from "react";
 
 // Height of the sticky nav header — popups start below this so they never
 // cover the nav bar (keep in sync with Header.tsx height).
-const HEADER_HEIGHT = 56
+const HEADER_HEIGHT = 56;
 
 export default function Modal({
   title,
@@ -13,74 +13,76 @@ export default function Modal({
   width = 480,
   topOffset = HEADER_HEIGHT,
 }: {
-  title: string
-  onClose: () => void
-  children: React.ReactNode
-  width?: number
-  topOffset?: number
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  width?: number;
+  topOffset?: number;
 }) {
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const titleId = useRef(`modal-title-${Math.random().toString(36).slice(2, 9)}`).current
-  const triggerElRef = useRef<HTMLElement | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useRef(
+    `modal-title-${Math.random().toString(36).slice(2, 9)}`,
+  ).current;
+  const triggerElRef = useRef<HTMLElement | null>(null);
 
   // Remember what had focus before the modal opened, and restore it on close.
   useEffect(() => {
-    triggerElRef.current = document.activeElement as HTMLElement | null
+    triggerElRef.current = document.activeElement as HTMLElement | null;
     return () => {
-      triggerElRef.current?.focus?.()
-    }
-  }, [])
+      triggerElRef.current?.focus?.();
+    };
+  }, []);
 
   // Lock the background page from scrolling while the modal is open, so nothing
   // behind the popup moves. Restore the previous overflow on close.
   useEffect(() => {
-    const previous = document.body.style.overflow
-    document.body.style.overflow = "hidden"
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = previous
-    }
-  }, [])
+      document.body.style.overflow = previous;
+    };
+  }, []);
 
   // Move focus into the dialog on mount.
   useEffect(() => {
-    const node = dialogRef.current
-    if (!node) return
+    const node = dialogRef.current;
+    if (!node) return;
     const focusable = node.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
-    )
-    ;(focusable[0] || node).focus()
-  }, [])
+      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+    );
+    (focusable[0] || node).focus();
+  }, []);
 
   // Escape-to-close and a Tab focus trap scoped to this dialog.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        e.stopPropagation()
-        onClose()
-        return
+        e.stopPropagation();
+        onClose();
+        return;
       }
-      if (e.key !== "Tab") return
-      const node = dialogRef.current
-      if (!node) return
+      if (e.key !== "Tab") return;
+      const node = dialogRef.current;
+      if (!node) return;
       const focusable = Array.from(
         node.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
-        )
-      ).filter((el) => el.offsetParent !== null)
-      if (focusable.length === 0) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.offsetParent !== null);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
       if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
+        e.preventDefault();
+        last.focus();
       } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
+        e.preventDefault();
+        first.focus();
       }
-    }
-    document.addEventListener("keydown", handleKeyDown, true)
-    return () => document.removeEventListener("keydown", handleKeyDown, true)
-  }, [onClose])
+    };
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
+  }, [onClose]);
 
   return createPortal(
     <div
@@ -105,7 +107,7 @@ export default function Modal({
         backdropFilter: "blur(2px)",
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
+        if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
@@ -129,7 +131,10 @@ export default function Modal({
           boxSizing: "border-box",
         }}
       >
-        <div className="flex items-center justify-between mb-5" style={{ flexShrink: 0 }}>
+        <div
+          className="flex items-center justify-between mb-5"
+          style={{ flexShrink: 0 }}
+        >
           <h3
             id={titleId}
             style={{
@@ -159,11 +164,19 @@ export default function Modal({
           </button>
         </div>
         {/* Only the content scrolls; the header and the dialog stay put. */}
-        <div style={{ overflowY: "auto", flex: "1 1 auto", minHeight: 0, marginRight: -4, paddingRight: 4 }}>
+        <div
+          style={{
+            overflowY: "auto",
+            flex: "1 1 auto",
+            minHeight: 0,
+            marginRight: -4,
+            paddingRight: 4,
+          }}
+        >
           {children}
         </div>
       </div>
     </div>,
     document.body,
-  )
+  );
 }

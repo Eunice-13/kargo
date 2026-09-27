@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
+import { List, LayoutGrid, AlertTriangle, Link2, ArrowLeft } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import {
@@ -21,6 +21,25 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { claimIsPayable } from "./claimExpiry"
 
+type OrderReceivedStatus = "Pending" | "Verified" | "Expired" | "Rejected" | "Cancelled"
+type OrderReceivedFilter = OrderReceivedStatus | "All"
+
+function orderReceivedStatus(claim: ClaimRow, payHistory: PayHistRow[]): OrderReceivedStatus {
+  if (claim.status === "Paid and Reserved") return "Verified"
+  if (claim.status === "Insufficient Payment") return "Pending"
+  const rejectedPayment = payHistory.some(
+    (payment) =>
+      payment.product === claim.product &&
+      payment.batch === claim.batch &&
+      payment.status === "Rejected",
+  )
+  if (rejectedPayment) return "Rejected"
+  if (claim.status === "Pending" || claim.status === "Expired" || claim.status === "Cancelled") {
+    return claim.status
+  }
+  return "Pending"
+}
+
 export default function MyClaims({
   claims,
   setClaims,
@@ -34,6 +53,7 @@ export default function MyClaims({
   setBatches,
   user,
   role,
+  setTab,
   refreshData,
 }: SharedState) {
   const [filter, setFilter] = useState<ClaimStatus | "All">("All")
@@ -42,7 +62,9 @@ export default function MyClaims({
   const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
   const [contact, setContact] = useState<ClaimRow | null>(null)
   const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null)
-  const [orderFilter, setOrderFilter] = useState<ClaimStatus | "All">("All")
+  const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>("All")
+  const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
+  const [reviewTarget, setReviewTarget] = useState<ClaimRow | null>(null)
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   useEffect(() => {
@@ -71,22 +93,17 @@ export default function MyClaims({
     const ordFiltered =
       orderFilter === "All"
         ? claims
-        : claims.filter((c) => c.status === orderFilter)
-    const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
-    const [shipTarget, setShipTarget] = useState<ClaimRow | null>(null)
-    const confirmShip = () => {
-      if (!shipTarget) return
-      setClaims((prev) =>
-        prev.map((cl) =>
-          cl.id === shipTarget.id
-            ? { ...cl, status: "Paid and Reserved" as ClaimStatus }
-            : cl,
-        ),
-      )
-      setShipTarget(null)
-    }
+        : claims.filter((claim) => orderReceivedStatus(claim, payHistory) === orderFilter)
+    const orderFilters: OrderReceivedFilter[] = [
+      "All",
+      "Pending",
+      "Verified",
+      "Expired",
+      "Rejected",
+      "Cancelled",
+    ]
     return (
-      <div className="p-6">
+      <div className="seller-orders-page">
         {fbToast && (
           <div
             className="fi"
@@ -110,30 +127,24 @@ export default function MyClaims({
             <Link2 size={15} aria-hidden="true" /> Opening {fbToast}'s Facebook profile…
           </div>
         )}
-        <h2
-          style={{
-            fontFamily: "'Plus Jakarta Sans',sans-serif",
-            fontSize: 18,
-            fontWeight: 800,
-            color: "#111827",
-            marginBottom: 4,
-          }}
+        <button
+          type="button"
+          onClick={() => setTab("Dashboard")}
+          className="seller-orders-back"
         >
-          Orders Received
-        </h2>
-        <p style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 16 }}>
-          Manage orders from your buyers.
-        </p>
-        <div className="flex items-center gap-2 mb-5">
-          {([
-            "All",
-            "Pending",
-            "Paid and Reserved",
-            "Expired",
-          ] as (ClaimStatus | "All")[]).map((f) => (
+          <ArrowLeft size={14} aria-hidden="true" />
+          Back to Dashboard
+        </button>
+        <header className="seller-orders-heading">
+          <h1>Orders Received</h1>
+          <p>Manage orders from your buyers</p>
+        </header>
+        <div className="seller-orders-filters" role="group" aria-label="Filter orders by status">
+          {orderFilters.map((f) => (
             <button
               key={f}
               onClick={() => setOrderFilter(f)}
+              aria-pressed={orderFilter === f}
               style={{
                 background: orderFilter === f ? INDIGO : "#fff",
                 color: orderFilter === f ? "#fff" : "#6B7280",
@@ -143,7 +154,7 @@ export default function MyClaims({
                 fontWeight: 600,
                 padding: "5px 14px",
                 transition: "all 0.15s",
-                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontFamily: "'Quicksand',sans-serif",
                 cursor: "pointer",
               }}
             >
@@ -159,119 +170,112 @@ export default function MyClaims({
                     fontSize: 10,
                   }}
                 >
-                  {claims.filter((c) => c.status === f).length}
+                  {claims.filter((claim) => orderReceivedStatus(claim, payHistory) === f).length}
                 </span>
               )}
             </button>
           ))}
         </div>
-        <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
-          <table className="w-full text-[13px]">
-            <thead style={{ background: CREAM }}>
+        <div className="seller-orders-table-wrap">
+          <div className="seller-orders-table-scroll">
+          <table className="seller-orders-table">
+            <thead>
               <tr>
                 {[
-                  "Buyer",
-                  "Product",
-                  "Batch",
-                  "Qty",
-                  "Amount",
-                  "Status",
-                  "Deadline",
-                  "Actions",
+                  "BUYER",
+                  "PRODUCT",
+                  "METHOD",
+                  "AMOUNT",
+                  "AMOUNT PAID",
+                  "DEADLINE",
+                  "STATUS",
+                  "ACTIONS",
                 ].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      color: "#9CA3AF",
-                      fontWeight: 600,
-                      fontSize: 11,
-                      padding: "10px 14px",
-                      textAlign: "left",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {h}
-                  </th>
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {ordFiltered.map((c, i) => (
+              {ordFiltered.map((c, i) => {
+                const status = orderReceivedStatus(c, payHistory)
+                const payment = payHistory.find(
+                  (entry) =>
+                    entry.product === c.product &&
+                    entry.batch === c.batch &&
+                    (entry.status === c.status ||
+                      (c.status === "Pending" &&
+                        (entry.status === "Insufficient Payment" || entry.status === "Rejected"))),
+                )
+                const amountPaid = status === "Verified"
+                  ? c.amount
+                  : status === "Pending" && payment && payment.status !== "Rejected" && payment.amount < c.amount
+                    ? payment.amount
+                    : 0
+                const underpaid = amountPaid > 0 && amountPaid < c.amount
+                const statusStyles: Record<OrderReceivedStatus, { background: string; color: string; dot: string; borderColor: string }> = {
+                  Pending: { background: "#fff5cc", color: "#c98f00", dot: "#f0b400", borderColor: "#f0b400" },
+                  Verified: { background: "#c8f5e4", color: "#0a8f6a", dot: "#2cc9a0", borderColor: "#2cc9a0" },
+                  Expired: { background: "#ffe4e8", color: "#d9273f", dot: "#d9273f", borderColor: "#d9273f" },
+                  Rejected: { background: "#ffe4e8", color: "#d9273f", dot: "#d9273f", borderColor: "#d9273f" },
+                  Cancelled: { background: "#ccc", color: "#555", dot: "#777", borderColor: "#777" },
+                }
+                const badge = statusStyles[status]
+                return (
                 <tr
                   key={c.id}
-                  style={{
-                    borderTop: "1px solid #F3F4F6",
-                    background: i % 2 ? "#FAFAFA" : "#fff",
-                  }}
+                  className={i % 2 ? "seller-orders-row seller-orders-row--alt" : "seller-orders-row"}
                 >
-                  <td style={{ padding: "10px 14px" }}>
+                  <td>
                     <div className="flex items-center gap-2">
                       <Avatar name={c.buyer || c.seller} size={22} />
                       <button
                         onClick={() => setBuyerProfile(c.buyer || c.seller)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          color: INDIGO,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          padding: 0,
-                        }}
+                        className="seller-orders-buyer"
                       >
                         {c.buyer || c.seller}
                       </button>
                     </div>
                   </td>
-                  <td style={{ padding: "10px 14px" }}>
+                  <td>
                     <div className="flex items-center gap-2">
                       <ProductThumb name={c.product} />
-                      <span style={{ color: "#374151" }}>{c.product}</span>
+                      <span>{c.product}</span>
                     </div>
                   </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      color: "#6B7280",
-                      fontSize: 12,
-                    }}
-                  >
-                    {c.batch}
-                  </td>
-                  <td style={{ padding: "10px 14px", color: "#374151" }}>
-                    ×{c.qty}
-                  </td>
-                  <td
-                    style={{
-                      padding: "10px 14px",
-                      fontWeight: 700,
-                      color: "#111827",
-                      fontFamily: "'Plus Jakarta Sans',sans-serif",
-                    }}
-                  >
+                  <td className="seller-orders-method">{payment?.method || "—"}</td>
+                  <td className="seller-orders-amount">
                     ₱{c.amount.toLocaleString()}
                   </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <StatusBadge status={c.status} />
+                  <td className="seller-orders-paid">
+                    {amountPaid > 0 ? (
+                      <>
+                        <span className={underpaid ? "seller-orders-paid--short" : ""}>
+                          ₱{amountPaid.toLocaleString()}
+                        </span>
+                        {underpaid && <small>Short ₱{(c.amount - amountPaid).toLocaleString()}</small>}
+                      </>
+                    ) : <span className="seller-orders-dash">—</span>}
                   </td>
-                  <td style={{ padding: "10px 14px" }}>
+                  <td className="seller-orders-deadline">
                     {c.status === "Pending" && c.hours > 0 ? (
                       <Countdown hours={c.hours} expiresAt={c.expiresAt} />
                     ) : (
-                      <span style={{ color: "#D1D5DB" }}>—</span>
+                      <span className="seller-orders-dash">—</span>
                     )}
                   </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <div className="flex items-center gap-1.5">
-                      {c.status === "Pending" && (
-                        <PrimaryBtn size="sm" onClick={() => setShipTarget(c)}>
-                          Mark Shipped
-                        </PrimaryBtn>
-                      )}
-                      <SecondaryBtn
-                        size="sm"
-                        onClick={() => {
+                  <td className="seller-orders-status-cell">
+                    <span className="seller-orders-status" style={{ background: badge.background, color: badge.color, borderColor: badge.borderColor }}>
+                      <span style={{ background: badge.dot }} />{status}
+                    </span>
+                    {status === "Pending" && underpaid && <small>Awaiting balance</small>}
+                  </td>
+                  <td>
+                    <div className="seller-orders-actions">
+                      <button className="seller-orders-review" onClick={() => setReviewTarget(c)}>Review</button>
+                      {status === "Pending" && (
+                        <button
+                          className="seller-orders-contact"
+                          onClick={() => {
                           const buyerName = c.buyer || c.seller
                           if (c.buyerFb) {
                             // Real contact link on file — open it.
@@ -289,51 +293,47 @@ export default function MyClaims({
                             // of fabricating a Facebook URL.
                             setBuyerProfile(buyerName)
                           }
-                        }}
-                      >
-                        Contact Buyer
-                      </SecondaryBtn>
+                          }}
+                        >Contact Buyer</button>
+                      )}
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           </div>
           {ordFiltered.length === 0 && (
-            <div
-              style={{
-                padding: "40px 0",
-                textAlign: "center",
-                color: "#9CA3AF",
-                fontSize: 13,
-              }}
-            >
+            <div className="seller-orders-empty">
               No orders found.
             </div>
           )}
-        </Card>
+        </div>
         {buyerProfile && (
           <BuyerProfileModal
             buyer={buyerProfile}
             onClose={() => setBuyerProfile(null)}
           />
         )}
-        {shipTarget && (
+        {reviewTarget && (
           <Modal
-            title="Mark this as shipped?"
-            onClose={() => setShipTarget(null)}
+            title="Order details"
+            onClose={() => setReviewTarget(null)}
             width={420}
           >
-            <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-              Are you sure you want to mark {shipTarget.product} for{" "}
-              {shipTarget.buyer || "this buyer"} as shipped?
-            </p>
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <SecondaryBtn onClick={() => setShipTarget(null)}>
-                Not yet
-              </SecondaryBtn>
-              <PrimaryBtn onClick={confirmShip}>Yes, mark shipped</PrimaryBtn>
+            <div className="seller-order-details">
+              <strong>{reviewTarget.product}</strong>
+              <span>{reviewTarget.batch}</span>
+              <dl>
+                <div><dt>Buyer</dt><dd>{reviewTarget.buyer || reviewTarget.seller}</dd></div>
+                <div><dt>Quantity</dt><dd>{reviewTarget.qty}</dd></div>
+                <div><dt>Amount</dt><dd>₱{reviewTarget.amount.toLocaleString()}</dd></div>
+                <div><dt>Status</dt><dd>{orderReceivedStatus(reviewTarget, payHistory)}</dd></div>
+                <div><dt>Deadline</dt><dd>{reviewTarget.status === "Pending" && reviewTarget.hours > 0 ? `${reviewTarget.hours}h` : "—"}</dd></div>
+              </dl>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
+              <SecondaryBtn onClick={() => setReviewTarget(null)}>Close</SecondaryBtn>
             </div>
           </Modal>
         )}

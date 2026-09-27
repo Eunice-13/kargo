@@ -12,7 +12,7 @@ function getDeadlineTimestamp(key: string, hours: number) {
   return deadline
 }
 
-export default function Countdown({ hours, id, expiresAt }: { hours: number; id?: string | number; expiresAt?: string }) {
+export default function Countdown({ hours, id, expiresAt, compact = false }: { hours: number; id?: string | number; expiresAt?: string; compact?: boolean }) {
   const deadlineKey = String(id ?? `hours-${hours}`)
   const deadline = expiresAt ? new Date(expiresAt).getTime() : getDeadlineTimestamp(deadlineKey, hours)
   const [remaining, setRemaining] = useState(() => Math.max(0, Math.round((deadline - Date.now()) / 1000)))
@@ -31,15 +31,19 @@ export default function Countdown({ hours, id, expiresAt }: { hours: number; id?
   const clockHours = Math.floor((remaining % 86400) / 3600)
   const minutes = Math.floor((remaining % 3600) / 60)
   const seconds = remaining % 60
-  const label = days > 0
-    ? `${days}d ${String(clockHours).padStart(2, "0")}h`
-    : `${String(clockHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+  const label = compact
+    ? currentHours >= 24
+      ? `${days}d ${clockHours}h`
+      : `${Math.ceil(currentHours)}h`
+    : days > 0
+      ? `${days}d ${String(clockHours).padStart(2, "0")}h`
+      : `${String(clockHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
   return (
     <span
       role="timer"
       aria-label={`${label} remaining`}
       className={`text-xs font-medium tabular-nums${urgent ? " cu" : ""}`}
-      style={{ color: remaining === 0 || urgent ? "#EF4444" : warn ? AMBER : "#6B7280" }}
+      style={{ color: compact ? AMBER : remaining === 0 || urgent ? "#EF4444" : warn ? AMBER : "#6B7280" }}
     >
       {label}
     </span>

@@ -1,52 +1,57 @@
-import { useState } from "react"
-import type { BatchType } from "@/types"
-import { INDIGO, CAT_GRAD } from "@/constants/theme"
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { kargoApi } from "@/services"
+import { useState } from "react";
+import type { BatchType } from "@/types";
+import { INDIGO, CAT_GRAD } from "@/constants/theme";
+import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { kargoApi } from "@/services";
 
 export type BatchProduct = {
-  name: string
-  basePrice: string
-  markup: string
-  qty: string
+  name: string;
+  basePrice: string;
+  markup: string;
+  qty: string;
   // Optional per-buyer claim limit. Empty string = no limit.
-  limit: string
-}
+  limit: string;
+};
 export default function NewBatchModal({
   onCreate,
   onClose,
   sellerName,
 }: {
-  onCreate: (b: BatchType) => void
-  onClose: () => void
-  sellerName?: string
+  onCreate: (b: BatchType) => void;
+  onClose: () => void;
+  sellerName?: string;
 }) {
-  const [title, setTitle] = useState("")
-  const [desc, setDesc] = useState("")
-  const [cat, setCat] = useState("Mixed")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
-  const [timerUnit, setTimerUnit] = useState<"hours" | "days">("hours")
-  const [timerVal, setTimerVal] = useState("48")
-  const [timerPreset, setTimerPreset] = useState("48h")
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [cat, setCat] = useState("Mixed");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [timerUnit, setTimerUnit] = useState<"hours" | "days">("hours");
+  const [timerVal, setTimerVal] = useState("48");
+  const [timerPreset, setTimerPreset] = useState("48h");
   const [products, setProducts] = useState<BatchProduct[]>([
     { name: "", basePrice: "", markup: "", qty: "", limit: "" },
-  ])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const addProduct = () =>
-    setProducts((p) => [...p, { name: "", basePrice: "", markup: "", qty: "", limit: "" }])
+    setProducts((p) => [
+      ...p,
+      { name: "", basePrice: "", markup: "", qty: "", limit: "" },
+    ]);
+  const removeProduct = (i: number) =>
+    setProducts((p) => p.filter((_, idx) => idx !== i));
   const updateProduct = (i: number, k: keyof BatchProduct, v: string) =>
     setProducts((p) =>
       p.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)),
-    )
+    );
 
   const formatDateRange = (s: string, e: string) => {
-    if (!s) return "TBD"
-    const start = new Date(s + "T00:00:00")
-    const end = e ? new Date(e + "T00:00:00") : null
+    if (!s) return "TBD";
+    const start = new Date(s + "T00:00:00");
+    const end = e ? new Date(e + "T00:00:00") : null;
     const months = [
       "Jan",
       "Feb",
@@ -60,18 +65,18 @@ export default function NewBatchModal({
       "Oct",
       "Nov",
       "Dec",
-    ]
-    const sm = months[start.getMonth()]
-    const sd = start.getDate()
-    const sy = start.getFullYear()
-    if (!end) return `${sm} ${sd}, ${sy}`
-    const em = months[end.getMonth()]
-    const ed = end.getDate()
-    const ey = end.getFullYear()
-    if (sm === em && sy === ey) return `${sm} ${sd}–${ed}, ${sy}`
-    if (sy === ey) return `${sm} ${sd} – ${em} ${ed}, ${sy}`
-    return `${sm} ${sd}, ${sy} – ${em} ${ed}, ${ey}`
-  }
+    ];
+    const sm = months[start.getMonth()];
+    const sd = start.getDate();
+    const sy = start.getFullYear();
+    if (!end) return `${sm} ${sd}, ${sy}`;
+    const em = months[end.getMonth()];
+    const ed = end.getDate();
+    const ey = end.getFullYear();
+    if (sm === em && sy === ey) return `${sm} ${sd}–${ed}, ${sy}`;
+    if (sy === ey) return `${sm} ${sd} – ${em} ${ed}, ${sy}`;
+    return `${sm} ${sd}, ${sy} – ${em} ${ed}, ${ey}`;
+  };
 
   const submit = async () => {
     const validProds = products.filter(
@@ -79,35 +84,35 @@ export default function NewBatchModal({
         p.name.trim() &&
         Number(p.basePrice) + Number(p.markup) > 0 &&
         Number(p.qty) > 0,
-    )
+    );
     if (!title.trim()) {
-      setError("Add a batch title before publishing.")
-      return
+      setError("Add a batch title before publishing.");
+      return;
     }
     if (validProds.length === 0) {
-      setError("Add at least one product with a name, price, and quantity.")
-      return
+      setError("Add at least one product with a name, price, and quantity.");
+      return;
     }
     if (isSupabaseConfigured && (!startDate || !endDate)) {
-      setError("Choose both the start and end date before publishing.")
-      return
+      setError("Choose both the start and end date before publishing.");
+      return;
     }
-    setError("")
-    setLoading(true)
+    setError("");
+    setLoading(true);
     try {
       const prods = validProds.map((p) => ({
-              name: p.name.trim(),
-              basePrice: Number(p.basePrice),
-              markup: Number(p.markup),
-              price: Number(p.basePrice) + Number(p.markup),
-              qty: Number(p.qty),
-              claimed: 0,
-              waitlist: 0,
-              locked: false,
-              limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
-            }))
+        name: p.name.trim(),
+        basePrice: Number(p.basePrice),
+        markup: Number(p.markup),
+        price: Number(p.basePrice) + Number(p.markup),
+        qty: Number(p.qty),
+        claimed: 0,
+        waitlist: 0,
+        locked: false,
+        limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
+      }));
       const reserveHours =
-        timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal)
+        timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal);
       if (isSupabaseConfigured) {
         await kargoApi.createBatch({
           title: title.trim(),
@@ -123,7 +128,7 @@ export default function NewBatchModal({
             quantity: Number(p.qty),
             limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
           })),
-        })
+        });
       }
       onCreate({
         id: Date.now(),
@@ -139,14 +144,16 @@ export default function NewBatchModal({
         notes: desc.trim() || undefined,
         products: prods,
         reserveHours,
-      })
-      setLoading(false)
-      onClose()
+      });
+      setLoading(false);
+      onClose();
     } catch (caught) {
-      setLoading(false)
-      setError(caught instanceof Error ? caught.message : "Unable to create batch.")
+      setLoading(false);
+      setError(
+        caught instanceof Error ? caught.message : "Unable to create batch.",
+      );
     }
-  }
+  };
 
   return (
     <Modal title="Create New Batch" onClose={onClose} width={560}>
@@ -324,11 +331,11 @@ export default function NewBatchModal({
               <button
                 key={p}
                 onClick={() => {
-                  setTimerPreset(p)
+                  setTimerPreset(p);
                   if (p !== "Custom") {
-                    const isDay = p.endsWith("d")
-                    setTimerUnit(isDay ? "days" : "hours")
-                    setTimerVal(p.replace(/[hd]/, ""))
+                    const isDay = p.endsWith("d");
+                    setTimerUnit(isDay ? "days" : "hours");
+                    setTimerVal(p.replace(/[hd]/, ""));
                   }
                 }}
                 style={{
@@ -404,14 +411,14 @@ export default function NewBatchModal({
           </label>
           <div className="space-y-3">
             {products.map((p, i) => {
-              const selling = Number(p.basePrice || 0) + Number(p.markup || 0)
+              const selling = Number(p.basePrice || 0) + Number(p.markup || 0);
               const fieldLabel = {
                 fontSize: 10,
                 fontWeight: 600 as const,
                 color: "#9CA3AF",
                 display: "block" as const,
                 marginBottom: 3,
-              }
+              };
               const numInput = {
                 width: "100%",
                 fontSize: 12,
@@ -422,7 +429,7 @@ export default function NewBatchModal({
                 color: "#374151",
                 fontFamily: "inherit",
                 boxSizing: "border-box" as const,
-              }
+              };
               return (
                 <div
                   key={i}
@@ -433,9 +440,38 @@ export default function NewBatchModal({
                     background: "#FCFCFD",
                   }}
                 >
-                  {/* Line 1: product name (full width) */}
+                  {/* Line 1: product name (full width) + remove button */}
                   <div style={{ marginBottom: 8 }}>
-                    <label style={fieldLabel}>Product Name</label>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 3,
+                      }}
+                    >
+                      <label style={{ ...fieldLabel, marginBottom: 0 }}>
+                        Product Name
+                      </label>
+                      {products.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeProduct(i)}
+                          aria-label={`Remove item ${i + 1}`}
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "#DC2626",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                     <input
                       value={p.name}
                       onChange={(e) => updateProduct(i, "name", e.target.value)}
@@ -501,7 +537,7 @@ export default function NewBatchModal({
                           background: "#EEF0FF",
                           borderRadius: 6,
                           padding: "7px 8px",
-                          fontFamily: "'Plus Jakarta Sans',sans-serif",
+                          fontFamily: "inherit",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -541,7 +577,7 @@ export default function NewBatchModal({
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
           <button
@@ -563,7 +599,17 @@ export default function NewBatchModal({
           </button>
         </div>
         {error && (
-          <div role="alert" style={{ color: "#B91C1C", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 6, padding: "8px 10px", fontSize: 11 }}>
+          <div
+            role="alert"
+            style={{
+              color: "#B91C1C",
+              background: "#FEF2F2",
+              border: "1px solid #FECACA",
+              borderRadius: 6,
+              padding: "8px 10px",
+              fontSize: 11,
+            }}
+          >
             {error}
           </div>
         )}
@@ -585,6 +631,5 @@ export default function NewBatchModal({
         </div>
       </div>
     </Modal>
-  )
+  );
 }
-

@@ -4,6 +4,8 @@ import { PrimaryBtn } from "@/components/shared"
 import { ClipboardList, History, LayoutGrid, Package } from "lucide-react"
 
 export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
+export const SELLER_TABS: Tab[] = ["Dashboard", "My Claims", "Batches", "Payments"]
+const SELLER_TAB_ICONS = [LayoutGrid, Package, ClipboardList, History] as const
 const TAB_ICONS = {
   Dashboard: LayoutGrid,
   Batches: Package,
@@ -21,6 +23,7 @@ export default function TabBar({
   role: Role
   onNewBatch: () => void
 }) {
+  const tabs = role === "Seller" ? SELLER_TABS : TABS
   return (
     <div
       style={{
@@ -37,11 +40,15 @@ export default function TabBar({
     >
       {/* Tabs — equally distributed across available width */}
       <div style={{ display: "flex", flex: 1, height: "100%", minWidth: 0 }}>
-        {TABS.map((tab) => {
-          const Icon = TAB_ICONS[tab as keyof typeof TAB_ICONS]
+        {tabs.map((tab, index) => {
+          const Icon = role === "Seller"
+            ? SELLER_TAB_ICONS[index]
+            : TAB_ICONS[tab as keyof typeof TAB_ICONS]
+          const visuallyActive = active === tab
           return (
           <button
             key={tab}
+            data-seller-active={visuallyActive ? "true" : undefined}
             data-spotlight={
               tab === "Dashboard"
                 ? "dashboard-tab"
@@ -55,11 +62,11 @@ export default function TabBar({
             aria-current={active === tab ? "page" : undefined}
             style={{
               fontFamily: "'Plus Jakarta Sans',sans-serif",
-              color: active === tab ? INDIGO : "#6B7280",
-              fontWeight: active === tab ? 700 : 500,
+              color: visuallyActive ? INDIGO : "#6B7280",
+              fontWeight: visuallyActive ? 700 : 500,
               fontSize: 13,
               borderBottom:
-                active === tab
+                visuallyActive
                   ? `2px solid ${INDIGO}`
                   : "2px solid transparent",
               height: 44,
@@ -75,7 +82,15 @@ export default function TabBar({
               textOverflow: "ellipsis",
             }}
             className="hover:text-gray-800"
-            aria-label={tab === "My Claims" && role === "Seller" ? "Orders Received" : tab}
+            aria-label={
+              role === "Seller"
+                ? tab === "My Claims"
+                  ? "Orders Received"
+                  : tab === "Batches"
+                    ? "My Batches"
+                    : tab
+                : tab
+            }
           >
             {role === "Seller" ? (
               <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
@@ -85,39 +100,7 @@ export default function TabBar({
           </button>
           )
         })}
-      </div>
-      {/* Right group — only shown for verified sellers (New Batch) */}
-      {role === "Seller" && (
-        <div
-          className="seller-new-batch"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            paddingLeft: 24,
-            paddingRight: 20,
-            borderLeft: "1px solid #E5E7EB",
-            height: "100%",
-            flexShrink: 0,
-          }}
-        >
-          <PrimaryBtn
-            size="sm"
-            onClick={onNewBatch}
-            style={{ display: "flex", alignItems: "center", gap: 4 }}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path
-                d="M6 1v10M1 6h10"
-                stroke="#fff"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            New Batch
-          </PrimaryBtn>
         </div>
-      )}
     </div>
   )
 }
