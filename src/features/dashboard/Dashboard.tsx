@@ -102,9 +102,24 @@ export default function Dashboard({
   // ─── Seller stat sources (derived from live data, not hardcoded) ───────────
   // Scope to the signed-in seller's own batches.
   const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name)
+  const mySellerOrders = claims.filter((claim) => claim.seller === user.name)
   // Payment proofs awaiting the seller's review = orders sitting in the
   // "Pending Payment" column of the fulfillment board.
   const paymentsToVerify = fulfillment.filter((o) => o.col === "Pending Payment")
+  // Match the seller's Orders Received > Pending filter, which is based on
+  // claims and their payment history rather than the recent fulfillment board.
+  const pendingReceivedOrders = mySellerOrders.filter((claim) => {
+    if (claim.status === "Paid and Reserved") return false
+    if (claim.status === "Insufficient Payment") return true
+    const rejectedPayment = payHistory.some(
+      (payment) =>
+        payment.product === claim.product &&
+        payment.batch === claim.batch &&
+        payment.status === "Rejected",
+    )
+    if (rejectedPayment) return false
+    return claim.status === "Pending"
+  })
   // Extension requests awaiting this seller's approval: claims on their orders
   // that requested an extension and are still pending a decision.
   const pendingExtensions = claims.filter(
@@ -415,7 +430,28 @@ export default function Dashboard({
             <article
               key={stat.label}
               className={`seller-stat seller-stat--${index + 1} fi`}
-              style={{ animationDelay: `${index * 60}ms`, background: stat.bg }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Open ${stat.label}`}
+              onClick={() => {
+                if (stat.label === "Active Batches") setTab("Batches")
+                if (stat.label === "Awaiting Verification") {
+                  navIntent.orderFilter = "Pending"
+                  setTab("My Claims")
+                }
+                if (stat.label === "Extension Requests") {
+                  navIntent.openExtensionRequests = true
+                  setTab("Batches")
+                }
+                if (stat.label === "Orders Fulfilled") setTab("Payments")
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault()
+                  event.currentTarget.click()
+                }
+              }}
+              style={{ animationDelay: `${index * 60}ms`, background: stat.bg, cursor: "pointer" }}
             >
               <stat.icon size={20} aria-hidden="true" style={{ color: stat.sc }} />
               <strong>{stat.value}</strong>
@@ -450,7 +486,7 @@ export default function Dashboard({
                   </tr>
                 </thead>
                 <tbody>
-                  {claims.slice(0, 7).map((claim, index) => {
+                  {mySellerOrders.slice(0, 7).map((claim, index) => {
                     const buyerName = claim.buyer || claim.seller
                     return (
                       <tr key={claim.id} onClick={() => setTab("My Claims")}>
@@ -493,8 +529,8 @@ export default function Dashboard({
                 {
                   icon: Clock3,
                   label: "Payments to Verify",
-                  count: paymentsToVerify.length,
-                  tab: "Payments" as Tab,
+                  count: pendingReceivedOrders.length,
+                  tab: "My Claims" as Tab,
                 },
                 {
                   icon: ClipboardList,
@@ -509,7 +545,16 @@ export default function Dashboard({
                     <strong>{action.label}</strong>
                     <small>{action.count} Pending</small>
                   </div>
-                  <button type="button" onClick={() => setTab(action.tab)}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (action.label === "Payments to Verify")
+                        navIntent.orderFilter = "Pending"
+                      if (action.label === "Extension Requests")
+                        navIntent.openExtensionRequests = true
+                      setTab(action.tab)
+                    }}
+                  >
                     View All
                   </button>
                 </div>

@@ -145,7 +145,6 @@ export default function SellerPaymentVerification() {
     "Duplicate submission",
     "Other",
   ]
-  const pendingItems = verifyItems.filter((item) => item.status === "Pending")
   const historyItems = verifyItems.filter((item) => item.status !== "Pending")
   const filteredHistory = historyItems.filter(
     (item) =>
@@ -369,25 +368,6 @@ export default function SellerPaymentVerification() {
 
   return (
     <div className="p-6 space-y-8">
-      <section>
-        <div className="mb-4">
-          <h2
-            style={{
-              fontFamily: "'Josefin Sans',sans-serif",
-              fontSize: 18,
-              fontWeight: 800,
-              color: "#111827",
-            }}
-          >
-            Pending Review
-          </h2>
-          <p style={{ marginTop: 2, color: "#9CA3AF", fontSize: 13 }}>
-            Review buyer submissions and update their payment status.
-          </p>
-        </div>
-        {renderTable(pendingItems, true)}
-      </section>
-
       <section>
         <h2
           className="mb-4"

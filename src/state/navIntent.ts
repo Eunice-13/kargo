@@ -2,9 +2,13 @@
 export const navIntent: {
   batchId: number | null;
   sellerName: string | null;
+  orderFilter: "Pending" | null;
+  openExtensionRequests: boolean;
 } = {
   batchId: null,
   sellerName: null,
+  orderFilter: null,
+  openExtensionRequests: false,
 }
 
 type NavIntentListener = () => void

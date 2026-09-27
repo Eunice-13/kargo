@@ -5370,6 +5370,19 @@ textarea::placeholder {
   border: 0;
   border-radius: 10px;
   box-shadow: 0 4px 13px rgba(18, 30, 71, .21);
+  transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.seller-stat:hover,
+.seller-stat:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 20px rgba(18, 30, 71, .24);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seller-stat {
+    transition: none;
+  }
 }
 
 .seller-stat::before {

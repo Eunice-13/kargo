@@ -20,6 +20,7 @@ import { PaymentSubmitModal, type PaymentSubmissionDetails } from "@/features/pa
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { claimIsPayable } from "./claimExpiry"
+import { navIntent } from "@/state/navIntent"
 
 type OrderReceivedStatus = "Pending" | "Verified" | "Expired" | "Rejected" | "Cancelled"
 type OrderReceivedFilter = OrderReceivedStatus | "All"
@@ -63,7 +64,11 @@ export default function MyClaims({
   const [viewOrder, setViewOrder] = useState<OrderRow | null>(null)
   const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
   const [contact, setContact] = useState<ClaimRow | null>(null)
-  const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>("All")
+  const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>(() => {
+    const requestedFilter = navIntent.orderFilter ?? "All"
+    navIntent.orderFilter = null
+    return requestedFilter
+  })
   const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
   const [reviewTarget, setReviewTarget] = useState<ClaimRow | null>(null)
   const [viewMode, setViewMode] = useState<"table" | "card">("table")

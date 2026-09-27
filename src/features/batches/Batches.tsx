@@ -204,7 +204,11 @@ export default function Batches({
         ],
   );
   // Seller request pop-ups (moved from inline bottom cards to top-of-tab buttons).
-  const [showExtReqModal, setShowExtReqModal] = useState(false);
+  const [showExtReqModal, setShowExtReqModal] = useState(() => {
+    const requested = navIntent.openExtensionRequests;
+    navIntent.openExtensionRequests = false;
+    return requested;
+  });
   const [showBuyerReqModal, setShowBuyerReqModal] = useState(false);
   // Confirmation target for extension approve/deny (#16)
   const [extConfirm, setExtConfirm] = useState<{
