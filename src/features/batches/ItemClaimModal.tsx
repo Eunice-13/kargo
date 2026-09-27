@@ -20,11 +20,12 @@ export default function ItemClaimModal({
     locked?: boolean
     limitPerUser?: number
   }
-  onConfirm: (qty: number) => void
+  onConfirm: (qty: number) => void | Promise<void>
   onClose: () => void
 }) {
   const [qty, setQty] = useState(1)
   const [showReminders, setShowReminders] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const left = product.qty - product.claimed
   // Keep the legacy cap only for products without a valid seller-configured limit.
   const perUser =
@@ -316,9 +317,17 @@ export default function ItemClaimModal({
           </SecondaryBtn>
           <PrimaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
-            onClick={() => onConfirm(qty)}
+            disabled={submitting}
+            onClick={async () => {
+              setSubmitting(true)
+              try {
+                await onConfirm(qty)
+              } finally {
+                setSubmitting(false)
+              }
+            }}
           >
-            Yes, confirm claim
+            {submitting ? "Claiming…" : "Yes, confirm claim"}
           </PrimaryBtn>
         </div>
       </div>

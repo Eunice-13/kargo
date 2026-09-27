@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type SetStateAction } from "react"
 import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
@@ -15,7 +15,14 @@ import {
   ExtensionRequestModal,
   PaymentSuccessToast,
 } from "@/components/shared"
-import { PaymentSubmitModal, type PaymentSubmissionDetails } from "@/features/payments"
+import {
+  PaymentSubmitModal,
+  InsufficientPaymentModal,
+  RejectPaymentModal,
+  ReviewSubmissionModal,
+  type VerifyItem,
+  type PaymentSubmissionDetails,
+} from "@/features/payments"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { claimIsPayable } from "./claimExpiry"
@@ -38,6 +45,19 @@ function orderReceivedStatus(claim: ClaimRow, payHistory: PayHistRow[]): OrderRe
     return claim.status
   }
   return "Pending"
+}
+
+function newestFirst<T extends { id: string | number; createdAt?: string }>(
+  left: T,
+  right: T,
+) {
+  const leftTime = left.createdAt
+    ? new Date(left.createdAt).getTime()
+    : Number(left.id) || 0
+  const rightTime = right.createdAt
+    ? new Date(right.createdAt).getTime()
+    : Number(right.id) || 0
+  return rightTime - leftTime
 }
 
 export default function MyClaims({
@@ -69,7 +89,14 @@ export default function MyClaims({
     return requestedFilter
   })
   const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
-  const [reviewTarget, setReviewTarget] = useState<ClaimRow | null>(null)
+  const [orderDetailTarget, setOrderDetailTarget] = useState<ClaimRow | null>(null)
+  const [sellerPayments, setSellerPayments] = useState<VerifyItem[]>([])
+  const [paymentReviewTarget, setPaymentReviewTarget] = useState<VerifyItem | null>(null)
+  const [paymentRejectTarget, setPaymentRejectTarget] = useState<VerifyItem | null>(null)
+  const [paymentRejectReason, setPaymentRejectReason] = useState("")
+  const [paymentRejectCustom, setPaymentRejectCustom] = useState("")
+  const [insufficientTarget, setInsufficientTarget] = useState<VerifyItem | null>(null)
+  const [insufficientAmount, setInsufficientAmount] = useState("")
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   useEffect(() => {
@@ -82,6 +109,47 @@ export default function MyClaims({
     const current = claims.find((claim) => claim.id === payTarget.id)
     if (!current || !claimIsPayable(current)) setPayTarget(null)
   }, [claims, payTarget])
+  useEffect(() => {
+    if (role !== "Seller") return
+    kargoApi
+      .loadSellerPaymentSubmissions()
+      .then(setSellerPayments)
+      .catch((error) =>
+        alert(error instanceof Error ? error.message : "Unable to load payment submissions."),
+      )
+  }, [role])
+
+  const updateSellerPayments = (action: SetStateAction<VerifyItem[]>) => {
+    setSellerPayments((previous) => {
+      const next = typeof action === "function" ? action(previous) : action
+      if (isSupabaseConfigured) {
+        for (const item of next) {
+          const before = previous.find((candidate) => candidate.id === item.id)
+          if (!before || before.status === item.status) continue
+          if (item.status !== "Verified" && item.status !== "Rejected") continue
+          const deadlineHours = item.rejectionDeadline
+            ? Math.max(
+                0,
+                (new Date(item.rejectionDeadline).getTime() - Date.now()) /
+                  3_600_000,
+              )
+            : undefined
+          void kargoApi
+            .reviewPayment(
+              String(item.id),
+              item.status === "Verified" ? "verified" : "rejected",
+              item.rejectReason,
+              deadlineHours,
+            )
+            .then(refreshData)
+            .catch((error) =>
+              alert(error instanceof Error ? error.message : "Unable to review payment."),
+            )
+        }
+      }
+      return next
+    })
+  }
   const filters: (ClaimStatus | "All")[] = [
     "All",
     "Awaiting Verification",
@@ -92,9 +160,11 @@ export default function MyClaims({
   // Payable claims (fresh "Pending" or "Insufficient Payment") live ONLY in the
   // upper "My Claims To Pay" table. The filtered table below never shows a
   // payable row, so there's exactly one place to pay from.
-  const claimsToPay = claims.filter(claimIsPayable)
+  const claimsToPay = claims.filter(claimIsPayable).sort(newestFirst)
 
-  const nonPayableClaims = claims.filter((c) => !claimIsPayable(c))
+  const nonPayableClaims = claims
+    .filter((c) => !claimIsPayable(c))
+    .sort(newestFirst)
   const filtered =
     filter === "All"
       ? nonPayableClaims
@@ -170,10 +240,20 @@ export default function MyClaims({
   }
 
   if (role === "Seller") {
+    const paymentForOrder = (claim: ClaimRow) =>
+      sellerPayments.find((payment) => String(payment.orderId) === String(claim.id))
+    const statusForOrder = (claim: ClaimRow): OrderReceivedStatus => {
+      const payment = paymentForOrder(claim)
+      if (payment?.status === "Verified") return "Verified"
+      if (payment?.status === "Rejected") return "Rejected"
+      return orderReceivedStatus(claim, payHistory)
+    }
     const ordFiltered =
       orderFilter === "All"
-        ? claims
-        : claims.filter((claim) => orderReceivedStatus(claim, payHistory) === orderFilter)
+        ? [...claims].sort(newestFirst)
+        : claims
+            .filter((claim) => statusForOrder(claim) === orderFilter)
+            .sort(newestFirst)
     const orderFilters: OrderReceivedFilter[] = [
       "All",
       "Pending",
@@ -272,21 +352,15 @@ export default function MyClaims({
             </thead>
             <tbody>
               {ordFiltered.map((c, i) => {
-                const status = orderReceivedStatus(c, payHistory)
-                const payment = payHistory.find(
-                  (entry) =>
-                    entry.product === c.product &&
-                    entry.batch === c.batch &&
-                    (entry.status === c.status ||
-                      (c.status === "Pending" &&
-                        (entry.status === "Insufficient Payment" || entry.status === "Rejected"))),
-                )
-                const amountPaid = status === "Verified"
-                  ? c.amount
-                  : status === "Pending" && payment && payment.status !== "Rejected" && payment.amount < c.amount
-                    ? payment.amount
+                const submission = paymentForOrder(c)
+                const status = statusForOrder(c)
+                const amountPaid = submission?.amountPaid
+                  ? Number(submission.amountPaid)
+                  : status === "Verified"
+                    ? c.amount
                     : 0
                 const underpaid = amountPaid > 0 && amountPaid < c.amount
+                const isCashOnMeetup = submission?.method === "Cash on Meetup"
                 const statusStyles: Record<OrderReceivedStatus, { background: string; color: string; dot: string; borderColor: string }> = {
                   Pending: { background: "#fff5cc", color: "#c98f00", dot: "#f0b400", borderColor: "#f0b400" },
                   Verified: { background: "#c8f5e4", color: "#0a8f6a", dot: "#2cc9a0", borderColor: "#2cc9a0" },
@@ -317,12 +391,14 @@ export default function MyClaims({
                       <span>{c.product}</span>
                     </div>
                   </td>
-                  <td className="seller-orders-method">{payment?.method || "—"}</td>
+                  <td className="seller-orders-method">{submission?.method || "—"}</td>
                   <td className="seller-orders-amount">
                     ₱{c.amount.toLocaleString()}
                   </td>
                   <td className="seller-orders-paid">
-                    {amountPaid > 0 ? (
+                    {isCashOnMeetup ? (
+                      <span className="seller-orders-dash">—</span>
+                    ) : amountPaid > 0 ? (
                       <>
                         <span className={underpaid ? "seller-orders-paid--short" : ""}>
                           ₱{amountPaid.toLocaleString()}
@@ -346,7 +422,14 @@ export default function MyClaims({
                   </td>
                   <td>
                     <div className="seller-orders-actions">
-                      <button className="seller-orders-review" onClick={() => setReviewTarget(c)}>Review</button>
+                      <button
+                        className="seller-orders-review"
+                        onClick={() =>
+                          submission
+                            ? setPaymentReviewTarget(submission)
+                            : setOrderDetailTarget(c)
+                        }
+                      >Review</button>
                       {status === "Pending" && (
                         <button
                           className="seller-orders-contact"
@@ -390,27 +473,99 @@ export default function MyClaims({
             onClose={() => setBuyerProfile(null)}
           />
         )}
-        {reviewTarget && (
+        {orderDetailTarget && (
           <Modal
             title="Order details"
-            onClose={() => setReviewTarget(null)}
+            onClose={() => setOrderDetailTarget(null)}
             width={420}
           >
             <div className="seller-order-details">
-              <strong>{reviewTarget.product}</strong>
-              <span>{reviewTarget.batch}</span>
+              <strong>{orderDetailTarget.product}</strong>
+              <span>{orderDetailTarget.batch}</span>
               <dl>
-                <div><dt>Buyer</dt><dd>{reviewTarget.buyer || reviewTarget.seller}</dd></div>
-                <div><dt>Quantity</dt><dd>{reviewTarget.qty}</dd></div>
-                <div><dt>Amount</dt><dd>₱{reviewTarget.amount.toLocaleString()}</dd></div>
-                <div><dt>Status</dt><dd>{orderReceivedStatus(reviewTarget, payHistory)}</dd></div>
-                <div><dt>Deadline</dt><dd>{reviewTarget.status === "Pending" && reviewTarget.hours > 0 ? `${reviewTarget.hours}h` : "—"}</dd></div>
+                <div><dt>Buyer</dt><dd>{orderDetailTarget.buyer || orderDetailTarget.seller}</dd></div>
+                <div><dt>Quantity</dt><dd>{orderDetailTarget.qty}</dd></div>
+                <div><dt>Amount</dt><dd>₱{orderDetailTarget.amount.toLocaleString()}</dd></div>
+                <div><dt>Status</dt><dd>{statusForOrder(orderDetailTarget)}</dd></div>
+                <div><dt>Deadline</dt><dd>{orderDetailTarget.status === "Pending" && orderDetailTarget.hours > 0 ? `${orderDetailTarget.hours}h` : "—"}</dd></div>
               </dl>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20 }}>
-              <SecondaryBtn onClick={() => setReviewTarget(null)}>Close</SecondaryBtn>
+              <SecondaryBtn onClick={() => setOrderDetailTarget(null)}>Close</SecondaryBtn>
             </div>
           </Modal>
+        )}
+        {paymentReviewTarget && (
+          <ReviewSubmissionModal
+            reviewTarget={paymentReviewTarget}
+            setReviewTarget={setPaymentReviewTarget}
+            setVerifyItems={updateSellerPayments}
+            setRejectTarget={setPaymentRejectTarget}
+            setRejectReason={setPaymentRejectReason}
+            setRejectCustom={setPaymentRejectCustom}
+            onNotifyBuyer={async (item) => {
+              if (item.status === "Rejected") {
+                if (isSupabaseConfigured) {
+                  await kargoApi.notifyPaymentResubmission(String(item.id))
+                }
+                setSellerPayments((items) =>
+                  items.map((candidate) =>
+                    candidate.id === item.id
+                      ? { ...candidate, buyerNotified: true }
+                      : candidate,
+                  ),
+                )
+                setPaymentReviewTarget((current) =>
+                  current?.id === item.id
+                    ? { ...current, buyerNotified: true }
+                    : current,
+                )
+                return
+              }
+              setInsufficientTarget(item)
+              setInsufficientAmount(item.amountPaid || "")
+              setPaymentReviewTarget(null)
+            }}
+            onMarkPaid={(item) => {
+              updateSellerPayments((items) =>
+                items.map((candidate) =>
+                  candidate.id === item.id
+                    ? { ...candidate, status: "Verified" as const }
+                    : candidate,
+                ),
+              )
+              setPaymentReviewTarget(null)
+            }}
+          />
+        )}
+        {insufficientTarget && (
+          <InsufficientPaymentModal
+            insuffTarget={insufficientTarget}
+            setInsuffTarget={setInsufficientTarget}
+            insuffAmtPaid={insufficientAmount}
+            setInsuffAmtPaid={setInsufficientAmount}
+            setVerifyItems={updateSellerPayments}
+          />
+        )}
+        {paymentRejectTarget && (
+          <RejectPaymentModal
+            rejectTarget={paymentRejectTarget}
+            setRejectTarget={setPaymentRejectTarget}
+            rejectReason={paymentRejectReason}
+            setRejectReason={setPaymentRejectReason}
+            rejectCustom={paymentRejectCustom}
+            setRejectCustom={setPaymentRejectCustom}
+            setInsuffTarget={setInsufficientTarget}
+            setInsuffAmtPaid={setInsufficientAmount}
+            setVerifyItems={updateSellerPayments}
+            REJECT_REASONS={[
+              "Receipt is invalid or unreadable",
+              "Reference number does not match",
+              "Wrong amount transferred",
+              "Payment was not received",
+              "Other",
+            ]}
+          />
         )}
       </div>
     )
@@ -467,6 +622,7 @@ export default function MyClaims({
     }
     const newHist: PayHistRow = {
       id: payHistory.length + 1,
+      submittedAt: new Date().toISOString(),
       product: payTarget.product,
       batch: payTarget.batch,
       method,

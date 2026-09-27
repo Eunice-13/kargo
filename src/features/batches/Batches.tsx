@@ -45,6 +45,7 @@ export default function Batches({
   setToPay,
   role,
   user,
+  refreshData,
   waitlist,
   setWaitlist,
   onNewBatch,
@@ -325,16 +326,22 @@ export default function Batches({
   ) => {
     const claimQty = Math.max(1, Math.floor(qty));
     if (isSupabaseConfigured) {
-      if (!product.dbId) return;
+      if (!product.dbId) {
+        alert("This product is missing its database identifier.");
+        return false;
+      }
       try {
         await kargoApi.claimProduct(product.dbId, claimQty);
+        await refreshData();
+        setClaimedKeys((current) => ({ ...current, [key]: true }));
+        return true;
       } catch (error) {
         alert(
           error instanceof Error
             ? error.message
             : "Unable to claim this product.",
         );
-        return;
+        return false;
       }
     }
     setClaimedKeys((c) => ({ ...c, [key]: true }));
@@ -362,6 +369,7 @@ export default function Batches({
     ).toISOString();
     const newClaim: ClaimRow = {
       id: claimId,
+      createdAt: new Date().toISOString(),
       productId: product.dbId,
       product: product.name,
       batch: batch.title.replace("—", "—"),
@@ -378,6 +386,7 @@ export default function Batches({
       setToPay((prev) => [
         {
           id: claimId,
+          createdAt: newClaim.createdAt,
           orderId: String(claimId),
           product: product.name,
           seller: batch.seller,
@@ -390,6 +399,7 @@ export default function Batches({
         ...prev,
       ]);
     }
+    return true;
   };
 
   const handleProfileClaim = (batchId: number, productName?: string) => {
@@ -589,19 +599,20 @@ export default function Batches({
           setBatches={setBatches}
           waitlist={waitlist}
           setWaitlist={setWaitlist}
+          refreshData={refreshData}
         />
         {profileClaimTarget && (
           <ItemClaimModal
             batch={profileClaimTarget.batch}
             product={profileClaimTarget.product}
-            onConfirm={(qty) => {
-              handleClaim(
+            onConfirm={async (qty) => {
+              const claimed = await handleClaim(
                 `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
                 profileClaimTarget.batch,
                 profileClaimTarget.product,
                 qty,
               );
-              setProfileClaimTarget(null);
+              if (claimed) setProfileClaimTarget(null);
             }}
             onClose={() => setProfileClaimTarget(null)}
           />
@@ -1197,14 +1208,14 @@ export default function Batches({
           <ItemClaimModal
             batch={profileClaimTarget.batch}
             product={profileClaimTarget.product}
-            onConfirm={(qty) => {
-              handleClaim(
+            onConfirm={async (qty) => {
+              const claimed = await handleClaim(
                 `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
                 profileClaimTarget.batch,
                 profileClaimTarget.product,
                 qty,
               );
-              setProfileClaimTarget(null);
+              if (claimed) setProfileClaimTarget(null);
             }}
             onClose={() => setProfileClaimTarget(null)}
           />
@@ -1491,14 +1502,14 @@ export default function Batches({
           <ItemClaimModal
             batch={profileClaimTarget.batch}
             product={profileClaimTarget.product}
-            onConfirm={(qty) => {
-              handleClaim(
+            onConfirm={async (qty) => {
+              const claimed = await handleClaim(
                 `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
                 profileClaimTarget.batch,
                 profileClaimTarget.product,
                 qty,
               );
-              setProfileClaimTarget(null);
+              if (claimed) setProfileClaimTarget(null);
             }}
             onClose={() => setProfileClaimTarget(null)}
           />
@@ -1603,13 +1614,14 @@ export default function Batches({
         <ItemClaimModal
           batch={profileClaimTarget.batch}
           product={profileClaimTarget.product}
-          onConfirm={() => {
-            handleClaim(
+          onConfirm={async (qty) => {
+            const claimed = await handleClaim(
               `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
               profileClaimTarget.batch,
               profileClaimTarget.product,
+              qty,
             );
-            setProfileClaimTarget(null);
+            if (claimed) setProfileClaimTarget(null);
           }}
           onClose={() => setProfileClaimTarget(null)}
         />

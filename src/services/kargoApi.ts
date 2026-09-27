@@ -537,6 +537,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       claims.push({
         id: row.id,
 
+        createdAt: row.created_at,
+
         productId: row.batch_product_id,
 
         product: product.name,
@@ -586,6 +588,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     } else {
       claims.push({
         id: row.id,
+
+        createdAt: row.created_at,
 
         productId: row.batch_product_id,
 
@@ -649,6 +653,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       toPay.push({
         id: row.id,
 
+        createdAt: row.created_at,
+
         orderId: row.id,
 
         product: product.name,
@@ -672,6 +678,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       payHistory.push({
         id: payment.id ?? `${row.id}-${payment.submitted_at}`,
+        submittedAt: payment.submitted_at,
         product: product.name,
 
         batch: product.batches.title,
@@ -1442,6 +1449,27 @@ export type SellerReceiveMethod = {
   qrUrl?: string
 }
 
+export type SellerPaymentMethod = SellerReceiveMethod & {
+  id: string
+}
+
+export async function loadOwnPaymentMethods(): Promise<SellerPaymentMethod[]> {
+  const { data, error } = await requireSupabase()
+    .from("seller_payment_methods")
+    .select("id,method_type,account_name,account_number,qr_path")
+    .order("method_type")
+
+  if (error) throw error
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    methodType: row.method_type,
+    accountName: row.account_name,
+    accountNumber: row.account_number,
+    qrUrl: paymentQrUrl(row.qr_path),
+  }))
+}
+
 export async function loadSellerReceiveMethods(
   sellerId: string,
 ): Promise<SellerReceiveMethod[]> {
@@ -1508,6 +1536,8 @@ export async function updatePaymentMethod(
 
   methodType: string,
 
+  accountName: string,
+
   accountNumber: string,
 
   _verified?: boolean,
@@ -1516,6 +1546,7 @@ export async function updatePaymentMethod(
 ) {
   const values: Record<string, unknown> = {
     method_type: methodType,
+    account_name: accountName,
     account_number: accountNumber,
   }
 
@@ -1576,7 +1607,7 @@ export async function loadSellerPaymentSubmissions() {
 
     .from("payments")
 
-    .select("*,orders!inner(total_amount,buyer_id,batch_products(name))")
+    .select("*,orders!inner(id,total_amount,buyer_id,batch_products(name))")
 
     .order("submitted_at", { ascending: false })
 
@@ -1601,6 +1632,8 @@ export async function loadSellerPaymentSubmissions() {
   return (data ?? []).map((row) => ({
     id: row.id as string,
 
+    orderId: row.orders.id as string,
+
     buyer: names.get(row.orders.buyer_id) ?? "Buyer",
 
     product: row.orders.batch_products.name as string,
@@ -1610,6 +1643,8 @@ export async function loadSellerPaymentSubmissions() {
     ref: row.reference_number ?? "—",
 
     date: new Date(row.submitted_at).toLocaleDateString(),
+
+    submittedAt: row.submitted_at,
 
     status:
       row.status === "verified"
@@ -1645,6 +1680,14 @@ export async function reviewPayment(
     p_decision: decision,
     p_reason: reason ?? null,
     p_deadline_hours: deadlineHours ?? null,
+  })
+
+  if (error) throw error
+}
+
+export async function notifyPaymentResubmission(paymentId: string) {
+  const { error } = await requireSupabase().rpc("notify_payment_resubmission", {
+    p_payment_id: paymentId,
   })
 
   if (error) throw error
@@ -2054,6 +2097,7 @@ export const kargoApi = {
   setWaitlistResponseHours,
 
   loadSellerReceiveMethods,
+  loadOwnPaymentMethods,
 
   uploadPaymentQr,
 
@@ -2072,6 +2116,7 @@ export const kargoApi = {
   loadSellerPaymentSubmissions,
 
   reviewPayment,
+  notifyPaymentResubmission,
 
   decideOrderExtension,
 

@@ -56,6 +56,8 @@ export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | 
 export type ClaimRow = {
   id: EntityId
 
+  createdAt?: string
+
   productId?: string
 
   product: string
@@ -96,6 +98,8 @@ export type ClaimRow = {
 export type ToPayRow = {
   id: EntityId
 
+  createdAt?: string
+
   orderId?: string
 
   product: string
@@ -115,6 +119,8 @@ export type ToPayRow = {
 
 export type PayHistRow = {
   id: EntityId
+
+  submittedAt?: string
 
   product: string
 

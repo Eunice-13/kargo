@@ -23,6 +23,7 @@ export default function BatchPage({
   setBatches,
   waitlist,
   setWaitlist,
+  refreshData,
 }: {
   batch: BatchType
   role: Role
@@ -37,6 +38,7 @@ export default function BatchPage({
   setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
   waitlist: WaitlistEntry[]
   setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>
+  refreshData: () => Promise<void>
 }) {
   const batch = batches.find((b) => b.id === batchProp.id) ?? batchProp
   const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({})
@@ -122,12 +124,18 @@ export default function BatchPage({
   ) => {
     const claimQty = Math.max(1, Math.floor(qty))
     if (isSupabaseConfigured) {
-      if (!product.dbId) return
+      if (!product.dbId) {
+        alert("This product is missing its database identifier.")
+        return false
+      }
       try {
         await kargoApi.claimProduct(product.dbId, claimQty)
+        await refreshData()
+        setClaimedKeys((current) => ({ ...current, [key]: true }))
+        return true
       } catch (error) {
         alert(error instanceof Error ? error.message : "Unable to claim this product.")
-        return
+        return false
       }
     }
     setClaimedKeys((c) => ({ ...c, [key]: true }))
@@ -149,10 +157,12 @@ export default function BatchPage({
       ),
     )
     const claimId = Date.now()
+    const createdAt = new Date().toISOString()
     const expiresAt = new Date(Date.now() + reserveHrs * 3_600_000).toISOString()
     setClaims((prev) => [
       {
         id: claimId,
+        createdAt,
         productId: product.dbId,
         product: product.name,
         batch: b.title,
@@ -169,6 +179,7 @@ export default function BatchPage({
       setToPay((prev) => [
         {
           id: claimId,
+          createdAt,
           orderId: String(claimId),
           product: product.name,
           seller: b.seller,
@@ -180,6 +191,7 @@ export default function BatchPage({
         },
         ...prev,
       ])
+    return true
   }
 
   return (
@@ -677,9 +689,14 @@ export default function BatchPage({
         <ItemClaimModal
           batch={batch}
           product={claimTarget.p}
-          onConfirm={(qty) => {
-            handleClaim(claimTarget.key, batch, claimTarget.p, qty)
-            setClaimTarget(null)
+          onConfirm={async (qty) => {
+            const claimed = await handleClaim(
+              claimTarget.key,
+              batch,
+              claimTarget.p,
+              qty,
+            )
+            if (claimed) setClaimTarget(null)
           }}
           onClose={() => setClaimTarget(null)}
         />

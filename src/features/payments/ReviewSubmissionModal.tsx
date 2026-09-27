@@ -29,13 +29,14 @@ export default function ReviewSubmissionModal({
   setRejectTarget: (v: VerifyItem | null) => void
   setRejectReason: (v: string) => void
   setRejectCustom: (v: string) => void
-  onNotifyBuyer: (item: VerifyItem) => void
+  onNotifyBuyer: (item: VerifyItem) => void | Promise<void>
   onMarkPaid: (item: VerifyItem) => void
 }) {
   const [showReceipt, setShowReceipt] = useState(false)
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
   const [receiptLoading, setReceiptLoading] = useState(false)
   const [receiptError, setReceiptError] = useState<string | null>(null)
+  const [notifying, setNotifying] = useState(false)
 
   const openReceipt = async () => {
     if (!reviewTarget.receiptPath) {
@@ -58,8 +59,18 @@ export default function ReviewSubmissionModal({
   const amountPaid =
     reviewTarget.amountPaid != null ? Number(reviewTarget.amountPaid) : null
   const isShort = amountPaid != null && amountPaid < reviewTarget.amount
-  const buyerNotified =
-    reviewTarget.rejectReason?.includes("buyer notified") ?? false
+  const buyerNotified = Boolean(reviewTarget.buyerNotified)
+  const isCashOnMeetup = reviewTarget.method === "Cash on Meetup"
+  const notifyBuyer = async () => {
+    setNotifying(true)
+    try {
+      await onNotifyBuyer(reviewTarget)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Unable to notify the buyer.")
+    } finally {
+      setNotifying(false)
+    }
+  }
   return (
     <>
       <Modal
@@ -146,12 +157,14 @@ export default function ReviewSubmissionModal({
                     ] as [string, string],
                   ]
                 : []),
-              [
-                "Amount Paid",
-                reviewTarget.amountPaid
-                  ? `₱${Number(reviewTarget.amountPaid).toLocaleString()}`
-                  : "—",
-              ],
+              ...(isCashOnMeetup
+                ? []
+                : [[
+                    "Amount Paid",
+                    reviewTarget.amountPaid
+                      ? `₱${Number(reviewTarget.amountPaid).toLocaleString()}`
+                      : "—",
+                  ] as [string, string]]),
             ] as [string, string][]).map(([k, v], idx) => (
               <div key={k}>
                 {idx === 0 && (
@@ -369,15 +382,8 @@ export default function ReviewSubmissionModal({
               color: "#374151",
             }}
           >
-            <strong>Your account:</strong>{" "}
-            {reviewTarget.method === "Bank Transfer"
-              ? "BDO •••• 4421"
-              : reviewTarget.method === "GCash"
-                ? "0917 •••• 8821"
-                : reviewTarget.method === "Maya"
-                  ? "0917 •••• 5543"
-                  : "—"}{" "}
-            — check that the reference ID and amount match what you received.
+            Check the reference ID and payment details against your configured{" "}
+            <strong>{reviewTarget.method}</strong> account before deciding.
           </div>
 
           {(() => {
@@ -494,6 +500,37 @@ export default function ReviewSubmissionModal({
                       <X size={13} aria-hidden="true" /> Reject
                     </button>
                   </>
+                )}
+                {reviewTarget.status === "Rejected" && reviewTarget.rejectionDeadline && (
+                  buyerNotified ? (
+                    <span
+                      style={{
+                        ...btnBase,
+                        flex: 1,
+                        color: "#0B7A59",
+                        background: "#D4F5EA",
+                        borderColor: "#6EE7B7",
+                        textAlign: "center",
+                      }}
+                    >
+                      Buyer Notified
+                    </span>
+                  ) : (
+                    <button
+                      disabled={notifying}
+                      onClick={notifyBuyer}
+                      style={{
+                        ...btnBase,
+                        flex: 1,
+                        background: "#FEF3C7",
+                        color: "#92400E",
+                        borderColor: "#FCD34D",
+                        opacity: notifying ? 0.65 : 1,
+                      }}
+                    >
+                      {notifying ? "Notifying…" : "Notify Buyer to Resubmit"}
+                    </button>
+                  )
                 )}
               </div>
             )

@@ -3,19 +3,28 @@ import type React from "react"
 import {
   Card,
   Avatar,
+  Modal,
+  PrimaryBtn,
   ProductThumb,
+  SecondaryBtn,
   Countdown,
   PaymentIcon,
   StatusBadge,
 } from "@/components/shared"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { VerifyItem } from "./verifyTypes"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
+import type { SellerPaymentMethod } from "@/services"
 
-export default function SellerPaymentVerification() {
+export default function SellerPaymentVerification({
+  view = "history",
+}: {
+  view?: "pending" | "history"
+}) {
   const VERIFY_SEED: VerifyItem[] = [
     {
       id: 1,
@@ -74,6 +83,13 @@ export default function SellerPaymentVerification() {
   const [rejectCustom, setRejectCustom] = useState("")
   const [insuffTarget, setInsuffTarget] = useState<VerifyItem | null>(null)
   const [insuffAmtPaid, setInsuffAmtPaid] = useState("")
+  const [paymentMethods, setPaymentMethods] = useState<SellerPaymentMethod[]>([])
+  const [methodEditor, setMethodEditor] = useState<SellerPaymentMethod | "new" | null>(null)
+  const [methodType, setMethodType] = useState("GCash")
+  const [methodName, setMethodName] = useState("")
+  const [methodNumber, setMethodNumber] = useState("")
+  const [methodQr, setMethodQr] = useState<File | undefined>()
+  const [savingMethod, setSavingMethod] = useState(false)
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -86,6 +102,58 @@ export default function SellerPaymentVerification() {
         ),
       )
   }, [])
+
+  const reloadPaymentMethods = () =>
+    kargoApi.loadOwnPaymentMethods().then(setPaymentMethods)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || view !== "history") return
+    reloadPaymentMethods()
+      .catch((error) =>
+        alert(
+          error instanceof Error
+            ? error.message
+            : "Unable to load configured payment methods.",
+        ),
+      )
+  }, [view])
+
+  const openMethodEditor = (method?: SellerPaymentMethod) => {
+    setMethodEditor(method ?? "new")
+    setMethodType(method?.methodType ?? "GCash")
+    setMethodName(method?.accountName ?? "")
+    setMethodNumber(method?.accountNumber ?? "")
+    setMethodQr(undefined)
+  }
+
+  const savePaymentMethod = async () => {
+    setSavingMethod(true)
+    try {
+      if (methodEditor === "new") {
+        await kargoApi.addPaymentMethod(
+          methodType,
+          methodName.trim(),
+          methodNumber.trim(),
+          methodQr,
+        )
+      } else if (methodEditor) {
+        await kargoApi.updatePaymentMethod(
+          methodEditor.id,
+          methodType,
+          methodName.trim(),
+          methodNumber.trim(),
+          undefined,
+          methodQr,
+        )
+      }
+      await reloadPaymentMethods()
+      setMethodEditor(null)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Unable to save payment method.")
+    } finally {
+      setSavingMethod(false)
+    }
+  }
 
   const updateVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>> =
     (action) => {
@@ -145,6 +213,7 @@ export default function SellerPaymentVerification() {
     "Duplicate submission",
     "Other",
   ]
+  const pendingItems = verifyItems.filter((item) => item.status === "Pending")
   const historyItems = verifyItems.filter((item) => item.status !== "Pending")
   const filteredHistory = historyItems.filter(
     (item) =>
@@ -235,7 +304,9 @@ export default function SellerPaymentVerification() {
                   </td>
                   {showAmountPaid && (
                     <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
-                      {paidAmount == null ? (
+                      {item.method === "Cash on Meetup" ? (
+                        <span style={{ color: "#9CA3AF" }}>Not applicable</span>
+                      ) : paidAmount == null ? (
                         <span style={{ color: "#9CA3AF" }}>—</span>
                       ) : (
                         <div>
@@ -368,6 +439,96 @@ export default function SellerPaymentVerification() {
 
   return (
     <div className="p-6 space-y-8">
+      {view === "pending" && (
+        <section>
+          <div className="mb-4">
+            <h2
+              style={{
+                fontFamily: "'Josefin Sans',sans-serif",
+                fontSize: 18,
+                fontWeight: 800,
+                color: "#111827",
+              }}
+            >
+              Pending Payment Review
+            </h2>
+            <p style={{ marginTop: 2, color: "#9CA3AF", fontSize: 13 }}>
+              Approve, reject, inspect receipts, or notify buyers from one review flow.
+            </p>
+          </div>
+          {renderTable(pendingItems, true)}
+        </section>
+      )}
+
+      {view === "history" && (
+      <>
+      <section>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2
+            style={{
+              fontFamily: "'Josefin Sans',sans-serif",
+              fontSize: 18,
+              fontWeight: 800,
+              color: "#111827",
+            }}
+          >
+            Payment Methods
+          </h2>
+          <PrimaryBtn size="sm" onClick={() => openMethodEditor()}>
+            <Plus size={14} aria-hidden="true" /> Add Payment Method
+          </PrimaryBtn>
+        </div>
+        <Card>
+          {paymentMethods.length > 0 ? (
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))" }}>
+              {paymentMethods.map((method) => (
+                <div
+                  key={`${method.methodType}-${method.accountNumber ?? "cash"}`}
+                  style={{
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 9,
+                    padding: "12px 14px",
+                    background: "#FAFAFA",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#111827", flex: 1 }}>
+                      <PaymentIcon method={method.methodType} size={20} />
+                      <div>
+                        <div>{method.methodType}</div>
+                        {(method.accountName || method.accountNumber) && (
+                          <div style={{ marginTop: 3, color: "#9CA3AF", fontSize: 10.5, fontWeight: 500 }}>
+                            {[method.accountName, method.accountNumber].filter(Boolean).join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <button type="button" aria-label={`Edit ${method.methodType}`} onClick={() => openMethodEditor(method)} style={{ border: 0, background: "transparent", color: "#6B7280", cursor: "pointer", padding: 4 }}>
+                      <Pencil size={15} />
+                    </button>
+                    <button type="button" aria-label={`Delete ${method.methodType}`} onClick={async () => {
+                      if (!window.confirm(`Delete ${method.methodType}?`)) return
+                      try {
+                        await kargoApi.deactivatePaymentMethod(method.id)
+                        await reloadPaymentMethods()
+                      } catch (error) {
+                        alert(error instanceof Error ? error.message : "Unable to delete payment method.")
+                      }
+                    }} style={{ border: 0, background: "transparent", color: "#E11D48", cursor: "pointer", padding: 4 }}>
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: "#748391", fontSize: 12 }}>
+              No payment methods are configured in seller settings.
+            </div>
+          )}
+        </Card>
+      </section>
+
       <section>
         <h2
           className="mb-4"
@@ -434,6 +595,41 @@ export default function SellerPaymentVerification() {
         </div>
         {renderTable(filteredHistory, false)}
       </section>
+      </>
+      )}
+
+      {methodEditor && (
+        <Modal
+          title={methodEditor === "new" ? "Add Payment Method" : "Edit Payment Method"}
+          onClose={() => !savingMethod && setMethodEditor(null)}
+          width={440}
+        >
+          <div className="space-y-4">
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
+              Method
+              <select value={methodType} onChange={(event) => setMethodType(event.target.value)} style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", background: "#fff" }}>
+                {["GCash", "Maya", "Bank Transfer", "Cash on Meetup", "Cash on Delivery", "Others"].map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </label>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
+              Account Name
+              <input value={methodName} onChange={(event) => setMethodName(event.target.value)} style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", boxSizing: "border-box" }} />
+            </label>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
+              Account Number / Instructions
+              <input value={methodNumber} onChange={(event) => setMethodNumber(event.target.value)} style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", boxSizing: "border-box" }} />
+            </label>
+            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
+              QR image (optional)
+              <input type="file" accept="image/*" onChange={(event) => setMethodQr(event.target.files?.[0])} style={{ display: "block", marginTop: 6, fontSize: 12 }} />
+            </label>
+            <div className="flex justify-end gap-2">
+              <SecondaryBtn onClick={() => setMethodEditor(null)} disabled={savingMethod}>Cancel</SecondaryBtn>
+              <PrimaryBtn onClick={savePaymentMethod} disabled={savingMethod}>{savingMethod ? "Saving…" : "Save Method"}</PrimaryBtn>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Review submission modal */}
       {reviewTarget && (
@@ -444,7 +640,25 @@ export default function SellerPaymentVerification() {
           setRejectTarget={setRejectTarget}
           setRejectReason={setRejectReason}
           setRejectCustom={setRejectCustom}
-          onNotifyBuyer={(item) => {
+          onNotifyBuyer={async (item) => {
+            if (item.status === "Rejected") {
+              if (isSupabaseConfigured) {
+                await kargoApi.notifyPaymentResubmission(String(item.id))
+              }
+              setVerifyItems((items) =>
+                items.map((candidate) =>
+                  candidate.id === item.id
+                    ? { ...candidate, buyerNotified: true }
+                    : candidate,
+                ),
+              )
+              setReviewTarget((current) =>
+                current?.id === item.id
+                  ? { ...current, buyerNotified: true }
+                  : current,
+              )
+              return
+            }
             setInsuffTarget(item)
             setInsuffAmtPaid(item.amountPaid || "")
             setReviewTarget(null)

@@ -3,9 +3,9 @@ import { CheckCircle2, Paperclip } from "lucide-react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
-
-// Cash methods (Meetup / Delivery) carry no online-payment details; the buyer
-// just coordinates with the seller. Keep their real label as the method key.
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
+import type { SellerReceiveMethod } from "@/services/kargoApi"
 
 // Cash methods (Meetup / Delivery) carry no online-payment details; the buyer
 // just coordinates with the seller. Keep their real label as the method key.
@@ -43,13 +43,18 @@ export default function PaymentSubmitModal({
     const timer = window.setInterval(closeIfExpired, 1000)
     return () => window.clearInterval(timer)
   }, [item, onClose])
-  const methodOptions = [
-    { label: "GCash", key: "GCash" },
-    { label: "Maya", key: "Maya" },
-    { label: "Bank Transfer", key: "Bank Transfer" },
-    { label: "Cash on Meetup", key: "Cash on Meetup" },
-  ]
-  const [method, setMethod] = useState("GCash")
+  const [methodOptions, setMethodOptions] = useState<SellerReceiveMethod[]>(
+    isSupabaseConfigured
+      ? []
+      : [
+          { methodType: "GCash", accountName: null, accountNumber: null },
+          { methodType: "Maya", accountName: null, accountNumber: null },
+          { methodType: "Bank Transfer", accountName: null, accountNumber: null },
+          { methodType: "Cash on Meetup", accountName: null, accountNumber: null },
+        ],
+  )
+  const [method, setMethod] = useState(isSupabaseConfigured ? "" : "GCash")
+  const [methodsError, setMethodsError] = useState<string | null>(null)
   const [refNo, setRefNo] = useState("")
   const [acctName, setAcctName] = useState("")
   const [phone, setPhone] = useState("")
@@ -60,6 +65,32 @@ export default function PaymentSubmitModal({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return
+    if (!item.sellerId) {
+      setMethodsError("The seller account could not be identified.")
+      return
+    }
+    kargoApi
+      .loadSellerReceiveMethods(item.sellerId)
+      .then((methods) => {
+        setMethodOptions(methods)
+        setMethod(methods[0]?.methodType ?? "")
+        setMethodsError(
+          methods.length === 0
+            ? "This seller has not configured a payment method yet."
+            : null,
+        )
+      })
+      .catch((error) =>
+        setMethodsError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load the seller's payment methods.",
+        ),
+      )
+  }, [item.sellerId])
 
   const isCash = method === "Cash on Meetup" || method === "Cash on Delivery"
   const numericAmountPaid = Number(amountPaid)
@@ -125,25 +156,39 @@ export default function PaymentSubmitModal({
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {methodOptions.map((m) => (
               <button
-                key={m.key}
-                onClick={() => setMethod(m.key)}
+                key={`${m.methodType}-${m.accountNumber ?? "cash"}`}
+                onClick={() => setMethod(m.methodType)}
                 style={{
                   padding: "7px 14px",
                   borderRadius: 8,
                   fontSize: 12,
                   fontWeight: 600,
                   cursor: "pointer",
-                  border: `2px solid ${method === m.key ? "#191BA9" : "#E5E7EB"}`,
-                  background: method === m.key ? "#EEF0FF" : "#fff",
-                  color: method === m.key ? "#191BA9" : "#6B7280",
+                  border: `2px solid ${method === m.methodType ? "#191BA9" : "#E5E7EB"}`,
+                  background: method === m.methodType ? "#EEF0FF" : "#fff",
+                  color: method === m.methodType ? "#191BA9" : "#6B7280",
                   transition: "all 0.15s",
                   fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
-                {m.label}
+                {m.methodType}
               </button>
             ))}
           </div>
+          {methodsError && (
+            <div role="alert" style={{ marginTop: 8, color: "#B91C1C", fontSize: 11.5 }}>
+              {methodsError}
+            </div>
+          )}
+          {methodOptions.find((option) => option.methodType === method) &&
+            !isCash && (
+              <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 7, background: "#F9FAFB", color: "#374151", fontSize: 11.5 }}>
+                {[
+                  methodOptions.find((option) => option.methodType === method)?.accountName,
+                  methodOptions.find((option) => option.methodType === method)?.accountNumber,
+                ].filter(Boolean).join(" · ")}
+              </div>
+            )}
         </div>
 
         {isCash && (
@@ -456,7 +501,7 @@ export default function PaymentSubmitModal({
               }
             }}
             disabled={
-              submitting || (!isCash
+              submitting || !method || (!isCash
                 ? !refNo.trim() ||
                   !uploaded ||
                   !phone.trim() ||

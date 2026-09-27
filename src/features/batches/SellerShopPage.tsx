@@ -1,8 +1,10 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { MessageCircle, Package, Clock3, CalendarDays } from "lucide-react"
 import type { BatchType, Role, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
-import { Card, Avatar, PrimaryBtn, ContactModal } from "@/components/shared"
+import { Card, Avatar, PrimaryBtn, ContactModal, PaymentIcon } from "@/components/shared"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi, type SellerReceiveMethod } from "@/services"
 import { sortSoldOutLast } from "./batchSort"
 
 // Dedicated seller storefront page (replaces the old popup modal). Laid out like
@@ -28,6 +30,30 @@ export default function SellerShopPage({
 }) {
   const canClaim = role !== "Seller" && Boolean(onClaimItem)
   const sellerBatches = batches.filter((b) => b.seller === seller)
+  const sellerId =
+    sellerBatches.find((batch) => batch.sellerId)?.sellerId ?? profileData?.id
+  const [paymentMethods, setPaymentMethods] = useState<SellerReceiveMethod[]>([])
+  const [methodsLoading, setMethodsLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !sellerId) return
+    let active = true
+    setMethodsLoading(true)
+    kargoApi
+      .loadSellerReceiveMethods(String(sellerId))
+      .then((methods) => {
+        if (active) setPaymentMethods(methods)
+      })
+      .catch(() => {
+        if (active) setPaymentMethods([])
+      })
+      .finally(() => {
+        if (active) setMethodsLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [sellerId])
 
   // ── Stats (row under the header) ────────────────────────────────────────────
   const totalProducts = sellerBatches.reduce((s, b) => s + b.products.length, 0)
@@ -321,6 +347,51 @@ export default function SellerShopPage({
 
           {/* Right — trust panel (kept from the old shop page) */}
           <div className="space-y-4">
+            <Card>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#374151",
+                  letterSpacing: 0.5,
+                  marginBottom: 10,
+                }}
+              >
+                ACCEPTED PAYMENT METHODS
+              </div>
+              {methodsLoading ? (
+                <div style={{ fontSize: 11, color: "#9CA3AF" }}>
+                  Loading payment methods…
+                </div>
+              ) : paymentMethods.length > 0 ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {paymentMethods.map((method) => (
+                    <div
+                      key={`${method.methodType}-${method.accountNumber ?? "cash"}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        border: "1px solid #E5E7EB",
+                        borderRadius: 8,
+                        background: "#F9FAFB",
+                        color: "#374151",
+                        padding: "7px 9px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                      }}
+                    >
+                      <PaymentIcon method={method.methodType} size={16} />
+                      {method.methodType}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5 }}>
+                  This seller has not listed an accepted payment method yet.
+                </div>
+              )}
+            </Card>
             <Card>
               <div
                 style={{

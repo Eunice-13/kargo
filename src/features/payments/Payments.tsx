@@ -18,10 +18,21 @@ export default function Payments({
   user,
   refreshData,
 }: SharedState) {
-  const [histFilter, setHistFilter] =
-    useState<"All" | "Paid and Reserved" | "Rejected" | "Cancelled">("All")
-  const [dateFilter2, setDateFilter2] = useState("All")
   const [txDetail, setTxDetail] = useState<PayHistRow | null>(null)
+  const resolvedPayments = payHistory
+    .filter(
+      (payment) =>
+        payment.status === "Paid and Reserved" || payment.status === "Rejected",
+    )
+    .sort((left, right) => {
+      const leftTime = left.submittedAt
+        ? new Date(left.submittedAt).getTime()
+        : Number(left.id) || 0
+      const rightTime = right.submittedAt
+        ? new Date(right.submittedAt).getTime()
+        : Number(right.id) || 0
+      return rightTime - leftTime
+    })
 
   useEffect(() => {
     if (!isSupabaseConfigured || role !== "Buyer") return
@@ -45,66 +56,16 @@ export default function Payments({
     }
   }, [refreshData, role, user.id])
 
-  if (role === "Seller") return <SellerPaymentVerification />
+  if (role === "Seller")
+    return <SellerPaymentVerification view="history" />
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <SH title="Payment History" />
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            alignItems: "center",
-            marginBottom: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-            Filter:
-          </span>
-          {(["All", "Paid and Reserved", "Rejected", "Cancelled"] as const).map(
-            (f) => (
-              <button
-                key={f}
-                onClick={() => setHistFilter(f)}
-                style={{
-                  background: histFilter === f ? "#191BA9" : "#fff",
-                  color: histFilter === f ? "#fff" : "#6B7280",
-                  border: `1px solid ${histFilter === f ? "#191BA9" : "#E5E7EB"
-                    }`,
-                  borderRadius: 999,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  padding: "4px 12px",
-                  cursor: "pointer",
-                }}
-              >
-                {f}
-              </button>
-            ),
-          )}
-          <div style={{ flex: 1 }} />
-          <select
-            value={dateFilter2}
-            onChange={(e) => setDateFilter2(e.target.value)}
-            style={{
-              fontSize: 12,
-              color: "#374151",
-              border: "1px solid #E5E7EB",
-              borderRadius: 6,
-              padding: "5px 8px",
-              background: "#fff",
-              outline: "none",
-            }}
-          >
-            {["All", "Sep 2026", "Aug 2026", "Jul 2026", "Jun 2026"].map(
-              (o) => (
-                <option key={o}>{o}</option>
-              ),
-            )}
-          </select>
-        </div>
+        <p style={{ marginTop: -8, marginBottom: 12, color: "#748391", fontSize: 12 }}>
+          Completed and rejected submissions, newest first.
+        </p>
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
             <table className="w-full text-[13px]">
@@ -135,18 +96,7 @@ export default function Payments({
                 </tr>
               </thead>
               <tbody>
-                {payHistory
-                  .filter((h) => {
-                    if (histFilter !== "All" && h.status !== histFilter)
-                      return false
-                    if (
-                      dateFilter2 !== "All" &&
-                      !h.date.includes(dateFilter2.split(" ")[0])
-                    )
-                      return false
-                    return true
-                  })
-                  .map((p, i) => (
+                {resolvedPayments.map((p, i) => (
                     <tr
                       key={p.id}
                       style={{
@@ -215,6 +165,13 @@ export default function Payments({
                       </td>
                     </tr>
                   ))}
+                {resolvedPayments.length === 0 && (
+                  <tr>
+                    <td colSpan={7} style={{ padding: 28, textAlign: "center", color: "#748391", fontSize: 12 }}>
+                      No resolved payments yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
