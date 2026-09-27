@@ -11,7 +11,6 @@ import {
   ProductThumb,
   StatusBadge,
   Countdown,
-  TrackOrderModal,
   BuyerProfileModal,
   ExtensionRequestModal,
   PaymentSuccessToast,
@@ -1060,9 +1059,7 @@ export default function MyClaims({
           </div>
         </Modal>
       )}
-      {viewOrder && (
-        <TrackOrderModal order={viewOrder} onClose={() => setViewOrder(null)} />
-      )}
+
       {extTarget && (
         <ExtensionRequestModal
           claim={extTarget}

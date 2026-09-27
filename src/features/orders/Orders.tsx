@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Check, Package } from "lucide-react"
+import { Check } from "lucide-react"
 import type { FulfillmentOrder, OrderRow, SharedState } from "@/types"
 import { INDIGO, CREAM, CYAN_L, SKY, GREEN } from "@/constants/theme"
 import {
@@ -7,9 +7,7 @@ import {
   SecondaryBtn,
   SH,
   Avatar,
-  TrackOrderModal,
   ContactModal,
-  ORDER_STEPS,
 } from "@/components/shared"
 import {
   KANBAN_COLS,
@@ -27,7 +25,6 @@ export default function Orders({
   setFulfillment,
 }: SharedState) {
   const board = useFulfillmentBoard(setFulfillment)
-  const [trackOrder, setTrackOrder] = useState<OrderRow | null>(null)
   const [contactOrder, setContact] = useState<OrderRow | null>(null)
 
   if (role === "Seller") {
@@ -201,62 +198,7 @@ export default function Orders({
 
   return (
     <div className="p-6 space-y-5">
-      <Card style={{ background: CYAN_L, border: `1px solid ${SKY}` }}>
-        <div className="flex items-center">
-          {ORDER_STEPS.map((step, i) => (
-            <div
-              key={step}
-              className="flex items-center"
-              style={{ flex: i < ORDER_STEPS.length - 1 ? 1 : "none" as never }}
-            >
-              <div className="flex flex-col items-center">
-                <div
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: INDIGO,
-                    color: "#fff",
-                    fontSize: 11,
-                    fontWeight: 700,
-                  }}
-                >
-                  {i + 1}
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: INDIGO,
-                    fontWeight: 600,
-                    marginTop: 4,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {step}
-                </div>
-              </div>
-              {i < ORDER_STEPS.length - 1 && (
-                <div
-                  style={{
-                    flex: 1,
-                    height: 2,
-                    background: INDIGO,
-                    margin: "0 4px",
-                    marginBottom: 20,
-                  }}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </Card>
       {orders.map((order) => {
-        const si = order.step - 1
-        const pct = Math.round((order.step / ORDER_STEPS.length) * 100)
-        const delivered = order.step === 5
         return (
           <Card key={order.id}>
             <div className="flex items-start justify-between mb-4">
@@ -305,103 +247,14 @@ export default function Orders({
                 ₱{order.amount.toLocaleString()}
               </div>
             </div>
-            <div className="flex items-center mb-4">
-              {ORDER_STEPS.map((step, i) => (
-                <div
-                  key={step}
-                  className="flex items-center"
-                  style={{
-                    flex: i < ORDER_STEPS.length - 1 ? 1 : "none" as never,
-                  }}
-                >
-                  <div
-                    className="flex flex-col items-center"
-                    style={{ minWidth: 60 }}
-                  >
-                    <div
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: i <= si ? INDIGO : "#E5E7EB",
-                        color: i <= si ? "#fff" : "#9CA3AF",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        transition: "background 0.3s",
-                      }}
-                    >
-                      {i < si ? <Check size={12} aria-hidden="true" /> : i + 1}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 10,
-                        color: i <= si ? INDIGO : "#9CA3AF",
-                        fontWeight: i === si ? 700 : 500,
-                        marginTop: 3,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {step}
-                    </div>
-                  </div>
-                  {i < ORDER_STEPS.length - 1 && (
-                    <div
-                      style={{
-                        flex: 1,
-                        height: 2,
-                        background: i < si ? INDIGO : "#E5E7EB",
-                        margin: "0 2px",
-                        marginBottom: 16,
-                        transition: "background 0.3s",
-                      }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div
-              style={{
-                background: "#F3F4F6",
-                borderRadius: 999,
-                height: 5,
-                marginBottom: 12,
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  width: `${pct}%`,
-                  height: "100%",
-                  background: delivered ? GREEN : INDIGO,
-                  borderRadius: 999,
-                  transition: "width 0.6s cubic-bezier(.22,1,.36,1)",
-                }}
-              />
-            </div>
+
             <div className="flex items-center justify-between">
               <div style={{ fontSize: 12, color: "#6B7280" }}>
-                {order.trackingNo ? (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <Package size={13} aria-hidden="true" />{" "}
-                    <span style={{ fontFamily: "monospace", fontSize: 11 }}>
-                      {order.trackingNo}
-                    </span>
-                  </span>
-                ) : (
-                  <span style={{ color: delivered ? GREEN : "#9CA3AF" }}>
-                    {order.eta}
-                  </span>
-                )}
+                <span style={{ color: "#9CA3AF" }}>
+                  {order.eta}
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                {!delivered && (
-                  <SecondaryBtn onClick={() => setTrackOrder(order)}>
-                    Track Order
-                  </SecondaryBtn>
-                )}
                 <SecondaryBtn onClick={() => setContact(order)}>
                   Contact Seller
                 </SecondaryBtn>
@@ -410,12 +263,6 @@ export default function Orders({
           </Card>
         )
       })}
-      {trackOrder && (
-        <TrackOrderModal
-          order={trackOrder}
-          onClose={() => setTrackOrder(null)}
-        />
-      )}
       {contactOrder && (
         <ContactModal
           name={contactOrder.seller}
