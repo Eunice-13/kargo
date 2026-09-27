@@ -485,7 +485,10 @@ export default function App() {
             onNewBatch={() => setShowNewBatch(true)}
           />
           <main style={{ minHeight: "calc(100vh - 100px)" }}>
-            <TabContent tab={tab} shared={shared} />
+            <TabContent
+              tab={tab}
+              shared={shared}
+            />
           </main>
           <Footer />
           {showOnboarding && <Onboarding onDone={() => setOnboard(false)} />}

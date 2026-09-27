@@ -72,9 +72,15 @@ export default function TabBar({
     >
       {/* Tabs — equally distributed across available width */}
       <div style={{ display: "flex", flex: 1, height: "100%", minWidth: 0 }}>
-        {visibleTabs.map(({ tab, label, icon: Icon }) => (
+        {visibleTabs.map(({ tab, label, icon: Icon }) => {
+          // Highlight exactly one tab at a time. Because the buyer tab list can
+          // map two entries to the same underlying tab, compare the whole
+          // entry's tab against the active tab so only the intended one lights.
+          const visuallyActive = active === tab
+          return (
           <button
             key={tab}
+            data-seller-active={visuallyActive ? "true" : undefined}
             data-spotlight={
               tab === "Dashboard"
                 ? "dashboard-tab"
@@ -85,14 +91,14 @@ export default function TabBar({
                     : undefined
             }
             onClick={() => setActive(tab)}
-            aria-current={active === tab ? "page" : undefined}
+            aria-current={visuallyActive ? "page" : undefined}
             style={{
               fontFamily: "'Josefin Sans',sans-serif",
-              color: active === tab ? INDIGO : "#6B7280",
-              fontWeight: active === tab ? 700 : 500,
+              color: visuallyActive ? INDIGO : "#6B7280",
+              fontWeight: visuallyActive ? 700 : 500,
               fontSize: 13,
               borderBottom:
-                active === tab
+                visuallyActive
                   ? `2px solid ${INDIGO}`
                   : "2px solid transparent",
               height: 44,
@@ -116,7 +122,8 @@ export default function TabBar({
           >
             <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
           </button>
-        ))}
+          )
+        })}
       </div>
       {/* Right group — only shown for verified sellers (New Batch) */}
       {role === "Seller" && (

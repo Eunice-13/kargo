@@ -70,10 +70,13 @@ export default function NewBatchModal({
       { name: "", basePrice: "", markup: "", qty: "", limit: "" },
     ])
 
+  const removeProduct = (i: number) =>
+    setProducts((p) => p.filter((_, idx) => idx !== i))
+
   const updateProduct = (i: number, k: keyof BatchProduct, v: string) =>
     setProducts((p) =>
       p.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)),
-    )
+    );
 
   const formatDateRange = (s: string, e: string) => {
     if (!s) return "TBD"
@@ -208,7 +211,7 @@ export default function NewBatchModal({
 
             limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
           })),
-        })
+        });
       }
 
       onCreate({
@@ -688,9 +691,38 @@ export default function NewBatchModal({
                     background: "#FCFCFD",
                   }}
                 >
-                  {/* Line 1: product name (full width) */}
+                  {/* Line 1: product name (full width) + remove button */}
                   <div style={{ marginBottom: 8 }}>
-                    <label style={fieldLabel}>Product Name</label>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 3,
+                      }}
+                    >
+                      <label style={{ ...fieldLabel, marginBottom: 0 }}>
+                        Product Name
+                      </label>
+                      {products.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeProduct(i)}
+                          aria-label={`Remove item ${i + 1}`}
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "#DC2626",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                     <input
                       value={p.name}
                       onChange={(e) => updateProduct(i, "name", e.target.value)}
@@ -813,7 +845,7 @@ export default function NewBatchModal({
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
           <button
@@ -876,5 +908,5 @@ export default function NewBatchModal({
         </div>
       </div>
     </Modal>
-  )
+  );
 }

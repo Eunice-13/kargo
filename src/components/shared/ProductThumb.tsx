@@ -20,6 +20,17 @@ export const PROD_IMG: Record<string, string> = {
   "Meiji Chocolate":
     "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=60&h=60&fit=crop&auto=format",
 }
+
+export function productImageUrl(name: string, size = 60) {
+  const url = new URL(
+    PROD_IMG[name] ||
+      "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=60&h=60&fit=crop&auto=format",
+  )
+  url.searchParams.set("w", String(size))
+  url.searchParams.set("h", String(size))
+  return url.toString()
+}
+
 export default function ProductThumb({ name }: { name: string }) {
   const url =
     PROD_IMG[name] ||

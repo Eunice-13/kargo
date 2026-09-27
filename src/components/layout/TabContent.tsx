@@ -8,18 +8,25 @@ import { Payments } from "@/features/payments"
 import { Orders } from "@/features/orders"
 import { Settings } from "@/features/settings"
 
-export default function TabContent({ tab, shared }: { tab: Tab; shared: SharedState }) {
+export default function TabContent({
+  tab,
+  shared,
+}: {
+  tab: Tab
+  shared: SharedState
+}) {
   const [displayed, setDisplayed] = useState(tab)
   const [animClass, setAnimClass] = useState("fi")
   const prev = useRef(tab)
+  const tabOrder = TABS
 
   useEffect(() => {
     if (tab !== prev.current) {
-      setAnimClass(TABS.indexOf(tab) > TABS.indexOf(prev.current) ? "pl" : "pr")
+      setAnimClass(tabOrder.indexOf(tab) > tabOrder.indexOf(prev.current) ? "pl" : "pr")
       setDisplayed(tab)
       prev.current = tab
     }
-  }, [tab])
+  }, [tab, tabOrder])
 
   const map: Record<Tab, React.ReactNode> = {
     Dashboard: <Dashboard {...shared} />,
@@ -35,4 +42,3 @@ export default function TabContent({ tab, shared }: { tab: Tab; shared: SharedSt
     </div>
   )
 }
-
