@@ -345,6 +345,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     { data: dbOrders, error: ordersError },
     { data: reactionCounts, error: reactionCountsError },
     { data: ownReactions, error: ownReactionsError },
+    { data: expenseTotals, error: expenseTotalsError },
   ] = await Promise.all([
     client.from("batch_catalog").select("*"),
     client
@@ -362,6 +363,9 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       .from("batch_reactions")
       .select("batch_id")
       .eq("user_id", auth.user.id),
+    client
+      .from("seller_batch_expense_totals")
+      .select("batch_id,total_expenses"),
   ])
   if (catalogError) throw catalogError
   if (ordersError) throw ordersError
@@ -370,6 +374,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   )
   if (reactionCountsError && !reactionSchemaMissing) throw reactionCountsError
   if (ownReactionsError && !reactionSchemaMissing) throw ownReactionsError
+  if (expenseTotalsError) throw expenseTotalsError
   if (reactionSchemaMissing) {
     console.warn(
       "Batch reaction tables are not migrated yet; loading catalog without reaction metadata.",
@@ -387,6 +392,12 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   )
   const reactedBatchIds = new Set(
     (ownReactions ?? []).map((row) => row.batch_id),
+  )
+  const expenseTotalByBatchId = new Map(
+    (expenseTotals ?? []).map((row) => [
+      row.batch_id,
+      Number(row.total_expenses ?? 0),
+    ]),
   )
 
   const participantIds = [
@@ -427,6 +438,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     const current: BatchType = batchMap.get(row.batch_id) ?? {
       id: numericId(row.batch_id),
       dbId: row.batch_id,
+      totalExpenses: expenseTotalByBatchId.get(row.batch_id),
       createdAt: reactions?.createdAt,
       reactionCount: reactions?.count ?? 0,
       reactedByCurrentUser: reactedBatchIds.has(row.batch_id),
@@ -1220,6 +1232,11 @@ export async function updateProfile(values: {
 }) {
   const client = requireSupabase()
 
+  const { data: auth, error: userError } = await client.auth.getUser()
+
+  if (userError) throw userError
+  if (!auth.user) throw new Error("Authentication required")
+
   const payload: Record<string, unknown> = {}
 
   if (values.displayName !== undefined)
@@ -1241,20 +1258,31 @@ export async function updateProfile(values: {
   if (values.waitlistResponseHours !== undefined)
     payload.waitlist_response_hours = values.waitlistResponseHours
 
-  if (values.email) {
+  const requestedEmail = values.email?.trim()
+  const currentEmail = auth.user.email?.trim()
+
+  if (
+    requestedEmail &&
+    requestedEmail.toLocaleLowerCase() !== currentEmail?.toLocaleLowerCase()
+  ) {
     const { error: authError } = await client.auth.updateUser({
-      email: values.email,
+      email: requestedEmail,
     })
 
     if (authError) throw authError
   }
 
-  const { error } = await client
+  if (Object.keys(payload).length === 0) return
+
+  const { data, error } = await client
     .from("profiles")
     .update(payload)
-    .eq("id", (await client.auth.getUser()).data.user?.id)
+    .eq("id", auth.user.id)
+    .select("id")
+    .single()
 
   if (error) throw error
+  if (!data) throw new Error("Profile update did not affect an account")
 }
 
 export async function setBatchLock(batchId: string, locked: boolean) {

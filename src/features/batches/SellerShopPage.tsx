@@ -45,13 +45,12 @@ export default function SellerShopPage({
 
   // ── Tab / category nav ──────────────────────────────────────────────────────
   const categories = Array.from(new Set(sellerBatches.map((b) => b.category)))
-  const TABS = ["Home", "All Batches", ...categories] as const
-  const [tab, setTab] = useState<string>("Home")
+  const TABS = ["All Batches", ...categories] as const
+  const [tab, setTab] = useState<string>("All Batches")
   const [sortBy, setSortBy] = useState("Newest")
 
   // Which batches the current tab shows.
-  const catFilter =
-    tab === "Home" || tab === "All Batches" ? "All" : tab
+  const catFilter = tab === "All Batches" ? "All" : tab
   const visibleBatches = sortSoldOutLast(
     sellerBatches
       .filter((b) => catFilter === "All" || b.category === catFilter)
@@ -63,8 +62,7 @@ export default function SellerShopPage({
             : b_.id - a.id,
       ),
   )
-  // "Home" leads with a shorter, recommended slice; other tabs show everything.
-  const gridBatches = tab === "Home" ? visibleBatches.slice(0, 6) : visibleBatches
+  const gridBatches = visibleBatches
 
   const stats: { icon: typeof Package; label: string; value: string; accent?: boolean }[] = [
     { icon: Package, label: "Products", value: String(totalProducts) },
@@ -249,29 +247,13 @@ export default function SellerShopPage({
       </div>
 
       {/* ── Tab body ───────────────────────────────────────────────────────── */}
-      {tab === "Home" && (profileData?.bio) && (
-        <Card style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
-            {profileData.bio}
-          </div>
-        </Card>
-      )}
-      {tab !== "Home" && (
-        <div
+      <div
           className="grid gap-5"
           style={{ gridTemplateColumns: "1fr 300px", alignItems: "start" }}
         >
           {/* Left — batches */}
           <div>
             {/* On Home, a light "About" strip mirrors Shopee's shop intro. */}
-            {tab === "Home" && profileData?.bio && (
-              <Card style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
-                  {profileData.bio}
-                </div>
-              </Card>
-            )}
-
             <div
               className="flex items-center justify-between"
               style={{ marginBottom: 14 }}
@@ -284,7 +266,7 @@ export default function SellerShopPage({
                   color: "#111827",
                 }}
               >
-                {tab === "Home" ? "Recommended for you" : `${visibleBatches.length} batch${visibleBatches.length !== 1 ? "es" : ""}`}
+                {`${visibleBatches.length} batch${visibleBatches.length !== 1 ? "es" : ""}`}
               </div>
               <select
                 value={sortBy}
@@ -400,8 +382,7 @@ export default function SellerShopPage({
               </div>
             </Card>
           </div>
-        </div>
-      )}
+      </div>
 
       {showChat && (
         <ContactModal

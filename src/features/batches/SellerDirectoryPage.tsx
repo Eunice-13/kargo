@@ -8,14 +8,12 @@ import SellerShopPage from "./SellerShopPage"
 export default function SellerDirectoryPage({
   batches,
   onBack,
-  onSellerSelect,
   onClaimItem,
   role,
   user,
 }: {
   batches: BatchType[]
   onBack: () => void
-  onSellerSelect: (name: string) => void
   onClaimItem: (batchId: number, productName: string) => void
   role: Role
   user: UserInfo

@@ -5,6 +5,7 @@ import {
   Unlock,
   Search,
   ArrowRight,
+  ArrowLeft,
   ChevronDown,
   Plus,
 } from "lucide-react";
@@ -25,8 +26,8 @@ import {
 import { sortSoldOutLast } from "./batchSort";
 import FinancialSummaryModal from "./FinancialSummaryModal";
 import ItemClaimModal from "./ItemClaimModal";
-import SellerProfileModal from "./SellerProfileModal";
 import SellerDirectoryPage from "./SellerDirectoryPage";
+import SellerShopPage from "./SellerShopPage";
 import BatchPage from "./BatchPage";
 import BuyerHome from "./BuyerHome";
 import { toggleBatchLock } from "./toggleBatchLock";
@@ -44,7 +45,6 @@ export default function Batches({
   setToPay,
   role,
   user,
-  setTab,
   waitlist,
   setWaitlist,
   onNewBatch,
@@ -94,7 +94,7 @@ export default function Batches({
     );
     setExtTarget(null);
   };
-  const [profile, setProfile] = useState<string | null>(() => {
+  const [shopPage, setShopPage] = useState<string | null>(() => {
     const n = navIntent.sellerName;
     navIntent.sellerName = null;
     return n;
@@ -109,7 +109,7 @@ export default function Batches({
           );
           navIntent.batchId = null;
           if (requestedBatch) {
-            setProfile(null);
+            setShopPage(null);
             setBatchPage(requestedBatch);
           }
         }
@@ -118,7 +118,8 @@ export default function Batches({
           const requestedSeller = navIntent.sellerName;
           navIntent.sellerName = null;
           setBatchPage(null);
-          setProfile(requestedSeller);
+          setSellerDir(false);
+          setShopPage(requestedSeller);
         }
       }),
     [batches],
@@ -395,8 +396,14 @@ export default function Batches({
       ? batch?.products.find((p) => p.name === productName)
       : batch?.products[0];
     if (!batch || !product) return;
-    setProfile(null);
+    setShopPage(null);
     setProfileClaimTarget({ batch, product });
+  };
+
+  const openSellerShop = (name: string) => {
+    setBatchPage(null);
+    setSellerDir(false);
+    setShopPage(name);
   };
 
   // Confirmation modals for consequential seller actions (#16). Rendered in
@@ -503,6 +510,64 @@ export default function Batches({
     </>
   );
 
+  if (shopPage)
+    return (
+      <div>
+        <div
+          style={{
+            background: "#fff",
+            borderBottom: "1px solid #E5E7EB",
+            padding: "10px 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            position: "sticky",
+            top: 88,
+            zIndex: 30,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setShopPage(null)}
+            style={{
+              fontSize: 13,
+              color: INDIGO,
+              fontWeight: 600,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            <ArrowLeft
+              size={13}
+              aria-hidden="true"
+              style={{ display: "inline", marginRight: 4, verticalAlign: -2 }}
+            />
+            Back to Batches
+          </button>
+          <span style={{ fontSize: 12, color: "#D1D5DB" }}>/</span>
+          <span style={{ fontSize: 13, color: "#6B7280" }}>{shopPage}</span>
+        </div>
+        <div className="p-6">
+          <SellerShopPage
+            seller={shopPage}
+            batches={batches}
+            onClaimItem={handleProfileClaim}
+            onBatchOpen={(batchId) => {
+              const requestedBatch = batches.find(
+                (batch) => batch.id === batchId,
+              );
+              if (!requestedBatch) return;
+              setShopPage(null);
+              setBatchPage(requestedBatch);
+            }}
+            role={role}
+            profileData={shopPage === user.name ? user : undefined}
+          />
+        </div>
+      </div>
+    );
+
   if (batchPage)
     return (
       <>
@@ -516,22 +581,11 @@ export default function Batches({
           toPay={toPay}
           setToPay={setToPay}
           onBack={() => setBatchPage(null)}
-          onSellerClick={(name) => setProfile(name)}
+          onSellerClick={openSellerShop}
           setBatches={setBatches}
           waitlist={waitlist}
           setWaitlist={setWaitlist}
         />
-        {profile && (
-          <SellerProfileModal
-            seller={profile}
-            batches={batches}
-            onClose={() => setProfile(null)}
-            onClaimFromProfile={handleProfileClaim}
-            setTab={setTab}
-            profileData={profile === user.name ? user : undefined}
-            role={role}
-          />
-        )}
         {profileClaimTarget && (
           <ItemClaimModal
             batch={profileClaimTarget.batch}
@@ -1134,9 +1188,6 @@ export default function Batches({
           onClaimItem={handleProfileClaim}
           role={role}
           user={user}
-          onSellerSelect={(name) => {
-            setProfile(name);
-          }}
         />
         {profileClaimTarget && (
           <ItemClaimModal
@@ -1432,17 +1483,6 @@ export default function Batches({
             )}
           </Modal>
         )}
-        {profile && (
-          <SellerProfileModal
-            seller={profile}
-            batches={batches}
-            onClose={() => setProfile(null)}
-            onClaimFromProfile={handleProfileClaim}
-            setTab={setTab}
-            profileData={profile === user.name ? user : undefined}
-            role={role}
-          />
-        )}
         {profileClaimTarget && (
           <ItemClaimModal
             batch={profileClaimTarget.batch}
@@ -1553,17 +1593,6 @@ export default function Batches({
           claim={extTarget}
           onSubmit={submitExtension}
           onClose={() => setExtTarget(null)}
-        />
-      )}
-      {profile && (
-        <SellerProfileModal
-          seller={profile}
-          batches={batches}
-          onClose={() => setProfile(null)}
-          onClaimFromProfile={handleProfileClaim}
-          setTab={setTab}
-          profileData={profile === user.name ? user : undefined}
-          role={role}
         />
       )}
       {profileClaimTarget && (

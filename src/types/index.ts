@@ -190,6 +190,9 @@ export interface BatchStoredProduct {
 export interface BatchItem {
   id: number
   dbId?: string
+  // Seller-only aggregate loaded from seller_batch_expense_totals. Buyers
+  // never receive another seller's private bookkeeping amount.
+  totalExpenses?: number
   createdAt?: string
   reactionCount?: number
   reactedByCurrentUser?: boolean
