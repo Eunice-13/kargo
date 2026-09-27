@@ -4,7 +4,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 1,
     product: "Tokyo Banana",
-    batch: "Japan Trip — Mar 2026",
+    batch: "Japan Trip — March 2026",
     seller: "Maria Santos",
     buyer: "Trisha Lim",
     buyerFb: "https://facebook.com/trisha.lim",
@@ -16,7 +16,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 2,
     product: "Laneige Lip Mask",
-    batch: "Korea Haul — Apr 2026",
+    batch: "Korea Haul — April 2026",
     seller: "Ana Reyes",
     buyer: "Grace Reyes",
     buyerFb: "https://facebook.com/grace.reyes",
@@ -39,7 +39,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 4,
     product: "Shiseido Sunscreen",
-    batch: "Japan Trip — Mar 2026",
+    batch: "Japan Trip — March 2026",
     seller: "Maria Santos",
     buyer: "Anna Bautista",
     buyerFb: "https://facebook.com/anna.bautista",
@@ -51,7 +51,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 5,
     product: "Korean Skincare Set",
-    batch: "Korea Haul — Apr 2026",
+    batch: "Korea Haul — April 2026",
     seller: "Ana Reyes",
     buyer: "Mia Cruz",
     qty: 1,
@@ -62,7 +62,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 6,
     product: "KitKat Sakura",
-    batch: "Japan Trip — Mar 2026",
+    batch: "Japan Trip — March 2026",
     seller: "Maria Santos",
     buyer: "Ben Torres",
     qty: 4,
@@ -73,7 +73,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 7,
     product: "COSRX Snail Cream",
-    batch: "Korea Haul — Apr 2026",
+    batch: "Korea Haul — April 2026",
     seller: "Ana Reyes",
     buyer: "Jade Garcia",
     qty: 1,
@@ -84,7 +84,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 8,
     product: "Thai Snack Box",
-    batch: "Bangkok Haul — Jun 2026",
+    batch: "Bangkok Haul — June 2026",
     seller: "Kristine Aquino",
     buyer: "Rico Mendoza",
     buyerFb: "https://facebook.com/rico.mendoza",
@@ -96,7 +96,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 9,
     product: "Cadbury Hamper",
-    batch: "UK Trip — Aug 2026",
+    batch: "UK Trip — August 2026",
     seller: "Ella Torres",
     buyer: "Nadia Cruz",
     qty: 1,
@@ -107,7 +107,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 10,
     product: "85°C Pastries",
-    batch: "Taiwan Finds — Jul 2026",
+    batch: "Taiwan Finds — July 2026",
     seller: "Rico Santos",
     buyer: "Leo Ramos",
     qty: 2,
@@ -152,7 +152,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 14,
     product: "Nars Blush",
-    batch: "Dubai Pasabuy — Jul 2026",
+    batch: "Dubai Pasabuy — July 2026",
     seller: "Mark Villanueva",
     buyer: "Denise Tan",
     qty: 1,

@@ -9,7 +9,10 @@
     "preview": "vite preview",
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
-    "test:expiry": "node --test tests/claimExpiry.test.ts"
+    "test:expiry": "node --test tests/claimExpiry.test.ts",
+    "test:seed": "node --experimental-strip-types --import ./scripts/lib/register.mjs scripts/check-batch-seed.mjs",
+    "test:claimmatch": "node --experimental-strip-types --import ./scripts/lib/register.mjs scripts/repro-claim-match.mjs",
+    "test:ratings": "node --experimental-strip-types --import ./scripts/lib/register.mjs scripts/verify-demo-ratings.mjs"
   },
   "dependencies": {
     "@supabase/server": "^1.7.0",

@@ -231,12 +231,18 @@ export default function App() {
 
       setBatches((current) =>
         current.map((batch) => {
+          // A claim belongs to this batch if it names the batch, or if it names
+          // one of the batch's products. The product branch requires a real
+          // productId: demo seed rows carry none, and an unguarded
+          // `product.dbId === claim.productId` would compare undefined to
+          // undefined, match every batch, and decrement all of them.
           const released = due.filter(
             (claim) =>
               claim.batch === batch.title ||
-              batch.products.some(
-                (product) => product.dbId === claim.productId,
-              ),
+              (claim.productId != null &&
+                batch.products.some(
+                  (product) => product.dbId === claim.productId,
+                )),
           )
 
           if (released.length === 0) return batch

@@ -15,7 +15,7 @@ export const ORDERS_INIT: OrderRow[] = [
   {
     id: "ORD-2026-0031",
     product: "Meiji Chocolate",
-    batch: "Japan Trip — Mar 2026",
+    batch: "Japan Trip — March 2026",
     seller: "Maria Santos",
     amount: 1160,
     step: 5,
@@ -27,7 +27,7 @@ export const ORDERS_INIT: OrderRow[] = [
   {
     id: "ORD-2026-0028",
     product: "Paldo Bibimmyeon",
-    batch: "Korea Haul — Apr 2026",
+    batch: "Korea Haul — April 2026",
     seller: "Ana Reyes",
     amount: 760,
     step: 5,
@@ -49,7 +49,7 @@ export const ORDERS_INIT: OrderRow[] = [
   {
     id: "ORD-2026-0047",
     product: "85°C Pastries",
-    batch: "Taiwan Finds — Jul 2026",
+    batch: "Taiwan Finds — July 2026",
     seller: "Rico Santos",
     amount: 1120,
     step: 4,
