@@ -10,7 +10,6 @@ export const ORDERS_INIT: OrderRow[] = [
     step: 4,
     trackingNo: "USPS 9400111899223456789012",
     eta: "May 25, 2026",
-    rated: false,
   },
   {
     id: "ORD-2026-0031",
@@ -21,8 +20,6 @@ export const ORDERS_INIT: OrderRow[] = [
     step: 5,
     trackingNo: null,
     eta: "Delivered Mar 22",
-    rated: true,
-    rating: 5,
   },
   {
     id: "ORD-2026-0028",
@@ -33,7 +30,6 @@ export const ORDERS_INIT: OrderRow[] = [
     step: 5,
     trackingNo: null,
     eta: "Delivered Feb 28",
-    rated: false,
   },
   {
     id: "ORD-2026-0052",
@@ -44,7 +40,6 @@ export const ORDERS_INIT: OrderRow[] = [
     step: 3,
     trackingNo: null,
     eta: "Est. Aug 30, 2026",
-    rated: false,
   },
   {
     id: "ORD-2026-0047",
@@ -55,6 +50,5 @@ export const ORDERS_INIT: OrderRow[] = [
     step: 4,
     trackingNo: "POST TW 2024112233",
     eta: "Jul 31, 2026",
-    rated: false,
   },
 ]

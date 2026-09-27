@@ -1,12 +1,12 @@
 import { useCallback, useRef, useState } from "react"
 import { Camera, Plane, ShoppingBasket } from "lucide-react"
-import type { BirState, Role, UserInfo } from "@/types"
+import type { Role, UserInfo } from "@/types"
 import { PrimaryBtn, Toggle } from "@/components/shared"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import AuthInput from "./AuthInput"
 import AuthLayout from "./AuthLayout"
-import BirVerifier from "./BirVerifier"
+
 
 const platforms = ["Facebook", "TikTok", "Instagram"] as const
 
@@ -36,7 +36,7 @@ export default function SignUp({
     TikTok: { on: false, url: "" },
     Instagram: { on: false, url: "" },
   })
-  const [birState, setBirState] = useState<BirState>("None")
+
   const [terms, setTerms] = useState(false)
 
   const submit = useCallback(async () => {
@@ -63,7 +63,6 @@ export default function SignUp({
           email,
           role,
           sellerEnabled: role === "Seller",
-          birState: role === "Seller" ? birState : "None",
           socialLinks: Object.fromEntries(
             Object.entries(socials)
               .filter(([, value]) => value.on && value.url.trim())
@@ -97,7 +96,7 @@ export default function SignUp({
         general: error instanceof Error ? error.message : "Unable to create account.",
       })
     }
-  }, [name, email, password, role, shopName, socials, birState, terms, onSuccess])
+  }, [name, email, password, role, shopName, socials, terms, onSuccess])
 
   const socialIcon = (platform: (typeof platforms)[number]) => {
     if (platform === "Instagram") return <Camera size={18} strokeWidth={3} />
@@ -219,22 +218,6 @@ export default function SignUp({
                 onChange={setPhone}
                 placeholder="+63 9XX XXX XXXX"
               />
-              <div className="auth-bir-field">
-                {isSupabaseConfigured ? (
-                  <p>
-                    BIR verification is optional. After creating your shop, you can submit
-                    a badge from Settings to build buyer trust.
-                  </p>
-                ) : (
-                  <>
-                    <p>
-                      Optional — a verified BIR badge can make your shop more trustworthy,
-                      but it is not required to start selling.
-                    </p>
-                    <BirVerifier birState={birState} setBirState={setBirState} />
-                  </>
-                )}
-              </div>
               <div>
                 <label className="auth-terms">
                   <input
@@ -244,7 +227,7 @@ export default function SignUp({
                   />
                   <span>
                     I agree to the <em>Terms of Service</em> and <em>Privacy Policy</em>.
-                    Linked accounts and BIR badge are reference indicators only, not
+                    Linked accounts are reference indicators only and are not
                     automatically verified by Kargo.
                   </span>
                 </label>

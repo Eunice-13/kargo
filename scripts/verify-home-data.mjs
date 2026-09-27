@@ -46,7 +46,6 @@ const [
   { data: orders, error: ordersError },
   { data: payments, error: paymentsError },
   { data: waitlist, error: waitlistError },
-  { data: reviews, error: reviewsError },
   { data: reactionRows, error: reactionRowsError },
   { data: products, error: productsError },
   { data: batchRows, error: batchesError },
@@ -65,7 +64,6 @@ const [
   client.from("orders").select("buyer_id,seller_id,status"),
   client.from("payments").select("submitted_by,reviewed_by"),
   client.from("waitlist_entries").select("buyer_id,batch_product_id"),
-  client.from("reviews").select("reviewer_id,reviewee_id"),
   client.from("batch_reactions").select("user_id"),
   client.from("batch_products").select("id,batch_id"),
   client.from("batches").select("id,seller_id"),
@@ -77,7 +75,6 @@ for (const error of [
   ordersError,
   paymentsError,
   waitlistError,
-  reviewsError,
   reactionRowsError,
   productsError,
   batchesError,
@@ -102,11 +99,10 @@ for (const row of catalog ?? []) {
 const rows = [...batches.values()]
 const allowed = new Set([
   "Food",
-  "Skincare",
-  "Grocery & Snacks",
   "Beauty",
   "Luxury",
-  "Mixed",
+  "Apparel",
+  "Others",
 ])
 const invalid = rows.filter(
   (batch) =>
@@ -159,9 +155,6 @@ const buyerCoverage = {
   waitlists: missingEmails(buyerIds, (id) =>
     waitlist?.some((row) => row.buyer_id === id),
   ),
-  reviews: missingEmails(buyerIds, (id) =>
-    reviews?.some((row) => row.reviewer_id === id || row.reviewee_id === id),
-  ),
   reactions: missingEmails(buyerIds, (id) =>
     reactionRows?.some((row) => row.user_id === id),
   ),
@@ -177,9 +170,6 @@ const sellerCoverage = {
     payments?.some((row) => row.reviewed_by === id),
   ),
   waitlists: missingEmails(sellerIds, (id) => waitlistSellerIds.has(id)),
-  reviews: missingEmails(sellerIds, (id) =>
-    reviews?.some((row) => row.reviewer_id === id || row.reviewee_id === id),
-  ),
 }
 
 console.log(
@@ -208,13 +198,6 @@ console.log(
             .length,
           waitlists: waitlist?.filter((row) => buyerIds.has(row.buyer_id))
             .length,
-          reviews: reviews?.filter(
-            (row) =>
-              buyerIds.has(row.reviewer_id) ||
-              buyerIds.has(row.reviewee_id) ||
-              sellerIds.has(row.reviewer_id) ||
-              sellerIds.has(row.reviewee_id),
-          ).length,
           reactions: reactionRows?.filter((row) => buyerIds.has(row.user_id))
             .length,
         },

@@ -2,13 +2,10 @@ import { useState, useRef, useEffect } from "react"
 import { CheckCircle2, Paperclip } from "lucide-react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
-import { getSellerPaymentDetails } from "./sellerPaymentDetails"
-import type { BuyerPaymentMethod } from "./buyerPaymentMethods"
-import { isCashMethod, cashCoordinationReminder } from "./buyerPaymentMethods"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { kargoApi } from "@/services"
-import type { SellerReceiveMethod } from "@/services/kargoApi"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
+
+// Cash methods (Meetup / Delivery) carry no online-payment details; the buyer
+// just coordinates with the seller. Keep their real label as the method key.
 
 // Cash methods (Meetup / Delivery) carry no online-payment details; the buyer
 // just coordinates with the seller. Keep their real label as the method key.
@@ -25,7 +22,6 @@ export default function PaymentSubmitModal({
   onConfirm,
   onClose,
   contactPrefill = "",
-  savedMethods = [],
 }: {
   item: ToPayRow
   onConfirm: (
@@ -36,7 +32,6 @@ export default function PaymentSubmitModal({
   ) => unknown | Promise<unknown>
   onClose: () => void
   contactPrefill?: string
-  savedMethods?: BuyerPaymentMethod[]
 }) {
   useEffect(() => {
     const closeIfExpired = () => {
@@ -48,19 +43,13 @@ export default function PaymentSubmitModal({
     const timer = window.setInterval(closeIfExpired, 1000)
     return () => window.clearInterval(timer)
   }, [item, onClose])
-  // Method options are filtered to what THIS SELLER accepts (Part 3), loaded
-  // below. Until they load (or in demo mode) we fall back to the buyer's saved
-  // methods, then to a default set.
-  const fallbackOptions =
-    savedMethods.length > 0
-      ? savedMethods.map((m) => ({ label: m.type, key: m.type }))
-      : [
-          { label: "GCash", key: "GCash" },
-          { label: "Maya", key: "Maya" },
-          { label: "Bank Transfer", key: "Bank Transfer" },
-          { label: "Cash on Meetup", key: "Cash on Meetup" },
-        ]
-  const [method, setMethod] = useState(fallbackOptions[0]?.key ?? "GCash")
+  const methodOptions = [
+    { label: "GCash", key: "GCash" },
+    { label: "Maya", key: "Maya" },
+    { label: "Bank Transfer", key: "Bank Transfer" },
+    { label: "Cash on Meetup", key: "Cash on Meetup" },
+  ]
+  const [method, setMethod] = useState("GCash")
   const [refNo, setRefNo] = useState("")
   const [acctName, setAcctName] = useState("")
   const [phone, setPhone] = useState("")
@@ -72,82 +61,9 @@ export default function PaymentSubmitModal({
   const [submitting, setSubmitting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const sellerDetails = getSellerPaymentDetails(item.seller)
-  const paymentMethods = {
-    ...sellerDetails.methods,
-    COD: { number: "" },
-  }
-  const details = paymentMethods[method as keyof typeof paymentMethods] ?? { number: "—" }
-
-  // Real seller-accepted methods (Part 3) with QR (Part 4), loaded on Supabase.
-  const [sellerMethods, setSellerMethods] = useState<SellerReceiveMethod[]>([])
-  const [sellerLoaded, setSellerLoaded] = useState(false)
-  useEffect(() => {
-    if (!isSupabaseConfigured || !item.sellerId) return
-    let active = true
-    kargoApi
-      .loadSellerReceiveMethods(item.sellerId)
-      .then((rows) => {
-        if (active) {
-          setSellerMethods(rows)
-          setSellerLoaded(true)
-        }
-      })
-      .catch(() => {
-        /* fall back to buyer's saved / default options */
-      })
-    return () => {
-      active = false
-    }
-  }, [item.sellerId])
-
-  // Part 3: restrict options to exactly what the seller accepts. Only trust the
-  // seller list once it has actually loaded with entries; otherwise fall back.
-  const methodOptions =
-    sellerLoaded && sellerMethods.length > 0
-      ? sellerMethods.map((m) => ({ label: m.methodType, key: m.methodType }))
-      : fallbackOptions
-  const acceptedLabels = methodOptions.map((m) => m.label)
-
-  // Keep the selected method valid whenever the option list changes.
-  useEffect(() => {
-    if (methodOptions.length > 0 && !methodOptions.some((m) => m.key === method)) {
-      setMethod(methodOptions[0].key)
-    }
-  }, [methodOptions, method])
-
-  const isCash = isCashMethod(method)
+  const isCash = method === "Cash on Meetup" || method === "Cash on Delivery"
   const numericAmountPaid = Number(amountPaid)
   const hasValidAmount = Number.isFinite(numericAmountPaid) && numericAmountPaid > 0
-  // Match the selected method to a seller-uploaded one (case-insensitive).
-  const sellerMethod = sellerMethods.find(
-    (m) => m.methodType.toLowerCase() === method.toLowerCase(),
-  )
-
-  // For cash methods, the buyer's default Address auto-fills as the handoff
-  // location; they can still override it for this order (default stays saved).
-  const [handoffAddress, setHandoffAddress] = useState("")
-  const [handoffTouched, setHandoffTouched] = useState(false)
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      if (!handoffTouched) setHandoffAddress("12 Mabini St., Barangay San Antonio, Makati City")
-      return
-    }
-    let active = true
-    kargoApi
-      .loadAddresses()
-      .then((rows) => {
-        if (!active || handoffTouched) return
-        const def = rows.find((r) => r.is_default) ?? rows[0]
-        if (def) {
-          setHandoffAddress([def.address_line, def.city].filter(Boolean).join(", "))
-        }
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-    }
-  }, [handoffTouched])
 
   const handleFile = (file: File) => {
     setUploading(true)
@@ -203,11 +119,9 @@ export default function PaymentSubmitModal({
           >
             Payment Method
           </label>
-          {acceptedLabels.length > 0 && (
-            <div style={{ fontSize: 11.5, color: "#6B7280", marginBottom: 8 }}>
-              This seller only accepts: <strong>{acceptedLabels.join(", ")}</strong>
-            </div>
-          )}
+          <div style={{ fontSize: 11.5, color: "#6B7280", marginBottom: 8 }}>
+            Select your payment method
+          </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {methodOptions.map((m) => (
               <button
@@ -232,128 +146,20 @@ export default function PaymentSubmitModal({
           </div>
         </div>
 
-        {!isCash && (
+        {isCash && (
           <div
             style={{
-              background: "#EEF0FF",
+              background: "#FFF7ED",
+              border: "1px solid #FCD34D",
               borderRadius: 8,
-              padding: "12px 14px",
+              padding: "10px 14px",
+              fontSize: 12,
+              color: "#92400E",
+              lineHeight: 1.5,
             }}
           >
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#374151",
-                marginBottom: 8,
-                letterSpacing: 0.5,
-              }}
-            >
-              SEND TO
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: 4,
-              }}
-            >
-              <span style={{ fontSize: 12, color: "#6B7280" }}>
-                Account Name
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
-                {sellerMethod?.accountName || sellerDetails.name}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 12, color: "#6B7280" }}>
-                Account Number
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
-                {sellerMethod?.accountNumber || details.number}
-              </span>
-            </div>
-            {sellerMethod?.qrUrl ? (
-              <div style={{ marginTop: 10, textAlign: "center" }}>
-                <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 6 }}>
-                  Scan to pay
-                </div>
-                <img
-                  src={sellerMethod.qrUrl}
-                  alt={`${item.seller} ${method} payment QR`}
-                  style={{
-                    width: 180,
-                    maxWidth: "100%",
-                    borderRadius: 8,
-                    border: "1px solid #E5E7EB",
-                    background: "#fff",
-                  }}
-                />
-              </div>
-            ) : (
-              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 8 }}>
-                No QR on file for this method — use the account details above, or
-                contact the seller.
-              </div>
-            )}
+            Please coordinate directly with the seller to arrange {method === "Cash on Delivery" ? "delivery" : "the meetup"} and payment.
           </div>
-        )}
-
-        {isCash && (
-          <>
-            <div
-              style={{
-                background: "#FFF7ED",
-                border: "1px solid #FCD34D",
-                borderRadius: 8,
-                padding: "10px 14px",
-                fontSize: 12,
-                color: "#92400E",
-                lineHeight: 1.5,
-              }}
-            >
-              {cashCoordinationReminder(method)}
-            </div>
-            <div>
-              <label
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#374151",
-                  display: "block",
-                  marginBottom: 5,
-                }}
-              >
-                {method === "Cash on Delivery" ? "Delivery address" : "Meetup location"}
-              </label>
-              <textarea
-                rows={2}
-                value={handoffAddress}
-                onChange={(e) => {
-                  setHandoffTouched(true)
-                  setHandoffAddress(e.target.value)
-                }}
-                placeholder="Where should the seller meet or deliver?"
-                style={{
-                  width: "100%",
-                  fontSize: 13,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 7,
-                  padding: "9px 12px",
-                  outline: "none",
-                  color: "#374151",
-                  fontFamily: "inherit",
-                  boxSizing: "border-box",
-                  resize: "vertical",
-                }}
-                className="placeholder:text-gray-400"
-              />
-              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
-                Pre-filled from your default address. Edit it for this order if
-                needed — your saved default won't change.
-              </div>
-            </div>
-          </>
         )}
 
         {!isCash && (
@@ -636,10 +442,10 @@ export default function PaymentSubmitModal({
               try {
                 await onConfirm(
                   method,
-                  isCash ? handoffAddress.trim() : refNo,
+                  refNo,
                   uploadedFile ?? undefined,
                   {
-                    amountPaid: isCash ? item.amount : numericAmountPaid,
+                    amountPaid: numericAmountPaid,
                     payerAccountName: acctName.trim() || undefined,
                     payerPhone: phone.trim() || undefined,
                     buyerContactUrl: contactLink.trim() || undefined,
@@ -650,12 +456,12 @@ export default function PaymentSubmitModal({
               }
             }}
             disabled={
-              submitting || (isCash
-                ? !handoffAddress.trim()
-                : !refNo.trim() ||
+              submitting || (!isCash
+                ? !refNo.trim() ||
                   !uploaded ||
                   !phone.trim() ||
-                  !hasValidAmount)
+                  !hasValidAmount
+                : false)
             }
           >
             {submitting ? "Submittingâ€¦" : isCash ? "Confirm Order" : "Submit Payment"}

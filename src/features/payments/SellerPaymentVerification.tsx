@@ -8,13 +8,12 @@ import {
   PaymentIcon,
   StatusBadge,
 } from "@/components/shared"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 import type { VerifyItem } from "./verifyTypes"
-import SellerPaymentMethods from "./SellerPaymentMethods"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { kargoApi } from "@/services"
 
 export default function SellerPaymentVerification() {
   const VERIFY_SEED: VerifyItem[] = [
@@ -370,8 +369,6 @@ export default function SellerPaymentVerification() {
 
   return (
     <div className="p-6 space-y-8">
-      <SellerPaymentMethods />
-
       <section>
         <div className="mb-4">
           <h2

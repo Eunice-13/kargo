@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from "react"
 import { UserRound, Settings as SettingsIcon, LogOut, Store, Clock3, AlertTriangle } from "lucide-react"
 import type { UserInfo } from "@/types"
-import { Avatar, BIRBadge } from "@/components/shared"
+import { Avatar } from "@/components/shared"
+
+type SellerMenuStatus = "None" | "Uploading" | "Scanning" | "Verifying" | "Verified" | "Flagged"
+
+const sellerMenuStatus = (enabled?: boolean): SellerMenuStatus =>
+  enabled ? "Verified" : "None"
 
 export default function UserMenu({
   user,
@@ -94,7 +99,7 @@ export default function UserMenu({
           </div>
           {/* Seller status / apply entry point — reflects verification state */}
           {(() => {
-            const s = user.birState ?? "None"
+            const s = sellerMenuStatus(user.sellerEnabled)
             if (s === "Verified") {
               return (
                 <div
@@ -109,7 +114,7 @@ export default function UserMenu({
                     fontWeight: 600,
                   }}
                 >
-                  <Store size={15} aria-hidden="true" /> Verified Seller <BIRBadge size={14} />
+                  <Store size={15} aria-hidden="true" /> Seller
                 </div>
               )
             }

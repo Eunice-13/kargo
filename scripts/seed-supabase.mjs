@@ -6,11 +6,11 @@
 
 // driving the SAME code paths the app uses:
 
-//   - service-role: create Auth users + set profiles (incl. bir_status)
+//   - service-role: create Auth users + set profiles
 
 //   - each seller (signed in, anon key): insert batches/products, payment
 
-//     methods, address — exactly what `authenticated` is granted
+//     methods — exactly what `authenticated` is granted
 
 //   - each buyer (signed in): claim_batch_product RPC, submit_order_payment RPC
 
@@ -26,9 +26,9 @@
 
 // SECURITY: SUPABASE_SECRET_KEY (service role) is used ONLY to create users and
 
-// set the seller BIR flag (a field authenticated users cannot set). All domain
+// set their profiles. All domain data is written as the authenticated user who
 
-// data is written as the authenticated user who owns it. Run locally only.
+// owns it. Run locally only.
 
 //
 
@@ -638,43 +638,6 @@ const PAYMENT_METHODS = [
   },
 ]
 
-const ADDRESSES = [
-  {
-    user: "trisha",
-    label: "Home",
-    line: "12 Mabini St., Brgy. San Antonio",
-    city: "Mandaluyong City",
-  },
-
-  {
-    user: "carlo",
-    label: "Home",
-    line: "88 Katipunan Ave.",
-    city: "Marikina City",
-  },
-
-  {
-    user: "anna",
-    label: "Office",
-    line: "5F Ayala Tower, Brgy. San Lorenzo",
-    city: "Makati City",
-  },
-
-  {
-    user: "mia",
-    label: "Home",
-    line: "23 Sampaguita St.",
-    city: "Caloocan City",
-  },
-
-  {
-    user: "maria",
-    label: "Meetup",
-    line: "Trinoma Mall, North Ave.",
-    city: "Quezon City",
-  },
-]
-
 // Orders drive claims/payments/fulfillment. `advance` is the final state we want.
 
 //   pending           → claim only
@@ -690,46 +653,6 @@ const ADDRESSES = [
 //   insufficient      → buyer pays a partial amount, seller verifies (→ insufficient_payment)
 
 //   cancelled         → buyer cancels
-
-// Buyer requests (sourcing asks) → create_buyer_request RPC.
-
-const BUYER_REQUESTS = [
-  {
-    buyer: "trisha",
-    seller: "maria",
-    batch: "Japan Autumn Finds — October 2026",
-    product: "Royce Nama Chocolate",
-    qty: 2,
-    message: "Any chance you can add Royce Nama (matcha)? Would claim 2.",
-  },
-
-  {
-    buyer: "carlo",
-    seller: "paolo",
-    batch: "US Holiday Grocery Haul — November 2026",
-    product: "Costco Vitamins",
-    qty: 1,
-    message: "Can you source Kirkland vitamins from Costco?",
-  },
-
-  {
-    buyer: "mia",
-    seller: "ana",
-    batch: "Seoul Skincare Run — October 2026",
-    product: "Beauty of Joseon Sunscreen",
-    qty: 3,
-    message: "Please add Beauty of Joseon relief sun if there's room.",
-  },
-
-  {
-    buyer: "grace",
-    seller: "jade",
-    batch: "Singapore Skincare Edit — December 2026",
-    product: "Charles & Keith Bag",
-    qty: 1,
-    message: "Open to a C&K crossbody if you pass by the outlet?",
-  },
-]
 
 // Waitlist joins (for sold-out / popular products) → direct insert as buyer.
 
@@ -1137,11 +1060,8 @@ const ORDERS = [
   },
 
   // ── Additional completed history ────────────────────────────────────────────
-  // Reviews can only be left on a completed order, so a marketplace with any
-  // rating history needs completed transactions to hang them on. These twelve
-  // spread across every buyer/seller pair so each account accumulates 3-5
-  // reviews — enough for a computed average to mean something, and varied
-  // enough that the directory is not a column of identical scores.
+  // Completed transactions give the financial summaries and order history
+  // realistic totals across every buyer/seller pair.
   {
     buyer: "trisha",
     seller: "ana",
@@ -1238,6 +1158,27 @@ const ORDERS = [
     advance: "completed",
     method: "GCash",
   },
+  {
+    buyer: "trisha",
+    seller: "maria",
+    product: "Uniqlo U Collection Tee",
+    qty: 1,
+    advance: "pending",
+  },
+  {
+    buyer: "anna",
+    seller: "ana",
+    product: "Korean Oversized Knit",
+    qty: 2,
+    advance: "pending",
+  },
+  {
+    buyer: "carlo",
+    seller: "kristine",
+    product: "Chatuchak Vintage Denim",
+    qty: 3,
+    advance: "pending",
+  },
 ]
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -1299,16 +1240,16 @@ function validateSeedDefinitions() {
     )
   }
 
-  if ([...claimedByBatch.values()].some((claimed) => claimed <= 0))
-    throw new Error("Every seeded batch must have at least one active claim")
+  const unclaimedBatches = [...claimedByBatch]
+    .filter(([, claimed]) => claimed <= 0)
+    .map(([title]) => title)
+  if (unclaimedBatches.length > 0)
+    throw new Error(`Seeded batches without active claims: ${unclaimedBatches.join(", ")}`)
   if (new Set(claimedByBatch.values()).size < 6)
     throw new Error("Seeded claim totals are not varied enough")
 
   const activeOrders = ORDERS.filter((order) => order.advance !== "cancelled")
   const paidOrders = activeOrders.filter((order) => order.advance !== "pending")
-  const completedOrders = activeOrders.filter(
-    (order) => order.advance === "completed",
-  )
   const waitlistedBuyers = new Set(WAITLIST.map((entry) => entry.buyer))
   const waitlistedSellers = new Set(WAITLIST.map((entry) => entry.seller))
 
@@ -1317,8 +1258,6 @@ function validateSeedDefinitions() {
       throw new Error(`Buyer has no claim/order: ${buyer.key}`)
     if (!paidOrders.some((order) => order.buyer === buyer.key))
       throw new Error(`Buyer has no payment: ${buyer.key}`)
-    if (!completedOrders.some((order) => order.buyer === buyer.key))
-      throw new Error(`Buyer has no completed order for reviews: ${buyer.key}`)
     if (!waitlistedBuyers.has(buyer.key))
       throw new Error(`Buyer has no waitlist entry: ${buyer.key}`)
   }
@@ -1328,77 +1267,8 @@ function validateSeedDefinitions() {
       throw new Error(`Seller has no received order: ${seller.key}`)
     if (!paidOrders.some((order) => order.seller === seller.key))
       throw new Error(`Seller has no received payment: ${seller.key}`)
-    if (!completedOrders.some((order) => order.seller === seller.key))
-      throw new Error(
-        `Seller has no completed order for reviews: ${seller.key}`,
-      )
     if (!waitlistedSellers.has(seller.key))
       throw new Error(`Seller has no waitlisted product: ${seller.key}`)
-  }
-
-  // Every completed order must carry a rating in both directions, otherwise the
-  // seed would silently fall back to a default score.
-  for (const order of completedOrders) {
-    const key = `${order.buyer}::${order.seller}::${order.product}`
-    const entry = REVIEW_RATINGS[key]
-    if (!entry) throw new Error(`Missing REVIEW_RATINGS entry for ${key}`)
-    for (const direction of ["buyer", "seller"]) {
-      const score = entry[direction]
-      if (!Number.isInteger(score) || score < 1 || score > 5) {
-        throw new Error(
-          `REVIEW_RATINGS[${key}].${direction} must be 1-5, got ${score}`,
-        )
-      }
-    }
-  }
-  const orphanRatings = Object.keys(REVIEW_RATINGS).filter(
-    (key) =>
-      !completedOrders.some(
-        (o) => `${o.buyer}::${o.seller}::${o.product}` === key,
-      ),
-  )
-  if (orphanRatings.length > 0) {
-    throw new Error(
-      `REVIEW_RATINGS has entries for non-completed orders: ${orphanRatings.join(", ")}`,
-    )
-  }
-
-  // A realistic marketplace is not uniformly perfect. Fail the seed if every
-  // seeded review is 5, which is the bug this table replaced.
-  const allScores = completedOrders.flatMap((o) => {
-    const entry = REVIEW_RATINGS[`${o.buyer}::${o.seller}::${o.product}`]
-    return [entry.buyer, entry.seller]
-  })
-  const distinct = new Set(allScores)
-  if (distinct.size < 3) {
-    throw new Error(
-      `Seeded ratings lack variation (only ${[...distinct].join(", ")})`,
-    )
-  }
-  if (allScores.every((score) => score === 5)) {
-    throw new Error("Seeded ratings are all 5 stars — unrealistic")
-  }
-  for (const buyer of BUYERS) {
-    const scores = completedOrders
-      .filter((o) => o.buyer === buyer.key)
-      .map(
-        (o) => REVIEW_RATINGS[`${o.buyer}::${o.seller}::${o.product}`].seller,
-      )
-    if (scores.length < 3) {
-      throw new Error(
-        `Buyer ${buyer.key} has only ${scores.length} review(s) — too few for a meaningful average`,
-      )
-    }
-  }
-  for (const seller of SELLERS) {
-    const scores = completedOrders
-      .filter((o) => o.seller === seller.key)
-      .map((o) => REVIEW_RATINGS[`${o.buyer}::${o.seller}::${o.product}`].buyer)
-    if (scores.length < 3) {
-      throw new Error(
-        `Seller ${seller.key} has only ${scores.length} review(s) — too few for a meaningful average`,
-      )
-    }
   }
 
   console.log(
@@ -1414,15 +1284,9 @@ const clients = new Map() // key -> signed-in supabase client
 
 const productIds = new Map()
 
-// batchId lookup: `${sellerKey}::${batchTitle}` -> uuid (for buyer requests)
+// batchId lookup: `${sellerKey}::${batchTitle}` -> uuid
 
 const batchIds = new Map()
-
-// completed orders captured during seedOrders, for reviews:
-
-//   [{ orderId, buyer, seller, product }]
-
-const completedOrders = []
 
 async function findUserByEmail(email) {
   let page = 1
@@ -1471,7 +1335,7 @@ async function ensureUser(person, isSeller) {
 
   userIds.set(person.key, user.id)
 
-  // service-role profile update (sets bir_status, which authenticated cannot).
+  // service-role profile update (auth users can't set these fields).
 
   const { error } = await admin
     .from("profiles")
@@ -1481,12 +1345,6 @@ async function ensureUser(person, isSeller) {
       shop_name: isSeller ? person.shop : null,
 
       social_links: { Facebook: person.fb },
-
-      bir_status: isSeller ? "verified" : "none",
-
-      bir_checked_at: isSeller ? new Date().toISOString() : null,
-
-      account_status: "active",
     })
     .eq("id", user.id)
 
@@ -1525,13 +1383,10 @@ async function reset() {
   // Delete dependents before their referenced rows. Failing loudly here keeps a
   // partial prior run from silently doubling claims and other engagement data.
   await remove("batch_reactions", "user_id")
-  await remove("reviews", "reviewer_id")
   await remove("payments", "submitted_by")
   await remove("waitlist_entries", "buyer_id")
-  await remove("buyer_requests", "buyer_id")
   await remove("notifications", "recipient_id")
   await remove("orders", "buyer_id")
-  await remove("addresses", "user_id")
   await remove("seller_payment_methods", "seller_id")
 
   // A non-demo buyer may have claimed an older demo-seller product. Preserve
@@ -1663,28 +1518,6 @@ async function seedSellerOwned() {
   }
 
   console.log(`  + payment methods`)
-
-  for (const a of ADDRESSES) {
-    const c = await signIn(a.user)
-
-    if (a.isDefault !== false)
-      await c
-        .from("addresses")
-        .update({ is_default: false })
-        .eq("user_id", userIds.get(a.user))
-
-    const { error } = await c.from("addresses").insert({
-      user_id: userIds.get(a.user),
-      label: a.label,
-      address_line: a.line,
-      city: a.city,
-      is_default: true,
-    })
-
-    if (error) throw new Error(`address ${a.user}: ${error.message}`)
-  }
-
-  console.log(`  + addresses`)
 }
 
 async function ensureMissingBatches() {
@@ -1891,209 +1724,13 @@ async function seedOrders(ordersToSeed = ORDERS) {
       })
 
       if (e2) throw new Error(`complete ${o.product}: ${e2.message}`)
-
-      completedOrders.push({
-        orderId,
-        buyer: o.buyer,
-        seller: o.seller,
-        product: o.product,
-      })
     }
 
     console.log(`  + ${o.product} → ${o.advance}`)
   }
 }
 
-// ── Review ratings ───────────────────────────────────────────────────────────
-//
-// The score for each direction of each completed order. Previously every seeded
-// review was hardcoded to 5, which made every seller and buyer in the database
-// read as a perfect 5.0 regardless of how much history they had — the exact
-// "unrealistic rating" problem this table exists to fix.
-//
-// The scores are deliberately uneven. Most transactions land on 4 or 5, a few
-// are 3, and no account is uniform, so the averages `public.profile_ratings`
-// computes come out looking earned:
-//
-//   sellers  maria 4.5 (n=4) · jade 4.8 (n=5) · ana 4.2 (n=4)
-//            kristine 4.2 (n=4) · paolo 3.7 (n=3)
-//   buyers   trisha 4.8 (n=4) · mia 4.7 (n=3) · grace 4.5 (n=4)
-//            anna 4.3 (n=3) · carlo 3.7 (n=3) · ben 3.7 (n=3)
-//
-// Accounts with no completed transaction (the signed-in user, Sean Dee) are
-// deliberately absent: they must end up with no reviews at all, so the app
-// shows "New seller" / "New buyer" rather than a fabricated score.
-//
-// Keyed by `buyer::seller::product`, which is unique across ORDERS.
-const REVIEW_RATINGS = {
-  // ── maria · 5, 5, 4, 4 → 4.5 ────────────────────────────────────────────────
-  "mia::maria::Meiji Chocolate": { buyer: 5, seller: 5 },
-  "trisha::maria::Tim Tam Assorted": { buyer: 5, seller: 4 },
-  "grace::maria::KitKat Sakura": { buyer: 4, seller: 5 },
-  "anna::maria::Liberty Beauty Box": { buyer: 4, seller: 4 },
-
-  // ── jade · 5, 5, 4, 5, 5 → 4.8 ─────────────────────────────────────────────
-  "carlo::jade::Hada Labo Serum": { buyer: 5, seller: 4 },
-  "grace::jade::Charlotte Tilbury Set": { buyer: 5, seller: 5 },
-  "ben::jade::Rare Beauty Blush": { buyer: 4, seller: 4 },
-  "anna::jade::Innisfree Sheet Mask": { buyer: 5, seller: 5 },
-  "mia::jade::Vietnamese Coffee Set": { buyer: 5, seller: 4 },
-
-  // ── ana · 5, 4, 5, 3 → 4.2 ─────────────────────────────────────────────────
-  "grace::ana::French Pharmacy Set": { buyer: 5, seller: 4 },
-  "trisha::ana::Laneige Lip Mask": { buyer: 4, seller: 5 },
-  "carlo::ana::COSRX Snail Cream": { buyer: 5, seller: 3 },
-  "ben::ana::Korean Skincare Set": { buyer: 3, seller: 4 },
-
-  // ── kristine · 4, 4, 5, 4 → 4.2 ────────────────────────────────────────────
-  "trisha::kristine::Dr. Wu Serum": { buyer: 4, seller: 5 },
-  "trisha::kristine::Pineapple Cake Box": { buyer: 4, seller: 5 },
-  "carlo::kristine::Thai Snack Box": { buyer: 5, seller: 4 },
-  "ben::kristine::Mistine Sunscreen": { buyer: 4, seller: 3 },
-
-  // ── paolo · 4, 3, 4 → 3.7 ──────────────────────────────────────────────────
-  "anna::paolo::MAC Lipstick Set": { buyer: 4, seller: 4 },
-  "grace::paolo::Muji Skincare": { buyer: 3, seller: 4 },
-  "mia::paolo::Nars Blush": { buyer: 4, seller: 5 },
-}
-
-// Comment pools keyed by score, so the written review always matches the stars
-// instead of praising a 3-star transaction. Cycled deterministically so repeat
-// runs produce identical data.
-const BUYER_REVIEW_COMMENTS = {
-  5: [
-    "Legit seller, exactly as described. Items arrived sealed and intact. Will order again!",
-    "Super smooth transaction. Seller kept me updated the whole way and the packaging was solid.",
-    "Salamat! Item was exactly as listed and the seller was very easy to coordinate with.",
-    "Great experience overall. Fair price, fast replies, and the item passed all my checks.",
-  ],
-  4: [
-    "Good transaction. Item was as described, though updates came in a bit late during the holidays.",
-    "No notes. Product is legit and the seller was polite. Would happily buy again.",
-    "Fair value and the item was well packed. Communication was okay, not outstanding.",
-    "Solid seller. Took a couple of days to confirm the meetup but everything else was smooth.",
-  ],
-  3: [
-    "Item was usable but not great. Had to follow up twice about the shipping delay, and the packaging was thin.",
-    "Mixed experience. The product itself was fine, but the price came out higher than the range I was quoted and replies were slow.",
-  ],
-}
-
-const SELLER_REVIEW_COMMENTS = {
-  5: [
-    "Responsive buyer with clear payment and pickup coordination. A pleasure to transact with.",
-    "Paid on time and confirmed the item count right away. Recommended buyer.",
-    "Smooth buyer, easy to schedule with and settled everything promptly.",
-    "Very organized. Confirmed before handoff and was happy to meet at a different location.",
-  ],
-  4: [
-    "Good transaction overall. Payment cleared a little later than agreed but no issues.",
-    "Courteous buyer who arrived on time for the meetup. Happy to transact again.",
-    "Easy to coordinate. Took a while to reply during work hours but settled everything.",
-    "Polite buyer, no problems at all during handoff.",
-  ],
-  3: [
-    "Buyer was fine but needed several reminders before sending payment. Would prefer a faster payer next time.",
-    "Transaction went through, though coordinating the meetup took more back and forth than usual.",
-  ],
-}
-
-// Quick statements drawn from the same vocabulary the in-app rating modal offers
-// (src/features/orders/ratingOptions.ts), so seeded rows look like real ones.
-const BUYER_STATEMENTS = {
-  5: [
-    ["Mabilis magbayad", "Smooth ang transaction"],
-    ["Maayos kausap", "Makikipag-transact ulit"],
-    ["Malinaw kausap", "Mabilis mag-reply"],
-  ],
-  4: [
-    ["Mabilis magbayad", "Malinaw kausap"],
-    ["Easy to communicate with!", "Smooth ang transaction"],
-  ],
-  3: [["Malinaw kausap", "Smooth ang transaction"]],
-}
-
-const SELLER_STATEMENTS = {
-  5: [
-    ["Mabilis magbayad", "Smooth transaction"],
-    ["Maayos kausap", "Oorder ulit ako"],
-    ["Accurate ang batch updates", "Maingat ang packaging"],
-  ],
-  4: [
-    ["Mabilis magbayad", "Maayos kausap"],
-    ["Sakto sa description ang item", "Smooth transaction"],
-  ],
-  3: [["Maayos kausap", "Sakto sa description ang item"]],
-}
-
-function reviewPlanFor(key, direction, cursor) {
-  const entry = REVIEW_RATINGS[key]
-  if (!entry) {
-    throw new Error(
-      `No seeded rating for completed order ${key} (${direction})`,
-    )
-  }
-  const score = entry[direction]
-  if (score < 1 || score > 5) {
-    throw new Error(`Rating out of range for ${key}: ${score}`)
-  }
-  const isBuyer = direction === "buyer"
-  const comments = isBuyer ? BUYER_REVIEW_COMMENTS : SELLER_REVIEW_COMMENTS
-  const statements = isBuyer ? BUYER_STATEMENTS : SELLER_STATEMENTS
-  return {
-    score,
-    comment: comments[score][cursor % comments[score].length],
-    statements: statements[score][cursor % statements[score].length],
-  }
-}
-
 async function seedEngagement() {
-  // Reviews — left through `create_order_review`, which requires a completed
-  // order and a participant, so every seeded rating is backed by a real
-  // transaction. Scores come from REVIEW_RATINGS, not a constant.
-  const buyerCursor = {}
-  const sellerCursor = {}
-
-  for (const co of completedOrders) {
-    const key = `${co.buyer}::${co.seller}::${co.product}`
-
-    const buyerPlan = reviewPlanFor(key, "buyer", buyerCursor[key] ?? 0)
-    buyerCursor[key] = (buyerCursor[key] ?? 0) + 1
-
-    const buyer = await signIn(co.buyer)
-
-    const { error } = await buyer.rpc("create_order_review", {
-      p_order_id: co.orderId,
-      p_rating: buyerPlan.score,
-      p_comment: buyerPlan.comment,
-      p_quick_statements: buyerPlan.statements,
-    })
-
-    if (error) throw new Error(`review ${co.product}: ${error.message}`)
-
-    const sellerPlan = reviewPlanFor(key, "seller", sellerCursor[key] ?? 0)
-    sellerCursor[key] = (sellerCursor[key] ?? 0) + 1
-
-    console.log(
-      `  + buyer ${buyerPlan.score}★ / seller ${sellerPlan.score}★ on ${co.product}`,
-    )
-
-    const seller = await signIn(co.seller)
-    const { error: sellerReviewError } = await seller.rpc(
-      "create_order_review",
-      {
-        p_order_id: co.orderId,
-        p_rating: sellerPlan.score,
-        p_comment: sellerPlan.comment,
-        p_quick_statements: sellerPlan.statements,
-      },
-    )
-    if (sellerReviewError)
-      throw new Error(
-        `seller review ${co.product}: ${sellerReviewError.message}`,
-      )
-  }
-
   // Batch reactions — unique per buyer/batch via the composite primary key.
   // The staggered pattern gives the Popular section useful deterministic data.
   for (let buyerIndex = 0; buyerIndex < BUYERS.length; buyerIndex += 1) {
@@ -2115,30 +1752,6 @@ async function seedEngagement() {
     console.log(
       `  + ${likedBatches.length} batch reactions from ${buyerDef.key}`,
     )
-  }
-
-  // Buyer requests — create_buyer_request RPC.
-
-  for (const r of BUYER_REQUESTS) {
-    const batchId = batchIds.get(`${r.seller}::${r.batch}`)
-
-    if (!batchId) {
-      console.warn(`  ! no batch ${r.seller}::${r.batch}`)
-      continue
-    }
-
-    const buyer = await signIn(r.buyer)
-
-    const { error } = await buyer.rpc("create_buyer_request", {
-      p_batch_id: batchId,
-      p_product_name: r.product,
-      p_quantity: r.qty,
-      p_message: r.message,
-    })
-
-    if (error) throw new Error(`buyer request ${r.product}: ${error.message}`)
-
-    console.log(`  + buyer request "${r.product}"`)
   }
 
   // Waitlist — direct insert as the buyer (matches kargoApi.joinWaitlist).
@@ -2206,7 +1819,7 @@ async function main() {
     return
   }
 
-  console.log("Seller-owned data (batches, products, methods, addresses):")
+  console.log("Seller-owned data (batches, products, methods):")
 
   await seedSellerOwned()
 
@@ -2214,14 +1827,14 @@ async function main() {
 
   await seedOrders()
 
-  console.log("Engagement (reviews, buyer requests, waitlist):")
+  console.log("Engagement (batch reactions, waitlist):")
 
   await seedEngagement()
 
   console.log(`\nDone. Demo logins (password: ${PASSWORD}):`)
 
   console.log(
-    "  Seller (BIR verified): maria@kargo.demo, ana@kargo.demo, jade@kargo.demo …",
+    "  Seller: maria@kargo.demo, ana@kargo.demo, jade@kargo.demo …",
   )
 
   console.log("  Buyer: trisha@kargo.demo, carlo@kargo.demo …")

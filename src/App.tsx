@@ -14,7 +14,6 @@ import type {
   WaitlistEntry,
   SellerWaitlistGroup,
   SharedState,
-  UserRating,
 } from "@/types"
 
 import { CREAM } from "@/constants/theme"
@@ -34,8 +33,6 @@ import { TOPAY_INIT } from "@/data/toPay"
 import { PAYHIST_INIT } from "@/data/payHistory"
 
 import { ORDERS_INIT } from "@/data/orders"
-
-import { DEMO_PROFILE_ID_BY_NAME, DEMO_RATINGS } from "@/data/reviews"
 
 import { WAITLIST_INIT } from "@/data/waitlist"
 
@@ -109,12 +106,6 @@ export default function App() {
           Instagram: "https://instagram.com/alexjordan",
         }
       : {},
-
-    // The "original" preview retains seller access so the seller screens remain
-
-    // viewable; real accounts start with no verified badge.
-
-    birState: originalPreview ? "Verified" : "None",
   })
 
   const [showNewBatch, setShowNewBatch] = useState(false)
@@ -152,18 +143,6 @@ export default function App() {
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>(
     useSeeds ? WAITLIST_INIT : [],
   )
-
-  // Every user's computed rating, keyed by profile id. The single source of
-  // truth for anything that renders a score: in Supabase mode it comes from
-  // `public.profile_ratings` + `public.reviews`, in demo mode from the review
-  // seed, and both are aggregated by `src/lib/ratings.ts`.
-
-  const [ratings, setRatings] = useState<Record<string, UserRating>>(
-    useSeeds ? DEMO_RATINGS : {},
-  )
-
-  const [profileIdByName, setProfileIdByName] =
-    useState<Record<string, string>>(useSeeds ? DEMO_PROFILE_ID_BY_NAME : {})
 
   const expiringClaims = useRef(new Set<string>())
 
@@ -332,10 +311,6 @@ export default function App() {
 
     setSellerWaitlist(data.sellerWaitlist)
 
-    setRatings(data.ratings)
-
-    setProfileIdByName(data.profileIdByName)
-
     setStage("app")
   }, [])
 
@@ -352,12 +327,6 @@ export default function App() {
   }, [originalPreview, refreshData])
 
   const shared: SharedState = {
-    ratings,
-
-    setRatings,
-
-    profileIdByName,
-
     claims,
 
     setClaims,
@@ -507,8 +476,6 @@ export default function App() {
           )}
           {showApplyToSell && (
             <ApplyToSellModal
-              birState={user.birState ?? "None"}
-              onBirState={(s) => setUser((u) => ({ ...u, birState: s }))}
               onEnableSeller={async () => {
                 if (isSupabaseConfigured)
                   await kargoApi.updateProfile({ canSell: true })

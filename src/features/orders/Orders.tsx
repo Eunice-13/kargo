@@ -1,18 +1,15 @@
 import { useState } from "react"
-import { Check, Package, Star } from "lucide-react"
+import { Check, Package } from "lucide-react"
 import type { FulfillmentOrder, OrderRow, SharedState } from "@/types"
-import { INDIGO, CREAM, CYAN_L, SKY, GREEN, AMBER } from "@/constants/theme"
+import { INDIGO, CREAM, CYAN_L, SKY, GREEN } from "@/constants/theme"
 import {
   Card,
-  PrimaryBtn,
   SecondaryBtn,
   SH,
   Avatar,
   TrackOrderModal,
   ContactModal,
-  BuyerProfileModal,
   ORDER_STEPS,
-  ratingFor,
 } from "@/components/shared"
 import {
   KANBAN_COLS,
@@ -21,13 +18,6 @@ import {
   FulfillmentLiveRegion,
   FulfillmentDetails,
 } from "@/features/fulfillment"
-import RateOrderModal from "./RateOrderModal"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { trustCounts } from "@/lib/ratings"
-import { kargoApi } from "@/services"
-
-const reviewIsEditable = (createdAt?: string) =>
-  Boolean(createdAt && Date.now() - new Date(createdAt).getTime() <= 24 * 60 * 60 * 1000)
 
 export default function Orders({
   orders,
@@ -35,20 +25,10 @@ export default function Orders({
   role,
   fulfillment,
   setFulfillment,
-  // Computed per-user ratings from `public.reviews`. Aliased because the local
-  // `ratings` state below is the in-progress star selection for the inline
-  // rating row, which is a different thing entirely.
-  ratings: profileRatings,
-  profileIdByName,
 }: SharedState) {
   const board = useFulfillmentBoard(setFulfillment)
-  const [ratings, setRatings] = useState<Record<string, number>>({})
-  const [hover, setHover] = useState<Record<string, number>>({})
   const [trackOrder, setTrackOrder] = useState<OrderRow | null>(null)
   const [contactOrder, setContact] = useState<OrderRow | null>(null)
-  const [rateTarget, setRateTarget] = useState<OrderRow | null>(null)
-  const [sellerRateTarget, setSellerRateTarget] = useState<FulfillmentOrder | null>(null)
-  const [buyerProfile, setBuyerProfile] = useState<{ name: string; contactUrl?: string } | null>(null)
 
   if (role === "Seller") {
     return (
@@ -134,12 +114,8 @@ export default function Orders({
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <Avatar name={o.buyer} size={20} />
-                        <button
-                          onClick={() => setBuyerProfile({ name: o.buyer, contactUrl: o.buyerFb })}
+                        <span
                           style={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
                             color: INDIGO,
                             fontSize: 12,
                             fontWeight: 600,
@@ -150,7 +126,7 @@ export default function Orders({
                           }}
                         >
                           {o.buyer}
-                        </button>
+                        </span>
                       </div>
                       <div
                         style={{
@@ -199,27 +175,6 @@ export default function Orders({
                           <FulfillmentDetails order={o} onMove={board.move} />
                         </div>
                       )}
-                      {o.col === "Completed" && (
-                        <div style={{ marginTop: 8 }}>
-                          {o.rated ? (
-                            <div className="space-y-1">
-                              <span style={{ fontSize: 11, color: AMBER, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                                <Star size={12} fill={AMBER} aria-hidden="true" /> {o.rating}/5 · Buyer rated
-                                {o.reviewCreatedAt && o.reviewUpdatedAt !== o.reviewCreatedAt ? " · Edited" : ""}
-                              </span>
-                              {reviewIsEditable(o.reviewCreatedAt) ? (
-                                <button type="button" onClick={() => setSellerRateTarget(o)} style={{ display: "block", border: "none", background: "none", color: INDIGO, fontSize: 10.5, fontWeight: 700, padding: 0, cursor: "pointer" }}>Edit review</button>
-                              ) : o.reviewCreatedAt ? (
-                                <span style={{ display: "block", fontSize: 9.5, color: "#9CA3AF" }}>Editing period ended</span>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <PrimaryBtn size="sm" onClick={() => setSellerRateTarget(o)}>
-                              Rate buyer
-                            </PrimaryBtn>
-                          )}
-                        </div>
-                      )}
                     </div>
                   ))}
                   {colOrders.length === 0 && (
@@ -240,45 +195,6 @@ export default function Orders({
           })}
         </div>
         <FulfillmentLiveRegion text={board.announcement} />
-        {buyerProfile && (
-          <BuyerProfileModal
-            buyer={buyerProfile.name}
-            rating={ratingFor(profileRatings, profileIdByName[buyerProfile.name])}
-            orderCounts={trustCounts(
-              fulfillment.filter((f) => f.buyer === buyerProfile.name).map((f) => f.col),
-            )}
-            contactUrl={buyerProfile.contactUrl}
-            onClose={() => setBuyerProfile(null)}
-          />
-        )}
-        {sellerRateTarget && (
-          <RateOrderModal
-            subjectName={sellerRateTarget.buyer}
-            subjectRole="Buyer"
-            initialRating={sellerRateTarget.rating ?? 0}
-            initialComment={sellerRateTarget.reviewComment ?? ""}
-            initialStatements={sellerRateTarget.reviewStatements ?? []}
-            onRate={async (rating, comment, statements) => {
-              if (isSupabaseConfigured) {
-                if (!sellerRateTarget.dbId) return
-                try {
-                  await kargoApi.createReview(sellerRateTarget.dbId, rating, comment, statements)
-                } catch (error) {
-                  alert(error instanceof Error ? error.message : "Unable to submit rating.")
-                  return
-                }
-              }
-              const now = new Date().toISOString()
-              setFulfillment((current) => current.map((order) =>
-                order.id === sellerRateTarget.id
-                  ? { ...order, rated: true, rating, reviewComment: comment, reviewStatements: statements, reviewCreatedAt: order.reviewCreatedAt ?? now, reviewUpdatedAt: now }
-                  : order,
-              ))
-              setSellerRateTarget(null)
-            }}
-            onClose={() => setSellerRateTarget(null)}
-          />
-        )}
       </div>
     )
   }
@@ -341,8 +257,6 @@ export default function Orders({
         const si = order.step - 1
         const pct = Math.round((order.step / ORDER_STEPS.length) * 100)
         const delivered = order.step === 5
-        const myR = ratings[order.id] || 0
-        const myH = hover[order.id] || 0
         return (
           <Card key={order.id}>
             <div className="flex items-start justify-between mb-4">
@@ -483,53 +397,6 @@ export default function Orders({
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {delivered && !order.rated && !(myR > 0) && (
-                  <div className="flex items-center gap-1">
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                      Rate seller:
-                    </span>
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onMouseEnter={() =>
-                          setHover((h) => ({ ...h, [order.id]: star }))
-                        }
-                        onMouseLeave={() =>
-                          setHover((h) => ({ ...h, [order.id]: 0 }))
-                        }
-                        onClick={() => setRateTarget(order)}
-                        aria-label={`Rate ${star} star${star !== 1 ? "s" : ""}`}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          display: "flex",
-                          color: star <= (myH || myR) ? AMBER : "#E5E7EB",
-                          transition: "color 0.1s,transform 0.1s",
-                          transform: star <= myH ? "scale(1.2)" : "scale(1)",
-                        }}
-                      >
-                        <Star size={20} aria-hidden="true" fill={star <= (myH || myR) ? AMBER : "none"} />
-                      </button>
-                    ))}
-                    <PrimaryBtn size="sm" onClick={() => setRateTarget(order)}>
-                      Rate
-                    </PrimaryBtn>
-                  </div>
-                )}
-                {(order.rated || myR > 0) && (
-                  <div>
-                    <span style={{ fontSize: 12, color: AMBER, display: "inline-flex", alignItems: "center", gap: 3 }}>
-                      <Star size={12} aria-hidden="true" fill={AMBER} /> {order.rating || myR}/5 Rated
-                      {order.reviewCreatedAt && order.reviewUpdatedAt !== order.reviewCreatedAt ? " · Edited" : ""}
-                    </span>
-                    {reviewIsEditable(order.reviewCreatedAt) ? (
-                      <button type="button" onClick={() => setRateTarget(order)} style={{ display: "block", marginLeft: "auto", border: "none", background: "none", color: INDIGO, fontSize: 10.5, fontWeight: 700, padding: 0, cursor: "pointer" }}>Edit review</button>
-                    ) : order.reviewCreatedAt ? (
-                      <span style={{ display: "block", fontSize: 9.5, color: "#9CA3AF", textAlign: "right" }}>Editing period ended</span>
-                    ) : null}
-                  </div>
-                )}
                 {!delivered && (
                   <SecondaryBtn onClick={() => setTrackOrder(order)}>
                     Track Order
@@ -555,37 +422,6 @@ export default function Orders({
           context={contactOrder.product}
           contactUrl={contactOrder.sellerFb}
           onClose={() => setContact(null)}
-        />
-      )}
-      {rateTarget && (
-        <RateOrderModal
-          subjectName={rateTarget.seller}
-          subjectRole="Seller"
-          initialRating={rateTarget.rating ?? 0}
-          initialComment={rateTarget.reviewComment ?? ""}
-          initialStatements={rateTarget.reviewStatements ?? []}
-          onRate={async (rating, comment, statements) => {
-            if (isSupabaseConfigured) {
-              if (!rateTarget.dbId) return
-              try {
-                await kargoApi.createReview(rateTarget.dbId, rating, comment, statements)
-              } catch (error) {
-                alert(error instanceof Error ? error.message : "Unable to submit rating.")
-                return
-              }
-            }
-            setRatings((r) => ({ ...r, [rateTarget.id]: rating }))
-            const now = new Date().toISOString()
-            setOrders((prev) =>
-              prev.map((o) =>
-                o.id === rateTarget.id
-                  ? { ...o, rated: true, rating, reviewComment: comment, reviewStatements: statements, reviewCreatedAt: o.reviewCreatedAt ?? now, reviewUpdatedAt: now }
-                  : o,
-              ),
-            )
-            setRateTarget(null)
-          }}
-          onClose={() => setRateTarget(null)}
         />
       )}
     </div>

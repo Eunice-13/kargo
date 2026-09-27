@@ -225,13 +225,6 @@ export default function NewBatchModal({
 
         seller: sellerName || "You",
 
-        // A brand-new batch has no reviews behind it. `null` renders as
-        // "New seller" until real completed transactions build a rating —
-        // stamping 0 (or 5) here would fabricate a reputation.
-        rating: null,
-
-        ratingCount: 0,
-
         trips: formatDateRange(startDate, endDate),
 
         items: prods.reduce((s, p) => s + p.qty, 0),

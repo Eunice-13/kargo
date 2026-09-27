@@ -1,11 +1,6 @@
 import type { BatchItem } from "@/types"
-import { DEMO_RATINGS, demoProfileId } from "./reviews"
 
-// Batches carry no rating of their own. `rating` / `ratingCount` are filled in
-// from DEMO_RATINGS at the bottom of this file, so a seller's score on a batch
-// card is the same computed aggregate their shop page and profile show. It is
-// `null` — not 0, not 5 — for a seller with no reviews yet.
-const BASE_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[] =
+const BASE_BATCHES_SEED: Omit<BatchItem, "sellerId">[] =
   [
     {
       id: 1,
@@ -945,7 +940,7 @@ const ADDITIONAL_BATCH_DEFINITIONS = [
   ],
 ] as const
 
-const ADDITIONAL_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "sellerId">[] =
+const ADDITIONAL_BATCHES_SEED: Omit<BatchItem, "sellerId">[] =
   ADDITIONAL_BATCH_DEFINITIONS.map(
     ([
       id,
@@ -983,16 +978,10 @@ const ADDITIONAL_BATCHES_SEED: Omit<BatchItem, "rating" | "ratingCount" | "selle
 
 const BATCHES_SEED = [...BASE_BATCHES_SEED, ...ADDITIONAL_BATCHES_SEED]
 
-// A seller's rating is looked up, never authored. `DEMO_RATINGS` is computed
-// from the review seed in `reviews.ts`, which is the demo stand-in for the
-// `public.profile_ratings` view.
-export const BATCHES_INIT: BatchItem[] = BATCHES_SEED.map((batch) => {
-  const sellerId = demoProfileId(batch.seller)
-  const summary = sellerId ? DEMO_RATINGS[sellerId] : undefined
-  return {
-    ...batch,
-    sellerId,
-    rating: summary?.average ?? null,
-    ratingCount: summary?.count ?? 0,
-  }
-})
+const demoSellerId = (name: string) =>
+  `demo-seller-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`
+
+export const BATCHES_INIT: BatchItem[] = BATCHES_SEED.map((batch) => ({
+  ...batch,
+  sellerId: demoSellerId(batch.seller),
+}))

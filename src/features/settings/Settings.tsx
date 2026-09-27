@@ -171,8 +171,6 @@ export default function Settings({ user, setUser, role }: SharedState) {
                 setAvatarPreview(URL.createObjectURL(file))
               }}
               saving={savingProfile}
-              sellerEnabled={Boolean(user.sellerEnabled)}
-              onBirState={(birState) => setUser((current) => ({ ...current, birState }))}
             />
           )}
           {section === "Linked Accounts" && (

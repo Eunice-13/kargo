@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   ArrowRight,
   CalendarDays,
-  FileText,
   Heart,
 } from "lucide-react"
 import { Avatar } from "@/components/shared"
@@ -319,7 +318,6 @@ export default function BuyerHome({
   date,
   onCategoryChange,
   onDateChange,
-  onRequestItem,
   onOpenBatch,
   onToggleReaction,
   reactionPending,
@@ -329,7 +327,6 @@ export default function BuyerHome({
   date: string
   onCategoryChange: (category: string) => void
   onDateChange: (date: string) => void
-  onRequestItem: () => void
   onOpenBatch: (batch: BatchType) => void
   onToggleReaction: (batch: BatchType) => void
   reactionPending: Set<number>
@@ -409,13 +406,6 @@ export default function BuyerHome({
             <option key={option}>{option}</option>
           ))}
         </select>
-        <button
-          type="button"
-          className="buyer-home-filter__request"
-          onClick={onRequestItem}
-        >
-          <FileText size={15} aria-hidden="true" /> Request Item
-        </button>
       </div>
 
       <div className="buyer-home__content">

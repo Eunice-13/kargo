@@ -59,6 +59,35 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: emitSourcemaps ? "inline" : false,
       minify: !emitSourcemaps,
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              {
+                name: "react-vendor",
+                test: /node_modules[\\/](react|react-dom)[\\/]/,
+                priority: 30,
+              },
+              {
+                name: "supabase-vendor",
+                test: /node_modules[\\/]@supabase[\\/]/,
+                priority: 20,
+              },
+              {
+                name: "icons-vendor",
+                test: /node_modules[\\/]lucide-react[\\/]/,
+                priority: 20,
+              },
+              {
+                name: "vendor",
+                test: /node_modules[\\/]/,
+                maxSize: 250_000,
+                priority: 10,
+              },
+            ],
+          },
+        },
+      },
     },
     plugins: [
       react(),

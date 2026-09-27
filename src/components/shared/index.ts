@@ -9,8 +9,6 @@ export { default as SH } from "./SH"
 export { default as PrimaryBtn } from "./PrimaryBtn"
 export { default as SecondaryBtn } from "./SecondaryBtn"
 export { default as Toggle } from "./Toggle"
-export { default as BIRBadge } from "./BIRBadge"
-export { default as BIRInfoModal } from "./BIRInfoModal"
 export { default as Modal } from "./Modal"
 export { default as TrackOrderModal, ORDER_STEPS } from "./TrackOrderModal"
 export { default as ContactModal } from "./ContactModal"
@@ -19,9 +17,4 @@ export { default as ShareButton } from "./ShareButton"
 export { buildBatchLink, shareBatchLink } from "./shareLink"
 export { default as ExtensionRequestModal } from "./ExtensionRequestModal"
 export { default as BuyerProfileModal } from "./BuyerProfileModal"
-export {
-  default as RatingDisplay,
-  ReviewList,
-  ratingFor,
-} from "./RatingDisplay"
 export { default as PaymentSuccessToast } from "./PaymentSuccessToast"

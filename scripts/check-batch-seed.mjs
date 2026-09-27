@@ -5,9 +5,7 @@
 // `batches.ts` is not just display data: `App.tsx` matches expiring claims to a
 // batch by exact title (`claim.batch === batch.title`), and the Batches screen
 // keys navigation off `batch.id`. So a duplicate id or a duplicate title is a
-// real data bug, not a cosmetic one. Ratings are checked here too, because a
-// batch's score must be the same computed aggregate the seller's profile shows
-// — never an authored literal.
+// real data bug, not a cosmetic one.
 
 import path from "node:path"
 import { readFileSync } from "node:fs"
@@ -17,9 +15,6 @@ const root = process.env.KARGO_ROOT
 const load = (rel) => import(pathToFileURL(path.join(root, rel)).href)
 
 const { BATCHES_INIT } = await load("src/data/batches.ts")
-const { DEMO_RATINGS, DEMO_PROFILES, DEMO_SELLERS } = await load(
-  "src/data/reviews.ts",
-)
 const { CLAIMS_INIT } = await load("src/data/claims.ts")
 const { ORDERS_INIT } = await load("src/data/orders.ts")
 const { WAITLIST_INIT } = await load("src/data/waitlist.ts")
@@ -78,50 +73,7 @@ for (const b of BATCHES_INIT) {
 
 if (failures === 0) pass(`${BATCHES_INIT.length} batches: ids, titles, inventory and categories all valid`)
 
-// ── 2. Ratings are the shared aggregate, never authored ──────────────────────
-for (const b of BATCHES_INIT) {
-  const summary = DEMO_RATINGS[b.sellerId]
-  if (!summary) {
-    fail(`batch ${b.id} ("${b.title}"): no rating entry for sellerId ${b.sellerId}`)
-    continue
-  }
-  if (b.rating !== (summary.average ?? null))
-    fail(`batch ${b.id}: rating ${b.rating} != aggregate ${summary.average}`)
-  if (b.ratingCount !== summary.count)
-    fail(`batch ${b.id}: ratingCount ${b.ratingCount} != ${summary.count}`)
-}
-if (!failures) pass("every batch rating equals the seller's computed aggregate")
-
-// A seller with no reviews must carry null, never 0 or a placeholder.
-for (const b of BATCHES_INIT) {
-  if (b.ratingCount === 0 && b.rating !== null)
-    fail(`batch ${b.id} ("${b.title}"): no reviews but rating is ${b.rating}`)
-}
-
-// Two batches by the same seller must show the same score.
-const bySeller = new Map()
-for (const b of BATCHES_INIT) {
-  const prev = bySeller.get(b.sellerId)
-  if (prev && (prev.rating !== b.rating || prev.ratingCount !== b.ratingCount))
-    fail(`seller ${b.seller} shows different ratings on batches ${prev.id} and ${b.id}`)
-  bySeller.set(b.sellerId, b)
-}
-pass("batches by the same seller never disagree on their rating")
-
-// ── 3. Sellers referenced by batches exist in the profile list ───────────────
-const knownSellers = new Set(DEMO_SELLERS.map((p) => p.name))
-const orphanSellers = [
-  ...new Set(BATCHES_INIT.map((b) => b.seller).filter((n) => !knownSellers.has(n))),
-]
-if (orphanSellers.length) {
-  fail(
-    `sellers in batches.ts absent from the review seed (their rating would silently vanish): ${orphanSellers.join(", ")}`,
-  )
-} else {
-  pass("every batch seller is present in the review seed")
-}
-
-// ── 4. Cross-seed title resolution ───────────────────────────────────────────
+// ── 2. Cross-seed title resolution ───────────────────────────────────────────
 // App.tsx routes an expiring claim to its batch with `claim.batch === batch.title`.
 // If these strings drift apart, claims silently stop decrementing their batch.
 const referrers = [

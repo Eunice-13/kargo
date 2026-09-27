@@ -1,13 +1,9 @@
-import { useState, useEffect } from "react"
-import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight, Wallet } from "lucide-react"
-import type { BatchType, Role, Tab, UserInfo, UserRating } from "@/types"
+import { useState } from "react"
+import { Lock, Plane, Package, TrendingUp, ChevronUp, ArrowRight, ArrowUpRight } from "lucide-react"
+import type { BatchType, Role, Tab, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD } from "@/constants/theme"
-import { Modal, Avatar, ProductThumb, BIRBadge, CategoryIcon, RatingDisplay, ReviewList, ratingFor } from "@/components/shared"
+import { Modal, Avatar, ProductThumb, CategoryIcon } from "@/components/shared"
 import { sortSoldOutLast } from "./batchSort"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { memberSince } from "@/lib/ratings"
-import { kargoApi } from "@/services"
-import BIRInfoModal from "./BIRInfoModal"
 
 export default function SellerProfileModal({
   seller,
@@ -17,7 +13,6 @@ export default function SellerProfileModal({
   setTab: setAppTab,
   profileData,
   role,
-  ratings,
 }: {
   seller: string
   batches: BatchType[]
@@ -26,9 +21,6 @@ export default function SellerProfileModal({
   setTab?: (t: Tab) => void
   profileData?: UserInfo
   role?: Role
-  // Every rating shown here is read from the shared computed map, the same one
-  // the batch cards and the seller's own dashboard use.
-  ratings: Record<string, UserRating>
 }) {
   // Sellers cannot claim/waitlist — claiming is a buyer-only action.
   const canClaim = role !== "Seller"
@@ -51,34 +43,12 @@ export default function SellerProfileModal({
       ),
       url,
     }))
-  const [tab, setTab] = useState<"Shop" | "Reviews" | "About">("Shop")
+  const [tab, setTab] = useState<"Shop" | "About">("Shop")
   const [shopCat, setShopCat] = useState("All")
   const [shopSort, setShopSort] = useState("Newest")
   const [expandedBatch, setExpandedBatch] = useState<number | null>(null)
   const [showPast, setShowPast] = useState(false)
-  const [showBIR, setShowBIR] = useState(false)
   const sellerBatches = batches.filter((b) => b.seller === seller)
-  // The seller's rating comes from the shared computed map — the same
-  // aggregate behind their batch cards and shop page. It is `null` when they
-  // have no reviews, which renders as "New seller" rather than a fake 5.0.
-  const sellerId = sellerBatches.find((b) => b.sellerId)?.sellerId
-  const sellerRating = ratingFor(ratings, sellerId)
-  const joined = memberSince(sellerRating.memberSince ?? profileData?.memberSince)
-  // Accepted payment method names (names only), auto-generated + public.
-  const [acceptedMethods, setAcceptedMethods] = useState<string[]>([])
-  useEffect(() => {
-    if (!isSupabaseConfigured || !sellerId) return
-    let active = true
-    kargoApi
-      .loadSellerReceiveMethods(sellerId)
-      .then((rows) => {
-        if (active) setAcceptedMethods(rows.map((r) => r.methodType))
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-    }
-  }, [sellerId])
   const activeBatches = sortSoldOutLast(
     sellerBatches
       .filter((b) => !b.locked && (shopCat === "All" || b.category === shopCat))
@@ -137,19 +107,14 @@ export default function SellerProfileModal({
             }}
           >
             {seller}
-            {(profileData ? profileData.birState === "Verified" : sellerBatches[0]?.sellerBirVerified !== false) && (
-              <BIRBadge size={18} onClick={() => setShowBIR(true)} />
-            )}
           </div>
           <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
-            <RatingDisplay summary={sellerRating} subject="seller" />
-            <span>· {sellerBatches.length} batch{sellerBatches.length !== 1 ? "es" : ""}</span>
-            {joined && <span>· Member since {joined}</span>}
+            <span>{sellerBatches.length} batch{sellerBatches.length !== 1 ? "es" : ""}</span>
           </div>
         </div>
       </div>
       <div className="flex gap-2 mb-4">
-        {(["Shop", "Reviews", "About"] as const).map((t) => (
+        {(["Shop", "About"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -628,20 +593,6 @@ export default function SellerProfileModal({
           </div>
         </div>
       )}
-      {tab === "Reviews" && (
-        <div className="space-y-3">
-          {/* Real review rows from `public.reviews` (or the demo review seed),
-              newest first. The aggregate above and this list come from the same
-              rows, so the score can never disagree with what is shown here. */}
-          <RatingDisplay
-            summary={sellerRating}
-            tone="stack"
-            fontSize={13}
-            subject="seller"
-          />
-          <ReviewList reviews={sellerRating.reviews} />
-        </div>
-      )}
       {tab === "About" && (
         <div className="space-y-4">
           <div
@@ -735,40 +686,9 @@ export default function SellerProfileModal({
                 </a>
               ))}
             </div>
-            {acceptedMethods.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "#111827",
-                    marginBottom: 8,
-                  }}
-                >
-                  Accepted Payment
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 8,
-                    background: CREAM,
-                    borderRadius: 8,
-                    padding: "9px 12px",
-                  }}
-                >
-                  <Wallet size={15} color={INDIGO} aria-hidden="true" style={{ marginTop: 1, flexShrink: 0 }} />
-                  <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
-                    <span style={{ fontWeight: 700, color: "#111827" }}>Accepting: </span>
-                    {acceptedMethods.join(", ")}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
-      {showBIR && <BIRInfoModal onClose={() => setShowBIR(false)} />}
     </Modal>
   )
 }

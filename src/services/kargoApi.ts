@@ -1,7 +1,6 @@
 import type {
   BatchExpenses,
   BatchType,
-  BirState,
   ClaimRow,
   WaitlistEntry,
   ExpenseItem,
@@ -9,18 +8,14 @@ import type {
   FulfillmentOrder,
   OrderRow,
   PayHistRow,
-  ReviewRecord,
   ToPayRow,
   UserInfo,
-  UserRating,
   SellerWaitlistGroup,
 } from "@/types"
 
 import { requireSupabase } from "@/lib/supabase"
 
 import { resolveContactUrl } from "@/components/shared/contactLink"
-
-import { buildUserRating, emptyUserRating } from "@/lib/ratings"
 
 type DbProfile = {
   id: string
@@ -36,10 +31,6 @@ type DbProfile = {
   avatar_path: string | null
 
   can_sell: boolean
-
-  bir_status: "none" | "pending" | "verified" | "flagged"
-
-  account_status: "active" | "suspended"
 
   notification_preferences: Record<string, boolean> | null
 
@@ -67,130 +58,8 @@ export type LoadedAppData = {
 
   sellerWaitlist: SellerWaitlistGroup[]
 
-  // Every participant's computed rating, keyed by profile id. Built from
-  // `public.profile_ratings` + `public.reviews` so the seller dashboard, shop
-  // page, directory and public profile all read one source of truth.
-  ratings: Record<string, UserRating>
-
-  // display name -> profile id, so a surface holding only a name can still
-  // resolve the right rating.
+  // display name -> profile id, for every user this account transacts with.
   profileIdByName: Record<string, string>
-}
-
-// `reviews.quick_statements` is text[]; the select() shape is untyped.
-type DbReview = {
-  id: string
-  order_id: string
-  reviewer_id: string
-  reviewee_id: string
-  rating: number
-  comment: string | null
-  quick_statements: string[] | null
-  created_at: string
-  updated_at: string
-}
-
-function toReviewRecord(row: DbReview): ReviewRecord {
-  return {
-    id: row.id,
-    orderId: row.order_id,
-    reviewerId: row.reviewer_id,
-    revieweeId: row.reviewee_id,
-    rating: Number(row.rating),
-    comment: row.comment,
-    quickStatements: row.quick_statements ?? [],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }
-}
-
-// Assembles the shared rating map: the SQL aggregate supplies the canonical
-// average/count, and the raw rows supply the review list. The JS aggregation is
-// applied to the same rows so both paths produce identical numbers.
-function buildRatingsMap(
-  aggregates: {
-    profile_id: string
-    average_rating: number | null
-    review_count: number | null
-    member_since?: string | null
-  }[],
-  reviews: DbReview[],
-  nameById: Map<string, string>,
-): Record<string, UserRating> {
-  const byReviewee = new Map<string, DbReview[]>()
-  for (const review of reviews) {
-    if (!byReviewee.has(review.reviewee_id)) byReviewee.set(review.reviewee_id, [])
-    byReviewee.get(review.reviewee_id)!.push(review)
-  }
-
-  const ratings: Record<string, UserRating> = {}
-  for (const aggregate of aggregates) {
-    ratings[aggregate.profile_id] = {
-      ...buildUserRating(
-        (byReviewee.get(aggregate.profile_id) ?? []).map(toReviewRecord),
-        nameById,
-      ),
-      memberSince: aggregate.member_since ?? null,
-    }
-  }
-
-  // A reviewee who somehow has rows but no aggregate row (e.g. the aggregate
-  // view filtered their profile) still gets a correct computed entry.
-  for (const [profileId, rows] of byReviewee) {
-    if (ratings[profileId]) continue
-    ratings[profileId] = buildUserRating(rows.map(toReviewRecord), nameById)
-  }
-
-  return ratings
-}
-
-// Public read of one user's reviews + aggregate. Used by surfaces that mount
-// outside the main data load (e.g. a profile opened directly).
-export async function loadUserRating(
-  profileId: string,
-): Promise<UserRating> {
-  if (!profileId) return emptyUserRating()
-  const client = requireSupabase()
-
-  const [{ data: aggregate }, { data: rows, error }] = await Promise.all([
-    client
-      .from("profile_ratings")
-      .select("profile_id,average_rating,review_count")
-      .eq("profile_id", profileId)
-      .maybeSingle(),
-    client
-      .from("reviews")
-      .select(
-        "id,order_id,reviewer_id,reviewee_id,rating,comment,quick_statements,created_at,updated_at",
-      )
-      .eq("reviewee_id", profileId),
-  ])
-
-  if (error) throw error
-
-  const reviews = ((rows ?? []) as DbReview[]).map(toReviewRecord)
-
-  // Display names for the reviewer, resolved in one round trip.
-  const reviewerIds = [...new Set(reviews.map((r) => r.reviewerId))]
-  const nameById = new Map<string, string>()
-  if (reviewerIds.length > 0) {
-    const { data: reviewers } = await client
-      .from("public_profiles")
-      .select("id,display_name")
-      .in("id", reviewerIds)
-    for (const reviewer of reviewers ?? []) {
-      nameById.set(reviewer.id, reviewer.display_name)
-    }
-  }
-
-  return buildUserRating(reviews, nameById)
-}
-
-const birToUi: Record<DbProfile["bir_status"], BirState> = {
-  none: "None",
-  pending: "Verifying",
-  verified: "Verified",
-  flagged: "None",
 }
 
 const PAYMENT_METHOD_TYPES = new Set([
@@ -282,7 +151,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     .from("profiles")
 
     .select(
-      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,bir_status,account_status,notification_preferences,waitlist_response_hours,created_at",
+      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,notification_preferences,waitlist_response_hours,created_at",
     )
 
     .eq("id", id)
@@ -320,10 +189,6 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     memberSince: profile.created_at,
 
     sellerEnabled: profile.can_sell,
-
-    birState: birToUi[profile.bir_status],
-
-    accountStatus: profile.account_status,
 
     notificationPreferences: profile.notification_preferences ?? {},
 
@@ -485,7 +350,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     client
       .from("orders")
       .select(
-        "*,batch_products(name,batch_id,batches(title)),payments(id,amount,status,method_type,submitted_at,reference_number,receipt_path,payer_account_name,payer_phone,buyer_contact_url,rejection_reason,rejection_deadline),reviews(*)",
+        "*,batch_products(name,batch_id,batches(title)),payments(id,amount,status,method_type,submitted_at,reference_number,receipt_path,payer_account_name,payer_phone,buyer_contact_url,rejection_reason,rejection_deadline)",
       )
       .order("created_at", { ascending: false }),
     client
@@ -533,8 +398,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
   const participantNames = new Map<string, string>()
 
-  const verifiedSellers = new Set<string>()
-
   const participantLinks = new Map<string, string | undefined>()
 
   if (participantIds.length > 0) {
@@ -542,7 +405,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       .from("public_profiles")
 
-      .select("id,display_name,bir_status,social_links")
+      .select("id,display_name,social_links")
 
       .in("id", participantIds)
 
@@ -555,34 +418,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         participant.id,
         resolveContactUrl(participant.social_links ?? undefined),
       )
-
-      if (participant.bir_status === "verified")
-        verifiedSellers.add(participant.id)
     }
   }
-
-  // Ratings come from the same load as everything else so no screen has to
-  // fetch (and potentially disagree about) a user's score. `profile_ratings` is
-  // the canonical aggregate; the raw rows back the review lists.
-  const { data: ratingAggregates, error: ratingAggregateError } = await client
-    .from("profile_ratings")
-    .select("profile_id,average_rating,review_count,member_since")
-
-  if (ratingAggregateError) throw ratingAggregateError
-
-  const { data: ratingRows, error: ratingRowsError } = await client
-    .from("reviews")
-    .select(
-      "id,order_id,reviewer_id,reviewee_id,rating,comment,quick_statements,created_at,updated_at",
-    )
-
-  if (ratingRowsError) throw ratingRowsError
-
-  const ratings = buildRatingsMap(
-    ratingAggregates ?? [],
-    (ratingRows ?? []) as DbReview[],
-    participantNames,
-  )
 
   const batchMap = new Map<string, BatchType>()
   for (const row of catalog ?? []) {
@@ -603,14 +440,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       sellerId: row.seller_id,
 
       sellerFb: participantLinks.get(row.seller_id),
-
-      sellerBirVerified: verifiedSellers.has(row.seller_id),
-
-      // NULL when the seller has no reviews yet — deliberately not 0, so the
-      // UI renders "New seller" instead of a 0-star badge.
-      rating: row.rating == null ? null : Number(row.rating),
-
-      ratingCount: Number(row.rating_count ?? 0),
 
       trips: formatBatchDateRange(row.starts_on, row.ends_on),
       items: Number(row.batch_total_items ?? 0),
@@ -684,16 +513,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
     const buyerName = participantNames.get(row.buyer_id) ?? "Buyer"
 
-    const ownReview = (row.reviews ?? []).find(
-      (review: { reviewer_id: string }) => review.reviewer_id === auth.user.id,
-    ) as {
-      rating: number
-      comment: string | null
-      quick_statements?: string[] | null
-      created_at: string
-      updated_at: string
-    } | undefined
-
     const expires = new Date(row.reservation_expires_at).getTime()
 
     const hours = Math.max(0, Math.ceil((expires - Date.now()) / 3_600_000))
@@ -751,18 +570,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         trackingNo: row.tracking_number,
 
         eta: row.eta ? new Date(row.eta).toLocaleDateString() : "Pending",
-
-        rated: Boolean(ownReview),
-
-        rating: ownReview?.rating,
-
-        reviewComment: ownReview?.comment ?? undefined,
-
-        reviewStatements: ownReview?.quick_statements ?? undefined,
-
-        reviewCreatedAt: ownReview?.created_at,
-
-        reviewUpdatedAt: ownReview?.updated_at,
       })
     } else {
       claims.push({
@@ -809,18 +616,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         qty: row.quantity,
 
         amount: Number(row.total_amount),
-
-        rated: Boolean(ownReview),
-
-        rating: ownReview?.rating,
-
-        reviewComment: ownReview?.comment ?? undefined,
-
-        reviewStatements: ownReview?.quick_statements ?? undefined,
-
-        reviewCreatedAt: ownReview?.created_at,
-
-        reviewUpdatedAt: ownReview?.updated_at,
       })
     }
 
@@ -913,7 +708,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     fulfillment,
     waitlist,
     sellerWaitlist,
-    ratings,
     profileIdByName,
   }
 }
@@ -1250,43 +1044,6 @@ export async function createBatch(batch: {
   return created.id as string
 }
 
-export async function uploadBirBadge(file: File) {
-  const client = requireSupabase()
-
-  const { data: auth } = await client.auth.getUser()
-
-  if (!auth.user) throw new Error("Sign in before uploading a BIR badge")
-
-  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg"
-
-  const objectPath = `${auth.user.id}/${crypto.randomUUID()}.${extension}`
-
-  const { error: uploadError } = await client.storage
-
-    .from("bir-certificates")
-
-    .upload(objectPath, file, { upsert: false })
-
-  if (uploadError) throw uploadError
-
-  const { error: submitError } = await client.rpc("submit_bir_badge", {
-    p_object_path: objectPath,
-  })
-
-  if (submitError) throw submitError
-
-  const { data, error } = await client.functions.invoke("verify-bir-badge", {
-    body: { objectPath },
-  })
-
-  if (error) throw error
-
-  return data as {
-    status: "verified" | "none"
-    reason: "unreadable" | "bad_domain" | null
-  }
-}
-
 // Translate a raw Supabase/Postgres error from submit_order_payment into a
 // clear, actionable message for the buyer. The live DB enforces:
 //   - unique (order_id, reference_number)  -> 23505 duplicate reference number
@@ -1500,70 +1257,6 @@ export async function updateProfile(values: {
   if (error) throw error
 }
 
-export async function loadAddresses() {
-  const { data, error } = await requireSupabase()
-    .from("addresses")
-    .select("*")
-    .order("created_at")
-
-  if (error) throw error
-
-  return data ?? []
-}
-
-export async function saveAddress(input: {
-  id?: string
-
-  label: string
-
-  addressLine: string
-
-  city: string
-
-  isDefault: boolean
-}) {
-  const client = requireSupabase()
-
-  const userId = (await client.auth.getUser()).data.user?.id
-
-  if (!userId) throw new Error("Authentication required")
-
-  if (input.isDefault)
-    await client
-      .from("addresses")
-      .update({ is_default: false })
-      .eq("user_id", userId)
-
-  const row = {
-    user_id: userId,
-
-    label: input.label,
-
-    address_line: input.addressLine,
-
-    city: input.city || null,
-
-    is_default: input.isDefault,
-  }
-
-  const query = input.id
-    ? client.from("addresses").update(row).eq("id", input.id)
-    : client.from("addresses").insert(row)
-
-  const { error } = await query
-
-  if (error) throw error
-}
-
-export async function deleteAddress(id: string) {
-  const { error } = await requireSupabase()
-    .from("addresses")
-    .delete()
-    .eq("id", id)
-
-  if (error) throw error
-}
-
 export async function setBatchLock(batchId: string, locked: boolean) {
   const { error } = await requireSupabase()
 
@@ -1631,25 +1324,6 @@ export async function setWaitlistResponseHours(hours: number) {
   })
 }
 
-export async function createReview(
-  orderId: string,
-  rating: number,
-  comment?: string,
-  statements: string[] = [],
-) {
-  const { error } = await requireSupabase().rpc("create_order_review", {
-    p_order_id: orderId,
-
-    p_rating: rating,
-
-    p_comment: comment ?? null,
-
-    p_quick_statements: statements,
-  })
-
-  if (error) throw error
-}
-
 export async function uploadProfileAvatar(file: File) {
   const client = requireSupabase()
 
@@ -1681,41 +1355,6 @@ export async function uploadProfileAvatar(file: File) {
 
   return client.storage.from("profile-avatars").getPublicUrl(objectPath).data
     .publicUrl
-}
-
-export async function createBuyerRequest(
-  batchId: string,
-  productName: string,
-  quantity: number,
-  message?: string,
-) {
-  const { error } = await requireSupabase().rpc("create_buyer_request", {
-    p_batch_id: batchId,
-
-    p_product_name: productName,
-
-    p_quantity: quantity,
-
-    p_message: message ?? null,
-  })
-
-  if (error) throw error
-}
-
-export async function loadPaymentMethods() {
-  const { data, error } = await requireSupabase()
-
-    .from("seller_payment_methods")
-
-    .select("*")
-
-    .eq("is_active", true)
-
-    .order("created_at")
-
-  if (error) throw error
-
-  return data ?? []
 }
 
 // Upload a seller's payment QR image to the public payment-qr bucket and return
@@ -1843,7 +1482,7 @@ export async function updatePaymentMethod(
 
   accountNumber: string,
 
-  verified?: boolean,
+  _verified?: boolean,
 
   qrFile?: File,
 ) {
@@ -1851,8 +1490,6 @@ export async function updatePaymentMethod(
     method_type: methodType,
     account_number: accountNumber,
   }
-
-  if (verified !== undefined) values.is_verified = verified
 
   if (qrFile) values.qr_path = await uploadPaymentQr(qrFile)
 
@@ -1867,7 +1504,7 @@ export async function updatePaymentMethod(
 export async function deactivatePaymentMethod(id: string) {
   const { error } = await requireSupabase()
     .from("seller_payment_methods")
-    .update({ is_active: false })
+    .delete()
     .eq("id", id)
 
   if (error) throw error
@@ -1981,6 +1618,7 @@ export async function reviewPayment(
     p_reason: reason ?? null,
     p_deadline_hours: deadlineHours ?? null,
   })
+
   if (error) throw error
 }
 
@@ -1997,38 +1635,17 @@ export async function decideOrderExtension(orderId: string, approve: boolean) {
 export async function loadSellerRequests() {
   const client = requireSupabase()
 
-  const [
-    { data: extensionRows, error: extensionError },
-    { data: requestRows, error: requestError },
-  ] = await Promise.all([
-    client
-
-      .from("orders")
-
-      .select(
-        "id,buyer_id,extension_status,extension_requested_at,batch_products(name,batches(title))",
-      )
-
-      .eq("extension_status", "pending"),
-
-    client
-
-      .from("buyer_requests")
-
-      .select(
-        "id,buyer_id,product_name,message,status,created_at,batches(title)",
-      ),
-  ])
+  const { data: extensionRows, error: extensionError } = await client
+    .from("orders")
+    .select(
+      "id,buyer_id,extension_status,extension_requested_at,batch_products(name,batches(title))",
+    )
+    .eq("extension_status", "pending")
 
   if (extensionError) throw extensionError
 
-  if (requestError) throw requestError
-
   const buyerIds = [
-    ...new Set([
-      ...(extensionRows ?? []).map((row) => row.buyer_id),
-      ...(requestRows ?? []).map((row) => row.buyer_id),
-    ]),
+    ...new Set((extensionRows ?? []).map((row) => row.buyer_id)),
   ]
 
   const names = new Map<string, string>()
@@ -2073,40 +1690,8 @@ export async function loadSellerRequests() {
       }
     }),
 
-    buyerRequests: (requestRows ?? []).map((row) => {
-      const batch = row.batches as unknown as { title: string } | null
-
-      return {
-        id: row.id as string,
-
-        buyer: names.get(row.buyer_id) ?? "Buyer",
-
-        buyerFb: links.get(row.buyer_id),
-
-        product: row.product_name,
-
-        batch: batch?.title ?? "General request",
-
-        message: row.message ?? "",
-
-        requestedAt: new Date(row.created_at).toLocaleDateString(),
-
-        replied: row.status !== "pending",
-      }
-    }),
+    buyerRequests: [],
   }
-}
-
-export async function markBuyerRequestReplied(id: string) {
-  const { error } = await requireSupabase()
-
-    .from("buyer_requests")
-
-    .update({ status: "replied", replied_at: new Date().toISOString() })
-
-    .eq("id", id)
-
-  if (error) throw error
 }
 
 export type FinancialSummary = {
@@ -2412,13 +1997,9 @@ export const kargoApi = {
 
   loadCurrentAppData,
 
-  loadUserRating,
-
   claimProduct,
 
   createBatch,
-
-  uploadBirBadge,
 
   submitPayment,
 
@@ -2434,12 +2015,6 @@ export const kargoApi = {
 
   uploadProfileAvatar,
 
-  loadAddresses,
-
-  saveAddress,
-
-  deleteAddress,
-
   setBatchLock,
 
   setProductLock,
@@ -2449,12 +2024,6 @@ export const kargoApi = {
   respondWaitlistOffer,
 
   setWaitlistResponseHours,
-
-  createReview,
-
-  createBuyerRequest,
-
-  loadPaymentMethods,
 
   loadSellerReceiveMethods,
 
@@ -2479,8 +2048,6 @@ export const kargoApi = {
   decideOrderExtension,
 
   loadSellerRequests,
-
-  markBuyerRequestReplied,
 
   getFinancialSummary,
 

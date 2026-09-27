@@ -1,12 +1,9 @@
-import { useState, useEffect } from "react"
-import { MessageCircle, Star, Package, Clock3, CalendarDays, Wallet } from "lucide-react"
-import type { BatchType, Role, UserInfo, UserRating } from "@/types"
+import { useState } from "react"
+import { MessageCircle, Package, Clock3, CalendarDays } from "lucide-react"
+import type { BatchType, Role, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
-import { Card, Avatar, BIRBadge, PrimaryBtn, RatingDisplay, ReviewList, ratingFor, ContactModal } from "@/components/shared"
+import { Card, Avatar, PrimaryBtn, ContactModal } from "@/components/shared"
 import { sortSoldOutLast } from "./batchSort"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { memberSince, pluralizeReviews } from "@/lib/ratings"
-import { kargoApi } from "@/services"
 
 // Dedicated seller storefront page (replaces the old popup modal). Laid out like
 // a Shopee shop: a gradient header with avatar/name/online + Follow/Chat and a
@@ -20,7 +17,6 @@ export default function SellerShopPage({
   onBatchOpen,
   role,
   profileData,
-  ratings,
 }: {
   seller: string
   batches: BatchType[]
@@ -29,37 +25,15 @@ export default function SellerShopPage({
   onBatchOpen?: (batchId: number) => void
   role?: Role
   profileData?: UserInfo
-  ratings: Record<string, UserRating>
 }) {
   const canClaim = role !== "Seller" && Boolean(onClaimItem)
   const sellerBatches = batches.filter((b) => b.seller === seller)
-  const sellerId = sellerBatches.find((b) => b.sellerId)?.sellerId
-  const sellerRating = ratingFor(ratings, sellerId)
-
-  const [acceptedMethods, setAcceptedMethods] = useState<string[]>([])
-  useEffect(() => {
-    if (!isSupabaseConfigured || !sellerId) return
-    let active = true
-    kargoApi
-      .loadSellerReceiveMethods(sellerId)
-      .then((rows) => {
-        if (active) setAcceptedMethods(rows.map((r) => r.methodType))
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-    }
-  }, [sellerId])
 
   // ── Stats (row under the header) ────────────────────────────────────────────
   const totalProducts = sellerBatches.reduce((s, b) => s + b.products.length, 0)
   const totalClaimed = sellerBatches.reduce((s, b) => s + b.claimed, 0)
   const totalAvail = sellerBatches.reduce((s, b) => s + b.items, 0)
   const claimRate = totalAvail > 0 ? Math.round((totalClaimed / totalAvail) * 100) : 0
-  const joined = memberSince(sellerRating.memberSince ?? profileData?.memberSince)
-  const isBirVerified = profileData
-    ? profileData.birState === "Verified"
-    : sellerBatches[0]?.sellerBirVerified !== false
 
   // ── Contact (reuses the shared ContactModal) ───────────────────────────────
   const [showChat, setShowChat] = useState(false)
@@ -71,13 +45,13 @@ export default function SellerShopPage({
 
   // ── Tab / category nav ──────────────────────────────────────────────────────
   const categories = Array.from(new Set(sellerBatches.map((b) => b.category)))
-  const TABS = ["Home", "All Batches", ...categories, "Reviews"] as const
+  const TABS = ["Home", "All Batches", ...categories] as const
   const [tab, setTab] = useState<string>("Home")
   const [sortBy, setSortBy] = useState("Newest")
 
   // Which batches the current tab shows.
   const catFilter =
-    tab === "Home" || tab === "All Batches" || tab === "Reviews" ? "All" : tab
+    tab === "Home" || tab === "All Batches" ? "All" : tab
   const visibleBatches = sortSoldOutLast(
     sellerBatches
       .filter((b) => catFilter === "All" || b.category === catFilter)
@@ -94,17 +68,8 @@ export default function SellerShopPage({
 
   const stats: { icon: typeof Package; label: string; value: string; accent?: boolean }[] = [
     { icon: Package, label: "Products", value: String(totalProducts) },
-    {
-      icon: Star,
-      label: "Rating",
-      value:
-        sellerRating.average != null
-          ? `${sellerRating.average.toFixed(1)} (${pluralizeReviews(sellerRating.count)})`
-          : "New seller",
-      accent: true,
-    },
     { icon: Clock3, label: "Claim Rate", value: `${claimRate}%` },
-    { icon: CalendarDays, label: "Joined", value: joined || "Recently" },
+    { icon: CalendarDays, label: "Batches", value: String(sellerBatches.length) },
   ]
 
   return (
@@ -147,7 +112,6 @@ export default function SellerShopPage({
               }}
             >
               {seller}
-              {isBirVerified && <BIRBadge size={16} />}
             </div>
             <div
               style={{
@@ -224,7 +188,6 @@ export default function SellerShopPage({
                   color: s.accent ? AMBER : "#111827",
                 }}
               >
-                {s.accent && <Star size={13} fill={AMBER} color={AMBER} aria-hidden="true" />}
                 {s.value}
               </div>
               <div
@@ -286,14 +249,14 @@ export default function SellerShopPage({
       </div>
 
       {/* ── Tab body ───────────────────────────────────────────────────────── */}
-      {tab === "Reviews" ? (
-        <Card>
-          <RatingDisplay summary={sellerRating} tone="stack" fontSize={13} subject="seller" />
-          <div className="mt-3">
-            <ReviewList reviews={sellerRating.reviews} />
+      {tab === "Home" && (profileData?.bio) && (
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
+            {profileData.bio}
           </div>
         </Card>
-      ) : (
+      )}
+      {tab !== "Home" && (
         <div
           className="grid gap-5"
           style={{ gridTemplateColumns: "1fr 300px", alignItems: "start" }}
@@ -301,32 +264,11 @@ export default function SellerShopPage({
           {/* Left — batches */}
           <div>
             {/* On Home, a light "About" strip mirrors Shopee's shop intro. */}
-            {tab === "Home" && (profileData?.bio || acceptedMethods.length > 0) && (
+            {tab === "Home" && profileData?.bio && (
               <Card style={{ marginBottom: 16 }}>
-                {profileData?.bio && (
-                  <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
-                    {profileData.bio}
-                  </div>
-                )}
-                {acceptedMethods.length > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 8,
-                      background: CREAM,
-                      borderRadius: 8,
-                      padding: "8px 12px",
-                      marginTop: profileData?.bio ? 10 : 0,
-                    }}
-                  >
-                    <Wallet size={15} color={INDIGO} aria-hidden="true" style={{ marginTop: 1, flexShrink: 0 }} />
-                    <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
-                      <span style={{ fontWeight: 700, color: "#111827" }}>Accepting: </span>
-                      {acceptedMethods.join(", ")}
-                    </div>
-                  </div>
-                )}
+                <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
+                  {profileData.bio}
+                </div>
               </Card>
             )}
 
@@ -454,8 +396,7 @@ export default function SellerShopPage({
                   lineHeight: 1.5,
                 }}
               >
-                These numbers come from recorded transactions, not self-reported
-                ratings.
+                These numbers come from recorded transactions.
               </div>
             </Card>
           </div>

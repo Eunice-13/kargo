@@ -4,9 +4,7 @@ import {
   Lock,
   Unlock,
   Search,
-  FileText,
   ArrowRight,
-  Star,
   ChevronDown,
   Plus,
 } from "lucide-react";
@@ -26,7 +24,6 @@ import {
 } from "@/components/shared";
 import { sortSoldOutLast } from "./batchSort";
 import FinancialSummaryModal from "./FinancialSummaryModal";
-import BuyerRequestFormModal from "./BuyerRequestFormModal";
 import ItemClaimModal from "./ItemClaimModal";
 import SellerProfileModal from "./SellerProfileModal";
 import SellerDirectoryPage from "./SellerDirectoryPage";
@@ -50,7 +47,6 @@ export default function Batches({
   setTab,
   waitlist,
   setWaitlist,
-  ratings,
   onNewBatch,
 }: SharedState & { onNewBatch: () => void }) {
   const [batchPage, setBatchPage] = useState<BatchType | null>(() => {
@@ -62,8 +58,6 @@ export default function Batches({
   const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({});
   const [catFilter, setCatFilter] = useState("All");
   const [dateFilter, setDateFilter] = useState("All");
-  const [ratingFilter, setRatingFilter] = useState("All");
-  const [showBuyerReqForm, setShowBuyerReqForm] = useState(false);
   const [reactingBatchIds, setReactingBatchIds] = useState<Set<number>>(
     () => new Set(),
   );
@@ -247,8 +241,6 @@ export default function Batches({
       };
       if (!b.trips.includes(mm[dateFilter] || "")) return false;
     }
-    if (ratingFilter === "4.8+" && (b.rating ?? 0) < 4.8) return false;
-    if (ratingFilter === "4.5+" && (b.rating ?? 0) < 4.5) return false;
     return true;
   });
 
@@ -538,7 +530,6 @@ export default function Batches({
             setTab={setTab}
             profileData={profile === user.name ? user : undefined}
             role={role}
-            ratings={ratings}
           />
         )}
         {profileClaimTarget && (
@@ -757,27 +748,6 @@ export default function Batches({
                               }}
                             >
                               {b.category.toUpperCase()}
-                            </span>
-                          )}
-                          {role === "Buyer" && (
-                            <span
-                              style={{
-                                position: "absolute",
-                                top: 10,
-                                right: 10,
-                                background: "rgba(0,0,0,0.45)",
-                                color: "#fff",
-                                fontSize: 10,
-                                fontWeight: 600,
-                                padding: "3px 8px",
-                                borderRadius: 999,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 4,
-                              }}
-                            >
-                              <Star size={11} aria-hidden="true" fill="#fff" />{" "}
-                              {b.rating}
                             </span>
                           )}
                           {role === "Buyer" && pct >= 90 && (
@@ -1116,36 +1086,6 @@ export default function Batches({
           </span>
         )}
       </div>
-      <div
-        className={role === "Seller" ? "seller-batch-select-wrap" : undefined}
-      >
-        <select
-          className={
-            role === "Seller" ? "seller-batch-filter-select" : undefined
-          }
-          value={ratingFilter}
-          onChange={(e) => setRatingFilter(e.target.value)}
-          style={{
-            fontSize: 12,
-            color: "#374151",
-            border: "1px solid #E5E7EB",
-            borderRadius: 6,
-            padding: "5px 8px",
-            background: "#fff",
-            outline: "none",
-            cursor: "pointer",
-          }}
-        >
-          {["All", "4.5+", "4.8+"].map((o) => (
-            <option key={o}>{o}</option>
-          ))}
-        </select>
-        {role === "Seller" && (
-          <span className="seller-batch-select-icon">
-            <ChevronDown size={12} aria-hidden="true" />
-          </span>
-        )}
-      </div>
       <div className="flex-1" />
       {role === "Seller" && (
         <>
@@ -1177,15 +1117,6 @@ export default function Batches({
         </SecondaryBtn>
       )}
       {role === "Buyer" && (
-        <SecondaryBtn onClick={() => setShowBuyerReqForm(true)}>
-          <span
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-          >
-            <FileText size={13} aria-hidden="true" /> Request Item
-          </span>
-        </SecondaryBtn>
-      )}
-      {role === "Buyer" && (
         <span style={{ fontSize: 12, color: "#9CA3AF" }}>
           {filtered.length} batch{filtered.length !== 1 ? "es" : ""} found
         </span>
@@ -1203,7 +1134,6 @@ export default function Batches({
           onClaimItem={handleProfileClaim}
           role={role}
           user={user}
-          ratings={ratings}
           onSellerSelect={(name) => {
             setProfile(name);
           }}
@@ -1243,8 +1173,6 @@ export default function Batches({
         };
         if (!b.trips.includes(mm[dateFilter] || "")) return false;
       }
-      if (ratingFilter === "4.8+" && (b.rating ?? 0) < 4.8) return false;
-      if (ratingFilter === "4.5+" && (b.rating ?? 0) < 4.5) return false;
       return true;
     });
     return (
@@ -1467,20 +1395,6 @@ export default function Batches({
                       ) : (
                         <SecondaryBtn
                           onClick={async () => {
-                            if (isSupabaseConfigured) {
-                              try {
-                                await kargoApi.markBuyerRequestReplied(
-                                  String(req.id),
-                                );
-                              } catch (error) {
-                                alert(
-                                  error instanceof Error
-                                    ? error.message
-                                    : "Unable to update request.",
-                                );
-                                return;
-                              }
-                            }
                             if (req.buyerFb) {
                               window.open(
                                 req.buyerFb,
@@ -1518,12 +1432,6 @@ export default function Batches({
             )}
           </Modal>
         )}
-        {showBuyerReqForm && (
-          <BuyerRequestFormModal
-            batches={batches}
-            onClose={() => setShowBuyerReqForm(false)}
-          />
-        )}
         {profile && (
           <SellerProfileModal
             seller={profile}
@@ -1533,7 +1441,6 @@ export default function Batches({
             setTab={setTab}
             profileData={profile === user.name ? user : undefined}
             role={role}
-            ratings={ratings}
           />
         )}
         {profileClaimTarget && (
@@ -1596,7 +1503,6 @@ export default function Batches({
         date={dateFilter}
         onCategoryChange={setCatFilter}
         onDateChange={setDateFilter}
-        onRequestItem={() => setShowBuyerReqForm(true)}
         onOpenBatch={setBatchPage}
         onToggleReaction={handleToggleReaction}
         reactionPending={reactingBatchIds}
@@ -1649,12 +1555,6 @@ export default function Batches({
           onClose={() => setExtTarget(null)}
         />
       )}
-      {showBuyerReqForm && (
-        <BuyerRequestFormModal
-          batches={batches}
-          onClose={() => setShowBuyerReqForm(false)}
-        />
-      )}
       {profile && (
         <SellerProfileModal
           seller={profile}
@@ -1664,7 +1564,6 @@ export default function Batches({
           setTab={setTab}
           profileData={profile === user.name ? user : undefined}
           role={role}
-          ratings={ratings}
         />
       )}
       {profileClaimTarget && (

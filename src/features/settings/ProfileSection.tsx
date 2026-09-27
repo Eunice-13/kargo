@@ -3,7 +3,7 @@ import { Check } from "lucide-react"
 import { Avatar, PrimaryBtn, SecondaryBtn, SH } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
 import type { UserInfo } from "@/types"
-import { BirVerifier } from "@/features/auth"
+
 
 type ProfileSectionProps = {
   user: UserInfo
@@ -21,8 +21,6 @@ type ProfileSectionProps = {
   avatarFileName?: string
   onAvatarSelected: (file: File) => void
   saving: boolean
-  sellerEnabled: boolean
-  onBirState: (state: NonNullable<UserInfo["birState"]>) => void
 }
 
 export default function ProfileSection({
@@ -41,8 +39,6 @@ export default function ProfileSection({
   avatarFileName,
   onAvatarSelected,
   saving,
-  sellerEnabled,
-  onBirState,
 }: ProfileSectionProps) {
   const photoRef = useRef<HTMLInputElement>(null)
   return (
@@ -211,15 +207,6 @@ export default function ProfileSection({
           {saving ? "Updating…" : "Update Profile"}
         </PrimaryBtn>
       </div>
-      {sellerEnabled && (
-        <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid #E5E7EB" }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: "#111827", marginBottom: 4 }}>Optional BIR trust badge</div>
-          <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 12px", lineHeight: 1.5 }}>
-            You can sell without this badge. Verification adds a public trust reference to your shop profile.
-          </p>
-          <BirVerifier birState={user.birState ?? "None"} setBirState={onBirState} />
-        </div>
-      )}
     </div>
   )
 }

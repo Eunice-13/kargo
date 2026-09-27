@@ -68,18 +68,6 @@ export const NOTIF_GROUPS: NotifGroup[] = [
       },
     ],
   },
-  {
-    title: "Ratings & Reviews",
-    roles: "Buyer",
-    items: [
-      {
-        label: "Ratings & Reviews",
-        sub: "Someone left you a review, and reminders to rate a completed order",
-        key: "reviews",
-      },
-    ],
-  },
-
   // ── Seller-facing ─────────────────────────────────────────────────────────
   {
     title: "Buyer Activity",
@@ -87,7 +75,7 @@ export const NOTIF_GROUPS: NotifGroup[] = [
     items: [
       {
         label: "Buyer Activity",
-        sub: "New claims, buyer requests/messages, and waitlist joins",
+        sub: "New claims, buyer messages, and waitlist joins",
         key: "buyerActivity",
       },
     ],
@@ -114,18 +102,6 @@ export const NOTIF_GROUPS: NotifGroup[] = [
       },
     ],
   },
-  {
-    title: "Account & Verification",
-    roles: "Seller",
-    items: [
-      {
-        label: "Account & Verification",
-        sub: "BIR badge status updates (Verified / Flagged)",
-        key: "verification",
-      },
-    ],
-  },
-
   // ── Shared (both roles) ─────────────────────────────────────────────────────
   {
     title: "Account & Security",
@@ -147,10 +123,8 @@ export const NOTIF_DEFAULT_STATE: Record<string, boolean> = {
   payments: true,
   waitlist: true,
   watchedBatches: true,
-  reviews: true,
   buyerActivity: true,
   paymentsToVerify: true,
   batchManagement: true,
-  verification: true,
   accountSecurity: true,
 }

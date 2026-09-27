@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { Lock, ArrowLeft, Plane, Check, Link2, Star } from "lucide-react"
+import { Lock, ArrowLeft, Plane, Check, Link2 } from "lucide-react"
 import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo, WaitlistEntry } from "@/types"
 import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
-import { Card, PrimaryBtn, SecondaryBtn, SH, Avatar, ProductThumb, BIRBadge, Toggle, ContactModal, ShareButton } from "@/components/shared"
+import { Card, PrimaryBtn, SecondaryBtn, SH, Avatar, ProductThumb, Toggle, ContactModal, ShareButton } from "@/components/shared"
 import ItemClaimModal from "./ItemClaimModal"
 import JoinWaitlistModal from "./JoinWaitlistModal"
 import { toggleBatchLock } from "./toggleBatchLock"
@@ -565,21 +565,9 @@ export default function BatchPage({
                   }}
                 >
                   {batch.seller}
-                  {batch.sellerBirVerified !== false && <BIRBadge verified />}
                 </div>
                 <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  {/* Carried from `public.profile_ratings`, so this always matches
-                      the seller's shop page and profile. Unreviewed sellers show
-                      "New seller" rather than a made-up score. */}
-                  {batch.rating === null ? (
-                    "New seller"
-                  ) : (
-                    <>
-                      <Star size={11} aria-hidden="true" fill="#9CA3AF" />{" "}
-                      {batch.rating.toFixed(1)}
-                    </>
-                  )}
-                  <span>· Tap to view shop</span>
+                  <span>Tap to view shop</span>
                 </div>
               </div>
             </div>
@@ -663,7 +651,6 @@ export default function BatchPage({
               ["Items", String(batch.items)],
               ["Claimed", String(batch.claimed)],
               ["Remaining", String(batch.items - batch.claimed)],
-              ["Rating", batch.rating === null ? "No ratings yet" : batch.rating.toFixed(1)],
             ].map(([k, v]) => (
               <div
                 key={k}

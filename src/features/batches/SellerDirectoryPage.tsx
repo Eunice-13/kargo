@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { ArrowLeft } from "lucide-react"
-import type { BatchType, Role, UserInfo, UserRating } from "@/types"
+import type { BatchType, Role, UserInfo } from "@/types"
 import { INDIGO } from "@/constants/theme"
-import { Card, PrimaryBtn, SH, Avatar, BIRBadge, RatingDisplay, ratingFor } from "@/components/shared"
+import { Card, PrimaryBtn, SH, Avatar } from "@/components/shared"
 import SellerShopPage from "./SellerShopPage"
 
 export default function SellerDirectoryPage({
@@ -12,7 +12,6 @@ export default function SellerDirectoryPage({
   onClaimItem,
   role,
   user,
-  ratings,
 }: {
   batches: BatchType[]
   onBack: () => void
@@ -20,17 +19,12 @@ export default function SellerDirectoryPage({
   onClaimItem: (batchId: number, productName: string) => void
   role: Role
   user: UserInfo
-  // Shared computed ratings, so a directory row shows the same score as the
-  // seller's own shop page and profile.
-  ratings: Record<string, UserRating>
 }) {
   const [query, setQuery] = useState("")
-  const [chip, setChip] = useState<"All" | "4.5+" | "Has Active Batch">("All")
+  const [chip, setChip] = useState<"All" | "Has Active Batch">("All")
   const [shopPage, setShopPage] = useState<string | null>(null)
 
-  // Group batches by seller, then read each seller's rating from the shared
-  // aggregate. Previously this averaged per-batch scores, which invented a
-  // number no review supported.
+  // Group batches by seller.
   const sellerBatches = new Map<string, BatchType[]>()
   batches.forEach((b) => {
     if (!sellerBatches.has(b.seller)) sellerBatches.set(b.seller, [])
@@ -41,16 +35,12 @@ export default function SellerDirectoryPage({
       name,
       {
         batches: list,
-        rating: ratingFor(ratings, list.find((b) => b.sellerId)?.sellerId),
       },
     ]),
   )
 
   const sellers = Object.entries(sellerMap).filter(([name, data]) => {
     if (query && !name.toLowerCase().includes(query.toLowerCase())) return false
-    // "4.5+" only matches sellers who actually have reviews. An unreviewed
-    // seller has no average, so it cannot satisfy a minimum-rating filter.
-    if (chip === "4.5+" && (data.rating.average ?? 0) < 4.5) return false
     if (chip === "Has Active Batch" && !data.batches.some((b) => b.live))
       return false
     return true
@@ -96,7 +86,6 @@ export default function SellerDirectoryPage({
             onClaimItem={onClaimItem}
             role={role}
             profileData={shopPage === user.name ? user : undefined}
-            ratings={ratings}
           />
         </div>
       </div>
@@ -168,7 +157,7 @@ export default function SellerDirectoryPage({
             }}
             className="placeholder:text-gray-400"
           />
-          {(["All", "4.5+", "Has Active Batch"] as const).map((c) => (
+          {(["All", "Has Active Batch"] as const).map((c) => (
             <button
               key={c}
               onClick={() => setChip(c)}
@@ -240,11 +229,9 @@ export default function SellerDirectoryPage({
                       >
                         {name}
                       </span>
-                      {(name !== user.name || user.birState === "Verified") && <BIRBadge size={12} />}
                     </div>
                     <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                      <RatingDisplay summary={data.rating} subject="seller" />
-                      <span>· {data.batches.length} batch{data.batches.length !== 1 ? "es" : ""}</span>
+                      <span>{data.batches.length} batch{data.batches.length !== 1 ? "es" : ""}</span>
                     </div>
                   </div>
                 </div>

@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
-import { QRCodeSVG } from "qrcode.react"
 import type { ToPayRow } from "@/types"
 import { Modal, PrimaryBtn, ProductThumb, SecondaryBtn } from "@/components/shared"
 import PaymentSubmitModal from "./PaymentSubmitModal"
 import type { PaymentSubmissionDetails } from "./PaymentSubmitModal"
-import { getSellerPaymentDetails } from "./sellerPaymentDetails"
-import type { BuyerPaymentMethod } from "./buyerPaymentMethods"
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
 export default function BatchCheckoutModal({
@@ -13,7 +10,6 @@ export default function BatchCheckoutModal({
     contactPrefill,
     onSubmit,
     onClose,
-    savedMethods = [],
 }: {
     items: ToPayRow[]
     contactPrefill?: string
@@ -25,7 +21,6 @@ export default function BatchCheckoutModal({
         details: PaymentSubmissionDetails,
     ) => Promise<boolean | undefined>
     onClose: () => void
-    savedMethods?: BuyerPaymentMethod[]
 }) {
     const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
     const payableItems = items.filter((item) => !deadlineHasPassed(item))
@@ -51,7 +46,6 @@ export default function BatchCheckoutModal({
                         Payments are separated by seller so each proof is sent against the correct account.
                     </div>
                     {groups.map(([seller, sellerItems]) => {
-                        const details = getSellerPaymentDetails(seller)
                         const subtotal = sellerItems.reduce((sum, item) => sum + item.amount, 0)
                         return (
                             <section key={seller} style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: 16 }}>
@@ -81,22 +75,6 @@ export default function BatchCheckoutModal({
                                         </div>
                                     ))}
                                 </div>
-                                <div className="flex items-center gap-3 mt-3" style={{ background: "#EEF0FF", borderRadius: 7, padding: 10 }}>
-                                    <QRCodeSVG
-                                        value={`${details.name}|${details.methods.GCash.number}|${details.qrCode}`}
-                                        size={68}
-                                        level="M"
-                                        bgColor="#FFFFFF"
-                                        fgColor="#111827"
-                                        aria-label={`Payment QR code for ${seller}`}
-                                    />
-                                    <div style={{ fontSize: 11, color: "#374151" }}>
-                                        <div style={{ fontWeight: 700, marginBottom: 4 }}>Payment details</div>
-                                        <div>GCash: {details.methods.GCash.number}</div>
-                                        <div>Maya: {details.methods.Maya.number}</div>
-                                        <div>Bank: {details.methods["Bank Transfer"].number}</div>
-                                    </div>
-                                </div>
                             </section>
                         )
                     })}
@@ -109,7 +87,6 @@ export default function BatchCheckoutModal({
                 <PaymentSubmitModal
                     item={payTarget}
                     contactPrefill={contactPrefill}
-                    savedMethods={savedMethods}
                     onConfirm={async (method, refNo, receipt, paymentDetails) => {
                         const submitted = await onSubmit(payTarget, method, refNo, receipt, paymentDetails)
                         if (submitted) setPayTarget(null)

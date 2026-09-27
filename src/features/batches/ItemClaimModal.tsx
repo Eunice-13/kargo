@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { Clock3, Star, ClipboardList } from "lucide-react"
+import { Clock3, ClipboardList } from "lucide-react"
 import type { BatchType } from "@/types"
 import { INDIGO, CREAM } from "@/constants/theme"
-import { Modal, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb, BIRBadge } from "@/components/shared"
+import { Modal, PrimaryBtn, SecondaryBtn, Avatar, ProductThumb } from "@/components/shared"
 
 export default function ItemClaimModal({
   batch,
@@ -90,27 +90,7 @@ export default function ItemClaimModal({
             <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
               {batch.seller}
             </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: "#9CA3AF",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              {/* The seller's computed rating. A seller with no completed
-                  transactions yet reads as "New seller", not a 0 or a 5. */}
-              {batch.rating === null ? (
-                "New seller"
-              ) : (
-                <>
-                  <Star size={12} aria-hidden="true" fill="#FFC24B" color="#FFC24B" />{" "}
-                  {batch.rating.toFixed(1)}
-                </>
-              )}
-              {batch.sellerBirVerified !== false && <> · Verified Seller <BIRBadge /></>}
-            </div>
+            <div style={{ fontSize: 11, color: "#9CA3AF" }}>Seller</div>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
             {["FB", "IG", "TT"].map((s) => (

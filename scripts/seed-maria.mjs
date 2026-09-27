@@ -6,7 +6,7 @@
 //     claim deadline (reservation set in the past)
 //   - orders across EVERY fulfillment column: Claimed, Pending Payment,
 //     Payment Confirmed, Preparing, Completed, Cancelled
-//   - payments in pending / verified / rejected states
+//   - payments in submitted (awaiting review) state
 //   - historical completed orders (older confirmed dates) so the financial
 //     summary + sales report show non-zero realistic totals
 //   - seller notifications are generated automatically by the RPCs
@@ -91,7 +91,7 @@ const BATCHES = [
 ]
 
 // Maria orders across every fulfillment column + payment states.
-// advance: pending | pendingPayment | submitted | rejected | confirmed | preparing | completed
+// advance: pending | submitted | preparing | completed
 // Uses Maria's batch products (from BATCHES above) and existing buyers.
 const ORDERS = [
   // Claimed column (payment_pending, fresh)
@@ -99,11 +99,6 @@ const ORDERS = [
   { buyer: "carlo", batchKey: "japan-may", product: "Calbee Jagabee", qty: 3, advance: "pending" },
   // Pending Payment with a submitted-but-unreviewed proof (still payment_submitted → Pending Payment)
   { buyer: "mia", batchKey: "japan-may", product: "Cezanne BB Cream", qty: 1, advance: "submitted", method: "GCash" },
-  // A rejected payment (buyer resubmits later) → order back to payment_pending
-  { buyer: "ben", batchKey: "japan-may", product: "Shiro Perfume", qty: 1, advance: "rejected", method: "Maya" },
-  // Payment Confirmed
-  { buyer: "grace", batchKey: "korea-feb", product: "Round Lab Toner", qty: 2, advance: "confirmed", method: "GCash" },
-  { buyer: "anna", batchKey: "korea-feb", product: "Torriden Serum", qty: 1, advance: "confirmed", method: "Bank Transfer" },
   // Preparing
   { buyer: "trisha", batchKey: "korea-feb", product: "Medicube Zero Pad", qty: 1, advance: "preparing", method: "GCash" },
   // Completed (historical — backdated for financials)
@@ -132,7 +127,6 @@ async function reset() {
       const oids = (ords ?? []).map((o) => o.id)
       if (oids.length) {
         await admin.from("payments").delete().in("order_id", oids)
-        await admin.from("reviews").delete().in("order_id", oids)
         await admin.from("orders").delete().in("id", oids)
       }
       await admin.from("waitlist_entries").delete().in("batch_product_id", pids)
@@ -177,7 +171,7 @@ async function seedOrders() {
     const { data: order, error: claimErr } = await buyer.rpc("claim_batch_product", { p_batch_product_id: productId, p_quantity: o.qty })
     if (claimErr) throw new Error(`claim ${o.buyer}/${o.product}: ${claimErr.message}`)
     const orderId = order.id
-    category: "Beauty"(order.total_amount)
+    const total = Number(order.total_amount)
 
     if (o.advance === "pending") { console.log(`  + ${o.product} → Claimed (payment_pending)`); continue }
     if (o.advance === "cancelled") {
@@ -195,17 +189,15 @@ async function seedOrders() {
     })
     if (payErr) throw new Error(`pay ${o.product}: ${payErr.message}`)
     if (o.advance === "submitted") { console.log(`  + ${o.product} → Pending Payment (submitted, awaiting review)`); continue }
-category: "Food"
+
     const maria = await signIn("maria")
-    if (o.advance === "rejected") {
-      const { error } = await maria.rpc("review_order_payment", { p_payment_id: payment.id, p_decision: "rejected", p_reason: "Amount/reference did not match. Please resend a clear receipt." })
-      if (error) throw new Error(`reject ${o.product}: ${error.message}`)
-      console.log(`  + ${o.product} → payment REJECTED`); continue
-    }
-    // verify
-    const { error: revErr } = await maria.rpc("review_order_payment", { p_payment_id: payment.id, p_decision: "verified", p_reason: null })
-    if (revErr) throw new Error(`verify ${o.product}: ${revErr.message}`)
-    if (o.advance === "confirmed") { console.log(`  + ${o.product} → Payment Confirmed`); continue }
+    const { error: reviewError } = await maria.rpc("review_order_payment", {
+      p_payment_id: payment.id,
+      p_decision: "verified",
+      p_reason: null,
+      p_deadline_hours: null,
+    })
+    if (reviewError) throw new Error(`verify ${o.product}: ${reviewError.message}`)
 
     if (o.advance === "preparing" || o.advance === "completed") {
       const { error: e1 } = await maria.rpc("set_fulfillment_status", { p_order_id: orderId, p_status: "preparing", p_tracking_number: "JP-EMS-" + orderId.slice(0, 8), p_eta: null })
