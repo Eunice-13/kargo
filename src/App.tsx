@@ -482,12 +482,12 @@ export default function App() {
             active={tab}
             setActive={setTab}
             role={role}
-            onNewBatch={() => setShowNewBatch(true)}
           />
           <main style={{ minHeight: "calc(100vh - 100px)" }}>
             <TabContent
               tab={tab}
               shared={shared}
+              onNewBatch={() => setShowNewBatch(true)}
             />
           </main>
           <Footer />

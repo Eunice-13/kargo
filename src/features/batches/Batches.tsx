@@ -50,7 +50,8 @@ export default function Batches({
   waitlist,
   setWaitlist,
   ratings,
-}: SharedState) {
+  onNewBatch,
+}: SharedState & { onNewBatch: () => void }) {
   const [batchPage, setBatchPage] = useState<BatchType | null>(() => {
     const id = navIntent.batchId;
     navIntent.batchId = null;
@@ -1158,6 +1159,13 @@ export default function Batches({
             <h1>My Batches</h1>
             <p>Manage your pasabuy batches. Toggle lock to pause new orders.</p>
           </div>
+          <button
+            type="button"
+            className="seller-batches-add"
+            onClick={onNewBatch}
+          >
+            <Plus size={14} aria-hidden="true" /> Add batch
+          </button>
         </header>
         <FilterBar />
         {myBatches.length === 0 ? (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { List, LayoutGrid, AlertTriangle, Link2, ArrowLeft } from "lucide-react"
+import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 import {
@@ -143,7 +143,6 @@ export default function MyClaims({
           onClick={() => setTab("Dashboard")}
           className="seller-orders-back"
         >
-          <ArrowLeft size={14} aria-hidden="true" />
           Back to Dashboard
         </button>
         <header className="seller-orders-heading">
@@ -170,26 +169,22 @@ export default function MyClaims({
               }}
             >
               {f}
-              {f !== "All" && (
-                <span
-                  style={{
-                    marginLeft: 6,
-                    background:
-                      orderFilter === f ? "rgba(255,255,255,0.25)" : "#F3F4F6",
-                    borderRadius: 999,
-                    padding: "0 5px",
-                    fontSize: 10,
-                  }}
-                >
-                  {claims.filter((claim) => orderReceivedStatus(claim, payHistory) === f).length}
-                </span>
-              )}
             </button>
           ))}
         </div>
         <div className="seller-orders-table-wrap">
           <div className="seller-orders-table-scroll">
           <table className="seller-orders-table">
+            <colgroup>
+              <col className="seller-orders-col-buyer" />
+              <col className="seller-orders-col-product" />
+              <col className="seller-orders-col-method" />
+              <col className="seller-orders-col-amount" />
+              <col className="seller-orders-col-paid" />
+              <col className="seller-orders-col-deadline" />
+              <col className="seller-orders-col-status" />
+              <col className="seller-orders-col-actions" />
+            </colgroup>
             <thead>
               <tr>
                 {[

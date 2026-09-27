@@ -11,9 +11,11 @@ import { Settings } from "@/features/settings"
 export default function TabContent({
   tab,
   shared,
+  onNewBatch,
 }: {
   tab: Tab
   shared: SharedState
+  onNewBatch: () => void
 }) {
   const [displayed, setDisplayed] = useState(tab)
   const [animClass, setAnimClass] = useState("fi")
@@ -30,7 +32,7 @@ export default function TabContent({
 
   const map: Record<Tab, React.ReactNode> = {
     Dashboard: <Dashboard {...shared} />,
-    Batches: <Batches {...shared} />,
+    Batches: <Batches {...shared} onNewBatch={onNewBatch} />,
     "My Claims": <MyClaims {...shared} />,
     Payments: <Payments {...shared} />,
     Orders: <Orders {...shared} />,

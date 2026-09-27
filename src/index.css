@@ -4492,12 +4492,6 @@ textarea::placeholder {
   color: #2022b5 !important;
 }
 
-.seller-tabbar .seller-new-batch {
-  position: absolute;
-  right: clamp(16px, 3vw, 44px);
-  border: 0 !important;
-}
-
 .seller-dashboard {
   min-height: 100%;
   padding: clamp(42px, 5vw, 74px) clamp(22px, 4.1vw, 64px) 72px;
@@ -4559,7 +4553,7 @@ textarea::placeholder {
   margin-bottom: 27px;
 }
 
-.seller-orders-table-wrap {
+.seller-dashboard .seller-orders-table-wrap {
   overflow: hidden;
   border-radius: 7px;
   background: #fff;
@@ -4570,18 +4564,18 @@ textarea::placeholder {
   overflow-x: auto;
 }
 
-.seller-orders-table {
+.seller-dashboard .seller-orders-table {
   width: 100%;
   min-width: 950px;
   border-collapse: collapse;
   font-size: 11px;
 }
 
-.seller-orders-table thead {
+.seller-dashboard .seller-orders-table thead {
   background: #5b7fd6;
 }
 
-.seller-orders-table th {
+.seller-dashboard .seller-orders-table th {
   padding: 11px 10px;
   color: #fff;
   font-size: 11px;
@@ -5177,8 +5171,116 @@ textarea::placeholder {
 .seller-batches-page .seller-batch-title {
   font-family: inherit !important;
   color: var(--seller-text) !important;
-  font-size: 16px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
+}
+
+/* Reference alignment for the seller-only Batches and Orders Received views. */
+.seller-orders-page {
+  padding-top: 28px;
+}
+
+.seller-orders-heading {
+  margin: 28px 0 55px;
+}
+
+.seller-orders-heading h1,
+.seller-batches-heading h1 {
+  font-size: 24px;
+}
+
+.seller-orders-heading p,
+.seller-batches-heading p {
+  font-size: 18px;
+}
+
+.seller-orders-filters {
+  gap: 10px;
+  margin-bottom: 55px;
+}
+
+.seller-orders-page .seller-orders-table {
+  table-layout: fixed;
+  font-size: 13px;
+}
+
+.seller-orders-page .seller-orders-table th {
+  padding: 16px 18px;
+  font-size: 18px;
+}
+
+.seller-orders-page .seller-orders-row td {
+  height: auto;
+  padding: 11px 18px;
+}
+
+.seller-orders-page .seller-orders-col-buyer { width: 11%; }
+.seller-orders-page .seller-orders-col-product { width: 15%; }
+.seller-orders-page .seller-orders-col-method { width: 10%; }
+.seller-orders-page .seller-orders-col-amount { width: 9%; }
+.seller-orders-page .seller-orders-col-paid { width: 13%; }
+.seller-orders-page .seller-orders-col-deadline { width: 11%; }
+.seller-orders-page .seller-orders-col-status { width: 12%; }
+.seller-orders-page .seller-orders-col-actions { width: 19%; }
+
+.seller-orders-page .seller-orders-review,
+.seller-orders-page .seller-orders-contact {
+  min-height: 31px;
+  padding: 6px 10px;
+}
+
+.seller-batches-add {
+  min-height: 32px;
+  padding: 7px 20px !important;
+  font-size: 14px !important;
+}
+
+.seller-batch-filter-bar {
+  min-height: 60px;
+  padding: 14px 20px !important;
+  margin-bottom: 72px !important;
+}
+
+.seller-batch-filter-label {
+  font-size: 18px !important;
+}
+
+.seller-batch-select-wrap:first-of-type {
+  width: 220px;
+  flex-basis: 220px;
+}
+
+.seller-batch-select-wrap:nth-of-type(2) {
+  width: 118px;
+  flex-basis: 118px;
+}
+
+.seller-batch-select-wrap:nth-of-type(3) {
+  width: 88px;
+  flex-basis: 88px;
+}
+
+.seller-batches-page .seller-batch-filter-select {
+  height: 32px;
+  background: #fff !important;
+}
+
+.seller-batch-quick-action {
+  min-height: 32px;
+  padding: 7px 12px;
+  font-size: 14px !important;
+}
+
+.seller-batches-grid {
+  gap: 22px !important;
+}
+
+.seller-batch-body {
+  min-height: 140px;
+}
+
+.seller-batches-page .seller-batch-actions > .kargo-primary {
+  font-size: 12px !important;
 }
 
 @media (max-width: 1200px) {
@@ -5400,21 +5502,21 @@ textarea::placeholder {
   text-transform: uppercase;
 }
 
-.seller-orders-table tbody tr {
+.seller-dashboard .seller-orders-table tbody tr {
   border: 0;
   background: #fff;
   cursor: pointer;
 }
 
-.seller-orders-table tbody tr:nth-child(odd) {
+.seller-dashboard .seller-orders-table tbody tr:nth-child(odd) {
   background: #eeeeee;
 }
 
-.seller-orders-table tbody tr:hover {
+.seller-dashboard .seller-orders-table tbody tr:hover {
   background: #e4ebf7;
 }
 
-.seller-orders-table td {
+.seller-dashboard .seller-orders-table td {
   overflow: hidden;
   padding: 12px clamp(8px, 1.3vw, 18px);
   color: #858585;
@@ -6384,21 +6486,6 @@ textarea::placeholder {
 
   .icon-tabbar > div:first-child > button {
     height: 64px !important;
-  }
-
-  .seller-tabbar .seller-new-batch {
-    right: 4px;
-    padding: 0 !important;
-  }
-
-  .seller-tabbar .seller-new-batch button {
-    display: grid !important;
-    width: 34px;
-    height: 34px;
-    padding: 0 !important;
-    place-items: center;
-    overflow: hidden;
-    font-size: 0 !important;
   }
 
   .seller-dashboard {

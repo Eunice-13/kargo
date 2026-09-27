@@ -2,8 +2,6 @@ import type { Role, Tab } from "@/types"
 
 import { INDIGO } from "@/constants/theme"
 
-import { PrimaryBtn } from "@/components/shared"
-
 import {
   ClipboardList,
   History,
@@ -31,16 +29,12 @@ export default function TabBar({
   setActive,
 
   role,
-
-  onNewBatch,
 }: {
   active: Tab
 
   setActive: (t: Tab) => void
 
   role: Role
-
-  onNewBatch: () => void
 }) {
   const visibleTabs =
     role === "Seller"
@@ -125,45 +119,6 @@ export default function TabBar({
           )
         })}
       </div>
-      {/* Right group — only shown for verified sellers (New Batch) */}
-      {role === "Seller" && (
-        <div
-          className="seller-new-batch"
-          style={{
-            display: "flex",
-
-            alignItems: "center",
-
-            gap: 12,
-
-            paddingLeft: 24,
-
-            paddingRight: 20,
-
-            borderLeft: "1px solid #E5E7EB",
-
-            height: "100%",
-
-            flexShrink: 0,
-          }}
-        >
-          <PrimaryBtn
-            size="sm"
-            onClick={onNewBatch}
-            style={{ display: "flex", alignItems: "center", gap: 4 }}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path
-                d="M6 1v10M1 6h10"
-                stroke="#fff"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            New Batch
-          </PrimaryBtn>
-        </div>
-      )}
     </div>
   )
 }
