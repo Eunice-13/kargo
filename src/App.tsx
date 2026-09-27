@@ -326,6 +326,43 @@ export default function App() {
     return () => data.subscription.unsubscribe()
   }, [originalPreview, refreshData])
 
+  // Keep order state and payment decisions synchronized across open buyer and
+  // seller sessions. Payment review updates and the matching order transition
+  // can arrive as separate realtime events, so each event reloads one coherent
+  // app snapshot instead of allowing either screen to show a stale status.
+  useEffect(() => {
+    if (!isSupabaseConfigured || originalPreview || !supabase || !user.id) return
+    const client = supabase
+
+    let refreshQueued = false
+    const refreshSoon = () => {
+      if (refreshQueued) return
+      refreshQueued = true
+      window.setTimeout(() => {
+        refreshQueued = false
+        void refreshData().catch(() => {})
+      }, 0)
+    }
+
+    const channel = client
+      .channel(`app-order-payment-sync-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "payments" },
+        refreshSoon,
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders" },
+        refreshSoon,
+      )
+      .subscribe()
+
+    return () => {
+      void client.removeChannel(channel)
+    }
+  }, [originalPreview, refreshData, user.id])
+
   const shared: SharedState = {
     claims,
 

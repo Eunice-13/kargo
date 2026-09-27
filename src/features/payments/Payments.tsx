@@ -14,15 +14,43 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 
 export default function Payments({
   payHistory,
+  claims,
   role,
   user,
   refreshData,
 }: SharedState) {
   const [txDetail, setTxDetail] = useState<PayHistRow | null>(null)
+  // A payment attempt is history, but the order's latest attempt determines
+  // its current state. Do not show an older verified attempt as paid when a
+  // newer rejection has reopened that same order for payment.
+  const latestPaymentIds = new Set<string>()
+  const seenOrders = new Set<string>()
+  for (const payment of [...payHistory].sort((left, right) => {
+    const leftTime = left.submittedAt ? new Date(left.submittedAt).getTime() : 0
+    const rightTime = right.submittedAt ? new Date(right.submittedAt).getTime() : 0
+    return rightTime - leftTime
+  })) {
+    if (!payment.orderId) {
+      latestPaymentIds.add(String(payment.id))
+      continue
+    }
+    const orderId = String(payment.orderId)
+    if (seenOrders.has(orderId)) continue
+    seenOrders.add(orderId)
+    latestPaymentIds.add(String(payment.id))
+  }
+
   const resolvedPayments = payHistory
     .filter(
       (payment) =>
-        payment.status === "Paid and Reserved",
+        payment.status === "Paid and Reserved" &&
+        latestPaymentIds.has(String(payment.id)) &&
+        (!payment.orderId ||
+          claims.some(
+            (claim) =>
+              String(claim.id) === String(payment.orderId) &&
+              claim.status === "Paid and Reserved",
+          )),
     )
     .sort((left, right) => {
       const leftTime = left.submittedAt
@@ -57,14 +85,14 @@ export default function Payments({
   }, [refreshData, role, user.id])
 
   if (role === "Seller")
-    return <SellerPaymentVerification view="history" />
+    return <SellerPaymentVerification view="history" refreshData={refreshData} />
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <SH title="Payment History" />
         <p style={{ marginTop: -8, marginBottom: 12, color: "#748391", fontSize: 12 }}>
-          Completed and rejected submissions, newest first.
+          Completed payments, newest first.
         </p>
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>

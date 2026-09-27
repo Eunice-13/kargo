@@ -96,6 +96,7 @@ export const STATUS_C: Record<PaymentHistoryStatus, {
   dot: string
 }> = {
   Pending: { bg: "#FEF3C7", text: "#92400E", dot: AMBER },
+  "Pending Payment": { bg: "#FEF3C7", text: "#92400E", dot: AMBER },
 
   "Awaiting Verification": { bg: "#E0E7FF", text: "#3730A3", dot: "#6366F1" },
 

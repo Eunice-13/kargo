@@ -16,6 +16,7 @@ import type {
 import { requireSupabase } from "@/lib/supabase"
 
 import { resolveContactUrl } from "@/components/shared/contactLink"
+import { effectiveOrderPaymentStatus } from "./orderPaymentState"
 
 type DbProfile = {
   id: string
@@ -346,6 +347,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     { data: reactionCounts, error: reactionCountsError },
     { data: ownReactions, error: ownReactionsError },
     { data: expenseTotals, error: expenseTotalsError },
+    { data: buyerPaymentStates, error: buyerPaymentStatesError },
   ] = await Promise.all([
     client.from("batch_catalog").select("*"),
     client
@@ -366,6 +368,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     client
       .from("seller_batch_expense_totals")
       .select("batch_id,total_expenses"),
+    client.rpc("buyer_order_payment_states"),
   ])
   if (catalogError) throw catalogError
   if (ordersError) throw ordersError
@@ -375,6 +378,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   if (reactionCountsError && !reactionSchemaMissing) throw reactionCountsError
   if (ownReactionsError && !reactionSchemaMissing) throw ownReactionsError
   if (expenseTotalsError) throw expenseTotalsError
+  if (buyerPaymentStatesError) throw buyerPaymentStatesError
   if (reactionSchemaMissing) {
     console.warn(
       "Batch reaction tables are not migrated yet; loading catalog without reaction metadata.",
@@ -397,6 +401,28 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     (expenseTotals ?? []).map((row) => [
       row.batch_id,
       Number(row.total_expenses ?? 0),
+    ]),
+  )
+  const buyerPaymentStateByOrderId = new Map<
+    string,
+    {
+      effectiveStatus: string
+      latestPaymentStatus: string | null
+      rejectionDeadline: string | null
+    }
+  >(
+    (buyerPaymentStates ?? []).map((row: {
+      order_id: string
+      effective_status: string
+      latest_payment_status: string | null
+      rejection_deadline: string | null
+    }) => [
+      row.order_id as string,
+      {
+        effectiveStatus: row.effective_status as string,
+        latestPaymentStatus: row.latest_payment_status as string | null,
+        rejectionDeadline: row.rejection_deadline as string | null,
+      },
     ]),
   )
 
@@ -525,13 +551,18 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
     const buyerName = participantNames.get(row.buyer_id) ?? "Buyer"
 
+    const buyerPaymentState = buyerPaymentStateByOrderId.get(row.id)
+    const effectiveStatus = isBuyer && buyerPaymentState
+      ? buyerPaymentState.effectiveStatus
+      : effectiveOrderPaymentStatus(row.status, row.payments)
+
     const expires = new Date(row.reservation_expires_at).getTime()
 
     const hours = Math.max(0, Math.ceil((expires - Date.now()) / 3_600_000))
 
     const deadlineExpired =
       expires <= Date.now() &&
-      ["payment_pending", "insufficient_payment"].includes(row.status)
+      ["payment_pending", "insufficient_payment"].includes(effectiveStatus)
 
     if (isBuyer) {
       claims.push({
@@ -555,7 +586,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         amount: Number(row.total_amount),
 
-        status: deadlineExpired ? "Expired" : statusToClaim(row.status),
+        status: deadlineExpired ? "Expired" : statusToClaim(effectiveStatus),
 
         hours,
 
@@ -579,7 +610,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         amount: Number(row.total_amount),
 
-        step: statusToStep(row.status),
+        step: statusToStep(effectiveStatus),
 
         trackingNo: row.tracking_number,
 
@@ -607,7 +638,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         amount: Number(row.total_amount),
 
-        status: deadlineExpired ? "Expired" : statusToClaim(row.status),
+        status: deadlineExpired ? "Expired" : statusToClaim(effectiveStatus),
 
         hours,
 
@@ -621,7 +652,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         dbId: row.id,
 
-        col: statusToColumn(row.status),
+        col: statusToColumn(effectiveStatus),
 
         buyer: buyerName,
 
@@ -648,7 +679,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     if (
       isBuyer &&
       !deadlineExpired &&
-      ["payment_pending", "insufficient_payment"].includes(row.status)
+      ["payment_pending", "insufficient_payment"].includes(effectiveStatus)
     ) {
       toPay.push({
         id: row.id,
@@ -678,6 +709,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       payHistory.push({
         id: payment.id ?? `${row.id}-${payment.submitted_at}`,
+        orderId: row.id,
         submittedAt: payment.submitted_at,
         product: product.name,
 

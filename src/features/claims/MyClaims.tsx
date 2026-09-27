@@ -1,4 +1,4 @@
-import { useEffect, useState, type SetStateAction } from "react"
+import { useEffect, useRef, useState, type SetStateAction } from "react"
 import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
@@ -23,24 +23,25 @@ import {
   type VerifyItem,
   type PaymentSubmissionDetails,
 } from "@/features/payments"
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { claimIsPayable } from "./claimExpiry"
+import { reconcileRejectedClaim } from "./claimPaymentState"
 import { navIntent } from "@/state/navIntent"
 
-type OrderReceivedStatus = "Pending" | "Verified" | "Expired" | "Rejected" | "Cancelled"
+type OrderReceivedStatus = "Pending" | "Awaiting Verification" | "Verified" | "Expired" | "Cancelled"
 type OrderReceivedFilter = OrderReceivedStatus | "All"
+
+function paymentMatchesClaim(payment: PayHistRow, claim: ClaimRow) {
+  return payment.orderId
+    ? String(payment.orderId) === String(claim.id)
+    : payment.product === claim.product && payment.batch === claim.batch
+}
 
 function orderReceivedStatus(claim: ClaimRow, payHistory: PayHistRow[]): OrderReceivedStatus {
   if (claim.status === "Paid and Reserved") return "Verified"
   if (claim.status === "Insufficient Payment") return "Pending"
-  const rejectedPayment = payHistory.some(
-    (payment) =>
-      payment.product === claim.product &&
-      payment.batch === claim.batch &&
-      payment.status === "Rejected",
-  )
-  if (rejectedPayment) return "Rejected"
+  if (claim.status === "Awaiting Verification") return "Awaiting Verification"
   if (claim.status === "Pending" || claim.status === "Expired" || claim.status === "Cancelled") {
     return claim.status
   }
@@ -65,8 +66,7 @@ function paidAt(claim: ClaimRow, payHistory: PayHistRow[]) {
   return payHistory
     .filter(
       (payment) =>
-        payment.product === claim.product &&
-        payment.batch === claim.batch &&
+        paymentMatchesClaim(payment, claim) &&
         payment.status === "Paid and Reserved" &&
         payment.submittedAt,
     )
@@ -79,8 +79,7 @@ function paidAt(claim: ClaimRow, payHistory: PayHistRow[]) {
 function hasRejectedPayment(claim: ClaimRow, payHistory: PayHistRow[]) {
   return payHistory.some(
     (payment) =>
-      payment.product === claim.product &&
-      payment.batch === claim.batch &&
+      paymentMatchesClaim(payment, claim) &&
       payment.status === "Rejected",
   )
 }
@@ -132,8 +131,22 @@ export default function MyClaims({
   useEffect(() => {
     if (!payTarget) return
     const current = claims.find((claim) => claim.id === payTarget.id)
-    if (!current || !claimIsPayable(current)) setPayTarget(null)
-  }, [claims, payTarget])
+    const effective = current
+      ? reconcileRejectedClaim(current, payHistory)
+      : undefined
+    if (!effective || !claimIsPayable(effective)) setPayTarget(null)
+  }, [claims, payHistory, payTarget])
+  useEffect(() => {
+    setClaims((current) => {
+      let changed = false
+      const next = current.map((claim) => {
+        const reconciled = reconcileRejectedClaim(claim, payHistory)
+        if (reconciled !== claim) changed = true
+        return reconciled
+      })
+      return changed ? next : current
+    })
+  }, [payHistory, setClaims])
   useEffect(() => {
     if (role !== "Seller") return
     kargoApi
@@ -144,36 +157,112 @@ export default function MyClaims({
       )
   }, [role])
 
+  // New buyer submissions — including resubmissions after a rejection —
+  // show up without a manual reload, so reviewing a repeat submission works
+  // exactly like the first one.
+  useEffect(() => {
+    if (!isSupabaseConfigured || role !== "Seller" || !supabase || !user.id) return
+    const channel = supabase
+      .channel(`seller-payment-submissions-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "payments" },
+        () => {
+          kargoApi
+            .loadSellerPaymentSubmissions()
+            .then(setSellerPayments)
+            .catch(() => {})
+        },
+      )
+      .subscribe()
+    return () => {
+      if (channel && supabase) void supabase.removeChannel(channel)
+    }
+  }, [role, user.id, isSupabaseConfigured, supabase])
+
+  // Buyers live-sync when the seller acts on a payment: rejection flips the
+  // order back to "Pending" (payable again) and adds a "Rejected" row to the
+  // payment history. Both must appear without a manual refresh, and a mount
+  // refresh covers rejections that landed while another tab was open.
+  useEffect(() => {
+    if (!isSupabaseConfigured || role !== "Buyer" || !supabase || !user.id) return
+    const refresh = () => void refreshData().catch(() => {})
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") refresh()
+    }
+    refresh()
+    const channel = supabase
+      .channel(`buyer-claims-payments-${user.id}`)
+      .on(
+        "postgres_changes",
+        // RLS already limits buyers to their own order payments. Avoid a WAL
+        // column filter here: depending on replica identity it can miss an
+        // UPDATE that only changes review fields such as status/reason.
+        { event: "UPDATE", schema: "public", table: "payments" },
+        refresh,
+      )
+      .subscribe()
+    window.addEventListener("focus", refresh)
+    document.addEventListener("visibilitychange", refreshWhenVisible)
+    const fallbackTimer = window.setInterval(refreshWhenVisible, 15_000)
+    return () => {
+      window.removeEventListener("focus", refresh)
+      document.removeEventListener("visibilitychange", refreshWhenVisible)
+      window.clearInterval(fallbackTimer)
+      if (channel && supabase) void supabase.removeChannel(channel)
+    }
+  }, [refreshData, role, user.id, isSupabaseConfigured, supabase])
+
+  const sellerPaymentsRef = useRef<VerifyItem[]>(sellerPayments)
+  sellerPaymentsRef.current = sellerPayments
+
   const updateSellerPayments = (action: SetStateAction<VerifyItem[]>) => {
-    setSellerPayments((previous) => {
-      const next = typeof action === "function" ? action(previous) : action
-      if (isSupabaseConfigured) {
-        for (const item of next) {
-          const before = previous.find((candidate) => candidate.id === item.id)
-          if (!before || before.status === item.status) continue
-          if (item.status !== "Verified" && item.status !== "Rejected") continue
-          const deadlineHours = item.rejectionDeadline
-            ? Math.max(
-                0,
-                (new Date(item.rejectionDeadline).getTime() - Date.now()) /
-                  3_600_000,
+    // Diff against the current list OUTSIDE the state updater: the updater
+    // must stay pure (React may invoke it more than once), and the review
+    // RPC must never fire from inside it.
+    const previous = sellerPaymentsRef.current
+    const next = typeof action === "function" ? action(previous) : action
+    if (isSupabaseConfigured) {
+      for (const item of next) {
+        const before = previous.find((candidate) => candidate.id === item.id)
+        if (!before || before.status === item.status) continue
+        if (item.status !== "Verified" && item.status !== "Rejected") continue
+        const deadlineHours = item.rejectionDeadline
+          ? Math.max(
+              0,
+              (new Date(item.rejectionDeadline).getTime() - Date.now()) /
+                3_600_000,
+            )
+          : undefined
+        void kargoApi
+          .reviewPayment(
+            String(item.id),
+            item.status === "Verified" ? "verified" : "rejected",
+            item.rejectReason,
+            deadlineHours,
+          )
+          .then(
+            () => {
+              void refreshData().catch(() => {})
+              kargoApi
+                .loadSellerPaymentSubmissions()
+                .then(setSellerPayments)
+                .catch(() => {})
+            },
+            (error) => {
+              alert(error instanceof Error ? error.message : "Unable to review payment.")
+              // Roll back the optimistic update so the list matches the server.
+              setSellerPayments((current) =>
+                current.map((candidate) =>
+                  candidate.id === item.id ? before : candidate,
+                ),
               )
-            : undefined
-          void kargoApi
-            .reviewPayment(
-              String(item.id),
-              item.status === "Verified" ? "verified" : "rejected",
-              item.rejectReason,
-              deadlineHours,
-            )
-            .then(refreshData)
-            .catch((error) =>
-              alert(error instanceof Error ? error.message : "Unable to review payment."),
-            )
-        }
+            },
+          )
       }
-      return next
-    })
+    }
+    sellerPaymentsRef.current = next
+    setSellerPayments(next)
   }
   const filters: (ClaimStatus | "All")[] = [
     "All",
@@ -185,9 +274,19 @@ export default function MyClaims({
   // Payable claims (fresh "Pending" or "Insufficient Payment") live ONLY in the
   // upper "My Claims To Pay" table. The filtered table below never shows a
   // payable row, so there's exactly one place to pay from.
-  const claimsToPay = claims.filter(claimIsPayable).sort(newestFirst)
+  const reconciledClaims = claims.map((claim) =>
+    reconcileRejectedClaim(claim, payHistory),
+  )
+  const claimsToPay = reconciledClaims.filter(claimIsPayable).sort(newestFirst)
 
-  const nonPayableClaims = claims.filter((c) => !claimIsPayable(c)).sort((left, right) => {
+  const nonPayableClaims = reconciledClaims.filter((c) => !claimIsPayable(c)).sort((left, right) => {
+    // "Awaiting Verification" — proof submitted, awaiting the seller's
+    // decision — stays pinned at the top of the list (newest first among
+    // themselves) so the buyer always sees where their payment stands.
+    const leftAwaiting = left.status === "Awaiting Verification"
+    const rightAwaiting = right.status === "Awaiting Verification"
+    if (leftAwaiting && !rightAwaiting) return -1
+    if (rightAwaiting && !leftAwaiting) return 1
     const leftPaidAt = paidAt(left, payHistory)
     const rightPaidAt = paidAt(right, payHistory)
     const leftTime = leftPaidAt || (left.createdAt ? new Date(left.createdAt).getTime() : Number(left.id) || 0)
@@ -274,7 +373,10 @@ export default function MyClaims({
     const statusForOrder = (claim: ClaimRow): OrderReceivedStatus => {
       const payment = paymentForOrder(claim)
       if (payment?.status === "Verified") return "Verified"
-      if (payment?.status === "Rejected") return "Rejected"
+      if (payment?.status === "Pending") return "Awaiting Verification"
+      // A rejection closes that proof, not the order. The order immediately
+      // returns to the buyer's payable queue and remains pending for the seller.
+      if (payment?.status === "Rejected") return "Pending"
       return orderReceivedStatus(claim, payHistory)
     }
     const orderReceivedSort = (left: ClaimRow, right: ClaimRow) => {
@@ -301,9 +403,9 @@ export default function MyClaims({
     const orderFilters: OrderReceivedFilter[] = [
       "All",
       "Pending",
+      "Awaiting Verification",
       "Verified",
       "Expired",
-      "Rejected",
       "Cancelled",
     ]
     return (
@@ -399,6 +501,7 @@ export default function MyClaims({
                 const submission = paymentForOrder(c)
                 const status = statusForOrder(c)
                 const amountPaid = submission?.amountPaid
+                  && submission.status !== "Rejected"
                   ? Number(submission.amountPaid)
                   : status === "Verified"
                     ? c.amount
@@ -407,9 +510,9 @@ export default function MyClaims({
                 const isCashOnMeetup = submission?.method === "Cash on Meetup"
                 const statusStyles: Record<OrderReceivedStatus, { background: string; color: string; dot: string; borderColor: string }> = {
                   Pending: { background: "#fff5cc", color: "#c98f00", dot: "#f0b400", borderColor: "#f0b400" },
+                  "Awaiting Verification": { background: "#e0e7ff", color: "#3730a3", dot: "#6366f1", borderColor: "#6366f1" },
                   Verified: { background: "#c8f5e4", color: "#0a8f6a", dot: "#2cc9a0", borderColor: "#2cc9a0" },
                   Expired: { background: "#ffe4e8", color: "#d9273f", dot: "#d9273f", borderColor: "#d9273f" },
-                  Rejected: { background: "#ffe4e8", color: "#d9273f", dot: "#d9273f", borderColor: "#d9273f" },
                   Cancelled: { background: "#ccc", color: "#555", dot: "#777", borderColor: "#777" },
                 }
                 const badge = statusStyles[status]
@@ -666,6 +769,7 @@ export default function MyClaims({
     }
     const newHist: PayHistRow = {
       id: payHistory.length + 1,
+      orderId: String(payTarget.id),
       submittedAt: new Date().toISOString(),
       product: payTarget.product,
       batch: payTarget.batch,
@@ -771,22 +875,6 @@ export default function MyClaims({
                       </td>
                       <td style={{ padding: "10px 14px" }}>
                         <div className="flex items-center gap-2">
-                          {hasRejectedPayment(t, payHistory) && (
-                            <span
-                              style={{
-                                padding: "3px 7px",
-                                borderRadius: 999,
-                                background: "#FEF2F2",
-                                border: "1px solid #FECACA",
-                                color: "#B91C1C",
-                                fontSize: 10,
-                                fontWeight: 700,
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              Payment Rejected
-                            </span>
-                          )}
                           <PrimaryBtn
                             size="sm"
                             onClick={() => setPayTarget(t)}
@@ -794,17 +882,35 @@ export default function MyClaims({
                             Pay Now
                           </PrimaryBtn>
                           {t.status === "Pending" && (
-                            <SecondaryBtn
-                              size="sm"
-                              onClick={() => setCancelTarget(t)}
-                              style={{
-                                color: "#DC2626",
-                                borderColor: "#FCA5A5",
-                                background: "#FEF2F2",
-                              }}
-                            >
-                              Cancel
-                            </SecondaryBtn>
+                            <>
+                              {hasRejectedPayment(t, payHistory) && (
+                                <span
+                                  style={{
+                                    padding: "3px 7px",
+                                    borderRadius: 999,
+                                    background: "#FEF2F2",
+                                    border: "1px solid #FECACA",
+                                    color: "#B91C1C",
+                                    fontSize: 10,
+                                    fontWeight: 700,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  Payment Rejected
+                                </span>
+                              )}
+                              <SecondaryBtn
+                                size="sm"
+                                onClick={() => setCancelTarget(t)}
+                                style={{
+                                  color: "#DC2626",
+                                  borderColor: "#FCA5A5",
+                                  background: "#FEF2F2",
+                                }}
+                              >
+                                Cancel
+                              </SecondaryBtn>
+                            </>
                           )}
                         </div>
                       </td>

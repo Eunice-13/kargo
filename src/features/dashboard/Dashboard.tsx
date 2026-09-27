@@ -111,13 +111,6 @@ export default function Dashboard({
   const pendingReceivedOrders = mySellerOrders.filter((claim) => {
     if (claim.status === "Paid and Reserved") return false
     if (claim.status === "Insufficient Payment") return true
-    const rejectedPayment = payHistory.some(
-      (payment) =>
-        payment.product === claim.product &&
-        payment.batch === claim.batch &&
-        payment.status === "Rejected",
-    )
-    if (rejectedPayment) return false
     return claim.status === "Pending"
   })
   // Extension requests awaiting this seller's approval: claims on their orders

@@ -50,7 +50,7 @@ export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" 
 export type Role = "Buyer" | "Seller"
 
 export type ClaimStatus = "Pending" | "Awaiting Verification" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
-export type PaymentHistoryStatus = ClaimStatus | "Rejected"
+export type PaymentHistoryStatus = ClaimStatus | "Rejected" | "Pending Payment"
 export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Security"
 
 export type ClaimRow = {
@@ -119,6 +119,8 @@ export type ToPayRow = {
 
 export type PayHistRow = {
   id: EntityId
+
+  orderId?: string
 
   submittedAt?: string
 

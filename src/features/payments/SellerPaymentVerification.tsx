@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import type React from "react"
 import {
   Card,
@@ -12,7 +12,7 @@ import {
   StatusBadge,
 } from "@/components/shared"
 import { Pencil, Plus, Trash2, Upload } from "lucide-react"
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { VerifyItem } from "./verifyTypes"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
@@ -22,8 +22,10 @@ import type { SellerPaymentMethod } from "@/services"
 
 export default function SellerPaymentVerification({
   view = "history",
+  refreshData,
 }: {
   view?: "pending" | "history"
+  refreshData?: () => Promise<void>
 }) {
   const VERIFY_SEED: VerifyItem[] = [
     {
@@ -76,7 +78,7 @@ export default function SellerPaymentVerification({
     isSupabaseConfigured ? [] : VERIFY_SEED,
   )
   const [historyFilter, setHistoryFilter] =
-    useState<"All" | "Paid and Reserved" | "Rejected">("All")
+    useState<"All" | "Paid and Reserved" | "Pending Payment">("All")
   const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null)
   const [rejectTarget, setRejectTarget] = useState<VerifyItem | null>(null)
   const [rejectReason, setRejectReason] = useState("")
@@ -155,55 +157,101 @@ export default function SellerPaymentVerification({
     }
   }
 
+  // New buyer submissions — including resubmissions after a rejection —
+  // appear without a manual reload, so reviewing a repeat submission works
+  // exactly like the first one.
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return
+    const channel = supabase
+      .channel("seller-payment-review-submissions")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "payments" },
+        () => {
+          kargoApi
+            .loadSellerPaymentSubmissions()
+            .then(setVerifyItems)
+            .catch(() => {})
+        },
+      )
+      .subscribe()
+    return () => {
+      if (channel && supabase) void supabase.removeChannel(channel)
+    }
+  }, [isSupabaseConfigured, supabase])
+
+  const verifyItemsRef = useRef<VerifyItem[]>(verifyItems)
+  verifyItemsRef.current = verifyItems
+
   const updateVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>> =
     (action) => {
-      setVerifyItems((previous) => {
-        const next = typeof action === "function" ? action(previous) : action
-        if (isSupabaseConfigured) {
-          for (const item of next) {
-            const before = previous.find(
-              (candidate) => candidate.id === item.id,
-            )
-            if (!before) continue
-            let decision: "verified" | "rejected" | null = null
-            if (item.status !== before.status && item.status === "Verified")
-              decision = "verified"
-            if (item.status !== before.status && item.status === "Rejected")
-              decision = "rejected"
-            if (
-              item.status === "Pending" &&
-              item.rejectReason?.startsWith("Short") &&
-              item.rejectReason !== before.rejectReason
-            ) {
-              decision = "verified"
-            }
-            if (decision) {
-              const deadlineHours = item.rejectionDeadline
-                ? Math.max(
-                    0,
-                    (new Date(item.rejectionDeadline).getTime() - Date.now()) /
-                      3_600_000,
-                  )
-                : undefined
-              void kargoApi
-                .reviewPayment(
-                  String(item.id),
-                  decision,
-                  item.rejectReason,
-                  deadlineHours,
+      // Diff against the current list OUTSIDE the state updater: the updater
+      // must stay pure (React may invoke it more than once), and the review
+      // RPC must never fire from inside it.
+      const previous = verifyItemsRef.current
+      const next = typeof action === "function" ? action(previous) : action
+      if (isSupabaseConfigured) {
+        for (const item of next) {
+          const before = previous.find(
+            (candidate) => candidate.id === item.id,
+          )
+          if (!before) continue
+          let decision: "verified" | "rejected" | null = null
+          if (item.status !== before.status && item.status === "Verified")
+            decision = "verified"
+          if (item.status !== before.status && item.status === "Rejected")
+            decision = "rejected"
+          if (
+            item.status === "Pending" &&
+            item.rejectReason?.startsWith("Short") &&
+            item.rejectReason !== before.rejectReason
+          ) {
+            decision = "verified"
+          }
+          if (decision) {
+            const deadlineHours = item.rejectionDeadline
+              ? Math.max(
+                  0,
+                  (new Date(item.rejectionDeadline).getTime() - Date.now()) /
+                    3_600_000,
                 )
-                .catch((error) =>
+              : undefined
+            void kargoApi
+              .reviewPayment(
+                String(item.id),
+                decision,
+                item.rejectReason,
+                deadlineHours,
+              )
+              .then(
+                () => {
+                  void refreshData?.().catch(() => {})
+                  // Reload from the server so the list reflects the persisted
+                  // state (a reload failure keeps the confirmed decision).
+                  kargoApi
+                    .loadSellerPaymentSubmissions()
+                    .then(setVerifyItems)
+                    .catch(() => {})
+                },
+                (error) => {
                   alert(
                     error instanceof Error
                       ? error.message
                       : "Unable to review payment.",
-                  ),
-                )
-            }
+                  )
+                  // Roll back the optimistic update so the list matches the server.
+                  setVerifyItems((current) =>
+                    current.map((candidate) =>
+                      candidate.id === item.id ? before : candidate,
+                    ),
+                  )
+                },
+              )
           }
         }
-        return next
-      })
+      }
+      verifyItemsRef.current = next
+      setVerifyItems(next)
     }
 
   const REJECT_REASONS = [
@@ -213,9 +261,10 @@ export default function SellerPaymentVerification({
     "Duplicate submission",
     "Other",
   ]
-  const pendingItems = verifyItems.filter((item) => item.status === "Pending")
-  const historyItems = verifyItems
-    .filter((item) => item.status !== "Pending")
+  // Only the newest submission for an order represents its current payment
+  // state. Older attempts remain in the database audit trail, but must not
+  // produce contradictory Paid and Reserved / Pending Payment rows in the UI.
+  const currentVerifyItems = [...verifyItems]
     .sort((left, right) => {
       const leftTime = left.submittedAt
         ? new Date(left.submittedAt).getTime()
@@ -225,11 +274,22 @@ export default function SellerPaymentVerification({
         : Number(right.id) || 0
       return rightTime - leftTime
     })
+    .filter((item, index, sorted) => {
+      if (!item.orderId) return true
+      return (
+        index ===
+        sorted.findIndex(
+          (candidate) => String(candidate.orderId) === String(item.orderId),
+        )
+      )
+    })
+  const pendingItems = currentVerifyItems.filter((item) => item.status === "Pending")
+  const historyItems = currentVerifyItems.filter((item) => item.status !== "Pending")
   const filteredHistory = historyItems.filter(
     (item) =>
       historyFilter === "All" ||
       (historyFilter === "Paid and Reserved" && item.status === "Verified") ||
-      (historyFilter === "Rejected" && item.status === "Rejected"),
+      (historyFilter === "Pending Payment" && item.status === "Rejected"),
   )
   const renderTable = (items: VerifyItem[], showAmountPaid: boolean) => (
     <Card className="!p-0 overflow-hidden">
@@ -271,7 +331,11 @@ export default function SellerPaymentVerification({
                 item.amountPaid == null ? null : Number(item.amountPaid)
               const isShort = paidAmount != null && paidAmount < item.amount
               const displayStatus =
-                item.status === "Verified" ? "Paid and Reserved" : item.status
+                item.status === "Verified"
+                  ? "Paid and Reserved"
+                  : item.status === "Rejected"
+                    ? "Pending Payment"
+                    : "Awaiting Verification"
               return (
                 <tr
                   key={item.id}
@@ -356,9 +420,7 @@ export default function SellerPaymentVerification({
                   </td>
                   <td style={{ padding: "12px 14px" }}>
                     <StatusBadge
-                      status={
-                        displayStatus === "Pending" ? "Pending" : displayStatus
-                      }
+                      status={displayStatus}
                     />
                     {item.status === "Pending" && isShort && (
                       <div
@@ -582,7 +644,7 @@ export default function SellerPaymentVerification({
           >
             Filter:
           </span>
-          {(["All", "Paid and Reserved", "Rejected"] as const).map((filter) => {
+          {(["All", "Paid and Reserved", "Pending Payment"] as const).map((filter) => {
             const count =
               filter === "All"
                 ? historyItems.length
