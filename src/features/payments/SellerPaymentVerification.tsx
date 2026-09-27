@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react"
 import type React from "react"
-import { CreditCard, Check, Megaphone } from "lucide-react"
-import { INDIGO, CREAM } from "@/constants/theme"
-import { Card, Avatar, ProductThumb, Countdown } from "@/components/shared"
+import {
+  Card,
+  Avatar,
+  ProductThumb,
+  Countdown,
+  PaymentIcon,
+  StatusBadge,
+} from "@/components/shared"
 import type { VerifyItem } from "./verifyTypes"
-import AddressSection from "./AddressSection"
 import SellerPaymentMethods from "./SellerPaymentMethods"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
@@ -60,7 +64,11 @@ export default function SellerPaymentVerification() {
       contact: "https://facebook.com/carla.reyes",
     },
   ]
-  const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(isSupabaseConfigured ? [] : VERIFY_SEED)
+  const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(
+    isSupabaseConfigured ? [] : VERIFY_SEED,
+  )
+  const [historyFilter, setHistoryFilter] =
+    useState<"All" | "Paid and Reserved" | "Rejected">("All")
   const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null)
   const [rejectTarget, setRejectTarget] = useState<VerifyItem | null>(null)
   const [rejectReason, setRejectReason] = useState("")
@@ -73,35 +81,63 @@ export default function SellerPaymentVerification() {
     kargoApi
       .loadSellerPaymentSubmissions()
       .then(setVerifyItems)
-      .catch((error) => alert(error instanceof Error ? error.message : "Unable to load payments."))
+      .catch((error) =>
+        alert(
+          error instanceof Error ? error.message : "Unable to load payments.",
+        ),
+      )
   }, [])
 
-  const updateVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>> = (action) => {
-    setVerifyItems((previous) => {
-      const next = typeof action === "function" ? action(previous) : action
-      if (isSupabaseConfigured) {
-        for (const item of next) {
-          const before = previous.find((candidate) => candidate.id === item.id)
-          if (!before) continue
-          let decision: "verified" | "rejected" | null = null
-          if (item.status !== before.status && item.status === "Verified") decision = "verified"
-          if (item.status !== before.status && item.status === "Rejected") decision = "rejected"
-          if (item.status === "Pending" && item.rejectReason?.startsWith("Short") && item.rejectReason !== before.rejectReason) {
-            decision = "verified"
-          }
-          if (decision) {
-            const deadlineHours = item.rejectionDeadline
-              ? Math.max(0, (new Date(item.rejectionDeadline).getTime() - Date.now()) / 3_600_000)
-              : undefined
-            void kargoApi.reviewPayment(String(item.id), decision, item.rejectReason, deadlineHours).catch((error) =>
-              alert(error instanceof Error ? error.message : "Unable to review payment."),
+  const updateVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>> =
+    (action) => {
+      setVerifyItems((previous) => {
+        const next = typeof action === "function" ? action(previous) : action
+        if (isSupabaseConfigured) {
+          for (const item of next) {
+            const before = previous.find(
+              (candidate) => candidate.id === item.id,
             )
+            if (!before) continue
+            let decision: "verified" | "rejected" | null = null
+            if (item.status !== before.status && item.status === "Verified")
+              decision = "verified"
+            if (item.status !== before.status && item.status === "Rejected")
+              decision = "rejected"
+            if (
+              item.status === "Pending" &&
+              item.rejectReason?.startsWith("Short") &&
+              item.rejectReason !== before.rejectReason
+            ) {
+              decision = "verified"
+            }
+            if (decision) {
+              const deadlineHours = item.rejectionDeadline
+                ? Math.max(
+                    0,
+                    (new Date(item.rejectionDeadline).getTime() - Date.now()) /
+                      3_600_000,
+                  )
+                : undefined
+              void kargoApi
+                .reviewPayment(
+                  String(item.id),
+                  decision,
+                  item.rejectReason,
+                  deadlineHours,
+                )
+                .catch((error) =>
+                  alert(
+                    error instanceof Error
+                      ? error.message
+                      : "Unable to review payment.",
+                  ),
+                )
+            }
           }
         }
-      }
-      return next
-    })
-  }
+        return next
+      })
+    }
 
   const REJECT_REASONS = [
     "Wrong amount transferred",
@@ -110,140 +146,100 @@ export default function SellerPaymentVerification() {
     "Duplicate submission",
     "Other",
   ]
-    return (
-      <div className="p-6">
-        <div style={{ marginBottom: 24 }}>
-          <SellerPaymentMethods />
-        </div>
-        <div style={{ marginBottom: 24 }}>
-          <AddressSection />
-        </div>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2
-              style={{
-                fontFamily: "'Josefin Sans',sans-serif",
-                fontSize: 18,
-                fontWeight: 800,
-                color: "#111827",
-              }}
-            >
-              Payment Verification
-            </h2>
-            <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: 2 }}>
-              Review buyer submissions and confirm or reject each payment.
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {(["Pending", "Verified", "Rejected"] as const).map((s) => (
-              <span
-                key={s}
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  padding: "4px 12px",
-                  borderRadius: 999,
-                  background:
-                    s === "Pending"
-                      ? "#FEF3C7"
-                      : s === "Verified"
-                        ? "#D4F5EA"
-                        : "#FEE2E2",
-                  color:
-                    s === "Pending"
-                      ? "#92400E"
-                      : s === "Verified"
-                        ? "#0B7A59"
-                        : "#991B1B",
-                }}
-              >
-                {verifyItems.filter((v) => v.status === s).length} {s}
-              </span>
-            ))}
-          </div>
-        </div>
-        <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
-          <table className="w-full text-[13px]">
-            <thead style={{ background: CREAM }}>
-              <tr>
-                {[
-                  "Buyer",
-                  "Product",
-                  "Method",
-                  "Amount",
-                  "Amount Paid",
-                  "Submitted",
-                  "Status",
-                  "Actions",
-                ].map((h) => (
-                  <th
-                    key={h}
+  const pendingItems = verifyItems.filter((item) => item.status === "Pending")
+  const historyItems = verifyItems.filter((item) => item.status !== "Pending")
+  const filteredHistory = historyItems.filter(
+    (item) =>
+      historyFilter === "All" ||
+      (historyFilter === "Paid and Reserved" && item.status === "Verified") ||
+      (historyFilter === "Rejected" && item.status === "Rejected"),
+  )
+  const renderTable = (items: VerifyItem[], showAmountPaid: boolean) => (
+    <Card className="!p-0 overflow-hidden">
+      <div style={{ overflowX: "auto" }}>
+        <table className="w-full text-[13px]">
+          <thead style={{ background: "#6892D5" }}>
+            <tr>
+              {[
+                "Product",
+                "Buyers",
+                "Method",
+                "Amount",
+                ...(showAmountPaid ? ["Amount Paid"] : []),
+                "Date",
+                "Status",
+                "Actions",
+              ].map((heading) => (
+                <th
+                  key={heading}
+                  style={{
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: 11,
+                    padding: "10px 14px",
+                    textAlign: "left",
+                    whiteSpace: "nowrap",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {heading}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, index) => {
+              const paidAmount =
+                item.amountPaid == null ? null : Number(item.amountPaid)
+              const isShort = paidAmount != null && paidAmount < item.amount
+              const displayStatus =
+                item.status === "Verified" ? "Paid and Reserved" : item.status
+              return (
+                <tr
+                  key={item.id}
+                  className="transition-colors hover:bg-gray-50"
+                  style={{
+                    borderTop: "1px solid #E5E7EB",
+                    background: index % 2 ? "#FAFAFA" : "#fff",
+                  }}
+                >
+                  <td style={{ padding: "12px 14px" }}>
+                    <div className="flex items-center gap-2">
+                      <ProductThumb name={item.product} />
+                      <span style={{ color: "#374151" }}>{item.product}</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: "12px 14px" }}>
+                    <div className="flex items-center gap-2">
+                      <Avatar name={item.buyer} size={22} />
+                      <span style={{ fontWeight: 500, color: "#111827" }}>
+                        {item.buyer}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: "12px 14px" }}>
+                    <span className="inline-flex items-center gap-1 text-[12px]">
+                      <PaymentIcon method={item.method} size={15} />
+                      {item.method}
+                    </span>
+                  </td>
+                  <td
                     style={{
-                      color: "#9CA3AF",
-                      fontWeight: 600,
-                      fontSize: 11,
-                      padding: "10px 14px",
-                      textAlign: "left",
+                      padding: "12px 14px",
+                      fontWeight: 700,
+                      color: "#111827",
+                      fontFamily: "'Josefin Sans',sans-serif",
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {verifyItems.map((item, i) => {
-                const paidNum =
-                  item.amountPaid != null ? Number(item.amountPaid) : null
-                const isShort = paidNum != null && paidNum < item.amount
-                return (
-                  <tr
-                    key={item.id}
-                    style={{
-                      borderTop: "1px solid #F3F4F6",
-                      background: i % 2 ? "#FAFAFA" : "#fff",
-                    }}
-                  >
-                    <td style={{ padding: "12px 14px" }}>
-                      <div className="flex items-center gap-2">
-                        <Avatar name={item.buyer} size={22} />
-                        <span style={{ fontWeight: 500, color: "#111827" }}>
-                          {item.buyer}
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ padding: "12px 14px" }}>
-                      <div className="flex items-center gap-2">
-                        <ProductThumb name={item.product} />
-                        <span style={{ color: "#374151" }}>{item.product}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: "12px 14px" }}>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                      >
-                        <CreditCard size={13} aria-hidden="true" /> {item.method}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px 14px",
-                        fontWeight: 700,
-                        color: "#111827",
-                        fontFamily: "'Josefin Sans',sans-serif",
-                      }}
-                    >
-                      ₱{item.amount.toLocaleString()}
-                    </td>
-                    <td style={{ padding: "12px 14px" }}>
-                      {paidNum != null ? (
+                    ₱{item.amount.toLocaleString()}
+                  </td>
+                  {showAmountPaid && (
+                    <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                      {paidAmount == null ? (
+                        <span style={{ color: "#9CA3AF" }}>—</span>
+                      ) : (
                         <div>
                           <div
                             style={{
@@ -251,313 +247,270 @@ export default function SellerPaymentVerification() {
                               color: isShort ? "#D97706" : "#111827",
                             }}
                           >
-                            ₱{paidNum.toLocaleString()}
+                            ₱{paidAmount.toLocaleString()}
                           </div>
                           {isShort && (
                             <div
                               style={{
-                                fontSize: 10,
-                                color: "#92400E",
-                                background: "#FFF7ED",
-                                borderRadius: 999,
-                                padding: "1px 7px",
                                 marginTop: 2,
-                                display: "inline-block",
+                                color: "#92400E",
+                                fontSize: 10,
                               }}
                             >
-                              Short ₱{(item.amount - paidNum).toLocaleString()}
+                              Short ₱
+                              {(item.amount - paidAmount).toLocaleString()}
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <span style={{ color: "#9CA3AF" }}>—</span>
                       )}
                     </td>
-                    <td
+                  )}
+                  <td
+                    style={{
+                      padding: "12px 14px",
+                      color: "#748391",
+                      fontSize: 12,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {item.date}
+                  </td>
+                  <td style={{ padding: "12px 14px" }}>
+                    <StatusBadge
+                      status={
+                        displayStatus === "Pending" ? "Pending" : displayStatus
+                      }
+                    />
+                    {item.status === "Pending" && isShort && (
+                      <div
+                        style={{
+                          marginTop: 4,
+                          color: "#92400E",
+                          fontSize: 10,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Awaiting balance
+                      </div>
+                    )}
+                    {item.status === "Rejected" && item.rejectReason && (
+                      <div
+                        style={{
+                          marginTop: 3,
+                          maxWidth: 160,
+                          color: "#9CA3AF",
+                          fontSize: 10,
+                        }}
+                      >
+                        {item.rejectReason}
+                      </div>
+                    )}
+                    {item.status === "Rejected" && item.rejectionDeadline && (
+                      <div
+                        style={{
+                          marginTop: 4,
+                          color: "#6B7280",
+                          fontSize: 10,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Resubmit in{" "}
+                        <Countdown
+                          hours={0}
+                          id={`seller-reject-${item.id}`}
+                          expiresAt={item.rejectionDeadline}
+                        />
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ padding: "12px 14px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setReviewTarget(item)}
                       style={{
-                        padding: "12px 14px",
-                        color: "#9CA3AF",
+                        border: "1px solid #D1D5DB",
+                        borderRadius: 8,
+                        background: "#fff",
+                        color: "#374151",
+                        padding: "6px 12px",
                         fontSize: 12,
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        cursor: "pointer",
                       }}
                     >
-                      {item.date}
-                    </td>
-                    <td style={{ padding: "12px 14px" }}>
-                      {item.status === "Pending" && (
-                        <div>
-                          <span
-                            style={{
-                              background: "#FEF3C7",
-                              color: "#92400E",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              padding: "3px 9px",
-                              borderRadius: 999,
-                            }}
-                          >
-                            Pending
-                          </span>
-                          {isShort && (
-                            <div
-                              style={{
-                                fontSize: 10,
-                                color: "#92400E",
-                                fontWeight: 600,
-                                marginTop: 3,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 3,
-                              }}
-                            >
-                              <span
-                                style={{
-                                  background: "#FCD34D",
-                                  borderRadius: 999,
-                                  width: 5,
-                                  height: 5,
-                                  display: "inline-block",
-                                }}
-                              />
-                              Awaiting balance
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {item.status === "Verified" && (
-                        <span
-                          style={{
-                            background: "#D4F5EA",
-                            color: "#0B7A59",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: "3px 9px",
-                            borderRadius: 999,
-                          }}
-                        >
-                          Verified
-                        </span>
-                      )}
-                      {item.status === "Rejected" && (
-                        <div>
-                          <span
-                            style={{
-                              background: "#FEE2E2",
-                              color: "#991B1B",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              padding: "3px 9px",
-                              borderRadius: 999,
-                            }}
-                          >
-                            Rejected
-                          </span>
-                          {item.rejectReason && (
-                            <div
-                              style={{
-                                fontSize: 10,
-                                color: "#9CA3AF",
-                                marginTop: 3,
-                                maxWidth: 160,
-                              }}
-                            >
-                              {item.rejectReason}
-                            </div>
-                          )}
-                          {item.rejectionDeadline && (
-                            <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4, whiteSpace: "nowrap" }}>
-                              Resubmit in <Countdown hours={0} id={`seller-reject-${item.id}`} expiresAt={item.rejectionDeadline} />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ padding: "12px 14px" }}>
-                      {(() => {
-                        const btnBase: React.CSSProperties = {
-                          fontSize: 12,
-                          fontWeight: 600,
-                          padding: "5px 12px",
-                          borderRadius: 6,
-                          border: "1px solid",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap" as const,
-                        }
-                        return (
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: 6,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <button
-                              onClick={() => setReviewTarget(item)}
-                              style={{
-                                ...btnBase,
-                                background: "#fff",
-                                color: "#374151",
-                                borderColor: "#E5E7EB",
-                              }}
-                            >
-                              Review
-                            </button>
-                            {item.status === "Pending" && isShort ? (
-                              <>
-                                {item.rejectReason?.includes(
-                                  "buyer notified",
-                                ) ? (
-                                  <span
-                                    style={{
-                                      fontSize: 12,
-                                      fontWeight: 600,
-                                      color: "#0B7A59",
-                                      background: "#D4F5EA",
-                                      border: "1px solid #6EE7B7",
-                                      borderRadius: 6,
-                                      padding: "5px 12px",
-                                      whiteSpace: "nowrap" as const,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 5,
-                                    }}
-                                  >
-                                    <Check size={12} aria-hidden="true" /> Notified
-                                  </span>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      setInsuffTarget(item)
-                                      setInsuffAmtPaid(item.amountPaid || "")
-                                    }}
-                                    style={{
-                                      ...btnBase,
-                                      background: "#FEF3C7",
-                                      color: "#92400E",
-                                      borderColor: "#FCD34D",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 5,
-                                    }}
-                                  >
-                                    <Megaphone size={12} aria-hidden="true" /> Notify Buyer
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() =>
-                                    updateVerifyItems((p) =>
-                                      p.map((v) =>
-                                        v.id === item.id
-                                          ? {
-                                              ...v,
-                                              status: "Verified" as const,
-                                            }
-                                          : v,
-                                      ),
-                                    )
-                                  }
-                                  style={{
-                                    ...btnBase,
-                                    background: INDIGO,
-                                    color: "#fff",
-                                    borderColor: INDIGO,
-                                  }}
-                                >
-                                  Mark Paid
-                                </button>
-                              </>
-                            ) : (
-                              item.status === "Pending" && (
-                                <>
-                                  <button
-                                    onClick={() =>
-                                      updateVerifyItems((p) =>
-                                        p.map((v) =>
-                                          v.id === item.id
-                                            ? {
-                                                ...v,
-                                                status: "Verified" as const,
-                                              }
-                                            : v,
-                                        ),
-                                      )
-                                    }
-                                    style={{
-                                      ...btnBase,
-                                      background: INDIGO,
-                                      color: "#fff",
-                                      borderColor: INDIGO,
-                                    }}
-                                  >
-                                    Confirm
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setRejectTarget(item)
-                                      setRejectReason("")
-                                      setRejectCustom("")
-                                    }}
-                                    style={{
-                                      ...btnBase,
-                                      background: "#fff",
-                                      color: "#EF4444",
-                                      borderColor: "#EF4444",
-                                    }}
-                                  >
-                                    Reject
-                                  </button>
-                                </>
-                              )
-                            )}
-                          </div>
-                        )
-                      })()}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-          </div>
-        </Card>
-
-        {/* Review submission modal */}
-        {reviewTarget && (
-          <ReviewSubmissionModal
-            reviewTarget={reviewTarget}
-            setReviewTarget={setReviewTarget}
-            setVerifyItems={updateVerifyItems}
-            setRejectTarget={setRejectTarget}
-            setRejectReason={setRejectReason}
-            setRejectCustom={setRejectCustom}
-          />
-        )}
-
-        {/* Insufficient Payment modal */}
-        {insuffTarget && (
-          <InsufficientPaymentModal
-            insuffTarget={insuffTarget}
-            setInsuffTarget={setInsuffTarget}
-            insuffAmtPaid={insuffAmtPaid}
-            setInsuffAmtPaid={setInsuffAmtPaid}
-            setVerifyItems={updateVerifyItems}
-          />
-        )}
-
-        {/* Reject with reason modal */}
-        {rejectTarget && (
-          <RejectPaymentModal
-            rejectTarget={rejectTarget}
-            setRejectTarget={setRejectTarget}
-            rejectReason={rejectReason}
-            setRejectReason={setRejectReason}
-            rejectCustom={rejectCustom}
-            setRejectCustom={setRejectCustom}
-            setInsuffTarget={setInsuffTarget}
-            setInsuffAmtPaid={setInsuffAmtPaid}
-            setVerifyItems={updateVerifyItems}
-            REJECT_REASONS={REJECT_REASONS}
-          />
-        )}
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+            {items.length === 0 && (
+              <tr>
+                <td
+                  colSpan={showAmountPaid ? 8 : 7}
+                  style={{
+                    padding: "28px 12px",
+                    color: "#748391",
+                    textAlign: "center",
+                    fontSize: 12,
+                  }}
+                >
+                  {showAmountPaid
+                    ? "No payments awaiting review."
+                    : "No payment history for this status."}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
-    )
+    </Card>
+  )
+
+  return (
+    <div className="p-6 space-y-8">
+      <SellerPaymentMethods />
+
+      <section>
+        <div className="mb-4">
+          <h2
+            style={{
+              fontFamily: "'Josefin Sans',sans-serif",
+              fontSize: 18,
+              fontWeight: 800,
+              color: "#111827",
+            }}
+          >
+            Pending Review
+          </h2>
+          <p style={{ marginTop: 2, color: "#9CA3AF", fontSize: 13 }}>
+            Review buyer submissions and update their payment status.
+          </p>
+        </div>
+        {renderTable(pendingItems, true)}
+      </section>
+
+      <section>
+        <h2
+          className="mb-4"
+          style={{
+            fontFamily: "'Josefin Sans',sans-serif",
+            fontSize: 18,
+            fontWeight: 800,
+            color: "#111827",
+          }}
+        >
+          Payment History
+        </h2>
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "center",
+            marginBottom: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <span
+            style={{
+              marginRight: 2,
+              color: "#374151",
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            Filter:
+          </span>
+          {(["All", "Paid and Reserved", "Rejected"] as const).map((filter) => {
+            const count =
+              filter === "All"
+                ? historyItems.length
+                : historyItems.filter((item) =>
+                    filter === "Paid and Reserved"
+                      ? item.status === "Verified"
+                      : item.status === "Rejected",
+                  ).length
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setHistoryFilter(filter)}
+                aria-pressed={historyFilter === filter}
+                style={{
+                  border: `1px solid ${
+                    historyFilter === filter ? "#191BA9" : "#E5E7EB"
+                  }`,
+                  borderRadius: 999,
+                  background: historyFilter === filter ? "#191BA9" : "#fff",
+                  color: historyFilter === filter ? "#fff" : "#374151",
+                  padding: "5px 12px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                {filter} ({count})
+              </button>
+            )
+          })}
+        </div>
+        {renderTable(filteredHistory, false)}
+      </section>
+
+      {/* Review submission modal */}
+      {reviewTarget && (
+        <ReviewSubmissionModal
+          reviewTarget={reviewTarget}
+          setReviewTarget={setReviewTarget}
+          setVerifyItems={updateVerifyItems}
+          setRejectTarget={setRejectTarget}
+          setRejectReason={setRejectReason}
+          setRejectCustom={setRejectCustom}
+          onNotifyBuyer={(item) => {
+            setInsuffTarget(item)
+            setInsuffAmtPaid(item.amountPaid || "")
+            setReviewTarget(null)
+          }}
+          onMarkPaid={(item) => {
+            updateVerifyItems((items) =>
+              items.map((candidate) =>
+                candidate.id === item.id
+                  ? { ...candidate, status: "Verified" as const }
+                  : candidate,
+              ),
+            )
+            setReviewTarget(null)
+          }}
+        />
+      )}
+
+      {/* Insufficient Payment modal */}
+      {insuffTarget && (
+        <InsufficientPaymentModal
+          insuffTarget={insuffTarget}
+          setInsuffTarget={setInsuffTarget}
+          insuffAmtPaid={insuffAmtPaid}
+          setInsuffAmtPaid={setInsuffAmtPaid}
+          setVerifyItems={updateVerifyItems}
+        />
+      )}
+
+      {/* Reject with reason modal */}
+      {rejectTarget && (
+        <RejectPaymentModal
+          rejectTarget={rejectTarget}
+          setRejectTarget={setRejectTarget}
+          rejectReason={rejectReason}
+          setRejectReason={setRejectReason}
+          rejectCustom={rejectCustom}
+          setRejectCustom={setRejectCustom}
+          setInsuffTarget={setInsuffTarget}
+          setInsuffAmtPaid={setInsuffAmtPaid}
+          setVerifyItems={updateVerifyItems}
+          REJECT_REASONS={REJECT_REASONS}
+        />
+      )}
+    </div>
+  )
 }
