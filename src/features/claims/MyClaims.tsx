@@ -798,8 +798,6 @@ export default function MyClaims({
       seller: payTarget.seller,
       amount: payTarget.amount,
       step: 3,
-      trackingNo: null,
-      eta: "Est. Oct 2026",
     }
     if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev])
     setPayTarget(null)
@@ -883,6 +881,17 @@ export default function MyClaims({
                           </PrimaryBtn>
                           {t.status === "Pending" && (
                             <>
+                              <SecondaryBtn
+                                size="sm"
+                                onClick={() => setCancelTarget(t)}
+                                style={{
+                                  color: "#DC2626",
+                                  borderColor: "#FCA5A5",
+                                  background: "#FEF2F2",
+                                }}
+                              >
+                                Cancel
+                              </SecondaryBtn>
                               {hasRejectedPayment(t, payHistory) && (
                                 <span
                                   style={{
@@ -899,17 +908,6 @@ export default function MyClaims({
                                   Payment Rejected
                                 </span>
                               )}
-                              <SecondaryBtn
-                                size="sm"
-                                onClick={() => setCancelTarget(t)}
-                                style={{
-                                  color: "#DC2626",
-                                  borderColor: "#FCA5A5",
-                                  background: "#FEF2F2",
-                                }}
-                              >
-                                Cancel
-                              </SecondaryBtn>
                             </>
                           )}
                         </div>
@@ -1144,8 +1142,6 @@ export default function MyClaims({
                             seller: c.seller,
                             amount: c.amount,
                             step: 3,
-                            trackingNo: null,
-                            eta: "Est. Oct 2026",
                             rated: false,
                           }
                           setViewOrder(o)
@@ -1298,8 +1294,6 @@ export default function MyClaims({
                               seller: c.seller,
                               amount: c.amount,
                               step: 3,
-                              trackingNo: null,
-                              eta: "Est. Oct 2026",
                               rated: false,
                             }
                             setViewOrder(o)

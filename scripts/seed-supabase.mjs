@@ -1707,9 +1707,6 @@ async function seedOrders(ordersToSeed = ORDERS) {
       const { error: e1 } = await seller.rpc("set_fulfillment_status", {
         p_order_id: orderId,
         p_status: "preparing",
-        p_tracking_number:
-          o.advance === "preparing" ? "JP-EMS-1122334455" : null,
-        p_eta: null,
       })
 
       if (e1) throw new Error(`prepare ${o.product}: ${e1.message}`)
@@ -1719,8 +1716,6 @@ async function seedOrders(ordersToSeed = ORDERS) {
       const { error: e2 } = await seller.rpc("set_fulfillment_status", {
         p_order_id: orderId,
         p_status: "completed",
-        p_tracking_number: null,
-        p_eta: null,
       })
 
       if (e2) throw new Error(`complete ${o.product}: ${e2.message}`)

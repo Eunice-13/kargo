@@ -200,11 +200,11 @@ async function seedOrders() {
     if (reviewError) throw new Error(`verify ${o.product}: ${reviewError.message}`)
 
     if (o.advance === "preparing" || o.advance === "completed") {
-      const { error: e1 } = await maria.rpc("set_fulfillment_status", { p_order_id: orderId, p_status: "preparing", p_tracking_number: "JP-EMS-" + orderId.slice(0, 8), p_eta: null })
+      const { error: e1 } = await maria.rpc("set_fulfillment_status", { p_order_id: orderId, p_status: "preparing" })
       if (e1) throw new Error(`prepare ${o.product}: ${e1.message}`)
     }
     if (o.advance === "completed") {
-      const { error: e2 } = await maria.rpc("set_fulfillment_status", { p_order_id: orderId, p_status: "completed", p_tracking_number: null, p_eta: null })
+      const { error: e2 } = await maria.rpc("set_fulfillment_status", { p_order_id: orderId, p_status: "completed" })
       if (e2) throw new Error(`complete ${o.product}: ${e2.message}`)
       // Backdate for historical financials (service-role; no RPC exposes this).
       if (o.historical) {

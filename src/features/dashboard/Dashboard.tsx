@@ -554,21 +554,7 @@ export default function Dashboard({
               ))}
             </section>
 
-            <SellerWaitlistCard
-              groups={sellerWaitlist}
-              responseHours={user.waitlistResponseHours ?? 24}
-              onSaveResponseHours={async (hours) => {
-                if (isSupabaseConfigured) {
-                  try {
-                    await kargoApi.setWaitlistResponseHours(hours)
-                  } catch (error) {
-                    alert(error instanceof Error ? error.message : "Unable to save response window.")
-                    return
-                  }
-                }
-                setUser((current) => ({ ...current, waitlistResponseHours: hours }))
-              }}
-            />
+            <SellerWaitlistCard groups={sellerWaitlist} />
           </aside>
         </div>
 
@@ -889,21 +875,7 @@ export default function Dashboard({
         </Card>
       )}
       {role === "Seller" && (
-        <SellerWaitlistCard
-          groups={sellerWaitlist}
-          responseHours={user.waitlistResponseHours ?? 24}
-          onSaveResponseHours={async (h) => {
-            if (isSupabaseConfigured) {
-              try {
-                await kargoApi.setWaitlistResponseHours(h)
-              } catch (error) {
-                alert(error instanceof Error ? error.message : "Unable to save response window.")
-                return
-              }
-            }
-            setUser((u) => ({ ...u, waitlistResponseHours: h }))
-          }}
-        />
+        <SellerWaitlistCard groups={sellerWaitlist} />
       )}
       {boardExpanded && (
         <div
@@ -1102,7 +1074,7 @@ export default function Dashboard({
             ) : (
               <div className="bdash-cleared">
                 <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
-                All payments cleared!
+                No upcoming deadlines!
               </div>
             )}
           </aside>
@@ -1136,28 +1108,6 @@ export default function Dashboard({
           entries={waitlist}
           activeId={activeWaitlistId}
           onSelect={setActiveWaitlistId}
-          onRespond={async (entry, accept) => {
-            if (isSupabaseConfigured) {
-              try {
-                await kargoApi.respondWaitlistOffer(String(entry.id), accept)
-                // Server cascades (new order on accept, next-buyer offer on
-                // decline) — re-pull the truth rather than guess locally.
-                await refreshData()
-                return
-              } catch (error) {
-                alert(error instanceof Error ? error.message : "Unable to respond to offer.")
-                return
-              }
-            }
-            // Demo mode: reflect the decision locally.
-            setWaitlist((prev) =>
-              prev.map((e) =>
-                e.id === entry.id
-                  ? { ...e, status: accept ? "converted" : "cancelled", offerQuantity: undefined, offerExpiresAt: undefined }
-                  : e,
-              ),
-            )
-          }}
           onClose={() => setShowWaitlist(false)}
           onViewBatch={(batchId) => {
             navIntent.batchId = batchId

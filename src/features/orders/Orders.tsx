@@ -248,12 +248,7 @@ export default function Orders({
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div style={{ fontSize: 12, color: "#6B7280" }}>
-                <span style={{ color: "#9CA3AF" }}>
-                  {order.eta}
-                </span>
-              </div>
+            <div className="flex items-center justify-end">
               <div className="flex items-center gap-2">
                 <SecondaryBtn onClick={() => setContact(order)}>
                   Contact Seller

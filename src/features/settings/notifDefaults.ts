@@ -52,7 +52,7 @@ export const NOTIF_GROUPS: NotifGroup[] = [
     items: [
       {
         label: "Waitlist",
-        sub: "Reached #1, stock offered (partial/full match), and offer expiring soon",
+        sub: "Reached #1 and stock automatically claimed from the waitlist",
         key: "waitlist",
       },
     ],

@@ -4,8 +4,8 @@ import { INDIGO, CREAM } from "@/constants/theme"
 import { Modal, PrimaryBtn, SecondaryBtn, ProductThumb } from "@/components/shared"
 
 // Buyers pick how many units they want before joining a waitlist. The desired
-// quantity is stored on their entry and decides, when stock later frees up,
-// whether it is a full match (auto-claim) or a partial match (accept/decline).
+// quantity is stored on their entry. When stock later frees up, the available
+// amount is automatically added to My Claims.
 export default function JoinWaitlistModal({
   productName,
   batchTitle,
@@ -114,10 +114,10 @@ export default function JoinWaitlistModal({
         >
           <Info size={16} aria-hidden="true" style={{ color: "#2563EB", flexShrink: 0, marginTop: 1 }} />
           <div style={{ fontSize: 11, color: "#1E40AF", lineHeight: 1.6 }}>
-            If a claim is cancelled and enough stock frees up to cover your full
-            request, it is claimed for you automatically. If only part is
-            available, we will ask you to accept or decline before anything is
-            claimed.
+            If stock becomes available, up to your requested quantity will be
+            added to My Claims automatically. If fewer units are released, the
+            available amount will still be claimed for you, and you can cancel
+            it later from My Claims if needed.
           </div>
         </div>
 

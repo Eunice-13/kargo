@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { ArrowUpRight, Check, ChevronDown, ChevronUp, Users } from "lucide-react"
+import { ArrowUpRight, ChevronDown, ChevronUp, Users } from "lucide-react"
 import type { SellerWaitlistGroup } from "@/types"
-import { Avatar, Card, Modal, PrimaryBtn } from "@/components/shared"
+import { Avatar, Card, Modal } from "@/components/shared"
 
 function WaitlistGroups({
   groups,
@@ -69,33 +69,11 @@ function WaitlistGroups({
   )
 }
 
-export default function SellerWaitlistCard({
-  groups,
-  responseHours,
-  onSaveResponseHours,
-}: {
+export default function SellerWaitlistCard({ groups }: {
   groups: SellerWaitlistGroup[]
-  responseHours: number
-  onSaveResponseHours: (hours: number) => Promise<void> | void
 }) {
   const [openId, setOpenId] = useState<string | null>(null)
-  const [hours, setHours] = useState(String(responseHours || 24))
-  const [savingHours, setSavingHours] = useState(false)
-  const [savedHours, setSavedHours] = useState(false)
   const [showAll, setShowAll] = useState(false)
-  const dirty = Number(hours) > 0 && Number(hours) !== responseHours
-
-  const saveHours = async () => {
-    if (!dirty) return
-    setSavingHours(true)
-    try {
-      await onSaveResponseHours(Math.max(1, Math.floor(Number(hours))))
-      setSavedHours(true)
-      setTimeout(() => setSavedHours(false), 2000)
-    } finally {
-      setSavingHours(false)
-    }
-  }
 
   const toggleGroup = (id: string) => setOpenId((current) => (current === id ? null : id))
 
@@ -108,27 +86,6 @@ export default function SellerWaitlistCard({
             View All
           </button>
         )}
-      </div>
-
-      <div className="seller-waitlist-window">
-        <strong>Waitlist response window</strong>
-        <div>
-          <input
-            type="number"
-            min="1"
-            max="168"
-            value={hours}
-            onChange={(event) => setHours(event.target.value)}
-            aria-label="Waitlist response hours"
-          />
-          <span>hours</span>
-          <span className="seller-waitlist-save">
-            {savedHours && <em><Check size={12} aria-hidden="true" /> Saved</em>}
-            <PrimaryBtn size="sm" onClick={saveHours} disabled={!dirty || savingHours}>
-              {savingHours ? "Saving…" : "Save"}
-            </PrimaryBtn>
-          </span>
-        </div>
       </div>
 
       <div className="seller-waitlist-preview">

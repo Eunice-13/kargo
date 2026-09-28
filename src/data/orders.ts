@@ -8,8 +8,6 @@ export const ORDERS_INIT: OrderRow[] = [
     seller: "Paolo Garcia",
     amount: 3600,
     step: 4,
-    trackingNo: "USPS 9400111899223456789012",
-    eta: "May 25, 2026",
   },
   {
     id: "ORD-2026-0031",
@@ -18,8 +16,6 @@ export const ORDERS_INIT: OrderRow[] = [
     seller: "Maria Santos",
     amount: 1160,
     step: 5,
-    trackingNo: null,
-    eta: "Delivered Mar 22",
   },
   {
     id: "ORD-2026-0028",
@@ -28,8 +24,6 @@ export const ORDERS_INIT: OrderRow[] = [
     seller: "Ana Reyes",
     amount: 760,
     step: 5,
-    trackingNo: null,
-    eta: "Delivered Feb 28",
   },
   {
     id: "ORD-2026-0052",
@@ -38,8 +32,6 @@ export const ORDERS_INIT: OrderRow[] = [
     seller: "Jade Bautista",
     amount: 4800,
     step: 3,
-    trackingNo: null,
-    eta: "Est. Aug 30, 2026",
   },
   {
     id: "ORD-2026-0047",
@@ -48,7 +40,5 @@ export const ORDERS_INIT: OrderRow[] = [
     seller: "Rico Santos",
     amount: 1120,
     step: 4,
-    trackingNo: "POST TW 2024112233",
-    eta: "Jul 31, 2026",
   },
 ]

@@ -257,6 +257,9 @@ Apply migrations in timestamp order with the Supabase CLI. Each migration is the
 | `supabase/migrations/202609270004_fix_payment_method_mapping.sql` | Corrects payment method mapping. |
 | `supabase/migrations/202609270005_payment_history_realtime.sql` | Realtime support for payment history changes. |
 | `supabase/migrations/202609270006_rejected_payment_deadline.sql` | Deadline behavior after rejected payment. |
+| `supabase/migrations/202610010001_auto_claim_waitlist_stock.sql` | Replaces waitlist confirmations with automatic claims for released stock. |
+| `supabase/migrations/202610010002_drop_seller_batch_expense_totals.sql` | Removes the unused seller expense aggregate view. |
+| `supabase/migrations/202610010003_remove_unused_contact_fulfillment_fields.sql` | Removes unused profile-phone, tracking, ETA, and payment-method link fields. |
 
 ### Relevant project configuration and documentation
 

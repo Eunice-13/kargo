@@ -35,10 +35,6 @@ export type UserInfo = {
 
   notificationPreferences?: Record<string, boolean>
 
-  // Seller-only: hours a waitlisted buyer has to respond to a partial-match offer.
-
-  waitlistResponseHours?: number
-
   // profiles.created_at. Formatted for display by `memberSince()`; a profile
   // with no value shows no "Member since" text rather than an invented date.
 
@@ -159,10 +155,6 @@ export type OrderRow = {
   amount: number
 
   step: number
-
-  trackingNo: string | null
-
-  eta: string
 }
 
 // ─── Batch data models ────────────────────────────────────────────────────────
@@ -198,9 +190,6 @@ export interface BatchStoredProduct {
 export interface BatchItem {
   id: number
   dbId?: string
-  // Seller-only aggregate loaded from seller_batch_expense_totals. Buyers
-  // never receive another seller's private bookkeeping amount.
-  totalExpenses?: number
   createdAt?: string
   reactionCount?: number
   reactedByCurrentUser?: boolean
@@ -293,7 +282,7 @@ export type FulfillmentOrder = {
 
 // snapshot a stale entry.
 
-export type WaitlistStatus = "waiting" | "offered" | "converted" | "cancelled"
+export type WaitlistStatus = "waiting" | "converted" | "cancelled"
 
 export type WaitlistEntry = {
   id: string
@@ -316,19 +305,12 @@ export type WaitlistEntry = {
 
   amount: number
 
-  // Quantity the buyer asked for when joining (Part 1 of the offer flow).
+  // Quantity the buyer wants automatically claimed when stock becomes available.
 
   desiredQuantity: number
 
   status: WaitlistStatus
 
-  // Populated when status === "offered": the partial amount on offer and the
-
-  // deadline (ISO) by which the buyer must accept/decline.
-
-  offerQuantity?: number
-
-  offerExpiresAt?: string
 }
 
 // Seller-facing view of who is waiting for one of their products, in join
@@ -402,7 +384,7 @@ export type SharedState = {
 
   // Re-pull all app data from the backend (no-op in demo mode). Used after
 
-  // server-side cascades like accepting a waitlist offer.
+  // server-side cascades like automatically converting a waitlist entry.
 
   refreshData: () => Promise<void>
 }

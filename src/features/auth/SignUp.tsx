@@ -28,7 +28,6 @@ export default function SignUp({
   const [photo, setPhoto] = useState("")
 
   const [shopName, setShopName] = useState("")
-  const [phone, setPhone] = useState("")
   const [socials, setSocials] = useState<
     Record<string, { on: boolean; url: string }>
   >({
@@ -78,7 +77,6 @@ export default function SignUp({
         email: email.trim(),
         password,
         shopName,
-        phone,
         socials,
         role,
       })
@@ -210,13 +208,6 @@ export default function SignUp({
                 onChange={setShopName}
                 error={errs.shopName}
                 placeholder="e.g. Maria's Japan Haul Shop"
-              />
-              <AuthInput
-                label="Contact Number"
-                type="tel"
-                value={phone}
-                onChange={setPhone}
-                placeholder="+63 9XX XXX XXXX"
               />
               <div>
                 <label className="auth-terms">

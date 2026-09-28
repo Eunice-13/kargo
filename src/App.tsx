@@ -326,10 +326,9 @@ export default function App() {
     return () => data.subscription.unsubscribe()
   }, [originalPreview, refreshData])
 
-  // Keep order state and payment decisions synchronized across open buyer and
-  // seller sessions. Payment review updates and the matching order transition
-  // can arrive as separate realtime events, so each event reloads one coherent
-  // app snapshot instead of allowing either screen to show a stale status.
+  // Keep orders, waitlists, and payment decisions synchronized across open
+  // buyer and seller sessions. Related database changes can arrive as separate
+  // realtime events, so each event reloads one coherent app snapshot.
   useEffect(() => {
     if (!isSupabaseConfigured || originalPreview || !supabase || !user.id) return
     const client = supabase
@@ -353,7 +352,12 @@ export default function App() {
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders" },
+        { event: "*", schema: "public", table: "orders" },
+        refreshSoon,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "waitlist_entries" },
         refreshSoon,
       )
       .subscribe()

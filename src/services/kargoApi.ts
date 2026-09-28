@@ -35,8 +35,6 @@ type DbProfile = {
 
   notification_preferences: Record<string, boolean> | null
 
-  waitlist_response_hours: number | null
-
   created_at: string
 }
 
@@ -152,7 +150,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     .from("profiles")
 
     .select(
-      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,notification_preferences,waitlist_response_hours,created_at",
+      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,notification_preferences,created_at",
     )
 
     .eq("id", id)
@@ -193,7 +191,6 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
 
     notificationPreferences: profile.notification_preferences ?? {},
 
-    waitlistResponseHours: profile.waitlist_response_hours ?? 24,
   }
 }
 
@@ -218,8 +215,6 @@ export async function signUp(input: {
   password: string
 
   shopName?: string
-
-  phone?: string
 
   socials?: Record<string, { on: boolean; url: string }>
 
@@ -258,8 +253,6 @@ export async function signUp(input: {
       display_name: input.name,
 
       shop_name: input.shopName || null,
-
-      phone: input.phone || null,
 
       social_links: links,
 
@@ -346,7 +339,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     { data: dbOrders, error: ordersError },
     { data: reactionCounts, error: reactionCountsError },
     { data: ownReactions, error: ownReactionsError },
-    { data: expenseTotals, error: expenseTotalsError },
     { data: buyerPaymentStates, error: buyerPaymentStatesError },
   ] = await Promise.all([
     client.from("batch_catalog").select("*"),
@@ -365,9 +357,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       .from("batch_reactions")
       .select("batch_id")
       .eq("user_id", auth.user.id),
-    client
-      .from("seller_batch_expense_totals")
-      .select("batch_id,total_expenses"),
     client.rpc("buyer_order_payment_states"),
   ])
   if (catalogError) throw catalogError
@@ -377,7 +366,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   )
   if (reactionCountsError && !reactionSchemaMissing) throw reactionCountsError
   if (ownReactionsError && !reactionSchemaMissing) throw ownReactionsError
-  if (expenseTotalsError) throw expenseTotalsError
   if (buyerPaymentStatesError) throw buyerPaymentStatesError
   if (reactionSchemaMissing) {
     console.warn(
@@ -396,12 +384,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   )
   const reactedBatchIds = new Set(
     (ownReactions ?? []).map((row) => row.batch_id),
-  )
-  const expenseTotalByBatchId = new Map(
-    (expenseTotals ?? []).map((row) => [
-      row.batch_id,
-      Number(row.total_expenses ?? 0),
-    ]),
   )
   const buyerPaymentStateByOrderId = new Map<
     string,
@@ -464,7 +446,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     const current: BatchType = batchMap.get(row.batch_id) ?? {
       id: numericId(row.batch_id),
       dbId: row.batch_id,
-      totalExpenses: expenseTotalByBatchId.get(row.batch_id),
       createdAt: reactions?.createdAt,
       reactionCount: reactions?.count ?? 0,
       reactedByCurrentUser: reactedBatchIds.has(row.batch_id),
@@ -612,9 +593,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         step: statusToStep(effectiveStatus),
 
-        trackingNo: row.tracking_number,
-
-        eta: row.eta ? new Date(row.eta).toLocaleDateString() : "Pending",
       })
     } else {
       claims.push({
@@ -784,7 +762,7 @@ async function loadSellerWaitlist(
       "batch_product_id, buyer_id, joined_at, desired_quantity, batch_products(name, batch_id, batches(title, seller_id))",
     )
 
-    .in("status", ["waiting", "offered"])
+    .eq("status", "waiting")
 
     .order("joined_at", { ascending: true })
 
@@ -896,12 +874,12 @@ async function loadBuyerWaitlist(
     .from("waitlist_entries")
 
     .select(
-      "id, batch_product_id, joined_at, status, desired_quantity, offer_quantity, offer_expires_at, batch_products(name, selling_price, batch_id)",
+      "id, batch_product_id, joined_at, status, desired_quantity, batch_products(name, selling_price, batch_id)",
     )
 
     .eq("buyer_id", userId)
 
-    .in("status", ["waiting", "offered"])
+    .eq("status", "waiting")
 
   if (error) throw error
 
@@ -912,13 +890,9 @@ async function loadBuyerWaitlist(
 
     joined_at: string
 
-    status: "waiting" | "offered" | "converted" | "cancelled"
+    status: "waiting" | "converted" | "cancelled"
 
     desired_quantity: number
-
-    offer_quantity: number | null
-
-    offer_expires_at: string | null
 
     batch_products: Array<{
       name: string
@@ -997,9 +971,6 @@ async function loadBuyerWaitlist(
 
       status: row.status,
 
-      offerQuantity: row.offer_quantity ?? undefined,
-
-      offerExpiresAt: row.offer_expires_at ?? undefined,
     }
   })
 }
@@ -1243,10 +1214,6 @@ export async function setFulfillmentStatus(orderId: string, status: string) {
     p_order_id: orderId,
 
     p_status: status,
-
-    p_tracking_number: null,
-
-    p_eta: null,
   })
 
   if (error) throw error
@@ -1267,7 +1234,6 @@ export async function updateProfile(values: {
 
   notificationPreferences?: Record<string, boolean>
 
-  waitlistResponseHours?: number
 }) {
   const client = requireSupabase()
 
@@ -1293,9 +1259,6 @@ export async function updateProfile(values: {
 
   if (values.notificationPreferences !== undefined)
     payload.notification_preferences = values.notificationPreferences
-
-  if (values.waitlistResponseHours !== undefined)
-    payload.waitlist_response_hours = values.waitlistResponseHours
 
   const requestedEmail = values.email?.trim()
   const currentEmail = auth.user.email?.trim()
@@ -1348,9 +1311,8 @@ export async function setProductLock(productId: string, locked: boolean) {
   if (error) throw error
 }
 
-// Join (or update) a waitlist entry with the buyer's desired quantity. The
-
-// quantity drives the full-vs-partial match decision when stock later frees up.
+// Join (or update) a waitlist entry with the quantity the buyer wants. When
+// stock frees up, the available amount is automatically added to My Claims.
 
 export async function joinWaitlist(productId: string, quantity: number = 1) {
   const { error } = await requireSupabase().rpc("join_waitlist", {
@@ -1360,35 +1322,6 @@ export async function joinWaitlist(productId: string, quantity: number = 1) {
   })
 
   if (error) throw error
-}
-
-// Buyer accepts or declines a partial-match waitlist offer. Accepting claims the
-
-// offered quantity on their behalf; declining (or timing out) rolls the offer to
-
-// the next buyer in the queue.
-
-export async function respondWaitlistOffer(
-  waitlistId: string,
-  accept: boolean,
-) {
-  const { error } = await requireSupabase().rpc("respond_waitlist_offer", {
-    p_waitlist_id: waitlistId,
-
-    p_accept: accept,
-  })
-
-  if (error) throw error
-}
-
-// Seller updates how many hours a waitlisted buyer has to respond to a
-
-// partial-match offer (Dashboard waitlist section).
-
-export async function setWaitlistResponseHours(hours: number) {
-  return updateProfile({
-    waitlistResponseHours: Math.max(1, Math.floor(hours)),
-  })
 }
 
 export async function uploadProfileAvatar(file: File) {
@@ -2123,10 +2056,6 @@ export const kargoApi = {
   setProductLock,
 
   joinWaitlist,
-
-  respondWaitlistOffer,
-
-  setWaitlistResponseHours,
 
   loadSellerReceiveMethods,
   loadOwnPaymentMethods,
