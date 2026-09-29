@@ -500,10 +500,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
           ? Number(row.limit_per_user)
           : undefined,
 
-      waitlistLimit:
-        row.waitlist_limit != null && Number(row.waitlist_limit) > 0
-          ? Number(row.waitlist_limit)
-          : undefined,
     })
 
     batchMap.set(row.batch_id, current)
@@ -1011,7 +1007,6 @@ export async function createBatch(batch: {
     markup: number
     quantity: number
     limitPerUser?: number
-    waitlistLimit?: number
   }>
 }) {
   const client = requireSupabase()
@@ -1063,11 +1058,6 @@ export async function createBatch(batch: {
       limit_per_user:
         product.limitPerUser && product.limitPerUser > 0
           ? product.limitPerUser
-          : null,
-
-      waitlist_limit:
-        product.waitlistLimit && product.waitlistLimit > 0
-          ? product.waitlistLimit
           : null,
     })),
   )
@@ -1322,19 +1312,6 @@ export async function setProductLock(productId: string, locked: boolean) {
   if (error) throw error
 }
 
-export async function setProductWaitlistLimit(
-  productId: string,
-  limit?: number,
-) {
-  const normalized = limit && limit > 0 ? Math.floor(limit) : null
-  const { error } = await requireSupabase().rpc("set_product_waitlist_limit", {
-    p_product_id: productId,
-    p_limit: normalized,
-  })
-
-  if (error) throw error
-}
-
 // Join (or update) a waitlist entry with the quantity the buyer wants. When
 // stock frees up, the available amount is automatically added to My Claims.
 
@@ -1446,6 +1423,7 @@ export async function loadOwnPaymentMethods(): Promise<SellerPaymentMethod[]> {
   const { data, error } = await requireSupabase()
     .from("seller_payment_methods")
     .select("id,method_type,account_name,account_number,qr_path")
+    .eq("is_active", true)
     .order("method_type")
 
   if (error) throw error
@@ -1552,7 +1530,7 @@ export async function updatePaymentMethod(
 export async function deactivatePaymentMethod(id: string) {
   const { error } = await requireSupabase()
     .from("seller_payment_methods")
-    .delete()
+    .update({ is_active: false })
     .eq("id", id)
 
   if (error) throw error
@@ -2078,8 +2056,6 @@ export const kargoApi = {
   setBatchLock,
 
   setProductLock,
-
-  setProductWaitlistLimit,
 
   joinWaitlist,
 

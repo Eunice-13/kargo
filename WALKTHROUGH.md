@@ -261,6 +261,8 @@ Apply migrations in timestamp order with the Supabase CLI. Each migration is the
 | `supabase/migrations/202610010002_drop_seller_batch_expense_totals.sql` | Removes the unused seller expense aggregate view. |
 | `supabase/migrations/202610010003_remove_unused_contact_fulfillment_fields.sql` | Removes unused profile-phone, tracking, ETA, and payment-method link fields. |
 | `supabase/migrations/202610010004_waitlist_limits_and_cleanup.sql` | Removes the legacy waitlist-offer state, adds seller queue limits, and converts stale waiters when stock is available. |
+| `supabase/migrations/202610010005_restore_payment_method_lifecycle.sql` | Restores active-state and audit timestamps for seller payment methods. |
+| `supabase/migrations/202610010006_remove_waitlist_limit.sql` | Removes the optional queue cap while preserving the unlimited waitlist. |
 
 ### Relevant project configuration and documentation
 
