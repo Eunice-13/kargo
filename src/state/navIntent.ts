@@ -1,10 +1,12 @@
 // Navigation intent — set before navigating to Batches so the tab can deep-link on mount
 export const navIntent: {
+  openBatchCheckout: boolean;
   batchId: number | null;
   sellerName: string | null;
   orderFilter: "Pending" | null;
   openExtensionRequests: boolean;
 } = {
+  openBatchCheckout: false,
   batchId: null,
   sellerName: null,
   orderFilter: null,

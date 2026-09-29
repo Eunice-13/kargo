@@ -45,6 +45,11 @@ export default function BatchCheckoutModal({
                     <div style={{ fontSize: 12, color: "#6B7280" }}>
                         Payments are separated by seller so each proof is sent against the correct account.
                     </div>
+                    {groups.length === 0 && (
+                        <p role="status" style={{ color: "#6B7280", fontSize: 13 }}>
+                            No claims are currently awaiting payment.
+                        </p>
+                    )}
                     {groups.map(([seller, sellerItems]) => {
                         const subtotal = sellerItems.reduce((sum, item) => sum + item.amount, 0)
                         return (
