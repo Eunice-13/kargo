@@ -103,9 +103,11 @@ export default function Dashboard({
   // Scope to the signed-in seller's own batches.
   const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name)
   const mySellerOrders = claims.filter((claim) => claim.seller === user.name)
-  // Payment proofs awaiting the seller's review = orders sitting in the
-  // "Pending Payment" column of the fulfillment board.
-  const paymentsToVerify = fulfillment.filter((o) => o.col === "Pending Payment")
+  // Only submitted proofs await seller verification. `payment_pending` means
+  // the buyer has not paid yet, so it must not inflate this seller metric.
+  const paymentsToVerify = mySellerOrders.filter(
+    (claim) => claim.status === "Awaiting Verification",
+  )
   // Match the seller's Orders Received > Pending filter, which is based on
   // claims and their payment history rather than the recent fulfillment board.
   const pendingReceivedOrders = mySellerOrders.filter((claim) => {

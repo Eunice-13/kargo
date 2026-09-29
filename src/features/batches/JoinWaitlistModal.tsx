@@ -10,19 +10,21 @@ export default function JoinWaitlistModal({
   productName,
   batchTitle,
   price,
+  limitPerUser,
   onConfirm,
   onClose,
 }: {
   productName: string
   batchTitle: string
   price: number
+  limitPerUser?: number
   onConfirm: (quantity: number) => void
   onClose: () => void
 }) {
   const [qty, setQty] = useState(1)
   // Waitlists are for sold-out items, so we don't know how much will free up.
   // Cap the request at a sensible ceiling to keep expectations realistic.
-  const maxQty = 10
+  const maxQty = Math.max(1, Math.min(10, limitPerUser ?? 10))
 
   return (
     <Modal title="Join the waitlist" onClose={onClose} width={440}>

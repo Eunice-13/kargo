@@ -185,6 +185,10 @@ export interface BatchStoredProduct {
   // Undefined/0 means no per-user limit.
 
   limitPerUser?: number
+
+  // Optional maximum number of buyers who may wait for this product.
+
+  waitlistLimit?: number
 }
 
 export interface BatchItem {

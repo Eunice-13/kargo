@@ -260,6 +260,7 @@ Apply migrations in timestamp order with the Supabase CLI. Each migration is the
 | `supabase/migrations/202610010001_auto_claim_waitlist_stock.sql` | Replaces waitlist confirmations with automatic claims for released stock. |
 | `supabase/migrations/202610010002_drop_seller_batch_expense_totals.sql` | Removes the unused seller expense aggregate view. |
 | `supabase/migrations/202610010003_remove_unused_contact_fulfillment_fields.sql` | Removes unused profile-phone, tracking, ETA, and payment-method link fields. |
+| `supabase/migrations/202610010004_waitlist_limits_and_cleanup.sql` | Removes the legacy waitlist-offer state, adds seller queue limits, and converts stale waiters when stock is available. |
 
 ### Relevant project configuration and documentation
 

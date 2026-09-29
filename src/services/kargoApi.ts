@@ -499,6 +499,11 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         row.limit_per_user != null && Number(row.limit_per_user) > 0
           ? Number(row.limit_per_user)
           : undefined,
+
+      waitlistLimit:
+        row.waitlist_limit != null && Number(row.waitlist_limit) > 0
+          ? Number(row.waitlist_limit)
+          : undefined,
     })
 
     batchMap.set(row.batch_id, current)
@@ -1006,6 +1011,7 @@ export async function createBatch(batch: {
     markup: number
     quantity: number
     limitPerUser?: number
+    waitlistLimit?: number
   }>
 }) {
   const client = requireSupabase()
@@ -1057,6 +1063,11 @@ export async function createBatch(batch: {
       limit_per_user:
         product.limitPerUser && product.limitPerUser > 0
           ? product.limitPerUser
+          : null,
+
+      waitlist_limit:
+        product.waitlistLimit && product.waitlistLimit > 0
+          ? product.waitlistLimit
           : null,
     })),
   )
@@ -1307,6 +1318,19 @@ export async function setProductLock(productId: string, locked: boolean) {
     .update({ is_locked: locked })
 
     .eq("id", productId)
+
+  if (error) throw error
+}
+
+export async function setProductWaitlistLimit(
+  productId: string,
+  limit?: number,
+) {
+  const normalized = limit && limit > 0 ? Math.floor(limit) : null
+  const { error } = await requireSupabase().rpc("set_product_waitlist_limit", {
+    p_product_id: productId,
+    p_limit: normalized,
+  })
 
   if (error) throw error
 }
@@ -2054,6 +2078,8 @@ export const kargoApi = {
   setBatchLock,
 
   setProductLock,
+
+  setProductWaitlistLimit,
 
   joinWaitlist,
 
