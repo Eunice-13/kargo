@@ -509,7 +509,7 @@ export default function PaymentSubmitModal({
                 : false)
             }
           >
-            {submitting ? "Submittingâ€¦" : isCash ? "Confirm Order" : "Submit Payment"}
+            {submitting ? "Submitting..." : isCash ? "Confirm Order" : "Submit Payment"}
           </PrimaryBtn>
         </div>
       </div>
