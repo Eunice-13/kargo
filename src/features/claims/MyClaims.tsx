@@ -16,6 +16,7 @@ import {
   PaymentSuccessToast,
 } from "@/components/shared"
 import {
+  BatchCheckoutModal,
   PaymentSubmitModal,
   InsufficientPaymentModal,
   RejectPaymentModal,
@@ -100,6 +101,8 @@ export default function MyClaims({
   setTab,
   refreshData,
 }: SharedState) {
+  const [showBatchCheckout, setShowBatchCheckout] = useState(navIntent.openBatchCheckout)
+  useEffect(() => { navIntent.openBatchCheckout = false }, [])
   const [filter, setFilter] = useState<ClaimStatus | "All">("All")
   const [payTarget, setPayTarget] = useState<ClaimRow | null>(null)
   const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null)
@@ -719,13 +722,13 @@ export default function MyClaims({
   }
 
   const handlePay = async (
+    target: ClaimRow,
     method: string,
     refNo: string,
     receipt: File | undefined,
     details: PaymentSubmissionDetails,
   ) => {
-    if (!payTarget) return
-    const currentClaim = claims.find((claim) => claim.id === payTarget.id)
+    const currentClaim = claims.find((claim) => claim.id === target.id)
     if (!currentClaim || !claimIsPayable(currentClaim)) {
       setPayTarget(null)
       alert("This claim has expired and can no longer be paid.")
@@ -734,7 +737,7 @@ export default function MyClaims({
     if (isSupabaseConfigured) {
       try {
         await kargoApi.submitPayment({
-          orderId: String(payTarget.id),
+          orderId: String(target.id),
           method,
           amount: details.amountPaid,
           referenceNumber: refNo,
@@ -765,14 +768,14 @@ export default function MyClaims({
       await refreshData()
       setPayTarget(null)
       setPaymentSuccess(true)
-      return
+      return true
     }
     const newHist: PayHistRow = {
       id: payHistory.length + 1,
-      orderId: String(payTarget.id),
+      orderId: String(target.id),
       submittedAt: new Date().toISOString(),
-      product: payTarget.product,
-      batch: payTarget.batch,
+      product: target.product,
+      batch: target.batch,
       method,
       amount: details.amountPaid,
       date: TODAY,
@@ -785,23 +788,24 @@ export default function MyClaims({
     setPayHistory((h) => [newHist, ...h])
     if (!isSupabaseConfigured) setClaims((prev) =>
       prev.map((c) =>
-        c.id === payTarget.id
+        c.id === target.id
           ? { ...c, status: "Paid and Reserved" as ClaimStatus }
           : c,
       ),
     )
-    if (!isSupabaseConfigured) setToPay((prev) => prev.filter((t) => t.product !== payTarget.product))
+    if (!isSupabaseConfigured) setToPay((prev) => prev.filter((t) => t.product !== target.product))
     const newOrder: OrderRow = {
       id: `ORD-2026-${String(orders.length + 60).padStart(4, "0")}`,
-      product: payTarget.product,
-      batch: payTarget.batch,
-      seller: payTarget.seller,
-      amount: payTarget.amount,
+      product: target.product,
+      batch: target.batch,
+      seller: target.seller,
+      amount: target.amount,
       step: 3,
     }
     if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev])
     setPayTarget(null)
     setPaymentSuccess(true)
+    return true
   }
 
   return (
@@ -940,7 +944,7 @@ export default function MyClaims({
             >
               ₱{claimsToPay.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}
             </span>
-            <PrimaryBtn size="sm">Batch Checkout</PrimaryBtn>
+            <PrimaryBtn size="sm" onClick={() => setShowBatchCheckout(true)}>Batch Checkout</PrimaryBtn>
           </div>
         </>
       )}
@@ -1323,6 +1327,18 @@ export default function MyClaims({
           )}
         </Card>
       )}
+      {showBatchCheckout && (
+        <BatchCheckoutModal
+          items={claimsToPay.map((claim) => ({ ...claim, orderId: String(claim.id) }))}
+          contactPrefill={user.fb || ""}
+          onSubmit={async (item, method, refNo, receipt, details) => {
+            const claim = claimsToPay.find((candidate) => candidate.id === item.id)
+            if (!claim) return false
+            return handlePay(claim, method, refNo, receipt, details)
+          }}
+          onClose={() => setShowBatchCheckout(false)}
+        />
+      )}
       {payTarget && (
         <PaymentSubmitModal
           item={{
@@ -1336,7 +1352,7 @@ export default function MyClaims({
             hours: payTarget.hours,
           }}
           contactPrefill={user.fb || ""}
-          onConfirm={(method, refNo, receipt, details) => handlePay(method, refNo, receipt, details)}
+          onConfirm={(method, refNo, receipt, details) => handlePay(payTarget, method, refNo, receipt, details)}
           onClose={() => setPayTarget(null)}
         />
       )}

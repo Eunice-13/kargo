@@ -15,7 +15,7 @@ import {
   Countdown,
   BuyerProfileModal,
 } from "@/components/shared"
-import BatchCheckoutModal from "@/features/payments/BatchCheckoutModal"
+import { BatchCheckoutModal, completedPayments } from "@/features/payments"
 import type { PaymentSubmissionDetails } from "@/features/payments"
 import {
   useFulfillmentBoard,
@@ -94,10 +94,7 @@ export default function Dashboard({
     .slice(0, RECENT_CLAIMS_PREVIEW)
   const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
-  // Buyer: orders that reached the final "Delivered" step (order.step === 5)
-  // are fulfilled and completed. Per-account, since `orders` is the current
-  // buyer's order list.
-  const completedOrders = orders.filter((o) => o.step === 5)
+  const completedOrders = completedPayments(payHistory, claims)
 
   // ─── Seller stat sources (derived from live data, not hardcoded) ───────────
   // Scope to the signed-in seller's own batches.
@@ -160,7 +157,7 @@ export default function Dashboard({
       label: "Completed Orders",
       value: String(completedOrders.length),
       icon: ReceiptText,
-      sub: "Fulfilled and delivered",
+      sub: "Completed payments",
       sc: "#6B7280",
       bg: "#FFFFFF",
     },
@@ -623,26 +620,29 @@ export default function Dashboard({
     <div className="bdash">
       <div className="bdash-stats">
         {stats.map((s, i) => {
-          const isWaitlist = s.label === "Waitlist Position"
+          const openCard = () => {
+            if (s.label === "Waitlist Position") openWaitlist()
+            else if (s.label === "Completed Orders") setTab("Payments")
+            else {
+              navIntent.openBatchCheckout = s.label === "Pending Payment"
+              setTab("My Claims")
+            }
+          }
           return (
             <div
               key={s.label}
-              className={`bdash-stat bdash-stat--${i + 1} fi${isWaitlist ? " bdash-stat--interactive" : ""}`}
+              className={`bdash-stat bdash-stat--${i + 1} fi bdash-stat--interactive`}
               style={{ background: s.bg, animationDelay: `${i * 60}ms` }}
-              role={isWaitlist ? "button" : undefined}
-              tabIndex={isWaitlist ? 0 : undefined}
-              aria-label={isWaitlist ? "Open full waitlist" : undefined}
-              onClick={isWaitlist ? openWaitlist : undefined}
-              onKeyDown={
-                isWaitlist
-                  ? (e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault()
-                        openWaitlist()
-                      }
-                    }
-                  : undefined
-              }
+              role="button"
+              tabIndex={0}
+              aria-label={`Open ${s.label === "Completed Orders" ? "Payment History" : s.label === "Pending Payment" ? "Batch Checkout" : s.label === "Active Claims" ? "My Claims To Pay" : "full waitlist"}`}
+              onClick={openCard}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault()
+                  openCard()
+                }
+              }}
             >
               <div className="bdash-stat__icon" style={{ color: s.sc }}>
                 <s.icon size={22} aria-hidden="true" />
