@@ -29,12 +29,13 @@ export default function Orders({
 
   if (role === "Seller") {
     return (
-      <div className="p-6">
+      <div className="p-6 orders-page orders-page--seller">
         <SH title="Fulfillment Board" />
         <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: -8, marginBottom: 20 }}>
           Track all orders across fulfillment stages.
         </p>
         <div
+          className="orders-board"
           style={{
             display: "flex",
             gap: 14,
@@ -47,6 +48,7 @@ export default function Orders({
             return (
               <div
                 key={col}
+                className="orders-board-column"
                 style={{
                   minWidth: 200,
                   width: 200,
@@ -197,11 +199,11 @@ export default function Orders({
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-5 orders-page orders-page--buyer">
       {orders.map((order) => {
         return (
-          <Card key={order.id}>
-            <div className="flex items-start justify-between mb-4">
+          <Card key={order.id} className="buyer-order-card">
+            <div className="flex items-start justify-between mb-4 buyer-order-card__head">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span

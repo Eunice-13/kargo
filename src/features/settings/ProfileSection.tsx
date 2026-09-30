@@ -97,7 +97,7 @@ export default function ProfileSection({
         </div>
       </div>
       <div
-        className="grid gap-4"
+        className="grid gap-4 settings-profile-grid"
         style={{ gridTemplateColumns: "1fr 1fr" }}
       >
         {[

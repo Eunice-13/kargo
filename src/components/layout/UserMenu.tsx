@@ -63,7 +63,7 @@ export default function UserMenu({
       </button>
       {showUser && (
         <div
-          className="si"
+          className="si kargo-user-popover"
           style={{
             position: "absolute",
             top: 44,

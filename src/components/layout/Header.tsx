@@ -1,3 +1,4 @@
+import { useState } from "react"
 import type { UserInfo, Role, Tab, BatchType } from "@/types"
 
 import { INDIGO } from "@/constants/theme"
@@ -45,7 +46,10 @@ export default function Header({
 
   onSellerSelect?: (name: string) => void
 }) {
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+
   return (
+    <>
     <header
       style={{
         background: "#fff",
@@ -111,7 +115,19 @@ export default function Header({
         onBatchSelect={onBatchSelect}
         onSellerSelect={onSellerSelect}
       />
-      <div className="flex items-center gap-3 flex-shrink-0">
+      <div className="kargo-header-actions flex items-center gap-3 flex-shrink-0">
+        <button
+          type="button"
+          className="kargo-mobile-search-toggle"
+          aria-label={mobileSearchOpen ? "Close search" : "Open search"}
+          aria-expanded={mobileSearchOpen}
+          onClick={() => setMobileSearchOpen((open) => !open)}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+            <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
         <NotificationsMenu role={role} onNavigate={onNavigate} />
         <UserMenu
           user={user}
@@ -122,5 +138,25 @@ export default function Header({
         />
       </div>
     </header>
+    {mobileSearchOpen && (
+      <div className="kargo-mobile-search-panel">
+        <SearchBox
+          batches={batches}
+          onNavigate={(tab) => {
+            onNavigate?.(tab)
+            setMobileSearchOpen(false)
+          }}
+          onBatchSelect={(id) => {
+            onBatchSelect?.(id)
+            setMobileSearchOpen(false)
+          }}
+          onSellerSelect={(name) => {
+            onSellerSelect?.(name)
+            setMobileSearchOpen(false)
+          }}
+        />
+      </div>
+    )}
+    </>
   )
 }

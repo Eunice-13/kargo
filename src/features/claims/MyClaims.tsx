@@ -125,6 +125,15 @@ export default function MyClaims({
   const [insufficientTarget, setInsufficientTarget] = useState<VerifyItem | null>(null)
   const [insufficientAmount, setInsufficientAmount] = useState("")
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 620px)")
+    const sync = () => setIsMobile(query.matches)
+    sync()
+    query.addEventListener("change", sync)
+    return () => query.removeEventListener("change", sync)
+  }, [])
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   useEffect(() => {
     if (!paymentSuccess) return
@@ -412,7 +421,7 @@ export default function MyClaims({
       "Cancelled",
     ]
     return (
-      <div className="seller-orders-page">
+      <div className="seller-orders-page mobile-data-page">
         {fbToast && (
           <div
             className="fi"
@@ -809,7 +818,7 @@ export default function MyClaims({
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 buyer-claims-page mobile-data-page">
       {claimsToPay.length > 0 && (
         <>
           <h2
@@ -823,7 +832,7 @@ export default function MyClaims({
           >
             My Claims To Pay
           </h2>
-          <Card className="!p-0 overflow-hidden mb-3">
+          <Card className="!p-0 overflow-hidden mb-3 claims-to-pay-table">
             <div style={{ overflowX: "auto" }}>
               <table className="w-full text-[13px]">
                 <thead style={{ background: "#6892D5" }}>
@@ -985,6 +994,7 @@ export default function MyClaims({
           </button>
         ))}
         <div
+          className="claims-view-toggle"
           style={{
             marginLeft: "auto",
             display: "flex",
@@ -1020,7 +1030,7 @@ export default function MyClaims({
         </div>
       </div>
 
-      {viewMode === "card" ? (
+      {isMobile || viewMode === "card" ? (
         <>
           {filtered.length === 0 && (
             <div
@@ -1035,7 +1045,7 @@ export default function MyClaims({
             </div>
           )}
           <div
-            className="grid gap-4"
+            className="grid gap-4 claims-card-grid"
             style={{ gridTemplateColumns: "repeat(2,1fr)" }}
           >
             {filtered.map((c) => (
@@ -1161,7 +1171,7 @@ export default function MyClaims({
           </div>
         </>
       ) : (
-        <Card className="!p-0 overflow-hidden">
+        <Card className="!p-0 overflow-hidden claims-history-table">
           <div style={{ overflowX: "auto" }}>
           <table className="w-full text-[13px]">
             <thead style={{ background: "#6892D5" }}>

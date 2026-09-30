@@ -237,7 +237,7 @@ export default function BatchPage({
   }
 
   return (
-    <div className="p-6 fi">
+    <div className="p-6 fi batch-page">
       {/* Breadcrumb + share */}
       <div
         style={{
@@ -384,6 +384,7 @@ export default function BatchPage({
       )}
 
       <div
+        className="batch-page-layout"
         style={{
           display: "grid",
           gridTemplateColumns: "1fr 300px",

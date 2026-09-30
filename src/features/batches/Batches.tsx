@@ -1063,7 +1063,7 @@ export default function Batches({
         borderRadius: 8,
         padding: role === "Seller" ? "8px 12px" : "12px 16px",
       }}
-      className={`flex items-center gap-3 mb-6 ${role === "Seller" ? "seller-batch-filter-bar" : ""}`}
+      className={`batch-filter-bar flex items-center gap-3 mb-6 ${role === "Seller" ? "seller-batch-filter-bar" : ""}`}
     >
       <span
         className={role === "Seller" ? "seller-batch-filter-label" : undefined}

@@ -115,6 +115,7 @@ export default function TabBar({
             }
           >
             <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
+            <span className="kargo-tab-label">{label}</span>
           </button>
           )
         })}

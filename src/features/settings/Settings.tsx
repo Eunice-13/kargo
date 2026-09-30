@@ -106,10 +106,10 @@ export default function Settings({ user, setUser, role }: SharedState) {
   }
 
   return (
-    <div className="p-6">
-      <div className="grid gap-6" style={{ gridTemplateColumns: "220px 1fr" }}>
-        <div>
-          <Card className="!p-2">
+    <div className="p-6 settings-page">
+      <div className="grid gap-6 settings-layout" style={{ gridTemplateColumns: "220px 1fr" }}>
+        <div className="settings-nav-wrap">
+          <Card className="!p-2 settings-nav">
             <div
               style={{
                 fontSize: 10,

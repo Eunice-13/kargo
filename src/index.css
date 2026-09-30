@@ -611,6 +611,506 @@ button {
   }
 }
 
+/* ===== Site-wide phone and tablet polish (desktop starts at 1025px) ===== */
+.kargo-mobile-search-toggle,
+.kargo-mobile-search-panel {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  html,
+  body,
+  #root,
+  .kargo-original-app,
+  .kargo-original-app main {
+    max-width: 100%;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :is(button, a[href], [role="button"], select, input[type="checkbox"], input[type="radio"]) {
+    min-height: 44px;
+  }
+
+  :is(button, a[href], [role="button"]):active {
+    transform: scale(.98);
+  }
+
+  a[href]:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--kargo-focus) 38%, transparent);
+    outline-offset: 2px;
+  }
+
+  .kargo-header-actions > div > button,
+  .kargo-mobile-search-toggle {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .kargo-notifications-popover {
+    width: min(340px, calc(100vw - 24px)) !important;
+    max-height: min(70dvh, 560px);
+    overflow-y: auto !important;
+  }
+
+  .kargo-user-popover {
+    width: min(240px, calc(100vw - 24px)) !important;
+  }
+
+  .kargo-original-app main .p-6,
+  .seller-directory-page,
+  .batch-page,
+  .orders-page,
+  .settings-page {
+    padding: 20px !important;
+  }
+
+  .seller-section-heading,
+  .bdash-section-head,
+  .seller-batches-heading,
+  .seller-orders-heading {
+    flex-wrap: wrap;
+  }
+
+  .settings-layout {
+    min-width: 0;
+    grid-template-columns: 190px minmax(0, 1fr) !important;
+  }
+
+  .settings-layout > *,
+  .seller-shop-layout > *,
+  .batch-page-layout > * {
+    min-width: 0;
+  }
+
+  .batch-page-layout,
+  .seller-shop-layout {
+    grid-template-columns: minmax(0, 1fr) 260px !important;
+  }
+
+  .seller-directory-page img,
+  .seller-shop-page img,
+  .batch-page img,
+  .kargo-original-app main img {
+    max-width: 100%;
+    object-fit: cover;
+  }
+
+  /* Data tables become labelled cards before they can force tablet overflow. */
+  :is(.mobile-data-page, .seller-dashboard, .bdash) :is(.seller-orders-table-wrap, [style*="overflow-x"], [style*="overflowX"], .bdash-table-wrap) {
+    overflow: visible !important;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) table,
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) thead {
+    display: none;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody tr {
+    display: grid;
+    min-width: 0;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px;
+    background: #fff !important;
+    box-shadow: 0 3px 10px rgba(18, 30, 71, .1);
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 !important;
+    overflow: visible !important;
+    text-align: right;
+    white-space: normal !important;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td::before {
+    min-width: 82px;
+    flex: 0 0 auto;
+    color: #6b7280;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .seller-dashboard .seller-orders-table td:nth-child(1)::before,
+  .bdash-table td:nth-child(1)::before { content: "Product"; }
+  .seller-dashboard .seller-orders-table td:nth-child(2)::before,
+  .bdash-table td:nth-child(2)::before { content: "Batch"; }
+  .seller-dashboard .seller-orders-table td:nth-child(3)::before,
+  .bdash-table td:nth-child(3)::before { content: "Seller"; }
+  .seller-dashboard .seller-orders-table td:nth-child(4)::before,
+  .bdash-table td:nth-child(4)::before { content: "Amount"; }
+  .seller-dashboard .seller-orders-table td:nth-child(5)::before,
+  .bdash-table td:nth-child(5)::before { content: "Status"; }
+  .seller-dashboard .seller-orders-table td:nth-child(6)::before,
+  .bdash-table td:nth-child(6)::before { content: "Deadline"; }
+
+  .seller-orders-page td:nth-child(1)::before { content: "Buyer"; }
+  .seller-orders-page td:nth-child(2)::before { content: "Product"; }
+  .seller-orders-page td:nth-child(3)::before { content: "Method"; }
+  .seller-orders-page td:nth-child(4)::before { content: "Amount"; }
+  .seller-orders-page td:nth-child(5)::before { content: "Amount paid"; }
+  .seller-orders-page td:nth-child(6)::before { content: "Deadline"; }
+  .seller-orders-page td:nth-child(7)::before { content: "Status"; }
+  .seller-orders-page td:nth-child(8)::before { content: "Actions"; }
+
+  .claims-to-pay-table td:nth-child(1)::before { content: "Product"; }
+  .claims-to-pay-table td:nth-child(2)::before { content: "Seller"; }
+  .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
+  .claims-to-pay-table td:nth-child(4)::before { content: "Amount"; }
+  .claims-to-pay-table td:nth-child(5)::before { content: "Actions"; }
+
+  .claims-history-table td:nth-child(1)::before { content: "Product"; }
+  .claims-history-table td:nth-child(2)::before { content: "Batch"; }
+  .claims-history-table td:nth-child(3)::before { content: "Seller"; }
+  .claims-history-table td:nth-child(4)::before { content: "Qty"; }
+  .claims-history-table td:nth-child(5)::before { content: "Amount"; }
+  .claims-history-table td:nth-child(6)::before { content: "Status"; }
+  .claims-history-table td:nth-child(7)::before { content: "Deadline"; }
+  .claims-history-table td:nth-child(8)::before { content: "Actions"; }
+
+  .payment-history-table td:nth-child(1)::before { content: "Product"; }
+  .payment-history-table td:nth-child(2)::before { content: "Batch"; }
+  .payment-history-table td:nth-child(3)::before { content: "Method"; }
+  .payment-history-table td:nth-child(4)::before { content: "Amount"; }
+  .payment-history-table td:nth-child(5)::before { content: "Date"; }
+  .payment-history-table td:nth-child(6)::before { content: "Status"; }
+  .payment-history-table td:nth-child(7)::before { content: "Actions"; }
+
+  .seller-payment-table td:nth-child(1)::before { content: "Product"; }
+  .seller-payment-table td:nth-child(2)::before { content: "Buyer"; }
+  .seller-payment-table td:nth-child(3)::before { content: "Method"; }
+  .seller-payment-table td:nth-child(4)::before { content: "Amount"; }
+  .seller-payment-table td:nth-child(5)::before { content: "Payment"; }
+  .seller-payment-table td:nth-child(6)::before { content: "Date"; }
+  .seller-payment-table td:nth-child(7)::before { content: "Status"; }
+  .seller-payment-table td:nth-child(8)::before { content: "Actions"; }
+}
+
+@media (max-width: 900px) {
+  .settings-layout,
+  .batch-page-layout,
+  .seller-shop-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .settings-nav-wrap {
+    position: sticky;
+    top: 112px;
+    z-index: 20;
+  }
+
+  .settings-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .settings-nav > div:first-child {
+    display: none;
+  }
+
+  .settings-nav button {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .buyer-batch-page {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .orders-board {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible !important;
+  }
+
+  .orders-board-column {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 620px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .kargo-mobile-search-toggle {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: currentColor;
+    cursor: pointer;
+  }
+
+  .seller-shell-header .kargo-mobile-search-toggle {
+    color: #fff;
+  }
+
+  .kargo-mobile-search-panel {
+    position: relative;
+    z-index: 45;
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    box-shadow: 0 5px 14px rgba(18, 30, 71, .12);
+  }
+
+  .kargo-mobile-search-panel .kargo-search-wrap {
+    display: block !important;
+    width: 100%;
+    max-width: none !important;
+  }
+
+  .kargo-mobile-search-panel .kargo-search {
+    min-height: 48px;
+  }
+
+  .kargo-notifications-popover {
+    position: fixed !important;
+    top: calc(56px + env(safe-area-inset-top)) !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+  }
+
+  .kargo-original-app main :is(p, span, small, label, a, button, input, select, textarea, td, th, dt, dd),
+  .si :is(p, span, small, label, a, button, input, select, textarea, dt, dd),
+  .kargo-footer :is(p, span, small, a),
+  .kargo-mobile-search-panel :is(input, button, span) {
+    font-size: 16px !important;
+    line-height: 1.45;
+  }
+
+  .kargo-original-app main [style*="font-size: 8px"],
+  .kargo-original-app main [style*="font-size: 9px"],
+  .kargo-original-app main [style*="font-size: 10px"],
+  .kargo-original-app main [style*="font-size: 11px"],
+  .kargo-original-app main [style*="font-size: 12px"],
+  .kargo-original-app main [style*="font-size: 13px"],
+  .kargo-original-app main [style*="font-size: 14px"],
+  .kargo-original-app main [style*="font-size: 15px"] {
+    font-size: 16px !important;
+  }
+
+  .kargo-original-app main .p-6,
+  .seller-directory-page,
+  .batch-page,
+  .orders-page,
+  .settings-page {
+    padding: 16px !important;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-nav-wrap {
+    top: 112px;
+  }
+
+  .settings-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-nav button {
+    min-width: 0;
+    padding: 10px 6px !important;
+  }
+
+  .settings-profile-grid,
+  .si [style*="grid-template-columns: 1fr 1fr"],
+  .si [style*="grid-template-columns: repeat(2"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .settings-profile-grid .col-span-2 {
+    grid-column: auto;
+  }
+
+  .settings-linked-row {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .settings-linked-row > input {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100% !important;
+  }
+
+  .settings-linked-row > button:last-child {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .buyer-batch-page,
+  .orders-board {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .buyer-order-card__head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .seller-directory-page [style*="min-width: 200px"] {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .seller-directory-page [style*="repeat(auto-fill"],
+  .seller-shop-page [style*="repeat(auto-fill"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .seller-shop-page [style*="grid-template-columns: repeat("] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .si {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    padding: 18px !important;
+  }
+
+  .si .flex.gap-3,
+  .si .flex.gap-2,
+  .si .no-print {
+    flex-wrap: wrap;
+  }
+
+  .si .flex.gap-3 > button,
+  .si .no-print > button {
+    min-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .auth-page {
+    position: fixed;
+    display: block;
+    overflow: auto;
+    background: #fff;
+  }
+
+  .auth-brand {
+    display: none;
+  }
+
+  .auth-form-pane,
+  .auth-page--signup .auth-form-pane {
+    display: block;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    padding: max(28px, env(safe-area-inset-top)) 20px max(40px, env(safe-area-inset-bottom));
+  }
+
+  .auth-form-wrap,
+  .auth-content,
+  .auth-page--condensed .auth-form-wrap {
+    width: 100%;
+    max-width: 480px;
+    max-height: none;
+    margin: 0 auto;
+    zoom: 1;
+  }
+
+  .auth-heading h1 { font-size: 32px; }
+
+  .auth-page :is(p, span, small, label, button, input, select, textarea) {
+    font-size: 16px !important;
+    line-height: 1.45;
+  }
+
+  .auth-input-shell input {
+    min-height: 56px;
+  }
+
+  .auth-login-fields,
+  .auth-signup-fields {
+    gap: 28px;
+  }
+
+  .auth-social-row {
+    flex-wrap: wrap;
+    min-height: 44px;
+  }
+
+  .auth-social-row > input {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .auth-link-button,
+  .auth-password-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .auth-role-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .kargo-footer {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .kargo-header-actions {
+    gap: 2px !important;
+  }
+
+  .seller-shell-header .kargo-brand-mark {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .icon-tabbar > div:first-child > button {
+    padding-right: 1px !important;
+    padding-left: 1px !important;
+  }
+
+  .kargo-tab-label {
+    font-size: 10px !important;
+  }
+}
+
 /* Keep authentication inside one fixed viewport. Values below intentionally
    override the spacious reference-size rules above only as the viewport gets
    shorter or narrower. */
@@ -4370,6 +4870,430 @@ textarea::placeholder {
   }
 }
 
+/* ===== Mobile Overrides =====
+   Phone-only layout adaptations. Desktop declarations above remain the source
+   of truth and are intentionally left untouched. */
+.kargo-tab-label {
+  display: none;
+}
+
+@media (max-width: 620px) {
+  html,
+  body,
+  #root,
+  .kargo-original-app {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .kargo-original-app {
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .kargo-header,
+  .seller-shell-header {
+    position: sticky !important;
+    top: 0 !important;
+    height: calc(56px + env(safe-area-inset-top)) !important;
+    min-height: calc(56px + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 12px 0 !important;
+    gap: 8px !important;
+  }
+
+  .kargo-brand-lockup,
+  .seller-shell-header .kargo-brand-lockup {
+    width: auto !important;
+    gap: 0 !important;
+  }
+
+  .kargo-brand-name,
+  .seller-shell-header .kargo-brand-name {
+    display: none !important;
+  }
+
+  .kargo-header-actions {
+    gap: 8px !important;
+    margin-left: auto !important;
+  }
+
+  .kargo-header-actions > div > button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 6px !important;
+  }
+
+  .icon-tabbar,
+  .seller-tabbar {
+    position: sticky !important;
+    top: calc(56px + env(safe-area-inset-top)) !important;
+    height: 56px !important;
+    overflow: visible !important;
+  }
+
+  .icon-tabbar > div:first-child {
+    width: 100%;
+    max-width: none;
+    flex: 1 1 auto !important;
+  }
+
+  .icon-tabbar > div:first-child > button {
+    display: flex !important;
+    min-width: 0 !important;
+    min-height: 48px;
+    height: 56px !important;
+    flex: 1 1 25% !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 3px 2px !important;
+    overflow: visible !important;
+  }
+
+  .icon-tabbar > div:first-child > button > svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+  }
+
+  .kargo-tab-label {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kargo-original-app :is(button, [role="button"], a.kargo-button) {
+    min-height: 44px;
+  }
+
+  .seller-dashboard,
+  .bdash,
+  .seller-orders-page,
+  .seller-batches-page {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 28px 14px 44px !important;
+  }
+
+  .seller-orders-layout,
+  .bdash-main,
+  .seller-dashboard-sidebar {
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100%;
+  }
+
+  .seller-dashboard-sidebar {
+    display: grid;
+  }
+
+  /* Turn operational tables into full-width cards without duplicating data. */
+  :is(.mobile-data-page, .seller-dashboard, .bdash) :is(.seller-orders-table-wrap, [style*="overflowX"], .bdash-table-wrap) {
+    overflow: visible !important;
+    box-shadow: none;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) table,
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) thead {
+    display: none;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody tr {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    gap: 8px;
+    padding: 14px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px;
+    background: #fff !important;
+    box-shadow: 0 3px 10px rgba(18, 30, 71, .1);
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 !important;
+    overflow: visible !important;
+    color: #374151;
+    font-size: 12px !important;
+    text-align: right;
+    white-space: normal !important;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td::before {
+    min-width: 72px;
+    flex: 0 0 auto;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .seller-dashboard .seller-orders-table td:nth-child(1)::before,
+  .bdash-table td:nth-child(1)::before { content: "Product"; }
+  .seller-dashboard .seller-orders-table td:nth-child(2)::before,
+  .bdash-table td:nth-child(2)::before { content: "Batch"; }
+  .seller-dashboard .seller-orders-table td:nth-child(3)::before,
+  .bdash-table td:nth-child(3)::before { content: "Seller"; }
+  .seller-dashboard .seller-orders-table td:nth-child(4)::before,
+  .bdash-table td:nth-child(4)::before { content: "Amount"; }
+  .seller-dashboard .seller-orders-table td:nth-child(5)::before,
+  .bdash-table td:nth-child(5)::before { content: "Status"; }
+  .seller-dashboard .seller-orders-table td:nth-child(6)::before,
+  .bdash-table td:nth-child(6)::before { content: "Deadline"; }
+
+  .seller-orders-page td:nth-child(1)::before { content: "Buyer"; }
+  .seller-orders-page td:nth-child(2)::before { content: "Product"; }
+  .seller-orders-page td:nth-child(3)::before { content: "Method"; }
+  .seller-orders-page td:nth-child(4)::before { content: "Amount"; }
+  .seller-orders-page td:nth-child(5)::before { content: "Amount paid"; }
+  .seller-orders-page td:nth-child(6)::before { content: "Deadline"; }
+  .seller-orders-page td:nth-child(7)::before { content: "Status"; }
+  .seller-orders-page td:nth-child(8)::before { content: "Actions"; }
+
+  .claims-to-pay-table td:nth-child(1)::before { content: "Product"; }
+  .claims-to-pay-table td:nth-child(2)::before { content: "Seller"; }
+  .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
+  .claims-to-pay-table td:nth-child(4)::before { content: "Amount"; }
+  .claims-to-pay-table td:nth-child(5)::before { content: "Actions"; }
+
+  .claims-history-table td:nth-child(1)::before { content: "Product"; }
+  .claims-history-table td:nth-child(2)::before { content: "Batch"; }
+  .claims-history-table td:nth-child(3)::before { content: "Seller"; }
+  .claims-history-table td:nth-child(4)::before { content: "Qty"; }
+  .claims-history-table td:nth-child(5)::before { content: "Amount"; }
+  .claims-history-table td:nth-child(6)::before { content: "Status"; }
+  .claims-history-table td:nth-child(7)::before { content: "Deadline"; }
+  .claims-history-table td:nth-child(8)::before { content: "Actions"; }
+
+  .payment-history-table td:nth-child(1)::before { content: "Product"; }
+  .payment-history-table td:nth-child(2)::before { content: "Batch"; }
+  .payment-history-table td:nth-child(3)::before { content: "Method"; }
+  .payment-history-table td:nth-child(4)::before { content: "Amount"; }
+  .payment-history-table td:nth-child(5)::before { content: "Date"; }
+  .payment-history-table td:nth-child(6)::before { content: "Status"; }
+  .payment-history-table td:nth-child(7)::before { content: "Actions"; }
+
+  .seller-payment-table td:nth-child(1)::before { content: "Product"; }
+  .seller-payment-table td:nth-child(2)::before { content: "Buyer"; }
+  .seller-payment-table td:nth-child(3)::before { content: "Method"; }
+  .seller-payment-table td:nth-child(4)::before { content: "Amount"; }
+  .seller-payment-table td:nth-child(5)::before { content: "Payment"; }
+  .seller-payment-table td:nth-child(6)::before { content: "Date"; }
+  .seller-payment-table td:nth-child(7)::before { content: "Status"; }
+  .seller-payment-table td:nth-child(8)::before { content: "Actions"; }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td > :last-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  :is(.mobile-data-page, .seller-dashboard, .bdash) [style*="font-size: 10px"],
+  :is(.mobile-data-page, .seller-dashboard, .bdash) [style*="font-size: 11px"] {
+    font-size: 12px !important;
+  }
+
+  .seller-orders-actions,
+  .claims-to-pay-table td:last-child > div,
+  .claims-history-table td:last-child > div {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .seller-orders-actions button,
+  .claims-to-pay-table td:last-child button,
+  .claims-history-table td:last-child button,
+  .payment-history-table td:last-child button,
+  .seller-payment-table td:last-child button {
+    width: 100%;
+  }
+
+  .claims-view-toggle {
+    display: none !important;
+  }
+
+  .claims-card-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .seller-orders-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+
+  .seller-orders-filters button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .pending-payments-list .kargo-card {
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+    padding: 14px !important;
+  }
+
+  .pending-payments-list .kargo-card > .kargo-primary {
+    width: 100%;
+  }
+
+  .seller-batches-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .seller-batch-image,
+  .seller-batch-photo {
+    height: 100px !important;
+    aspect-ratio: auto !important;
+    object-fit: cover;
+  }
+
+  .batch-filter-bar,
+  .seller-batch-filter-bar {
+    align-items: stretch !important;
+    flex-direction: column;
+    gap: 10px !important;
+  }
+
+  .batch-filter-bar > div,
+  .batch-filter-bar select,
+  .batch-filter-bar .kargo-secondary,
+  .seller-batches-add {
+    width: 100% !important;
+  }
+
+  .batch-filter-bar > .flex-1 {
+    display: none;
+  }
+
+  .seller-board-preview,
+  .seller-board-dialog__columns {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
+    overflow: visible;
+  }
+
+  .seller-board-column {
+    width: 100%;
+    min-width: 0 !important;
+    flex-basis: auto !important;
+  }
+
+  .seller-board-column__head {
+    min-height: 44px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+
+  .seller-board-column__cards[data-collapsed="true"] {
+    display: none;
+  }
+
+  .seller-board-card {
+    padding: 10px !important;
+  }
+
+  .seller-board-dialog > header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 10px 14px;
+  }
+
+  .seller-board-dialog > header > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .seller-board-dialog__body {
+    padding: 0;
+  }
+
+  .kargo-footer {
+    padding: 30px 16px calc(20px + env(safe-area-inset-bottom));
+    text-align: center;
+  }
+
+  .kargo-footer__grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .kargo-footer nav {
+    align-items: center;
+  }
+
+  .kargo-footer a {
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  body > .fi[style*="position: fixed"] > .si[role="dialog"],
+  body > .fi[style*="position: fixed"] > .si {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    padding: 20px !important;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .seller-stats,
+  .bdash-stats {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .seller-stat,
+  .bdash-stat {
+    min-height: 124px;
+    padding: 38px 18px 16px !important;
+  }
+
+  .seller-stat strong,
+  .bdash-stat__value {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    font-size: 30px;
+  }
+
+  .seller-stat span,
+  .seller-stat small,
+  .bdash-stat__label,
+  .bdash-stat__sub {
+    white-space: normal;
+  }
+}
+
 /* Seller dashboard redesign */
 .seller-shell-header {
   position: relative !important;
@@ -6538,6 +7462,65 @@ textarea::placeholder {
     display: none !important;
   }
 }
+
+/* ===== Mobile Overrides: final cascade guards =====
+   Keep these last because the legacy seller theme has later phone rules. */
+@media (max-width: 620px) {
+  .kargo-header,
+  .seller-shell-header {
+    position: sticky !important;
+    top: 0 !important;
+    height: calc(56px + env(safe-area-inset-top)) !important;
+    padding: env(safe-area-inset-top) 12px 0 !important;
+    gap: 8px !important;
+  }
+
+  .seller-shell-header .kargo-brand-lockup {
+    width: auto !important;
+  }
+
+  .seller-shell-header .kargo-brand-name {
+    display: none !important;
+  }
+
+  .icon-tabbar,
+  .seller-tabbar {
+    top: calc(56px + env(safe-area-inset-top)) !important;
+    height: 56px !important;
+  }
+
+  .icon-tabbar > div:first-child > button {
+    display: flex !important;
+    min-width: 0 !important;
+    height: 56px !important;
+    flex-direction: column;
+  }
+
+  .seller-batches-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .seller-board-preview,
+  .seller-board-dialog__columns {
+    display: grid !important;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px;
+    padding: 14px;
+    overflow: visible;
+  }
+
+  .seller-board-preview .seller-board-column {
+    width: 100%;
+    min-width: 0 !important;
+    flex-basis: auto !important;
+  }
+
+  .kargo-footer__grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
 /* Buyer Dashboard — restored after the seller UI merge removed this scoped block. */
 .bdash {
   display: flex;
@@ -6849,4 +7832,73 @@ textarea::placeholder {
   .bdash-stats { grid-template-columns: 1fr; }
   .bdash-stat { min-height: 150px; }
   .bdash-section-head { align-items: flex-end; }
+}
+
+/* ===== Mobile Overrides: end-of-file cascade ===== */
+@media (max-width: 620px) {
+  .kargo-header,
+  .seller-shell-header {
+    position: sticky !important;
+    top: 0 !important;
+    height: calc(56px + env(safe-area-inset-top)) !important;
+    padding: env(safe-area-inset-top) 12px 0 !important;
+    gap: 8px !important;
+  }
+
+  .seller-shell-header .kargo-brand-lockup { width: auto !important; }
+  .seller-shell-header .kargo-brand-name { display: none !important; }
+
+  .icon-tabbar,
+  .seller-tabbar {
+    top: calc(56px + env(safe-area-inset-top)) !important;
+    height: 56px !important;
+  }
+
+  .icon-tabbar > div:first-child > button {
+    display: flex !important;
+    min-width: 0 !important;
+    height: 56px !important;
+    flex-direction: column;
+  }
+
+  .seller-batches-grid { grid-template-columns: minmax(0, 1fr) !important; }
+
+  .seller-board-preview,
+  .seller-board-dialog__columns {
+    display: grid !important;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px;
+    padding: 14px;
+    overflow: visible;
+  }
+
+  .seller-board-preview .seller-board-column {
+    width: 100%;
+    min-width: 0 !important;
+    flex-basis: auto !important;
+  }
+
+  .kargo-footer__grid { grid-template-columns: minmax(0, 1fr) !important; }
+
+  .seller-section-heading,
+  .seller-board-heading,
+  .seller-board-heading > div {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .seller-stats,
+  .bdash-stats {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .seller-stat,
+  .bdash-stat {
+    min-width: 0;
+    min-height: 124px !important;
+    padding: 38px 18px 16px !important;
+  }
 }

@@ -139,13 +139,13 @@ export default function Payments({
     return <SellerPaymentVerification view="history" refreshData={refreshData} />
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 payments-page mobile-data-page">
       <div>
         <SH title="Pending Payments" />
         <p style={{ marginTop: -8, marginBottom: 12, color: "#748391", fontSize: 12 }}>
           Submit payment before each reservation deadline.
         </p>
-        <div className="space-y-3">
+        <div className="space-y-3 pending-payments-list">
           {payableToPay.map((item) => (
             <Card key={item.id} className="flex items-center gap-4">
               <ProductThumb name={item.product} />
@@ -194,7 +194,7 @@ export default function Payments({
         <p style={{ marginTop: -8, marginBottom: 12, color: "#748391", fontSize: 12 }}>
           Completed payments, newest first.
         </p>
-        <Card className="!p-0 overflow-hidden">
+        <Card className="!p-0 overflow-hidden payment-history-table">
           <div style={{ overflowX: "auto" }}>
             <table className="w-full text-[13px]">
               <thead style={{ background: "#6892D5" }}>
