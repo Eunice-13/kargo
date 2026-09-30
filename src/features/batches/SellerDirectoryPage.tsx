@@ -77,7 +77,7 @@ export default function SellerDirectoryPage({
           <span style={{ fontSize: 12, color: "#D1D5DB" }}>/</span>
           <span style={{ fontSize: 13, color: "#6B7280" }}>{shopPage}</span>
         </div>
-        <div className="p-6">
+        <div className="p-6 seller-directory-page">
           <SellerShopPage
             seller={shopPage}
             batches={batches}
@@ -122,7 +122,7 @@ export default function SellerDirectoryPage({
         <span style={{ fontSize: 12, color: "#D1D5DB" }}>/</span>
         <span style={{ fontSize: 13, color: "#6B7280" }}>Browse Sellers</span>
       </div>
-      <div className="p-6">
+      <div className="p-6 seller-directory-page">
         <div style={{ marginBottom: 20 }}>
           <SH title="Seller Directory" />
           <p style={{ fontSize: 13, color: "#9CA3AF", marginTop: -8 }}>

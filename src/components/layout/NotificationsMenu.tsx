@@ -124,7 +124,7 @@ export default function NotificationsMenu({
       </button>
       {showNotif && (
         <div
-          className="si"
+          className="si kargo-notifications-popover"
           style={{
             position: "absolute",
             top: 44,

@@ -62,6 +62,7 @@ export default function Dashboard({
   const [boardExpanded, setBoardExpanded] = useState(false)
   const [showSalesReport, setShowSalesReport] = useState(false)
   const [showWaitlist, setShowWaitlist] = useState(false)
+  const [collapsedBoardColumns, setCollapsedBoardColumns] = useState<Record<string, boolean>>({})
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
   const board = useFulfillmentBoard(setFulfillment)
 
@@ -322,8 +323,23 @@ export default function Dashboard({
             >
               {colOrders.length}
             </span>
+            <button
+              type="button"
+              className="seller-board-column__mobile-toggle"
+              aria-label={`${collapsedBoardColumns[col] ? "Expand" : "Collapse"} ${col}`}
+              aria-expanded={!collapsedBoardColumns[col]}
+              onClick={() =>
+                setCollapsedBoardColumns((current) => ({
+                  ...current,
+                  [col]: !current[col],
+                }))
+              }
+            />
           </div>
-          <div className="seller-board-column__cards space-y-2">
+          <div
+            className="seller-board-column__cards space-y-2"
+            data-collapsed={collapsedBoardColumns[col] ? "true" : undefined}
+          >
             {visibleOrders.map((o) => {
               const isExpanded = board.expandedId === o.id
               return (

@@ -97,7 +97,7 @@ export default function SellerShopPage({
   ]
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 seller-shop-page">
       {/* ── Storefront header ──────────────────────────────────────────────── */}
       <Card style={{ overflow: "hidden", padding: 0 }}>
         <div
@@ -274,7 +274,7 @@ export default function SellerShopPage({
 
       {/* ── Tab body ───────────────────────────────────────────────────────── */}
       <div
-          className="grid gap-5"
+          className="grid gap-5 seller-shop-layout"
           style={{ gridTemplateColumns: "1fr 300px", alignItems: "start" }}
         >
           {/* Left — batches */}

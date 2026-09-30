@@ -292,7 +292,7 @@ export default function SellerPaymentVerification({
       (historyFilter === "Pending Payment" && item.status === "Rejected"),
   )
   const renderTable = (items: VerifyItem[], showAmountPaid: boolean) => (
-    <Card className="!p-0 overflow-hidden">
+    <Card className="!p-0 overflow-hidden seller-payment-table mobile-data-page">
       <div style={{ overflowX: "auto" }}>
         <table className="w-full text-[13px]">
           <thead style={{ background: "#6892D5" }}>

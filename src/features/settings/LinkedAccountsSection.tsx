@@ -42,7 +42,7 @@ export default function LinkedAccountsSection({
 
       <div className="space-y-3">
         {Object.entries(links).map(([name, value]) => (
-          <div key={name} style={{ border: "1px solid #E5E7EB", borderRadius: 10, padding: 14, display: "grid", gridTemplateColumns: "125px 1fr auto 34px", alignItems: "center", gap: 10 }}>
+          <div className="settings-linked-row" key={name} style={{ border: "1px solid #E5E7EB", borderRadius: 10, padding: 14, display: "grid", gridTemplateColumns: "125px 1fr auto 34px", alignItems: "center", gap: 10 }}>
             <label htmlFor={`social-${name}`} style={{ fontSize: 13, fontWeight: 700, color: "#374151", display: "flex", alignItems: "center", gap: 6 }}>
               <Link2 size={14} color={INDIGO} aria-hidden="true" /> {name}
             </label>
