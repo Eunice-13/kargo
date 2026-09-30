@@ -147,7 +147,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
 
   const { data, error } = await client
 
-    .from("profiles")
+    .from("user_profiles")
 
     .select(
       "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,notification_preferences,created_at",
@@ -247,7 +247,7 @@ export async function signUp(input: {
 
   const { error: updateError } = await client
 
-    .from("profiles")
+    .from("user_profiles")
 
     .update({
       display_name: input.name,
@@ -500,6 +500,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
           ? Number(row.limit_per_user)
           : undefined,
 
+      waitlistLimit:
+        row.waitlist_limit != null && Number(row.waitlist_limit) > 0
+          ? Number(row.waitlist_limit)
+          : undefined,
     })
 
     batchMap.set(row.batch_id, current)
@@ -1007,6 +1011,7 @@ export async function createBatch(batch: {
     markup: number
     quantity: number
     limitPerUser?: number
+    waitlistLimit?: number
   }>
 }) {
   const client = requireSupabase()
@@ -1058,6 +1063,11 @@ export async function createBatch(batch: {
       limit_per_user:
         product.limitPerUser && product.limitPerUser > 0
           ? product.limitPerUser
+          : null,
+
+      waitlist_limit:
+        product.waitlistLimit && product.waitlistLimit > 0
+          ? product.waitlistLimit
           : null,
     })),
   )
@@ -1278,7 +1288,7 @@ export async function updateProfile(values: {
   if (Object.keys(payload).length === 0) return
 
   const { data, error } = await client
-    .from("profiles")
+    .from("user_profiles")
     .update(payload)
     .eq("id", auth.user.id)
     .select("id")
@@ -1308,6 +1318,19 @@ export async function setProductLock(productId: string, locked: boolean) {
     .update({ is_locked: locked })
 
     .eq("id", productId)
+
+  if (error) throw error
+}
+
+export async function setProductWaitlistLimit(
+  productId: string,
+  limit?: number,
+) {
+  const normalized = limit && limit > 0 ? Math.floor(limit) : null
+  const { error } = await requireSupabase().rpc("set_product_waitlist_limit", {
+    p_product_id: productId,
+    p_limit: normalized,
+  })
 
   if (error) throw error
 }
@@ -1348,7 +1371,7 @@ export async function uploadProfileAvatar(file: File) {
   if (uploadError) throw uploadError
 
   const { error: profileError } = await client
-    .from("profiles")
+    .from("user_profiles")
     .update({ avatar_path: objectPath })
     .eq("id", userId)
 
@@ -2056,6 +2079,8 @@ export const kargoApi = {
   setBatchLock,
 
   setProductLock,
+
+  setProductWaitlistLimit,
 
   joinWaitlist,
 

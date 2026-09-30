@@ -51,9 +51,51 @@ export default function BatchPage({
     pIdx: number
   } | null>(null)
   const [contact, setContact] = useState(false)
+  const [waitlistLimitDrafts, setWaitlistLimitDrafts] = useState<Record<string, string>>({})
+  const [savingWaitlistLimit, setSavingWaitlistLimit] = useState<string | null>(null)
   const pct = Math.round((batch.claimed / batch.items) * 100)
   const grad = CAT_GRAD[batch.category] || CAT_GRAD["Mixed"]
   const reserveHrs = batch.reserveHours || 48
+
+  const saveWaitlistLimit = async (
+    product: typeof batch.products[0],
+    productIndex: number,
+  ) => {
+    const key = product.dbId ?? `${batch.id}-${productIndex}`
+    const raw = waitlistLimitDrafts[key] ?? String(product.waitlistLimit ?? "")
+    const parsed = Number(raw)
+    const limit = Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : undefined
+
+    setSavingWaitlistLimit(key)
+    try {
+      if (isSupabaseConfigured) {
+        if (!product.dbId) throw new Error("This product is missing its database identifier.")
+        await kargoApi.setProductWaitlistLimit(product.dbId, limit)
+      }
+      setBatches((current) =>
+        current.map((item) =>
+          item.id !== batch.id
+            ? item
+            : {
+                ...item,
+                products: item.products.map((candidate, index) =>
+                  index === productIndex
+                    ? { ...candidate, waitlistLimit: limit }
+                    : candidate,
+                ),
+              },
+        ),
+      )
+      setWaitlistLimitDrafts((current) => ({
+        ...current,
+        [key]: limit ? String(limit) : "",
+      }))
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Unable to save waitlist limit.")
+    } finally {
+      setSavingWaitlistLimit(null)
+    }
+  }
 
   // Join a waitlist with the buyer's chosen quantity (from JoinWaitlistModal).
   const handleJoinWaitlist = async (
@@ -375,6 +417,9 @@ export default function BatchPage({
                   (e.batchId === batch.id && e.product === p.name),
               )
               const onWaitlist = Boolean(waitEntry)
+              const waitlistFull =
+                p.waitlistLimit !== undefined && p.waitlist >= p.waitlistLimit
+              const waitlistLimitKey = p.dbId ?? `${batch.id}-${pIdx}`
               return (
                 <Card
                   key={pIdx}
@@ -396,7 +441,11 @@ export default function BatchPage({
                       style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}
                     >
                       {p.claimed}/{p.qty} claimed
-                      {p.waitlist > 0 ? ` · ${p.waitlist} on waitlist` : ""}
+                      {p.waitlist > 0
+                        ? p.waitlistLimit
+                          ? ` · ${p.waitlist}/${p.waitlistLimit} waitlist slots`
+                          : ` · ${p.waitlist} on waitlist`
+                        : ""}
                     </div>
                     <div
                       style={{
@@ -478,11 +527,46 @@ export default function BatchPage({
                       ₱{p.price.toLocaleString()}
                     </div>
                     {role === "Seller" ? (
-                      <Toggle
-                        on={!p.locked}
-                        label={`${p.locked ? "Unlock" : "Lock"} ${p.name}`}
-                        onChange={() => toggleBatchLock(setBatches, batch.id, pIdx)}
-                      />
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                        <Toggle
+                          on={!p.locked}
+                          label={`${p.locked ? "Unlock" : "Lock"} ${p.name}`}
+                          onChange={() => toggleBatchLock(setBatches, batch.id, pIdx)}
+                        />
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <label
+                            htmlFor={`waitlist-limit-${waitlistLimitKey}`}
+                            style={{ fontSize: 10, color: "#6B7280", whiteSpace: "nowrap" }}
+                          >
+                            Waitlist max
+                          </label>
+                          <input
+                            id={`waitlist-limit-${waitlistLimitKey}`}
+                            type="number"
+                            min="1"
+                            inputMode="numeric"
+                            value={
+                              waitlistLimitDrafts[waitlistLimitKey] ??
+                              (p.waitlistLimit ? String(p.waitlistLimit) : "")
+                            }
+                            onChange={(event) =>
+                              setWaitlistLimitDrafts((current) => ({
+                                ...current,
+                                [waitlistLimitKey]: event.target.value,
+                              }))
+                            }
+                            placeholder="∞"
+                            style={{ width: 54, border: "1px solid #D1D5DB", borderRadius: 6, padding: "5px 7px", fontSize: 11 }}
+                          />
+                          <SecondaryBtn
+                            size="sm"
+                            disabled={savingWaitlistLimit === waitlistLimitKey}
+                            onClick={() => saveWaitlistLimit(p, pIdx)}
+                          >
+                            {savingWaitlistLimit === waitlistLimitKey ? "Saving…" : "Save"}
+                          </SecondaryBtn>
+                        </div>
+                      </div>
                     ) : batch.locked ? (
                       <span style={{ fontSize: 11, color: "#9CA3AF" }}>
                         <><Lock size={13} aria-hidden="true" /> Locked</>
@@ -503,6 +587,10 @@ export default function BatchPage({
                           }}
                         >
                           On Waitlist
+                        </span>
+                      ) : waitlistFull ? (
+                        <span style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>
+                          Waitlist Full
                         </span>
                       ) : (
                         <PrimaryBtn
