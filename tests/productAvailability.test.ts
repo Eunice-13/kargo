@@ -22,7 +22,7 @@ test("last waitlist slot fully locks the sold-out product", () => {
 
 test("released capacity automatically reopens the appropriate action", () => {
   assert.equal(productAvailability({ ...product, claimed: 2, waitlist: 1 }).canWaitlist, true)
-  assert.equal(productAvailability({ ...product, waitlist: 2 }).canClaim, true)
+  assert.equal(productAvailability({ ...product, waitlist: 2 }).canClaim, false)
 })
 
 test("manual product and batch locks block both actions", () => {
@@ -44,4 +44,13 @@ test("zero waitlist slots locks at claim capacity without accepting a queue", ()
   const full = productAvailability({ ...product, claimed: 2, waitlistLimit: 0 })
   assert.equal(full.canWaitlist, false)
   assert.equal(full.fullyLocked, true)
+})
+
+
+test("released stock is reserved until the entire waitlist has cleared", () => {
+  for (const waitlistLimit of [0, 2, undefined]) {
+    assert.equal(productAvailability({ ...product, waitlistLimit, waitlist: 1 }).canClaim, false)
+    assert.equal(productAvailability({ ...product, waitlistLimit, waitlist: 0 }).canClaim, true)
+    assert.equal(productAvailability({ ...product, waitlistLimit, waitlist: 0, claimed: 2 }).canClaim, false)
+  }
 })

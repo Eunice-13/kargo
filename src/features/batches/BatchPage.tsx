@@ -548,7 +548,7 @@ export default function BatchPage({
                     {canEdit ? (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
                         <span style={{ fontSize: 11, color: "#6B7280" }}>
-                          {availability.fullyLocked ? "Locked" : soldOut ? "Claims locked · Waitlist open" : "Claims open"}
+                          {availability.fullyLocked ? "Locked" : soldOut ? "Claims locked · Waitlist open" : availability.queuePending ? "Allocating stock to waitlist" : "Claims open"}
                         </span>
                         <span style={{ fontSize: 10, color: "#6B7280" }}>Manual availability</span>
                         <Toggle
@@ -601,6 +601,10 @@ export default function BatchPage({
                         style={{ fontSize: 11, color: GREEN, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 3 }}
                       >
                         <Check size={12} aria-hidden="true" /> In Claims
+                      </span>
+                    ) : !soldOut && availability.queuePending ? (
+                      <span style={{ fontSize: 11, color: "#0369A1", fontWeight: 600 }}>
+                        {onWaitlist ? "On Waitlist" : "Reserved for waitlisted buyers"}
                       </span>
                     ) : soldOut ? (
                       onWaitlist ? (

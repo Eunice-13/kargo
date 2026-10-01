@@ -6,11 +6,13 @@ export function productAvailability(
 ) {
   const claimsFull = product.claimed >= product.qty
   const waitlistFull = product.waitlistLimit !== undefined && product.waitlist >= product.waitlistLimit
+  const queuePending = product.waitlist > 0
   const manuallyLocked = batchLocked || Boolean(product.locked)
   return {
     claimsFull,
+    queuePending,
     waitlistFull,
-    canClaim: !manuallyLocked && !claimsFull,
+    canClaim: !manuallyLocked && !claimsFull && !queuePending,
     canWaitlist: !manuallyLocked && claimsFull && !waitlistFull,
     fullyLocked: manuallyLocked || (claimsFull && waitlistFull),
   }
