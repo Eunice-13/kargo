@@ -61,7 +61,7 @@ export default function NewBatchModal({
   const [timerPreset, setTimerPreset] = useState("48h")
 
   const [products, setProducts] = useState<BatchProduct[]>([
-    { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "" },
+    { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "0" },
   ])
 
   const [loading, setLoading] = useState(false)
@@ -71,7 +71,7 @@ export default function NewBatchModal({
   const addProduct = () =>
     setProducts((p) => [
       ...p,
-      { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "" },
+      { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "0" },
     ])
 
   const removeProduct = (i: number) =>
@@ -156,6 +156,11 @@ export default function NewBatchModal({
       return
     }
 
+    if (validProds.some((p) => !Number.isInteger(Number(p.waitlistLimit)) || Number(p.waitlistLimit) < 0)) {
+      setError("Waitlist slots must be a whole number of 0 or more.")
+      return
+    }
+
     if (isSupabaseConfigured && (!startDate || !endDate)) {
       setError("Choose both the start and end date before publishing.")
 
@@ -187,7 +192,7 @@ export default function NewBatchModal({
         limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
 
         waitlistLimit:
-          Number(p.waitlistLimit) > 0 ? Number(p.waitlistLimit) : undefined,
+          Number(p.waitlistLimit),
       }))
 
       const reserveHours =
@@ -219,7 +224,7 @@ export default function NewBatchModal({
             limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
 
             waitlistLimit:
-              Number(p.waitlistLimit) > 0 ? Number(p.waitlistLimit) : undefined,
+              Number(p.waitlistLimit),
           })),
         });
       }
@@ -851,12 +856,12 @@ export default function NewBatchModal({
                       <input
                         type="number"
                         inputMode="numeric"
-                        min="1"
+                        min="0"
                         value={p.waitlistLimit}
                         onChange={(e) =>
                           updateProduct(i, "waitlistLimit", e.target.value)
                         }
-                        placeholder="unlimited"
+                        placeholder="0"
                         style={numInput}
                         className="placeholder:text-gray-400"
                       />

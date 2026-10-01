@@ -1,3 +1,4 @@
+import { productAvailability } from "./productAvailability"
 import { useEffect, useState } from "react"
 import { MessageCircle, Package, Clock3, CalendarDays } from "lucide-react"
 import type { BatchType, Role, UserInfo } from "@/types"
@@ -603,14 +604,14 @@ function StorefrontBatchCard({
         >
           <div style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: 999 }} />
         </div>
-        {canClaim && !soldOut && (
+        {canClaim && b.products.some((p) => productAvailability(p, b.locked).canClaim) && (
           // Wrapper stops the card's open-on-click so the CTA claims instead of
           // navigating (PrimaryBtn's onClick takes no event).
           <div onClick={(e) => e.stopPropagation()}>
             <PrimaryBtn
               size="sm"
               onClick={() => {
-                const firstAvailable = b.products.find((p) => p.claimed < p.qty)
+                const firstAvailable = b.products.find((p) => productAvailability(p, b.locked).canClaim)
                 if (firstAvailable) onClaimItem?.(b.id, firstAvailable.name)
                 else open()
               }}

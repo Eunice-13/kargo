@@ -501,7 +501,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
           : undefined,
 
       waitlistLimit:
-        row.waitlist_limit != null && Number(row.waitlist_limit) > 0
+        row.waitlist_limit != null && Number(row.waitlist_limit) >= 0
           ? Number(row.waitlist_limit)
           : undefined,
     })
@@ -1066,7 +1066,7 @@ export async function createBatch(batch: {
           : null,
 
       waitlist_limit:
-        product.waitlistLimit && product.waitlistLimit > 0
+        product.waitlistLimit != null && product.waitlistLimit >= 0
           ? product.waitlistLimit
           : null,
     })),
@@ -1326,7 +1326,7 @@ export async function setProductWaitlistLimit(
   productId: string,
   limit?: number,
 ) {
-  const normalized = limit && limit > 0 ? Math.floor(limit) : null
+  const normalized = limit !== undefined && limit >= 0 ? Math.floor(limit) : null
   const { error } = await requireSupabase().rpc("set_product_waitlist_limit", {
     p_product_id: productId,
     p_limit: normalized,

@@ -1,3 +1,4 @@
+import { productAvailability } from "./productAvailability"
 import { useEffect, useState } from "react"
 import { Clock3, ClipboardList } from "lucide-react"
 import type { BatchType } from "@/types"
@@ -363,7 +364,7 @@ export default function ItemClaimModal({
           </SecondaryBtn>
           <PrimaryBtn
             style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
-            disabled={submitting}
+            disabled={submitting || !productAvailability(product, batch.locked).canClaim || qty > left}
             onClick={async () => {
               setSubmitting(true)
               try {

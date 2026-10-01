@@ -1,3 +1,4 @@
+import { productAvailability } from "./productAvailability"
 import { canManageBatch } from "./batchAccess"
 import { useState } from "react"
 import { Lock, ArrowLeft, Plane, Check, Link2 } from "lucide-react"
@@ -67,7 +68,11 @@ export default function BatchPage({
     const key = product.dbId ?? `${batch.id}-${productIndex}`
     const raw = waitlistLimitDrafts[key] ?? String(product.waitlistLimit ?? "")
     const parsed = Number(raw)
-    const limit = Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : undefined
+    if (raw.trim() !== "" && (!Number.isInteger(parsed) || parsed < 0)) {
+      alert("Waitlist slots must be a whole number of 0 or more.")
+      return
+    }
+    const limit = raw.trim() === "" ? undefined : parsed
 
     setSavingWaitlistLimit(key)
     try {
@@ -91,7 +96,7 @@ export default function BatchPage({
       )
       setWaitlistLimitDrafts((current) => ({
         ...current,
-        [key]: limit ? String(limit) : "",
+        [key]: limit !== undefined ? String(limit) : "",
       }))
     } catch (error) {
       alert(error instanceof Error ? error.message : "Unable to save waitlist limit.")
@@ -106,6 +111,11 @@ export default function BatchPage({
     pIdx: number,
     qty: number,
   ) => {
+    const currentProduct = batch.products[pIdx]
+    if (role !== "Buyer" || !currentProduct || !productAvailability(currentProduct, batch.locked).canWaitlist) {
+      alert("This product is no longer available for waitlisting.")
+      return
+    }
     if (isSupabaseConfigured) {
       if (!p.dbId) return
       try {
@@ -168,6 +178,11 @@ export default function BatchPage({
     qty: number = 1,
   ) => {
     const claimQty = Math.max(1, Math.floor(qty))
+    const currentProduct = b.products.find((p) => product.dbId ? p.dbId === product.dbId : p.name === product.name)
+    if (role !== "Buyer" || !currentProduct || !productAvailability(currentProduct, b.locked).canClaim || claimQty > currentProduct.qty - currentProduct.claimed) {
+      alert("This product no longer has enough available claim slots.")
+      return false
+    }
     if (isSupabaseConfigured) {
       if (!product.dbId) {
         alert("This product is missing its database identifier.")
@@ -414,15 +429,15 @@ export default function BatchPage({
               // p.claimed is bumped by the claimed quantity on confirm, so it is
               // already authoritative — no extra manual offset needed.
               const left = p.qty - p.claimed
-              const soldOut = left <= 0
+              const availability = productAvailability(p, batch.locked)
+              const soldOut = availability.claimsFull
               const waitEntry = waitlist.find(
                 (e) =>
                   (p.dbId && e.productId === p.dbId) ||
                   (e.batchId === batch.id && e.product === p.name),
               )
               const onWaitlist = Boolean(waitEntry)
-              const waitlistFull =
-                p.waitlistLimit !== undefined && p.waitlist >= p.waitlistLimit
+              const waitlistFull = availability.waitlistFull
               const waitlistLimitKey = p.dbId ?? `${batch.id}-${pIdx}`
               return (
                 <Card
@@ -446,7 +461,7 @@ export default function BatchPage({
                     >
                       {p.claimed}/{p.qty} claimed
                       {p.waitlist > 0
-                        ? p.waitlistLimit
+                        ? p.waitlistLimit !== undefined
                           ? ` · ${p.waitlist}/${p.waitlistLimit} waitlist slots`
                           : ` · ${p.waitlist} on waitlist`
                         : ""}
@@ -532,6 +547,10 @@ export default function BatchPage({
                     </div>
                     {canEdit ? (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                        <span style={{ fontSize: 11, color: "#6B7280" }}>
+                          {availability.fullyLocked ? "Locked" : soldOut ? "Claims locked · Waitlist open" : "Claims open"}
+                        </span>
+                        <span style={{ fontSize: 10, color: "#6B7280" }}>Manual availability</span>
                         <Toggle
                           on={!p.locked}
                           label={`${p.locked ? "Unlock" : "Lock"} ${p.name}`}
@@ -549,11 +568,11 @@ export default function BatchPage({
                           <input
                             id={`waitlist-limit-${waitlistLimitKey}`}
                             type="number"
-                            min="1"
+                            min="0"
                             inputMode="numeric"
                             value={
                               waitlistLimitDrafts[waitlistLimitKey] ??
-                              (p.waitlistLimit ? String(p.waitlistLimit) : "")
+                              (p.waitlistLimit !== undefined ? String(p.waitlistLimit) : "")
                             }
                             onChange={(event) =>
                               setWaitlistLimitDrafts((current) => ({
@@ -573,9 +592,9 @@ export default function BatchPage({
                           </SecondaryBtn>
                         </div>
                       </div>
-                    ) : role !== "Buyer" ? null : batch.locked ? (
+                    ) : role !== "Buyer" ? null : batch.locked || p.locked || (availability.fullyLocked && !onWaitlist) ? (
                       <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                        <><Lock size={13} aria-hidden="true" /> Locked</>
+                        <><Lock size={13} aria-hidden="true" /> {soldOut && waitlistFull ? "Locked · Waitlist full" : "Locked"}</>
                       </span>
                     ) : isClaimed ? (
                       <span
@@ -782,7 +801,7 @@ export default function BatchPage({
       {claimTarget && (
         <ItemClaimModal
           batch={batch}
-          product={claimTarget.p}
+          product={batch.products.find((p) => claimTarget.p.dbId ? p.dbId === claimTarget.p.dbId : p.name === claimTarget.p.name) ?? claimTarget.p}
           onConfirm={async (qty) => {
             const claimed = await handleClaim(
               claimTarget.key,

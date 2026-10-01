@@ -1,3 +1,4 @@
+import { productAvailability } from "./productAvailability";
 import { canManageBatch, canOpenBatch } from "./batchAccess";
 import { useEffect, useState } from "react";
 import {
@@ -336,6 +337,12 @@ export default function Batches({
     qty: number = 1,
   ) => {
     const claimQty = Math.max(1, Math.floor(qty));
+    const currentBatch = batches.find((item) => item.id === batch.id);
+    const currentProduct = currentBatch?.products.find((item) => product.dbId ? item.dbId === product.dbId : item.name === product.name);
+    if (role !== "Buyer" || !currentBatch || !currentProduct || !productAvailability(currentProduct, currentBatch.locked).canClaim || claimQty > currentProduct.qty - currentProduct.claimed) {
+      alert("This product no longer has enough available claim slots.");
+      return false;
+    }
     if (isSupabaseConfigured) {
       if (!product.dbId) {
         alert("This product is missing its database identifier.");
@@ -420,7 +427,7 @@ export default function Batches({
     const product = productName
       ? batch?.products.find((p) => p.name === productName)
       : batch?.products[0];
-    if (!batch || !product) return;
+    if (!batch || !product || role !== "Buyer" || !productAvailability(product, batch.locked).canClaim) return;
     setShopPage(null);
     setProfileClaimTarget({ batch, product });
   };
