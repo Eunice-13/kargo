@@ -53,7 +53,8 @@ export default function Batches({
   waitlist,
   setWaitlist,
   onNewBatch,
-}: SharedState & { onNewBatch: () => void }) {
+  onBatchAccessDenied,
+}: SharedState & { onNewBatch: () => void; onBatchAccessDenied?: () => void }) {
   const [batchPage, setBatchPage] = useState<BatchType | null>(null);
   const [waitlisted, setWaitlisted] = useState<Record<string, boolean>>({});
   const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({});
@@ -114,6 +115,7 @@ export default function Batches({
             setBatchPage(requestedBatch);
           } else {
             setBatchPage(null);
+            onBatchAccessDenied?.();
             setTab("Dashboard");
           }
         }
@@ -131,13 +133,14 @@ export default function Batches({
     // pending and retry when batches load, as well as on navigation events.
     applyNavigationIntent();
     return subscribeNavIntent(applyNavigationIntent);
-  }, [batches, user, role, setTab]);
+  }, [batches, user, role, setTab, onBatchAccessDenied]);
   useEffect(() => {
     if (batchPage && !canOpenBatch(batchPage, user, role)) {
       setBatchPage(null);
+      onBatchAccessDenied?.();
       setTab("Dashboard");
     }
-  }, [batchPage, user, role, setTab]);
+  }, [batchPage, user, role, setTab, onBatchAccessDenied]);
   const [claimTarget, setClaimTarget] = useState<{
     p: (typeof batches)[0]["products"][0];
     key: string;
