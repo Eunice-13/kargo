@@ -8,6 +8,7 @@ import {
 import { Avatar } from "@/components/shared"
 import {
   BATCH_CATEGORIES,
+  normalizeBatchCategory,
   batchImage,
   categoryImage,
 } from "@/constants/categories"
@@ -155,7 +156,7 @@ function BatchCard({
           draggable={false}
           className="buyer-batch-card__image"
         />
-        <span className="buyer-batch-card__category">{batch.category}</span>
+        <span className="buyer-batch-card__category">{normalizeBatchCategory(batch.category)}</span>
         <button
           type="button"
           className={`buyer-batch-card__favorite${
@@ -356,7 +357,7 @@ export default function BuyerHome({
   const filtered = useMemo(
     () =>
       batches.filter((batch) => {
-        if (category !== "All" && batch.category !== category) return false
+        if (category !== "All" && normalizeBatchCategory(batch.category) !== category) return false
         if (
           date !== "All" &&
           postedMonth(batch.createdAt) !== date

@@ -1,3 +1,4 @@
+import { normalizeBatchCategory } from "@/constants/categories"
 import type {
   BatchExpenses,
   BatchType,
@@ -465,7 +466,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       claimed: Number(row.batch_claimed ?? 0),
 
-      category: row.category,
+      category: normalizeBatchCategory(row.category),
 
       reserveHours: row.reservation_hours,
 

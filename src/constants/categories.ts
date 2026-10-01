@@ -56,3 +56,14 @@ export function batchImage(category: string, id: string | number) {
     (categoryIndex + numericId) % BATCH_IMAGE_VARIANTS.length
   ]
 }
+
+// Keep older saved batches visible under the current category choices.
+export function normalizeBatchCategory(value: string | null | undefined): BatchCategory {
+  const key = value?.trim().toLowerCase() ?? ""
+  const current = BATCH_CATEGORIES.find((category) => category.toLowerCase() === key)
+  if (current) return current
+  if (key === "skincare") return "Beauty"
+  if (key === "grocery & snacks") return "Food"
+  // Mixed categories (including Food & Beauty) and uncategorized batches.
+  return "Others"
+}

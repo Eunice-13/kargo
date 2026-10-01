@@ -1,3 +1,4 @@
+import { BATCH_CATEGORIES, normalizeBatchCategory } from "@/constants/categories";
 import { productAvailability } from "./productAvailability";
 import { canManageBatch, canOpenBatch } from "./batchAccess";
 import { useEffect, useState } from "react";
@@ -247,7 +248,7 @@ export default function Batches({
   }, [role]);
 
   const filtered = batches.filter((b) => {
-    if (catFilter !== "All" && b.category !== catFilter) return false;
+    if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter) return false;
     if (dateFilter !== "All") {
       const mm: Record<string, string> = {
         "May 2026": "May",
@@ -1117,15 +1118,7 @@ export default function Batches({
             cursor: "pointer",
           }}
         >
-          {[
-            "All",
-            "Food & Beauty",
-            "Skincare",
-            "Grocery & Snacks",
-            "Beauty",
-            "Luxury",
-            "Mixed",
-          ].map((o) => (
+          {["All", ...BATCH_CATEGORIES].map((o) => (
             <option key={o} value={o}>{o === "All" ? "All categories" : o}</option>
           ))}
         </select>
@@ -1247,7 +1240,7 @@ export default function Batches({
   if (role === "Seller") {
     const myBatches = batches.filter((b) => canManageBatch(b, user, role));
     const myFiltered = myBatches.filter((b) => {
-      if (catFilter !== "All" && b.category !== catFilter) return false;
+      if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter) return false;
       if (dateFilter !== "All") {
         const mm: Record<string, string> = {
           "May 2026": "May",
