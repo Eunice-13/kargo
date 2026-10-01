@@ -1694,7 +1694,7 @@ export async function decideOrderExtension(orderId: string, approve: boolean) {
   if (error) throw error
 }
 
-export async function loadSellerRequests() {
+export async function loadSellerExtensionRequests() {
   const client = requireSupabase()
 
   const { data: extensionRows, error: extensionError } = await client
@@ -1712,21 +1712,14 @@ export async function loadSellerRequests() {
 
   const names = new Map<string, string>()
 
-  const links = new Map<string, string | undefined>()
-
   if (buyerIds.length) {
     const { data: profiles } = await client
       .from("public_profiles")
-      .select("id,display_name,social_links")
+      .select("id,display_name")
       .in("id", buyerIds)
 
     for (const profile of profiles ?? []) {
       names.set(profile.id, profile.display_name)
-
-      links.set(
-        profile.id,
-        resolveContactUrl(profile.social_links ?? undefined),
-      )
     }
   }
 
@@ -1752,7 +1745,6 @@ export async function loadSellerRequests() {
       }
     }),
 
-    buyerRequests: [],
   }
 }
 
@@ -2109,7 +2101,7 @@ export const kargoApi = {
 
   decideOrderExtension,
 
-  loadSellerRequests,
+  loadSellerExtensionRequests,
 
   getFinancialSummary,
 

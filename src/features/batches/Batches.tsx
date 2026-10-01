@@ -159,16 +159,6 @@ export default function Batches({
     requestedAt: string;
     status: "pending" | "approved" | "denied";
   };
-  type BuyerReq = {
-    id: EntityId;
-    buyer: string;
-    buyerFb?: string;
-    product: string;
-    batch: string;
-    message: string;
-    requestedAt: string;
-    replied: boolean;
-  };
   const [extensionRequests, setExtensionRequests] = useState<ExtReq[]>(
     isSupabaseConfigured
       ? []
@@ -191,39 +181,12 @@ export default function Batches({
           },
         ],
   );
-  const [buyerRequests, setBuyerRequests] = useState<BuyerReq[]>(
-    isSupabaseConfigured
-      ? []
-      : [
-          {
-            id: 1,
-            buyer: "Trisha Lim",
-            product: "Tokyo Banana (more qty?)",
-            batch: "Japan Trip",
-            message:
-              "Hi! Can I order 3 pcs instead of the max of 2? Willing to pay extra shipping.",
-            requestedAt: "Sep 8, 2026",
-            replied: false,
-          },
-          {
-            id: 2,
-            buyer: "Paolo Cruz",
-            product: "Custom request",
-            batch: "Korea Haul",
-            message:
-              "Do you accept requests for Etude House products? Planning to order 5 pcs.",
-            requestedAt: "Sep 9, 2026",
-            replied: false,
-          },
-        ],
-  );
   // Seller request pop-ups (moved from inline bottom cards to top-of-tab buttons).
   const [showExtReqModal, setShowExtReqModal] = useState(() => {
     const requested = navIntent.openExtensionRequests;
     navIntent.openExtensionRequests = false;
     return requested;
   });
-  const [showBuyerReqModal, setShowBuyerReqModal] = useState(false);
   // Confirmation target for extension approve/deny (#16)
   const [extConfirm, setExtConfirm] = useState<{
     req: ExtReq;
@@ -233,16 +196,15 @@ export default function Batches({
   useEffect(() => {
     if (!isSupabaseConfigured || role !== "Seller") return;
     kargoApi
-      .loadSellerRequests()
+      .loadSellerExtensionRequests()
       .then((data) => {
         setExtensionRequests(data.extensions);
-        setBuyerRequests(data.buyerRequests);
       })
       .catch((error) =>
         alert(
           error instanceof Error
             ? error.message
-            : "Unable to load seller requests.",
+            : "Unable to load extension requests.",
         ),
       );
   }, [role]);
@@ -1072,9 +1034,6 @@ export default function Batches({
   const pendingExtCount = extensionRequests.filter(
     (request) => request.status === "pending",
   ).length;
-  const unrepliedBuyerCount = buyerRequests.filter(
-    (request) => !request.replied,
-  ).length;
 
   const FilterBar = () => (
     <div
@@ -1179,14 +1138,7 @@ export default function Batches({
             Extension Requests
             {pendingExtCount > 0 && <span>{pendingExtCount}</span>}
           </button>
-          <button
-            type="button"
-            className="seller-batch-quick-action"
-            onClick={() => setShowBuyerReqModal(true)}
-          >
-            Buyer Requests
-            {unrepliedBuyerCount > 0 && <span>{unrepliedBuyerCount}</span>}
-          </button>
+
         </>
       )}
       {role === "Buyer" && (
@@ -1375,134 +1327,6 @@ export default function Batches({
                         >
                           {req.status === "approved" ? "Approved" : "Denied"}
                         </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Modal>
-        )}
-        {showBuyerReqModal && (
-          <Modal
-            title="Buyer Requests"
-            onClose={() => setShowBuyerReqModal(false)}
-            width={480}
-          >
-            {buyerRequests.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  color: "#9CA3AF",
-                  fontSize: 13,
-                  padding: "16px 0",
-                }}
-              >
-                No buyer requests yet.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {buyerRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    style={{
-                      border: "1px solid #E5E7EB",
-                      borderRadius: 8,
-                      padding: "12px 14px",
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Avatar name={req.buyer} size={20} />
-                          <span
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 600,
-                              color: "#111827",
-                            }}
-                          >
-                            {req.buyer}
-                          </span>
-                          <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                            · {req.batch}
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "#374151",
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          <strong>{req.product}</strong>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#6B7280",
-                            marginTop: 3,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {req.message}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#9CA3AF",
-                            marginTop: 4,
-                          }}
-                        >
-                          {req.requestedAt}
-                        </div>
-                      </div>
-                      {req.replied ? (
-                        <span
-                          style={{
-                            background: "#D4F5EA",
-                            color: "#0B7A59",
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: "3px 9px",
-                            borderRadius: 999,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          Replied
-                        </span>
-                      ) : (
-                        <SecondaryBtn
-                          onClick={async () => {
-                            if (req.buyerFb) {
-                              window.open(
-                                req.buyerFb,
-                                "_blank",
-                                "noopener,noreferrer",
-                              );
-                            } else {
-                              alert(
-                                "This buyer hasn't added a contact link yet.",
-                              );
-                            }
-                            setBuyerRequests((p) =>
-                              p.map((r) =>
-                                r.id === req.id ? { ...r, replied: true } : r,
-                              ),
-                            );
-                          }}
-                        >
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
-                            Reply on FB{" "}
-                            <ArrowRight size={13} aria-hidden="true" />
-                          </span>
-                        </SecondaryBtn>
                       )}
                     </div>
                   </div>
