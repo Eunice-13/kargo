@@ -33,7 +33,8 @@ export default function NotificationsMenu({
   onNavigate?: (tab: Tab) => void
 }) {
   const [showNotif, setShowNotif] = useState(false)
-  const [notifRead, setNotifRead] = useState(false)
+  const [savingRead, setSavingRead] = useState(false)
+  const [notificationError, setNotificationError] = useState<string | null>(null)
   const [readSet, setReadSet] = useState<Set<string | number>>(new Set())
   const [databaseNotifs, setDatabaseNotifs] = useState<Array<{
     id: string
@@ -44,6 +45,7 @@ export default function NotificationsMenu({
     read_at: string | null
     created_at: string
   }> | null>(null)
+  const loadVersion = useRef(0)
   const notifRef = useRef<HTMLDivElement>(null)
   const notifSource = role === "Seller" ? NOTIF_SELLER : NOTIF_BUYER
   const notifs = databaseNotifs
@@ -55,7 +57,7 @@ export default function NotificationsMenu({
         unread: !notification.read_at,
         tab: (notification.target_path || notification.context.tab || "Dashboard") as Tab,
       }))
-    : notifSource.map((n) => ({
+    : (isSupabaseConfigured ? [] : notifSource).map((n) => ({
         id: n.id,
         icon: n.icon,
         text: n.text,
@@ -65,8 +67,17 @@ export default function NotificationsMenu({
       }))
   useEffect(() => {
     if (!isSupabaseConfigured) return
-    kargoApi.loadNotifications().then((rows) => setDatabaseNotifs(rows as typeof databaseNotifs))
-  }, [])
+    let active = true
+    const version = ++loadVersion.current
+    kargoApi.loadNotifications()
+      .then((rows) => {
+        if (active && version === loadVersion.current) setDatabaseNotifs(rows as typeof databaseNotifs)
+      })
+      .catch(() => {
+        if (active && version === loadVersion.current) setNotificationError("Unable to load notifications. Please reopen this menu to retry.")
+      })
+    return () => { active = false }
+  }, [showNotif])
   useEffect(() => {
     const h = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node))
@@ -75,12 +86,33 @@ export default function NotificationsMenu({
     document.addEventListener("mousedown", h)
     return () => document.removeEventListener("mousedown", h)
   }, [])
-  const markAllRead = () => {
-    setReadSet(new Set(notifs.map((notification) => notification.id)))
-    setNotifRead(true)
-    if (isSupabaseConfigured) void kargoApi.markNotificationRead()
+  const markRead = async (id?: string | number) => {
+    if (savingRead) return false
+    ++loadVersion.current
+    setSavingRead(true)
+    setNotificationError(null)
+    try {
+      if (isSupabaseConfigured) {
+        const updated = await kargoApi.markNotificationRead(id === undefined ? undefined : String(id))
+        const ids = new Set(updated.map((notification) => notification.id))
+        const expected = notifs.filter((n) => n.unread && (id === undefined || n.id === id))
+        if (expected.some((n) => !ids.has(String(n.id)))) {
+          throw new Error("Some notifications could not be marked as read. Please try again.")
+        }
+        const readAt = new Date().toISOString()
+        setDatabaseNotifs((rows) => rows?.map((row) => ids.has(row.id) ? { ...row, read_at: readAt } : row) ?? null)
+      } else {
+        setReadSet((current) => new Set([...current, ...(id === undefined ? notifs.map((n) => n.id) : [id])]))
+      }
+      return true
+    } catch (error) {
+      setNotificationError(error instanceof Error ? error.message : "Unable to save read status. Please try again.")
+      return false
+    } finally {
+      setSavingRead(false)
+    }
   }
-  const hasUnread = !notifRead && notifs.some((n) => n.unread)
+  const hasUnread = notifs.some((n) => n.unread && !readSet.has(n.id))
 
   return (
     <div ref={notifRef} style={{ position: "relative" }}>
@@ -159,7 +191,8 @@ export default function NotificationsMenu({
             </span>
             {hasUnread && (
               <button
-                onClick={markAllRead}
+                onClick={() => void markRead()}
+                disabled={savingRead}
                 style={{
                   fontSize: 11,
                   color: INDIGO,
@@ -169,16 +202,16 @@ export default function NotificationsMenu({
                   cursor: "pointer",
                 }}
               >
-                Mark all read
+                {savingRead ? "Saving…" : "Mark all read"}
               </button>
             )}
           </div>
-          {notifs.map((n, i) => {
+          {notificationError && <p role="alert" className="px-3 py-2 text-xs text-red-700">{notificationError}</p>}
+          {notifs.map((n) => {
             const isRead = readSet.has(n.id) || !n.unread
             const Icon = NOTIF_ICONS[n.icon]
-            const openNotification = () => {
-              setReadSet((s) => new Set([...s, n.id]))
-              if (isSupabaseConfigured) void kargoApi.markNotificationRead(String(n.id))
+            const openNotification = async () => {
+              if (!isRead && !(await markRead(n.id))) return
               setShowNotif(false)
               onNavigate && onNavigate(n.tab)
             }

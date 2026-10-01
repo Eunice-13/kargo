@@ -1578,17 +1578,19 @@ export async function loadNotifications() {
 
 export async function markNotificationRead(id?: string) {
   const client = requireSupabase()
+  const { data: auth, error: authError } = await client.auth.getUser()
+  if (authError) throw authError
+  if (!auth.user) throw new Error("Please sign in to update notifications.")
 
   let query = client
     .from("notifications")
     .update({ read_at: new Date().toISOString() })
+    .eq("recipient_id", auth.user.id)
 
   if (id) query = query.eq("id", id)
-  else query = query.is("read_at", null)
-
-  const { error } = await query
-
+  const { data, error } = await query.select("id")
   if (error) throw error
+  return data ?? []
 }
 
 export async function loadSellerPaymentSubmissions() {

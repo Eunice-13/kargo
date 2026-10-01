@@ -128,7 +128,7 @@ export default function Header({
             <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
-        <NotificationsMenu role={role} onNavigate={onNavigate} />
+        <NotificationsMenu key={user.id ?? user.email} role={role} onNavigate={onNavigate} />
         <UserMenu
           user={user}
           onSettings={onSettings}
