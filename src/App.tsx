@@ -19,7 +19,6 @@ import type {
 import { CREAM } from "@/constants/theme"
 
 import {
-  navIntent,
   requestBatchOpen,
   requestSellerOpen,
 } from "@/state/navIntent"
@@ -72,7 +71,9 @@ export default function App() {
     return Number.isFinite(n) && n > 0 ? n : null
   })()
 
-  if (sharedBatchId !== null) navIntent.batchId = sharedBatchId
+  useEffect(() => {
+    if (sharedBatchId !== null) requestBatchOpen(sharedBatchId)
+  }, [sharedBatchId])
 
   const [stage, setStage] = useState<AppStage>(
     originalPreview ? "app" : "login",
@@ -413,7 +414,7 @@ export default function App() {
 
   const handleSignupSuccess = (u: UserInfo) => {
     setUser(u)
-    setTab(u.sellerEnabled ? "Dashboard" : "Batches")
+    setTab(sharedBatchId !== null ? "Batches" : u.sellerEnabled ? "Dashboard" : "Batches")
     setStage("app")
 
     setOnboard(true)
@@ -421,7 +422,7 @@ export default function App() {
 
   const handleLoginSuccess = (u: UserInfo) => {
     setUser(u)
-    setTab(u.sellerEnabled ? "Dashboard" : "Batches")
+    setTab(sharedBatchId !== null ? "Batches" : u.sellerEnabled ? "Dashboard" : "Batches")
     setStage("app")
 
     if (isSupabaseConfigured) refreshData()

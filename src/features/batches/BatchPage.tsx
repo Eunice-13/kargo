@@ -1,3 +1,4 @@
+import { canManageBatch } from "./batchAccess"
 import { useState } from "react"
 import { Lock, ArrowLeft, Plane, Check, Link2 } from "lucide-react"
 import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo, WaitlistEntry } from "@/types"
@@ -41,6 +42,7 @@ export default function BatchPage({
   refreshData: () => Promise<void>
 }) {
   const batch = batches.find((b) => b.id === batchProp.id) ?? batchProp
+  const canEdit = canManageBatch(batch, user, role)
   const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({})
   const [claimTarget, setClaimTarget] = useState<{
     p: typeof batch.products[0]
@@ -61,6 +63,7 @@ export default function BatchPage({
     product: typeof batch.products[0],
     productIndex: number,
   ) => {
+    if (!canEdit) return
     const key = product.dbId ?? `${batch.id}-${productIndex}`
     const raw = waitlistLimitDrafts[key] ?? String(product.waitlistLimit ?? "")
     const parsed = Number(raw)
@@ -527,12 +530,14 @@ export default function BatchPage({
                     >
                       ₱{p.price.toLocaleString()}
                     </div>
-                    {role === "Seller" ? (
+                    {canEdit ? (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
                         <Toggle
                           on={!p.locked}
                           label={`${p.locked ? "Unlock" : "Lock"} ${p.name}`}
-                          onChange={() => toggleBatchLock(setBatches, batch.id, pIdx)}
+                          onChange={() => {
+                            if (canEdit) toggleBatchLock(setBatches, batch.id, pIdx)
+                          }}
                         />
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <label
@@ -568,7 +573,7 @@ export default function BatchPage({
                           </SecondaryBtn>
                         </div>
                       </div>
-                    ) : batch.locked ? (
+                    ) : role !== "Buyer" ? null : batch.locked ? (
                       <span style={{ fontSize: 11, color: "#9CA3AF" }}>
                         <><Lock size={13} aria-hidden="true" /> Locked</>
                       </span>

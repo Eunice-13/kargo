@@ -1,3 +1,4 @@
+import { canManageBatch, canOpenBatch } from "./batchAccess";
 import { useEffect, useState } from "react";
 import {
   BarChart3,
@@ -39,6 +40,7 @@ export const COLS = 3;
 export default function Batches({
   batches,
   setBatches,
+  setTab,
   claims,
   setClaims,
   toPay,
@@ -50,11 +52,7 @@ export default function Batches({
   setWaitlist,
   onNewBatch,
 }: SharedState & { onNewBatch: () => void }) {
-  const [batchPage, setBatchPage] = useState<BatchType | null>(() => {
-    const id = navIntent.batchId;
-    navIntent.batchId = null;
-    return id ? batches.find((b) => b.id === id) || null : null;
-  });
+  const [batchPage, setBatchPage] = useState<BatchType | null>(null);
   const [waitlisted, setWaitlisted] = useState<Record<string, boolean>>({});
   const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({});
   const [catFilter, setCatFilter] = useState("All");
@@ -101,30 +99,43 @@ export default function Batches({
     return n;
   });
   const [contact, setContact] = useState<BatchType | null>(null);
-  useEffect(
-    () =>
-      subscribeNavIntent(() => {
-        if (navIntent.batchId !== null) {
-          const requestedBatch = batches.find(
-            (batch) => batch.id === navIntent.batchId,
-          );
+  useEffect(() => {
+    const applyNavigationIntent = () => {
+      if (navIntent.batchId !== null) {
+        const requestedBatch = batches.find(
+          (batch) => batch.id === navIntent.batchId,
+        );
+        if (requestedBatch) {
           navIntent.batchId = null;
-          if (requestedBatch) {
-            setShopPage(null);
+          setShopPage(null);
+          if (canOpenBatch(requestedBatch, user, role)) {
             setBatchPage(requestedBatch);
+          } else {
+            setBatchPage(null);
+            setTab("Dashboard");
           }
         }
+      }
 
-        if (navIntent.sellerName !== null) {
-          const requestedSeller = navIntent.sellerName;
-          navIntent.sellerName = null;
-          setBatchPage(null);
-          setSellerDir(false);
-          setShopPage(requestedSeller);
-        }
-      }),
-    [batches],
-  );
+      if (navIntent.sellerName !== null) {
+        const requestedSeller = navIntent.sellerName;
+        navIntent.sellerName = null;
+        setBatchPage(null);
+        setSellerDir(false);
+        setShopPage(requestedSeller);
+      }
+    };
+    // Login can mount this tab before the catalog arrives. Keep the intent
+    // pending and retry when batches load, as well as on navigation events.
+    applyNavigationIntent();
+    return subscribeNavIntent(applyNavigationIntent);
+  }, [batches, user, role, setTab]);
+  useEffect(() => {
+    if (batchPage && !canOpenBatch(batchPage, user, role)) {
+      setBatchPage(null);
+      setTab("Dashboard");
+    }
+  }, [batchPage, user, role, setTab]);
   const [claimTarget, setClaimTarget] = useState<{
     p: (typeof batches)[0]["products"][0];
     key: string;
@@ -581,6 +592,8 @@ export default function Batches({
         </div>
       </div>
     );
+
+  if (batchPage && !canOpenBatch(batchPage, user, role)) return null;
 
   if (batchPage)
     return (
@@ -1225,7 +1238,7 @@ export default function Batches({
   }
 
   if (role === "Seller") {
-    const myBatches = batches.filter((b) => b.seller === user.name);
+    const myBatches = batches.filter((b) => canManageBatch(b, user, role));
     const myFiltered = myBatches.filter((b) => {
       if (catFilter !== "All" && b.category !== catFilter) return false;
       if (dateFilter !== "All") {
