@@ -1,4 +1,32 @@
-import type { ClaimRow, PayHistRow } from "@/types"
+import type { ClaimRow, ClaimStatus, PayHistRow } from "@/types"
+
+export type SellerOrderReceivedStatus =
+  | "Pending"
+  | "Awaiting Verification"
+  | "Verified"
+  | "Expired"
+  | "Cancelled"
+
+type SellerPaymentReviewStatus = "Pending" | "Verified" | "Rejected"
+
+export function sellerOrderReceivedStatus(
+  claimStatus: ClaimStatus,
+  paymentStatus?: SellerPaymentReviewStatus,
+): SellerOrderReceivedStatus {
+  // The order lifecycle is canonical. A historical payment decision must not
+  // reopen or relabel an order that has already expired or been cancelled.
+  if (claimStatus === "Expired" || claimStatus === "Cancelled") {
+    return claimStatus
+  }
+  if (claimStatus === "Paid and Reserved") return "Verified"
+
+  if (paymentStatus === "Verified") return "Verified"
+  if (paymentStatus === "Pending") return "Awaiting Verification"
+  if (paymentStatus === "Rejected") return "Pending"
+
+  if (claimStatus === "Awaiting Verification") return "Awaiting Verification"
+  return "Pending"
+}
 
 function matchesOrder(payment: PayHistRow, claim: ClaimRow) {
   return payment.orderId

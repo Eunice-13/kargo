@@ -7,18 +7,13 @@ import {
   PrimaryBtn,
   ProductThumb,
   SecondaryBtn,
-  Countdown,
   PaymentIcon,
   StatusBadge,
 } from "@/components/shared"
 import { Pencil, Plus, Trash2, Upload } from "lucide-react"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
-import {
-  rejectionDeadlineHasPassed,
-  verificationDisplayStatus,
-  type VerifyItem,
-} from "./verifyTypes"
+import { verificationDisplayStatus, type VerifyItem } from "./verifyTypes"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
@@ -81,9 +76,6 @@ export default function SellerPaymentVerification({
   const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(
     isSupabaseConfigured ? [] : VERIFY_SEED,
   )
-  const [statusClock, setStatusClock] = useState(() => Date.now())
-  const [historyFilter, setHistoryFilter] =
-    useState<"All" | "Paid and Reserved" | "Pending Payment">("All")
   const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null)
   const [rejectTarget, setRejectTarget] = useState<VerifyItem | null>(null)
   const [rejectReason, setRejectReason] = useState("")
@@ -109,19 +101,6 @@ export default function SellerPaymentVerification({
         ),
       )
   }, [])
-
-  useEffect(() => {
-    setStatusClock(Date.now())
-    const hasActiveRejectionDeadline = verifyItems.some((item) => {
-      if (item.status !== "Rejected" || !item.rejectionDeadline) return false
-      const deadline = new Date(item.rejectionDeadline).getTime()
-      return Number.isFinite(deadline) && deadline > Date.now()
-    })
-    if (!hasActiveRejectionDeadline) return
-
-    const timer = window.setInterval(() => setStatusClock(Date.now()), 1000)
-    return () => window.clearInterval(timer)
-  }, [verifyItems])
 
   const reloadPaymentMethods = () =>
     kargoApi.loadOwnPaymentMethods().then(setPaymentMethods)
@@ -302,15 +281,7 @@ export default function SellerPaymentVerification({
       )
     })
   const pendingItems = currentVerifyItems.filter((item) => item.status === "Pending")
-  const historyItems = currentVerifyItems.filter((item) => item.status !== "Pending")
-  const filteredHistory = historyItems.filter(
-    (item) =>
-      historyFilter === "All" ||
-      (historyFilter === "Paid and Reserved" && item.status === "Verified") ||
-      (historyFilter === "Pending Payment" &&
-        item.status === "Rejected" &&
-        !rejectionDeadlineHasPassed(item, statusClock)),
-  )
+  const historyItems = currentVerifyItems.filter((item) => item.status === "Verified")
   const renderTable = (items: VerifyItem[], showAmountPaid: boolean) => (
     <Card className="!p-0 overflow-hidden seller-payment-table mobile-data-page">
       <div style={{ overflowX: "auto" }}>
@@ -350,7 +321,7 @@ export default function SellerPaymentVerification({
               const paidAmount =
                 item.amountPaid == null ? null : Number(item.amountPaid)
               const isShort = paidAmount != null && paidAmount < item.amount
-              const displayStatus = verificationDisplayStatus(item, statusClock)
+              const displayStatus = verificationDisplayStatus(item)
               return (
                 <tr
                   key={item.id}
@@ -449,25 +420,6 @@ export default function SellerPaymentVerification({
                         Awaiting balance
                       </div>
                     )}
-                    {item.status === "Rejected" &&
-                      item.rejectionDeadline &&
-                      !rejectionDeadlineHasPassed(item, statusClock) && (
-                      <div
-                        style={{
-                          marginTop: 4,
-                          color: "#6B7280",
-                          fontSize: 10,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        Resubmit in{" "}
-                        <Countdown
-                          hours={0}
-                          id={`seller-reject-${item.id}`}
-                          expiresAt={item.rejectionDeadline}
-                        />
-                      </div>
-                    )}
                   </td>
                   <td style={{ padding: "12px 14px" }}>
                     <button
@@ -504,7 +456,7 @@ export default function SellerPaymentVerification({
                 >
                   {showAmountPaid
                     ? "No payments awaiting review."
-                    : "No payment history for this status."}
+                    : "No paid and reserved payments yet."}
                 </td>
               </tr>
             )}
@@ -642,59 +594,10 @@ export default function SellerPaymentVerification({
         >
           Payment History
         </h2>
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            alignItems: "center",
-            marginBottom: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{
-              marginRight: 2,
-              color: "#374151",
-              fontSize: 12,
-              fontWeight: 600,
-            }}
-          >
-            Filter:
-          </span>
-          {(["All", "Paid and Reserved", "Pending Payment"] as const).map((filter) => {
-            const count =
-              filter === "All"
-                ? historyItems.length
-                : historyItems.filter((item) =>
-                    filter === "Paid and Reserved"
-                      ? item.status === "Verified"
-                      : item.status === "Rejected",
-                  ).length
-            return (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setHistoryFilter(filter)}
-                aria-pressed={historyFilter === filter}
-                style={{
-                  border: `1px solid ${
-                    historyFilter === filter ? "#191BA9" : "#E5E7EB"
-                  }`,
-                  borderRadius: 999,
-                  background: historyFilter === filter ? "#191BA9" : "#fff",
-                  color: historyFilter === filter ? "#fff" : "#374151",
-                  padding: "5px 12px",
-                  fontSize: 11,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                {filter} ({count})
-              </button>
-            )
-          })}
-        </div>
-        {renderTable(filteredHistory, false)}
+        <p style={{ marginTop: -8, marginBottom: 12, color: "#748391", fontSize: 12 }}>
+          Verified payments for paid and reserved orders.
+        </p>
+        {renderTable(historyItems, false)}
       </section>
       </>
       )}

@@ -4,6 +4,7 @@ import {
   rejectionDeadlineHasPassed,
   verificationDisplayStatus,
 } from "../src/features/payments/verifyTypes.ts"
+import { sellerOrderReceivedStatus } from "../src/features/claims/claimPaymentState.ts"
 
 const deadline = "2026-09-28T22:00:14.386Z"
 
@@ -36,4 +37,18 @@ test("a rejected payment remains pending before its resubmission deadline", () =
 test("verified and pending submissions keep their review states", () => {
   assert.equal(verificationDisplayStatus({ status: "Verified" }), "Paid and Reserved")
   assert.equal(verificationDisplayStatus({ status: "Pending" }), "Awaiting Verification")
+})
+
+test("terminal seller orders are not reopened by historical payment attempts", () => {
+  assert.equal(sellerOrderReceivedStatus("Expired", "Rejected"), "Expired")
+  assert.equal(sellerOrderReceivedStatus("Cancelled", "Verified"), "Cancelled")
+})
+
+test("active seller orders still reflect their latest payment review", () => {
+  assert.equal(sellerOrderReceivedStatus("Pending", "Rejected"), "Pending")
+  assert.equal(
+    sellerOrderReceivedStatus("Awaiting Verification", "Pending"),
+    "Awaiting Verification",
+  )
+  assert.equal(sellerOrderReceivedStatus("Paid and Reserved", "Verified"), "Verified")
 })

@@ -28,26 +28,19 @@ import {
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { claimIsPayable } from "./claimExpiry"
-import { reconcileRejectedClaim } from "./claimPaymentState"
+import {
+  reconcileRejectedClaim,
+  sellerOrderReceivedStatus,
+  type SellerOrderReceivedStatus,
+} from "./claimPaymentState"
 import { navIntent } from "@/state/navIntent"
 
-type OrderReceivedStatus = "Pending" | "Awaiting Verification" | "Verified" | "Expired" | "Cancelled"
-type OrderReceivedFilter = OrderReceivedStatus | "All"
+type OrderReceivedFilter = SellerOrderReceivedStatus | "All"
 
 function paymentMatchesClaim(payment: PayHistRow, claim: ClaimRow) {
   return payment.orderId
     ? String(payment.orderId) === String(claim.id)
     : payment.product === claim.product && payment.batch === claim.batch
-}
-
-function orderReceivedStatus(claim: ClaimRow, payHistory: PayHistRow[]): OrderReceivedStatus {
-  if (claim.status === "Paid and Reserved") return "Verified"
-  if (claim.status === "Insufficient Payment") return "Pending"
-  if (claim.status === "Awaiting Verification") return "Awaiting Verification"
-  if (claim.status === "Pending" || claim.status === "Expired" || claim.status === "Cancelled") {
-    return claim.status
-  }
-  return "Pending"
 }
 
 function newestFirst<T extends { id: string | number; createdAt?: string }>(
@@ -383,14 +376,9 @@ export default function MyClaims({
   if (role === "Seller") {
     const paymentForOrder = (claim: ClaimRow) =>
       sellerPayments.find((payment) => String(payment.orderId) === String(claim.id))
-    const statusForOrder = (claim: ClaimRow): OrderReceivedStatus => {
+    const statusForOrder = (claim: ClaimRow): SellerOrderReceivedStatus => {
       const payment = paymentForOrder(claim)
-      if (payment?.status === "Verified") return "Verified"
-      if (payment?.status === "Pending") return "Awaiting Verification"
-      // A rejection closes that proof, not the order. The order immediately
-      // returns to the buyer's payable queue and remains pending for the seller.
-      if (payment?.status === "Rejected") return "Pending"
-      return orderReceivedStatus(claim, payHistory)
+      return sellerOrderReceivedStatus(claim.status, payment?.status)
     }
     const orderReceivedSort = (left: ClaimRow, right: ClaimRow) => {
       const leftStatus = statusForOrder(left)
@@ -521,7 +509,7 @@ export default function MyClaims({
                     : 0
                 const underpaid = amountPaid > 0 && amountPaid < c.amount
                 const isCashOnMeetup = submission?.method === "Cash on Meetup"
-                const statusStyles: Record<OrderReceivedStatus, { background: string; color: string; dot: string; borderColor: string }> = {
+                const statusStyles: Record<SellerOrderReceivedStatus, { background: string; color: string; dot: string; borderColor: string }> = {
                   Pending: { background: "#fff5cc", color: "#c98f00", dot: "#f0b400", borderColor: "#f0b400" },
                   "Awaiting Verification": { background: "#e0e7ff", color: "#3730a3", dot: "#6366f1", borderColor: "#6366f1" },
                   Verified: { background: "#c8f5e4", color: "#0a8f6a", dot: "#2cc9a0", borderColor: "#2cc9a0" },
