@@ -333,15 +333,24 @@ export default function BuyerHome({
 }) {
   const categoryCarousel = useHorizontalCarousel(BATCH_CATEGORIES.length)
 
+  const postedMonth = (createdAt?: string) => {
+    if (!createdAt) return null
+    const posted = new Date(createdAt)
+    if (Number.isNaN(posted.getTime())) return null
+    return `${posted.getFullYear()}-${String(posted.getMonth() + 1).padStart(2, "0")}`
+  }
   const dates = useMemo(() => {
-    const values = new Set<string>()
+    const values = new Map<string, string>()
     for (const batch of batches) {
-      const match = batch.trips.match(
-        /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[^0-9]*(20\d{2})/i,
-      )
-      if (match) values.add(`${match[1].slice(0, 3)} ${match[2]}`)
+      const key = postedMonth(batch.createdAt)
+      if (key) {
+        values.set(key, new Date(batch.createdAt!).toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        }))
+      }
     }
-    return ["All", ...values]
+    return [...values].sort(([a], [b]) => b.localeCompare(a))
   }, [batches])
 
   const filtered = useMemo(
@@ -350,7 +359,7 @@ export default function BuyerHome({
         if (category !== "All" && batch.category !== category) return false
         if (
           date !== "All" &&
-          !batch.trips.toLowerCase().includes(date.slice(0, 3).toLowerCase())
+          postedMonth(batch.createdAt) !== date
         )
           return false
         return true
@@ -394,16 +403,17 @@ export default function BuyerHome({
           onChange={(event) => onCategoryChange(event.target.value)}
         >
           {["All", ...BATCH_CATEGORIES].map((option) => (
-            <option key={option}>{option}</option>
+            <option key={option} value={option}>{option === "All" ? "All categories" : option}</option>
           ))}
         </select>
         <select
-          aria-label="Filter batches by date"
+          aria-label="Filter batches by posting month"
           value={date}
           onChange={(event) => onDateChange(event.target.value)}
         >
-          {dates.map((option) => (
-            <option key={option}>{option}</option>
+          <option value="All">All months</option>
+          {dates.map(([value, label]) => (
+            <option key={value} value={value}>{label}</option>
           ))}
         </select>
       </div>

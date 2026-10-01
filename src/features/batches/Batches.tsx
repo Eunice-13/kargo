@@ -1126,7 +1126,7 @@ export default function Batches({
             "Luxury",
             "Mixed",
           ].map((o) => (
-            <option key={o}>{o}</option>
+            <option key={o} value={o}>{o === "All" ? "All categories" : o}</option>
           ))}
         </select>
         {role === "Seller" && (
@@ -1166,7 +1166,7 @@ export default function Batches({
             "Sep 2026",
             "Oct 2026",
           ].map((o) => (
-            <option key={o}>{o}</option>
+            <option key={o} value={o}>{o === "All" ? "All months" : o}</option>
           ))}
         </select>
         {role === "Seller" && (
