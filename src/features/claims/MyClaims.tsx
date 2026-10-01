@@ -1,3 +1,4 @@
+import { OrderDetailsModal } from "@/features/orders"
 import { useEffect, useRef, useState, type SetStateAction } from "react"
 import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
 import type { ClaimRow, OrderRow, PayHistRow, ClaimStatus, SharedState } from "@/types"
@@ -1148,9 +1149,12 @@ export default function MyClaims({
                         size="sm"
                         onClick={() => {
                           const o = orders.find(
-                            (o) => o.product === c.product,
+                            (o) => o.dbId
+                                ? o.dbId === String(c.id)
+                                : o.id === String(c.id) || (!isSupabaseConfigured && o.product === c.product && o.batch === c.batch && o.seller === c.seller),
                           ) || {
-                            id: `ORD-${c.id}`,
+                            id: String(c.id),
+                            dbId: isSupabaseConfigured ? String(c.id) : undefined,
                             product: c.product,
                             batch: c.batch,
                             seller: c.seller,
@@ -1300,9 +1304,12 @@ export default function MyClaims({
                           size="sm"
                           onClick={() => {
                             const o = orders.find(
-                              (o) => o.product === c.product,
+                              (o) => o.dbId
+                                ? o.dbId === String(c.id)
+                                : o.id === String(c.id) || (!isSupabaseConfigured && o.product === c.product && o.batch === c.batch && o.seller === c.seller),
                             ) || {
-                              id: `ORD-${c.id}`,
+                              id: String(c.id),
+                            dbId: isSupabaseConfigured ? String(c.id) : undefined,
                               product: c.product,
                               batch: c.batch,
                               seller: c.seller,
@@ -1364,6 +1371,13 @@ export default function MyClaims({
           contactPrefill={user.fb || ""}
           onConfirm={(method, refNo, receipt, details) => handlePay(payTarget, method, refNo, receipt, details)}
           onClose={() => setPayTarget(null)}
+        />
+      )}
+      {viewOrder && (
+        <OrderDetailsModal
+          order={orders.find((order) => order.id === viewOrder.id) ?? viewOrder}
+          payHistory={payHistory}
+          onClose={() => setViewOrder(null)}
         />
       )}
       {cancelTarget && (

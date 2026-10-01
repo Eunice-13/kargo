@@ -1,10 +1,8 @@
-import { TransactionDetailModal } from "@/features/payments"
 import { useState } from "react"
-import type { OrderRow, PayHistRow, SharedState } from "@/types"
+import type { OrderRow, SharedState } from "@/types"
 import { INDIGO, CREAM, GREEN } from "@/constants/theme"
 import {
   Card,
-  Modal,
   SecondaryBtn,
   SH,
   Avatar,
@@ -20,7 +18,6 @@ import {
 
 export default function Orders({
   orders,
-  payHistory,
   role,
   fulfillment,
   setFulfillment,
@@ -28,12 +25,6 @@ export default function Orders({
   const board = useFulfillmentBoard(setFulfillment)
   const [contactOrder, setContact] = useState<OrderRow | null>(null)
 
-  const [detailOrderId, setDetailOrderId] = useState<string | null>(null)
-  const [detailPayment, setDetailPayment] = useState<PayHistRow | null>(null)
-  const detailOrder = orders.find((order) => order.id === detailOrderId)
-  const orderPayments = detailOrder
-    ? payHistory.filter((payment) => payment.orderId === (detailOrder.dbId ?? detailOrder.id))
-    : []
 
   if (role === "Seller") {
     return (
@@ -260,9 +251,6 @@ export default function Orders({
 
             <div className="flex items-center justify-end">
               <div className="flex items-center gap-2">
-                <SecondaryBtn onClick={() => setDetailOrderId(order.id)}>
-                  View Details
-                </SecondaryBtn>
                 <SecondaryBtn onClick={() => setContact(order)}>
                   Contact Seller
                 </SecondaryBtn>
@@ -271,39 +259,6 @@ export default function Orders({
           </Card>
         )
       })}
-      {detailOrder && !detailPayment && (
-        <Modal title="Order Details" onClose={() => setDetailOrderId(null)} width={480}>
-          <dl className="space-y-3">
-            {[
-              ["Order ID", detailOrder.id],
-              ["Product", detailOrder.product],
-              ["Batch", detailOrder.batch || "—"],
-              ["Seller", detailOrder.seller],
-              ["Total", `₱${detailOrder.amount.toLocaleString()}`],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between gap-4 border-b border-gray-100 pb-2 text-sm">
-                <dt className="text-gray-500">{label}</dt>
-                <dd className="text-right font-semibold break-words min-w-0">{value}</dd>
-              </div>
-            ))}
-          </dl>
-          <div className="mt-5 space-y-3">
-            <h3 className="text-sm font-semibold">Payment records</h3>
-            {orderPayments.length === 0 ? (
-              <p className="text-sm text-gray-500">No payment records for this order yet.</p>
-            ) : orderPayments.map((payment) => (
-              <div key={payment.id} className="flex items-center justify-between gap-3 text-sm">
-                <span>{payment.date} · ₱{payment.amount.toLocaleString()} · {payment.status}</span>
-                <SecondaryBtn onClick={() => setDetailPayment(payment)}>View payment</SecondaryBtn>
-              </div>
-            ))}
-            <SecondaryBtn onClick={() => setDetailOrderId(null)}>Close</SecondaryBtn>
-          </div>
-        </Modal>
-      )}
-      {detailPayment && (
-        <TransactionDetailModal tx={detailPayment} onClose={() => setDetailPayment(null)} />
-      )}
       {contactOrder && (
         <ContactModal
           name={contactOrder.seller}
