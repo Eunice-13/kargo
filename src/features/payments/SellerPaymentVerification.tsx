@@ -14,7 +14,11 @@ import {
 import { Pencil, Plus, Trash2, Upload } from "lucide-react"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
-import type { VerifyItem } from "./verifyTypes"
+import {
+  rejectionDeadlineHasPassed,
+  verificationDisplayStatus,
+  type VerifyItem,
+} from "./verifyTypes"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
@@ -77,6 +81,7 @@ export default function SellerPaymentVerification({
   const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(
     isSupabaseConfigured ? [] : VERIFY_SEED,
   )
+  const [statusClock, setStatusClock] = useState(() => Date.now())
   const [historyFilter, setHistoryFilter] =
     useState<"All" | "Paid and Reserved" | "Pending Payment">("All")
   const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null)
@@ -104,6 +109,19 @@ export default function SellerPaymentVerification({
         ),
       )
   }, [])
+
+  useEffect(() => {
+    setStatusClock(Date.now())
+    const hasActiveRejectionDeadline = verifyItems.some((item) => {
+      if (item.status !== "Rejected" || !item.rejectionDeadline) return false
+      const deadline = new Date(item.rejectionDeadline).getTime()
+      return Number.isFinite(deadline) && deadline > Date.now()
+    })
+    if (!hasActiveRejectionDeadline) return
+
+    const timer = window.setInterval(() => setStatusClock(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [verifyItems])
 
   const reloadPaymentMethods = () =>
     kargoApi.loadOwnPaymentMethods().then(setPaymentMethods)
@@ -289,7 +307,9 @@ export default function SellerPaymentVerification({
     (item) =>
       historyFilter === "All" ||
       (historyFilter === "Paid and Reserved" && item.status === "Verified") ||
-      (historyFilter === "Pending Payment" && item.status === "Rejected"),
+      (historyFilter === "Pending Payment" &&
+        item.status === "Rejected" &&
+        !rejectionDeadlineHasPassed(item, statusClock)),
   )
   const renderTable = (items: VerifyItem[], showAmountPaid: boolean) => (
     <Card className="!p-0 overflow-hidden seller-payment-table mobile-data-page">
@@ -330,12 +350,7 @@ export default function SellerPaymentVerification({
               const paidAmount =
                 item.amountPaid == null ? null : Number(item.amountPaid)
               const isShort = paidAmount != null && paidAmount < item.amount
-              const displayStatus =
-                item.status === "Verified"
-                  ? "Paid and Reserved"
-                  : item.status === "Rejected"
-                    ? "Pending Payment"
-                    : "Awaiting Verification"
+              const displayStatus = verificationDisplayStatus(item, statusClock)
               return (
                 <tr
                   key={item.id}
@@ -434,7 +449,9 @@ export default function SellerPaymentVerification({
                         Awaiting balance
                       </div>
                     )}
-                    {item.status === "Rejected" && item.rejectionDeadline && (
+                    {item.status === "Rejected" &&
+                      item.rejectionDeadline &&
+                      !rejectionDeadlineHasPassed(item, statusClock) && (
                       <div
                         style={{
                           marginTop: 4,
