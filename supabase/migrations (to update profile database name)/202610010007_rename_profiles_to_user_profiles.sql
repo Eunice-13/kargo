@@ -1,6 +1,6 @@
 -- Keep the checked-in schema aligned with the live API table names.
--- PostgreSQL updates dependent foreign keys, views, policies, and functions
--- when the table is renamed.
+-- PostgreSQL updates tracked foreign keys, views and policies on rename.
+-- String-based function bodies require the follow-up function-reference migration.
 do $$
 begin
   if to_regclass('public.user_profiles') is null
