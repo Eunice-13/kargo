@@ -26,7 +26,9 @@ export function useFulfillmentBoard(
         "Pending Payment": "payment_pending",
         "Payment Confirmed": "payment_confirmed",
         Preparing: "preparing",
-        Completed: "completed",
+        Shipped: "shipped",
+        "In Transit": "in_transit",
+        Delivered: "completed",
         Cancelled: "cancelled",
       }[col]
       try {

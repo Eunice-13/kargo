@@ -2,3 +2,8 @@ project_id = "leylmztbknmlwnwgvaud"
 
 [functions.verify-bir-badge]
 verify_jwt = true
+
+[functions.process-pending-emails]
+# This is an internal cron endpoint. Authentication is performed by
+# @supabase/server against the `apikey` header instead of a user JWT.
+verify_jwt = false

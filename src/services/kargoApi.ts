@@ -118,14 +118,23 @@ function statusToStep(status: string) {
   )
 }
 
-function statusToColumn(status: string): FulfillmentOrder["col"] {
+function statusToColumn(
+  status: string,
+  fulfillmentStage?: string | null,
+): FulfillmentOrder["col"] {
   if (status === "payment_pending") return "Pending Payment"
 
   if (status === "payment_confirmed") return "Payment Confirmed"
 
+  if (fulfillmentStage === "shipped") return "Shipped"
+
+  if (fulfillmentStage === "in_transit") return "In Transit"
+
+  if (fulfillmentStage === "delivered") return "Delivered"
+
   if (status === "preparing") return "Preparing"
 
-  if (status === "completed") return "Completed"
+  if (status === "completed") return "Delivered"
 
   if (["cancelled", "expired", "incomplete"].includes(status))
     return "Cancelled"
@@ -636,7 +645,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         dbId: row.id,
 
-        col: statusToColumn(effectiveStatus),
+        col: statusToColumn(effectiveStatus, row.fulfillment_stage),
 
         buyer: buyerName,
 

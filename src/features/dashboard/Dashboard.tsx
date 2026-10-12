@@ -33,7 +33,9 @@ const SELLER_BOARD_COLUMNS = [
   "Pending Payment",
   "Payment Confirmed",
   "Preparing",
-  "Completed",
+  "Shipped",
+  "In Transit",
+  "Delivered",
   "Cancelled",
 ] as const
 
@@ -118,8 +120,8 @@ export default function Dashboard({
   const pendingExtensions = claims.filter(
     (c) => c.extensionRequested && c.status === "Pending" && c.seller === user.name,
   )
-  // Orders fulfilled = orders moved to the board's "Completed" column.
-  const ordersFulfilled = fulfillment.filter((o) => o.col === "Completed")
+  // Orders fulfilled = orders moved to the board's "Delivered" column.
+  const ordersFulfilled = fulfillment.filter((o) => o.col === "Delivered")
 
   const waitlistSub = closestWaitlist
     ? closestWaitlist.product && closestWaitlist.product !== "Product"
@@ -281,7 +283,9 @@ export default function Dashboard({
         "Pending Payment": "#FFF7ED",
         "Payment Confirmed": CYAN_L,
         Preparing: "#F0FDF4",
-        Completed: "#D4F5EA",
+        Shipped: "#DBEAFE",
+        "In Transit": "#E0E7FF",
+        Delivered: "#D4F5EA",
         Cancelled: "#FEE2E2",
       }
       // "Claimed" is the existing pre-payment state. The reference combines

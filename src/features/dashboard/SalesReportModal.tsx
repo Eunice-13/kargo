@@ -26,7 +26,6 @@ function startOfWeek(d: Date) {
   x.setDate(x.getDate() - x.getDay())
   return x
 }
-
 export default function SalesReportModal({
   batches,
   fulfillment,
@@ -95,7 +94,9 @@ export default function SalesReportModal({
   const demoOrders = useMemo(() => {
     if (isSupabaseConfigured) return []
     return fulfillment
-      .filter((o) => o.col === "Completed" || o.col === "Payment Confirmed" || o.col === "Preparing")
+      .filter((o) =>
+        ["Payment Confirmed", "Preparing", "Shipped", "In Transit", "Delivered"].includes(o.col),
+      )
       .map((o) => ({ id: o.id, buyer: o.buyer, purchase: o.product, qty: o.qty, amount: o.amount }))
   }, [fulfillment])
   const demoExpenses = useMemo(() => {

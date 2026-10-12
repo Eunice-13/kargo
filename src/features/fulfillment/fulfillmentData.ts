@@ -53,7 +53,7 @@ export const FULFILLMENT_INIT: FulfillmentOrder[] = [
   },
   {
     id: "ful-7",
-    col: "Completed",
+    col: "Delivered",
     buyer: "Jade Garcia",
     product: "Meiji Chocolate",
     qty: 4,

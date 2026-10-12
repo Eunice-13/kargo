@@ -6,7 +6,9 @@ export const KANBAN_COLS = [
   "Pending Payment",
   "Payment Confirmed",
   "Preparing",
-  "Completed",
+  "Shipped",
+  "In Transit",
+  "Delivered",
   "Cancelled",
 ] as const
 export type KanbanCol = typeof KANBAN_COLS[number]
@@ -15,9 +17,11 @@ export const KANBAN_COL_BG: Record<KanbanCol, string> = {
   "Pending Payment": "#FEF3C7",
   "Payment Confirmed": CYAN_L,
   Preparing: "#F0FDF4",
-  Completed: "#D4F5EA",
+  Shipped: "#DBEAFE",
+  "In Transit": "#E0E7FF",
+  Delivered: "#D4F5EA",
   Cancelled: "#FEE2E2",
 }
 // Orders already fulfilled before the ones on the board (keeps the seller
-// stat at 14 on first load, and lets it grow as cards move to "Completed").
+// stat at 14 on first load, and lets it grow as cards move to "Delivered").
 export const PRIOR_FULFILLED = 13
