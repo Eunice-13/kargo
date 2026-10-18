@@ -30,7 +30,7 @@ export const PAYHIST_INIT: PayHistRow[] = [
   },
   {
     id: 4,
-    product: "85°C Pastries",
+    product: "85\u00B0C Pastries",
     batch: "Taiwan Finds — Jul 2026",
     method: "GCash",
     amount: 1120,

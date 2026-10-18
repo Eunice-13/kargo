@@ -71,13 +71,11 @@ export default function SocialConnectModal({
         </div>
         <div className="flex gap-3">
           <SecondaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
             onClick={onClose}
           >
             Cancel
           </SecondaryBtn>
           <PrimaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
             onClick={confirm}
             loading={loading}
             disabled={!username.trim()}

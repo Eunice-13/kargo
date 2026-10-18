@@ -892,13 +892,11 @@ export default function NewBatchModal({
         )}
         <div className="flex gap-3 pt-1">
           <SecondaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
             onClick={onClose}
           >
             Cancel
           </SecondaryBtn>
           <PrimaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
             onClick={submit}
             loading={loading}
             disabled={!title.trim()}

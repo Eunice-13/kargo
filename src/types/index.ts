@@ -1,6 +1,6 @@
 import type React from "react"
 
-import type { KanbanCol } from "@/constants/fulfillment"
+import type { FulfillmentColumn } from "@/constants/fulfillment"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -363,11 +363,17 @@ export type FulfillmentOrder = {
 
   dbId?: string
 
-  col: KanbanCol
+  col: FulfillmentColumn
+
+  perspective: "seller" | "buyer"
 
   buyer: string
 
   buyerFb?: string
+
+  seller?: string
+
+  sellerFb?: string
 
   product: string
 

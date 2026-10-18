@@ -16,7 +16,7 @@ export const WAITLIST_INIT: WaitlistEntry[] = [
   },
   {
     id: "wl-pastries",
-    product: "85°C Pastries",
+    product: "85\u00B0C Pastries",
     batchId: 8,
     batch: "Taiwan Finds — July 2026",
     seller: "Rico Santos",

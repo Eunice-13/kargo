@@ -1,7 +1,13 @@
 import { useState } from "react"
 import type { FulfillmentOrder } from "@/types"
-import { KANBAN_COLS, type KanbanCol } from "@/constants/fulfillment"
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { SELLER_COLUMNS, type SellerColumn } from "@/constants/fulfillment"
+import {
+  Modal,
+  PrimaryBtn,
+  SecondaryBtn,
+  StageProgress,
+  SummaryBlock,
+} from "@/components/shared"
 import TrackingDetailsModal, {
   type TrackingDetailsInput,
 } from "./TrackingDetailsModal"
@@ -12,7 +18,7 @@ export default function FulfillmentDetails({
   onSaveTracking,
 }: {
   order: FulfillmentOrder
-  onMove: (order: FulfillmentOrder, col: KanbanCol) => void
+  onMove: (order: FulfillmentOrder, col: SellerColumn) => void
   onSaveTracking: (
     order: FulfillmentOrder,
     tracking: TrackingDetailsInput,
@@ -21,7 +27,6 @@ export default function FulfillmentDetails({
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [confirmComplete, setConfirmComplete] = useState(false)
   const [confirmShip, setConfirmShip] = useState(false)
-  const [confirmTransit, setConfirmTransit] = useState(false)
   const [showTracking, setShowTracking] = useState(false)
   const [shipAfterTracking, setShipAfterTracking] = useState(false)
   const selectId = `fulfillment-status-${order.id}`
@@ -34,12 +39,15 @@ export default function FulfillmentDetails({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 6 }}>
-        Qty: ×{order.qty} · Amount: ₱{order.amount.toLocaleString()}
-      </div>
-      <div style={{ fontSize: 11, color: "#374151", marginBottom: 8 }}>
-        Buyer: {order.buyer}
-      </div>
+      <SummaryBlock
+        title={order.product}
+        product={order.product}
+        details={[
+          `Buyer: ${order.buyer} · ×${order.qty}`,
+          `₱${order.amount.toLocaleString()}`,
+        ]}
+      />
+      <StageProgress stages={SELLER_COLUMNS} current={order.col} compact />
       <label htmlFor={selectId} className="sr-only">
         Change status for {order.buyer}, {order.product}
       </label>
@@ -47,11 +55,10 @@ export default function FulfillmentDetails({
         id={selectId}
         value={order.col}
         onChange={(e) => {
-          const next = e.target.value as KanbanCol
+          const next = e.target.value as SellerColumn
           if (next === "Cancelled") setConfirmCancel(true)
           else if (next === "Delivered") setConfirmComplete(true)
           else if (next === "Shipped") setConfirmShip(true)
-          else if (next === "In Transit") setConfirmTransit(true)
           else onMove(order, next)
         }}
         style={{
@@ -65,7 +72,7 @@ export default function FulfillmentDetails({
           color: "#374151",
         }}
       >
-        {KANBAN_COLS.map((c) => (
+        {SELLER_COLUMNS.map((c) => (
           <option key={c} value={c}>
             {c}
           </option>
@@ -104,7 +111,7 @@ export default function FulfillmentDetails({
             order. You can move it back to another status later if this was a
             mistake.
           </p>
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setConfirmCancel(false)}>
               Keep order
             </SecondaryBtn>
@@ -130,7 +137,7 @@ export default function FulfillmentDetails({
             this order and counts it toward your fulfilled total. You can move
             it back to another status later if this was a mistake.
           </p>
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setConfirmComplete(false)}>
               Not yet
             </SecondaryBtn>
@@ -155,7 +162,7 @@ export default function FulfillmentDetails({
             Are you sure you want to mark {order.product} for {order.buyer} as
             shipped? This notifies the buyer by email.
           </p>
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setConfirmShip(false)}>
               Not yet
             </SecondaryBtn>
@@ -185,31 +192,6 @@ export default function FulfillmentDetails({
             setShipAfterTracking(false)
           }}
         />
-      )}
-      {confirmTransit && (
-        <Modal
-          title="Mark this order as in transit?"
-          onClose={() => setConfirmTransit(false)}
-          width={420}
-        >
-          <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-            Confirm that {order.product} for {order.buyer} is now in transit.
-            The buyer will be notified by email.
-          </p>
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-            <SecondaryBtn onClick={() => setConfirmTransit(false)}>
-              Not yet
-            </SecondaryBtn>
-            <PrimaryBtn
-              onClick={() => {
-                setConfirmTransit(false)
-                onMove(order, "In Transit")
-              }}
-            >
-              Mark in transit
-            </PrimaryBtn>
-          </div>
-        </Modal>
       )}
     </div>
   )

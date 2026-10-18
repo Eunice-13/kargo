@@ -4,7 +4,12 @@ import { CheckCircle2, Paperclip } from "lucide-react"
 
 import type { ToPayRow } from "@/types"
 
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import {
+  Modal,
+  PrimaryBtn,
+  SecondaryBtn,
+  SummaryBlock,
+} from "@/components/shared"
 
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
@@ -173,43 +178,14 @@ export default function PaymentSubmitModal({
   return (
     <Modal title="Submit Payment" onClose={onClose} width={480}>
       <div className="space-y-4">
-        <div
-          style={{
-            background: "#F9FAFB",
-
-            borderRadius: 8,
-
-            padding: "10px 14px",
-
-            display: "flex",
-
-            justifyContent: "space-between",
-
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
-              {item.product}
-            </div>
-            <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-              Seller: {item.seller}
-            </div>
-          </div>
-          <div
-            style={{
-              fontSize: 16,
-
-              fontWeight: 800,
-
-              color: "#111827",
-
-              fontFamily: "'Josefin Sans',sans-serif",
-            }}
-          >
-            ₱{item.amount.toLocaleString()}
-          </div>
-        </div>
+        <SummaryBlock
+          title={item.product}
+          product={item.product}
+          details={[
+            `Seller: ${item.seller}`,
+            `₱${item.amount.toLocaleString()}`,
+          ]}
+        />
 
         <div>
           <label
@@ -675,25 +651,11 @@ export default function PaymentSubmitModal({
           </>
         )}
 
-        <div className="flex gap-3 pt-1">
-          <SecondaryBtn
-            style={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              fontSize: 12,
-            }}
-            onClick={onClose}
-          >
+        <div className="kargo-modal-actions pt-1">
+          <SecondaryBtn onClick={onClose}>
             Cancel
           </SecondaryBtn>
           <PrimaryBtn
-            style={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              fontSize: 12,
-            }}
             onClick={async () => {
               if (deadlineHasPassed(item)) {
                 onClose()

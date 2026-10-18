@@ -16,9 +16,8 @@ export default function ApplyToSellModal({ onEnableSeller, onClose }: {
         </p>
 
         <div className="flex gap-3">
-          <SecondaryBtn style={{ flex: 1, display: "flex", justifyContent: "center" }} onClick={onClose}>Cancel</SecondaryBtn>
+          <SecondaryBtn onClick={onClose}>Cancel</SecondaryBtn>
           <PrimaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
             disabled={loading}
             onClick={async () => {
               setLoading(true)

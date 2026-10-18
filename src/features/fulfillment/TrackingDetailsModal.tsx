@@ -6,6 +6,7 @@ import {
   Modal,
   PrimaryBtn,
   SecondaryBtn,
+  SummaryBlock,
 } from "@/components/shared"
 
 export type TrackingDetailsInput = {
@@ -59,6 +60,14 @@ export default function TrackingDetailsModal({
       width={520}
     >
       <div className="space-y-4">
+        <SummaryBlock
+          title={order.product}
+          product={order.product}
+          details={[
+            `Buyer: ${order.buyer} · ×${order.qty}`,
+            `₱${order.amount.toLocaleString()}`,
+          ]}
+        />
         <p className="text-sm leading-6 text-gray-600">
           Add the courier and rider information the buyer will use after this
           order is marked shipped.
@@ -141,7 +150,7 @@ export default function TrackingDetailsModal({
             {saveError}
           </p>
         )}
-        <div className="flex justify-end gap-3 max-[480px]:flex-col-reverse">
+        <div className="kargo-modal-actions">
           <SecondaryBtn onClick={onClose} disabled={saving}>
             Cancel
           </SecondaryBtn>

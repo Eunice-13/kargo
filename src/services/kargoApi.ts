@@ -125,25 +125,29 @@ function statusToStep(status: string, fulfillmentStage?: string | null) {
 function statusToColumn(
   status: string,
   fulfillmentStage?: string | null,
-): FulfillmentOrder["col"] {
-  if (status === "payment_pending") return "Pending Payment"
+  role: FulfillmentOrder["perspective"] = "seller",
+): FulfillmentOrder["col"] | null {
+  if (fulfillmentStage === "delivered" || status === "completed")
+    return "Delivered"
+
+  if (
+    ["shipped", "in_transit"].includes(fulfillmentStage ?? "") ||
+    ["shipped", "in_transit"].includes(status)
+  )
+    return "Shipped"
+
+  if (fulfillmentStage === "preparing" || status === "preparing")
+    return "Preparing"
 
   if (status === "payment_confirmed") return "Payment Confirmed"
 
-  if (fulfillmentStage === "shipped") return "Shipped"
-
-  if (fulfillmentStage === "in_transit") return "In Transit"
-
-  if (fulfillmentStage === "delivered") return "Delivered"
-
-  if (status === "preparing") return "Preparing"
-
-  if (status === "completed") return "Delivered"
+  if (["payment_pending", "payment_submitted", "insufficient_payment"].includes(status))
+    return role === "buyer" ? "Pending Payment" : null
 
   if (["cancelled", "expired", "incomplete"].includes(status))
-    return "Cancelled"
+    return role === "seller" ? "Cancelled" : null
 
-  return "Claimed"
+  return null
 }
 
 function numericId(value: string) {
@@ -641,6 +645,27 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         qty: row.quantity,
         ...deliveryFields,
       })
+
+      const buyerColumn = statusToColumn(
+        effectiveStatus,
+        row.fulfillment_stage,
+        "buyer",
+      )
+      if (buyerColumn) {
+        fulfillment.push({
+          id: row.id,
+          dbId: row.id,
+          col: buyerColumn,
+          perspective: "buyer",
+          buyer: buyerName,
+          seller: sellerName,
+          sellerFb: participantLinks.get(row.seller_id),
+          product: product.name,
+          qty: row.quantity,
+          amount: orderTotal,
+          ...deliveryFields,
+        })
+      }
     } else {
       claims.push({
         id: row.id,
@@ -673,24 +698,25 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         ...deliveryFields,
       })
 
-      fulfillment.push({
-        id: row.id,
-
-        dbId: row.id,
-
-        col: statusToColumn(effectiveStatus, row.fulfillment_stage),
-
-        buyer: buyerName,
-
-        buyerFb: participantLinks.get(row.buyer_id),
-
-        product: product.name,
-
-        qty: row.quantity,
-
-        amount: orderTotal,
-        ...deliveryFields,
-      })
+      const sellerColumn = statusToColumn(
+        effectiveStatus,
+        row.fulfillment_stage,
+        "seller",
+      )
+      if (sellerColumn) {
+        fulfillment.push({
+          id: row.id,
+          dbId: row.id,
+          col: sellerColumn,
+          perspective: "seller",
+          buyer: buyerName,
+          buyerFb: participantLinks.get(row.buyer_id),
+          product: product.name,
+          qty: row.quantity,
+          amount: orderTotal,
+          ...deliveryFields,
+        })
+      }
     }
 
     const verifiedPaid = (row.payments ?? [])

@@ -51,13 +51,12 @@ export default function ContactModal({
             </p>
             <div className="flex gap-3">
               <SecondaryBtn
-                style={{ flex: 1, display: "flex", justifyContent: "center" }}
                 onClick={onClose}
               >
                 Close
               </SecondaryBtn>
               <PrimaryBtn
-                style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", gap: 5 }}
+                style={{ display: "flex", alignItems: "center", gap: 5 }}
                 onClick={() => {
                   window.open(contactUrl, "_blank", "noopener,noreferrer")
                   onClose()

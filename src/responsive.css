@@ -18,10 +18,6 @@
     box-sizing: border-box;
   }
 
-  :is(button, a[href], [role="button"], select, input[type="checkbox"], input[type="radio"]) {
-    min-height: 44px;
-  }
-
   :is(button, a[href], [role="button"]):active {
     transform: scale(.98);
   }
@@ -190,6 +186,12 @@
   .seller-payment-table td:nth-child(6)::before { content: "Date"; }
   .seller-payment-table td:nth-child(7)::before { content: "Status"; }
   .seller-payment-table td:nth-child(8)::before { content: "Actions"; }
+}
+
+@media (max-width: 1024px) and (pointer: coarse) {
+  :is(button, a[href], [role="button"], select, input[type="checkbox"], input[type="radio"]) {
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 900px) {

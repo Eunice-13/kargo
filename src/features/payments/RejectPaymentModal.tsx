@@ -223,13 +223,8 @@ export default function RejectPaymentModal({
             notified to complete their payment.</span>
           </div>
         )}
-        <div className="flex gap-3 pt-1">
+        <div className="kargo-modal-actions pt-1">
           <SecondaryBtn
-            style={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-            }}
             onClick={() => setRejectTarget(null)}
           >
             Cancel
@@ -262,7 +257,6 @@ export default function RejectPaymentModal({
               }
             }}
             style={{
-              flex: 1,
               background: isWrongAmt ? "#F59E0B" : "#EF4444",
               color: "#fff",
               border: "none",

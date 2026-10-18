@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import type React from "react"
 import type { FulfillmentOrder } from "@/types"
-import type { KanbanCol } from "@/constants/fulfillment"
+import type { SellerColumn } from "@/constants/fulfillment"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { TrackingDetailsInput } from "./TrackingDetailsModal"
@@ -19,16 +19,13 @@ export function useFulfillmentBoard(
   const toggle = (id: string) =>
     setExpandedId((cur) => (cur === id ? null : id))
 
-  const move = async (order: FulfillmentOrder, col: KanbanCol) => {
+  const move = async (order: FulfillmentOrder, col: SellerColumn) => {
     if (order.col === col) return
     if (isSupabaseConfigured) {
       const status = {
-        Claimed: "payment_submitted",
-        "Pending Payment": "payment_pending",
         "Payment Confirmed": "payment_confirmed",
         Preparing: "preparing",
         Shipped: "shipped",
-        "In Transit": "in_transit",
         Delivered: "completed",
         Cancelled: "cancelled",
       }[col]

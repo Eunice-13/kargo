@@ -1,11 +1,13 @@
 import { useState } from "react"
 
 import type { OrderRow, PayHistRow } from "@/types"
+import { BUYER_COLUMNS } from "@/constants/fulfillment"
 
 import {
   DeliveryPreviewCard,
   Modal,
   SecondaryBtn,
+  StageProgress,
   safeTrackingUrl,
 } from "@/components/shared"
 import { TransactionDetailModal } from "@/features/payments"
@@ -31,10 +33,20 @@ export default function OrderDetailsModal({
     ["shipped", "in_transit", "delivered"].includes(
       detailOrder.fulfillmentStage ?? "",
     )
+  const currentStage = detailOrder.fulfillmentStage === "delivered"
+    ? "Delivered"
+    : ["shipped", "in_transit"].includes(detailOrder.fulfillmentStage ?? "")
+      ? "Shipped"
+      : detailOrder.fulfillmentStage === "preparing" || detailOrder.step === 4
+        ? "Preparing"
+        : detailOrder.step === 3
+          ? "Payment Confirmed"
+          : "Pending Payment"
   return (
     <>
       {detailOrder && !detailPayment && (
         <Modal title="Order Details" onClose={() => onClose()} width={480}>
+          <StageProgress stages={BUYER_COLUMNS} current={currentStage} />
           <dl className="space-y-3">
             {[
               ["Order ID", detailOrder.id],
@@ -85,15 +97,15 @@ export default function OrderDetailsModal({
                 />
                 <dl className="space-y-2">
                   {[
-                    ["Courier", detailOrder.courierCompany || "â€”"],
-                    ["Rider", detailOrder.riderName || "â€”"],
-                    ["Rider contact", detailOrder.riderContact || "â€”"],
-                    ["Tracking number", detailOrder.trackingNumber || "â€”"],
+                    ["Courier", detailOrder.courierCompany || "—"],
+                    ["Rider", detailOrder.riderName || "—"],
+                    ["Rider contact", detailOrder.riderContact || "—"],
+                    ["Tracking number", detailOrder.trackingNumber || "—"],
                     [
                       "ETA",
                       detailOrder.eta
                         ? new Date(detailOrder.eta).toLocaleString()
-                        : "â€”",
+                        : "—",
                     ],
                     [
                       "Status",

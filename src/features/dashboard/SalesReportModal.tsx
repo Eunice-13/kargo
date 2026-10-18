@@ -96,7 +96,7 @@ export default function SalesReportModal({
     if (isSupabaseConfigured) return []
     return fulfillment
       .filter((o) =>
-        ["Payment Confirmed", "Preparing", "Shipped", "In Transit", "Delivered"].includes(o.col),
+        ["Payment Confirmed", "Preparing", "Shipped", "Delivered"].includes(o.col),
       )
       .map((o) => ({ id: o.id, buyer: o.buyer, purchase: o.product, qty: o.qty, amount: o.amount }))
   }, [fulfillment])
@@ -351,16 +351,15 @@ export default function SalesReportModal({
         </div>
 
         {/* Actions — not printed */}
-        <div className="no-print" style={{ display: "flex", gap: 10, padding: "0 24px 20px" }}>
+        <div className="no-print kargo-modal-actions" style={{ padding: "0 24px 20px" }}>
           <SecondaryBtn
             onClick={onClose}
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
           >
             Close
           </SecondaryBtn>
           <PrimaryBtn
             onClick={handlePrint}
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
+            style={{ display: "flex", alignItems: "center", gap: 7 }}
           >
             <Printer size={16} aria-hidden="true" />
             Print

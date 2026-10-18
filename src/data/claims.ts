@@ -208,7 +208,7 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 10,
 
-    product: "85°C Pastries",
+    product: "85\u00B0C Pastries",
 
     batch: "Taiwan Finds — July 2026",
 

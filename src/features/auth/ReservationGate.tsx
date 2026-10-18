@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import {
+  Modal,
+  PrimaryBtn,
+  SecondaryBtn,
+  SummaryBlock,
+} from "@/components/shared"
 
 type ReservationGateStep = "question" | "choose"
 
@@ -36,11 +41,10 @@ export default function ReservationGate({
                 it or reserve items.
               </p>
               {batchTitle && (
-                <p>
-                  Shared batch:{" "}
-                  <strong className="text-gray-900">{batchTitle}</strong>
-                  {sellerName ? ` by ${sellerName}` : ""}
-                </p>
+                <SummaryBlock
+                  title={`Shared batch: ${batchTitle}`}
+                  details={sellerName ? [`by ${sellerName}`] : undefined}
+                />
               )}
               <p>
                 The shared batch will open next after you log in or create an

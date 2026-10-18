@@ -455,7 +455,7 @@ const BASE_BATCHES_SEED: Omit<BatchItem, "sellerId">[] =
 
       products: [
         {
-          name: "85°C Pastries",
+          name: "85\u00B0C Pastries",
 
           price: 560,
 

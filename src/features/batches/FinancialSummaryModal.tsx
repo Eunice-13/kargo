@@ -405,11 +405,11 @@ export default function FinancialSummaryModal({
           and finalized.
         </p>
 
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="kargo-modal-actions">
           <SecondaryBtn
             size="sm"
             onClick={onClose}
-            style={{ flex: 1, display: "flex", justifyContent: "center", padding: "9px 8px" }}
+            style={{ padding: "9px 12px" }}
           >
             Close
           </SecondaryBtn>
@@ -417,14 +417,14 @@ export default function FinancialSummaryModal({
             size="sm"
             onClick={handleSaveExpenses}
             disabled={saving}
-            style={{ flex: 1, display: "flex", justifyContent: "center", padding: "9px 8px" }}
+            style={{ padding: "9px 12px" }}
           >
             {saving ? "Saving…" : "Save"}
           </PrimaryBtn>
           <SecondaryBtn
             size="sm"
             onClick={() => setShowReceipt(true)}
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "9px 8px" }}
+            style={{ display: "flex", alignItems: "center", gap: 5, padding: "9px 12px" }}
           >
             <Printer size={14} aria-hidden="true" /> Receipt
           </SecondaryBtn>
@@ -619,13 +619,13 @@ function FinancialReceipt({
           internal seller records only — not shared with buyers.
         </p>
 
-        <div className="no-print" style={{ display: "flex", gap: 10, marginTop: 16 }}>
-          <SecondaryBtn onClick={onBack} style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+        <div className="no-print kargo-modal-actions">
+          <SecondaryBtn onClick={onBack}>
             Back
           </SecondaryBtn>
           <PrimaryBtn
             onClick={onPrint}
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}
+            style={{ display: "flex", alignItems: "center", gap: 7 }}
           >
             <Printer size={16} aria-hidden="true" /> Print
           </PrimaryBtn>

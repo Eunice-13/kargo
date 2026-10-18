@@ -530,6 +530,7 @@ export default function MyClaims({
     id: String(claim.id),
     dbId: isSupabaseConfigured ? String(claim.id) : undefined,
     col: claim.fulfillmentStage === "shipped" ? "Shipped" : "Preparing",
+    perspective: "seller",
     buyer: claim.buyer || "Buyer",
     buyerFb: claim.buyerFb,
     product: claim.product,

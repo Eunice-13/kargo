@@ -7,6 +7,7 @@ import {
   Modal,
   PrimaryBtn,
   SecondaryBtn,
+  SummaryBlock,
 } from "@/components/shared"
 
 export default function SetShippingFeeModal({
@@ -31,11 +32,12 @@ export default function SetShippingFeeModal({
   return (
     <Modal title="Set shipping fee" onClose={onClose} width={540}>
       <div className="space-y-4">
-        <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
-          <strong>{claim.product}</strong> Ã—{claim.qty}
-          <div className="mt-1 text-xs text-gray-500">
-            Item amount: â‚±{claim.amount.toLocaleString()}
-          </div>
+        <div>
+          <SummaryBlock
+            title={`${claim.product} ×${claim.qty}`}
+            product={claim.product}
+            details={[`Item amount: ₱${claim.amount.toLocaleString()}`]}
+          />
           <div className="mt-2">
             <Countdown hours={claim.hours} expiresAt={claim.expiresAt} paused />
           </div>
@@ -50,7 +52,7 @@ export default function SetShippingFeeModal({
           }}
         />
         <label className="block text-xs font-semibold text-gray-700">
-          Shipping fee (â‚±)
+          Shipping fee (₱)
           <input
             type="number"
             min="0"
@@ -64,7 +66,7 @@ export default function SetShippingFeeModal({
         {valid && (
           <p className="text-sm text-gray-600">
             New total:{" "}
-            <strong>â‚±{(claim.amount + numericFee).toLocaleString()}</strong>
+            <strong>₱{(claim.amount + numericFee).toLocaleString()}</strong>
           </p>
         )}
         <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
@@ -73,7 +75,7 @@ export default function SetShippingFeeModal({
           </SecondaryBtn>
           <SecondaryBtn onClick={onDecline}>Decline order</SecondaryBtn>
         </div>
-        <div className="flex justify-end gap-3 max-[480px]:flex-col-reverse">
+        <div className="kargo-modal-actions">
           <SecondaryBtn onClick={onClose} disabled={saving}>
             Cancel
           </SecondaryBtn>

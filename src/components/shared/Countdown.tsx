@@ -68,7 +68,7 @@ export default function Countdown({
   if (paused) {
     return (
       <span className="text-xs font-semibold text-amber-700">
-        Paused â€” waiting for seller
+        Paused — waiting for seller
       </span>
     )
   }

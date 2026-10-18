@@ -97,13 +97,11 @@ export default function ExtensionRequestModal({
         </div>
         <div className="flex gap-3">
           <SecondaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
             onClick={onClose}
           >
             Cancel
           </SecondaryBtn>
           <PrimaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center" }}
             onClick={() => onSubmit(Number(days) * 24, reason.trim())}
           >
             Send Request

@@ -64,7 +64,7 @@ export const ORDERS_INIT: OrderRow[] = [
   {
     id: "ORD-2026-0047",
 
-    product: "85°C Pastries",
+    product: "85\u00B0C Pastries",
 
     batch: "Taiwan Finds — July 2026",
 

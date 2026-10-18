@@ -33,8 +33,9 @@ import type { PaymentSubmissionDetails } from "@/features/payments"
 import {
   useFulfillmentBoard,
   FulfillmentLiveRegion,
-  FulfillmentDetails,
+  FulfillmentBoard,
 } from "@/features/fulfillment"
+import { OrderDetailsModal } from "@/features/orders"
 import SalesReportModal from "./SalesReportModal"
 import WaitlistModal from "./WaitlistModal"
 import SellerWaitlistCard from "./SellerWaitlistCard"
@@ -44,16 +45,6 @@ import {
   claimIsPayable,
   deadlineHasPassed,
 } from "@/features/claims/claimExpiry"
-
-const SELLER_BOARD_COLUMNS = [
-  "Pending Payment",
-  "Payment Confirmed",
-  "Preparing",
-  "Shipped",
-  "In Transit",
-  "Delivered",
-  "Cancelled",
-] as const
 
 export default function Dashboard({
   batches,
@@ -83,8 +74,7 @@ export default function Dashboard({
   const [boardExpanded, setBoardExpanded] = useState(false)
   const [showSalesReport, setShowSalesReport] = useState(false)
   const [showWaitlist, setShowWaitlist] = useState(false)
-  const [collapsedBoardColumns, setCollapsedBoardColumns] =
-    useState<Record<string, boolean>>({})
+  const [buyerOrderDetailsId, setBuyerOrderDetailsId] = useState<string | null>(null)
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
   const board = useFulfillmentBoard(setFulfillment)
 
@@ -321,175 +311,6 @@ export default function Dashboard({
     return true
   }
 
-  // Kanban columns for the seller Fulfillment Board. Rendered both inside the
-  // embedded dashboard card and inside the full-screen expanded overlay; the
-  // `expanded` flag simply gives each column more room.
-  const renderBoardColumns = (expanded: boolean) =>
-    SELLER_BOARD_COLUMNS.map((col) => {
-      const colColors: Record<string, string> = {
-        Claimed: "#EEF0FF",
-        "Pending Payment": "#FFF7ED",
-        "Payment Confirmed": CYAN_L,
-        Preparing: "#F0FDF4",
-        Shipped: "#DBEAFE",
-        "In Transit": "#E0E7FF",
-        Delivered: "#D4F5EA",
-        Cancelled: "#FEE2E2",
-      }
-      // "Claimed" is the existing pre-payment state. The reference combines
-      // it with Pending Payment visually; the underlying status is untouched.
-      const colOrders = fulfillment.filter((o) =>
-        col === "Pending Payment"
-          ? o.col === "Claimed" || o.col === "Pending Payment"
-          : o.col === col,
-      )
-      const visibleOrders = expanded ? colOrders : colOrders.slice(0, 3)
-      return (
-        <div
-          key={col}
-          className="seller-board-column"
-          style={{ minWidth: expanded ? 260 : undefined }}
-        >
-          <div
-            className="seller-board-column__head"
-            style={{ background: colColors[col] || CREAM }}
-          >
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#374151",
-              }}
-            >
-              {col}
-            </span>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#6B7280",
-                background: "rgba(255,255,255,0.6)",
-                borderRadius: 999,
-                padding: "1px 7px",
-              }}
-            >
-              {colOrders.length}
-            </span>
-            <button
-              type="button"
-              className="seller-board-column__mobile-toggle"
-              aria-label={`${
-                collapsedBoardColumns[col] ? "Expand" : "Collapse"
-              } ${col}`}
-              aria-expanded={!collapsedBoardColumns[col]}
-              onClick={() =>
-                setCollapsedBoardColumns((current) => ({
-                  ...current,
-                  [col]: !current[col],
-                }))
-              }
-            />
-          </div>
-          <div
-            className="seller-board-column__cards space-y-2"
-            data-collapsed={collapsedBoardColumns[col] ? "true" : undefined}
-          >
-            {visibleOrders.map((o) => {
-              const isExpanded = board.expandedId === o.id
-              return (
-                <div key={o.id} className="seller-board-card">
-                  <div
-                    onClick={() => board.toggle(o.id)}
-                    role="button"
-                    tabIndex={0}
-                    aria-expanded={isExpanded}
-                    aria-label={`${
-                      isExpanded ? "Collapse" : "Expand"
-                    } order for ${o.buyer} — ${o.product}`}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault()
-                        board.toggle(o.id)
-                      }
-                    }}
-                    style={{ padding: "9px 10px", cursor: "pointer" }}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Avatar name={o.buyer} size={18} />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setBuyerProfile({
-                            name: o.buyer,
-                            contactUrl: o.buyerFb,
-                          })
-                        }}
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: INDIGO,
-                          background: "none",
-                          border: "none",
-                          padding: 0,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {o.buyer}
-                      </button>
-                    </div>
-                    <div style={{ fontSize: 11, color: "#6B7280" }}>
-                      {o.product}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: GREEN,
-                        marginTop: 4,
-                        fontFamily: "'Josefin Sans',sans-serif",
-                      }}
-                    >
-                      ₱{o.amount.toLocaleString()}
-                    </div>
-                  </div>
-                  {isExpanded && (
-                    <FulfillmentDetails
-                      order={o}
-                      onMove={board.move}
-                      onSaveTracking={board.saveTracking}
-                    />
-                  )}
-                </div>
-              )
-            })}
-            {!expanded && colOrders.length > 3 && (
-              <button
-                type="button"
-                className="seller-board-more"
-                onClick={() => setBoardExpanded(true)}
-                aria-label={`Show ${colOrders.length - 3} more ${col} orders`}
-              >
-                +{colOrders.length - 3} more
-              </button>
-            )}
-            {colOrders.length === 0 && (
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "#9CA3AF",
-                  textAlign: "center",
-                  padding: "16px 0",
-                }}
-              >
-                —
-              </div>
-            )}
-          </div>
-        </div>
-      )
-    })
-
   if (String(role) === "Seller") {
     return (
       <div className="seller-dashboard">
@@ -679,7 +500,19 @@ export default function Dashboard({
             </div>
           </div>
           <div className="seller-board-preview">
-            {renderBoardColumns(false)}
+            <FulfillmentBoard
+              fulfillment={fulfillment}
+              role="seller"
+              board={board}
+              onExpand={() => setBoardExpanded(true)}
+              onOpenProfile={(order) =>
+                setBuyerProfile({ name: order.buyer, contactUrl: order.buyerFb })
+              }
+              onOpenPendingPayments={() => {
+                navIntent.orderFilter = "Pending"
+                setTab("My Claims")
+              }}
+            />
           </div>
           <FulfillmentLiveRegion text={board.announcement} />
         </section>
@@ -702,7 +535,20 @@ export default function Dashboard({
             </header>
             <div className="seller-board-dialog__body">
               <div className="seller-board-dialog__columns">
-                {renderBoardColumns(true)}
+                <FulfillmentBoard
+                  fulfillment={fulfillment}
+                  role="seller"
+                  board={board}
+                  expanded
+                  onOpenProfile={(order) =>
+                    setBuyerProfile({ name: order.buyer, contactUrl: order.buyerFb })
+                  }
+                  onOpenPendingPayments={() => {
+                    navIntent.orderFilter = "Pending"
+                    setTab("My Claims")
+                    setBoardExpanded(false)
+                  }}
+                />
               </div>
             </div>
             <FulfillmentLiveRegion text={board.announcement} />
@@ -961,154 +807,6 @@ export default function Dashboard({
           </Card>
         </div>
       )}
-      {role === "Seller" && (
-        <Card>
-          <SH
-            title="Fulfillment Board"
-            action={
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSalesReport(true)}
-                  aria-label="Open sales report"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "#374151",
-                    background: "#fff",
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 7,
-                    padding: "5px 10px",
-                    cursor: "pointer",
-                  }}
-                >
-                  <FileText size={14} />
-                  Sales Report
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBoardExpanded(true)}
-                  aria-label="Expand fulfillment board to full screen"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: INDIGO,
-                    background: "#EEF0FF",
-                    border: "1px solid #E0E3FF",
-                    borderRadius: 7,
-                    padding: "5px 10px",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Maximize2 size={14} />
-                  Expand
-                </button>
-              </div>
-            }
-          />
-          <div
-            style={{
-              display: "flex",
-              gap: 16,
-              overflowX: "auto",
-              paddingBottom: 8,
-            }}
-          >
-            {renderBoardColumns(false)}
-          </div>
-          <FulfillmentLiveRegion text={board.announcement} />
-        </Card>
-      )}
-      {role === "Seller" && <SellerWaitlistCard groups={sellerWaitlist} />}
-      {boardExpanded && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Fulfillment Board — expanded view"
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 60,
-            background: "#F5F6FA",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "14px 20px",
-              background: "#fff",
-              borderBottom: "1px solid #E5E7EB",
-              flexShrink: 0,
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setBoardExpanded(false)}
-                aria-label="Back to dashboard"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#374151",
-                  background: "#F3F4F6",
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 8,
-                  padding: "7px 12px",
-                  cursor: "pointer",
-                }}
-              >
-                <X size={16} />
-                Back to Dashboard
-              </button>
-              <h2
-                style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: "#111827",
-                  fontFamily: "'Josefin Sans',sans-serif",
-                }}
-              >
-                Fulfillment Board
-              </h2>
-            </div>
-            <span style={{ fontSize: 12, color: "#9CA3AF" }}>
-              Track all orders across fulfillment stages
-            </span>
-          </div>
-          <div
-            style={{
-              flex: 1,
-              overflow: "auto",
-              padding: 20,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                gap: 20,
-                alignItems: "flex-start",
-                minHeight: "100%",
-              }}
-            >
-              {renderBoardColumns(true)}
-            </div>
-          </div>
-          <FulfillmentLiveRegion text={board.announcement} />
-        </div>
-      )}
       {role !== "Seller" && (
         <div className="bdash-main">
           <div className="bdash-card">
@@ -1243,6 +941,69 @@ export default function Dashboard({
           </aside>
         </div>
       )}
+      <section className="buyer-fulfillment-section">
+        <div className="seller-section-heading seller-board-heading">
+          <h2>Fulfillment Board</h2>
+          <button type="button" onClick={() => setBoardExpanded(true)}>
+            <Maximize2 size={14} aria-hidden="true" />
+            Expand
+          </button>
+        </div>
+        <FulfillmentBoard
+          fulfillment={fulfillment}
+          role="buyer"
+          board={board}
+          onExpand={() => setBoardExpanded(true)}
+          onViewOrder={(order) => setBuyerOrderDetailsId(order.dbId || order.id)}
+        />
+        <FulfillmentLiveRegion text={board.announcement} />
+      </section>
+      {boardExpanded && (
+        <div
+          className="seller-board-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fulfillment Board — expanded view"
+        >
+          <header>
+            <div>
+              <button type="button" onClick={() => setBoardExpanded(false)}>
+                <X size={16} aria-hidden="true" /> Back to Dashboard
+              </button>
+              <h2>Fulfillment Board</h2>
+            </div>
+            <span>Track all orders across fulfillment stages</span>
+          </header>
+          <div className="seller-board-dialog__body">
+            <div className="seller-board-dialog__columns">
+              <FulfillmentBoard
+                fulfillment={fulfillment}
+                role="buyer"
+                board={board}
+                expanded
+                onViewOrder={(order) =>
+                  setBuyerOrderDetailsId(order.dbId || order.id)
+                }
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      {buyerOrderDetailsId &&
+        (() => {
+          const order = orders.find(
+            (candidate) =>
+              candidate.dbId === buyerOrderDetailsId ||
+              candidate.id === buyerOrderDetailsId,
+          )
+          return order ? (
+            <OrderDetailsModal
+              order={order}
+              payHistory={payHistory}
+              onClose={() => setBuyerOrderDetailsId(null)}
+            />
+          ) : null
+        })()}
       {showPayAll && (
         <BatchCheckoutModal
           items={payableToPay}

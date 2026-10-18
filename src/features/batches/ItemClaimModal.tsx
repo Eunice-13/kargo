@@ -12,7 +12,7 @@ import {
   PrimaryBtn,
   SecondaryBtn,
   Avatar,
-  ProductThumb,
+  SummaryBlock,
   LocationPinPicker,
   type LocationPinValue,
 } from "@/components/shared"
@@ -149,55 +149,14 @@ export default function ItemClaimModal({
   return (
     <Modal title="Review claim before submitting" onClose={onClose} width={480}>
       <div className="space-y-4">
-        {/* Product header */}
-        <div
-          style={{
-            display: "flex",
-
-            gap: 14,
-
-            alignItems: "center",
-
-            background: CREAM,
-
-            borderRadius: 10,
-
-            padding: "12px 14px",
-          }}
-        >
-          <ProductThumb name={product.name} />
-          <div className="flex-1">
-            <div
-              style={{
-                fontSize: 15,
-
-                fontWeight: 700,
-
-                color: "#111827",
-
-                fontFamily: "'Josefin Sans',sans-serif",
-              }}
-            >
-              {product.name}
-            </div>
-            <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
-              from {batch.title}
-            </div>
-          </div>
-          <div
-            style={{
-              fontSize: 18,
-
-              fontWeight: 800,
-
-              color: INDIGO,
-
-              fontFamily: "'Josefin Sans',sans-serif",
-            }}
-          >
-            ₱{product.price.toLocaleString()}
-          </div>
-        </div>
+        <SummaryBlock
+          title={product.name}
+          product={product.name}
+          details={[
+            `from ${batch.title}`,
+            `₱${product.price.toLocaleString()}`,
+          ]}
+        />
 
         {/* Seller trust row */}
         <div
@@ -555,25 +514,11 @@ export default function ItemClaimModal({
           Total: ₱{(product.price * qty).toLocaleString()}
         </div>
 
-        <div className="flex gap-3">
-          <SecondaryBtn
-            style={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              fontSize: 12,
-            }}
-            onClick={onClose}
-          >
+        <div className="kargo-modal-actions">
+          <SecondaryBtn onClick={onClose}>
             Cancel
           </SecondaryBtn>
           <PrimaryBtn
-            style={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              fontSize: 12,
-            }}
             disabled={submitting || !canConfirm}
             onClick={async () => {
               setSubmitting(true)

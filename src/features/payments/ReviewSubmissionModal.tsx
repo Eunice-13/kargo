@@ -397,12 +397,11 @@ export default function ReviewSubmissionModal({
               whiteSpace: "nowrap" as const,
             }
             return (
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className="kargo-modal-actions">
                 <button
                   onClick={() => setReviewTarget(null)}
                   style={{
                     ...btnBase,
-                    flex: 1,
                     justifyContent: "center",
                     display: "flex",
                     background: "#fff",
@@ -420,7 +419,6 @@ export default function ReviewSubmissionModal({
                           <span
                             style={{
                               ...btnBase,
-                              flex: 1,
                               color: "#0B7A59",
                               background: "#D4F5EA",
                               borderColor: "#6EE7B7",
@@ -434,7 +432,6 @@ export default function ReviewSubmissionModal({
                             onClick={() => onNotifyBuyer(reviewTarget)}
                             style={{
                               ...btnBase,
-                              flex: 1,
                               background: "#FEF3C7",
                               color: "#92400E",
                               borderColor: "#FCD34D",
@@ -447,7 +444,6 @@ export default function ReviewSubmissionModal({
                           onClick={() => onMarkPaid(reviewTarget)}
                           style={{
                             ...btnBase,
-                            flex: 1,
                             background: INDIGO,
                             color: "#fff",
                             borderColor: INDIGO,
@@ -461,7 +457,6 @@ export default function ReviewSubmissionModal({
                       onClick={() => onMarkPaid(reviewTarget)}
                       style={{
                         ...btnBase,
-                        flex: 1,
                         justifyContent: "center",
                         display: "flex",
                         background: INDIGO,
@@ -480,7 +475,6 @@ export default function ReviewSubmissionModal({
                       }}
                       style={{
                         ...btnBase,
-                        flex: 1,
                         justifyContent: "center",
                         display: "flex",
                         background: "#fff",
@@ -497,7 +491,6 @@ export default function ReviewSubmissionModal({
                     <span
                       style={{
                         ...btnBase,
-                        flex: 1,
                         color: "#0B7A59",
                         background: "#D4F5EA",
                         borderColor: "#6EE7B7",
@@ -512,7 +505,6 @@ export default function ReviewSubmissionModal({
                       onClick={notifyBuyer}
                       style={{
                         ...btnBase,
-                        flex: 1,
                         background: "#FEF3C7",
                         color: "#92400E",
                         borderColor: "#FCD34D",

@@ -125,13 +125,13 @@ export default function JoinWaitlistModal({
 
         <div className="flex gap-3">
           <SecondaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
+            style={{ display: "flex", justifyContent: "center", fontSize: 12 }}
             onClick={onClose}
           >
             Cancel
           </SecondaryBtn>
           <PrimaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
+            style={{ display: "flex", justifyContent: "center", fontSize: 12 }}
             onClick={() => onConfirm(qty)}
           >
             <Users size={13} aria-hidden="true" style={{ marginRight: 6 }} />

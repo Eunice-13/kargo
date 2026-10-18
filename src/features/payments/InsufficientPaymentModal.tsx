@@ -171,13 +171,8 @@ export default function InsufficientPaymentModal({
             balance to avoid your reservation expiring."
           </div>
         )}
-        <div className="flex gap-3">
+        <div className="kargo-modal-actions">
           <SecondaryBtn
-            style={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-            }}
             onClick={() => setInsuffTarget(null)}
           >
             Cancel
@@ -200,7 +195,6 @@ export default function InsufficientPaymentModal({
               setInsuffTarget(null)
             }}
             style={{
-              flex: 1,
               background: "#F59E0B",
               color: "#fff",
               border: "none",

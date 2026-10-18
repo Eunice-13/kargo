@@ -4,40 +4,9 @@ import type { FulfillmentOrder } from "@/types"
 // (`fulfillment`) so the Dashboard board and the Orders board stay in sync.
 export const FULFILLMENT_INIT: FulfillmentOrder[] = [
   {
-    id: "ful-1",
-    col: "Claimed",
-    buyer: "Trisha Lim",
-    product: "Laneige Lip Mask",
-    qty: 2,
-    amount: 1900,
-  },
-  {
-    id: "ful-2",
-    col: "Claimed",
-    buyer: "Grace Reyes",
-    product: "KitKat Sakura",
-    qty: 3,
-    amount: 960,
-  },
-  {
-    id: "ful-3",
-    col: "Pending Payment",
-    buyer: "Carlo Santos",
-    product: "SK-II Essence",
-    qty: 1,
-    amount: 4800,
-  },
-  {
-    id: "ful-4",
-    col: "Pending Payment",
-    buyer: "Mia Cruz",
-    product: "Tokyo Banana",
-    qty: 2,
-    amount: 960,
-  },
-  {
     id: "ful-5",
     col: "Payment Confirmed",
+    perspective: "seller",
     buyer: "Anna Bautista",
     product: "Shiseido Sunscreen",
     qty: 1,
@@ -46,6 +15,7 @@ export const FULFILLMENT_INIT: FulfillmentOrder[] = [
   {
     id: "ful-6",
     col: "Shipped",
+    perspective: "seller",
     buyer: "Ben Torres",
     product: "COSRX Snail Cream",
     qty: 2,
@@ -62,6 +32,7 @@ export const FULFILLMENT_INIT: FulfillmentOrder[] = [
   {
     id: "ful-7",
     col: "Delivered",
+    perspective: "seller",
     buyer: "Jade Garcia",
     product: "Meiji Chocolate",
     qty: 4,
@@ -70,6 +41,7 @@ export const FULFILLMENT_INIT: FulfillmentOrder[] = [
   {
     id: "ful-8",
     col: "Cancelled",
+    perspective: "seller",
     buyer: "Rico Mendoza",
     product: "MAC Lipstick Set",
     qty: 1,
