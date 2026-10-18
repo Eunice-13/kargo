@@ -1,4 +1,5 @@
 import { INDIGO } from "@/constants/theme"
+import logoUrl from "@/assets/kargo-logo.png"
 
 export default function LogoMark({
   size = 40,
@@ -20,7 +21,7 @@ export default function LogoMark({
       }}
     >
       <img
-        src="/kargo-logo.png"
+        src={logoUrl}
         alt="Kargo"
         style={{ width: size, height: size, objectFit: "contain" }}
       />

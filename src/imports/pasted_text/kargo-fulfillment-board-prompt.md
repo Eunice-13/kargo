@@ -17,7 +17,7 @@ The seller-side fulfillment mechanics (set status, add tracking, the `set_fulfil
 ## 1. DO NOT CHANGE (preserve exactly as-is)
 
 - **The design tokens.** Colors come from `src/constants/theme.ts` (`INDIGO` `#191BA9`, `CREAM`, `GREEN`, `CYAN_L`, …). Do not add new colors, gradients, or a second accent.
-- **The font stack.** Only the four families already loaded in `src/index.css` line 1: **Josefin Sans, DM Sans, Manrope, Quicksand**. Do not add a new font, font file, or `@font-face`. (See §4.10 — the docs disagree with the code; the code wins.)
+- **The font stack.** Only the four families already loaded in `src/index.css` line 1: **Josefin Sans, DM Sans, Manrope, Quicksand**. Do not add a new font, font file, or `@font-face`. (See §3.10 — the docs disagree with the code; the code wins.)
 - **`src/components/shared/Modal.tsx`** — the portal, focus trap, Escape handling, body-scroll lock, header offset, and close animation. Extend with presentational props only if needed; do not rework its behaviour.
 - **The existing order/claim status vocabulary in the database** — the `order_status` enum values, `fulfillment_stage` values (`preparing` / `shipped` / `in_transit` / `delivered`), and both RPCs. **No migration.** The UI maps those values onto fewer columns; it never asks the database to forget them.
 - **The auth flow** (`Login`, `SignUp`, `AuthInput`, `AuthLayout`, `Onboarding`, `ReservationGate` logic) and `src/components/shared/shareLink.ts`. Presentation may be polished; fields, validation, and control flow stay.
@@ -45,7 +45,7 @@ The seller-side fulfillment mechanics (set status, add tracking, the `set_fulfil
 
 ## 3. Detailed requirements
 
-### 4.1 One canonical column vocabulary (both roles)
+### 3.1 One canonical column vocabulary (both roles)
 
 Replace the two disagreeing lists with a single source of truth in `src/constants/fulfillment.ts`:
 
@@ -73,7 +73,7 @@ export const BUYER_COLUMNS = [
 - Add **one** `STAGE_COLORS` map for every column name, and delete the duplicated `colColors` object inside `Dashboard.tsx:329-338` and `KANBAN_COL_BG`. Both boards, every chip, and the stage progress read from this one map.
 - Delete `PRIOR_FULFILLED` (constant + barrel export) — it is unused dead weight.
 
-### 4.2 Mapping and row scoping
+### 3.2 Mapping and row scoping
 
 `statusToColumn()` must become role-aware — `statusToColumn(status, fulfillmentStage, role)`:
 
@@ -89,7 +89,7 @@ export const BUYER_COLUMNS = [
 - `in_transit` is **never produced again** by the UI: remove it from the seller's status `<select>`, from the move-map in `useFulfillmentBoard.ts:25-34`, from the column backgrounds, and delete the "Mark this order as in transit?" confirm modal in `FulfillmentDetails.tsx:189-213`. `Shipped` now covers shipped-and-on-the-way, because the seller already attaches courier + tracking at that step.
 - The seller board must **silently skip** pre-payment rows rather than showing an empty bucket. Render one small footnote under the board when such rows exist: `N orders awaiting payment — open Orders Received`, wired through the existing `navIntent.orderFilter = "Pending"` mechanism (`Dashboard.tsx:648-655` shows the pattern). This footnote is not a column.
 
-### 4.3 The buyer Fulfillment Board
+### 3.3 The buyer Fulfillment Board
 
 **Data — real, scoped, no placeholders.**
 
@@ -120,14 +120,14 @@ export const BUYER_COLUMNS = [
 - A page-level **empty state** when the buyer genuinely has no orders: icon + "No orders in progress yet" + a "Browse batches" action that switches to the Batches tab.
 - `aria-live` announcement of the summary when the board refreshes (reuse `FulfillmentLiveRegion`).
 
-### 4.4 Seller board cleanup
+### 3.4 Seller board cleanup
 
-- Columns per §4.1; delete `In Transit` everywhere (select options, move-map, `colColors`, `KANBAN_COL_BG`, confirm modal, and any copy that names it).
+- Columns per §3.1; delete `In Transit` everywhere (select options, move-map, `colColors`, `KANBAN_COL_BG`, confirm modal, and any copy that names it).
 - Keep the `Shipped` step as the one place tracking is required (Payment Confirmed → Preparing → Shipped → Delivered is now a single jump from Preparing to Shipped, with the existing "Add tracking details" confirm flow).
 - Keep the seller's mobile collapse toggle, the `+N more` overflow, the count badge, and the drag-free select-based move.
 - `Delivered` still counts toward the seller's "Orders Fulfilled" stat (`Dashboard.tsx:161`) — unchanged.
 
-### 4.5 Oversized buttons (the "unusually big" fix)
+### 3.5 Oversized buttons (the "unusually big" fix)
 
 The cause is central CSS plus inline `flex: 1` footers. Fix it centrally so every modal shrinks together, and do not hand-tune each modal.
 
@@ -142,7 +142,7 @@ In `src/index.css`:
    - On `≤620px`, stack full-width and reverse the order so the primary sits at the bottom, as `SetShippingFeeModal.tsx:70-76` already does — make that the shared convention.
 6. Add a short comment block in `index.css` naming this as **the** modal geometry contract so the next modal cannot drift.
 
-### 4.6 The visual vocabulary (applies to every card and every modal form)
+### 3.6 The visual vocabulary (applies to every card and every modal form)
 
 Build the visuals once, in `src/components/shared/`, and use them everywhere. No bespoke one-off styling per screen.
 
@@ -169,7 +169,7 @@ Build the visuals once, in `src/components/shared/`, and use them everywhere. No
 2. A `SummaryBlock` lead when the modal is about a specific item/order/payment.
 3. Fields: label above, helper/validation text below, 38px controls, one column on mobile, two columns only when the pair is genuinely related (`SetShippingFeeModal.tsx:70` two-column action grid is the existing precedent).
 4. Inline, non-shifting error text; no `alert()` for validation.
-5. Footer: right-aligned actions, one primary, side-by-side, `≤620px` full-width stacked (per §4.5).
+5. Footer: right-aligned actions, one primary, side-by-side, `≤620px` full-width stacked (per §3.5).
 6. Consistent vertical rhythm: more space above a heading than below it; body measure 65–75ch;
 7. Contrast: body and placeholder text ≥ 4.5:1, large text ≥ 3:1. On a tinted surface, tint secondary text from that hue rather than defaulting to gray.
 
@@ -180,31 +180,63 @@ Build the visuals once, in `src/components/shared/`, and use them everywhere. No
 
 Nothing in this list may be skipped for being "not part of the feature".
 
-### 4.7 Mobile
+### 3.7 Mobile
 
 - Board: horizontally scrolling columns with scroll-snap, collapsible column headers (reuse `seller-board-column__mobile-toggle`), full-width cards; the expanded view is full-screen with a "Back to Dashboard" affordance on both roles.
 - Pin picker and tracking/map preview stay full-width (already the case — do not regress them).
 - Buyer and seller boards must scroll identically; one responsive implementation, not two.
 - Verify against `MOBILE_REPONSIVENESS.md` at 360 / 390 / 768 / 1024 / 1440 widths.
 
-### 4.8 Accessibility
+### 3.8 Accessibility
 
 - The board keeps its `aria-live` region, `role="button"` cards with `aria-expanded`, and Enter/Space activation.
 - `StageProgress` exposes `role="img"` with an `aria-label` like `"Stage 3 of 5: Preparing"` and never relies on color alone (label + fill).
 - Stage chips include their label in text, not color only.
 - Every action still reachable by keyboard; no icon-only control without an `aria-label`.
 
-### 4.9 Encoding defect (must fix)
+### 3.9 Encoding defect — mojibake (must fix)
 
-These are byte-level mojibake, not styling. Fix the strings and ensure the files are saved as UTF-8:
+**Not a styling issue, and not a file-encoding issue.** Ten strings in three files were written through a Windows-1252 round-trip and then saved as UTF-8, so the files now hold **valid UTF-8 text for the wrong characters** (`â€”` where `—` was meant). All three files are already **UTF-8 without BOM** (verified), and `₱` is correct in ~30 other files — so this is a **local, character-level defect**.
 
-- `src/components/shared/Countdown.tsx:71` — `Paused â€” waiting for seller` → `Paused — waiting for seller`
-- `src/features/orders/OrderDetailsModal.tsx:88-91, 96` — `â€”` → `—`
-- `src/features/claims/SetShippingFeeModal.tsx:35` — `Ã—` → `×`; `:37, 53, 67` — `â‚±` → `₱`
+Do **not** run an encoding conversion, do **not** add or strip a BOM, and do **not** re-save the files through a different codec. Replace the exact characters in place.
 
-Grep the whole `src` tree for `â`, `Ã`, `Â` after the fix and confirm zero matches.
+**Match what already works.** `₱` is already correct in `MyClaims.tsx`, `Dashboard.tsx`, `FinancialSummaryModal.tsx`, `PaymentSubmitModal.tsx`, `InsufficientPaymentModal.tsx` and others; `×` and `·` are correct in `FulfillmentDetails.tsx:38`; `—` is correct in `NewBatchModal.tsx:799`. Use the same literal characters — no HTML entities, no symbol font, and no ASCII fallback (`PHP`, `x`, `-`).
 
-### 4.10 Code quality and documentation drift
+**Complete inventory — verified exhaustive. Nothing else in the repo (src, supabase, docs) matches.**
+
+| # | File | Line | Currently contains | Must become | Character fix |
+|---|---|---|---|---|---|
+| 1 | `src/components/shared/Countdown.tsx` | 71 | `Paused â€” waiting for seller` | `Paused — waiting for seller` | `â€”` → `—` (U+2014) |
+| 2 | `src/features/orders/OrderDetailsModal.tsx` | 88 | `["Courier", … \|\| "â€”"]` | `["Courier", … \|\| "—"]` | `â€”` → `—` |
+| 3 | `src/features/orders/OrderDetailsModal.tsx` | 89 | `["Rider", … \|\| "â€”"]` | `["Rider", … \|\| "—"]` | `â€”` → `—` |
+| 4 | `src/features/orders/OrderDetailsModal.tsx` | 90 | `["Rider contact", … \|\| "â€”"]` | `["Rider contact", … \|\| "—"]` | `â€”` → `—` |
+| 5 | `src/features/orders/OrderDetailsModal.tsx` | 91 | `["Tracking number", … \|\| "â€”"]` | `["Tracking number", … \|\| "—"]` | `â€”` → `—` |
+| 6 | `src/features/orders/OrderDetailsModal.tsx` | 96 | `: "â€”",` | `: "—",` | `â€”` → `—` |
+| 7 | `src/features/claims/SetShippingFeeModal.tsx` | 35 | `<strong>{claim.product}</strong> Ã—{claim.qty}` | `<strong>{claim.product}</strong> ×{claim.qty}` | `Ã—` → `×` (U+00D7) |
+| 8 | `src/features/claims/SetShippingFeeModal.tsx` | 37 | `Item amount: â‚±{…}` | `Item amount: ₱{…}` | `â‚±` → `₱` (U+20B1) |
+| 9 | `src/features/claims/SetShippingFeeModal.tsx` | 53 | `Shipping fee (â‚±)` | `Shipping fee (₱)` | `â‚±` → `₱` |
+| 10 | `src/features/claims/SetShippingFeeModal.tsx` | 67 | `<strong>â‚±{…}</strong>` | `<strong>₱{…}</strong>` | `â‚±` → `₱` |
+
+**Procedure.**
+
+1. Read each affected line **in full** before editing. The snippets above are fragments — a mojibake run can extend past the matched part — and confirm nothing else on the line is mangled.
+2. Replace only the mangled characters, typing the real `—` / `×` / `₱`. Keep the rest of the line byte-identical. This is **not** a reformat: do not let the formatter rewrite unrelated lines in the same commit, or the diff becomes unreviewable.
+3. Do not work around it with a helper constant or an interpolation — use the literal character.
+4. Confirm the three files are still UTF-8 **without BOM** afterwards (first three bytes must not be `EF BB BF`).
+5. Re-check each of the ten lines in the browser (see §6, step 14).
+
+**Guard — run before committing.**
+
+```bash
+# A Latin-1-misread UTF-8 lead byte means mojibake is back.
+rg -n "[ÃÂâð]" src/ supabase/ -g '!src/imports/pasted_text/**'
+```
+
+Expect **zero** matches. `src/imports/pasted_text/` is excluded only because this prompt file quotes the broken samples as documentation.
+
+**Ongoing rule for the whole task.** The §3.6 visual pass touches many of these same files. Type `₱`, `—`, `×`, `·`, `≥`, `≤` and `→` directly, and never paste them from a source that re-encodes — that round-trip is exactly what produced these ten defects.
+
+### 3.10 Code quality and documentation drift
 
 - Follow `AGENTS.md`: default exports, double quotes, `@/` alias for cross-folder imports, relative `./` for siblings; respect the dependency direction in `ARCHITECTURE.md` (`constants` → `components/shared` → `features/*` → `components/layout` → `App.tsx`). A feature may import another feature only through its `index.ts`.
 - Export new shared primitives through `src/components/shared/index.ts`; export new board exports through `src/features/fulfillment/index.ts`.
@@ -217,7 +249,7 @@ Grep the whole `src` tree for `â`, `Ã`, `Â` after the fix and confirm zero ma
 
 ---
 
-## 5. Acceptance criteria
+## 4. Acceptance criteria
 
 **Board columns**
 
@@ -251,7 +283,9 @@ Grep the whole `src` tree for `â`, `Ã`, `Â` after the fix and confirm zero ma
 - [ ] Every empty list/column/table has an `EmptyState`; no bare `—` placeholders remain.
 - [ ] No new color, font, gradient, image asset, or animation was introduced; only theme tokens, the four loaded families, and lucide icons.
 - [ ] Body/placeholder contrast passes ≥4.5:1 (≥3:1 for large text).
-- [ ] The mojibake grep (`â`, `Ã`, `Â`) returns zero results in `src`.
+- [ ] All ten inventoried strings (§3.9) render correctly: `—`, `×`, `₱`.
+- [ ] The §3.9 guard returns zero matches: `rg -n "[ÃÂâð]" src/ supabase/ -g '!src/imports/pasted_text/**'`.
+- [ ] `Countdown.tsx`, `OrderDetailsModal.tsx`, and `SetShippingFeeModal.tsx` are still UTF-8 **without BOM** after the fix.
 
 **Regressions**
 
@@ -263,7 +297,7 @@ Grep the whole `src` tree for `â`, `Ã`, `Â` after the fix and confirm zero ma
 
 ---
 
-## 6. Files expected to change
+## 5. Files expected to change
 
 | File | Change |
 |---|---|
@@ -279,28 +313,28 @@ Grep the whole `src` tree for `â`, `Ã`, `Â` after the fix and confirm zero ma
 | `src/features/fulfillment/fulfillmentData.ts` | Seed parity only if `?preview=original` needs it; no new hardcoded buyer arrays |
 | `src/features/dashboard/Dashboard.tsx` | Delete `SELLER_BOARD_COLUMNS` + `colColors`; render the buyer board; one board renderer for preview + expanded; new `EmptyState`/skeleton |
 | `src/features/orders/Orders.tsx` | Consume the shared board/columns |
-| `src/features/orders/OrderDetailsModal.tsx` | `SummaryBlock` + `StageProgress`; fix mojibake |
+| `src/features/orders/OrderDetailsModal.tsx` | `SummaryBlock` + `StageProgress`; mojibake fix (§3.9) — lines 88-91, 96 |
 | `src/components/shared/StageProgress.tsx` | **New** |
 | `src/components/shared/StageChip.tsx` | **New** |
 | `src/components/shared/SummaryBlock.tsx` | **New** |
 | `src/components/shared/EmptyState.tsx` | **New** |
 | `src/components/shared/Skeleton.tsx` | **New** |
 | `src/components/shared/index.ts` | Export the new primitives |
-| `src/components/shared/Countdown.tsx` | Mojibake fix |
-| `src/features/claims/SetShippingFeeModal.tsx` | Mojibake fix; `SummaryBlock`; footer un-stretched |
+| `src/components/shared/Countdown.tsx` | Mojibake fix (§3.9) — line 71 |
+| `src/features/claims/SetShippingFeeModal.tsx` | Mojibake fix (§3.9) — lines 35, 37, 53, 67; `SummaryBlock`; footer un-stretched |
 | `src/features/claims/RequestLocationCorrectionModal.tsx` | `SummaryBlock`; footer un-stretched |
 | `src/features/claims/DeclineDeliveryOrderModal.tsx` | `SummaryBlock`; footer un-stretched |
 | `src/features/batches/ItemClaimModal.tsx` | `SummaryBlock`; `StageProgress`; footer un-stretched |
 | `src/features/payments/PaymentSubmitModal.tsx` | `SummaryBlock`; footer un-stretched |
 | `src/features/payments/*.tsx` (BatchCheckout, ReviewSubmission, RejectPayment, InsufficientPayment, TransactionDetail) | Visual pass + footer un-stretched |
 | `src/features/batches/*.tsx`, `src/features/dashboard/*.tsx`, `src/features/settings/SocialConnectModal.tsx`, `src/features/auth/{ReservationGate,ApplyToSellModal}.tsx`, `src/components/shared/{ContactModal,BuyerProfileModal,ExtensionRequestModal}.tsx` | Visual pass + footer un-stretched |
-| `src/index.css` | Button/control geometry contract (§4.5); touch-only 44px rule; shared modal footer convention |
+| `src/index.css` | Button/control geometry contract (§3.5); touch-only 44px rule; shared modal footer convention |
 
 No changes to: `src/lib/supabase.ts`, the `supabase/migrations/` tree, `shareLink.ts`, the `orders`/`payments` tables, or either RPC signature.
 
 ---
 
-## 7. Manual test script (for the demo)
+## 6. Manual test script (for the demo)
 
 1. **Seller columns.** Sign in as a seller with orders. Confirm the board shows exactly `Payment Confirmed · Preparing · Shipped · Delivered · Cancelled` — no Pending Payment, no Claimed, no In Transit.
 2. **In-transit folding.** Take an order whose `fulfillment_stage` is `in_transit` (or set it) and confirm it renders under **Shipped**, not a missing bucket.
@@ -315,13 +349,13 @@ No changes to: `src/lib/supabase.ts`, the `supabase/migrations/` tree, `shareLin
 11. **Buttons.** Open `SetShippingFeeModal`, `PaymentSubmitModal`, `ItemClaimModal`, `TrackingDetailsModal`, `ContactModal`, `OrderDetailsModal`, `ReservationGate`, `NewBatchModal`, `FinancialSummaryModal`. Confirm every action button is compact, right-aligned, and side-by-side on desktop; and full-width stacked on a 390px viewport.
 12. **Auth size.** Confirm the login/signup submit is no longer 67px tall.
 13. **Visuals everywhere.** Confirm a stage/progress or summary visual is present in the reservation gate, the payment flow, and the order-viewing modal — not only on the board.
-14. **Encoding.** Confirm the countdown paused label, the order-details fallbacks, and the shipping-fee amounts render `—`, `×`, and `₱` correctly.
+14. **Encoding.** Confirm all ten §3.9 strings render correctly: the countdown paused label shows `—`, the Order Details fallbacks (courier / rider / rider contact / tracking number) show `—`, and the shipping-fee modal shows `×{qty}` and `₱` amounts. Then run the §3.9 guard and confirm zero matches.
 15. **Regressions.** `?preview=original` boots to demo with no popup; a `?batch=` link while logged out still shows the reservation gate; the shipping-fee acceptance + pause flow is unchanged; no DB migration exists.
 16. **Mobile.** At 360 / 390 / 768 / 1024 px, confirm the boards scroll horizontally with snap, columns collapse, and no modal overflows.
 
 ---
 
-## 8. Resolved decisions
+## 7. Resolved decisions
 
 These are settled — implement them as written.
 
@@ -334,10 +368,10 @@ These are settled — implement them as written.
 7. **Dual-role safety.** `isBuyer` is evaluated per row, so `perspective` is required to keep a user's purchases and their sales in separate boards.
 8. **Buyer board is read-only.** Expand a card for tracking details + **View Order**; no status controls for buyers.
 9. **Tracking entry stays at `Shipped`.** With Preparing and Shipped adjacent, the seller still attaches courier + rider + tracking at the Shipped transition, which is what the buyer's board and `OrderDetailsModal` read from.
-10. **The visual pass is app-wide, not board-only.** Every card and every modal form listed in §4.6 gets the same vocabulary — reservation gate, payment, shipping, tracking, viewing, auth, settings, waitlists, reports.
+10. **The visual pass is app-wide, not board-only.** Every card and every modal form listed in §3.6 gets the same vocabulary — reservation gate, payment, shipping, tracking, viewing, auth, settings, waitlists, reports.
 11. **Visuals are system-driven.** New shared primitives (`StageProgress`, `StageChip`, `SummaryBlock`, `EmptyState`, `Skeleton`) plus one stage-color map — not per-screen styling. `lucide-react` icons only; no imagery, gradients, or new animation.
 12. **The design system of record is the shipped code.** `INDIGO #191BA9` + `src/constants/theme.ts`, and the four fonts already loaded. The `Manrope + DM Sans` and `Inter` references in `DESIGN.md` / `AGENTS.md` are stale and are **reported, not edited**, in this pass.
 13. **Buttons: ~36px in modals, right-aligned, side-by-side; full-width stacked only ≤620px.** Fixed centrally in `index.css` with a documented contract, plus removal of the inline `flex: 1` stretchers. The blanket 44px rule becomes touch-only.
 14. **No new dependency, no schema change, no migration.** `leaflet` and `lucide-react` already exist.
-15. **Mojibake is fixed** in `Countdown.tsx`, `OrderDetailsModal.tsx`, and `SetShippingFeeModal.tsx`, and the files are re-saved as UTF-8 (`—`, `×`, `₱`).
-16. **Finished screenshots.** Verify the finished UI in one batched pass — seller board, buyer board, expanded views, and every modal listed in §4.6, desktop **and** 390px mobile — fix everything it shows in a single batch, confirm once, and stop.
+15. **Mojibake is fixed by character replacement — not by re-encoding.** All ten strings inventoried in §3.9 are corrected in `Countdown.tsx`, `OrderDetailsModal.tsx`, and `SetShippingFeeModal.tsx`. Those files are already UTF-8 without BOM and stay that way: no encoding conversion, no BOM change, no codec re-save, no helper constant. The repo guard `rg -n "[ÃÂâð]" src/ supabase/ -g '!src/imports/pasted_text/**'` must return zero.
+16. **Finished screenshots.** Verify the finished UI in one batched pass — seller board, buyer board, expanded views, and every modal listed in §3.6, desktop **and** 390px mobile — fix everything it shows in a single batch, confirm once, and stop.

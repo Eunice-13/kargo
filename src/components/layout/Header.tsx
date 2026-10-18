@@ -2,6 +2,7 @@ import { useState } from "react"
 import type { UserInfo, Role, Tab, BatchType } from "@/types"
 
 import { INDIGO } from "@/constants/theme"
+import headerLogoUrl from "@/assets/kargo-logo-head.png"
 
 import SearchBox from "./SearchBox"
 
@@ -68,7 +69,7 @@ export default function Header({
       >
         <div className="kargo-brand-mark">
           <img
-            src="/kargo-logo-head.png"
+            src={headerLogoUrl}
             alt="Kargo Logo Header"
             width="35"
             height="35"
