@@ -40,9 +40,13 @@ import { FULFILLMENT_INIT } from "@/features/fulfillment"
 import {
   Login,
   SignUp,
+  ResetPassword,
   Onboarding,
   ApplyToSellModal,
   ReservationGate,
+  clearResetPasswordUrl,
+  hasRecoveryFragment,
+  isResetPasswordPath,
 } from "@/features/auth"
 
 import { NewBatchModal } from "@/features/batches"
@@ -85,6 +89,13 @@ export default function App() {
 
   const [stage, setStage] = useState<AppStage>(
     originalPreview ? "app" : "login",
+  )
+
+  // A recovery link can land either on the reset path or, when the redirect is
+  // not allow-listed, on the root with the token in the fragment. Both are read
+  // before the client has a chance to consume them.
+  const [recoveryMode, setRecoveryMode] = useState(
+    () => isResetPasswordPath() || hasRecoveryFragment(),
   )
 
   const [booting, setBooting] = useState(
@@ -335,6 +346,10 @@ export default function App() {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") setStage("login")
 
+      // A recovery link also arrives as a session, so the second signal is what
+      // keeps this correct when the link does not land on the reset path.
+      if (event === "PASSWORD_RECOVERY") setRecoveryMode(true)
+
       // A confirmation link lands with the session tokens in the URL hash, which
       // the client parses asynchronously. If the mount-time refresh above ran
       // before they were stored, adopt the session here rather than stranding the
@@ -451,6 +466,26 @@ export default function App() {
   const linkedBatch = viaBatchLink
     ? batches.find((batch) => batch.id === sharedBatchId)
     : undefined
+
+  // The recovery screen outranks the normal stage machine: a recovery link signs
+  // the visitor in, so the usual bootstrap would otherwise drop them straight
+  // into the app without ever setting a new password.
+  if (recoveryMode) {
+    const leaveRecovery = () => {
+      clearResetPasswordUrl()
+      setRecoveryMode(false)
+    }
+
+    return (
+      <ResetPassword
+        onDone={leaveRecovery}
+        onBack={() => {
+          leaveRecovery()
+          setStage("login")
+        }}
+      />
+    )
+  }
 
   if (booting) {
     return (

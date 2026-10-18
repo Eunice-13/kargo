@@ -2,15 +2,19 @@ import { useState } from "react"
 import { Check, Eye, EyeOff } from "lucide-react"
 import { PrimaryBtn, SH } from "@/components/shared"
 import { GREEN } from "@/constants/theme"
+import { authErrorMessage } from "@/features/auth"
+import { isSupabaseConfigured } from "@/lib/supabase"
+import { kargoApi } from "@/services"
 
 export default function SecuritySection() {
   const [curPw, setCurPw] = useState("")
   const [newPw, setNewPw] = useState("")
   const [pwError, setPwError] = useState("")
   const [pwSaved, setPwSaved] = useState(false)
+  const [pwBusy, setPwBusy] = useState(false)
   const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({})
 
-  const updatePassword = () => {
+  const savePassword = async () => {
     if (!curPw || !newPw) {
       setPwError("Enter your current and new password.")
       return
@@ -19,11 +23,34 @@ export default function SecuritySection() {
       setPwError("New password must be at least 8 characters.")
       return
     }
+    if (!isSupabaseConfigured) {
+      setPwError("Changing your password needs a connected KARGO account.")
+      return
+    }
+
     setPwError("")
-    setCurPw("")
-    setNewPw("")
-    setPwSaved(true)
-    setTimeout(() => setPwSaved(false), 2400)
+    setPwBusy(true)
+
+    try {
+      await kargoApi.changePassword({
+        currentPassword: curPw,
+        newPassword: newPw,
+      })
+
+      setCurPw("")
+      setNewPw("")
+      setPwSaved(true)
+      setTimeout(() => setPwSaved(false), 2400)
+    } catch (error) {
+      setPwError(
+        authErrorMessage(
+          error,
+          "We couldn't update your password. Please try again.",
+        ),
+      )
+    } finally {
+      setPwBusy(false)
+    }
   }
 
   return (
@@ -103,7 +130,9 @@ export default function SecuritySection() {
           </div>
         )}
         <div className="flex items-center gap-3">
-          <PrimaryBtn onClick={updatePassword}>Update Password</PrimaryBtn>
+          <PrimaryBtn onClick={savePassword} loading={pwBusy}>
+            Update Password
+          </PrimaryBtn>
           {pwSaved && (
             <span
               className="fi"

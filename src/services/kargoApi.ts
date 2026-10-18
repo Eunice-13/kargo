@@ -1,3 +1,4 @@
+import { PASSWORD_RESET_PATH } from "@/constants/auth"
 import { normalizeBatchCategory } from "@/constants/categories"
 import type {
   BatchExpenses,
@@ -299,11 +300,60 @@ export async function signUp(input: {
 export async function requestPasswordReset(email: string) {
   const client = requireSupabase()
 
-  const redirectTo = `${window.location.origin}/reset-password`
+  const redirectTo = `${window.location.origin}${PASSWORD_RESET_PATH}`
 
   const { error } = await client.auth.resetPasswordForEmail(email, {
     redirectTo,
   })
+
+  if (error) throw error
+}
+
+// Called by the recovery screen once Supabase has accepted a reset link and
+// established the short-lived session that authorizes the change.
+export async function updatePassword(password: string) {
+  const { error } = await requireSupabase().auth.updateUser({ password })
+
+  if (error) throw error
+}
+
+// Changing a password from Settings has to prove the current one first. Supabase
+// does not ask for it when an authenticated user calls `updateUser`, so sign in
+// again with it and let that step reject a wrong password.
+export async function changePassword(input: {
+  currentPassword: string
+  newPassword: string
+}) {
+  const client = requireSupabase()
+
+  // Read the address from the session rather than the profile form: the two
+  // differ while an email change is still waiting to be confirmed.
+  const { data, error: userError } = await client.auth.getUser()
+
+  if (userError) throw userError
+
+  const email = data.user?.email
+
+  if (!email) throw new Error("Authentication required")
+
+  const { error: verifyError } = await client.auth.signInWithPassword({
+    email,
+    password: input.currentPassword,
+  })
+
+  if (verifyError) {
+    // Only a credential rejection means the password was wrong. A rate limit or a
+    // network fault has to surface as itself.
+    const wrongPassword =
+      verifyError.code === "invalid_credentials" ||
+      /invalid login credentials/i.test(verifyError.message)
+
+    if (wrongPassword) throw new Error("Current password is incorrect.")
+
+    throw verifyError
+  }
+
+  const { error } = await client.auth.updateUser({ password: input.newPassword })
 
   if (error) throw error
 }
@@ -2199,6 +2249,10 @@ export const kargoApi = {
   signOut,
   setBatchReaction,
   requestPasswordReset,
+
+  updatePassword,
+
+  changePassword,
 
   loadCurrentAppData,
 

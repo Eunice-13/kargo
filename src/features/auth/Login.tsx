@@ -19,7 +19,10 @@ export default function Login({
   const [emailErr, setEmailErr] = useState("")
   const [passErr, setPassErr] = useState("")
   const [loading, setLoading] = useState(false)
-  const [forgotSent, setForgotSent] = useState(false)
+  const [forgotSending, setForgotSending] = useState(false)
+  const [forgotNotice, setForgotNotice] = useState<
+    { tone: "sent" | "error"; text: string } | null
+  >(null)
 
   const submit = useCallback(async () => {
     let ok = true
@@ -52,6 +55,48 @@ export default function Login({
     }
   }, [email, password, onSuccess])
 
+  const requestReset = useCallback(async () => {
+    if (!email.includes("@")) {
+      setForgotNotice({
+        tone: "error",
+        text: "Enter your email address above, then tap Forgot password again.",
+      })
+
+      return
+    }
+
+    if (!isSupabaseConfigured) {
+      setForgotNotice({
+        tone: "error",
+        text: "Password recovery needs a connected KARGO account.",
+      })
+
+      return
+    }
+
+    setForgotSending(true)
+
+    try {
+      await kargoApi.requestPasswordReset(email.trim())
+
+      // Deliberately says nothing about whether the address is registered.
+      setForgotNotice({
+        tone: "sent",
+        text: "If this email is registered, recovery instructions will be sent shortly.",
+      })
+    } catch (error) {
+      setForgotNotice({
+        tone: "error",
+        text: authErrorMessage(
+          error,
+          "We couldn't send the reset email. Please try again.",
+        ),
+      })
+    } finally {
+      setForgotSending(false)
+    }
+  }, [email])
+
   return (
     <AuthLayout page="login">
       <div className="auth-content pu">
@@ -81,19 +126,20 @@ export default function Login({
             <div className="auth-forgot-row">
               <button
                 type="button"
-                onClick={async () => {
-                  setForgotSent(true)
-                  if (isSupabaseConfigured && email.includes("@")) {
-                    await kargoApi.requestPasswordReset(email)
-                  }
-                }}
+                onClick={requestReset}
+                disabled={forgotSending}
                 className="auth-link-button"
               >
-                Forgot password?
+                {forgotSending ? "Sending…" : "Forgot password?"}
               </button>
-              {forgotSent && (
-                <div role="status" className="auth-recovery-status">
-                  If this email is registered, recovery instructions will be sent shortly.
+              {forgotNotice && (
+                <div
+                  role="status"
+                  className={`auth-recovery-status${
+                    forgotNotice.tone === "error" ? " is-error" : ""
+                  }`}
+                >
+                  {forgotNotice.text}
                 </div>
               )}
             </div>

@@ -54,6 +54,7 @@ In Supabase Auth:
 - Configure custom SMTP under Authentication → Emails → SMTP Settings before enabling email confirmation. The default Supabase sender is capped at two messages per hour for the entire project and that cap cannot be raised, so signup and password reset fail with "Email rate limit exceeded" once it is spent.
 - Email confirmation is enabled: signup sends a confirmation link and the account stays unconfirmed until it is clicked. Send from an address on a domain you control — sending as a free-mail address (a `gmail.com` address, for example) through a third-party relay fails SPF and DMARC alignment, so the confirmation mail can be filtered into spam.
 - Allow-list every origin a confirmation or reset link may return to, including the local development origin. Supabase silently falls back to the Site URL for origins that are not allow-listed.
+- Password reset links return to `/reset-password`, which the app renders as its own screen. Vercel's Vite preset does not fall back to `index.html` for unknown paths, so `vercel.json` carries the rewrite that lets that link resolve on a deployment. The app also recognises a recovery token that arrives on the root with `type=recovery` in the fragment, which is what happens when the redirect falls back to the Site URL.
 
 ### Signup profile fields
 

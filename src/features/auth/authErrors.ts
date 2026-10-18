@@ -17,6 +17,18 @@ const COPY: Array<[needles: string[], message: string]> = [
     "This account still needs confirming. Open the link in the email we sent you.",
   ],
   [
+    ["otp_expired", "email link is invalid or has expired", "token has expired"],
+    "That reset link has expired. Request a new one and open it right away.",
+  ],
+  [
+    ["same_password", "should be different from the old password"],
+    "Choose a password you haven't used on KARGO before.",
+  ],
+  [
+    ["current password is incorrect"],
+    "That current password isn't right. Check it and try again.",
+  ],
+  [
     ["over_request_rate_limit", "too many requests"],
     "Too many attempts. Please wait a minute and try again.",
   ],

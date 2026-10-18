@@ -120,6 +120,10 @@ button {
   align-items: center;
 }
 
+.auth-page--reset .auth-form-pane {
+  align-items: center;
+}
+
 .auth-page--signup .auth-form-pane {
   align-items: flex-start;
   padding-top: 152px;
@@ -280,6 +284,10 @@ button {
   color: #0b7a59;
   font-size: 11px;
   line-height: 1.35;
+}
+
+.auth-recovery-status.is-error {
+  color: #d93838;
 }
 
 .auth-content .kargo-primary {

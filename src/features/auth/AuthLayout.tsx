@@ -7,7 +7,7 @@ export default function AuthLayout({
   condensed = false,
 }: {
   children: ReactNode
-  page: "login" | "signup"
+  page: "login" | "signup" | "reset"
   condensed?: boolean
 }) {
   return (
