@@ -62,32 +62,14 @@ export default function Header({
         className="kargo-brand-lockup flex items-center gap-2 flex-shrink-0"
         style={{ width: 160 }}
       >
-        <div className="kargo-brand-mark" style={{ color: "#fff" }}>
-          <svg
+        <div className="kargo-brand-mark">
+          <img
+            src="/kargo-logo-head.png"
+            alt="Kargo Logo Header"
             width="35"
             height="35"
-            viewBox="0 0 42 42"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M8 23V11L21 3l13 8v12"
-              stroke="currentColor"
-              strokeWidth="2.4"
-            />
-            <path
-              d="M21 8v3M16 14l5-3 5 3M13 19l8-4 8 4"
-              stroke="currentColor"
-              strokeWidth="2.4"
-            />
-            <path d="M10 24l11-3 11 3-3 9-8 3-8-3-3-9Z" fill="currentColor" />
-            <path
-              d="M4 36c7-2 11-1 17 1 6 1 11 1 17-1M7 40c6-1 9 0 14 1 5 0 9 0 14-1"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
+            style={{ objectFit: "contain" }}
+          />
         </div>
         <span
           className="kargo-brand-name"

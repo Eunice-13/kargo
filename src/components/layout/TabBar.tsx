@@ -80,9 +80,11 @@ export default function TabBar({
                 ? "dashboard-tab"
                 : tab === "Batches"
                   ? "batches-tab"
-                  : tab === "Payments"
-                    ? "payments-tab"
-                    : undefined
+                  : tab === "My Claims"
+                    ? "claims-tab"
+                    : tab === "Payments"
+                      ? "payments-tab"
+                      : undefined
             }
             onClick={() => setActive(tab)}
             aria-current={active === tab ? "page" : undefined}
