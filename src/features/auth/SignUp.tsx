@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import AuthInput from "./AuthInput"
 import AuthLayout from "./AuthLayout"
+import { authErrorMessage } from "./authErrors"
 
 
 const platforms = ["Facebook", "TikTok", "Instagram"] as const
@@ -85,7 +86,8 @@ export default function SignUp({
       setLoading(false)
       if (result.needsEmailConfirmation || !result.user) {
         setErrs({
-          general: "Account created. Check your email to confirm it, then log in.",
+          general:
+            "Account created. Open the confirmation link we emailed you, then log in. If it doesn't arrive, check your spam folder.",
         })
         return
       }
@@ -93,7 +95,10 @@ export default function SignUp({
     } catch (error) {
       setLoading(false)
       setErrs({
-        general: error instanceof Error ? error.message : "Unable to create account.",
+        general: authErrorMessage(
+          error,
+          "Unable to create account. Please try again.",
+        ),
       })
     }
   }, [name, email, password, role, shopName, socials, terms, onSuccess])

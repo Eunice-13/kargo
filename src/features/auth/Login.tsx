@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import AuthInput from "./AuthInput"
 import AuthLayout from "./AuthLayout"
+import { authErrorMessage } from "./authErrors"
 
 export default function Login({
   onSignUp,
@@ -47,7 +48,7 @@ export default function Login({
       setLoading(false)
     } catch (error) {
       setLoading(false)
-      setPassErr(error instanceof Error ? error.message : "Unable to sign in.")
+      setPassErr(authErrorMessage(error, "Unable to sign in. Please try again."))
     }
   }, [email, password, onSuccess])
 

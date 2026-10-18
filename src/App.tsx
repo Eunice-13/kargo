@@ -332,8 +332,14 @@ export default function App() {
 
     refreshData().finally(() => setBooting(false))
 
-    const { data } = supabase.auth.onAuthStateChange((event) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") setStage("login")
+
+      // A confirmation link lands with the session tokens in the URL hash, which
+      // the client parses asynchronously. If the mount-time refresh above ran
+      // before they were stored, adopt the session here rather than stranding the
+      // confirmed user on the login screen.
+      if (event === "SIGNED_IN" && session) void refreshData().catch(() => {})
     })
 
     return () => data.subscription.unsubscribe()

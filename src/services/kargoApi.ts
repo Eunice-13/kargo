@@ -239,21 +239,6 @@ export async function signUp(input: {
 }) {
   const client = requireSupabase()
 
-  const { data, error } = await client.auth.signUp({
-    email: input.email,
-
-    password: input.password,
-
-    options: { data: { display_name: input.name } },
-  })
-
-  if (error) throw error
-
-  if (!data.user) throw new Error("Supabase did not return a user")
-
-  if (!data.session)
-    return { needsEmailConfirmation: true as const, user: null }
-
   const links = Object.fromEntries(
     Object.entries(input.socials ?? {})
 
@@ -262,27 +247,47 @@ export async function signUp(input: {
       .map(([provider, value]) => [provider, value.url.trim()]),
   )
 
-  const { error: updateError } = await client
+  // Every field the signup form collects travels in the auth metadata, because
+  // `handle_new_auth_user` writes the profile row from `raw_user_meta_data` the
+  // moment the auth user is created. That trigger runs whether or not Supabase
+  // issues a session, so the shop name, social links and seller flag survive the
+  // email-confirmation round trip. Writing them from here cannot be relied on:
+  // `auth.signUp` returns no session while a confirmation is pending, and
+  // `user_profiles` is update-authenticated only, so the write would match zero
+  // rows without raising an error.
+  const { data, error } = await client.auth.signUp({
+    email: input.email,
 
-    .from("user_profiles")
+    password: input.password,
 
-    .update({
-      display_name: input.name,
+    options: {
+      // Return the confirmation link to wherever the user signed up from. Without
+      // this Supabase falls back to the configured Site URL, so confirming from a
+      // local development server would land on the deployed site instead.
+      emailRedirectTo: `${window.location.origin}/`,
 
-      shop_name: input.shopName || null,
+      data: {
+        display_name: input.name,
 
-      social_links: links,
+        shop_name: input.shopName || null,
 
-      social_visibility: Object.fromEntries(
-        Object.keys(links).map((key) => [key, true]),
-      ),
+        social_links: links,
 
-      can_sell: input.role === "Seller",
-    })
+        social_visibility: Object.fromEntries(
+          Object.keys(links).map((key) => [key, true]),
+        ),
 
-    .eq("id", data.user.id)
+        can_sell: input.role === "Seller",
+      },
+    },
+  })
 
-  if (updateError) throw updateError
+  if (error) throw error
+
+  if (!data.user) throw new Error("Supabase did not return a user")
+
+  if (!data.session)
+    return { needsEmailConfirmation: true as const, user: null }
 
   return {
     needsEmailConfirmation: false as const,

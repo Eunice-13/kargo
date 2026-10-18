@@ -51,8 +51,17 @@ In Supabase Auth:
 - Enable email/password authentication.
 - Set the production Site URL to the Vercel URL.
 - Add local and production confirmation/reset redirect URLs.
-- Configure production SMTP before launch.
-- Keep email confirmation enabled if required for production accounts.
+- Configure custom SMTP under Authentication → Emails → SMTP Settings before enabling email confirmation. The default Supabase sender is capped at two messages per hour for the entire project and that cap cannot be raised, so signup and password reset fail with "Email rate limit exceeded" once it is spent.
+- Email confirmation is enabled: signup sends a confirmation link and the account stays unconfirmed until it is clicked. Send from an address on a domain you control — sending as a free-mail address (a `gmail.com` address, for example) through a third-party relay fails SPF and DMARC alignment, so the confirmation mail can be filtered into spam.
+- Allow-list every origin a confirmation or reset link may return to, including the local development origin. Supabase silently falls back to the Site URL for origins that are not allow-listed.
+
+### Signup profile fields
+
+The signup form collects the display name, shop name, social links, and whether the account can sell. All of them travel as `auth.signUp` metadata (`options.data`), and the `handle_new_auth_user` trigger writes them into `user_profiles` as the auth user is created. The trigger runs whether or not Supabase returns a session, so the fields survive an unconfirmed-email round trip.
+
+A client-side `user_profiles` update cannot do this: the table is update-authenticated only, and `auth.signUp` issues no session while a confirmation is pending, so the update matches zero rows and raises no error.
+
+Apply `202610180004_signup_metadata_profile_fields.sql` together with the frontend change — through the Supabase SQL editor, like the other files in `supabase/migrations (to update profile database name)` (see `NYLAS_SETUP.md` §3). Without it the trigger writes only `display_name`, and the shop name, social links and seller flag are dropped again.
 
 Seller signup creates the account first. Once authenticated, KARGO opens the private BIR verification flow because protected Storage uploads cannot safely occur before authentication.
 
