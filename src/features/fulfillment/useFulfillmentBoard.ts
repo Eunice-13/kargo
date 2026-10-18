@@ -4,6 +4,7 @@ import type { FulfillmentOrder } from "@/types"
 import type { KanbanCol } from "@/constants/fulfillment"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
+import type { TrackingDetailsInput } from "./TrackingDetailsModal"
 
 // Shared board behaviour: which card is expanded, moving a card between
 // columns, screen-reader announcement, and keeping focus on the status select
@@ -34,7 +35,11 @@ export function useFulfillmentBoard(
       try {
         await kargoApi.setFulfillmentStatus(order.id, status)
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Unable to update fulfillment status.")
+        alert(
+          error instanceof Error
+            ? error.message
+            : "Unable to update fulfillment status.",
+        )
         return
       }
     }
@@ -46,12 +51,35 @@ export function useFulfillmentBoard(
     setRefocusId(order.id)
   }
 
+  const saveTracking = async (
+    order: FulfillmentOrder,
+    tracking: TrackingDetailsInput,
+  ) => {
+    if (isSupabaseConfigured) {
+      await kargoApi.setOrderTracking(order.id, tracking)
+    }
+    setFulfillment((current) =>
+      current.map((item) =>
+        item.id === order.id
+          ? {
+              ...item,
+              courierCompany: tracking.courier,
+              riderName: tracking.riderName,
+              riderContact: tracking.riderContact,
+              trackingNumber: tracking.trackingNumber,
+              eta: tracking.eta,
+              trackingUrl: tracking.trackingUrl,
+            }
+          : item,
+      ),
+    )
+  }
+
   useEffect(() => {
     if (!refocusId) return
     document.getElementById(`fulfillment-status-${refocusId}`)?.focus()
     setRefocusId(null)
   }, [refocusId])
 
-  return { expandedId, toggle, move, announcement }
+  return { expandedId, toggle, move, saveTracking, announcement }
 }
-

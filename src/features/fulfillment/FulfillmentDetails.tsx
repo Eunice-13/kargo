@@ -2,18 +2,28 @@ import { useState } from "react"
 import type { FulfillmentOrder } from "@/types"
 import { KANBAN_COLS, type KanbanCol } from "@/constants/fulfillment"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import TrackingDetailsModal, {
+  type TrackingDetailsInput,
+} from "./TrackingDetailsModal"
 
 export default function FulfillmentDetails({
   order,
   onMove,
+  onSaveTracking,
 }: {
   order: FulfillmentOrder
   onMove: (order: FulfillmentOrder, col: KanbanCol) => void
+  onSaveTracking: (
+    order: FulfillmentOrder,
+    tracking: TrackingDetailsInput,
+  ) => void | Promise<void>
 }) {
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [confirmComplete, setConfirmComplete] = useState(false)
   const [confirmShip, setConfirmShip] = useState(false)
   const [confirmTransit, setConfirmTransit] = useState(false)
+  const [showTracking, setShowTracking] = useState(false)
+  const [shipAfterTracking, setShipAfterTracking] = useState(false)
   const selectId = `fulfillment-status-${order.id}`
   return (
     <div
@@ -61,6 +71,28 @@ export default function FulfillmentDetails({
           </option>
         ))}
       </select>
+      {(order.col === "Shipped" || order.trackingNumber) && (
+        <button
+          type="button"
+          onClick={() => setShowTracking(true)}
+          style={{
+            marginTop: 8,
+            width: "100%",
+            border: "1px solid #D1D5DB",
+            borderRadius: 6,
+            background: "#fff",
+            padding: "6px 8px",
+            color: "#191BA9",
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          {order.trackingNumber
+            ? "Edit tracking details"
+            : "Add tracking details"}
+        </button>
+      )}
       {confirmCancel && (
         <Modal
           title="Cancel this order?"
@@ -130,13 +162,29 @@ export default function FulfillmentDetails({
             <PrimaryBtn
               onClick={() => {
                 setConfirmShip(false)
-                onMove(order, "Shipped")
+                setShipAfterTracking(true)
+                setShowTracking(true)
               }}
             >
-              Yes, mark shipped
+              Add tracking details
             </PrimaryBtn>
           </div>
         </Modal>
+      )}
+      {showTracking && (
+        <TrackingDetailsModal
+          order={order}
+          onClose={() => {
+            setShowTracking(false)
+            setShipAfterTracking(false)
+          }}
+          onSave={async (tracking) => {
+            await onSaveTracking(order, tracking)
+            setShowTracking(false)
+            if (shipAfterTracking) onMove(order, "Shipped")
+            setShipAfterTracking(false)
+          }}
+        />
       )}
       {confirmTransit && (
         <Modal

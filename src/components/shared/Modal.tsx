@@ -86,7 +86,7 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="fi"
+      className="fi kargo-modal-overlay"
       style={{
         // Portaled to document.body so `position: fixed` resolves against the
         // viewport, not the transform-animated app wrapper (.pu). The overlay
@@ -116,7 +116,7 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="si"
+        className="si kargo-modal"
         style={{
           background: "#fff",
           borderRadius: 12,
@@ -126,29 +126,39 @@ export default function Modal({
           display: "flex",
           flexDirection: "column",
           boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-          padding: 28,
+          padding: 0,
           outline: "none",
           boxSizing: "border-box",
         }}
       >
         <div
-          className="flex items-center justify-between mb-5"
-          style={{ flexShrink: 0 }}
+          className="kargo-modal__header flex items-center justify-between"
+          style={{
+            flexShrink: 0,
+            padding: title ? "20px 24px 16px" : "12px 16px 0 24px",
+          }}
         >
-          <h3
-            id={titleId}
-            style={{
-              fontFamily: "'Josefin Sans',sans-serif",
-              fontSize: 17,
-              fontWeight: 700,
-              color: "#111827",
-            }}
-          >
-            {title}
-          </h3>
+          {title ? (
+            <h3
+              id={titleId}
+              style={{
+                fontFamily: "'Josefin Sans',sans-serif",
+                fontSize: 17,
+                fontWeight: 700,
+                color: "#111827",
+                margin: 0,
+              }}
+            >
+              {title}
+            </h3>
+          ) : (
+            <span id={titleId} className="sr-only">
+              Dialog
+            </span>
+          )}
           <button
             type="button"
-            aria-label={`Close ${title}`}
+            aria-label={title ? `Close ${title}` : "Close dialog"}
             onClick={onClose}
             style={{
               color: "#9CA3AF",
@@ -157,7 +167,12 @@ export default function Modal({
               border: "none",
               cursor: "pointer",
               lineHeight: 1,
-              padding: "0 4px",
+              padding: 0,
+              width: 36,
+              height: 36,
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
             }}
           >
             ×
@@ -165,12 +180,12 @@ export default function Modal({
         </div>
         {/* Only the content scrolls; the header and the dialog stay put. */}
         <div
+          className="kargo-modal__body"
           style={{
             overflowY: "auto",
             flex: "1 1 auto",
             minHeight: 0,
-            marginRight: -4,
-            paddingRight: 4,
+            padding: "0 24px 24px",
           }}
         >
           {children}

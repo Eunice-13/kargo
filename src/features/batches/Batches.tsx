@@ -1,7 +1,14 @@
-import { BATCH_CATEGORIES, normalizeBatchCategory } from "@/constants/categories";
-import { productAvailability } from "./productAvailability";
-import { canManageBatch, canOpenBatch } from "./batchAccess";
-import { useEffect, useState } from "react";
+import {
+  BATCH_CATEGORIES,
+  normalizeBatchCategory,
+} from "@/constants/categories"
+
+import { productAvailability } from "./productAvailability"
+
+import { canManageBatch, canOpenBatch } from "./batchAccess"
+
+import { useEffect, useState } from "react"
+
 import {
   BarChart3,
   Lock,
@@ -11,10 +18,19 @@ import {
   ArrowLeft,
   ChevronDown,
   Plus,
-} from "lucide-react";
-import type { ClaimRow, BatchType, SharedState, EntityId } from "@/types";
-import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme";
-import { navIntent, subscribeNavIntent } from "@/state/navIntent";
+} from "lucide-react"
+
+import type {
+  ClaimRow,
+  BatchType,
+  SharedState,
+  EntityId,
+  ClaimReservationInput,
+} from "@/types"
+import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
+
+import { navIntent, subscribeNavIntent } from "@/state/navIntent"
+
 import {
   Modal,
   Card,
@@ -25,247 +41,366 @@ import {
   Toggle,
   ShareButton,
   ExtensionRequestModal,
-} from "@/components/shared";
-import { sortSoldOutLast } from "./batchSort";
-import FinancialSummaryModal from "./FinancialSummaryModal";
-import ItemClaimModal from "./ItemClaimModal";
-import SellerDirectoryPage from "./SellerDirectoryPage";
-import SellerShopPage from "./SellerShopPage";
-import BatchPage from "./BatchPage";
-import BuyerHome from "./BuyerHome";
-import { toggleBatchLock } from "./toggleBatchLock";
-import { isSupabaseConfigured } from "@/lib/supabase";
-import { kargoApi } from "@/services";
-import { productImageUrl } from "@/components/shared/ProductThumb";
+} from "@/components/shared"
 
-export const COLS = 3;
+import { sortSoldOutLast } from "./batchSort"
+
+import FinancialSummaryModal from "./FinancialSummaryModal"
+
+import ItemClaimModal from "./ItemClaimModal"
+
+import SellerDirectoryPage from "./SellerDirectoryPage"
+
+import SellerShopPage from "./SellerShopPage"
+
+import BatchPage from "./BatchPage"
+
+import BuyerHome from "./BuyerHome"
+
+import { toggleBatchLock } from "./toggleBatchLock"
+
+import { isSupabaseConfigured } from "@/lib/supabase"
+
+import { kargoApi } from "@/services"
+
+import { productImageUrl } from "@/components/shared/ProductThumb"
+
+export const COLS = 3
+
 export default function Batches({
   batches,
+
   setBatches,
+
   setTab,
+
   claims,
+
   setClaims,
+
   toPay,
+
   setToPay,
+
   role,
+
   user,
+
   refreshData,
+
   waitlist,
+
   setWaitlist,
+
   onNewBatch,
 }: SharedState & { onNewBatch: () => void }) {
-  const [batchPage, setBatchPage] = useState<BatchType | null>(null);
-  const [waitlisted, setWaitlisted] = useState<Record<string, boolean>>({});
-  const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({});
-  const [catFilter, setCatFilter] = useState("All");
-  const [dateFilter, setDateFilter] = useState("All");
+  const [batchPage, setBatchPage] = useState<BatchType | null>(null)
+
+  const [waitlisted, setWaitlisted] = useState<Record<string, boolean>>({})
+
+  const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({})
+
+  const [catFilter, setCatFilter] = useState("All")
+
+  const [dateFilter, setDateFilter] = useState("All")
+
   const [reactingBatchIds, setReactingBatchIds] = useState<Set<number>>(
     () => new Set(),
-  );
-  const [sellerDir, setSellerDir] = useState(false);
+  )
+
+  const [sellerDir, setSellerDir] = useState(false)
+  const [batchReturnSeller, setBatchReturnSeller] = useState<string | null>(
+    null,
+  )
+  const [shopReturnBatch, setShopReturnBatch] = useState<BatchType | null>(null)
   // Request Extension moved to the top of the Batches tab (3.7). A picker of
+
   // the buyer's extendable claims → the shared ExtensionRequestModal.
-  const [showExtPicker, setShowExtPicker] = useState(false);
-  const [extTarget, setExtTarget] = useState<ClaimRow | null>(null);
+
+  const [showExtPicker, setShowExtPicker] = useState(false)
+
+  const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
+
   const extendableClaims = claims.filter(
     (c) => c.status === "Pending" && !c.extensionRequested,
-  );
+  )
+
   const submitExtension = async (hours: number, reason: string) => {
-    if (!extTarget) return;
+    if (!extTarget) return
+
     if (isSupabaseConfigured) {
       try {
         await kargoApi.requestOrderExtension(
           String(extTarget.id),
+
           hours,
+
           reason,
-        );
+        )
       } catch (error) {
         alert(
           error instanceof Error
             ? error.message
             : "Unable to request extension.",
-        );
-        return;
+        )
+
+        return
       }
     }
+
     setClaims((prev) =>
       prev.map((c) =>
         c.id === extTarget.id ? { ...c, extensionRequested: true } : c,
       ),
-    );
-    setExtTarget(null);
-  };
+    )
+
+    setExtTarget(null)
+  }
+
   const [shopPage, setShopPage] = useState<string | null>(() => {
-    const n = navIntent.sellerName;
-    navIntent.sellerName = null;
-    return n;
-  });
-  const [contact, setContact] = useState<BatchType | null>(null);
+    const n = navIntent.sellerName
+
+    navIntent.sellerName = null
+
+    return n
+  })
+
+  const [contact, setContact] = useState<BatchType | null>(null)
+
   useEffect(() => {
     const applyNavigationIntent = () => {
       if (navIntent.batchId !== null) {
         const requestedBatch = batches.find(
           (batch) => batch.id === navIntent.batchId,
-        );
+        )
+
         if (requestedBatch) {
-          navIntent.batchId = null;
-          setShopPage(null);
+          navIntent.batchId = null
+          setBatchReturnSeller(null)
+          setShopReturnBatch(null)
+          setShopPage(null)
           if (canOpenBatch(requestedBatch, user, role)) {
-            setBatchPage(requestedBatch);
+            setBatchPage(requestedBatch)
           } else {
-            setBatchPage(null);
-            setTab("Dashboard");
+            setBatchPage(null)
+
+            setTab("Dashboard")
           }
         }
       }
 
       if (navIntent.sellerName !== null) {
-        const requestedSeller = navIntent.sellerName;
-        navIntent.sellerName = null;
-        setBatchPage(null);
-        setSellerDir(false);
-        setShopPage(requestedSeller);
+        const requestedSeller = navIntent.sellerName
+
+        navIntent.sellerName = null
+        setBatchReturnSeller(null)
+        setShopReturnBatch(null)
+        setBatchPage(null)
+        setSellerDir(false)
+
+        setShopPage(requestedSeller)
       }
-    };
+    }
+
     // Login can mount this tab before the catalog arrives. Keep the intent
+
     // pending and retry when batches load, as well as on navigation events.
-    applyNavigationIntent();
-    return subscribeNavIntent(applyNavigationIntent);
-  }, [batches, user, role, setTab]);
+
+    applyNavigationIntent()
+
+    return subscribeNavIntent(applyNavigationIntent)
+  }, [batches, user, role, setTab])
+
   useEffect(() => {
     if (batchPage && !canOpenBatch(batchPage, user, role)) {
-      setBatchPage(null);
-      setTab("Dashboard");
+      setBatchPage(null)
+
+      setTab("Dashboard")
     }
-  }, [batchPage, user, role, setTab]);
+  }, [batchPage, user, role, setTab])
+
   const [claimTarget, setClaimTarget] = useState<{
-    p: (typeof batches)[0]["products"][0];
-    key: string;
-  } | null>(null);
-  const [financialBatch, setFinancialBatch] = useState<BatchType | null>(null);
+    p: typeof batches[0]["products"][0]
+
+    key: string
+  } | null>(null)
+
+  const [financialBatch, setFinancialBatch] = useState<BatchType | null>(null)
+
   const [profileClaimTarget, setProfileClaimTarget] = useState<{
-    batch: BatchType;
-    product: BatchType["products"][0];
-  } | null>(null);
+    batch: BatchType
+
+    product: BatchType["products"][0]
+  } | null>(null)
+
   // Confirmation targets for consequential seller actions (#16)
-  const [lockConfirm, setLockConfirm] = useState<BatchType | null>(null);
+
+  const [lockConfirm, setLockConfirm] = useState<BatchType | null>(null)
 
   // Seller-only state
+
   type ExtReq = {
-    id: EntityId;
-    buyer: string;
-    product: string;
-    batch: string;
-    requestedAt: string;
-    status: "pending" | "approved" | "denied";
-  };
+    id: EntityId
+
+    buyer: string
+
+    product: string
+
+    batch: string
+
+    requestedAt: string
+
+    status: "pending" | "approved" | "denied"
+  }
+
   const [extensionRequests, setExtensionRequests] = useState<ExtReq[]>(
     isSupabaseConfigured
       ? []
       : [
           {
             id: 1,
+
             buyer: "Carlo Reyes",
+
             product: "Laneige Lip Mask",
+
             batch: "Korea Haul",
+
             requestedAt: "Sep 9, 2026",
+
             status: "pending",
           },
+
           {
             id: 2,
+
             buyer: "Mia Santos",
+
             product: "SK-II Essence",
+
             batch: "Singapore Haul",
+
             requestedAt: "Sep 10, 2026",
+
             status: "pending",
           },
         ],
-  );
+  )
+
   // Seller request pop-ups (moved from inline bottom cards to top-of-tab buttons).
+
   const [showExtReqModal, setShowExtReqModal] = useState(() => {
-    const requested = navIntent.openExtensionRequests;
-    navIntent.openExtensionRequests = false;
-    return requested;
-  });
+    const requested = navIntent.openExtensionRequests
+
+    navIntent.openExtensionRequests = false
+
+    return requested
+  })
+
   // Confirmation target for extension approve/deny (#16)
+
   const [extConfirm, setExtConfirm] = useState<{
-    req: ExtReq;
-    action: "approved" | "denied";
-  } | null>(null);
+    req: ExtReq
+
+    action: "approved" | "denied"
+  } | null>(null)
 
   useEffect(() => {
-    if (!isSupabaseConfigured || role !== "Seller") return;
+    if (!isSupabaseConfigured || role !== "Seller") return
+
     kargoApi
+
       .loadSellerExtensionRequests()
+
       .then((data) => {
-        setExtensionRequests(data.extensions);
+        setExtensionRequests(data.extensions)
       })
+
       .catch((error) =>
         alert(
           error instanceof Error
             ? error.message
             : "Unable to load extension requests.",
         ),
-      );
-  }, [role]);
+      )
+  }, [role])
 
   const filtered = batches.filter((b) => {
-    if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter) return false;
+    if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter)
+      return false
+
     if (dateFilter !== "All") {
       const mm: Record<string, string> = {
         "May 2026": "May",
+
         "Jun 2026": "Jun",
+
         "Jul 2026": "Jul",
+
         "Aug 2026": "Aug",
+
         "Sep 2026": "Sep",
+
         "Oct 2026": "Oct",
-      };
-      if (!b.trips.includes(mm[dateFilter] || "")) return false;
+      }
+
+      if (!b.trips.includes(mm[dateFilter] || "")) return false
     }
-    return true;
-  });
+
+    return true
+  })
 
   const handleToggleReaction = async (batch: BatchType) => {
-    if (reactingBatchIds.has(batch.id)) return;
+    if (reactingBatchIds.has(batch.id)) return
 
-    const wasReacted = Boolean(batch.reactedByCurrentUser);
-    const previousCount = batch.reactionCount ?? 0;
-    const nextReacted = !wasReacted;
-    const nextCount = Math.max(0, previousCount + (nextReacted ? 1 : -1));
+    const wasReacted = Boolean(batch.reactedByCurrentUser)
 
-    setReactingBatchIds((current) => new Set(current).add(batch.id));
+    const previousCount = batch.reactionCount ?? 0
+
+    const nextReacted = !wasReacted
+
+    const nextCount = Math.max(0, previousCount + (nextReacted ? 1 : -1))
+
+    setReactingBatchIds((current) => new Set(current).add(batch.id))
+
     setBatches((current) =>
       current.map((item) =>
         item.id === batch.id
           ? {
               ...item,
+
               reactedByCurrentUser: nextReacted,
+
               reactionCount: nextCount,
             }
           : item,
       ),
-    );
+    )
 
     try {
       if (isSupabaseConfigured) {
         if (!batch.dbId)
-          throw new Error("This batch is missing its database identifier.");
+          throw new Error("This batch is missing its database identifier.")
 
         const confirmed = await kargoApi.setBatchReaction(
           batch.dbId,
+
           nextReacted,
-        );
+        )
+
         setBatches((current) =>
           current.map((item) =>
             item.id === batch.id
               ? {
                   ...item,
+
                   reactedByCurrentUser: confirmed.reacted,
+
                   reactionCount: confirmed.reactionCount,
                 }
               : item,
           ),
-        );
+        )
       }
     } catch (error) {
       setBatches((current) =>
@@ -273,67 +408,99 @@ export default function Batches({
           item.id === batch.id
             ? {
                 ...item,
+
                 reactedByCurrentUser: wasReacted,
+
                 reactionCount: previousCount,
               }
             : item,
         ),
-      );
+      )
+
       alert(
         error instanceof Error
           ? error.message
           : "Unable to update this reaction.",
-      );
+      )
     } finally {
       setReactingBatchIds((current) => {
-        const next = new Set(current);
-        next.delete(batch.id);
-        return next;
-      });
+        const next = new Set(current)
+
+        next.delete(batch.id)
+
+        return next
+      })
     }
-  };
+  }
 
   const handleClaim = async (
     key: string,
+
     batch: BatchType,
-    product: (typeof batch.products)[0],
-    qty: number = 1,
+
+    product: typeof batch.products[0],
+
+    reservation: ClaimReservationInput,
   ) => {
-    const claimQty = Math.max(1, Math.floor(qty));
-    const currentBatch = batches.find((item) => item.id === batch.id);
-    const currentProduct = currentBatch?.products.find((item) => product.dbId ? item.dbId === product.dbId : item.name === product.name);
-    if (role !== "Buyer" || !currentBatch || !currentProduct || !productAvailability(currentProduct, currentBatch.locked).canClaim || claimQty > currentProduct.qty - currentProduct.claimed) {
-      alert("This product no longer has enough available claim slots.");
-      return false;
+    const qty = reservation.quantity
+    const claimQty = Math.max(1, Math.floor(qty))
+
+    const currentBatch = batches.find((item) => item.id === batch.id)
+
+    const currentProduct = currentBatch?.products.find((item) =>
+      product.dbId ? item.dbId === product.dbId : item.name === product.name,
+    )
+
+    if (
+      role !== "Buyer" ||
+      !currentBatch ||
+      !currentProduct ||
+      !productAvailability(currentProduct, currentBatch.locked).canClaim ||
+      claimQty > currentProduct.qty - currentProduct.claimed
+    ) {
+      alert("This product no longer has enough available claim slots.")
+
+      return false
     }
+
     if (isSupabaseConfigured) {
       if (!product.dbId) {
-        alert("This product is missing its database identifier.");
-        return false;
+        alert("This product is missing its database identifier.")
+
+        return false
       }
+
       try {
-        await kargoApi.claimProduct(product.dbId, claimQty);
-        await refreshData();
-        setClaimedKeys((current) => ({ ...current, [key]: true }));
-        return true;
+        await kargoApi.claimProduct(product.dbId, reservation)
+        await refreshData()
+
+        setClaimedKeys((current) => ({ ...current, [key]: true }))
+
+        return true
       } catch (error) {
         alert(
           error instanceof Error
             ? error.message
             : "Unable to claim this product.",
-        );
-        return false;
+        )
+
+        return false
       }
     }
-    setClaimedKeys((c) => ({ ...c, [key]: true }));
+
+    setClaimedKeys((c) => ({ ...c, [key]: true }))
+
     // Keep batch/product claim counts accurate immediately (2.3).
+
     setBatches((prev) =>
       prev.map((bt) =>
         bt.id !== batch.id
           ? bt
           : {
               ...bt,
+
               claimed: bt.claimed + claimQty,
+
               products: bt.products.map((prod) =>
                 (product.dbId && prod.dbId === product.dbId) ||
                 prod.name === product.name
@@ -342,67 +509,159 @@ export default function Batches({
               ),
             },
       ),
-    );
-    const reserveHrs = batch.reserveHours || 48;
-    const claimId = Date.now();
+    )
+
+    const reserveHrs = batch.reserveHours || 48
+
+    const claimId = Date.now()
+
     const expiresAt = new Date(
       Date.now() + reserveHrs * 3_600_000,
-    ).toISOString();
+    ).toISOString()
+    const shippingApplies = reservation.paymentMethod !== "Cash on Meetup"
+    const deadlinePausedAt = shippingApplies
+      ? new Date().toISOString()
+      : undefined
     const newClaim: ClaimRow = {
       id: claimId,
+
       createdAt: new Date().toISOString(),
+
       productId: product.dbId,
+
       product: product.name,
+
       batch: batch.title.replace("—", "—"),
+
       seller: batch.seller,
+
       qty: claimQty,
+
       amount: product.price * claimQty,
+
       status: "Pending",
+
       hours: reserveHrs,
+
       expiresAt,
-    };
-    setClaims((prev) => [newClaim, ...prev]);
-    const alreadyInToPay = toPay.some((t) => t.product === product.name);
+      reservedPaymentMethod: reservation.paymentMethod,
+      shippingApplies,
+      shippingState: shippingApplies ? "waiting_for_seller" : undefined,
+      deadlinePausedAt,
+      deliveryPinLat: reservation.pinLat,
+      deliveryPinLng: reservation.pinLng,
+      deliveryPinUrl: reservation.pinUrl,
+      deliveryPinAddress: reservation.pinAddress,
+    }
+
+    setClaims((prev) => [newClaim, ...prev])
+
+    const alreadyInToPay = toPay.some((t) => t.product === product.name)
+
     if (!alreadyInToPay) {
       setToPay((prev) => [
         {
           id: claimId,
+
           createdAt: newClaim.createdAt,
+
           orderId: String(claimId),
+
           product: product.name,
+
           seller: batch.seller,
+
           sellerId: batch.sellerId,
+
           amount: product.price * claimQty,
+
           qty: claimQty,
+
           hours: reserveHrs,
+
           expiresAt,
+          reservedPaymentMethod: reservation.paymentMethod,
+          shippingApplies,
+          shippingState: shippingApplies ? "waiting_for_seller" : undefined,
+          deadlinePausedAt,
         },
+
         ...prev,
-      ]);
+      ])
     }
-    return true;
-  };
+
+    return true
+  }
 
   const handleProfileClaim = (batchId: number, productName?: string) => {
-    const batch = batches.find((b) => b.id === batchId);
+    const batch = batches.find((b) => b.id === batchId)
+
     // Target a specific item when a name is given (per-item claim from the
+
     // View-Shop panel); otherwise fall back to the first product.
+
     const product = productName
       ? batch?.products.find((p) => p.name === productName)
-      : batch?.products[0];
-    if (!batch || !product || role !== "Buyer" || !productAvailability(product, batch.locked).canClaim) return;
-    setShopPage(null);
-    setProfileClaimTarget({ batch, product });
-  };
+      : batch?.products[0]
+
+    if (
+      !batch ||
+      !product ||
+      role !== "Buyer" ||
+      !productAvailability(product, batch.locked).canClaim
+    )
+      return
+
+    setShopPage(null)
+
+    setProfileClaimTarget({ batch, product })
+  }
 
   const openSellerShop = (name: string) => {
-    setBatchPage(null);
-    setSellerDir(false);
-    setShopPage(name);
-  };
+    setShopReturnBatch(batchPage)
+    setBatchReturnSeller(null)
+    setBatchPage(null)
+    setSellerDir(false)
+    setShopPage(name)
+  }
+
+  const openBatchFromList = (batch: BatchType) => {
+    setBatchReturnSeller(null)
+    setShopReturnBatch(null)
+    setShopPage(null)
+    setBatchPage(batch)
+  }
+
+  const openBatchFromShop = (batch: BatchType, seller: string) => {
+    setShopReturnBatch(null)
+    setBatchReturnSeller(seller)
+    setShopPage(null)
+    setBatchPage(batch)
+  }
+
+  const handleShopBack = () => {
+    const previousBatch = shopReturnBatch
+    setShopPage(null)
+    setShopReturnBatch(null)
+    if (previousBatch) {
+      const currentBatch = batches.find(
+        (batch) => batch.id === previousBatch.id,
+      )
+      setBatchPage(currentBatch ?? previousBatch)
+    }
+  }
+
+  const handleBatchBack = () => {
+    const previousSeller = batchReturnSeller
+    setBatchPage(null)
+    setBatchReturnSeller(null)
+    if (previousSeller) setShopPage(previousSeller)
+  }
 
   // Confirmation modals for consequential seller actions (#16). Rendered in
+
   // every return branch so they work from the batch grid and the seller panels.
+
   const confirmModals = (
     <>
       {lockConfirm && (
@@ -431,8 +690,9 @@ export default function Batches({
             </SecondaryBtn>
             <PrimaryBtn
               onClick={() => {
-                toggleBatchLock(setBatches, lockConfirm.id);
-                setLockConfirm(null);
+                toggleBatchLock(setBatches, lockConfirm.id)
+
+                setLockConfirm(null)
               }}
             >
               {lockConfirm.locked ? "Unlock Batch" : "Lock Batch"}
@@ -476,25 +736,29 @@ export default function Batches({
                   try {
                     await kargoApi.decideOrderExtension(
                       String(extConfirm.req.id),
+
                       extConfirm.action === "approved",
-                    );
+                    )
                   } catch (error) {
                     alert(
                       error instanceof Error
                         ? error.message
                         : "Unable to decide extension.",
-                    );
-                    return;
+                    )
+
+                    return
                   }
                 }
+
                 setExtensionRequests((p) =>
                   p.map((r) =>
                     r.id === extConfirm.req.id
                       ? { ...r, status: extConfirm.action }
                       : r,
                   ),
-                );
-                setExtConfirm(null);
+                )
+
+                setExtConfirm(null)
               }}
             >
               {extConfirm.action === "approved" ? "Approve" : "Deny"}
@@ -503,7 +767,7 @@ export default function Batches({
         </Modal>
       )}
     </>
-  );
+  )
 
   if (shopPage)
     return (
@@ -511,25 +775,38 @@ export default function Batches({
         <div
           style={{
             background: "#fff",
+
             borderBottom: "1px solid #E5E7EB",
+
             padding: "10px 24px",
+
             display: "flex",
+
             alignItems: "center",
+
             gap: 8,
+
             position: "sticky",
+
             top: 88,
+
             zIndex: 30,
           }}
         >
           <button
             type="button"
-            onClick={() => setShopPage(null)}
+            onClick={handleShopBack}
             style={{
               fontSize: 13,
+
               color: INDIGO,
+
               fontWeight: 600,
+
               background: "none",
+
               border: "none",
+
               cursor: "pointer",
             }}
           >
@@ -538,7 +815,7 @@ export default function Batches({
               aria-hidden="true"
               style={{ display: "inline", marginRight: 4, verticalAlign: -2 }}
             />
-            Back to Batches
+            {shopReturnBatch ? "Back to Batch" : "Back to Batches"}
           </button>
           <span style={{ fontSize: 12, color: "#D1D5DB" }}>/</span>
           <span style={{ fontSize: 13, color: "#6B7280" }}>{shopPage}</span>
@@ -551,19 +828,20 @@ export default function Batches({
             onBatchOpen={(batchId) => {
               const requestedBatch = batches.find(
                 (batch) => batch.id === batchId,
-              );
-              if (!requestedBatch) return;
-              setShopPage(null);
-              setBatchPage(requestedBatch);
+              )
+
+              if (!requestedBatch) return
+
+              openBatchFromShop(requestedBatch, shopPage)
             }}
             role={role}
             profileData={shopPage === user.name ? user : undefined}
           />
         </div>
       </div>
-    );
+    )
 
-  if (batchPage && !canOpenBatch(batchPage, user, role)) return null;
+  if (batchPage && !canOpenBatch(batchPage, user, role)) return null
 
   if (batchPage)
     return (
@@ -577,7 +855,8 @@ export default function Batches({
           setClaims={setClaims}
           toPay={toPay}
           setToPay={setToPay}
-          onBack={() => setBatchPage(null)}
+          onBack={handleBatchBack}
+          backLabel={batchReturnSeller ? "Back to Shop" : "Back to Batches"}
           onSellerClick={openSellerShop}
           setBatches={setBatches}
           waitlist={waitlist}
@@ -588,44 +867,58 @@ export default function Batches({
           <ItemClaimModal
             batch={profileClaimTarget.batch}
             product={profileClaimTarget.product}
-            onConfirm={async (qty) => {
+            onConfirm={async (reservation) => {
               const claimed = await handleClaim(
                 `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
+
                 profileClaimTarget.batch,
+
                 profileClaimTarget.product,
-                qty,
-              );
-              if (claimed) setProfileClaimTarget(null);
+
+                reservation,
+              )
+
+              if (claimed) setProfileClaimTarget(null)
             }}
             onClose={() => setProfileClaimTarget(null)}
           />
         )}
       </>
-    );
+    )
 
   const BatchGrid = ({ batchList }: { batchList: BatchType[] }) => {
     // Sold-out batches sink to the bottom (3.3).
-    const ordered = sortSoldOutLast(batchList);
-    const gridColumns = role === "Seller" ? 6 : COLS;
-    const gridRows: BatchType[][] = [];
+
+    const ordered = sortSoldOutLast(batchList)
+
+    const gridColumns = role === "Seller" ? 6 : COLS
+
+    const gridRows: BatchType[][] = []
+
     for (let i = 0; i < ordered.length; i += gridColumns)
-      gridRows.push(ordered.slice(i, i + gridColumns));
+      gridRows.push(ordered.slice(i, i + gridColumns))
+
     return (
       <div className="space-y-0">
         {gridRows.map((row, rowIdx) => {
           return (
             <div key={rowIdx}>
               <div
-                className={`grid gap-5 ${role === "Seller" ? "seller-batches-grid" : ""}`}
+                className={`grid gap-5 ${
+                  role === "Seller" ? "seller-batches-grid" : ""
+                }`}
                 style={{
                   gridTemplateColumns:
                     role === "Seller" ? undefined : "repeat(3,1fr)",
+
                   marginBottom: 20,
                 }}
               >
                 {row.map((b, i) => {
-                  const pct = Math.round((b.claimed / b.items) * 100);
-                  const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"];
+                  const pct = Math.round((b.claimed / b.items) * 100)
+
+                  const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"]
+
                   return (
                     <div
                       key={b.id}
@@ -637,27 +930,36 @@ export default function Batches({
                       <div
                         style={{
                           background: "#fff",
+
                           border: `1px solid ${
                             b.locked ? "#FCA5A5" : "#E5E7EB"
                           }`,
+
                           borderRadius: 8,
+
                           overflow: "hidden",
+
                           boxShadow: b.locked
                             ? "0 0 0 1px #FCA5A5,0 1px 3px rgba(0,0,0,0.06)"
                             : "0 1px 3px rgba(0,0,0,0.06)",
+
                           transition: "transform 0.15s,box-shadow 0.15s",
                         }}
                         onMouseEnter={(e) => {
-                          const el = e.currentTarget as HTMLDivElement;
-                          el.style.transform = "translateY(-2px)";
-                          el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)";
+                          const el = e.currentTarget as HTMLDivElement
+
+                          el.style.transform = "translateY(-2px)"
+
+                          el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)"
                         }}
                         onMouseLeave={(e) => {
-                          const el = e.currentTarget as HTMLDivElement;
-                          el.style.transform = "";
+                          const el = e.currentTarget as HTMLDivElement
+
+                          el.style.transform = ""
+
                           el.style.boxShadow = b.locked
                             ? "0 0 0 1px #FCA5A5,0 1px 3px rgba(0,0,0,0.06)"
-                            : "0 1px 3px rgba(0,0,0,0.06)";
+                            : "0 1px 3px rgba(0,0,0,0.06)"
                         }}
                       >
                         <div
@@ -666,12 +968,18 @@ export default function Batches({
                           }
                           style={{
                             height: role === "Seller" ? undefined : 120,
+
                             aspectRatio:
                               role === "Seller" ? "1 / 1" : undefined,
+
                             background: grad,
+
                             position: "relative",
+
                             display: "flex",
+
                             alignItems: "center",
+
                             justifyContent: "center",
                           }}
                         >
@@ -680,6 +988,7 @@ export default function Batches({
                               className="seller-batch-photo"
                               src={productImageUrl(
                                 b.products[0]?.name || "",
+
                                 480,
                               )}
                               alt={b.products[0]?.name || b.title}
@@ -698,29 +1007,44 @@ export default function Batches({
                                 b.locked ? "Unlock batch" : "Lock batch"
                               }
                               onClick={(e) => {
-                                e.stopPropagation();
-                                setLockConfirm(b);
+                                e.stopPropagation()
+
+                                setLockConfirm(b)
                               }}
                               style={{
                                 position: "absolute",
+
                                 top: 8,
+
                                 left: role === "Seller" ? undefined : 8,
+
                                 right: role === "Seller" ? 8 : undefined,
+
                                 background:
                                   role === "Seller"
                                     ? b.locked
                                       ? "#C1EAF2"
                                       : INDIGO
                                     : "rgba(255,255,255,0.92)",
+
                                 border: "none",
+
                                 borderRadius: role === "Seller" ? "50%" : 6,
+
                                 width: 28,
+
                                 height: 28,
+
                                 display: "flex",
+
                                 alignItems: "center",
+
                                 justifyContent: "center",
+
                                 cursor: "pointer",
+
                                 fontSize: 15,
+
                                 boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
                               }}
                               title={b.locked ? "Unlock batch" : "Lock batch"}
@@ -749,14 +1073,23 @@ export default function Batches({
                             <span
                               style={{
                                 position: "absolute",
+
                                 top: 10,
+
                                 left: 10,
+
                                 background: "#FEE2E2",
+
                                 color: "#991B1B",
+
                                 fontSize: 9,
+
                                 fontWeight: 700,
+
                                 padding: "3px 8px",
+
                                 borderRadius: 999,
+
                                 letterSpacing: 0.5,
                               }}
                             >
@@ -768,15 +1101,25 @@ export default function Batches({
                             <span
                               style={{
                                 position: "absolute",
+
                                 top: 10,
+
                                 left: 10,
+
                                 background: "rgba(255,255,255,0.9)",
+
                                 backdropFilter: "blur(4px)",
+
                                 color: "#374151",
+
                                 fontSize: 9,
+
                                 fontWeight: 700,
+
                                 padding: "3px 8px",
+
                                 borderRadius: 999,
+
                                 letterSpacing: 0.5,
                               }}
                             >
@@ -787,15 +1130,25 @@ export default function Batches({
                             <span
                               style={{
                                 position: "absolute",
+
                                 top: 10,
+
                                 left: 10,
+
                                 background: "rgba(255,255,255,0.9)",
+
                                 backdropFilter: "blur(4px)",
+
                                 color: "#374151",
+
                                 fontSize: 9,
+
                                 fontWeight: 700,
+
                                 padding: "3px 8px",
+
                                 borderRadius: 999,
+
                                 letterSpacing: 0.5,
                               }}
                             >
@@ -806,13 +1159,21 @@ export default function Batches({
                             <span
                               style={{
                                 position: "absolute",
+
                                 bottom: 8,
+
                                 right: 8,
+
                                 background: CORAL,
+
                                 color: "#fff",
+
                                 fontSize: 9,
+
                                 fontWeight: 700,
+
                                 padding: "2px 8px",
+
                                 borderRadius: 999,
                               }}
                             >
@@ -823,13 +1184,21 @@ export default function Batches({
                             <span
                               style={{
                                 position: "absolute",
+
                                 bottom: 8,
+
                                 left: 8,
+
                                 background: AMBER,
+
                                 color: "#7A4800",
+
                                 fontSize: 9,
+
                                 fontWeight: 700,
+
                                 padding: "2px 8px",
+
                                 borderRadius: 999,
                               }}
                             >
@@ -854,16 +1223,22 @@ export default function Batches({
                             }
                             style={{
                               fontFamily: "'Plus Jakarta Sans',sans-serif",
+
                               fontSize: 13.5,
+
                               fontWeight: 700,
+
                               color: "#111827",
+
                               marginBottom: 6,
                             }}
                           >
                             {b.title}
                           </h3>
                           <div
-                            className={`flex items-center gap-1.5 mb-3 ${role === "Seller" ? "seller-batch-organizer" : ""}`}
+                            className={`flex items-center gap-1.5 mb-3 ${
+                              role === "Seller" ? "seller-batch-organizer" : ""
+                            }`}
                           >
                             <Avatar name={b.seller} size={18} />
                             <span style={{ fontSize: 11.5, color: "#6B7280" }}>
@@ -894,7 +1269,9 @@ export default function Batches({
                             <span
                               style={{
                                 fontSize: 11,
+
                                 fontWeight: 700,
+
                                 color:
                                   pct > 85
                                     ? "#EF4444"
@@ -911,16 +1288,22 @@ export default function Batches({
                           <div
                             style={{
                               background: "#F3F4F6",
+
                               borderRadius: 999,
+
                               height: 4,
+
                               overflow: "hidden",
+
                               marginBottom: 12,
                             }}
                           >
                             <div
                               style={{
                                 width: `${pct}%`,
+
                                 height: "100%",
+
                                 background:
                                   pct > 85
                                     ? "#EF4444"
@@ -929,7 +1312,9 @@ export default function Batches({
                                       : role === "Seller"
                                         ? "#20A582"
                                         : INDIGO,
+
                                 borderRadius: 999,
+
                                 transition:
                                   "width 0.6s cubic-bezier(.22,1,.36,1)",
                               }}
@@ -939,11 +1324,17 @@ export default function Batches({
                             <div
                               style={{
                                 background: "#FEE2E2",
+
                                 color: "#991B1B",
+
                                 fontSize: 11,
+
                                 fontWeight: 700,
+
                                 padding: "7px 12px",
+
                                 borderRadius: 6,
+
                                 textAlign: "center",
                               }}
                             >
@@ -964,16 +1355,20 @@ export default function Batches({
                               <PrimaryBtn
                                 style={{
                                   flex: 1,
+
                                   display: "flex",
+
                                   justifyContent: "center",
                                 }}
-                                onClick={() => setBatchPage(b)}
+                                onClick={() => openBatchFromList(b)}
                                 size="sm"
                               >
                                 <span
                                   style={{
                                     display: "inline-flex",
+
                                     alignItems: "center",
+
                                     gap: 4,
                                   }}
                                 >
@@ -988,8 +1383,9 @@ export default function Batches({
                                   size="sm"
                                   ariaLabel="View batch financial summary"
                                   onClick={(event) => {
-                                    event.stopPropagation();
-                                    setFinancialBatch(b);
+                                    event.stopPropagation()
+
+                                    setFinancialBatch(b)
                                   }}
                                 >
                                   <BarChart3 size={15} aria-hidden="true" />
@@ -1005,7 +1401,7 @@ export default function Batches({
                         </div>
                       </div>
                     </div>
-                  );
+                  )
                 })}
                 {row.length < gridColumns &&
                   Array.from({ length: gridColumns - row.length }).map(
@@ -1013,14 +1409,17 @@ export default function Batches({
                   )}
               </div>
             </div>
-          );
+          )
         })}
         {batchList.length === 0 && (
           <div
             style={{
               padding: "60px 0",
+
               textAlign: "center",
+
               color: "#9CA3AF",
+
               fontSize: 13,
             }}
           >
@@ -1028,28 +1427,35 @@ export default function Batches({
           </div>
         )}
       </div>
-    );
-  };
+    )
+  }
 
   const pendingExtCount = extensionRequests.filter(
     (request) => request.status === "pending",
-  ).length;
+  ).length
 
   const FilterBar = () => (
     <div
       style={{
         background: role === "Seller" ? "#6a90d6" : "#fff",
+
         border: role === "Seller" ? "1px solid #6a90d6" : "1px solid #E5E7EB",
+
         borderRadius: 8,
+
         padding: role === "Seller" ? "8px 12px" : "12px 16px",
       }}
-      className={`batch-filter-bar flex items-center gap-3 mb-6 ${role === "Seller" ? "seller-batch-filter-bar" : ""}`}
+      className={`batch-filter-bar flex items-center gap-3 mb-6 ${
+        role === "Seller" ? "seller-batch-filter-bar" : ""
+      }`}
     >
       <span
         className={role === "Seller" ? "seller-batch-filter-label" : undefined}
         style={{
           fontSize: 12,
+
           fontWeight: 600,
+
           color: role === "Seller" ? "#fff" : "#374151",
         }}
       >
@@ -1064,21 +1470,30 @@ export default function Batches({
           }
           value={catFilter}
           onChange={(e) => {
-            setCatFilter(e.target.value);
+            setCatFilter(e.target.value)
           }}
           style={{
             fontSize: 12,
+
             color: "#374151",
+
             border: "1px solid #E5E7EB",
+
             borderRadius: 6,
+
             padding: "5px 8px",
+
             background: "#fff",
+
             outline: "none",
+
             cursor: "pointer",
           }}
         >
           {["All", ...BATCH_CATEGORIES].map((o) => (
-            <option key={o} value={o}>{o === "All" ? "All categories" : o}</option>
+            <option key={o} value={o}>
+              {o === "All" ? "All categories" : o}
+            </option>
           ))}
         </select>
         {role === "Seller" && (
@@ -1096,29 +1511,44 @@ export default function Batches({
           }
           value={dateFilter}
           onChange={(e) => {
-            setDateFilter(e.target.value);
+            setDateFilter(e.target.value)
           }}
           style={{
             fontSize: 12,
+
             color: "#374151",
+
             border: "1px solid #E5E7EB",
+
             borderRadius: 6,
+
             padding: "5px 8px",
+
             background: "#fff",
+
             outline: "none",
+
             cursor: "pointer",
           }}
         >
           {[
             "All",
+
             "May 2026",
+
             "Jun 2026",
+
             "Jul 2026",
+
             "Aug 2026",
+
             "Sep 2026",
+
             "Oct 2026",
           ].map((o) => (
-            <option key={o} value={o}>{o === "All" ? "All months" : o}</option>
+            <option key={o} value={o}>
+              {o === "All" ? "All months" : o}
+            </option>
           ))}
         </select>
         {role === "Seller" && (
@@ -1138,7 +1568,6 @@ export default function Batches({
             Extension Requests
             {pendingExtCount > 0 && <span>{pendingExtCount}</span>}
           </button>
-
         </>
       )}
       {role === "Buyer" && (
@@ -1156,9 +1585,10 @@ export default function Batches({
         </span>
       )}
     </div>
-  );
+  )
 
   // Full-page seller directory
+
   if (sellerDir) {
     return (
       <>
@@ -1173,39 +1603,57 @@ export default function Batches({
           <ItemClaimModal
             batch={profileClaimTarget.batch}
             product={profileClaimTarget.product}
-            onConfirm={async (qty) => {
+            onConfirm={async (reservation) => {
               const claimed = await handleClaim(
                 `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
+
                 profileClaimTarget.batch,
+
                 profileClaimTarget.product,
-                qty,
-              );
-              if (claimed) setProfileClaimTarget(null);
+
+                reservation,
+              )
+
+              if (claimed) setProfileClaimTarget(null)
             }}
             onClose={() => setProfileClaimTarget(null)}
           />
         )}
       </>
-    );
+    )
   }
 
   if (role === "Seller") {
-    const myBatches = batches.filter((b) => canManageBatch(b, user, role));
+    const myBatches = batches.filter((b) => canManageBatch(b, user, role))
+
     const myFiltered = myBatches.filter((b) => {
-      if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter) return false;
+      if (
+        catFilter !== "All" &&
+        normalizeBatchCategory(b.category) !== catFilter
+      )
+        return false
+
       if (dateFilter !== "All") {
         const mm: Record<string, string> = {
           "May 2026": "May",
+
           "Jun 2026": "Jun",
+
           "Jul 2026": "Jul",
+
           "Aug 2026": "Aug",
+
           "Sep 2026": "Sep",
+
           "Oct 2026": "Oct",
-        };
-        if (!b.trips.includes(mm[dateFilter] || "")) return false;
+        }
+
+        if (!b.trips.includes(mm[dateFilter] || "")) return false
       }
-      return true;
-    });
+
+      return true
+    })
+
     return (
       <div className="seller-batches-page">
         <header className="seller-batches-heading">
@@ -1242,8 +1690,11 @@ export default function Batches({
               <div
                 style={{
                   textAlign: "center",
+
                   color: "#9CA3AF",
+
                   fontSize: 13,
+
                   padding: "16px 0",
                 }}
               >
@@ -1256,7 +1707,9 @@ export default function Batches({
                     key={req.id}
                     style={{
                       border: "1px solid #E5E7EB",
+
                       borderRadius: 8,
+
                       padding: "12px 14px",
                     }}
                   >
@@ -1265,7 +1718,9 @@ export default function Batches({
                         <div
                           style={{
                             fontSize: 13,
+
                             fontWeight: 600,
+
                             color: "#111827",
                           }}
                         >
@@ -1274,7 +1729,9 @@ export default function Batches({
                         <div
                           style={{
                             fontSize: 11,
+
                             color: "#9CA3AF",
+
                             marginTop: 2,
                           }}
                         >
@@ -1300,12 +1757,19 @@ export default function Batches({
                             }
                             style={{
                               fontSize: 12,
+
                               color: "#EF4444",
+
                               fontWeight: 600,
+
                               background: "none",
+
                               border: "1px solid #EF4444",
+
                               borderRadius: 6,
+
                               padding: "4px 10px",
+
                               cursor: "pointer",
                             }}
                           >
@@ -1317,11 +1781,16 @@ export default function Batches({
                           style={{
                             background:
                               req.status === "approved" ? "#D4F5EA" : "#FEE2E2",
+
                             color:
                               req.status === "approved" ? "#0B7A59" : "#991B1B",
+
                             fontSize: 11,
+
                             fontWeight: 600,
+
                             padding: "3px 9px",
+
                             borderRadius: 999,
                           }}
                         >
@@ -1339,14 +1808,18 @@ export default function Batches({
           <ItemClaimModal
             batch={profileClaimTarget.batch}
             product={profileClaimTarget.product}
-            onConfirm={async (qty) => {
+            onConfirm={async (reservation) => {
               const claimed = await handleClaim(
                 `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
+
                 profileClaimTarget.batch,
+
                 profileClaimTarget.product,
-                qty,
-              );
-              if (claimed) setProfileClaimTarget(null);
+
+                reservation,
+              )
+
+              if (claimed) setProfileClaimTarget(null)
             }}
             onClose={() => setProfileClaimTarget(null)}
           />
@@ -1359,7 +1832,7 @@ export default function Batches({
         )}
         {confirmModals}
       </div>
-    );
+    )
   }
 
   return (
@@ -1368,13 +1841,21 @@ export default function Batches({
       <div
         style={{
           display: "none",
+
           alignItems: "center",
+
           justifyContent: "space-between",
+
           gap: 12,
+
           background: "#EEF0FF",
+
           border: "1px solid #DDE0FF",
+
           borderRadius: 8,
+
           padding: "10px 14px",
+
           marginBottom: 12,
         }}
       >
@@ -1395,7 +1876,7 @@ export default function Batches({
         date={dateFilter}
         onCategoryChange={setCatFilter}
         onDateChange={setDateFilter}
-        onOpenBatch={setBatchPage}
+        onOpenBatch={openBatchFromList}
         onToggleReaction={handleToggleReaction}
         reactionPending={reactingBatchIds}
       />
@@ -1414,16 +1895,23 @@ export default function Batches({
                 key={c.id}
                 type="button"
                 onClick={() => {
-                  setExtTarget(c);
-                  setShowExtPicker(false);
+                  setExtTarget(c)
+
+                  setShowExtPicker(false)
                 }}
                 style={{
                   width: "100%",
+
                   textAlign: "left",
+
                   border: "1px solid #E5E7EB",
+
                   borderRadius: 8,
+
                   padding: "10px 12px",
+
                   background: "#fff",
+
                   cursor: "pointer",
                 }}
               >
@@ -1451,14 +1939,18 @@ export default function Batches({
         <ItemClaimModal
           batch={profileClaimTarget.batch}
           product={profileClaimTarget.product}
-          onConfirm={async (qty) => {
+          onConfirm={async (reservation) => {
             const claimed = await handleClaim(
               `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
+
               profileClaimTarget.batch,
+
               profileClaimTarget.product,
-              qty,
-            );
-            if (claimed) setProfileClaimTarget(null);
+
+              reservation,
+            )
+
+            if (claimed) setProfileClaimTarget(null)
           }}
           onClose={() => setProfileClaimTarget(null)}
         />
@@ -1471,5 +1963,5 @@ export default function Batches({
       )}
       {confirmModals}
     </div>
-  );
+  )
 }

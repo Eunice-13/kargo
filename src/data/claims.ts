@@ -4,171 +4,326 @@ export const CLAIMS_INIT: ClaimRow[] = [
   {
     id: 1,
     product: "Tokyo Banana",
+
     batch: "Japan Trip — March 2026",
+
     seller: "Maria Santos",
+
     buyer: "Trisha Lim",
+
     buyerFb: "https://facebook.com/trisha.lim",
+
     qty: 2,
+
     amount: 960,
+
     status: "Pending",
     hours: 18,
+    reservedPaymentMethod: "GCash",
+    shippingApplies: true,
+    shippingState: "waiting_for_seller",
+    deadlinePausedAt: "2026-10-18T08:00:00.000Z",
+    deliveryPinLat: 14.5995,
+    deliveryPinLng: 120.9842,
+    deliveryPinUrl: "https://maps.google.com/?q=14.5995,120.9842",
+    deliveryPinAddress: "Manila, Metro Manila, Philippines",
   },
+
   {
     id: 2,
+
     product: "Laneige Lip Mask",
+
     batch: "Korea Haul — April 2026",
+
     seller: "Ana Reyes",
+
     buyer: "Grace Reyes",
+
     buyerFb: "https://facebook.com/grace.reyes",
+
     qty: 1,
+
     amount: 950,
+
     status: "Pending",
+
     hours: 3,
   },
+
   {
     id: 3,
     product: "Trader Joe's Snacks",
+
     batch: "US Pasabuy — May 2026",
+
     seller: "Paolo Garcia",
+
     buyer: "Carlo Santos",
+
     qty: 3,
+
     amount: 3600,
+
     status: "Paid and Reserved",
     hours: 0,
+    reservedPaymentMethod: "GCash",
+    shippingApplies: true,
+    shippingState: "fee_set",
+    shippingFee: 180,
+    courierCompany: "Ninja Van",
+    riderName: "Marco Dela Cruz",
+    riderContact: "+63 917 555 0142",
+    trackingNumber: "NVPHDMO0043",
+    eta: "2026-10-20T17:00:00.000Z",
+    fulfillmentStage: "shipped",
+    deliveryPinLat: 14.5995,
+    deliveryPinLng: 120.9842,
   },
+
   {
     id: 4,
+
     product: "Shiseido Sunscreen",
+
     batch: "Japan Trip — March 2026",
+
     seller: "Maria Santos",
+
     buyer: "Anna Bautista",
+
     buyerFb: "https://facebook.com/anna.bautista",
+
     qty: 1,
+
     amount: 1650,
+
     status: "Pending",
+
     hours: 5,
   },
+
   {
     id: 5,
+
     product: "Korean Skincare Set",
+
     batch: "Korea Haul — April 2026",
+
     seller: "Ana Reyes",
+
     buyer: "Mia Cruz",
+
     qty: 1,
+
     amount: 2400,
+
     status: "Pending",
+
     hours: 42,
   },
+
   {
     id: 6,
+
     product: "KitKat Sakura",
+
     batch: "Japan Trip — March 2026",
+
     seller: "Maria Santos",
+
     buyer: "Ben Torres",
+
     qty: 4,
+
     amount: 1280,
+
     status: "Cancelled",
+
     hours: 0,
   },
+
   {
     id: 7,
+
     product: "COSRX Snail Cream",
+
     batch: "Korea Haul — April 2026",
+
     seller: "Ana Reyes",
+
     buyer: "Jade Garcia",
+
     qty: 1,
+
     amount: 780,
+
     status: "Expired",
+
     hours: 0,
   },
+
   {
     id: 8,
+
     product: "Thai Snack Box",
+
     batch: "Bangkok Haul — June 2026",
+
     seller: "Kristine Aquino",
+
     buyer: "Rico Mendoza",
+
     buyerFb: "https://facebook.com/rico.mendoza",
+
     qty: 2,
+
     amount: 1300,
+
     status: "Pending",
+
     hours: 11,
   },
+
   {
     id: 9,
+
     product: "Cadbury Hamper",
+
     batch: "UK Trip — August 2026",
+
     seller: "Ella Torres",
+
     buyer: "Nadia Cruz",
+
     qty: 1,
+
     amount: 980,
+
     status: "Pending",
+
     hours: 60,
   },
+
   {
     id: 10,
+
     product: "85°C Pastries",
+
     batch: "Taiwan Finds — July 2026",
+
     seller: "Rico Santos",
+
     buyer: "Leo Ramos",
+
     qty: 2,
+
     amount: 1120,
+
     status: "Paid and Reserved",
+
     hours: 0,
   },
+
   {
     id: 11,
+
     product: "Hada Labo Serum",
+
     batch: "Singapore Haul — Aug 2026",
+
     seller: "Jade Bautista",
+
     buyer: "Faith Del Rosario",
+
     qty: 1,
+
     amount: 780,
+
     status: "Expired",
+
     hours: 0,
   },
+
   {
     id: 12,
+
     product: "Tim Tam Assorted",
+
     batch: "Australia Run — Sep 2026",
+
     seller: "Maria Santos",
+
     buyer: "Oscar Lim",
+
     qty: 3,
+
     amount: 2160,
+
     status: "Cancelled",
+
     hours: 0,
   },
+
   {
     id: 13,
+
     product: "SK-II Essence",
+
     batch: "Singapore Haul — Aug 2026",
+
     seller: "Jade Bautista",
+
     buyer: "Patricia Yu",
+
     buyerFb: "https://facebook.com/patricia.yu",
+
     qty: 1,
+
     amount: 4800,
+
     status: "Paid and Reserved",
+
     hours: 0,
   },
+
   {
     id: 14,
+
     product: "Nars Blush",
+
     batch: "Dubai Pasabuy — July 2026",
+
     seller: "Mark Villanueva",
+
     buyer: "Denise Tan",
+
     qty: 1,
+
     amount: 2800,
+
     status: "Pending",
+
     hours: 36,
   },
+
   {
     id: 15,
+
     product: "Lacvert Sheet Mask",
+
     batch: "Vietnam Haul — May 2026",
+
     seller: "Paolo Garcia",
+
     buyer: "Kevin Reyes",
+
     qty: 4,
+
     amount: 1160,
+
     status: "Pending",
+
     hours: 28,
   },
 ]

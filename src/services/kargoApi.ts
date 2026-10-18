@@ -12,6 +12,7 @@ import type {
   ToPayRow,
   UserInfo,
   SellerWaitlistGroup,
+  ClaimReservationInput,
 } from "@/types"
 
 import { requireSupabase } from "@/lib/supabase"
@@ -94,7 +95,10 @@ function statusToClaim(status: string): ClaimRow["status"] {
   return "Pending"
 }
 
-function statusToStep(status: string) {
+function statusToStep(status: string, fulfillmentStage?: string | null) {
+  if (fulfillmentStage === "shipped" || fulfillmentStage === "in_transit")
+    return 4
+  if (fulfillmentStage === "delivered") return 5
   return (
     {
       payment_pending: 1,
@@ -200,7 +204,6 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     sellerEnabled: profile.can_sell,
 
     notificationPreferences: profile.notification_preferences ?? {},
-
   }
 }
 
@@ -395,27 +398,26 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   const reactedBatchIds = new Set(
     (ownReactions ?? []).map((row) => row.batch_id),
   )
-  const buyerPaymentStateByOrderId = new Map<
-    string,
-    {
-      effectiveStatus: string
-      latestPaymentStatus: string | null
-      rejectionDeadline: string | null
-    }
-  >(
-    (buyerPaymentStates ?? []).map((row: {
-      order_id: string
-      effective_status: string
-      latest_payment_status: string | null
-      rejection_deadline: string | null
-    }) => [
-      row.order_id as string,
-      {
-        effectiveStatus: row.effective_status as string,
-        latestPaymentStatus: row.latest_payment_status as string | null,
-        rejectionDeadline: row.rejection_deadline as string | null,
-      },
-    ]),
+  const buyerPaymentStateByOrderId = new Map<string, {
+    effectiveStatus: string
+    latestPaymentStatus: string | null
+    rejectionDeadline: string | null
+  }>(
+    (buyerPaymentStates ?? []).map(
+      (row: {
+        order_id: string
+        effective_status: string
+        latest_payment_status: string | null
+        rejection_deadline: string | null
+      }) => [
+        row.order_id as string,
+        {
+          effectiveStatus: row.effective_status as string,
+          latestPaymentStatus: row.latest_payment_status as string | null,
+          rejectionDeadline: row.rejection_deadline as string | null,
+        },
+      ],
+    ),
   )
 
   const participantIds = [
@@ -548,17 +550,45 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     const buyerName = participantNames.get(row.buyer_id) ?? "Buyer"
 
     const buyerPaymentState = buyerPaymentStateByOrderId.get(row.id)
-    const effectiveStatus = isBuyer && buyerPaymentState
-      ? buyerPaymentState.effectiveStatus
-      : effectiveOrderPaymentStatus(row.status, row.payments)
+    const effectiveStatus =
+      isBuyer && buyerPaymentState
+        ? buyerPaymentState.effectiveStatus
+        : effectiveOrderPaymentStatus(row.status, row.payments)
 
     const expires = new Date(row.reservation_expires_at).getTime()
 
     const hours = Math.max(0, Math.ceil((expires - Date.now()) / 3_600_000))
 
     const deadlineExpired =
+      !row.deadline_paused_at &&
       expires <= Date.now() &&
       ["payment_pending", "insufficient_payment"].includes(effectiveStatus)
+
+    const deliveryFields = {
+      reservedPaymentMethod: row.reserved_payment_method ?? undefined,
+      shippingApplies: Boolean(row.shipping_applies),
+      shippingState: row.shipping_state ?? undefined,
+      shippingFee:
+        row.shipping_fee == null ? undefined : Number(row.shipping_fee),
+      deadlinePausedAt: row.deadline_paused_at ?? undefined,
+      deliveryPinLat:
+        row.delivery_pin_lat == null ? undefined : Number(row.delivery_pin_lat),
+      deliveryPinLng:
+        row.delivery_pin_lng == null ? undefined : Number(row.delivery_pin_lng),
+      deliveryPinUrl: row.delivery_pin_url ?? undefined,
+      deliveryPinAddress: row.delivery_pin_address ?? undefined,
+      courierCompany: row.courier_company ?? undefined,
+      riderName: row.rider_name ?? undefined,
+      riderContact: row.rider_contact ?? undefined,
+      trackingNumber: row.tracking_number ?? undefined,
+      eta: row.eta ?? undefined,
+      trackingUrl: row.tracking_url ?? undefined,
+      fulfillmentStage: row.fulfillment_stage ?? undefined,
+      declineReason: row.decline_reason ?? undefined,
+    }
+    const orderTotal =
+      Number(row.total_amount) +
+      (row.shipping_fee == null ? 0 : Number(row.shipping_fee))
 
     if (isBuyer) {
       claims.push({
@@ -580,7 +610,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         qty: row.quantity,
 
-        amount: Number(row.total_amount),
+        amount: orderTotal,
 
         status: deadlineExpired ? "Expired" : statusToClaim(effectiveStatus),
 
@@ -589,6 +619,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         expiresAt: row.reservation_expires_at,
 
         extensionRequested: row.extension_status === "pending",
+        ...deliveryFields,
       })
 
       orders.push({
@@ -604,10 +635,11 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         sellerFb: participantLinks.get(row.seller_id),
 
-        amount: Number(row.total_amount),
+        amount: orderTotal,
 
-        step: statusToStep(effectiveStatus),
-
+        step: statusToStep(effectiveStatus, row.fulfillment_stage),
+        qty: row.quantity,
+        ...deliveryFields,
       })
     } else {
       claims.push({
@@ -629,7 +661,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         qty: row.quantity,
 
-        amount: Number(row.total_amount),
+        amount: orderTotal,
 
         status: deadlineExpired ? "Expired" : statusToClaim(effectiveStatus),
 
@@ -638,6 +670,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         expiresAt: row.reservation_expires_at,
 
         extensionRequested: row.extension_status === "pending",
+        ...deliveryFields,
       })
 
       fulfillment.push({
@@ -655,7 +688,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         qty: row.quantity,
 
-        amount: Number(row.total_amount),
+        amount: orderTotal,
+        ...deliveryFields,
       })
     }
 
@@ -689,11 +723,16 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         qty: row.quantity,
 
-        amount: Math.max(0, Number(row.total_amount) - verifiedPaid),
+        amount: Math.max(0, orderTotal - verifiedPaid),
 
         hours,
 
         expiresAt: row.reservation_expires_at,
+        reservedPaymentMethod: deliveryFields.reservedPaymentMethod,
+        shippingApplies: deliveryFields.shippingApplies,
+        shippingState: deliveryFields.shippingState,
+        shippingFee: deliveryFields.shippingFee,
+        deadlinePausedAt: deliveryFields.deadlinePausedAt,
       })
     }
 
@@ -985,17 +1024,27 @@ async function loadBuyerWaitlist(
       desiredQuantity: row.desired_quantity ?? 1,
 
       status: row.status,
-
     }
   })
 }
 
-export async function claimProduct(productId: string, quantity: number) {
-  const { data, error } = await requireSupabase().rpc("claim_batch_product", {
-    p_batch_product_id: productId,
-
-    p_quantity: quantity,
-  })
+export async function claimProduct(
+  productId: string,
+  reservation: ClaimReservationInput,
+) {
+  const { data, error } = await requireSupabase().rpc(
+    "claim_batch_product_with_address",
+    {
+      p_batch_product_id: productId,
+      p_quantity: reservation.quantity,
+      p_payment_method: reservation.paymentMethod,
+      p_pin_lat: reservation.pinLat ?? null,
+      p_pin_lng: reservation.pinLng ?? null,
+      p_pin_url: reservation.pinUrl ?? null,
+      p_accept_shipping: reservation.acceptShipping,
+      p_pin_address: reservation.pinAddress ?? null,
+    },
+  )
 
   if (error) throw error
 
@@ -1240,6 +1289,69 @@ export async function setFulfillmentStatus(orderId: string, status: string) {
   if (error) throw error
 }
 
+export async function setOrderShippingFee(orderId: string, fee: number) {
+  const { error } = await requireSupabase().rpc("set_order_shipping_fee", {
+    p_order_id: orderId,
+    p_fee: fee,
+  })
+  if (error) throw error
+}
+
+export async function requestLocationCorrection(orderId: string) {
+  const { error } = await requireSupabase().rpc("request_location_correction", {
+    p_order_id: orderId,
+  })
+  if (error) throw error
+}
+
+export async function declineDeliveryOrder(orderId: string, reason: string) {
+  const { error } = await requireSupabase().rpc("decline_delivery_order", {
+    p_order_id: orderId,
+    p_reason: reason,
+  })
+  if (error) throw error
+}
+
+export async function updateOrderDeliveryPin(
+  orderId: string,
+  pin: { lat?: number; lng?: number; url?: string; address?: string },
+) {
+  const { error } = await requireSupabase().rpc(
+    "update_order_delivery_pin_with_address",
+    {
+      p_order_id: orderId,
+      p_lat: pin.lat ?? null,
+      p_lng: pin.lng ?? null,
+      p_url: pin.url ?? null,
+      p_address: pin.address ?? null,
+    },
+  )
+  if (error) throw error
+}
+
+export async function setOrderTracking(
+  orderId: string,
+  tracking: {
+    courier: string
+    riderName: string
+    riderContact: string
+    trackingNumber: string
+    eta: string
+    trackingUrl?: string
+  },
+) {
+  const { error } = await requireSupabase().rpc("set_order_tracking", {
+    p_order_id: orderId,
+    p_courier: tracking.courier,
+    p_rider_name: tracking.riderName,
+    p_rider_contact: tracking.riderContact,
+    p_tracking_number: tracking.trackingNumber,
+    p_eta: tracking.eta,
+    p_tracking_url: tracking.trackingUrl ?? null,
+  })
+  if (error) throw error
+}
+
 export async function updateProfile(values: {
   displayName?: string
 
@@ -1254,7 +1366,6 @@ export async function updateProfile(values: {
   email?: string
 
   notificationPreferences?: Record<string, boolean>
-
 }) {
   const client = requireSupabase()
 
@@ -1336,7 +1447,8 @@ export async function setProductWaitlistLimit(
   productId: string,
   limit?: number,
 ) {
-  const normalized = limit !== undefined && limit >= 0 ? Math.floor(limit) : null
+  const normalized =
+    limit !== undefined && limit >= 0 ? Math.floor(limit) : null
   const { error } = await requireSupabase().rpc("set_product_waitlist_limit", {
     p_product_id: productId,
     p_limit: normalized,
@@ -1753,7 +1865,6 @@ export async function loadSellerExtensionRequests() {
         status: row.extension_status as "pending" | "approved" | "denied",
       }
     }),
-
   }
 }
 
@@ -2073,6 +2184,11 @@ export const kargoApi = {
   expireClaim,
 
   setFulfillmentStatus,
+  setOrderShippingFee,
+  requestLocationCorrection,
+  declineDeliveryOrder,
+  updateOrderDeliveryPin,
+  setOrderTracking,
 
   updateProfile,
 

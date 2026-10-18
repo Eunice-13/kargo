@@ -1,19 +1,35 @@
 import type { ClaimRow, ToPayRow } from "@/types"
 
-type Expirable = Pick<ClaimRow, "status" | "hours" | "expiresAt">
+type Expirable = Pick<ClaimRow, "status" | "hours" | "expiresAt" | "deadlinePausedAt" | "shippingState">
 
-export function deadlineHasPassed(item: Pick<Expirable, "hours" | "expiresAt">, now = Date.now()) {
+export function deadlineHasPassed(
+  item: Pick<Expirable, "hours" | "expiresAt" | "deadlinePausedAt" | "shippingState">,
+  now = Date.now(),
+) {
+  if (
+    item.deadlinePausedAt ||
+    item.shippingState === "waiting_for_seller" ||
+    item.shippingState === "correction_requested"
+  )
+    return false
   if (item.expiresAt) return new Date(item.expiresAt).getTime() <= now
   return item.hours <= 0
 }
 
 // A claim is payable when the seller is waiting for (re)payment: a fresh
+
 // "Pending" claim, or one the seller marked "Insufficient Payment" (a short
+
 // payment the buyer can top up). "Awaiting Verification" — proof submitted,
+
 // pending the seller's decision — is intentionally NOT payable.
+
 export function claimIsPayable(claim: Expirable, now = Date.now()) {
   return (
     (claim.status === "Pending" || claim.status === "Insufficient Payment") &&
+    !claim.deadlinePausedAt &&
+    claim.shippingState !== "waiting_for_seller" &&
+    claim.shippingState !== "correction_requested" &&
     !deadlineHasPassed(claim, now)
   )
 }
@@ -26,15 +42,31 @@ export function expireClaimRows(claims: ClaimRow[], now = Date.now()) {
   )
 }
 
-export function removeExpiredPayments(toPay: ToPayRow[], claims: ClaimRow[], now = Date.now()) {
+export function removeExpiredPayments(
+  toPay: ToPayRow[],
+  claims: ClaimRow[],
+  now = Date.now(),
+) {
   const expiredIds = new Set(
     claims
-      .filter((claim) => claim.status === "Pending" && deadlineHasPassed(claim, now))
+
+      .filter(
+        (claim) => claim.status === "Pending" && deadlineHasPassed(claim, now),
+      )
+
       .map((claim) => String(claim.id)),
   )
-  const expiredClaims = claims.filter((claim) => claim.status === "Pending" && deadlineHasPassed(claim, now))
-  return toPay.filter((item) =>
-    !expiredIds.has(String(item.orderId ?? item.id)) &&
-    !expiredClaims.some((claim) => claim.product === item.product && claim.seller === item.seller),
+
+  const expiredClaims = claims.filter(
+    (claim) => claim.status === "Pending" && deadlineHasPassed(claim, now),
+  )
+
+  return toPay.filter(
+    (item) =>
+      !expiredIds.has(String(item.orderId ?? item.id)) &&
+      !expiredClaims.some(
+        (claim) =>
+          claim.product === item.product && claim.seller === item.seller,
+      ),
   )
 }

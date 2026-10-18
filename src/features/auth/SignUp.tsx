@@ -13,9 +13,11 @@ const platforms = ["Facebook", "TikTok", "Instagram"] as const
 export default function SignUp({
   onLogin,
   onSuccess,
+  fromBatchLink = false,
 }: {
   onLogin: () => void
   onSuccess: (u: UserInfo) => void
+  fromBatchLink?: boolean
 }) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -164,6 +166,12 @@ export default function SignUp({
               Contact &amp; Social Links{" "}
               <span>{role === "Seller" ? "(at least one required)" : "(optional)"}</span>
             </label>
+            {fromBatchLink && role === "Buyer" && (
+              <p className="mb-3 text-sm leading-5 text-gray-600">
+                Recommended: helpers often check a social profile before confirming
+                a reservation.
+              </p>
+            )}
             <div className="auth-social-list">
               {platforms.map((platform) => (
                 <div className="auth-social-row" key={platform}>

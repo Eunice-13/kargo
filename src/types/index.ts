@@ -36,6 +36,7 @@ export type UserInfo = {
   notificationPreferences?: Record<string, boolean>
 
   // profiles.created_at. Formatted for display by `memberSince()`; a profile
+
   // with no value shows no "Member since" text rather than an invented date.
 
   memberSince?: string
@@ -46,6 +47,19 @@ export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" 
 export type Role = "Buyer" | "Seller"
 
 export type ClaimStatus = "Pending" | "Awaiting Verification" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
+export type ShippingState = "waiting_for_seller" | "fee_set" | "correction_requested" | "declined"
+
+export type CourierCompany = "Lalamove" | "J&T Express" | "LBC" | "Grab Express" | "2GO" | "Ninja Van" | "Others"
+
+export type ClaimReservationInput = {
+  quantity: number
+  paymentMethod: string
+  pinLat?: number
+  pinLng?: number
+  pinUrl?: string
+  pinAddress?: string
+  acceptShipping: boolean
+}
 export type PaymentHistoryStatus = ClaimStatus | "Rejected" | "Pending Payment"
 export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Security"
 
@@ -89,6 +103,40 @@ export type ClaimRow = {
   // Seller's contact/Facebook link (buyer's "My Claims" view).
 
   sellerFb?: string
+
+  reservedPaymentMethod?: string
+
+  shippingApplies?: boolean
+
+  shippingState?: ShippingState
+
+  shippingFee?: number
+
+  deadlinePausedAt?: string
+
+  deliveryPinLat?: number
+
+  deliveryPinLng?: number
+
+  deliveryPinUrl?: string
+
+  deliveryPinAddress?: string
+
+  courierCompany?: string
+
+  riderName?: string
+
+  riderContact?: string
+
+  trackingNumber?: string
+
+  eta?: string
+
+  trackingUrl?: string
+
+  fulfillmentStage?: string
+
+  declineReason?: string
 }
 
 export type ToPayRow = {
@@ -111,6 +159,16 @@ export type ToPayRow = {
   hours: number
 
   expiresAt?: string
+
+  reservedPaymentMethod?: string
+
+  shippingApplies?: boolean
+
+  shippingState?: ShippingState
+
+  shippingFee?: number
+
+  deadlinePausedAt?: string
 }
 
 export type PayHistRow = {
@@ -131,14 +189,22 @@ export type PayHistRow = {
   date: string
 
   status: PaymentHistoryStatus
+
   referenceNumber?: string
+
   receiptPath?: string
+
   payerAccountName?: string
+
   payerPhone?: string
+
   buyerContactUrl?: string
+
   rejectionReason?: string
+
   rejectionDeadline?: string
 }
+
 export type OrderRow = {
   id: string
 
@@ -155,6 +221,30 @@ export type OrderRow = {
   amount: number
 
   step: number
+
+  qty?: number
+
+  fulfillmentStage?: string
+
+  courierCompany?: string
+
+  riderName?: string
+
+  riderContact?: string
+
+  trackingNumber?: string
+
+  eta?: string
+
+  trackingUrl?: string
+
+  deliveryPinLat?: number
+
+  deliveryPinLng?: number
+
+  deliveryPinUrl?: string
+
+  deliveryPinAddress?: string
 }
 
 // ─── Batch data models ────────────────────────────────────────────────────────
@@ -196,8 +286,11 @@ export interface BatchItem {
   dbId?: string
   createdAt?: string
   reactionCount?: number
+
   reactedByCurrentUser?: boolean
+
   live: boolean
+
   locked: boolean
 
   title: string
@@ -221,8 +314,11 @@ export interface BatchItem {
   notes?: string
 
   // Optional seller-set cover photo. A single image field used identically by
+
   // the Home batch card banner and the batch detail hero. When absent, both
+
   // fall back to the category gradient + CategoryIcon.
+
   coverImage?: string
 
   products: BatchStoredProduct[]
@@ -278,6 +374,28 @@ export type FulfillmentOrder = {
   qty: number
 
   amount: number
+
+  fulfillmentStage?: string
+
+  courierCompany?: string
+
+  riderName?: string
+
+  riderContact?: string
+
+  trackingNumber?: string
+
+  eta?: string
+
+  trackingUrl?: string
+
+  deliveryPinLat?: number
+
+  deliveryPinLng?: number
+
+  deliveryPinUrl?: string
+
+  deliveryPinAddress?: string
 }
 
 // Buyer's place in a sold-out product queue. Dashboard and BatchPage share
@@ -314,7 +432,6 @@ export type WaitlistEntry = {
   desiredQuantity: number
 
   status: WaitlistStatus
-
 }
 
 // Seller-facing view of who is waiting for one of their products, in join

@@ -26,3 +26,17 @@ test("an expired claim is removed from all payment actions", () => {
   const toPay: ToPayRow[] = [{ id: "order-expired", orderId: "order-expired", product: "Thai Snack Box", seller: "Kristine Aquino", amount: 1300, hours: 0, expiresAt: expiredClaim.expiresAt }]
   assert.deepEqual(removeExpiredPayments(toPay, [expiredClaim], now), [])
 })
+
+test("a shipping claim stays unexpired and unpayable while its deadline is paused", () => {
+  const now = new Date("2026-01-02T00:00:00.000Z").getTime()
+  const pausedClaim: ClaimRow = {
+    ...expiredClaim,
+    id: "order-waiting-for-shipping",
+    shippingApplies: true,
+    shippingState: "waiting_for_seller",
+    deadlinePausedAt: "2025-12-31T23:00:00.000Z",
+  }
+
+  assert.equal(claimIsPayable(pausedClaim, now), false)
+  assert.equal(expireClaimRows([pausedClaim], now)[0].status, "Pending")
+})

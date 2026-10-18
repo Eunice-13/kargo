@@ -1,91 +1,179 @@
 import { productAvailability } from "./productAvailability"
+
 import { canManageBatch } from "./batchAccess"
+
 import { useState } from "react"
+
 import { Lock, ArrowLeft, Plane, Check, Link2 } from "lucide-react"
-import type { ClaimRow, ToPayRow, BatchType, Role, UserInfo, WaitlistEntry } from "@/types"
-import { INDIGO, CYAN_L, GREEN, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
-import { Card, PrimaryBtn, SecondaryBtn, SH, Avatar, ProductThumb, Toggle, ContactModal, ShareButton } from "@/components/shared"
+
+import type {
+  ClaimRow,
+  ToPayRow,
+  BatchType,
+  Role,
+  UserInfo,
+  WaitlistEntry,
+  ClaimReservationInput,
+} from "@/types"
+import {
+  INDIGO,
+  CYAN_L,
+  GREEN,
+  AMBER,
+  CAT_GRAD,
+  batchCoverSrc,
+} from "@/constants/theme"
+
+import {
+  Card,
+  PrimaryBtn,
+  SecondaryBtn,
+  SH,
+  Avatar,
+  ProductThumb,
+  Toggle,
+  ContactModal,
+  ShareButton,
+} from "@/components/shared"
+
 import ItemClaimModal from "./ItemClaimModal"
+
 import JoinWaitlistModal from "./JoinWaitlistModal"
+
 import { toggleBatchLock } from "./toggleBatchLock"
+
 import { isSupabaseConfigured } from "@/lib/supabase"
+
 import { kargoApi } from "@/services"
 
 export default function BatchPage({
   batch: batchProp,
+
   role,
+
   user,
+
   batches,
+
   claims,
+
   setClaims,
+
   toPay,
+
   setToPay,
+
   onBack,
+  backLabel = "Back to Batches",
   onSellerClick,
+
   setBatches,
+
   waitlist,
+
   setWaitlist,
+
   refreshData,
 }: {
   batch: BatchType
+
   role: Role
+
   user: UserInfo
+
   batches: BatchType[]
+
   claims: ClaimRow[]
+
   setClaims: React.Dispatch<React.SetStateAction<ClaimRow[]>>
+
   toPay: ToPayRow[]
+
   setToPay: React.Dispatch<React.SetStateAction<ToPayRow[]>>
+
   onBack: () => void
+  backLabel?: string
   onSellerClick: (name: string) => void
+
   setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
+
   waitlist: WaitlistEntry[]
+
   setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>
+
   refreshData: () => Promise<void>
 }) {
   const batch = batches.find((b) => b.id === batchProp.id) ?? batchProp
+
   const canEdit = canManageBatch(batch, user, role)
+
   const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({})
+
   const [claimTarget, setClaimTarget] = useState<{
     p: typeof batch.products[0]
+
     key: string
   } | null>(null)
+
   const [waitlistTarget, setWaitlistTarget] = useState<{
     p: typeof batch.products[0]
+
     pIdx: number
   } | null>(null)
+
   const [contact, setContact] = useState(false)
-  const [waitlistLimitDrafts, setWaitlistLimitDrafts] = useState<Record<string, string>>({})
-  const [savingWaitlistLimit, setSavingWaitlistLimit] = useState<string | null>(null)
+
+  const [waitlistLimitDrafts, setWaitlistLimitDrafts] =
+    useState<Record<string, string>>({})
+
+  const [savingWaitlistLimit, setSavingWaitlistLimit] = useState<string | null>(
+    null,
+  )
+
   const pct = Math.round((batch.claimed / batch.items) * 100)
+
   const grad = CAT_GRAD[batch.category] || CAT_GRAD["Mixed"]
+
   const reserveHrs = batch.reserveHours || 48
 
   const saveWaitlistLimit = async (
     product: typeof batch.products[0],
+
     productIndex: number,
   ) => {
     if (!canEdit) return
+
     const key = product.dbId ?? `${batch.id}-${productIndex}`
+
     const raw = waitlistLimitDrafts[key] ?? String(product.waitlistLimit ?? "")
+
     const parsed = Number(raw)
+
     if (raw.trim() !== "" && (!Number.isInteger(parsed) || parsed < 0)) {
       alert("Waitlist slots must be a whole number of 0 or more.")
+
       return
     }
+
     const limit = raw.trim() === "" ? undefined : parsed
 
     setSavingWaitlistLimit(key)
+
     try {
       if (isSupabaseConfigured) {
-        if (!product.dbId) throw new Error("This product is missing its database identifier.")
+        if (!product.dbId)
+          throw new Error("This product is missing its database identifier.")
+
         await kargoApi.setProductWaitlistLimit(product.dbId, limit)
       }
+
       setBatches((current) =>
         current.map((item) =>
           item.id !== batch.id
             ? item
             : {
                 ...item,
+
                 products: item.products.map((candidate, index) =>
                   index === productIndex
                     ? { ...candidate, waitlistLimit: limit }
@@ -94,37 +182,58 @@ export default function BatchPage({
               },
         ),
       )
+
       setWaitlistLimitDrafts((current) => ({
         ...current,
+
         [key]: limit !== undefined ? String(limit) : "",
       }))
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to save waitlist limit.")
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to save waitlist limit.",
+      )
     } finally {
       setSavingWaitlistLimit(null)
     }
   }
 
   // Join a waitlist with the buyer's chosen quantity (from JoinWaitlistModal).
+
   const handleJoinWaitlist = async (
     p: typeof batch.products[0],
+
     pIdx: number,
+
     qty: number,
   ) => {
     const currentProduct = batch.products[pIdx]
-    if (role !== "Buyer" || !currentProduct || !productAvailability(currentProduct, batch.locked).canWaitlist) {
+
+    if (
+      role !== "Buyer" ||
+      !currentProduct ||
+      !productAvailability(currentProduct, batch.locked).canWaitlist
+    ) {
       alert("This product is no longer available for waitlisting.")
+
       return
     }
+
     if (isSupabaseConfigured) {
       if (!p.dbId) return
+
       try {
         await kargoApi.joinWaitlist(p.dbId, qty)
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Unable to join waitlist.")
+        alert(
+          error instanceof Error ? error.message : "Unable to join waitlist.",
+        )
+
         return
       }
     }
+
     setWaitlist((prev) => {
       if (
         prev.some(
@@ -135,35 +244,51 @@ export default function BatchPage({
       ) {
         return prev
       }
+
       const nextPos = p.waitlist + 1
+
       return [
         ...prev.map((e) =>
           e.batchId === batch.id && e.product === p.name
             ? { ...e, queueSize: nextPos, desiredQuantity: qty }
             : e,
         ),
+
         {
           id: p.dbId ?? `wl-${batch.id}-${p.name}`,
+
           productId: p.dbId,
+
           product: p.name,
+
           batchId: batch.id,
+
           batch: batch.title,
+
           seller: batch.seller,
+
           trips: batch.trips,
+
           position: nextPos,
+
           queueSize: nextPos,
+
           amount: p.price,
+
           desiredQuantity: qty,
+
           status: "waiting",
         },
       ]
     })
+
     setBatches((prev) =>
       prev.map((b) =>
         b.id !== batch.id
           ? b
           : {
               ...b,
+
               products: b.products.map((prod, i) =>
                 i === pIdx ? { ...prod, waitlist: prod.waitlist + 1 } : prod,
               ),
@@ -171,86 +296,158 @@ export default function BatchPage({
       ),
     )
   }
+
   const handleClaim = async (
     key: string,
+
     b: BatchType,
+
     product: typeof batch.products[0],
-    qty: number = 1,
+
+    reservation: ClaimReservationInput,
   ) => {
+    const qty = reservation.quantity
     const claimQty = Math.max(1, Math.floor(qty))
-    const currentProduct = b.products.find((p) => product.dbId ? p.dbId === product.dbId : p.name === product.name)
-    if (role !== "Buyer" || !currentProduct || !productAvailability(currentProduct, b.locked).canClaim || claimQty > currentProduct.qty - currentProduct.claimed) {
+
+    const currentProduct = b.products.find((p) =>
+      product.dbId ? p.dbId === product.dbId : p.name === product.name,
+    )
+
+    if (
+      role !== "Buyer" ||
+      !currentProduct ||
+      !productAvailability(currentProduct, b.locked).canClaim ||
+      claimQty > currentProduct.qty - currentProduct.claimed
+    ) {
       alert("This product no longer has enough available claim slots.")
+
       return false
     }
+
     if (isSupabaseConfigured) {
       if (!product.dbId) {
         alert("This product is missing its database identifier.")
+
         return false
       }
+
       try {
-        await kargoApi.claimProduct(product.dbId, claimQty)
+        await kargoApi.claimProduct(product.dbId, reservation)
         await refreshData()
+
         setClaimedKeys((current) => ({ ...current, [key]: true }))
+
         return true
       } catch (error) {
-        alert(error instanceof Error ? error.message : "Unable to claim this product.")
+        alert(
+          error instanceof Error
+            ? error.message
+            : "Unable to claim this product.",
+        )
+
         return false
       }
     }
+
     setClaimedKeys((c) => ({ ...c, [key]: true }))
+
     // Keep the batch/product claim counts accurate immediately (2.3) instead of
+
     // waiting for the next full data refresh.
+
     setBatches((prev) =>
       prev.map((bt) =>
         bt.id !== b.id
           ? bt
           : {
               ...bt,
+
               claimed: bt.claimed + claimQty,
+
               products: bt.products.map((prod) =>
-                (product.dbId && prod.dbId === product.dbId) || prod.name === product.name
+                (product.dbId && prod.dbId === product.dbId) ||
+                prod.name === product.name
                   ? { ...prod, claimed: prod.claimed + claimQty }
                   : prod,
               ),
             },
       ),
     )
+
     const claimId = Date.now()
+
     const createdAt = new Date().toISOString()
-    const expiresAt = new Date(Date.now() + reserveHrs * 3_600_000).toISOString()
+    const expiresAt = new Date(
+      Date.now() + reserveHrs * 3_600_000,
+    ).toISOString()
+    const shippingApplies = reservation.paymentMethod !== "Cash on Meetup"
     setClaims((prev) => [
       {
         id: claimId,
+
         createdAt,
+
         productId: product.dbId,
+
         product: product.name,
+
         batch: b.title,
+
         seller: b.seller,
+
         qty: claimQty,
+
         amount: product.price * claimQty,
+
         status: "Pending",
+
         hours: reserveHrs,
+
         expiresAt,
+        reservedPaymentMethod: reservation.paymentMethod,
+        shippingApplies,
+        shippingState: shippingApplies ? "waiting_for_seller" : undefined,
+        deadlinePausedAt: shippingApplies ? createdAt : undefined,
+        deliveryPinLat: reservation.pinLat,
+        deliveryPinLng: reservation.pinLng,
+        deliveryPinUrl: reservation.pinUrl,
+        deliveryPinAddress: reservation.pinAddress,
       },
+
       ...prev,
     ])
+
     if (!toPay.some((t) => t.product === product.name))
       setToPay((prev) => [
         {
           id: claimId,
+
           createdAt,
+
           orderId: String(claimId),
+
           product: product.name,
+
           seller: b.seller,
+
           sellerId: b.sellerId,
+
           amount: product.price * claimQty,
+
           qty: claimQty,
+
           hours: reserveHrs,
+
           expiresAt,
+          reservedPaymentMethod: reservation.paymentMethod,
+          shippingApplies,
+          shippingState: shippingApplies ? "waiting_for_seller" : undefined,
+          deadlinePausedAt: shippingApplies ? createdAt : undefined,
         },
+
         ...prev,
       ])
+
     return true
   }
 
@@ -260,8 +457,11 @@ export default function BatchPage({
       <div
         style={{
           display: "flex",
+
           alignItems: "center",
+
           justifyContent: "space-between",
+
           paddingBottom: 16,
         }}
       >
@@ -269,21 +469,35 @@ export default function BatchPage({
           onClick={onBack}
           style={{
             display: "flex",
+
             alignItems: "center",
+
             gap: 6,
+
             fontSize: 13,
+
             fontWeight: 600,
+
             color: INDIGO,
+
             background: "none",
+
             border: "none",
+
             cursor: "pointer",
+
             padding: 0,
+
             fontFamily: "'Josefin Sans',sans-serif",
           }}
         >
-          <ArrowLeft size={14} aria-hidden="true" /> Back to Batches
+          <ArrowLeft size={14} aria-hidden="true" /> {backLabel}
         </button>
-        <ShareButton batchId={batch.id} title={batch.title} label="Share batch" />
+        <ShareButton
+          batchId={batch.id}
+          title={batch.title}
+          label="Share batch"
+        />
       </div>
 
       {/* Hero header — same cover photo the Home batch card shows (seller upload
@@ -291,13 +505,21 @@ export default function BatchPage({
       <div
         style={{
           height: 220,
+
           background: grad,
+
           borderRadius: 12,
+
           display: "flex",
+
           alignItems: "flex-end",
+
           padding: 20,
+
           position: "relative",
+
           marginBottom: 24,
+
           overflow: "hidden",
         }}
       >
@@ -307,9 +529,13 @@ export default function BatchPage({
           aria-hidden="true"
           style={{
             position: "absolute",
+
             inset: 0,
+
             width: "100%",
+
             height: "100%",
+
             objectFit: "cover",
           }}
         />
@@ -317,7 +543,9 @@ export default function BatchPage({
         <div
           style={{
             position: "absolute",
+
             inset: 0,
+
             background:
               "linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0) 75%)",
           }}
@@ -326,26 +554,40 @@ export default function BatchPage({
           <span
             style={{
               position: "absolute",
+
               top: 16,
+
               right: 16,
+
               background: "rgba(0,0,0,0.55)",
+
               color: "#fff",
+
               fontSize: 11,
+
               fontWeight: 700,
+
               padding: "4px 10px",
+
               borderRadius: 999,
             }}
           >
-            <><Lock size={14} aria-hidden="true" /> Not Accepting Orders</>
+            <>
+              <Lock size={14} aria-hidden="true" /> Not Accepting Orders
+            </>
           </span>
         )}
         <div style={{ position: "relative" }}>
           <h1
             style={{
               fontFamily: "'Josefin Sans',sans-serif",
+
               fontSize: 22,
+
               fontWeight: 800,
+
               color: "#fff",
+
               marginBottom: 4,
             }}
           >
@@ -355,20 +597,33 @@ export default function BatchPage({
             <span
               style={{
                 background: "rgba(255,255,255,0.2)",
+
                 color: "#fff",
+
                 fontSize: 11,
+
                 fontWeight: 600,
+
                 padding: "3px 10px",
+
                 borderRadius: 999,
               }}
             >
               {batch.category}
             </span>
-            <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <span
+              style={{
+                color: "rgba(255,255,255,0.85)",
+                fontSize: 12,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
               <Plane size={12} aria-hidden="true" /> {batch.trips}
             </span>
             <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
-               48h reservation window
+              48h reservation window
             </span>
           </div>
         </div>
@@ -378,24 +633,39 @@ export default function BatchPage({
         <div
           style={{
             background: "#fff",
+
             border: "1px solid #E5E7EB",
+
             borderRadius: 12,
+
             padding: "16px 18px",
+
             marginBottom: 24,
           }}
         >
           <div
             style={{
               fontSize: 11,
+
               fontWeight: 700,
+
               color: "#9CA3AF",
+
               letterSpacing: 0.8,
+
               marginBottom: 8,
             }}
           >
             DESCRIPTION
           </div>
-          <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+          <p
+            style={{
+              fontSize: 13,
+              color: "#374151",
+              lineHeight: 1.6,
+              whiteSpace: "pre-wrap",
+            }}
+          >
             {batch.notes}
           </p>
         </div>
@@ -405,8 +675,11 @@ export default function BatchPage({
         className="batch-page-layout"
         style={{
           display: "grid",
+
           gridTemplateColumns: "1fr 300px",
+
           gap: 24,
+
           alignItems: "start",
         }}
       >
@@ -425,20 +698,31 @@ export default function BatchPage({
           <div className="space-y-3">
             {batch.products.map((p, pIdx) => {
               const pKey = `${batch.id}-${pIdx}`
+
               const isClaimed = claimedKeys[pKey]
+
               // p.claimed is bumped by the claimed quantity on confirm, so it is
+
               // already authoritative — no extra manual offset needed.
+
               const left = p.qty - p.claimed
+
               const availability = productAvailability(p, batch.locked)
+
               const soldOut = availability.claimsFull
+
               const waitEntry = waitlist.find(
                 (e) =>
                   (p.dbId && e.productId === p.dbId) ||
                   (e.batchId === batch.id && e.product === p.name),
               )
+
               const onWaitlist = Boolean(waitEntry)
+
               const waitlistFull = availability.waitlistFull
+
               const waitlistLimitKey = p.dbId ?? `${batch.id}-${pIdx}`
+
               return (
                 <Card
                   key={pIdx}
@@ -449,8 +733,11 @@ export default function BatchPage({
                     <div
                       style={{
                         fontSize: 14,
+
                         fontWeight: 700,
+
                         color: "#111827",
+
                         fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
@@ -469,8 +756,11 @@ export default function BatchPage({
                     <div
                       style={{
                         display: "flex",
+
                         gap: 6,
+
                         marginTop: 5,
+
                         flexWrap: "wrap" as const,
                       }}
                     >
@@ -478,10 +768,15 @@ export default function BatchPage({
                         <span
                           style={{
                             fontSize: 10,
+
                             fontWeight: 600,
+
                             color: "#EF4444",
+
                             background: "#FEE2E2",
+
                             borderRadius: 999,
+
                             padding: "2px 8px",
                           }}
                         >
@@ -492,10 +787,15 @@ export default function BatchPage({
                         <span
                           style={{
                             fontSize: 10,
+
                             fontWeight: 600,
+
                             color: "#D97706",
+
                             background: "#FEF3C7",
+
                             borderRadius: 999,
+
                             padding: "2px 8px",
                           }}
                         >
@@ -506,14 +806,27 @@ export default function BatchPage({
                         <span
                           style={{
                             fontSize: 10,
+
                             fontWeight: 600,
+
                             color: GREEN,
+
                             background: "#D4F5EA",
+
                             borderRadius: 999,
+
                             padding: "2px 8px",
                           }}
                         >
-                          <Check size={11} aria-hidden="true" style={{ display: "inline", verticalAlign: -1, marginRight: 2 }} />
+                          <Check
+                            size={11}
+                            aria-hidden="true"
+                            style={{
+                              display: "inline",
+                              verticalAlign: -1,
+                              marginRight: 2,
+                            }}
+                          />
                           Claimed
                         </span>
                       )}
@@ -521,10 +834,15 @@ export default function BatchPage({
                         <span
                           style={{
                             fontSize: 10,
+
                             fontWeight: 600,
+
                             color: "#0369A1",
+
                             background: CYAN_L,
+
                             borderRadius: 999,
+
                             padding: "2px 8px",
                           }}
                         >
@@ -537,31 +855,61 @@ export default function BatchPage({
                     <div
                       style={{
                         fontSize: 16,
+
                         fontWeight: 800,
+
                         color: INDIGO,
+
                         fontFamily: "'Josefin Sans',sans-serif",
+
                         marginBottom: 8,
                       }}
                     >
                       ₱{p.price.toLocaleString()}
                     </div>
                     {canEdit ? (
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                          gap: 8,
+                        }}
+                      >
                         <span style={{ fontSize: 11, color: "#6B7280" }}>
-                          {availability.fullyLocked ? "Locked" : soldOut ? "Claims locked · Waitlist open" : availability.queuePending ? "Allocating stock to waitlist" : "Claims open"}
+                          {availability.fullyLocked
+                            ? "Locked"
+                            : soldOut
+                              ? "Claims locked · Waitlist open"
+                              : availability.queuePending
+                                ? "Allocating stock to waitlist"
+                                : "Claims open"}
                         </span>
-                        <span style={{ fontSize: 10, color: "#6B7280" }}>Manual availability</span>
+                        <span style={{ fontSize: 10, color: "#6B7280" }}>
+                          Manual availability
+                        </span>
                         <Toggle
                           on={!p.locked}
                           label={`${p.locked ? "Unlock" : "Lock"} ${p.name}`}
                           onChange={() => {
-                            if (canEdit) toggleBatchLock(setBatches, batch.id, pIdx)
+                            if (canEdit)
+                              toggleBatchLock(setBatches, batch.id, pIdx)
                           }}
                         />
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
                           <label
                             htmlFor={`waitlist-limit-${waitlistLimitKey}`}
-                            style={{ fontSize: 10, color: "#6B7280", whiteSpace: "nowrap" }}
+                            style={{
+                              fontSize: 10,
+                              color: "#6B7280",
+                              whiteSpace: "nowrap",
+                            }}
                           >
                             Waitlist max
                           </label>
@@ -572,53 +920,94 @@ export default function BatchPage({
                             inputMode="numeric"
                             value={
                               waitlistLimitDrafts[waitlistLimitKey] ??
-                              (p.waitlistLimit !== undefined ? String(p.waitlistLimit) : "")
+                              (p.waitlistLimit !== undefined
+                                ? String(p.waitlistLimit)
+                                : "")
                             }
                             onChange={(event) =>
                               setWaitlistLimitDrafts((current) => ({
                                 ...current,
+
                                 [waitlistLimitKey]: event.target.value,
                               }))
                             }
                             placeholder="∞"
-                            style={{ width: 54, border: "1px solid #D1D5DB", borderRadius: 6, padding: "5px 7px", fontSize: 11 }}
+                            style={{
+                              width: 54,
+                              border: "1px solid #D1D5DB",
+                              borderRadius: 6,
+                              padding: "5px 7px",
+                              fontSize: 11,
+                            }}
                           />
                           <SecondaryBtn
                             size="sm"
                             disabled={savingWaitlistLimit === waitlistLimitKey}
                             onClick={() => saveWaitlistLimit(p, pIdx)}
                           >
-                            {savingWaitlistLimit === waitlistLimitKey ? "Saving…" : "Save"}
+                            {savingWaitlistLimit === waitlistLimitKey
+                              ? "Saving…"
+                              : "Save"}
                           </SecondaryBtn>
                         </div>
                       </div>
-                    ) : role !== "Buyer" ? null : batch.locked || p.locked || (availability.fullyLocked && !onWaitlist) ? (
+                    ) : role !== "Buyer" ? null : batch.locked ||
+                      p.locked ||
+                      (availability.fullyLocked && !onWaitlist) ? (
                       <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                        <><Lock size={13} aria-hidden="true" /> {soldOut && waitlistFull ? "Locked · Waitlist full" : "Locked"}</>
+                        <>
+                          <Lock size={13} aria-hidden="true" />{" "}
+                          {soldOut && waitlistFull
+                            ? "Locked · Waitlist full"
+                            : "Locked"}
+                        </>
                       </span>
                     ) : isClaimed ? (
                       <span
-                        style={{ fontSize: 11, color: GREEN, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 3 }}
+                        style={{
+                          fontSize: 11,
+                          color: GREEN,
+                          fontWeight: 600,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 3,
+                        }}
                       >
                         <Check size={12} aria-hidden="true" /> In Claims
                       </span>
                     ) : !soldOut && availability.queuePending ? (
-                      <span style={{ fontSize: 11, color: "#0369A1", fontWeight: 600 }}>
-                        {onWaitlist ? "On Waitlist" : "Reserved for waitlisted buyers"}
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "#0369A1",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {onWaitlist
+                          ? "On Waitlist"
+                          : "Reserved for waitlisted buyers"}
                       </span>
                     ) : soldOut ? (
                       onWaitlist ? (
                         <span
                           style={{
                             fontSize: 11,
+
                             color: "#0369A1",
+
                             fontWeight: 600,
                           }}
                         >
                           On Waitlist
                         </span>
                       ) : waitlistFull ? (
-                        <span style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: "#9CA3AF",
+                            fontWeight: 600,
+                          }}
+                        >
                           Waitlist Full
                         </span>
                       ) : (
@@ -635,6 +1024,7 @@ export default function BatchPage({
                         onClick={() => setClaimTarget({ p, key: pKey })}
                         style={{
                           background: "#C81E62",
+
                           boxShadow: "0 2px 8px rgba(200,30,98,0.35)",
                         }}
                       >
@@ -654,9 +1044,13 @@ export default function BatchPage({
             <div
               style={{
                 fontSize: 11,
+
                 fontWeight: 700,
+
                 color: "#9CA3AF",
+
                 letterSpacing: 0.8,
+
                 marginBottom: 12,
               }}
             >
@@ -665,8 +1059,11 @@ export default function BatchPage({
             <div
               style={{
                 display: "flex",
+
                 alignItems: "center",
+
                 gap: 10,
+
                 cursor: "pointer",
               }}
               onClick={() => onSellerClick(batch.seller)}
@@ -676,6 +1073,7 @@ export default function BatchPage({
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault()
+
                   onSellerClick(batch.seller)
                 }
               }}
@@ -685,17 +1083,32 @@ export default function BatchPage({
                 <div
                   style={{
                     fontSize: 14,
+
                     fontWeight: 700,
+
                     color: "#111827",
+
                     fontFamily: "'Josefin Sans',sans-serif",
+
                     display: "flex",
+
                     alignItems: "center",
+
                     gap: 6,
                   }}
                 >
                   {batch.seller}
                 </div>
-                <div style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "#6B7280",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    flexWrap: "wrap",
+                  }}
+                >
                   <span>Tap to view shop</span>
                 </div>
               </div>
@@ -703,14 +1116,23 @@ export default function BatchPage({
             <div
               style={{
                 marginTop: 12,
+
                 padding: "10px 12px",
+
                 background: "#EEF0FF",
+
                 borderRadius: 8,
+
                 display: "flex",
+
                 gap: 8,
               }}
             >
-              <Link2 size={16} aria-hidden="true" style={{ color: INDIGO, flexShrink: 0, marginTop: 1 }} />
+              <Link2
+                size={16}
+                aria-hidden="true"
+                style={{ color: INDIGO, flexShrink: 0, marginTop: 1 }}
+              />
               <div>
                 <div
                   style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}
@@ -730,9 +1152,13 @@ export default function BatchPage({
             <div
               style={{
                 fontSize: 11,
+
                 fontWeight: 700,
+
                 color: "#9CA3AF",
+
                 letterSpacing: 0.8,
+
                 marginBottom: 12,
               }}
             >
@@ -741,7 +1167,9 @@ export default function BatchPage({
             <div
               style={{
                 display: "flex",
+
                 justifyContent: "space-between",
+
                 marginBottom: 6,
               }}
             >
@@ -751,7 +1179,9 @@ export default function BatchPage({
               <span
                 style={{
                   fontSize: 12,
+
                   fontWeight: 700,
+
                   color: pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO,
                 }}
               >
@@ -761,32 +1191,44 @@ export default function BatchPage({
             <div
               style={{
                 background: "#F3F4F6",
+
                 borderRadius: 999,
+
                 height: 6,
+
                 overflow: "hidden",
+
                 marginBottom: 12,
               }}
             >
               <div
                 style={{
                   width: `${pct}%`,
+
                   height: "100%",
+
                   background: pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO,
+
                   borderRadius: 999,
                 }}
               />
             </div>
             {[
               ["Items", String(batch.items)],
+
               ["Claimed", String(batch.claimed)],
+
               ["Remaining", String(batch.items - batch.claimed)],
             ].map(([k, v]) => (
               <div
                 key={k}
                 style={{
                   display: "flex",
+
                   justifyContent: "space-between",
+
                   padding: "5px 0",
+
                   borderBottom: "1px solid #F3F4F6",
                 }}
               >
@@ -805,14 +1247,24 @@ export default function BatchPage({
       {claimTarget && (
         <ItemClaimModal
           batch={batch}
-          product={batch.products.find((p) => claimTarget.p.dbId ? p.dbId === claimTarget.p.dbId : p.name === claimTarget.p.name) ?? claimTarget.p}
-          onConfirm={async (qty) => {
+          product={
+            batch.products.find((p) =>
+              claimTarget.p.dbId
+                ? p.dbId === claimTarget.p.dbId
+                : p.name === claimTarget.p.name,
+            ) ?? claimTarget.p
+          }
+          onConfirm={async (reservation) => {
             const claimed = await handleClaim(
               claimTarget.key,
+
               batch,
+
               claimTarget.p,
-              qty,
+
+              reservation,
             )
+
             if (claimed) setClaimTarget(null)
           }}
           onClose={() => setClaimTarget(null)}
@@ -827,6 +1279,7 @@ export default function BatchPage({
           limitPerUser={waitlistTarget.p.limitPerUser}
           onConfirm={(qty) => {
             handleJoinWaitlist(waitlistTarget.p, waitlistTarget.pIdx, qty)
+
             setWaitlistTarget(null)
           }}
           onClose={() => setWaitlistTarget(null)}
@@ -843,4 +1296,3 @@ export default function BatchPage({
     </div>
   )
 }
-

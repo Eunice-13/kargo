@@ -37,7 +37,13 @@ import { WAITLIST_INIT } from "@/data/waitlist"
 
 import { FULFILLMENT_INIT } from "@/features/fulfillment"
 
-import { Login, SignUp, Onboarding, ApplyToSellModal } from "@/features/auth"
+import {
+  Login,
+  SignUp,
+  Onboarding,
+  ApplyToSellModal,
+  ReservationGate,
+} from "@/features/auth"
 
 import { NewBatchModal } from "@/features/batches"
 
@@ -71,6 +77,8 @@ export default function App() {
     return Number.isFinite(n) && n > 0 ? n : null
   })()
 
+  const viaBatchLink = sharedBatchId !== null
+
   useEffect(() => {
     if (sharedBatchId !== null) requestBatchOpen(sharedBatchId)
   }, [sharedBatchId])
@@ -81,6 +89,10 @@ export default function App() {
 
   const [booting, setBooting] = useState(
     isSupabaseConfigured && !originalPreview,
+  )
+
+  const [showReservationGate, setShowReservationGate] = useState(
+    viaBatchLink && !originalPreview,
   )
 
   const [showOnboarding, setOnboard] = useState(false)
@@ -417,7 +429,9 @@ export default function App() {
     setTab(sharedBatchId !== null ? "Batches" : u.sellerEnabled ? "Dashboard" : "Batches")
     setStage("app")
 
-    setOnboard(true)
+    // Shared-link buyers should reach the requested batch immediately; keep the
+    // existing onboarding tour for normal signups only.
+    setOnboard(sharedBatchId === null)
   }
 
   const handleLoginSuccess = (u: UserInfo) => {
@@ -427,6 +441,10 @@ export default function App() {
 
     if (isSupabaseConfigured) refreshData()
   }
+
+  const linkedBatch = viaBatchLink
+    ? batches.find((batch) => batch.id === sharedBatchId)
+    : undefined
 
   if (booting) {
     return (
@@ -450,6 +468,7 @@ export default function App() {
           <SignUp
             onLogin={() => setStage("login")}
             onSuccess={handleSignupSuccess}
+            fromBatchLink={viaBatchLink}
           />
         </div>
       )}
@@ -461,6 +480,25 @@ export default function App() {
           />
         </div>
       )}
+      {viaBatchLink &&
+        stage !== "app" &&
+        !booting &&
+        !originalPreview &&
+        showReservationGate && (
+          <ReservationGate
+            batchTitle={linkedBatch?.title}
+            sellerName={linkedBatch?.seller}
+            onLogin={() => {
+              setShowReservationGate(false)
+              setStage("login")
+            }}
+            onSignUp={() => {
+              setShowReservationGate(false)
+              setStage("signup")
+            }}
+            onDismiss={() => setShowReservationGate(false)}
+          />
+        )}
       {stage === "app" && (
         <div
           className="kargo-original-app"

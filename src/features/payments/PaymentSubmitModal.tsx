@@ -1,88 +1,145 @@
 import { useState, useRef, useEffect } from "react"
+
 import { CheckCircle2, Paperclip } from "lucide-react"
+
 import type { ToPayRow } from "@/types"
+
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
+
 import { isSupabaseConfigured } from "@/lib/supabase"
+
 import { kargoApi } from "@/services"
+
 import type { SellerReceiveMethod } from "@/services/kargoApi"
 
 // Cash methods (Meetup / Delivery) carry no online-payment details; the buyer
+
 // just coordinates with the seller. Keep their real label as the method key.
 
 export type PaymentSubmissionDetails = {
   amountPaid: number
+
   payerAccountName?: string
+
   payerPhone?: string
+
   buyerContactUrl?: string
 }
 
 export default function PaymentSubmitModal({
   item,
+
   onConfirm,
+
   onClose,
+
   contactPrefill = "",
 }: {
   item: ToPayRow
+
   onConfirm: (
     method: string,
+
     refNo: string,
+
     receipt: File | undefined,
+
     details: PaymentSubmissionDetails,
   ) => unknown | Promise<unknown>
+
   onClose: () => void
+
   contactPrefill?: string
 }) {
   useEffect(() => {
     const closeIfExpired = () => {
       if (!deadlineHasPassed(item)) return
+
       onClose()
+
       alert("This claim has expired and can no longer be paid.")
     }
+
     closeIfExpired()
+
     const timer = window.setInterval(closeIfExpired, 1000)
+
     return () => window.clearInterval(timer)
   }, [item, onClose])
+
   const [methodOptions, setMethodOptions] = useState<SellerReceiveMethod[]>(
     isSupabaseConfigured
       ? []
       : [
           { methodType: "GCash", accountName: null, accountNumber: null },
+
           { methodType: "Maya", accountName: null, accountNumber: null },
-          { methodType: "Bank Transfer", accountName: null, accountNumber: null },
-          { methodType: "Cash on Meetup", accountName: null, accountNumber: null },
+
+          {
+            methodType: "Bank Transfer",
+            accountName: null,
+            accountNumber: null,
+          },
+
+          {
+            methodType: "Cash on Meetup",
+            accountName: null,
+            accountNumber: null,
+          },
         ],
   )
-  const [method, setMethod] = useState(isSupabaseConfigured ? "" : "GCash")
+
+  const [method, setMethod] = useState(
+    item.reservedPaymentMethod ?? (isSupabaseConfigured ? "" : "GCash"),
+  )
   const [methodsError, setMethodsError] = useState<string | null>(null)
+
   const [refNo, setRefNo] = useState("")
+
   const [acctName, setAcctName] = useState("")
+
   const [phone, setPhone] = useState("")
+
   const [contactLink, setContactLink] = useState(contactPrefill)
+
   const [amountPaid, setAmountPaid] = useState(String(item.amount))
+
   const [uploading, setUploading] = useState(false)
+
   const [uploaded, setUploaded] = useState<string | null>(null)
+
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+
   const [submitting, setSubmitting] = useState(false)
+
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
+
     if (!item.sellerId) {
       setMethodsError("The seller account could not be identified.")
+
       return
     }
+
     kargoApi
+
       .loadSellerReceiveMethods(item.sellerId)
+
       .then((methods) => {
         setMethodOptions(methods)
-        setMethod(methods[0]?.methodType ?? "")
+
+        setMethod(item.reservedPaymentMethod ?? methods[0]?.methodType ?? "")
         setMethodsError(
           methods.length === 0
             ? "This seller has not configured a payment method yet."
             : null,
         )
       })
+
       .catch((error) =>
         setMethodsError(
           error instanceof Error
@@ -90,17 +147,25 @@ export default function PaymentSubmitModal({
             : "Unable to load the seller's payment methods.",
         ),
       )
-  }, [item.sellerId])
+  }, [item.reservedPaymentMethod, item.sellerId])
+
+  const methodLocked = Boolean(item.reservedPaymentMethod)
 
   const isCash = method === "Cash on Meetup" || method === "Cash on Delivery"
+
   const numericAmountPaid = Number(amountPaid)
-  const hasValidAmount = Number.isFinite(numericAmountPaid) && numericAmountPaid > 0
+
+  const hasValidAmount =
+    Number.isFinite(numericAmountPaid) && numericAmountPaid > 0
 
   const handleFile = (file: File) => {
     setUploading(true)
+
     setTimeout(() => {
       setUploading(false)
+
       setUploaded(file.name)
+
       setUploadedFile(file)
     }, 1200)
   }
@@ -111,10 +176,15 @@ export default function PaymentSubmitModal({
         <div
           style={{
             background: "#F9FAFB",
+
             borderRadius: 8,
+
             padding: "10px 14px",
+
             display: "flex",
+
             justifyContent: "space-between",
+
             alignItems: "center",
           }}
         >
@@ -129,8 +199,11 @@ export default function PaymentSubmitModal({
           <div
             style={{
               fontSize: 16,
+
               fontWeight: 800,
+
               color: "#111827",
+
               fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
@@ -142,32 +215,50 @@ export default function PaymentSubmitModal({
           <label
             style={{
               fontSize: 12,
+
               fontWeight: 600,
+
               color: "#374151",
+
               display: "block",
+
               marginBottom: 6,
             }}
           >
             Payment Method
           </label>
           <div style={{ fontSize: 11.5, color: "#6B7280", marginBottom: 8 }}>
-            Select your payment method
+            {methodLocked
+              ? "Selected when you reserved this item"
+              : "Select your payment method"}
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {methodOptions.map((m) => (
               <button
                 key={`${m.methodType}-${m.accountNumber ?? "cash"}`}
-                onClick={() => setMethod(m.methodType)}
+                onClick={() => !methodLocked && setMethod(m.methodType)}
+                disabled={methodLocked}
                 style={{
                   padding: "7px 14px",
+
                   borderRadius: 8,
+
                   fontSize: 12,
+
                   fontWeight: 600,
-                  cursor: "pointer",
-                  border: `2px solid ${method === m.methodType ? "#191BA9" : "#E5E7EB"}`,
+
+                  cursor: methodLocked ? "default" : "pointer",
+                  opacity: methodLocked && method !== m.methodType ? 0.5 : 1,
+                  border: `2px solid ${
+                    method === m.methodType ? "#191BA9" : "#E5E7EB"
+                  }`,
+
                   background: method === m.methodType ? "#EEF0FF" : "#fff",
+
                   color: method === m.methodType ? "#191BA9" : "#6B7280",
+
                   transition: "all 0.15s",
+
                   fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
@@ -176,17 +267,34 @@ export default function PaymentSubmitModal({
             ))}
           </div>
           {methodsError && (
-            <div role="alert" style={{ marginTop: 8, color: "#B91C1C", fontSize: 11.5 }}>
+            <div
+              role="alert"
+              style={{ marginTop: 8, color: "#B91C1C", fontSize: 11.5 }}
+            >
               {methodsError}
             </div>
           )}
           {methodOptions.find((option) => option.methodType === method) &&
             !isCash && (
-              <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 7, background: "#F9FAFB", color: "#374151", fontSize: 11.5 }}>
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: "8px 10px",
+                  borderRadius: 7,
+                  background: "#F9FAFB",
+                  color: "#374151",
+                  fontSize: 11.5,
+                }}
+              >
                 {[
-                  methodOptions.find((option) => option.methodType === method)?.accountName,
-                  methodOptions.find((option) => option.methodType === method)?.accountNumber,
-                ].filter(Boolean).join(" · ")}
+                  methodOptions.find((option) => option.methodType === method)
+                    ?.accountName,
+
+                  methodOptions.find((option) => option.methodType === method)
+                    ?.accountNumber,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </div>
             )}
         </div>
@@ -195,15 +303,23 @@ export default function PaymentSubmitModal({
           <div
             style={{
               background: "#FFF7ED",
+
               border: "1px solid #FCD34D",
+
               borderRadius: 8,
+
               padding: "10px 14px",
+
               fontSize: 12,
+
               color: "#92400E",
+
               lineHeight: 1.5,
             }}
           >
-            Please coordinate directly with the seller to arrange {method === "Cash on Delivery" ? "delivery" : "the meetup"} and payment.
+            Please coordinate directly with the seller to arrange{" "}
+            {method === "Cash on Delivery" ? "delivery" : "the meetup"} and
+            payment.
           </div>
         )}
 
@@ -213,9 +329,13 @@ export default function PaymentSubmitModal({
               <label
                 style={{
                   fontSize: 12,
+
                   fontWeight: 600,
+
                   color: "#374151",
+
                   display: "block",
+
                   marginBottom: 5,
                 }}
               >
@@ -227,13 +347,21 @@ export default function PaymentSubmitModal({
                 placeholder="e.g. GC-20260910-3821"
                 style={{
                   width: "100%",
+
                   fontSize: 13,
+
                   border: "1px solid #E5E7EB",
+
                   borderRadius: 7,
+
                   padding: "9px 12px",
+
                   outline: "none",
+
                   color: "#374151",
+
                   fontFamily: "inherit",
+
                   boxSizing: "border-box" as const,
                 }}
                 className="placeholder:text-gray-400"
@@ -248,9 +376,13 @@ export default function PaymentSubmitModal({
               <label
                 style={{
                   fontSize: 12,
+
                   fontWeight: 600,
+
                   color: "#374151",
+
                   display: "block",
+
                   marginBottom: 5,
                 }}
               >
@@ -262,13 +394,21 @@ export default function PaymentSubmitModal({
                 placeholder="Your GCash / bank account name"
                 style={{
                   width: "100%",
+
                   fontSize: 13,
+
                   border: "1px solid #E5E7EB",
+
                   borderRadius: 7,
+
                   padding: "9px 12px",
+
                   outline: "none",
+
                   color: "#374151",
+
                   fontFamily: "inherit",
+
                   boxSizing: "border-box" as const,
                 }}
                 className="placeholder:text-gray-400"
@@ -278,9 +418,13 @@ export default function PaymentSubmitModal({
               <label
                 style={{
                   fontSize: 12,
+
                   fontWeight: 600,
+
                   color: "#374151",
+
                   display: "block",
+
                   marginBottom: 5,
                 }}
               >
@@ -293,13 +437,21 @@ export default function PaymentSubmitModal({
                 type="tel"
                 style={{
                   width: "100%",
+
                   fontSize: 13,
+
                   border: "1px solid #E5E7EB",
+
                   borderRadius: 7,
+
                   padding: "9px 12px",
+
                   outline: "none",
+
                   color: "#374151",
+
                   fontFamily: "inherit",
+
                   boxSizing: "border-box" as const,
                 }}
                 className="placeholder:text-gray-400"
@@ -309,9 +461,13 @@ export default function PaymentSubmitModal({
               <label
                 style={{
                   fontSize: 12,
+
                   fontWeight: 600,
+
                   color: "#374151",
+
                   display: "block",
+
                   marginBottom: 5,
                 }}
               >
@@ -323,13 +479,21 @@ export default function PaymentSubmitModal({
                 placeholder="e.g. facebook.com/yourname"
                 style={{
                   width: "100%",
+
                   fontSize: 13,
+
                   border: "1px solid #E5E7EB",
+
                   borderRadius: 7,
+
                   padding: "9px 12px",
+
                   outline: "none",
+
                   color: "#374151",
+
                   fontFamily: "inherit",
+
                   boxSizing: "border-box" as const,
                 }}
                 className="placeholder:text-gray-400"
@@ -343,9 +507,13 @@ export default function PaymentSubmitModal({
               <label
                 style={{
                   fontSize: 12,
+
                   fontWeight: 600,
+
                   color: "#374151",
+
                   display: "block",
+
                   marginBottom: 5,
                 }}
               >
@@ -360,13 +528,21 @@ export default function PaymentSubmitModal({
                 placeholder={String(item.amount)}
                 style={{
                   width: "100%",
+
                   fontSize: 13,
+
                   border: "1px solid #E5E7EB",
+
                   borderRadius: 7,
+
                   padding: "9px 12px",
+
                   outline: "none",
+
                   color: "#374151",
+
                   fontFamily: "inherit",
+
                   boxSizing: "border-box" as const,
                 }}
               />
@@ -376,9 +552,13 @@ export default function PaymentSubmitModal({
               <label
                 style={{
                   fontSize: 12,
+
                   fontWeight: 600,
+
                   color: "#374151",
+
                   display: "block",
+
                   marginBottom: 6,
                 }}
               >
@@ -391,6 +571,7 @@ export default function PaymentSubmitModal({
                 style={{ display: "none" }}
                 onChange={(e) => {
                   const f = e.target.files?.[0]
+
                   if (f) handleFile(f)
                 }}
               />
@@ -402,23 +583,29 @@ export default function PaymentSubmitModal({
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault()
+
                     fileRef.current?.click()
                   }
                 }}
                 style={{
                   border: "2px dashed #D1D5DB",
+
                   borderRadius: 8,
+
                   padding: 20,
+
                   textAlign: "center",
+
                   cursor: "pointer",
+
                   background: "#FAFAFA",
                 }}
                 onMouseEnter={(e) => {
-                  ; (e.currentTarget as HTMLElement).style.borderColor =
+                  ;(e.currentTarget as HTMLElement).style.borderColor =
                     "#191BA9"
                 }}
                 onMouseLeave={(e) => {
-                  ; (e.currentTarget as HTMLElement).style.borderColor =
+                  ;(e.currentTarget as HTMLElement).style.borderColor =
                     "#D1D5DB"
                 }}
               >
@@ -428,11 +615,21 @@ export default function PaymentSubmitModal({
                   </div>
                 ) : uploaded ? (
                   <>
-                    <div style={{ color: "#0B7A59", display: "flex", justifyContent: "center" }}><CheckCircle2 size={24} aria-hidden="true" /></div>
+                    <div
+                      style={{
+                        color: "#0B7A59",
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <CheckCircle2 size={24} aria-hidden="true" />
+                    </div>
                     <div
                       style={{
                         fontSize: 12,
+
                         fontWeight: 600,
+
                         color: "#065F46",
                       }}
                     >
@@ -446,11 +643,21 @@ export default function PaymentSubmitModal({
                   </>
                 ) : (
                   <>
-                    <div style={{ color: "#9CA3AF", display: "flex", justifyContent: "center" }}><Paperclip size={28} aria-hidden="true" /></div>
+                    <div
+                      style={{
+                        color: "#9CA3AF",
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Paperclip size={28} aria-hidden="true" />
+                    </div>
                     <div
                       style={{
                         fontSize: 12,
+
                         fontWeight: 600,
+
                         color: "#374151",
                       }}
                     >
@@ -470,29 +677,49 @@ export default function PaymentSubmitModal({
 
         <div className="flex gap-3 pt-1">
           <SecondaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
+            style={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              fontSize: 12,
+            }}
             onClick={onClose}
           >
             Cancel
           </SecondaryBtn>
           <PrimaryBtn
-            style={{ flex: 1, display: "flex", justifyContent: "center", fontSize: 12 }}
+            style={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              fontSize: 12,
+            }}
             onClick={async () => {
               if (deadlineHasPassed(item)) {
                 onClose()
+
                 alert("This claim has expired and can no longer be paid.")
+
                 return
               }
+
               setSubmitting(true)
+
               try {
                 await onConfirm(
                   method,
+
                   refNo,
+
                   uploadedFile ?? undefined,
+
                   {
                     amountPaid: numericAmountPaid,
+
                     payerAccountName: acctName.trim() || undefined,
+
                     payerPhone: phone.trim() || undefined,
+
                     buyerContactUrl: contactLink.trim() || undefined,
                   },
                 )
@@ -501,15 +728,18 @@ export default function PaymentSubmitModal({
               }
             }}
             disabled={
-              submitting || !method || (!isCash
-                ? !refNo.trim() ||
-                  !uploaded ||
-                  !phone.trim() ||
-                  !hasValidAmount
+              submitting ||
+              !method ||
+              (!isCash
+                ? !refNo.trim() || !uploaded || !phone.trim() || !hasValidAmount
                 : false)
             }
           >
-            {submitting ? "Submitting..." : isCash ? "Confirm Order" : "Submit Payment"}
+            {submitting
+              ? "Submitting..."
+              : isCash
+                ? "Confirm Order"
+                : "Submit Payment"}
           </PrimaryBtn>
         </div>
       </div>

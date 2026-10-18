@@ -1,5 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Josefin+Sans:wght@400;600;700&family=Manrope:wght@600;700;800&family=Quicksand:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+.kargo-location-map {
+  height: 230px;
+  min-height: 230px;
+}
+
+.kargo-delivery-preview {
+  height: 180px;
+  min-height: 180px;
+}
+
+@media (max-width: 480px) {
+  .kargo-location-map {
+    height: min(52dvh, 320px);
+  }
+
+  .kargo-delivery-preview {
+    height: 210px;
+  }
+}
 
 
 :root {
@@ -5395,6 +5416,7 @@ textarea::placeholder {
 }
 
 .icon-tabbar > div:first-child {
+  width: min(100%, 930px);
   max-width: 930px;
   margin: 0 auto;
 }
@@ -5414,6 +5436,80 @@ textarea::placeholder {
 
 .icon-tabbar > div:first-child > button:hover {
   color: #2022b5 !important;
+}
+
+/* Keep the brand, search, and account actions optically balanced around the
+   viewport center instead of centering search in leftover flex space. */
+@media (min-width: 761px) {
+  .seller-shell-header {
+    display: grid !important;
+    grid-template-columns: minmax(190px, 1fr) minmax(320px, 690px) minmax(190px, 1fr);
+    column-gap: clamp(18px, 2.5vw, 40px) !important;
+  }
+
+  .seller-shell-header .kargo-brand-lockup {
+    width: auto !important;
+    justify-self: start;
+  }
+
+  .seller-shell-header .kargo-search-wrap {
+    width: 100%;
+    max-width: 690px !important;
+    justify-self: center;
+  }
+
+  .seller-shell-header .kargo-header-actions {
+    justify-self: end;
+    margin-left: 0 !important;
+  }
+}
+
+/* Shared modal geometry: one padding rhythm, one control height, and resilient
+   grids. Colors and type continue to come from each existing flow. */
+.kargo-modal__body {
+  scrollbar-gutter: stable;
+}
+
+.kargo-modal__body :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select) {
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.kargo-modal__body textarea {
+  box-sizing: border-box;
+}
+
+.kargo-modal__body :is(.kargo-primary, .kargo-secondary) {
+  min-height: 40px;
+  align-items: center;
+}
+
+.kargo-modal__body [style*="grid-template-columns"] > * {
+  min-width: 0;
+}
+
+.kargo-modal__body .batch-meta-grid {
+  grid-template-columns: minmax(0, 1.15fr) repeat(2, minmax(0, 1fr)) !important;
+  align-items: end;
+}
+
+@media (max-width: 620px) {
+  .kargo-modal-overlay {
+    padding: 10px !important;
+  }
+
+  .kargo-modal__header {
+    padding: 16px 16px 12px !important;
+  }
+
+  .kargo-modal__body {
+    padding: 0 16px 16px !important;
+  }
+
+  .kargo-modal__body .batch-meta-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: stretch;
+  }
 }
 
 .seller-dashboard {

@@ -1,5 +1,18 @@
 import { useState, useEffect, useMemo } from "react"
-import { Package, PackagePlus, CreditCard, CalendarX2, ReceiptText, Clock3, CheckCircle2, Plane, ClipboardList, Maximize2, X, FileText } from "lucide-react"
+import {
+  Package,
+  PackagePlus,
+  CreditCard,
+  CalendarX2,
+  ReceiptText,
+  Clock3,
+  CheckCircle2,
+  Plane,
+  ClipboardList,
+  Maximize2,
+  X,
+  FileText,
+} from "lucide-react"
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
 import { navIntent } from "@/state/navIntent"
 import { sortWaitlistUpcoming } from "@/data/waitlist"
@@ -27,7 +40,10 @@ import WaitlistModal from "./WaitlistModal"
 import SellerWaitlistCard from "./SellerWaitlistCard"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
-import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry"
+import {
+  claimIsPayable,
+  deadlineHasPassed,
+} from "@/features/claims/claimExpiry"
 
 const SELLER_BOARD_COLUMNS = [
   "Pending Payment",
@@ -60,15 +76,22 @@ export default function Dashboard({
   refreshData,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
-  const [buyerProfile, setBuyerProfile] = useState<{ name: string; contactUrl?: string } | null>(null)
+  const [buyerProfile, setBuyerProfile] = useState<{
+    name: string
+    contactUrl?: string
+  } | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
   const [showSalesReport, setShowSalesReport] = useState(false)
   const [showWaitlist, setShowWaitlist] = useState(false)
-  const [collapsedBoardColumns, setCollapsedBoardColumns] = useState<Record<string, boolean>>({})
+  const [collapsedBoardColumns, setCollapsedBoardColumns] =
+    useState<Record<string, boolean>>({})
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
   const board = useFulfillmentBoard(setFulfillment)
 
-  const waitlistSorted = useMemo(() => sortWaitlistUpcoming(waitlist), [waitlist])
+  const waitlistSorted = useMemo(
+    () => sortWaitlistUpcoming(waitlist),
+    [waitlist],
+  )
   const closestWaitlist = waitlistSorted[0] ?? null
   const openWaitlist = () => {
     setActiveWaitlistId(closestWaitlist?.id ?? null)
@@ -95,7 +118,13 @@ export default function Dashboard({
     .slice()
     .sort((a, b) => Number(b.id) - Number(a.id))
     .slice(0, RECENT_CLAIMS_PREVIEW)
-  const payableToPay = toPay.filter((item) => !deadlineHasPassed(item))
+  const payableToPay = toPay.filter(
+    (item) =>
+      !item.deadlinePausedAt &&
+      item.shippingState !== "waiting_for_seller" &&
+      item.shippingState !== "correction_requested" &&
+      !deadlineHasPassed(item),
+  )
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
   const completedOrders = completedPayments(payHistory, claims)
 
@@ -115,17 +144,27 @@ export default function Dashboard({
     if (claim.status === "Insufficient Payment") return true
     return claim.status === "Pending"
   })
+  const shippingFeesToSet = mySellerOrders.filter(
+    (claim) =>
+      claim.status === "Pending" &&
+      claim.shippingApplies &&
+      (claim.shippingState === "waiting_for_seller" ||
+        claim.shippingState === "correction_requested"),
+  )
   // Extension requests awaiting this seller's approval: claims on their orders
   // that requested an extension and are still pending a decision.
   const pendingExtensions = claims.filter(
-    (c) => c.extensionRequested && c.status === "Pending" && c.seller === user.name,
+    (c) =>
+      c.extensionRequested && c.status === "Pending" && c.seller === user.name,
   )
   // Orders fulfilled = orders moved to the board's "Delivered" column.
   const ordersFulfilled = fulfillment.filter((o) => o.col === "Delivered")
 
   const waitlistSub = closestWaitlist
     ? closestWaitlist.product && closestWaitlist.product !== "Product"
-      ? `${closestWaitlist.product}${closestWaitlist.batch ? ` — ${closestWaitlist.batch}` : ""}`
+      ? `${closestWaitlist.product}${
+          closestWaitlist.batch ? ` — ${closestWaitlist.batch}` : ""
+        }`
       : closestWaitlist.batch || "Waitlisted item"
     : "No waitlisted items"
   const buyerStats = [
@@ -214,13 +253,15 @@ export default function Dashboard({
   )
 
   const handleBatchPayment = async (
-    item: (typeof toPay)[number],
+    item: typeof toPay[number],
     method: string,
     referenceNumber: string,
     receipt: File | undefined,
     details: PaymentSubmissionDetails,
   ) => {
-    const claim = claims.find((candidate) => String(candidate.id) === String(item.orderId ?? item.id))
+    const claim = claims.find(
+      (candidate) => String(candidate.id) === String(item.orderId ?? item.id),
+    )
     if (!claim || !claimIsPayable(claim) || deadlineHasPassed(item)) {
       alert("This claim has expired and can no longer be paid.")
       return false
@@ -238,10 +279,13 @@ export default function Dashboard({
           buyerContactUrl: details.buyerContactUrl,
         })
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Unable to submit payment."
+        const message =
+          error instanceof Error ? error.message : "Unable to submit payment."
         if (message === "Order is not payable") {
           await refreshData()
-          alert("This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.")
+          alert(
+            "This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.",
+          )
           return false
         }
         alert(message)
@@ -258,18 +302,22 @@ export default function Dashboard({
         method,
         amount: details.amountPaid,
         date: TODAY,
-        status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
+        status: (isSupabaseConfigured
+          ? "Pending"
+          : "Paid and Reserved") as ClaimStatus,
       },
       ...history,
     ])
-    if (!isSupabaseConfigured) setClaims((prev) =>
-      prev.map((c) =>
-        c.id === item.id && c.status === "Pending"
-          ? { ...c, status: "Paid and Reserved" as ClaimStatus }
-          : c,
-      ),
-    )
-    if (!isSupabaseConfigured) setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
+    if (!isSupabaseConfigured)
+      setClaims((prev) =>
+        prev.map((c) =>
+          c.id === item.id && c.status === "Pending"
+            ? { ...c, status: "Paid and Reserved" as ClaimStatus }
+            : c,
+        ),
+      )
+    if (!isSupabaseConfigured)
+      setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
     return true
   }
 
@@ -330,7 +378,9 @@ export default function Dashboard({
             <button
               type="button"
               className="seller-board-column__mobile-toggle"
-              aria-label={`${collapsedBoardColumns[col] ? "Expand" : "Collapse"} ${col}`}
+              aria-label={`${
+                collapsedBoardColumns[col] ? "Expand" : "Collapse"
+              } ${col}`}
               aria-expanded={!collapsedBoardColumns[col]}
               onClick={() =>
                 setCollapsedBoardColumns((current) => ({
@@ -347,16 +397,15 @@ export default function Dashboard({
             {visibleOrders.map((o) => {
               const isExpanded = board.expandedId === o.id
               return (
-                <div
-                  key={o.id}
-                  className="seller-board-card"
-                >
+                <div key={o.id} className="seller-board-card">
                   <div
                     onClick={() => board.toggle(o.id)}
                     role="button"
                     tabIndex={0}
                     aria-expanded={isExpanded}
-                    aria-label={`${isExpanded ? "Collapse" : "Expand"} order for ${o.buyer} — ${o.product}`}
+                    aria-label={`${
+                      isExpanded ? "Collapse" : "Expand"
+                    } order for ${o.buyer} — ${o.product}`}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault()
@@ -371,7 +420,10 @@ export default function Dashboard({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation()
-                          setBuyerProfile({ name: o.buyer, contactUrl: o.buyerFb })
+                          setBuyerProfile({
+                            name: o.buyer,
+                            contactUrl: o.buyerFb,
+                          })
                         }}
                         style={{
                           fontSize: 11,
@@ -402,7 +454,11 @@ export default function Dashboard({
                     </div>
                   </div>
                   {isExpanded && (
-                    <FulfillmentDetails order={o} onMove={board.move} />
+                    <FulfillmentDetails
+                      order={o}
+                      onMove={board.move}
+                      onSaveTracking={board.saveTracking}
+                    />
                   )}
                 </div>
               )
@@ -463,9 +519,17 @@ export default function Dashboard({
                   event.currentTarget.click()
                 }
               }}
-              style={{ animationDelay: `${index * 60}ms`, background: stat.bg, cursor: "pointer" }}
+              style={{
+                animationDelay: `${index * 60}ms`,
+                background: stat.bg,
+                cursor: "pointer",
+              }}
             >
-              <stat.icon size={20} aria-hidden="true" style={{ color: stat.sc }} />
+              <stat.icon
+                size={20}
+                aria-hidden="true"
+                style={{ color: stat.sc }}
+              />
               <strong>{stat.value}</strong>
               <span>{stat.label}</span>
               <small style={{ color: stat.sc }}>{stat.sub}</small>
@@ -518,10 +582,25 @@ export default function Dashboard({
                         <td className="seller-order-amount">
                           ₱{claim.amount.toLocaleString()}
                         </td>
-                        <td><StatusBadge status={claim.status} /></td>
-                        <td className={claim.hours > 0 && claim.hours < 6 ? "is-urgent" : index === 1 ? "is-warning" : ""}>
+                        <td>
+                          <StatusBadge status={claim.status} />
+                        </td>
+                        <td
+                          className={
+                            claim.hours > 0 && claim.hours < 6
+                              ? "is-urgent"
+                              : index === 1
+                                ? "is-warning"
+                                : ""
+                          }
+                        >
                           {claim.status === "Pending" && claim.hours > 0 ? (
-                            <Countdown hours={claim.hours} id={claim.id} expiresAt={claim.expiresAt} />
+                            <Countdown
+                              hours={claim.hours}
+                              id={claim.id}
+                              expiresAt={claim.expiresAt}
+                              paused={Boolean(claim.deadlinePausedAt)}
+                            />
                           ) : (
                             <span>—</span>
                           )}
@@ -550,6 +629,12 @@ export default function Dashboard({
                   count: pendingExtensions.length,
                   tab: "Batches" as Tab,
                 },
+                {
+                  icon: Package,
+                  label: "Shipping Fees to Set",
+                  count: shippingFeesToSet.length,
+                  tab: "My Claims" as Tab,
+                },
               ].map((action) => (
                 <div className="seller-action-row" key={action.label}>
                   <action.icon size={19} aria-hidden="true" />
@@ -561,6 +646,8 @@ export default function Dashboard({
                     type="button"
                     onClick={() => {
                       if (action.label === "Payments to Verify")
+                        navIntent.orderFilter = "Pending"
+                      if (action.label === "Shipping Fees to Set")
                         navIntent.orderFilter = "Pending"
                       if (action.label === "Extension Requests")
                         navIntent.openExtensionRequests = true
@@ -598,7 +685,12 @@ export default function Dashboard({
         </section>
 
         {boardExpanded && (
-          <div className="seller-board-dialog" role="dialog" aria-modal="true" aria-label="Fulfillment Board — expanded view">
+          <div
+            className="seller-board-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Fulfillment Board — expanded view"
+          >
             <header>
               <div>
                 <button type="button" onClick={() => setBoardExpanded(false)}>
@@ -655,7 +747,15 @@ export default function Dashboard({
               style={{ background: s.bg, animationDelay: `${i * 60}ms` }}
               role="button"
               tabIndex={0}
-              aria-label={`Open ${s.label === "Completed Orders" ? "Payment History" : s.label === "Pending Payment" ? "Batch Checkout" : s.label === "Active Claims" ? "My Claims To Pay" : "full waitlist"}`}
+              aria-label={`Open ${
+                s.label === "Completed Orders"
+                  ? "Payment History"
+                  : s.label === "Pending Payment"
+                    ? "Batch Checkout"
+                    : s.label === "Active Claims"
+                      ? "My Claims To Pay"
+                      : "full waitlist"
+              }`}
               onClick={openCard}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -751,7 +851,12 @@ export default function Dashboard({
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
-                        <Countdown hours={c.hours} id={c.id} expiresAt={c.expiresAt} />
+                        <Countdown
+                          hours={c.hours}
+                          id={c.id}
+                          expiresAt={c.expiresAt}
+                          paused={Boolean(c.deadlinePausedAt)}
+                        />
                       ) : (
                         <span style={{ color: "#D1D5DB", fontSize: 12 }}>
                           —
@@ -779,6 +884,12 @@ export default function Dashboard({
                   count: pendingExtensions.length,
                   tab: "Batches" as Tab,
                 },
+                {
+                  icon: Package,
+                  label: "Shipping Fees to Set",
+                  count: shippingFeesToSet.length,
+                  tab: "My Claims" as Tab,
+                },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -792,7 +903,11 @@ export default function Dashboard({
                     gap: 10,
                   }}
                 >
-                  <item.icon size={18} aria-hidden="true" style={{ color: "#9CA3AF", flexShrink: 0 }} />
+                  <item.icon
+                    size={18}
+                    aria-hidden="true"
+                    style={{ color: "#9CA3AF", flexShrink: 0 }}
+                  />
                   <div className="flex-1">
                     <div
                       style={{
@@ -809,7 +924,13 @@ export default function Dashboard({
                       {item.count} pending
                     </div>
                   </div>
-                  <SecondaryBtn onClick={() => setTab(item.tab)}>
+                  <SecondaryBtn
+                    onClick={() => {
+                      if (item.label === "Shipping Fees to Set")
+                        navIntent.orderFilter = "Pending"
+                      setTab(item.tab)
+                    }}
+                  >
                     View All
                   </SecondaryBtn>
                 </div>
@@ -825,7 +946,15 @@ export default function Dashboard({
                   textAlign: "center",
                 }}
               >
-                <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                <CheckCircle2
+                  size={13}
+                  aria-hidden="true"
+                  style={{
+                    display: "inline",
+                    verticalAlign: -2,
+                    marginRight: 4,
+                  }}
+                />
                 No "Pay All Pending" needed — sellers verify, not pay.
               </div>
             </div>
@@ -896,9 +1025,7 @@ export default function Dashboard({
           <FulfillmentLiveRegion text={board.announcement} />
         </Card>
       )}
-      {role === "Seller" && (
-        <SellerWaitlistCard groups={sellerWaitlist} />
-      )}
+      {role === "Seller" && <SellerWaitlistCard groups={sellerWaitlist} />}
       {boardExpanded && (
         <div
           role="dialog"
@@ -1069,7 +1196,9 @@ export default function Dashboard({
             {upcoming.map((d, i) => (
               <div
                 key={i}
-                className={`bdash-deadline${d.hours < 6 ? " bdash-deadline--urgent" : ""}`}
+                className={`bdash-deadline${
+                  d.hours < 6 ? " bdash-deadline--urgent" : ""
+                }`}
               >
                 <div>
                   <div className="bdash-deadline__name">{d.product}</div>
@@ -1080,7 +1209,11 @@ export default function Dashboard({
                     ₱{d.amount.toLocaleString()}
                   </div>
                   <div className="bdash-deadline__time">
-                    <Countdown hours={d.hours} id={d.id} expiresAt={d.expiresAt} />
+                    <Countdown
+                      hours={d.hours}
+                      id={d.id}
+                      expiresAt={d.expiresAt}
+                    />
                   </div>
                 </div>
               </div>
@@ -1095,7 +1228,15 @@ export default function Dashboard({
               </button>
             ) : (
               <div className="bdash-cleared">
-                <CheckCircle2 size={13} aria-hidden="true" style={{ display: "inline", verticalAlign: -2, marginRight: 4 }} />
+                <CheckCircle2
+                  size={13}
+                  aria-hidden="true"
+                  style={{
+                    display: "inline",
+                    verticalAlign: -2,
+                    marginRight: 4,
+                  }}
+                />
                 No upcoming deadlines!
               </div>
             )}

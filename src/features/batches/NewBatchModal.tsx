@@ -399,7 +399,7 @@ export default function NewBatchModal({
             className="placeholder:text-gray-400"
           />
         </div>
-        <div className="grid gap-4" style={{ gridTemplateColumns: "1fr 1fr" }}>
+        <div className="batch-meta-grid grid gap-4">
           <div>
             <label
               style={{
@@ -446,82 +446,59 @@ export default function NewBatchModal({
             <label
               style={{
                 fontSize: 12,
-
                 fontWeight: 600,
-
                 color: "#374151",
-
                 display: "block",
-
                 marginBottom: 5,
               }}
             >
-              Trip Dates
+              Trip Start
             </label>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 3 }}
-                >
-                  Start
-                </div>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  style={{
-                    width: "100%",
-
-                    fontSize: 12,
-
-                    border: "1px solid #E5E7EB",
-
-                    borderRadius: 7,
-
-                    padding: "8px 10px",
-
-                    outline: "none",
-
-                    color: "#374151",
-
-                    fontFamily: "inherit",
-
-                    boxSizing: "border-box" as const,
-                  }}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 3 }}
-                >
-                  End
-                </div>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  style={{
-                    width: "100%",
-
-                    fontSize: 12,
-
-                    border: "1px solid #E5E7EB",
-
-                    borderRadius: 7,
-
-                    padding: "8px 10px",
-
-                    outline: "none",
-
-                    color: "#374151",
-
-                    fontFamily: "inherit",
-
-                    boxSizing: "border-box" as const,
-                  }}
-                />
-              </div>
-            </div>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              style={{
+                width: "100%",
+                fontSize: 12,
+                border: "1px solid #E5E7EB",
+                borderRadius: 7,
+                padding: "8px 10px",
+                outline: "none",
+                color: "#374151",
+                fontFamily: "inherit",
+                boxSizing: "border-box" as const,
+              }}
+            />
+          </div>
+          <div>
+            <label
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#374151",
+                display: "block",
+                marginBottom: 5,
+              }}
+            >
+              Trip End
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              style={{
+                width: "100%",
+                fontSize: 12,
+                border: "1px solid #E5E7EB",
+                borderRadius: 7,
+                padding: "8px 10px",
+                outline: "none",
+                color: "#374151",
+                fontFamily: "inherit",
+                boxSizing: "border-box" as const,
+              }}
+            />
           </div>
         </div>
         <div>
