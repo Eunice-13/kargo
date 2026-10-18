@@ -59,6 +59,27 @@ import { kargoApi } from "@/services"
 
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
+// ─── Onboarding tour: show once per account ─────────────────────────────────
+
+const tourSeenKey = (u: UserInfo) =>
+  `kargo:tour-seen:${(u.email || u.name || "").trim().toLowerCase()}`
+
+function hasSeenTour(u: UserInfo): boolean {
+  try {
+    return window.localStorage.getItem(tourSeenKey(u)) === "1"
+  } catch {
+    return true // storage blocked: skip the tour rather than replaying it forever
+  }
+}
+
+function markTourSeen(u: UserInfo) {
+  try {
+    window.localStorage.setItem(tourSeenKey(u), "1")
+  } catch {
+    /* storage unavailable: nothing to persist */
+  }
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -452,6 +473,7 @@ export default function App() {
 
     // Shared-link buyers should reach the requested batch immediately; keep the
     // existing onboarding tour for normal signups only.
+    if (sharedBatchId === null) markTourSeen(u)
     setOnboard(sharedBatchId === null)
   }
 
@@ -459,6 +481,13 @@ export default function App() {
     setUser(u)
     setTab(sharedBatchId !== null ? "Batches" : u.sellerEnabled ? "Dashboard" : "Batches")
     setStage("app")
+
+    // With Supabase email confirmation, signup never reaches the app: the user
+    // confirms by email and then logs in. Show the tour on that first login too.
+    if (sharedBatchId === null && !hasSeenTour(u)) {
+      markTourSeen(u)
+      setOnboard(true)
+    }
 
     if (isSupabaseConfigured) refreshData()
   }
