@@ -6,6 +6,7 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import AuthInput from "./AuthInput"
 import AuthLayout from "./AuthLayout"
+import ResendConfirmation from "./ResendConfirmation"
 import { authErrorMessage } from "./authErrors"
 
 
@@ -40,6 +41,11 @@ export default function SignUp({
   })
 
   const [terms, setTerms] = useState(false)
+
+  // Outcome of a signup that needs the user to do something by email.
+  const [notice, setNotice] = useState<
+    { kind: "sent" | "exists"; email: string } | null
+  >(null)
 
   const submit = useCallback(async () => {
     const e: Record<string, string> = {}
@@ -84,13 +90,19 @@ export default function SignUp({
         role,
       })
       setLoading(false)
-      if (result.needsEmailConfirmation || !result.user) {
-        setErrs({
-          general:
-            "Account created. Open the confirmation link we emailed you, then log in. If it doesn't arrive, check your spam folder.",
-        })
+      if (result.status === "already_registered") {
+        // Supabase sends nothing for an address that already has an account, so
+        // never claim an email is on its way.
+        setErrs({})
+        setNotice({ kind: "exists", email: email.trim() })
         return
       }
+      if (result.status === "confirmation_sent") {
+        setErrs({})
+        setNotice({ kind: "sent", email: email.trim() })
+        return
+      }
+      setNotice(null)
       onSuccess({ ...result.user, role })
     } catch (error) {
       setLoading(false)
@@ -268,14 +280,32 @@ export default function SignUp({
           </div>
 
           {errs.general && (
-            <p
-              role="status"
-              className={`auth-general-message${
-                errs.general.startsWith("Account created") ? " is-success" : ""
-              }`}
-            >
+            <p role="status" className="auth-general-message">
               {errs.general}
             </p>
+          )}
+
+          {notice?.kind === "sent" && (
+            <>
+              <p role="status" className="auth-general-message is-success">
+                Account created. We sent a confirmation link to{" "}
+                <strong>{notice.email}</strong>. Open it, then log in. If it
+                hasn&apos;t arrived in a minute, check your spam folder or resend
+                it below.
+              </p>
+              <ResendConfirmation email={notice.email} />
+            </>
+          )}
+
+          {notice?.kind === "exists" && (
+            <>
+              <p role="status" className="auth-general-message">
+                <strong>{notice.email}</strong> already has an account, so we
+                didn&apos;t send a new email. Log in instead. If you never
+                confirmed it, resend the confirmation link below.
+              </p>
+              <ResendConfirmation email={notice.email} />
+            </>
           )}
 
           <PrimaryBtn onClick={submit} loading={loading} style={{ width: "100%" }}>

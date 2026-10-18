@@ -5,6 +5,7 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import AuthInput from "./AuthInput"
 import AuthLayout from "./AuthLayout"
+import ResendConfirmation from "./ResendConfirmation"
 import { authErrorMessage } from "./authErrors"
 
 export default function Login({
@@ -19,6 +20,7 @@ export default function Login({
   const [emailErr, setEmailErr] = useState("")
   const [passErr, setPassErr] = useState("")
   const [loading, setLoading] = useState(false)
+  const [needsConfirm, setNeedsConfirm] = useState(false)
   const [forgotSending, setForgotSending] = useState(false)
   const [forgotNotice, setForgotNotice] = useState<
     { tone: "sent" | "error"; text: string } | null
@@ -38,6 +40,7 @@ export default function Login({
       ok = false
     } else setPassErr("")
     if (!ok) return
+    setNeedsConfirm(false)
     setLoading(true)
     if (!isSupabaseConfigured) {
       setTimeout(() => {
@@ -52,6 +55,15 @@ export default function Login({
     } catch (error) {
       setLoading(false)
       setPassErr(authErrorMessage(error, "Unable to sign in. Please try again."))
+      // An unconfirmed account can never log in until a link is opened, so offer
+      // a fresh one right where the user is stuck.
+      const detail = `${(error as { code?: string } | null)?.code ?? ""} ${
+        error instanceof Error ? error.message : ""
+      }`.toLowerCase()
+      setNeedsConfirm(
+        detail.includes("email_not_confirmed") ||
+          detail.includes("email not confirmed"),
+      )
     }
   }, [email, password, onSuccess])
 
@@ -144,6 +156,7 @@ export default function Login({
               )}
             </div>
           </div>
+          {needsConfirm && <ResendConfirmation email={email.trim()} />}
           <PrimaryBtn onClick={submit} loading={loading} style={{ width: "100%" }}>
             {loading ? "Signing in…" : "Login"}
           </PrimaryBtn>

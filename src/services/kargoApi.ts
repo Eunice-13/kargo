@@ -287,14 +287,34 @@ export async function signUp(input: {
 
   if (!data.user) throw new Error("Supabase did not return a user")
 
-  if (!data.session)
-    return { needsEmailConfirmation: true as const, user: null }
+  // Supabase will not reveal whether an address is registered. For an email that
+  // already has a confirmed account it returns a placeholder user with NO
+  // identities, no session and no error, and sends no email at all. Reporting
+  // that as "we emailed you" is how a buyer ends up waiting on a message that
+  // will never arrive, so surface it as its own outcome.
+  if (data.user.identities && data.user.identities.length === 0)
+    return { status: "already_registered" as const, user: null }
+
+  if (!data.session) return { status: "confirmation_sent" as const, user: null }
 
   return {
-    needsEmailConfirmation: false as const,
+    status: "signed_in" as const,
 
     user: await profileFor(data.user.id, data.user.email ?? input.email),
   }
+}
+
+// Sends a fresh signup confirmation link. Supabase enforces a minimum gap between
+// sends (60s on this project) and answers the same way whether or not the address
+// has an unconfirmed account, so callers must not claim an email definitely went out.
+export async function resendConfirmation(email: string) {
+  const { error } = await requireSupabase().auth.resend({
+    type: "signup",
+    email: email.trim(),
+    options: { emailRedirectTo: `${window.location.origin}/` },
+  })
+
+  if (error) throw error
 }
 
 export async function requestPasswordReset(email: string) {
@@ -2245,6 +2265,8 @@ export const kargoApi = {
   signIn,
 
   signUp,
+
+  resendConfirmation,
 
   signOut,
   setBatchReaction,
