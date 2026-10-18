@@ -14,6 +14,10 @@ logs/
 .tmp-*
 /.figma/design-context/
 
+# Email preview/screenshot scratch output. The generator writes rendered HTML,
+# PNG captures, and a throwaway Chrome profile here; none of it is source.
+scripts/out/
+
 # Platform-managed agentplat state, not project source. In the
 # client-initiated single-repo workspace layout (make's `Path: "."` spec) the
 # repo root IS the workspace root, so these land inside this repo rather than
