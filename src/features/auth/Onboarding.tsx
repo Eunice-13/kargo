@@ -6,24 +6,24 @@ import { PrimaryBtn } from "@/components/shared"
 // ─── Onboarding spotlight ─────────────────────────────────────────────────────
 export const TOUR_STEPS = [
   {
-    selector: "[data-spotlight='dashboard-tab']",
-    headline: "Welcome to Kargo 👋",
-    copy: "Your pasabuy command center. The Dashboard shows your active claims, deadlines, and order status at a glance.",
+    selector: "[data-spotlight='batches-tab']",
+    headline: "Welcome Home to Kargo 👋",
+    copy: "Browse pasabuy batches from sellers and find items you want to claim.",
   },
   {
-    selector: "[data-spotlight='batches-tab']",
-    headline: "Claim items from batches",
-    copy: "Sellers post trip batches here. Browse items, claim your slot before it fills up, and track status in real time.",
+    selector: "[data-spotlight='claims-tab']",
+    headline: "My Claims",
+    copy: "Review the items you have claimed and see which ones are ready to pay.",
+  },
+  {
+    selector: "[data-spotlight='dashboard-tab']",
+    headline: "Dashboard",
+    copy: "Check your active claims, deadlines, and order status at a glance.",
   },
   {
     selector: "[data-spotlight='payments-tab']",
-    headline: "Pay before the countdown hits zero",
-    copy: "All pending payments and deadlines are here. Upload your GCash or bank receipt to lock in your order.",
-  },
-  {
-    selector: "[data-spotlight='role-toggle']",
-    headline: "One account, two roles",
-    copy: "Toggle to Seller mode to create your own pasabuy batch and manage buyers — no separate account needed.",
+    headline: "Payment History",
+    copy: "Review your payments and deadlines, and upload a receipt for an order that needs payment.",
   },
 ]
 export default function Onboarding({ onDone }: { onDone: () => void }) {
@@ -38,6 +38,18 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
     ) as HTMLElement | null
     if (el) setRect(el.getBoundingClientRect())
   }, [step])
+
+  useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow
+    const previousDocumentOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = "hidden"
+    document.documentElement.style.overflow = "hidden"
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow
+      document.documentElement.style.overflow = previousDocumentOverflow
+    }
+  }, [])
 
   const go = (next: number, d: "l" | "r") => {
     setDir(d)

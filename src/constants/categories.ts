@@ -12,15 +12,15 @@ export type BatchCategory = typeof BATCH_CATEGORIES[number]
 // Mixed) are intentionally kept as fallbacks so any not-yet-migrated data still
 // resolves to a sensible image instead of the "Others" default.
 export const CATEGORY_IMAGES: Record<string, string> = {
-  Food: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=900&h=700&fit=crop&auto=format",
+  Food: "https://images.unsplash.com/photo-1642520078772-0a26120c92b2?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   Beauty:
-    "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=900&h=700&fit=crop&auto=format",
+    "https://plus.unsplash.com/premium_photo-1684407616442-8d5a1b7c978e?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   Luxury:
-    "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=900&h=700&fit=crop&auto=format",
+    "https://images.unsplash.com/photo-1652427019217-3ded1a356f10?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   Apparel:
-    "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=900&h=700&fit=crop&auto=format",
+    "https://plus.unsplash.com/premium_photo-1755164640404-361edebe444f?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   Others:
-    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=900&h=700&fit=crop&auto=format",
+    "https://plus.unsplash.com/premium_photo-1676559916183-d4033c0b51ed?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
   // ── Legacy fallbacks (remapped in data, kept for safety) ──
   Skincare:
     "https://images.unsplash.com/photo-1612817288484-6f916006741a?w=900&h=700&fit=crop&auto=format",
