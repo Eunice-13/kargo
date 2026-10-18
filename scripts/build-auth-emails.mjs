@@ -94,7 +94,7 @@ const banner = (strapline) => {
   <td class="k-banner" style="background:${C.indigo};padding:30px ${M.gutter}px 0;text-align:center">
     <img src="${LOGO}" width="40" height="46" alt="" border="0" style="display:block;margin:0 auto 12px;width:40px;height:46px;border:0;outline:none;text-decoration:none">
     <div style="font-family:${FONT.display};font-size:21px;font-weight:800;line-height:1;letter-spacing:0.34em;padding-left:0.34em;color:#FFFFFF">KARGO</div>
-    <div style="margin-top:9px;font-family:${FONT.body};font-size:10.5px;font-weight:500;line-height:1.4;letter-spacing:0.19em;text-transform:uppercase;color:rgba(255,255,255,0.74)">${esc(strapline)}</div>
+    <div style="margin-top:9px;font-family:${FONT.body};font-size:11px;font-weight:500;line-height:1.4;letter-spacing:0.19em;text-transform:uppercase;color:rgba(255,255,255,0.74)">${esc(strapline)}</div>
     <div style="padding:20px 0 14px">${waterline}</div>
   </td>
 </tr>`
@@ -105,7 +105,7 @@ const strip = (label, address, chip) => `<tr>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse">
       <tr>
         <td valign="middle" align="left">
-          <div style="font-family:${FONT.body};font-size:10px;font-weight:600;line-height:1.4;letter-spacing:0.15em;text-transform:uppercase;color:${C.mutedText}">${esc(label)}</div>
+          <div class="k-strip-label" style="font-family:${FONT.body};font-size:11px;font-weight:600;line-height:1.4;letter-spacing:0.15em;text-transform:uppercase;color:${C.mutedText}">${esc(label)}</div>
           <div class="k-strip-order" style="margin-top:3px;font-family:${FONT.display};font-size:13px;font-weight:700;line-height:1.4;letter-spacing:0.02em;color:${C.ink};word-break:break-all">${esc(address)}</div>
         </td>
         <td valign="middle" align="right" class="k-strip-right">${chipHtml(chip)}</td>
@@ -119,7 +119,7 @@ const focusBlock = (focus) => {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;margin:24px 0 4px">
   <tr>
     <td style="background:${tone.bg};border-radius:${M.radiusSmall}px;padding:18px 20px;text-align:center">
-      <div class="k-focus-label" style="font-family:${FONT.body};font-size:10.5px;font-weight:600;line-height:1.4;letter-spacing:0.12em;text-transform:uppercase;color:${tone.ink};opacity:0.82">${esc(focus.label)}</div>
+      <div class="k-focus-label" style="font-family:${FONT.body};font-size:11px;font-weight:600;line-height:1.4;letter-spacing:0.12em;text-transform:uppercase;color:${tone.ink};opacity:0.82">${esc(focus.label)}</div>
       <div class="k-focus-value" style="margin-top:8px;font-family:${FONT.display};font-size:34px;font-weight:800;line-height:1.1;letter-spacing:0.22em;color:${tone.ink};font-variant-numeric:tabular-nums">${esc(focus.value)}</div>
       ${focus.note ? `<div style="margin-top:7px;font-family:${FONT.body};font-size:12.5px;line-height:1.5;color:${tone.ink};opacity:0.88">${esc(focus.note)}</div>` : ""}
     </td>
@@ -135,7 +135,7 @@ const rowsHtml = (list) => {
         <td class="k-row-label" valign="top" style="padding:11px 16px 11px 0;border-bottom:${last ? "0" : `1px solid ${C.hairlineSoft}`};font-family:${FONT.body};font-size:13px;line-height:1.5;color:${C.mutedText}">${esc(row.label)}</td>
         <td class="k-row-value" valign="top" align="right" style="padding:11px 0;border-bottom:${last ? "0" : `1px solid ${C.hairlineSoft}`};font-family:${FONT.display};font-size:13.5px;font-weight:600;line-height:1.5;color:${C.ink};word-break:break-all">
           ${esc(row.value)}
-          ${row.note ? `<div style="margin-top:2px;font-family:${FONT.body};font-size:11.5px;font-weight:400;line-height:1.45;color:${C.mutedText}">${esc(row.note)}</div>` : ""}
+          ${row.note ? `<div class="k-row-note" style="margin-top:2px;font-family:${FONT.body};font-size:11.5px;font-weight:400;line-height:1.45;color:${C.mutedText}">${esc(row.note)}</div>` : ""}
         </td>
       </tr>`
     })
@@ -169,7 +169,7 @@ const action = (cta) => `<table role="presentation" width="100%" cellpadding="0"
     </td>
   </tr>
 </table>
-${cta.note ? `<div style="margin-top:10px;font-family:${FONT.body};font-size:12px;line-height:1.5;color:${C.mutedText}">${esc(cta.note)}</div>` : ""}`
+${cta.note ? `<div class="k-cta-note" style="margin-top:10px;font-family:${FONT.body};font-size:12px;line-height:1.5;color:${C.mutedText}">${esc(cta.note)}</div>` : ""}`
 
 const footer = (year) => `<tr>
   <td class="k-footer" style="background:${C.cream};padding:22px ${M.gutter}px 26px;border-top:1px solid ${C.hairline}">
@@ -181,8 +181,8 @@ const footer = (year) => `<tr>
   </td>
 </tr>
 <tr>
-  <td style="background:${C.cream};padding:0 ${M.gutter}px 22px;text-align:center">
-    <div style="font-family:${FONT.body};font-size:10.5px;line-height:1.5;color:${C.mutedText}">KARGO &middot; Account security &middot; 20${String(year).slice(-2)}</div>
+  <td class="k-footer" style="background:${C.cream};padding:0 ${M.gutter}px 22px;text-align:center">
+    <div class="k-colophon" style="font-family:${FONT.body};font-size:11px;line-height:1.5;color:${C.mutedText}">KARGO &middot; Account security &middot; 20${String(year).slice(-2)}</div>
   </td>
 </tr>`
 
@@ -229,6 +229,7 @@ const document = ({ view, year }) => `<!doctype html>
     .k-footer{background:${DARK.cream}!important;border-color:${DARK.hairline}!important}
     .k-row-label,.k-row-value{border-color:${DARK.hairlineSoft}!important}
     .k-rule{background:${DARK.hairline}!important}
+    .k-strip-label,.k-eyebrow,.k-row-note,.k-cta-note,.k-colophon{color:${DARK.muted}!important}
     .k-footer-mark,.k-footer a{color:#B4C0FF!important}
   }
 </style>
@@ -243,7 +244,7 @@ const document = ({ view, year }) => `<!doctype html>
         ${strip(view.stripLabel ?? "Account", view.address, view.chip)}
         <tr>
           <td class="k-body k-gutter" style="background:${C.surface};padding:30px ${M.gutter}px 34px">
-            <div style="font-family:${FONT.body};font-size:10.5px;font-weight:600;line-height:1.4;letter-spacing:0.14em;text-transform:uppercase;color:${C.mutedText}">${esc(view.eyebrow)}</div>
+            <div class="k-eyebrow" style="font-family:${FONT.body};font-size:11px;font-weight:600;line-height:1.4;letter-spacing:0.14em;text-transform:uppercase;color:${C.mutedText}">${esc(view.eyebrow)}</div>
             <h1 class="k-h1" style="margin:8px 0 0;font-family:${FONT.display};font-size:25px;font-weight:800;line-height:1.25;letter-spacing:-0.018em;color:${C.ink}">${esc(view.headline)}</h1>
             <p class="k-lead" style="margin:12px 0 0;font-family:${FONT.body};font-size:15px;line-height:1.65;color:${C.soft}">${esc(view.lead)}</p>
             ${view.focus ? focusBlock(view.focus) : ""}

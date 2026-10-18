@@ -41,7 +41,7 @@ export type Branding = {
 
 const chipHtml = (chip: { label: string; tone: Tone }) => {
   const { bg, ink } = TONES[chip.tone]
-  return `<span style="display:inline-block;background:${bg};color:${ink};border-radius:999px;padding:5px 11px;font-family:${FONT.body};font-size:11.5px;font-weight:600;line-height:1.4;white-space:nowrap">${escapeHtml(chip.label)}</span>`
+  return `<span style="display:inline-block;background:${bg};color:${ink};border-radius:999px;padding:5px 11px;font-family:${FONT.body};font-size:12px;font-weight:600;line-height:1.4;white-space:nowrap">${escapeHtml(chip.label)}</span>`
 }
 
 /* ── Banner ──────────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ function banner(logoUrl: string | null): string {
   <td class="k-banner" style="background:${COLOR.indigo};padding:30px ${METRICS.gutter}px 0;text-align:center">
     ${mark}
     <div style="font-family:${FONT.display};font-size:21px;font-weight:800;line-height:1;letter-spacing:0.34em;padding-left:0.34em;color:#FFFFFF">KARGO</div>
-    <div style="margin-top:9px;font-family:${FONT.body};font-size:10.5px;font-weight:500;line-height:1.4;letter-spacing:0.19em;text-transform:uppercase;color:rgba(255,255,255,0.74)">Pasabuy order updates</div>
+    <div style="margin-top:9px;font-family:${FONT.body};font-size:11px;font-weight:500;line-height:1.4;letter-spacing:0.19em;text-transform:uppercase;color:rgba(255,255,255,0.74)">Pasabuy order updates</div>
     <div style="padding:20px 0 14px">${waterline}</div>
   </td>
 </tr>`
@@ -279,7 +279,7 @@ export function renderDocument(
     .k-strip-right{text-align:left!important;padding-top:10px!important}
     .k-h1{font-size:22px!important}
     .k-focus-value{font-size:25px!important}
-    .k-rail-label{font-size:9.5px!important;letter-spacing:0.02em!important}
+    .k-rail-label{font-size:11px!important;letter-spacing:0.02em!important}
     .k-cta-cell{text-align:center!important}
     .k-cta{display:block!important;width:100%!important;padding:15px 18px!important;text-align:center!important;box-sizing:border-box!important}
     .k-shell{padding:0!important}
@@ -297,6 +297,7 @@ export function renderDocument(
     .k-rail-on{color:${DARK.ink}!important}
     .k-rail-off{color:${DARK.muted}!important}
     .k-rail-future{background:${DARK.hairline}!important}
+    .k-strip-label,.k-row-note,.k-cta-note,.k-colophon{color:${DARK.muted}!important}
     .k-footer-mark,.k-footer a{color:#B4C0FF!important}
     /* Tinted focus panels keep their light fill in dark mode: dark ink on a pale
        wash stays legible and reads as a printed stub inside the dark card. */
@@ -325,7 +326,7 @@ export function renderDocument(
         </tr>
         ${footer(recipientName, branding.appUrl, settingsUrl)}
       </table>
-      <div class="k-colophon" style="margin:14px auto 0;max-width:${METRICS.width}px;font-family:${FONT.body};font-size:11px;line-height:1.5;color:${COLOR.mutedText};text-align:center">KARGO &middot; Pasabuy order fulfillment &middot; ${year}</div>
+      <div class="k-colophon" style="margin:14px auto 0;max-width:${METRICS.width}px;font-family:${FONT.body};font-size:12px;line-height:1.5;color:${COLOR.mutedText};text-align:center">KARGO &middot; Pasabuy order fulfillment &middot; ${year}</div>
     </td>
   </tr>
 </table>
