@@ -10,6 +10,10 @@
     "format": "oxfmt",
     "typecheck": "tsc --noEmit",
     "test:expiry": "node --test tests/claimExpiry.test.ts",
+    "test:emails": "node --test tests/emailTemplates.test.ts",
+    "preview:emails": "node scripts/preview-emails.mjs",
+    "screenshot:emails": "node scripts/screenshot-emails.mjs",
+    "upload:brand": "node scripts/upload-brand-assets.mjs",
     "test:seed": "node --experimental-strip-types --import ./scripts/lib/register.mjs scripts/check-batch-seed.mjs",
     "test:claimmatch": "node --experimental-strip-types --import ./scripts/lib/register.mjs scripts/repro-claim-match.mjs"
   },

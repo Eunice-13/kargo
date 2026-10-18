@@ -29,8 +29,9 @@ node scripts/build-auth-emails.mjs          # write the six HTML files
 node scripts/build-auth-emails.mjs --push   # write, then PATCH the live project
 ```
 
-`--push` copies the current live HTML into `previous/` before replacing it, so a
-change is reversible. Subject lines are never touched by the script.
+`--push` copies the current live HTML into `scripts/out/auth-email-previous/`
+before replacing it, so a change is reversible. Subject lines are never touched
+by the script.
 
 ## Preview
 
@@ -46,9 +47,9 @@ PNGs land in `scripts/out/auth-shots/` (git-ignored).
 
 - **Do not edit the templates in the Supabase dashboard.** The next `--push`
   overwrites them. Change the generator instead.
-- The banner logo is served from the deployed app
-  (`/kargo-logo-head.png`) because the `brand-assets` storage bucket is not
-  populated yet. If the worker switches to the bucket, change `LOGO` here too.
+- The banner logo comes from the public `brand-assets` bucket, the same URL the
+  Nylas worker resolves. Run `npm run upload:brand` if it is ever missing; the
+  banner wordmark is live text, so a missing image degrades quietly.
 - Two Supabase Auth variables are easy to get wrong: `{{ .NewEmail }}` only
   exists in `email_change`, and `{{ .Token }}` is the 6-digit code used by
   `reauthentication` and `magic_link`.

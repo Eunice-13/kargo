@@ -19,7 +19,8 @@ import { fileURLToPath } from "node:url"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
 const outDir = join(root, "supabase", "email-templates")
-const prevDir = join(outDir, "previous")
+// Scratch, not source: whatever was live before the last --push.
+const prevDir = join(root, "scripts", "out", "auth-email-previous")
 
 const args = new Set(process.argv.slice(2).map((a) => a.replace(/^--/, "")))
 const dry = args.has("dry")
@@ -66,9 +67,10 @@ const FONT = {
 const M = { width: 600, radius: 16, radiusSmall: 10, gutter: 32, gutterMobile: 20 }
 
 // The ship mark is white on transparent, so it only reads on the indigo
-// masthead. Served from the deployed app because the brand-assets bucket is
-// not populated yet; both are the same file.
-const LOGO = "https://kargo-eunice-13s-projects.vercel.app/kargo-logo-head.png"
+// masthead. Served from the public brand-assets bucket, which is the same URL
+// the Nylas worker resolves, so both halves of the brand share one asset.
+const LOGO =
+  "https://leylmztbknmlwnwgvaud.supabase.co/storage/v1/object/public/brand-assets/kargo-logo-head.png"
 
 const esc = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
