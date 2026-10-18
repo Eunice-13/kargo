@@ -30,7 +30,7 @@ export default function Orders({
 
   if (role === "Seller") {
     return (
-      <div className="p-6 orders-page orders-page--seller">
+      <div className="seller-page-shell seller-fulfillment-page orders-page orders-page--seller">
         <SH title="Fulfillment Board" />
         <p className="orders-board-intro">
           Track all orders across fulfillment stages.

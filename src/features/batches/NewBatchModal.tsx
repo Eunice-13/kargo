@@ -1,6 +1,7 @@
 import { useState } from "react"
+import { ImageUp } from "lucide-react"
 
-import type { BatchType } from "@/types"
+import type { BatchType, GroupDiscountType, SellingUnit } from "@/types"
 
 import { INDIGO, CAT_GRAD } from "@/constants/theme"
 import { BATCH_CATEGORIES } from "@/constants/categories"
@@ -27,6 +28,14 @@ export type BatchProduct = {
   // Optional maximum number of buyers allowed in the queue.
 
   waitlistLimit: string
+
+  imageFile?: File
+
+  imagePreview?: string
+
+  sellingUnit: SellingUnit
+
+  piecesPerBox: string
 }
 
 export default function NewBatchModal({
@@ -46,7 +55,9 @@ export default function NewBatchModal({
 
   const [desc, setDesc] = useState("")
 
-  const [coverImage, setCoverImage] = useState("")
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+
+  const [coverPreview, setCoverPreview] = useState("")
 
   const [cat, setCat] = useState("Food")
 
@@ -61,8 +72,19 @@ export default function NewBatchModal({
   const [timerPreset, setTimerPreset] = useState("48h")
 
   const [products, setProducts] = useState<BatchProduct[]>([
-    { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "0" },
+    { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "0", sellingUnit: "piece", piecesPerBox: "" },
   ])
+
+  const [groupOrdersEnabled, setGroupOrdersEnabled] = useState(false)
+
+  const [discountEnabled, setDiscountEnabled] = useState(false)
+
+  const [discountType, setDiscountType] =
+    useState<GroupDiscountType>("percentage")
+
+  const [discountValue, setDiscountValue] = useState("")
+
+  const [discountMinimum, setDiscountMinimum] = useState("")
 
   const [loading, setLoading] = useState(false)
 
@@ -71,16 +93,53 @@ export default function NewBatchModal({
   const addProduct = () =>
     setProducts((p) => [
       ...p,
-      { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "0" },
+      { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "0", sellingUnit: "piece", piecesPerBox: "" },
     ])
 
   const removeProduct = (i: number) =>
-    setProducts((p) => p.filter((_, idx) => idx !== i))
+    setProducts((p) => {
+      if (p[i]?.imagePreview) URL.revokeObjectURL(p[i].imagePreview)
+      return p.filter((_, idx) => idx !== i)
+    })
 
   const updateProduct = (i: number, k: keyof BatchProduct, v: string) =>
     setProducts((p) =>
       p.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)),
     );
+
+  const chooseProductImage = (i: number, file?: File) => {
+    if (!file) return
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      setError("Choose an image file that is 5 MB or smaller.")
+      return
+    }
+
+    setError("")
+    setProducts((current) =>
+      current.map((product, index) => {
+        if (index !== i) return product
+        if (product.imagePreview) URL.revokeObjectURL(product.imagePreview)
+        return {
+          ...product,
+          imageFile: file,
+          imagePreview: URL.createObjectURL(file),
+        }
+      }),
+    )
+  }
+
+  const chooseCoverImage = (file?: File) => {
+    if (!file) return
+    if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
+      setError("Choose an image file that is 5 MB or smaller.")
+      return
+    }
+
+    if (coverPreview) URL.revokeObjectURL(coverPreview)
+    setError("")
+    setCoverFile(file)
+    setCoverPreview(URL.createObjectURL(file))
+  }
 
   const formatDateRange = (s: string, e: string) => {
     if (!s) return "TBD"
@@ -161,6 +220,27 @@ export default function NewBatchModal({
       return
     }
 
+    if (
+      validProds.some(
+        (p) =>
+          p.sellingUnit === "box" &&
+          (!Number.isInteger(Number(p.piecesPerBox)) || Number(p.piecesPerBox) < 1),
+      )
+    ) {
+      setError("Enter the number of pieces included in every box item.")
+      return
+    }
+
+    if (
+      groupOrdersEnabled &&
+      discountEnabled &&
+      (Number(discountValue) <= 0 ||
+        (discountType === "percentage" && Number(discountValue) > 100))
+    ) {
+      setError("Enter a valid group discount.")
+      return
+    }
+
     if (isSupabaseConfigured && (!startDate || !endDate)) {
       setError("Choose both the start and end date before publishing.")
 
@@ -193,13 +273,22 @@ export default function NewBatchModal({
 
         waitlistLimit:
           Number(p.waitlistLimit),
+
+        sellingUnit: p.sellingUnit,
+
+        piecesPerBox:
+          p.sellingUnit === "box" ? Number(p.piecesPerBox) : undefined,
       }))
 
       const reserveHours =
         timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal)
 
+      let uploadedMedia:
+        | { coverImage?: string; productImages: Array<string | undefined> }
+        | undefined
+
       if (isSupabaseConfigured) {
-        await kargoApi.createBatch({
+        uploadedMedia = await kargoApi.createBatch({
           title: title.trim(),
 
           category: cat,
@@ -211,6 +300,23 @@ export default function NewBatchModal({
           reservationHours: reserveHours,
 
           notes: desc.trim() || undefined,
+
+          coverFile: coverFile ?? undefined,
+
+          groupOrdersEnabled,
+
+          groupDiscountType:
+            groupOrdersEnabled && discountEnabled ? discountType : undefined,
+
+          groupDiscountValue:
+            groupOrdersEnabled && discountEnabled
+              ? Number(discountValue)
+              : undefined,
+
+          groupDiscountMinSubtotal:
+            groupOrdersEnabled && discountEnabled && Number(discountMinimum) > 0
+              ? Number(discountMinimum)
+              : undefined,
 
           products: validProds.map((p) => ({
             name: p.name.trim(),
@@ -225,9 +331,22 @@ export default function NewBatchModal({
 
             waitlistLimit:
               Number(p.waitlistLimit),
+
+            imageFile: p.imageFile,
+
+            sellingUnit: p.sellingUnit,
+
+            piecesPerBox:
+              p.sellingUnit === "box" ? Number(p.piecesPerBox) : undefined,
           })),
         });
       }
+
+      const visibleProducts = prods.map((product, index) => ({
+        ...product,
+        imageUrl:
+          uploadedMedia?.productImages[index] ?? validProds[index].imagePreview,
+      }))
 
       onCreate({
         id: Date.now(),
@@ -242,7 +361,7 @@ export default function NewBatchModal({
 
         trips: formatDateRange(startDate, endDate),
 
-        items: prods.reduce((s, p) => s + p.qty, 0),
+        items: visibleProducts.reduce((s, p) => s + p.qty, 0),
 
         claimed: 0,
 
@@ -250,9 +369,24 @@ export default function NewBatchModal({
 
         notes: desc.trim() || undefined,
 
-        coverImage: coverImage.trim() || undefined,
+        coverImage: uploadedMedia?.coverImage ?? (coverPreview || undefined),
 
-        products: prods,
+        groupOrdersEnabled,
+
+        groupDiscountType:
+          groupOrdersEnabled && discountEnabled ? discountType : undefined,
+
+        groupDiscountValue:
+          groupOrdersEnabled && discountEnabled
+            ? Number(discountValue)
+            : undefined,
+
+        groupDiscountMinSubtotal:
+          groupOrdersEnabled && discountEnabled && Number(discountMinimum) > 0
+            ? Number(discountMinimum)
+            : undefined,
+
+        products: visibleProducts,
 
         reserveHours,
       })
@@ -314,6 +448,63 @@ export default function NewBatchModal({
             className="placeholder:text-gray-400"
           />
         </div>
+        <section className="batch-group-config">
+          <label className="batch-group-config__toggle">
+            <span>
+              <strong>Allow Group Orders</strong>
+              <small>Buyers can combine items from this batch under one leader.</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={groupOrdersEnabled}
+              onChange={(event) => setGroupOrdersEnabled(event.target.checked)}
+            />
+          </label>
+          {groupOrdersEnabled && (
+            <div className="batch-group-config__discount">
+              <label className="batch-group-config__toggle batch-group-config__toggle--nested">
+                <span>
+                  <strong>Offer a group discount</strong>
+                  <small>Optional. Shipping is not discounted.</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={discountEnabled}
+                  onChange={(event) => setDiscountEnabled(event.target.checked)}
+                />
+              </label>
+              {discountEnabled && (
+                <div className="batch-group-discount-fields">
+                  <select
+                    aria-label="Group discount type"
+                    value={discountType}
+                    onChange={(event) =>
+                      setDiscountType(event.target.value as GroupDiscountType)
+                    }
+                  >
+                    <option value="percentage">Percentage off</option>
+                    <option value="fixed">Fixed amount off</option>
+                  </select>
+                  <input
+                    type="number"
+                    min="0.01"
+                    max={discountType === "percentage" ? "100" : undefined}
+                    value={discountValue}
+                    onChange={(event) => setDiscountValue(event.target.value)}
+                    placeholder={discountType === "percentage" ? "Discount %" : "Discount amount"}
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    value={discountMinimum}
+                    onChange={(event) => setDiscountMinimum(event.target.value)}
+                    placeholder="Minimum subtotal (optional)"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </section>
         <div>
           <label
             style={{
@@ -376,28 +567,19 @@ export default function NewBatchModal({
               batch detail hero. Empty falls back to the category gradient + icon. */}
           <BatchCover
             category={cat}
-            coverImage={coverImage.trim() || undefined}
+            coverImage={coverPreview || undefined}
             height={110}
             radius={8}
           />
-          <input
-            value={coverImage}
-            onChange={(e) => setCoverImage(e.target.value)}
-            placeholder="Paste an image URL (or leave blank to use the category banner)"
-            style={{
-              width: "100%",
-              marginTop: 8,
-              fontSize: 13,
-              border: "1px solid #E5E7EB",
-              borderRadius: 7,
-              padding: "9px 12px",
-              outline: "none",
-              color: "#374151",
-              fontFamily: "inherit",
-              boxSizing: "border-box",
-            }}
-            className="placeholder:text-gray-400"
-          />
+          <label className="batch-image-upload">
+            <ImageUp size={16} aria-hidden="true" />
+            <span>{coverFile ? "Change cover photo" : "Upload cover photo"}</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={(event) => chooseCoverImage(event.target.files?.[0])}
+            />
+          </label>
         </div>
         <div className="batch-meta-grid grid gap-4">
           <div>
@@ -733,6 +915,51 @@ export default function NewBatchModal({
                       }}
                       className="placeholder:text-gray-400"
                     />
+                  </div>
+                  <div className="batch-product-image-row">
+                    {p.imagePreview && (
+                      <img src={p.imagePreview} alt="" aria-hidden="true" />
+                    )}
+                    <label className="batch-image-upload batch-image-upload--compact">
+                      <ImageUp size={14} aria-hidden="true" />
+                      <span>{p.imageFile ? "Change item photo" : "Upload item photo"}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={(event) =>
+                          chooseProductImage(i, event.target.files?.[0])
+                        }
+                      />
+                    </label>
+                  </div>
+                  <div className="batch-product-unit-row">
+                    <label>
+                      <span>Selling unit</span>
+                      <select
+                        value={p.sellingUnit}
+                        onChange={(event) =>
+                          updateProduct(i, "sellingUnit", event.target.value)
+                        }
+                      >
+                        <option value="piece">Per Piece</option>
+                        <option value="box">Per Box</option>
+                      </select>
+                    </label>
+                    {p.sellingUnit === "box" && (
+                      <label>
+                        <span>Pieces per box</span>
+                        <input
+                          type="number"
+                          min="1"
+                          inputMode="numeric"
+                          value={p.piecesPerBox}
+                          onChange={(event) =>
+                            updateProduct(i, "piecesPerBox", event.target.value)
+                          }
+                          placeholder="e.g. 12"
+                        />
+                      </label>
+                    )}
                   </div>
                   {/* Line 2: numeric fields wrap on narrow screens, no scroll */}
                   <div

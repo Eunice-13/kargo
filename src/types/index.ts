@@ -52,6 +52,10 @@ export type ShippingState = "waiting_for_seller" | "fee_set" | "correction_reque
 
 export type CourierCompany = "Lalamove" | "J&T Express" | "LBC" | "Grab Express" | "2GO" | "Ninja Van" | "Others"
 
+export type SellingUnit = "piece" | "box"
+
+export type GroupDiscountType = "percentage" | "fixed"
+
 export type ClaimReservationInput = {
   quantity: number
 
@@ -78,6 +82,18 @@ export type ClaimRow = {
   createdAt?: string
 
   productId?: string
+
+  groupOrderId?: string
+
+  groupOrderCode?: string
+
+  groupItemCount?: number
+
+  groupMemberCount?: number
+
+  groupRegularSubtotal?: number
+
+  groupDiscountAmount?: number
 
   product: string
 
@@ -163,6 +179,8 @@ export type ToPayRow = {
   createdAt?: string
 
   orderId?: string
+
+  groupOrderId?: string
 
   product: string
 
@@ -274,6 +292,12 @@ export interface BatchStoredProduct {
 
   name: string
 
+  imageUrl?: string
+
+  sellingUnit?: SellingUnit
+
+  piecesPerBox?: number
+
   price: number
 
   basePrice?: number
@@ -342,10 +366,55 @@ export interface BatchItem {
 
   coverImage?: string
 
+  groupOrdersEnabled?: boolean
+
+  groupDiscountType?: GroupDiscountType
+
+  groupDiscountValue?: number
+
+  groupDiscountMinSubtotal?: number
+
   products: BatchStoredProduct[]
 }
 
 export type BatchType = BatchItem
+
+export type GroupOrderMember = {
+  userId: string
+  name: string
+  role: "leader" | "member"
+  status: "active" | "left" | "removed"
+}
+
+export type GroupOrderCommitment = {
+  userId: string
+  memberName: string
+  productId: string
+  productName: string
+  quantity: number
+  unitPrice: number
+}
+
+export type GroupOrder = {
+  id: string
+  batchId: string
+  leaderId: string
+  leaderName: string
+  referralCode: string
+  status: "forming" | "waiting_for_seller" | "payment_pending" | "payment_submitted" | "payment_confirmed" | "cancelled" | "expired"
+  formationDeadline: string
+  regularSubtotal: number
+  discountAmount: number
+  finalSubtotal: number
+  shippingFee?: number
+  shippingState?: ShippingState | "declined"
+  paymentDeadline?: string
+  reservedPaymentMethod?: string
+  isLeader: boolean
+  currentUserId: string
+  members: GroupOrderMember[]
+  commitments: GroupOrderCommitment[]
+}
 
 // ─── Per-batch expenses (seller-only bookkeeping) ─────────────────────────────
 

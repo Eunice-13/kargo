@@ -21,7 +21,9 @@ export const PROD_IMG: Record<string, string> = {
     "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=60&h=60&fit=crop&auto=format",
 }
 
-export function productImageUrl(name: string, size = 60) {
+export function productImageUrl(name: string, size = 60, imageUrl?: string) {
+  if (imageUrl) return imageUrl
+
   const url = new URL(
     PROD_IMG[name] ||
       "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=60&h=60&fit=crop&auto=format",
@@ -31,10 +33,14 @@ export function productImageUrl(name: string, size = 60) {
   return url.toString()
 }
 
-export default function ProductThumb({ name }: { name: string }) {
-  const url =
-    PROD_IMG[name] ||
-    "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=60&h=60&fit=crop&auto=format"
+export default function ProductThumb({
+  name,
+  imageUrl,
+}: {
+  name: string
+  imageUrl?: string
+}) {
+  const url = productImageUrl(name, 60, imageUrl)
   return (
     <img
       src={url}

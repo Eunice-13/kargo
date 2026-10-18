@@ -738,10 +738,6 @@ export default function Dashboard({
                   order.buyerSocialLinks,
                 )
               }
-              onOpenPendingPayments={() => {
-                navIntent.orderFilter = "Pending"
-                setTab("My Claims")
-              }}
             />
           </div>
           <FulfillmentLiveRegion text={board.announcement} />
@@ -777,11 +773,6 @@ export default function Dashboard({
                       order.buyerSocialLinks,
                     )
                   }
-                  onOpenPendingPayments={() => {
-                    navIntent.orderFilter = "Pending"
-                    setTab("My Claims")
-                    setBoardExpanded(false)
-                  }}
                 />
               </div>
             </div>

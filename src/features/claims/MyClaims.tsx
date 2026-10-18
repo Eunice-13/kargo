@@ -439,9 +439,14 @@ export default function MyClaims({
             )
           : undefined
 
-        void kargoApi
-
-          .reviewPayment(
+        void (item.groupOrderId
+          ? kargoApi.reviewGroupPayment(
+              String(item.id),
+              item.status === "Verified" ? "verified" : "rejected",
+              item.rejectReason,
+              deadlineHours,
+            )
+          : kargoApi.reviewPayment(
             String(item.id),
 
             item.status === "Verified" ? "verified" : "rejected",
@@ -449,7 +454,7 @@ export default function MyClaims({
             item.rejectReason,
 
             deadlineHours,
-          )
+          ))
 
           .then(
             () => {
@@ -996,7 +1001,17 @@ export default function MyClaims({
                       <td>
                         <div className="flex items-center gap-2">
                           <ProductThumb name={c.product} />
-                          <span>{c.product}</span>
+                          <span>
+                            {c.product}
+                            {c.groupOrderId && (
+                              <small className="seller-orders-group-meta">
+                                {c.groupMemberCount} members · Code {c.groupOrderCode}
+                                {c.groupDiscountAmount
+                                  ? ` · Discount ₱${c.groupDiscountAmount.toLocaleString()}`
+                                  : ""}
+                              </small>
+                            )}
+                          </span>
                         </div>
                       </td>
                       <td className="seller-orders-method">
@@ -1289,11 +1304,17 @@ export default function MyClaims({
             }}
             onSave={async (fee) => {
               if (isSupabaseConfigured) {
-                await kargoApi.setOrderShippingFee(
-                  String(shippingTarget.id),
-
-                  fee,
-                )
+                if (shippingTarget.groupOrderId) {
+                  await kargoApi.setGroupOrderShippingFee(
+                    shippingTarget.groupOrderId,
+                    fee,
+                  )
+                } else {
+                  await kargoApi.setOrderShippingFee(
+                    String(shippingTarget.id),
+                    fee,
+                  )
+                }
 
                 await refreshData()
               } else {
@@ -1341,9 +1362,15 @@ export default function MyClaims({
             onClose={() => setCorrectionTarget(null)}
             onConfirm={async () => {
               if (isSupabaseConfigured) {
-                await kargoApi.requestLocationCorrection(
-                  String(correctionTarget.id),
-                )
+                if (correctionTarget.groupOrderId) {
+                  await kargoApi.requestGroupLocationCorrection(
+                    correctionTarget.groupOrderId,
+                  )
+                } else {
+                  await kargoApi.requestLocationCorrection(
+                    String(correctionTarget.id),
+                  )
+                }
 
                 await refreshData()
               } else {
@@ -1374,11 +1401,17 @@ export default function MyClaims({
             onContactBuyer={() => contactBuyer(declineTarget)}
             onConfirm={async (reason) => {
               if (isSupabaseConfigured) {
-                await kargoApi.declineDeliveryOrder(
-                  String(declineTarget.id),
-
-                  reason,
-                )
+                if (declineTarget.groupOrderId) {
+                  await kargoApi.declineGroupDeliveryOrder(
+                    declineTarget.groupOrderId,
+                    reason,
+                  )
+                } else {
+                  await kargoApi.declineDeliveryOrder(
+                    String(declineTarget.id),
+                    reason,
+                  )
+                }
 
                 await refreshData()
               } else {
@@ -1525,8 +1558,7 @@ export default function MyClaims({
 
     if (isSupabaseConfigured) {
       try {
-        await kargoApi.submitPayment({
-          orderId: String(target.id),
+        const paymentInput = {
 
           method,
 
@@ -1541,7 +1573,19 @@ export default function MyClaims({
           payerPhone: details.payerPhone,
 
           buyerContactUrl: details.buyerContactUrl,
-        })
+        }
+
+        if (target.groupOrderId) {
+          await kargoApi.submitGroupPayment({
+            ...paymentInput,
+            groupOrderId: target.groupOrderId,
+          })
+        } else {
+          await kargoApi.submitPayment({
+            ...paymentInput,
+            orderId: String(target.id),
+          })
+        }
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Unable to submit payment."
@@ -2313,6 +2357,8 @@ export default function MyClaims({
 
             orderId: String(payTarget.id),
 
+            groupOrderId: payTarget.groupOrderId,
+
             product: payTarget.product,
 
             seller: payTarget.seller,
@@ -2435,11 +2481,17 @@ export default function MyClaims({
                 }
                 onClick={async () => {
                   if (isSupabaseConfigured) {
-                    await kargoApi.updateOrderDeliveryPin(
-                      String(pinTarget.id),
-
-                      pinDraft,
-                    )
+                    if (pinTarget.groupOrderId) {
+                      await kargoApi.updateGroupDeliveryPin(
+                        pinTarget.groupOrderId,
+                        pinDraft,
+                      )
+                    } else {
+                      await kargoApi.updateOrderDeliveryPin(
+                        String(pinTarget.id),
+                        pinDraft,
+                      )
+                    }
 
                     await refreshData()
                   } else {

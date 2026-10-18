@@ -27,7 +27,7 @@ import type {
   EntityId,
   ClaimReservationInput,
 } from "@/types"
-import { INDIGO, CORAL, AMBER, CAT_GRAD } from "@/constants/theme"
+import { INDIGO, CORAL, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
 
 import { navIntent, subscribeNavIntent } from "@/state/navIntent"
 
@@ -63,7 +63,6 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 
 import { kargoApi } from "@/services"
 
-import { productImageUrl } from "@/components/shared/ProductThumb"
 
 export const COLS = 3
 
@@ -614,6 +613,12 @@ export default function Batches({
 
     setShopPage(null)
 
+    if (batch.groupOrdersEnabled) {
+      setBatchPage(batch)
+      setProfileClaimTarget(null)
+      return
+    }
+
     setProfileClaimTarget({ batch, product })
   }
 
@@ -982,12 +987,8 @@ export default function Batches({
                           {role === "Seller" ? (
                             <img
                               className="seller-batch-photo"
-                              src={productImageUrl(
-                                b.products[0]?.name || "",
-
-                                480,
-                              )}
-                              alt={b.products[0]?.name || b.title}
+                              src={batchCoverSrc(b.coverImage, b.category)}
+                              alt={b.title}
                             />
                           ) : (
                             <CategoryIcon
@@ -996,6 +997,22 @@ export default function Batches({
                               color="rgba(255,255,255,.78)"
                             />
                           )}
+                          <div className="batch-cover-badges">
+                            <span>
+                              {new Set(
+                                b.products.map((product) =>
+                                  product.sellingUnit === "box" ? "box" : "piece",
+                                ),
+                              ).size > 1
+                                ? "Mixed"
+                                : b.products[0]?.sellingUnit === "box"
+                                  ? "Per Box"
+                                  : "Per Piece"}
+                            </span>
+                            {b.groupOrdersEnabled && (
+                              <span className="is-group">Group Order Available</span>
+                            )}
+                          </div>
                           {role === "Seller" ? (
                             <button
                               type="button"

@@ -65,6 +65,22 @@ import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 // Read at module load: the Supabase client strips the URL fragment right after.
 const ARRIVED_VIA_CONFIRMATION_LINK = hasSignupConfirmationFragment()
 
+// Email CTAs deep-link to the tab where the action lives (?tab=Orders). Accept
+// the app's labels plus the few words a person might expect instead.
+const TAB_DEEP_LINKS: Record<string, Tab> = {
+  dashboard: "Dashboard",
+  home: "Dashboard",
+  batches: "Batches",
+  shop: "Batches",
+  "my claims": "My Claims",
+  claims: "My Claims",
+  cart: "My Claims",
+  payments: "Payments",
+  history: "Payments",
+  orders: "Orders",
+  settings: "Settings",
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -88,6 +104,17 @@ export default function App() {
   })()
 
   const viaBatchLink = sharedBatchId !== null
+
+  // A batch link outranks an email tab: it promises to open that batch's page.
+  const linkedTab = (() => {
+    const raw = searchParams?.get("tab")?.trim().toLowerCase().replace(/[_-]+/g, " ")
+    return raw ? TAB_DEEP_LINKS[raw] ?? null : null
+  })()
+
+  const landingTab = (u: UserInfo): Tab =>
+    sharedBatchId !== null
+      ? "Batches"
+      : linkedTab ?? (u.sellerEnabled ? "Dashboard" : "Batches")
 
   useEffect(() => {
     if (sharedBatchId !== null) requestBatchOpen(sharedBatchId)
@@ -115,7 +142,10 @@ export default function App() {
   const [showOnboarding, setOnboard] = useState(false)
 
   const [tab, setTab] = useState<Tab>(
-    sharedBatchId !== null || !originalPreview ? "Batches" : "Dashboard",
+    () =>
+      sharedBatchId !== null
+        ? "Batches"
+        : linkedTab ?? (originalPreview ? "Dashboard" : "Batches"),
   )
   const [user, setUser] = useState<UserInfo>({
     name: originalPreview ? "Alex Jordan" : "",
@@ -467,7 +497,7 @@ export default function App() {
 
   const handleSignupSuccess = (u: UserInfo) => {
     setUser(u)
-    setTab(sharedBatchId !== null ? "Batches" : u.sellerEnabled ? "Dashboard" : "Batches")
+    setTab(landingTab(u))
     setStage("app")
 
     // Shared-link buyers should reach the requested batch immediately; keep the
@@ -477,7 +507,7 @@ export default function App() {
 
   const handleLoginSuccess = (u: UserInfo) => {
     setUser(u)
-    setTab(sharedBatchId !== null ? "Batches" : u.sellerEnabled ? "Dashboard" : "Batches")
+    setTab(landingTab(u))
     setStage("app")
 
     if (isSupabaseConfigured) refreshData()

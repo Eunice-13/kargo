@@ -3,6 +3,7 @@ import type { EntityId } from "@/types"
 export type VerifyItem = {
   id: EntityId
   orderId?: string
+  groupOrderId?: string
   buyer: string
   product: string
   amount: number

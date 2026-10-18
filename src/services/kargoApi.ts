@@ -16,6 +16,9 @@ import type {
   UserInfo,
   SellerWaitlistGroup,
   ClaimReservationInput,
+  GroupOrder,
+  GroupDiscountType,
+  SellingUnit,
 } from "@/types"
 
 import { requireSupabase } from "@/lib/supabase"
@@ -508,6 +511,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     { data: ownReactions, error: ownReactionsError },
 
     { data: buyerPaymentStates, error: buyerPaymentStatesError },
+
+    { data: dbGroupOrders, error: groupOrdersError },
   ] = await Promise.all([
     client.from("batch_catalog").select("*"),
 
@@ -540,6 +545,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       .eq("user_id", auth.user.id),
 
     client.rpc("buyer_order_payment_states"),
+
+    client
+      .from("group_orders")
+      .select("*,group_order_members(status),group_order_commitments(quantity,batch_products(name))"),
   ])
 
   if (catalogError) throw catalogError
@@ -555,6 +564,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   if (ownReactionsError && !reactionSchemaMissing) throw ownReactionsError
 
   if (buyerPaymentStatesError) throw buyerPaymentStatesError
+
+  if (groupOrdersError) throw groupOrdersError
 
   if (reactionSchemaMissing) {
     console.warn(
@@ -606,6 +617,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         },
       ],
     ),
+  )
+
+  const groupOrderById = new Map(
+    (dbGroupOrders ?? []).map((group) => [group.id as string, group]),
   )
 
   const participantIds = [
@@ -685,6 +700,22 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       notes: row.notes ?? undefined,
 
+      coverImage: batchMediaUrl(row.batch_cover_path),
+
+      groupOrdersEnabled: Boolean(row.group_orders_enabled),
+
+      groupDiscountType: row.group_discount_type ?? undefined,
+
+      groupDiscountValue:
+        row.group_discount_value == null
+          ? undefined
+          : Number(row.group_discount_value),
+
+      groupDiscountMinSubtotal:
+        row.group_discount_min_subtotal == null
+          ? undefined
+          : Number(row.group_discount_min_subtotal),
+
       products: [],
     }
 
@@ -694,6 +725,13 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       dbId: row.product_id,
 
       name: row.product_name,
+
+      imageUrl: batchMediaUrl(row.product_image_path),
+
+      sellingUnit: row.selling_unit === "box" ? "box" : "piece",
+
+      piecesPerBox:
+        row.pieces_per_box == null ? undefined : Number(row.pieces_per_box),
 
       basePrice: Number(row.base_price),
 
@@ -734,12 +772,30 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   const toPay: ToPayRow[] = []
 
   for (const row of dbOrders ?? []) {
-    const product = row.batch_products as unknown as {
+    const groupOrder = row.group_order_id
+      ? groupOrderById.get(row.group_order_id)
+      : undefined
+
+    if (groupOrder && row.id !== groupOrder.payment_order_id) continue
+
+    const rawProduct = row.batch_products as unknown as {
       name: string
 
       batch_id: string
 
       batches: { title: string }
+    }
+
+    const groupCommitments = (groupOrder?.group_order_commitments ?? []) as Array<{
+      quantity: number
+      batch_products: { name: string }
+    }>
+
+    const product = {
+      ...rawProduct,
+      name: groupOrder
+        ? `Group Order · ${groupCommitments.length} item${groupCommitments.length === 1 ? "" : "s"}`
+        : rawProduct.name,
     }
 
     const isBuyer = row.buyer_id === auth.user.id
@@ -758,7 +814,9 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         ? buyerPaymentState.effectiveStatus
         : effectiveOrderPaymentStatus(row.status, row.payments)
 
-    const expires = new Date(row.reservation_expires_at).getTime()
+    const expiresAt = groupOrder?.payment_deadline ?? row.reservation_expires_at
+
+    const expires = new Date(expiresAt).getTime()
 
     const hours = Math.max(0, Math.ceil((expires - Date.now()) / 3_600_000))
 
@@ -806,9 +864,26 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       declineReason: row.decline_reason ?? undefined,
     }
 
-    const orderTotal =
-      Number(row.total_amount) +
-      (row.shipping_fee == null ? 0 : Number(row.shipping_fee))
+    const orderTotal = groupOrder
+      ? Number(groupOrder.final_subtotal) + Number(groupOrder.shipping_fee ?? 0)
+      : Number(row.total_amount) +
+        (row.shipping_fee == null ? 0 : Number(row.shipping_fee))
+
+    const groupFields = groupOrder
+      ? {
+          groupOrderId: groupOrder.id as string,
+          groupOrderCode: groupOrder.referral_code as string,
+          groupItemCount: groupCommitments.reduce(
+            (sum, commitment) => sum + Number(commitment.quantity),
+            0,
+          ),
+          groupMemberCount: (groupOrder.group_order_members ?? []).filter(
+            (member: { status: string }) => member.status === "active",
+          ).length,
+          groupRegularSubtotal: Number(groupOrder.regular_subtotal ?? 0),
+          groupDiscountAmount: Number(groupOrder.discount_amount ?? 0),
+        }
+      : {}
 
     if (isBuyer) {
       claims.push({
@@ -817,6 +892,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         createdAt: row.created_at,
 
         productId: row.batch_product_id,
+
+        ...groupFields,
 
         product: product.name,
 
@@ -832,7 +909,12 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         orderStatus: effectiveStatus,
 
-        qty: row.quantity,
+        qty: groupOrder
+          ? groupCommitments.reduce(
+              (sum, commitment) => sum + Number(commitment.quantity),
+              0,
+            )
+          : row.quantity,
 
         amount: orderTotal,
 
@@ -840,7 +922,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         hours,
 
-        expiresAt: row.reservation_expires_at,
+        expiresAt,
 
         extensionRequested: row.extension_status === "pending",
 
@@ -910,6 +992,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         productId: row.batch_product_id,
 
+        ...groupFields,
+
         product: product.name,
 
         batch: product.batches.title,
@@ -924,7 +1008,12 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         orderStatus: effectiveStatus,
 
-        qty: row.quantity,
+        qty: groupOrder
+          ? groupCommitments.reduce(
+              (sum, commitment) => sum + Number(commitment.quantity),
+              0,
+            )
+          : row.quantity,
 
         amount: orderTotal,
 
@@ -932,7 +1021,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         hours,
 
-        expiresAt: row.reservation_expires_at,
+        expiresAt,
 
         extensionRequested: row.extension_status === "pending",
 
@@ -995,19 +1084,26 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         orderId: row.id,
 
+        groupOrderId: groupOrder?.id,
+
         product: product.name,
 
         seller: sellerName,
 
         sellerId: row.seller_id,
 
-        qty: row.quantity,
+        qty: groupOrder
+          ? groupCommitments.reduce(
+              (sum, commitment) => sum + Number(commitment.quantity),
+              0,
+            )
+          : row.quantity,
 
         amount: Math.max(0, orderTotal - verifiedPaid),
 
         hours,
 
-        expiresAt: row.reservation_expires_at,
+        expiresAt,
 
         reservedPaymentMethod: deliveryFields.reservedPaymentMethod,
 
@@ -1381,6 +1477,16 @@ export async function createBatch(batch: {
 
   notes?: string
 
+  coverFile?: File
+
+  groupOrdersEnabled?: boolean
+
+  groupDiscountType?: GroupDiscountType
+
+  groupDiscountValue?: number
+
+  groupDiscountMinSubtotal?: number
+
   products: Array<{
     name: string
 
@@ -1393,6 +1499,12 @@ export async function createBatch(batch: {
     limitPerUser?: number
 
     waitlistLimit?: number
+
+    imageFile?: File
+
+    sellingUnit?: SellingUnit
+
+    piecesPerBox?: number
   }>
 }) {
   const client = requireSupabase()
@@ -1421,6 +1533,23 @@ export async function createBatch(batch: {
       reservation_hours: batch.reservationHours,
 
       notes: batch.notes ?? null,
+
+      group_orders_enabled: Boolean(batch.groupOrdersEnabled),
+
+      group_discount_type:
+        batch.groupOrdersEnabled && batch.groupDiscountType
+          ? batch.groupDiscountType
+          : null,
+
+      group_discount_value:
+        batch.groupOrdersEnabled && batch.groupDiscountType
+          ? batch.groupDiscountValue ?? null
+          : null,
+
+      group_discount_min_subtotal:
+        batch.groupOrdersEnabled && batch.groupDiscountType
+          ? batch.groupDiscountMinSubtotal ?? null
+          : null,
     })
 
     .select("id")
@@ -1429,8 +1558,40 @@ export async function createBatch(batch: {
 
   if (error) throw error
 
-  const { error: productsError } = await client.from("batch_products").insert(
-    batch.products.map((product) => ({
+  let coverPath: string | null = null
+  if (batch.coverFile) {
+    coverPath = await uploadBatchMediaFile(
+      client,
+      auth.user.id,
+      created.id,
+      "cover",
+      batch.coverFile,
+    )
+
+    const { error: coverError } = await client
+      .from("batches")
+      .update({ cover_path: coverPath })
+      .eq("id", created.id)
+
+    if (coverError) throw coverError
+  }
+
+  const productImagePaths = await Promise.all(
+    batch.products.map((product, index) =>
+      product.imageFile
+        ? uploadBatchMediaFile(
+            client,
+            auth.user.id,
+            created.id,
+            `product-${index + 1}`,
+            product.imageFile,
+          )
+        : Promise.resolve(null),
+    ),
+  )
+
+  const { data: createdProducts, error: productsError } = await client.from("batch_products").insert(
+    batch.products.map((product, index) => ({
       batch_id: created.id,
 
       name: product.name,
@@ -1440,6 +1601,13 @@ export async function createBatch(batch: {
       markup: product.markup,
 
       quantity_total: product.quantity,
+
+      image_path: productImagePaths[index],
+
+      selling_unit: product.sellingUnit ?? "piece",
+
+      pieces_per_box:
+        product.sellingUnit === "box" ? product.piecesPerBox ?? null : null,
 
       limit_per_user:
         product.limitPerUser && product.limitPerUser > 0
@@ -1451,11 +1619,314 @@ export async function createBatch(batch: {
           ? product.waitlistLimit
           : null,
     })),
-  )
+  ).select("id")
 
   if (productsError) throw productsError
 
-  return created.id as string
+  return {
+    id: created.id as string,
+    coverImage: batchMediaUrl(coverPath),
+    productImages: (createdProducts ?? []).map((_, index) =>
+      batchMediaUrl(productImagePaths[index]),
+    ),
+  }
+}
+
+const BATCH_MEDIA_BUCKET = "batch-media"
+const MAX_BATCH_IMAGE_BYTES = 5 * 1024 * 1024
+
+function assertBatchImage(file: File) {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Choose an image file for the batch photo.")
+  }
+
+  if (file.size > MAX_BATCH_IMAGE_BYTES) {
+    throw new Error("Batch photos must be 5 MB or smaller.")
+  }
+}
+
+function batchMediaUrl(path?: string | null) {
+  if (!path) return undefined
+
+  return requireSupabase().storage.from(BATCH_MEDIA_BUCKET).getPublicUrl(path)
+    .data.publicUrl
+}
+
+async function uploadBatchMediaFile(
+  client: ReturnType<typeof requireSupabase>,
+  userId: string,
+  batchId: string,
+  slot: string,
+  file: File,
+) {
+  assertBatchImage(file)
+  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg"
+  const objectPath = `${userId}/${batchId}/${slot}-${Date.now()}.${extension}`
+  const { error } = await client.storage.from(BATCH_MEDIA_BUCKET).upload(
+    objectPath,
+    file,
+    { contentType: file.type || undefined, upsert: false },
+  )
+
+  if (error) throw error
+  return objectPath
+}
+
+export async function updateBatchCover(batchId: string, file: File) {
+  const client = requireSupabase()
+  const { data: auth } = await client.auth.getUser()
+  if (!auth.user) throw new Error("Authentication required")
+
+  const path = await uploadBatchMediaFile(
+    client,
+    auth.user.id,
+    batchId,
+    "cover",
+    file,
+  )
+  const { error } = await client
+    .from("batches")
+    .update({ cover_path: path })
+    .eq("id", batchId)
+  if (error) throw error
+  return batchMediaUrl(path) as string
+}
+
+export async function updateProductImage(
+  batchId: string,
+  productId: string,
+  file: File,
+) {
+  const client = requireSupabase()
+  const { data: auth } = await client.auth.getUser()
+  if (!auth.user) throw new Error("Authentication required")
+
+  const path = await uploadBatchMediaFile(
+    client,
+    auth.user.id,
+    batchId,
+    `product-${productId}`,
+    file,
+  )
+  const { error } = await client
+    .from("batch_products")
+    .update({ image_path: path })
+    .eq("id", productId)
+  if (error) throw error
+  return batchMediaUrl(path) as string
+}
+
+export async function updateBatchGroupSettings(input: {
+  batchId: string
+  enabled: boolean
+  discountType?: GroupDiscountType
+  discountValue?: number
+  discountMinSubtotal?: number
+  products: Array<{
+    id: string
+    sellingUnit: SellingUnit
+    piecesPerBox?: number
+  }>
+}) {
+  const client = requireSupabase()
+  const { error: batchError } = await client
+    .from("batches")
+    .update({
+      group_orders_enabled: input.enabled,
+      group_discount_type:
+        input.enabled && input.discountType ? input.discountType : null,
+      group_discount_value:
+        input.enabled && input.discountType ? input.discountValue ?? null : null,
+      group_discount_min_subtotal:
+        input.enabled && input.discountType
+          ? input.discountMinSubtotal ?? null
+          : null,
+    })
+    .eq("id", input.batchId)
+
+  if (batchError) throw batchError
+
+  for (const product of input.products) {
+    const { error } = await client
+      .from("batch_products")
+      .update({
+        selling_unit: product.sellingUnit,
+        pieces_per_box:
+          product.sellingUnit === "box" ? product.piecesPerBox ?? null : null,
+      })
+      .eq("id", product.id)
+    if (error) throw error
+  }
+}
+
+async function loadGroupOrder(groupOrderId: string): Promise<GroupOrder> {
+  const client = requireSupabase()
+  const [{ data: group, error: groupError }, { data: members, error: memberError }, { data: commitments, error: commitmentError }] =
+    await Promise.all([
+      client.from("group_orders").select("*").eq("id", groupOrderId).single(),
+      client
+        .from("group_order_members")
+        .select("user_id,role,status")
+        .eq("group_order_id", groupOrderId),
+      client
+        .from("group_order_commitments")
+        .select("user_id,batch_product_id,quantity,unit_selling_price,batch_products(name)")
+        .eq("group_order_id", groupOrderId),
+    ])
+
+  if (groupError) throw groupError
+  if (memberError) throw memberError
+  if (commitmentError) throw commitmentError
+
+  const userIds = [
+    ...new Set((members ?? []).map((member) => member.user_id as string)),
+  ]
+  const names = new Map<string, string>()
+  if (userIds.length > 0) {
+    const { data: profiles, error } = await client
+      .from("public_profiles")
+      .select("id,display_name")
+      .in("id", userIds)
+    if (error) throw error
+    for (const profile of profiles ?? []) names.set(profile.id, profile.display_name)
+  }
+
+  const userId = (await client.auth.getUser()).data.user?.id
+  return {
+    id: group.id,
+    batchId: group.batch_id,
+    leaderId: group.leader_id,
+    leaderName: names.get(group.leader_id) ?? "Group leader",
+    referralCode: group.referral_code,
+    status: group.status,
+    formationDeadline: group.formation_deadline,
+    regularSubtotal: Number(group.regular_subtotal ?? 0),
+    discountAmount: Number(group.discount_amount ?? 0),
+    finalSubtotal: Number(group.final_subtotal ?? 0),
+    shippingFee:
+      group.shipping_fee == null ? undefined : Number(group.shipping_fee),
+    shippingState: group.shipping_state ?? undefined,
+    paymentDeadline: group.payment_deadline ?? undefined,
+    reservedPaymentMethod: group.reserved_payment_method ?? undefined,
+    isLeader: group.leader_id === userId,
+    currentUserId: userId ?? "",
+    members: (members ?? []).map((member) => ({
+      userId: member.user_id,
+      name: names.get(member.user_id) ?? "Member",
+      role: member.role,
+      status: member.status,
+    })),
+    commitments: (commitments ?? []).map((commitment) => ({
+      userId: commitment.user_id,
+      memberName: names.get(commitment.user_id) ?? "Member",
+      productId: commitment.batch_product_id,
+      productName: (commitment.batch_products as unknown as { name: string }).name,
+      quantity: Number(commitment.quantity),
+      unitPrice: Number(commitment.unit_selling_price),
+    })),
+  }
+}
+
+export async function loadMyGroupOrder(batchId: string) {
+  const client = requireSupabase()
+  const userId = (await client.auth.getUser()).data.user?.id
+  if (!userId) return null
+
+  const { data, error } = await client
+    .from("group_order_members")
+    .select("group_order_id,group_orders!inner(batch_id,status)")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .eq("group_orders.batch_id", batchId)
+    .in("group_orders.status", [
+      "forming",
+      "waiting_for_seller",
+      "payment_pending",
+      "payment_submitted",
+      "payment_confirmed",
+    ])
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw error
+  return data ? loadGroupOrder(data.group_order_id) : null
+}
+
+export async function startGroupOrder(batchId: string) {
+  const { data, error } = await requireSupabase().rpc("start_group_order", {
+    p_batch_id: batchId,
+  })
+  if (error) throw error
+  return loadGroupOrder(data.id)
+}
+
+export async function joinGroupOrder(code: string) {
+  const { data, error } = await requireSupabase().rpc("join_group_order", {
+    p_referral_code: code,
+  })
+  if (error) throw error
+  return loadGroupOrder(data.id)
+}
+
+export async function setGroupCommitment(
+  groupOrderId: string,
+  productId: string,
+  quantity: number,
+) {
+  const { error } = await requireSupabase().rpc("set_group_commitment", {
+    p_group_order_id: groupOrderId,
+    p_batch_product_id: productId,
+    p_quantity: quantity,
+  })
+  if (error) throw error
+  return loadGroupOrder(groupOrderId)
+}
+
+export async function leaveGroupOrder(groupOrderId: string) {
+  const { error } = await requireSupabase().rpc("leave_group_order", {
+    p_group_order_id: groupOrderId,
+  })
+  if (error) throw error
+}
+
+export async function removeGroupMember(groupOrderId: string, userId: string) {
+  const { error } = await requireSupabase().rpc("remove_group_member", {
+    p_group_order_id: groupOrderId,
+    p_user_id: userId,
+  })
+  if (error) throw error
+  return loadGroupOrder(groupOrderId)
+}
+
+export async function regenerateGroupCode(groupOrderId: string) {
+  const { data, error } = await requireSupabase().rpc("regenerate_group_code", {
+    p_group_order_id: groupOrderId,
+  })
+  if (error) throw error
+  return data as string
+}
+
+export async function checkoutGroupOrder(input: {
+  groupOrderId: string
+  paymentMethod: string
+  pinLat?: number
+  pinLng?: number
+  pinUrl?: string
+  pinAddress?: string
+  acceptShipping: boolean
+}) {
+  const { data, error } = await requireSupabase().rpc("checkout_group_order", {
+    p_group_order_id: input.groupOrderId,
+    p_payment_method: input.paymentMethod,
+    p_pin_lat: input.pinLat ?? null,
+    p_pin_lng: input.pinLng ?? null,
+    p_pin_url: input.pinUrl ?? null,
+    p_pin_address: input.pinAddress ?? null,
+    p_accept_shipping: input.acceptShipping,
+    p_acknowledged: true,
+  })
+  if (error) throw error
+  return loadGroupOrder(data.id)
 }
 
 // Translate a raw Supabase/Postgres error from submit_order_payment into a
@@ -1587,6 +2058,46 @@ export async function submitPayment(input: {
   return result
 }
 
+export async function submitGroupPayment(input: {
+  groupOrderId: string
+  method: string
+  amount: number
+  referenceNumber?: string
+  receipt?: File
+  payerAccountName?: string
+  payerPhone?: string
+  buyerContactUrl?: string
+}) {
+  const client = requireSupabase()
+  const { data: auth } = await client.auth.getUser()
+  if (!auth.user) throw new Error("Authentication required")
+
+  let receiptPath: string | null = null
+  if (input.receipt) {
+    const extension = input.receipt.name.split(".").pop()?.toLowerCase() || "jpg"
+    receiptPath = `${auth.user.id}/${crypto.randomUUID()}.${extension}`
+    const { error: uploadError } = await client.storage
+      .from("payment-receipts")
+      .upload(receiptPath, input.receipt)
+    if (uploadError) throw new Error("We could not upload your receipt image.")
+  }
+
+  const { data, error } = await client.rpc("submit_group_order_payment", {
+    p_group_order_id: input.groupOrderId,
+    p_method_type: input.method,
+    p_amount: input.amount,
+    p_reference_number: input.referenceNumber ?? null,
+    p_receipt_path: receiptPath,
+    p_payer_account_name: input.payerAccountName ?? null,
+    p_payer_phone: input.payerPhone ?? null,
+    p_buyer_contact_url: input.buyerContactUrl ?? null,
+  })
+  if (error) throw new Error(paymentErrorMessage(error))
+  const result = data as { accepted?: boolean; error?: string } | null
+  if (!result?.accepted) throw new Error(result?.error || "Payment was rejected")
+  return result
+}
+
 export async function requestOrderExtension(
   orderId: string,
 
@@ -1640,6 +2151,43 @@ export async function setOrderShippingFee(orderId: string, fee: number) {
     p_fee: fee,
   })
 
+  if (error) throw error
+}
+
+export async function setGroupOrderShippingFee(groupOrderId: string, fee: number) {
+  const { error } = await requireSupabase().rpc("set_group_order_shipping_fee", {
+    p_group_order_id: groupOrderId,
+    p_fee: fee,
+  })
+  if (error) throw error
+}
+
+export async function requestGroupLocationCorrection(groupOrderId: string) {
+  const { error } = await requireSupabase().rpc("request_group_location_correction", {
+    p_group_order_id: groupOrderId,
+  })
+  if (error) throw error
+}
+
+export async function updateGroupDeliveryPin(
+  groupOrderId: string,
+  pin: { lat?: number; lng?: number; url?: string; address?: string },
+) {
+  const { error } = await requireSupabase().rpc("update_group_delivery_pin", {
+    p_group_order_id: groupOrderId,
+    p_lat: pin.lat ?? null,
+    p_lng: pin.lng ?? null,
+    p_url: pin.url ?? null,
+    p_address: pin.address ?? null,
+  })
+  if (error) throw error
+}
+
+export async function declineGroupDeliveryOrder(groupOrderId: string, reason: string) {
+  const { error } = await requireSupabase().rpc("decline_group_delivery_order", {
+    p_group_order_id: groupOrderId,
+    p_reason: reason,
+  })
   if (error) throw error
 }
 
@@ -2137,7 +2685,7 @@ export async function loadSellerPaymentSubmissions() {
 
     .from("payments")
 
-    .select("*,orders!inner(id,total_amount,buyer_id,batch_products(name))")
+    .select("*,orders!inner(id,total_amount,buyer_id,group_order_id,batch_products(name),group_orders!orders_group_order_id_fkey(id,final_subtotal,shipping_fee,group_order_commitments(quantity)))")
 
     .order("submitted_at", { ascending: false })
 
@@ -2167,11 +2715,18 @@ export async function loadSellerPaymentSubmissions() {
 
     orderId: row.orders.id as string,
 
+    groupOrderId: row.orders.group_order_id ?? undefined,
+
     buyer: names.get(row.orders.buyer_id) ?? "Buyer",
 
-    product: row.orders.batch_products.name as string,
+    product: row.orders.group_order_id
+      ? `Group Order · ${row.orders.group_orders?.group_order_commitments?.length ?? 0} items`
+      : row.orders.batch_products.name as string,
 
-    amount: Number(row.orders.total_amount),
+    amount: row.orders.group_order_id
+      ? Number(row.orders.group_orders?.final_subtotal ?? 0) +
+        Number(row.orders.group_orders?.shipping_fee ?? 0)
+      : Number(row.orders.total_amount),
 
     ref: row.reference_number ?? "—",
 
@@ -2225,6 +2780,21 @@ export async function reviewPayment(
     p_deadline_hours: deadlineHours ?? null,
   })
 
+  if (error) throw error
+}
+
+export async function reviewGroupPayment(
+  paymentId: string,
+  decision: "verified" | "rejected",
+  reason?: string,
+  deadlineHours?: number,
+) {
+  const { error } = await requireSupabase().rpc("review_group_order_payment", {
+    p_payment_id: paymentId,
+    p_decision: decision,
+    p_reason: reason ?? null,
+    p_deadline_hours: deadlineHours ?? null,
+  })
   if (error) throw error
 }
 
@@ -2625,8 +3195,20 @@ export const kargoApi = {
   claimProduct,
 
   createBatch,
+  updateBatchCover,
+  updateProductImage,
+  updateBatchGroupSettings,
+  loadMyGroupOrder,
+  startGroupOrder,
+  joinGroupOrder,
+  setGroupCommitment,
+  leaveGroupOrder,
+  removeGroupMember,
+  regenerateGroupCode,
+  checkoutGroupOrder,
 
   submitPayment,
+  submitGroupPayment,
 
   requestOrderExtension,
 
@@ -2637,6 +3219,10 @@ export const kargoApi = {
   setFulfillmentStatus,
 
   setOrderShippingFee,
+  setGroupOrderShippingFee,
+  requestGroupLocationCorrection,
+  updateGroupDeliveryPin,
+  declineGroupDeliveryOrder,
 
   requestLocationCorrection,
 
@@ -2681,6 +3267,7 @@ export const kargoApi = {
   loadSellerPaymentSubmissions,
 
   reviewPayment,
+  reviewGroupPayment,
 
   notifyPaymentResubmission,
 

@@ -4,7 +4,7 @@ import { canManageBatch } from "./batchAccess"
 
 import { useState } from "react"
 
-import { Lock, ArrowLeft, Plane, Check, Link2 } from "lucide-react"
+import { Lock, ArrowLeft, Plane, Check, Link2, ImageUp, Users } from "lucide-react"
 
 import type {
   ClaimRow,
@@ -39,6 +39,8 @@ import {
 import ItemClaimModal from "./ItemClaimModal"
 
 import JoinWaitlistModal from "./JoinWaitlistModal"
+import GroupOrderModal, { GroupOrderChoiceModal } from "./GroupOrderModal"
+import BatchGroupSettingsModal from "./BatchGroupSettingsModal"
 
 import { toggleBatchLock } from "./toggleBatchLock"
 
@@ -115,6 +117,24 @@ export default function BatchPage({
     key: string
   } | null>(null)
 
+  const [purchaseModeTarget, setPurchaseModeTarget] = useState<{
+    p: typeof batch.products[0]
+    key: string
+  } | null>(null)
+
+  const sharedGroupCode =
+    typeof window === "undefined"
+      ? ""
+      : new URLSearchParams(window.location.search).get("group") ?? ""
+
+  const [groupOrderProductId, setGroupOrderProductId] = useState<string | null>(null)
+
+  const [groupOrderOpen, setGroupOrderOpen] = useState(
+    role === "Buyer" && batch.groupOrdersEnabled && Boolean(sharedGroupCode),
+  )
+
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false)
+
   const [waitlistTarget, setWaitlistTarget] = useState<{
     p: typeof batch.products[0]
 
@@ -129,6 +149,70 @@ export default function BatchPage({
   const [savingWaitlistLimit, setSavingWaitlistLimit] = useState<string | null>(
     null,
   )
+
+  const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
+
+  const changeCoverPhoto = async (file?: File) => {
+    if (!file || !canEdit) return
+    setUploadingPhoto("cover")
+    try {
+      const imageUrl = isSupabaseConfigured
+        ? batch.dbId
+          ? await kargoApi.updateBatchCover(batch.dbId, file)
+          : (() => {
+              throw new Error("This batch is missing its database identifier.")
+            })()
+        : URL.createObjectURL(file)
+
+      setBatches((current) =>
+        current.map((item) =>
+          item.id === batch.id ? { ...item, coverImage: imageUrl } : item,
+        ),
+      )
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Unable to update photo.")
+    } finally {
+      setUploadingPhoto(null)
+    }
+  }
+
+  const changeProductPhoto = async (
+    product: typeof batch.products[0],
+    productIndex: number,
+    file?: File,
+  ) => {
+    if (!file || !canEdit) return
+    const key = product.dbId ?? `${batch.id}-${productIndex}`
+    setUploadingPhoto(key)
+    try {
+      const imageUrl = isSupabaseConfigured
+        ? batch.dbId && product.dbId
+          ? await kargoApi.updateProductImage(batch.dbId, product.dbId, file)
+          : (() => {
+              throw new Error("This item is missing its database identifier.")
+            })()
+        : URL.createObjectURL(file)
+
+      setBatches((current) =>
+        current.map((item) =>
+          item.id !== batch.id
+            ? item
+            : {
+                ...item,
+                products: item.products.map((candidate, index) =>
+                  index === productIndex
+                    ? { ...candidate, imageUrl }
+                    : candidate,
+                ),
+              },
+        ),
+      )
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Unable to update photo.")
+    } finally {
+      setUploadingPhoto(null)
+    }
+  }
 
   const pct = Math.round((batch.claimed / batch.items) * 100)
 
@@ -539,6 +623,55 @@ export default function BatchPage({
             objectFit: "cover",
           }}
         />
+        {canEdit && (
+          <label className="batch-hero-photo-action">
+            <ImageUp size={15} aria-hidden="true" />
+            <span>{uploadingPhoto === "cover" ? "Uploading…" : "Change photo"}</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              disabled={uploadingPhoto !== null}
+              onChange={(event) => changeCoverPhoto(event.target.files?.[0])}
+            />
+          </label>
+        )}
+        {canEdit && (
+          <button
+            type="button"
+            className="batch-group-settings-action"
+            onClick={() => setGroupSettingsOpen(true)}
+          >
+            <Users size={15} aria-hidden="true" /> Selling & groups
+          </button>
+        )}
+        {role === "Buyer" && batch.groupOrdersEnabled && (
+          <button
+            type="button"
+            className="batch-group-order-action"
+            onClick={() => {
+              setGroupOrderProductId(null)
+              setGroupOrderOpen(true)
+            }}
+          >
+            <Users size={15} aria-hidden="true" /> Group Order
+          </button>
+        )}
+        <div className="batch-cover-badges batch-cover-badges--hero">
+          <span>
+            {new Set(
+              batch.products.map((product) =>
+                product.sellingUnit === "box" ? "box" : "piece",
+              ),
+            ).size > 1
+              ? "Mixed"
+              : batch.products[0]?.sellingUnit === "box"
+                ? "Per Box"
+                : "Per Piece"}
+          </span>
+          {batch.groupOrdersEnabled && (
+            <span className="is-group">Group Order Available</span>
+          )}
+        </div>
         {/* Scrim keeps the white title legible over the photo. */}
         <div
           style={{
@@ -728,7 +861,31 @@ export default function BatchPage({
                   key={pIdx}
                   style={{ display: "flex", alignItems: "center", gap: 14 }}
                 >
-                  <ProductThumb name={p.name} />
+                  <div className="batch-product-photo-control">
+                    <ProductThumb name={p.name} imageUrl={p.imageUrl} />
+                    {canEdit && (
+                      <label>
+                        <ImageUp size={12} aria-hidden="true" />
+                        <span>
+                          {uploadingPhoto === waitlistLimitKey
+                            ? "Uploading…"
+                            : "Photo"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          disabled={uploadingPhoto !== null}
+                          onChange={(event) =>
+                            changeProductPhoto(
+                              p,
+                              pIdx,
+                              event.target.files?.[0],
+                            )
+                          }
+                        />
+                      </label>
+                    )}
+                  </div>
                   <div className="flex-1">
                     <div
                       style={{
@@ -746,6 +903,9 @@ export default function BatchPage({
                     <div
                       style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}
                     >
+                      {p.sellingUnit === "box"
+                        ? `₱${p.price.toLocaleString()} / box · ${p.piecesPerBox ?? 1} pieces · `
+                        : `₱${p.price.toLocaleString()} / piece · `}
                       {p.claimed}/{p.qty} claimed
                       {p.waitlist > 0
                         ? p.waitlistLimit !== undefined
@@ -1021,7 +1181,13 @@ export default function BatchPage({
                     ) : (
                       <PrimaryBtn
                         size="sm"
-                        onClick={() => setClaimTarget({ p, key: pKey })}
+                        onClick={() => {
+                          if (batch.groupOrdersEnabled) {
+                            setPurchaseModeTarget({ p, key: pKey })
+                          } else {
+                            setClaimTarget({ p, key: pKey })
+                          }
+                        }}
                         style={{
                           background: "#C81E62",
 
@@ -1268,6 +1434,43 @@ export default function BatchPage({
             if (claimed) setClaimTarget(null)
           }}
           onClose={() => setClaimTarget(null)}
+        />
+      )}
+      {purchaseModeTarget && (
+        <GroupOrderChoiceModal
+          onSolo={() => {
+            setClaimTarget(purchaseModeTarget)
+            setPurchaseModeTarget(null)
+          }}
+          onGroup={() => {
+            setGroupOrderProductId(purchaseModeTarget.p.dbId ?? null)
+            setPurchaseModeTarget(null)
+            setGroupOrderOpen(true)
+          }}
+          onClose={() => setPurchaseModeTarget(null)}
+        />
+      )}
+      {groupOrderOpen && (
+        <GroupOrderModal
+          batch={batch}
+          initialProductId={groupOrderProductId ?? undefined}
+          initialCode={sharedGroupCode}
+          onCheckoutComplete={refreshData}
+          onClose={() => {
+            setGroupOrderOpen(false)
+            setGroupOrderProductId(null)
+          }}
+        />
+      )}
+      {groupSettingsOpen && (
+        <BatchGroupSettingsModal
+          batch={batch}
+          onSaved={(updated) =>
+            setBatches((current) =>
+              current.map((item) => (item.id === updated.id ? updated : item)),
+            )
+          }
+          onClose={() => setGroupSettingsOpen(false)}
         />
       )}
 

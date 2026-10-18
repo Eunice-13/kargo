@@ -31,7 +31,6 @@ export default function FulfillmentBoard({
   loading = false,
   onExpand,
   onOpenProfile,
-  onOpenPendingPayments,
   onViewOrder,
 }: {
   fulfillment: FulfillmentOrder[]
@@ -41,7 +40,6 @@ export default function FulfillmentBoard({
   loading?: boolean
   onExpand?: () => void
   onOpenProfile?: (order: FulfillmentOrder) => void
-  onOpenPendingPayments?: () => void
   onViewOrder?: (order: FulfillmentOrder) => void
 }) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
@@ -76,9 +74,6 @@ export default function FulfillmentBoard({
               : "Paid orders will appear here when they are ready for fulfillment."
           }
         />
-        {role === "seller" && onOpenPendingPayments && (
-          <PendingPaymentsNote onOpen={onOpenPendingPayments} />
-        )}
       </div>
     )
   }
@@ -225,20 +220,6 @@ export default function FulfillmentBoard({
           )
         })}
       </div>
-      {role === "seller" && onOpenPendingPayments && (
-        <PendingPaymentsNote onOpen={onOpenPendingPayments} />
-      )}
     </>
-  )
-}
-
-function PendingPaymentsNote({ onOpen }: { onOpen: () => void }) {
-  return (
-    <p className="fulfillment-board__pending-note">
-      Pre-payment reservations stay in Orders Received.{" "}
-      <button type="button" onClick={onOpen}>
-        View Pending
-      </button>
-    </p>
   )
 }
