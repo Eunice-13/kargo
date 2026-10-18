@@ -107,9 +107,8 @@ export default function FulfillmentDetails({
           width={420}
         >
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-            Moving {order.product} for {order.buyer} to Cancelled ends this
-            order. You can move it back to another status later if this was a
-            mistake.
+            This ends {order.product} for {order.buyer}. You can restore its
+            status later if needed.
           </p>
           <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setConfirmCancel(false)}>
@@ -133,9 +132,8 @@ export default function FulfillmentDetails({
           width={420}
         >
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-            Marking {order.product} for {order.buyer} as delivered finalizes
-            this order and counts it toward your fulfilled total. You can move
-            it back to another status later if this was a mistake.
+            This finalizes {order.product} for {order.buyer} and counts it
+            toward your fulfilled total. You can change it later if needed.
           </p>
           <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setConfirmComplete(false)}>
@@ -159,8 +157,8 @@ export default function FulfillmentDetails({
           width={420}
         >
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-            Are you sure you want to mark {order.product} for {order.buyer} as
-            shipped? This notifies the buyer by email.
+            This emails {order.buyer} that {order.product} has shipped. Add
+            tracking details to continue.
           </p>
           <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setConfirmShip(false)}>

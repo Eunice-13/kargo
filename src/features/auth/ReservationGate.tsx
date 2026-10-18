@@ -36,9 +36,8 @@ export default function ReservationGate({
           <>
             <div className="space-y-3 text-sm leading-6 text-gray-600">
               <p>
-                A reservation holds an item for you until its payment deadline.
-                This batch was shared with you, and you need an account to view
-                it or reserve items.
+                A reservation holds an item until its payment deadline. Log in
+                or create an account to view this shared batch.
               </p>
               {batchTitle && (
                 <SummaryBlock
@@ -47,8 +46,7 @@ export default function ReservationGate({
                 />
               )}
               <p>
-                The shared batch will open next after you log in or create an
-                account.
+                The batch will open after you continue.
               </p>
             </div>
 

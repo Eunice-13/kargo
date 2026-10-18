@@ -1086,13 +1086,7 @@ export default function MyClaims({
                 </div>
               </dl>
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginTop: 20,
-              }}
-            >
+            <div className="kargo-modal-actions">
               <SecondaryBtn onClick={() => setOrderDetailTarget(null)}>
                 Close
               </SecondaryBtn>
@@ -2202,17 +2196,7 @@ export default function MyClaims({
             cannot be undone, and the quantity will become available to other
             buyers.
           </p>
-          <div
-            style={{
-              display: "flex",
-
-              justifyContent: "flex-end",
-
-              gap: 10,
-
-              marginTop: 20,
-            }}
-          >
+          <div className="kargo-modal-actions">
             <SecondaryBtn
               onClick={() => setCancelTarget(null)}
               disabled={cancelling}

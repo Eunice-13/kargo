@@ -147,7 +147,7 @@ export default function ItemClaimModal({
     qty <= left
 
   return (
-    <Modal title="Review claim before submitting" onClose={onClose} width={480}>
+    <Modal title="Review Claim" onClose={onClose} width={480}>
       <div className="space-y-4">
         <SummaryBlock
           title={product.name}

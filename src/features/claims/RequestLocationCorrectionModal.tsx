@@ -20,8 +20,7 @@ export default function RequestLocationCorrectionModal({
       <div className="space-y-4">
         <p className="text-sm leading-6 text-gray-600">
           Ask {claim.buyer || "the buyer"} to update the delivery pin. The
-          reservation timer remains paused until you confirm the corrected pin
-          by setting the shipping fee.
+          timer stays paused until you set the shipping fee.
         </p>
         <LocationPinPicker
           readOnly

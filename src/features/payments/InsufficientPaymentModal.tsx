@@ -22,7 +22,8 @@ export default function InsufficientPaymentModal({
   const isValid = paidAmt > 0 && shortAmt > 0
   return (
     <Modal
-      title="Mark as Insufficient Payment"
+      title="Insufficient Payment"
+      variant="confirm"
       onClose={() => setInsuffTarget(null)}
       width={460}
     >

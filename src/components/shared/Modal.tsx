@@ -1,68 +1,97 @@
-import { useCallback, useRef, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import type React from "react";
+import {
+  CircleHelp,
+  FilePenLine,
+  ScanSearch,
+  TriangleAlert,
+  X,
+} from "lucide-react"
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react"
+import { createPortal } from "react-dom"
+import type React from "react"
 
-// Height of the sticky nav header — popups start below this so they never
-// cover the nav bar (keep in sync with Header.tsx height).
-const HEADER_HEIGHT = 56;
+const HEADER_HEIGHT = 56
 const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+export type ModalVariant = "form" | "confirm" | "danger" | "detail"
+
+function inferVariant(title: string): ModalVariant {
+  const value = title.toLowerCase()
+  if (/cancel|decline|reject|deny/.test(value)) return "danger"
+  if (/detail|preview|receipt|summary|profile|waitlist|requests|contact/.test(value))
+    return "detail"
+  if (/mark |lock|unlock|approve|do you have|review claim/.test(value))
+    return "confirm"
+  return "form"
+}
+
+const VARIANT_ICONS = {
+  form: FilePenLine,
+  confirm: CircleHelp,
+  danger: TriangleAlert,
+  detail: ScanSearch,
+} satisfies Record<ModalVariant, typeof FilePenLine>
 
 export function useDialogA11y(onClose: () => void) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLElement | null>(null);
-  const onCloseRef = useRef(onClose);
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
+  const onCloseRef = useRef(onClose)
 
   useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
-    triggerRef.current = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const dialog = dialogRef.current;
-    const firstFocusable = dialog?.querySelector<HTMLElement>(FOCUSABLE);
-    (firstFocusable || dialog)?.focus();
+    triggerRef.current = document.activeElement as HTMLElement | null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const dialog = dialogRef.current
+    const firstFocusable = dialog?.querySelector<HTMLElement>(FOCUSABLE)
+    ;(firstFocusable || dialog)?.focus()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        event.stopPropagation();
-        onCloseRef.current();
-        return;
+        event.stopPropagation()
+        onCloseRef.current()
+        return
       }
-      if (event.key !== "Tab" || !dialogRef.current) return;
+      if (event.key !== "Tab" || !dialogRef.current) return
 
       const focusable = Array.from(
         dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
-      ).filter((element) => element.offsetParent !== null);
+      ).filter((element) => element.offsetParent !== null)
       if (!focusable.length) {
-        event.preventDefault();
-        dialogRef.current.focus();
-        return;
+        event.preventDefault()
+        dialogRef.current.focus()
+        return
       }
 
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
       if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
+        event.preventDefault()
+        last.focus()
       } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
+        event.preventDefault()
+        first.focus()
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("keydown", handleKeyDown, true)
     return () => {
-      document.removeEventListener("keydown", handleKeyDown, true);
-      document.body.style.overflow = previousOverflow;
-      triggerRef.current?.focus?.();
-    };
-  }, []);
+      document.removeEventListener("keydown", handleKeyDown, true)
+      document.body.style.overflow = previousOverflow
+      triggerRef.current?.focus?.()
+    }
+  }, [])
 
-  return dialogRef;
+  return dialogRef
 }
 
 export default function Modal({
@@ -71,115 +100,94 @@ export default function Modal({
   children,
   width = 480,
   topOffset = HEADER_HEIGHT,
+  variant,
 }: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-  width?: number;
-  topOffset?: number;
+  title: string
+  onClose: () => void
+  children: React.ReactNode
+  width?: number
+  topOffset?: number
+  variant?: ModalVariant
 }) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const titleId = useRef(
-    `modal-title-${Math.random().toString(36).slice(2, 9)}`,
-  ).current;
-  const triggerElRef = useRef<HTMLElement | null>(null);
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isClosing, setIsClosing] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  const triggerElRef = useRef<HTMLElement | null>(null)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [isClosing, setIsClosing] = useState(false)
+  const resolvedVariant = variant ?? inferVariant(title)
+  const VariantIcon = VARIANT_ICONS[resolvedVariant]
 
   const requestClose = useCallback(() => {
-    if (closeTimerRef.current) return;
-    setIsClosing(true);
-
+    if (closeTimerRef.current) return
+    setIsClosing(true)
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
-    ).matches;
-    closeTimerRef.current = setTimeout(onClose, reducedMotion ? 0 : 180);
-  }, [onClose]);
+    ).matches
+    closeTimerRef.current = setTimeout(onClose, reducedMotion ? 0 : 180)
+  }, [onClose])
 
-  // Remember what had focus before the modal opened, and restore it on close.
   useEffect(() => {
-    triggerElRef.current = document.activeElement as HTMLElement | null;
+    triggerElRef.current = document.activeElement as HTMLElement | null
     return () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-      triggerElRef.current?.focus?.();
-    };
-  }, []);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+      triggerElRef.current?.focus?.()
+    }
+  }, [])
 
-  // Lock the background page from scrolling while the modal is open, so nothing
-  // behind the popup moves. Restore the previous overflow on close.
   useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
     return () => {
-      document.body.style.overflow = previous;
-    };
-  }, []);
+      document.body.style.overflow = previous
+    }
+  }, [])
 
-  // Move focus into the dialog on mount.
   useEffect(() => {
-    const node = dialogRef.current;
-    if (!node) return;
-    const focusable = node.querySelectorAll<HTMLElement>(
-      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
-    );
-    (focusable[0] || node).focus();
-  }, []);
+    const node = dialogRef.current
+    if (!node) return
+    const firstFocusable = node.querySelector<HTMLElement>(FOCUSABLE)
+    ;(firstFocusable || node).focus()
+  }, [])
 
-  // Escape-to-close and a Tab focus trap scoped to this dialog.
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        requestClose();
-        return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation()
+        requestClose()
+        return
       }
-      if (e.key !== "Tab") return;
-      const node = dialogRef.current;
-      if (!node) return;
+      if (event.key !== "Tab" || !dialogRef.current) return
+
       const focusable = Array.from(
-        node.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
-        ),
-      ).filter((el) => el.offsetParent !== null);
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
+        dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
+      ).filter((element) => element.offsetParent !== null)
+      if (!focusable.length) {
+        event.preventDefault()
+        dialogRef.current.focus()
+        return
       }
-    };
-    document.addEventListener("keydown", handleKeyDown, true);
-    return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [requestClose]);
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown, true)
+    return () => document.removeEventListener("keydown", handleKeyDown, true)
+  }, [requestClose])
 
   return createPortal(
     <div
       className={`fi kargo-modal-overlay${isClosing ? " is-closing" : ""}`}
-      style={{
-        // Portaled to document.body so `position: fixed` resolves against the
-        // viewport, not the transform-animated app wrapper (.pu). The overlay
-        // starts below the configured nav header so a popup never covers it, and
-        // centers the dialog within the area beneath it.
-        position: "fixed",
-        top: topOffset,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(0,0,0,0.45)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "16px",
-        boxSizing: "border-box",
-        zIndex: 1000,
-        backdropFilter: "blur(2px)",
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) requestClose();
+      style={{ top: topOffset }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) requestClose()
       }}
     >
       <div
@@ -188,82 +196,42 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
+        data-variant={resolvedVariant}
         className={`si kargo-modal${isClosing ? " is-closing" : ""}`}
         style={{
-          background: "#fff",
-          borderRadius: 12,
-          width: "100%",
           maxWidth: width,
           maxHeight: `calc(100dvh - ${topOffset + 32}px)`,
-          display: "flex",
-          flexDirection: "column",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-          padding: 0,
-          outline: "none",
-          boxSizing: "border-box",
         }}
       >
-        <div
-          className="kargo-modal__header flex items-center justify-between"
-          style={{
-            flexShrink: 0,
-            padding: title ? "20px 24px 16px" : "12px 16px 0 24px",
-          }}
-        >
-          {title ? (
-            <h3
-              id={titleId}
-              style={{
-                fontFamily: "'Josefin Sans',sans-serif",
-                fontSize: 17,
-                fontWeight: 700,
-                color: "#111827",
-                margin: 0,
-              }}
-            >
-              {title}
-            </h3>
-          ) : (
-            <span id={titleId} className="sr-only">
-              Dialog
-            </span>
-          )}
+        <header className="kargo-modal__header">
+          <div className="kargo-modal__title-group">
+            {title && (
+              <span className="kargo-modal__title-icon" aria-hidden="true">
+                <VariantIcon size={18} />
+              </span>
+            )}
+            {title ? (
+              <h3 id={titleId}>{title}</h3>
+            ) : (
+              <span id={titleId} className="sr-only">
+                Dialog
+              </span>
+            )}
+          </div>
           <button
             type="button"
+            className="kargo-modal__close"
             aria-label={title ? `Close ${title}` : "Close dialog"}
             onClick={requestClose}
-            style={{
-              color: "#9CA3AF",
-              fontSize: 24,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              lineHeight: 1,
-              padding: 0,
-              width: 36,
-              height: 36,
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
           >
-            ×
+            <X size={18} aria-hidden="true" />
           </button>
-        </div>
-        {/* Only the content scrolls; the header and the dialog stay put. */}
-        <div
-          className="kargo-modal__body"
-          style={{
-            overflowY: "auto",
-            flex: "1 1 auto",
-            minHeight: 0,
-            padding: "0 24px 24px",
-          }}
-        >
+        </header>
+        <div className="kargo-modal__body">
           <div className="kargo-modal__content">{children}</div>
         </div>
       </div>
     </div>,
     document.body,
-  );
+  )
 }

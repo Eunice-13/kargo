@@ -56,6 +56,7 @@ export default function TrackingDetailsModal({
   return (
     <Modal
       title={order.trackingNumber ? "Edit tracking details" : "Add tracking details"}
+      variant="form"
       onClose={onClose}
       width={520}
     >

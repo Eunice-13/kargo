@@ -21,8 +21,8 @@ export default function BuyerProfileModal({
   const counts = orderCounts ?? { completed: 0, cancelled: 0, incomplete: 0 }
 
   return (
-    <Modal title="" onClose={onClose} width={480}>
-      <div style={{ margin: "-28px -28px 20px", background: "linear-gradient(135deg,#DEF3FA,#EEF0FF)", borderRadius: "12px 12px 0 0", padding: "24px 24px 16px", textAlign: "center" }}>
+    <Modal title="" onClose={onClose} width={480} variant="detail">
+      <div className="buyer-profile-modal__hero">
         <Avatar name={buyer} size={56} />
         <div style={{ fontFamily: "'Josefin Sans',sans-serif", fontSize: 17, fontWeight: 800, color: "#111827", marginTop: 10 }}>{buyer}</div>
       </div>

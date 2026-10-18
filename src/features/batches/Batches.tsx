@@ -684,7 +684,7 @@ export default function Batches({
               </>
             )}
           </p>
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setLockConfirm(null)}>
               Cancel
             </SecondaryBtn>
@@ -702,11 +702,7 @@ export default function Batches({
       )}
       {extConfirm && (
         <Modal
-          title={
-            extConfirm.action === "approved"
-              ? "Approve this extension request?"
-              : "Deny this extension request?"
-          }
+          title={extConfirm.action === "approved" ? "Approve Extension?" : "Deny Extension?"}
           onClose={() => setExtConfirm(null)}
           width={420}
         >
@@ -726,7 +722,7 @@ export default function Batches({
               </>
             )}
           </p>
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setExtConfirm(null)}>
               Cancel
             </SecondaryBtn>
