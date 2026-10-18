@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { Lock, FileText, Clock3, CheckCircle2, AlertTriangle } from "lucide-react"
+import { Lock, FileText, Clock3, CheckCircle2, AlertTriangle, Info } from "lucide-react"
 import type { BirState } from "@/types"
 import { CREAM } from "@/constants/theme"
 import { clientHasDetectableQr, runBirVerification } from "./birVerification"
@@ -52,43 +52,44 @@ export default function BirVerifier({
   return (
     <div>
       {/* Instructions */}
-      <div style={{ marginBottom: 10 }}>
+      <div className="bir-instructions">
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: 7,
             fontSize: 13,
-            fontWeight: 700,
+            fontWeight: 600,
             color: "#111827",
-            fontFamily: "'Josefin Sans',sans-serif",
-            marginBottom: 6,
+            fontFamily: "'Quicksand', 'DM Sans', sans-serif",
+            marginBottom: 10,
           }}
         >
           <Lock size={15} aria-hidden="true" />
           BIR Registration Badge Verification
+          <span className="bir-instructions__help">
+            <button
+              type="button"
+              className="bir-instructions__trigger"
+              aria-label="Show BIR badge instructions"
+              aria-describedby="bir-badge-instructions"
+            >
+              <Info size={14} aria-hidden="true" />
+            </button>
+            <span
+              id="bir-badge-instructions"
+              className="bir-instructions__tooltip"
+              role="tooltip"
+            >
+              <ul>
+                <li>Upload a standalone, cropped image of your Registration Seal Badge with its unique QR code.</li>
+                <li>Do not upload the full-page COR.</li>
+                <li>Make sure the QR code is clear and not blurry.</li>
+                <li>We check that the QR code links to verify.bir.gov.ph. Counterfeit badges or altered links may result in account suspension.</li>
+              </ul>
+            </span>
+          </span>
         </div>
-        <ul
-          style={{
-            margin: 0,
-            paddingLeft: 18,
-            fontSize: 11.5,
-            color: "#6B7280",
-            lineHeight: 1.55,
-          }}
-        >
-          <li>
-            Please upload the standalone cropped image of your Registration Seal
-            Badge containing your unique QR code.
-          </li>
-          <li>Do not upload your entire full-page COR.</li>
-          <li>Ensure the QR code is clear and not blurry.</li>
-          <li>
-            Our system will instantly verify that your QR links to the official
-            verify.bir.gov.ph domain. Counterfeit badges or altered links will
-            result in immediate account suspension.
-          </li>
-        </ul>
       </div>
 
       <input

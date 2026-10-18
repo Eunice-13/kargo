@@ -105,8 +105,8 @@ export default function SignUp({
   }
 
   return (
-    <AuthLayout page="signup" condensed={role === "Seller"}>
-      <div className="auth-content auth-signup-content pl">
+    <AuthLayout page="signup">
+      <div className="auth-content auth-signup-content pl py-6">
         <header className="auth-heading">
           <h1>Start your Pasabuy Journey!</h1>
           <p>Join Kargo to buy or sell pasabuy items</p>
