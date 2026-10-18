@@ -46,6 +46,8 @@ import {
   ReservationGate,
   clearResetPasswordUrl,
   hasRecoveryFragment,
+  hasSignupConfirmationFragment,
+  isNewAccount,
   isResetPasswordPath,
 } from "@/features/auth"
 
@@ -58,6 +60,10 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
+
+// True only when this page load came from clicking the signup confirmation link.
+// Read at module load: the Supabase client strips the URL fragment right after.
+const ARRIVED_VIA_CONFIRMATION_LINK = hasSignupConfirmationFragment()
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
@@ -359,6 +365,20 @@ export default function App() {
 
     return () => data.subscription.unsubscribe()
   }, [originalPreview, refreshData])
+
+  // Onboarding tour for brand-new accounts. Confirming by email signs the user in
+  // through the session-restore path above (not handleSignupSuccess), so it is
+  // started here instead: once, when the app has loaded the user that arrived via
+  // the confirmation link. Regular logins never set the flag, so they never see it.
+  const tourPendingRef = useRef(
+    ARRIVED_VIA_CONFIRMATION_LINK && sharedBatchId === null,
+  )
+  useEffect(() => {
+    if (!tourPendingRef.current) return
+    if (stage !== "app" || !user.id) return
+    tourPendingRef.current = false
+    if (isNewAccount(user.memberSince)) setOnboard(true)
+  }, [stage, user.id, user.memberSince])
 
   // Keep orders, waitlists, and payment decisions synchronized across open
   // buyer and seller sessions. Related database changes can arrive as separate
