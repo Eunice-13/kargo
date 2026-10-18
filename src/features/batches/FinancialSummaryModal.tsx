@@ -3,7 +3,7 @@ import { createPortal } from "react-dom"
 import { Plus, Trash2, Printer, X } from "lucide-react"
 import type { BatchType, BatchExpenses, ExpenseItem, ExpenseMode } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { Modal, PrimaryBtn, SecondaryBtn, useDialogA11y } from "@/components/shared"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { FinancialSummary } from "@/services"
@@ -460,6 +460,7 @@ function FinancialReceipt({
   onPrint: () => void
   onClose: () => void
 }) {
+  const dialogRef = useDialogA11y(onClose)
   const dashed = "1px dashed #D1D5DB"
   const row = (labelText: string, value: string, strong = false, color = "#374151") => (
     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
@@ -479,9 +480,12 @@ function FinancialReceipt({
   )
   return createPortal(
     <div
+      ref={dialogRef}
+      className="fi kargo-modal-overlay kargo-modal-overlay--legacy"
       role="dialog"
       aria-modal="true"
       aria-label="Batch financial summary receipt"
+      tabIndex={-1}
       style={{
         position: "fixed",
         top: 56,
@@ -499,7 +503,7 @@ function FinancialReceipt({
       onClick={onClose}
     >
       <div
-        className="expense-receipt-sheet"
+        className="si expense-receipt-sheet kargo-legacy-modal"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom"
 import { Printer, X } from "lucide-react"
 import type { BatchType, FulfillmentOrder } from "@/types"
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
-import { PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { PrimaryBtn, SecondaryBtn, useDialogA11y } from "@/components/shared"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import type { PeriodOrder } from "@/services"
@@ -37,6 +37,7 @@ export default function SalesReportModal({
   shopName: string
   onClose: () => void
 }) {
+  const dialogRef = useDialogA11y(onClose)
   const today = useMemo(parseToday, [])
   const [period, setPeriod] = useState<Period>("Month")
   const [anchorDay, setAnchorDay] = useState(() => today.toISOString().slice(0, 10))
@@ -138,9 +139,12 @@ export default function SalesReportModal({
 
   return createPortal(
     <div
+      ref={dialogRef}
+      className="fi kargo-modal-overlay kargo-modal-overlay--legacy"
       role="dialog"
       aria-modal="true"
       aria-label="Sales Report"
+      tabIndex={-1}
       style={{
         position: "fixed",
         top: 56,
@@ -158,7 +162,7 @@ export default function SalesReportModal({
       onClick={onClose}
     >
       <div
-        className="sales-report-sheet"
+        className="si sales-report-sheet kargo-legacy-modal"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",
