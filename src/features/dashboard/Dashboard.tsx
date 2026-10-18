@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+
 import {
   Package,
   PackagePlus,
@@ -13,10 +14,15 @@ import {
   X,
   FileText,
 } from "lucide-react"
+
 import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
+
 import { navIntent } from "@/state/navIntent"
+
 import { sortWaitlistUpcoming } from "@/data/waitlist"
+
 import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
+
 import {
   Card,
   SH,
@@ -28,8 +34,11 @@ import {
   Countdown,
   BuyerProfileModal,
 } from "@/components/shared"
+
 import { BatchCheckoutModal, completedPayments } from "@/features/payments"
+
 import type { PaymentSubmissionDetails } from "@/features/payments"
+
 import {
   useFulfillmentBoard,
   FulfillmentLiveRegion,
@@ -37,10 +46,15 @@ import {
 } from "@/features/fulfillment"
 import { OrderDetailsModal } from "@/features/orders"
 import SalesReportModal from "./SalesReportModal"
+
 import WaitlistModal from "./WaitlistModal"
+
 import SellerWaitlistCard from "./SellerWaitlistCard"
+
 import { isSupabaseConfigured } from "@/lib/supabase"
+
 import { kargoApi } from "@/services"
+
 import {
   claimIsPayable,
   deadlineHasPassed,
@@ -48,66 +62,141 @@ import {
 
 export default function Dashboard({
   batches,
+
   claims,
+
   setClaims,
+
   toPay,
+
   setToPay,
+
   payHistory,
+
   setPayHistory,
+
   setTab,
+
   role,
+
   orders,
+
   fulfillment,
+
   setFulfillment,
+
   waitlist,
+
   setWaitlist,
+
   sellerWaitlist,
+
   user,
+
   setUser,
+
   refreshData,
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
+
   const [buyerProfile, setBuyerProfile] = useState<{
     name: string
     contactUrl?: string
+    socialLinks?: Record<string, string>
+    orderCounts: { completed: number; cancelled: number; incomplete: number }
   } | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
+
   const [showSalesReport, setShowSalesReport] = useState(false)
+
   const [showWaitlist, setShowWaitlist] = useState(false)
-  const [buyerOrderDetailsId, setBuyerOrderDetailsId] = useState<string | null>(null)
+  const [buyerOrderDetailsId, setBuyerOrderDetailsId] = useState<string | null>(
+    null,
+  )
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
+
   const board = useFulfillmentBoard(setFulfillment)
+
+  const openBuyerProfile = (
+    name: string,
+    contactUrl?: string,
+    socialLinks?: Record<string, string>,
+  ) => {
+    const buyerOrders = claims.filter((claim) => claim.buyer === name)
+    setBuyerProfile({
+      name,
+      contactUrl,
+      socialLinks,
+      orderCounts: {
+        completed: buyerOrders.filter(
+          (claim) =>
+            claim.orderStatus === "completed" ||
+            claim.fulfillmentStage === "delivered",
+        ).length,
+        cancelled: buyerOrders.filter(
+          (claim) =>
+            claim.orderStatus === "cancelled" ||
+            (!claim.orderStatus && claim.status === "Cancelled"),
+        ).length,
+        incomplete: buyerOrders.filter(
+          (claim) =>
+            ["incomplete", "expired"].includes(claim.orderStatus ?? "") ||
+            (!claim.orderStatus && claim.status === "Expired"),
+        ).length,
+      },
+    })
+  }
 
   const waitlistSorted = useMemo(
     () => sortWaitlistUpcoming(waitlist),
+
     [waitlist],
   )
+
   const closestWaitlist = waitlistSorted[0] ?? null
+
   const openWaitlist = () => {
     setActiveWaitlistId(closestWaitlist?.id ?? null)
+
     setShowWaitlist(true)
   }
 
   // Close the expanded board with Escape.
+
   useEffect(() => {
     if (!boardExpanded) return
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setBoardExpanded(false)
     }
+
     window.addEventListener("keydown", onKey)
+
     return () => window.removeEventListener("keydown", onKey)
   }, [boardExpanded])
+
   const activeClaims = claims
+
     .filter((c) => c.status === "Pending")
+
     .sort((a, b) => Number(b.id) - Number(a.id))
+
   // Recent Claims preview: a fixed number of the most recent claims, shown in
+
   // full with NO internal scroll. Anything beyond this is reached via "View
+
   // All", matching the Seller Dashboard's Recent Orders preview pattern.
+
   const RECENT_CLAIMS_PREVIEW = 7
+
   const recentClaims = claims
+
     .slice()
+
     .sort((a, b) => Number(b.id) - Number(a.id))
+
     .slice(0, RECENT_CLAIMS_PREVIEW)
+
   const payableToPay = toPay.filter(
     (item) =>
       !item.deadlinePausedAt &&
@@ -115,25 +204,39 @@ export default function Dashboard({
       item.shippingState !== "correction_requested" &&
       !deadlineHasPassed(item),
   )
+
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
+
   const completedOrders = completedPayments(payHistory, claims)
 
   // ─── Seller stat sources (derived from live data, not hardcoded) ───────────
+
   // Scope to the signed-in seller's own batches.
+
   const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name)
+
   const mySellerOrders = claims.filter((claim) => claim.seller === user.name)
+
   // Only submitted proofs await seller verification. `payment_pending` means
+
   // the buyer has not paid yet, so it must not inflate this seller metric.
+
   const paymentsToVerify = mySellerOrders.filter(
     (claim) => claim.status === "Awaiting Verification",
   )
+
   // Match the seller's Orders Received > Pending filter, which is based on
+
   // claims and their payment history rather than the recent fulfillment board.
+
   const pendingReceivedOrders = mySellerOrders.filter((claim) => {
     if (claim.status === "Paid and Reserved") return false
+
     if (claim.status === "Insufficient Payment") return true
+
     return claim.status === "Pending"
   })
+
   const shippingFeesToSet = mySellerOrders.filter(
     (claim) =>
       claim.status === "Pending" &&
@@ -141,13 +244,18 @@ export default function Dashboard({
       (claim.shippingState === "waiting_for_seller" ||
         claim.shippingState === "correction_requested"),
   )
+
   // Extension requests awaiting this seller's approval: claims on their orders
+
   // that requested an extension and are still pending a decision.
+
   const pendingExtensions = claims.filter(
     (c) =>
       c.extensionRequested && c.status === "Pending" && c.seller === user.name,
   )
+
   // Orders fulfilled = orders moved to the board's "Delivered" column.
+
   const ordersFulfilled = fulfillment.filter((o) => o.col === "Delivered")
 
   const waitlistSub = closestWaitlist
@@ -157,147 +265,235 @@ export default function Dashboard({
         }`
       : closestWaitlist.batch || "Waitlisted item"
     : "No waitlisted items"
+
   const buyerStats = [
     {
       label: "Active Claims",
+
       value: String(activeClaims.length),
+
       icon: PackagePlus,
+
       sub:
         activeClaims.length === 0
           ? "No active claims"
           : `${activeClaims.length} awaiting payment or reservation`,
+
       sc: GREEN,
+
       bg: "#E8F9F3",
     },
+
     {
       label: "Pending Payment",
+
       value: `₱${pendingTotal.toLocaleString()}`,
+
       icon: CreditCard,
+
       sub: `${payableToPay.length} items due soon`,
+
       sc: AMBER,
+
       bg: "#FFF8E8",
     },
+
     {
       label: "Waitlist Position",
+
       value: closestWaitlist ? `#${closestWaitlist.position}` : "—",
+
       icon: CalendarX2,
+
       sub: waitlistSub,
+
       sc: "#EF4444",
+
       bg: "#FDECEC",
     },
+
     {
       label: "Completed Orders",
+
       value: String(completedOrders.length),
+
       icon: ReceiptText,
+
       sub: "Completed payments",
+
       sc: "#6B7280",
+
       bg: "#FFFFFF",
     },
   ]
+
   const sellerStats = [
     {
       label: "Active Batches",
+
       value: String(myLiveBatches.length),
+
       icon: Plane,
+
       sub: "Open + Scheduled",
+
       sc: "#64E894",
+
       bg: "#ECFFF4",
     },
+
     {
       label: "Awaiting Verification",
+
       value: String(paymentsToVerify.length),
+
       icon: Clock3,
+
       sub: "Payment proofs to review",
+
       sc: "#F4D85D",
+
       bg: "#FFFBE3",
     },
+
     {
       label: "Extension Requests",
+
       value: String(pendingExtensions.length),
+
       icon: ClipboardList,
+
       sub: "Awaiting your approval",
+
       sc: "#E62B48",
+
       bg: "#FFF0F2",
     },
+
     {
       label: "Orders Fulfilled",
+
       value: String(ordersFulfilled.length),
+
       icon: CheckCircle2,
+
       sub: "Completed this quarter",
+
       sc: "#6B7280",
+
       bg: "#FFFFFF",
     },
   ]
+
   const stats = role === "Seller" ? sellerStats : buyerStats
+
   // Upcoming Deadlines is driven by the buyer's real pending, still-payable
+
   // claims — the SAME "Waiting for payment" rows shown in Recent Claims — so
+
   // the panel never renders empty when there are outstanding payments. Sorted
+
   // soonest-first and capped to a short preview.
+
   const upcoming = useMemo(
     () =>
       activeClaims
+
         .filter((c) => claimIsPayable(c))
+
         .sort((a, b) => a.hours - b.hours)
+
         .slice(0, 4),
+
     [activeClaims],
   )
 
   const handleBatchPayment = async (
     item: typeof toPay[number],
+
     method: string,
+
     referenceNumber: string,
+
     receipt: File | undefined,
+
     details: PaymentSubmissionDetails,
   ) => {
     const claim = claims.find(
       (candidate) => String(candidate.id) === String(item.orderId ?? item.id),
     )
+
     if (!claim || !claimIsPayable(claim) || deadlineHasPassed(item)) {
       alert("This claim has expired and can no longer be paid.")
+
       return false
     }
+
     if (isSupabaseConfigured) {
       try {
         await kargoApi.submitPayment({
           orderId: item.orderId ?? String(item.id),
+
           method,
+
           amount: details.amountPaid,
+
           referenceNumber,
+
           receipt,
+
           payerAccountName: details.payerAccountName,
+
           payerPhone: details.payerPhone,
+
           buyerContactUrl: details.buyerContactUrl,
         })
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Unable to submit payment."
+
         if (message === "Order is not payable") {
           await refreshData()
+
           alert(
             "This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.",
           )
+
           return false
         }
+
         alert(message)
+
         return false
       }
+
       await refreshData()
+
       return true
     }
+
     setPayHistory((history) => [
       {
         id: history.length + 1,
+
         product: item.product,
+
         batch: "",
+
         method,
+
         amount: details.amountPaid,
+
         date: TODAY,
+
         status: (isSupabaseConfigured
           ? "Pending"
           : "Paid and Reserved") as ClaimStatus,
       },
+
       ...history,
     ])
+
     if (!isSupabaseConfigured)
       setClaims((prev) =>
         prev.map((c) =>
@@ -306,8 +502,10 @@ export default function Dashboard({
             : c,
         ),
       )
+
     if (!isSupabaseConfigured)
       setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
+
     return true
   }
 
@@ -324,25 +522,33 @@ export default function Dashboard({
               aria-label={`Open ${stat.label}`}
               onClick={() => {
                 if (stat.label === "Active Batches") setTab("Batches")
+
                 if (stat.label === "Awaiting Verification") {
                   navIntent.orderFilter = "Pending"
+
                   setTab("My Claims")
                 }
+
                 if (stat.label === "Extension Requests") {
                   navIntent.openExtensionRequests = true
+
                   setTab("Batches")
                 }
+
                 if (stat.label === "Orders Fulfilled") setTab("Payments")
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault()
+
                   event.currentTarget.click()
                 }
               }}
               style={{
                 animationDelay: `${index * 60}ms`,
+
                 background: stat.bg,
+
                 cursor: "pointer",
               }}
             >
@@ -372,10 +578,15 @@ export default function Dashboard({
                   <tr>
                     {[
                       "Products",
+
                       "Batch",
+
                       "Buyer",
+
                       "Amount",
+
                       "Status",
+
                       "Deadline",
                     ].map((heading) => (
                       <th key={heading}>{heading}</th>
@@ -385,6 +596,7 @@ export default function Dashboard({
                 <tbody>
                   {mySellerOrders.slice(0, 7).map((claim, index) => {
                     const buyerName = claim.buyer || claim.seller
+
                     return (
                       <tr key={claim.id} onClick={() => setTab("My Claims")}>
                         <td>
@@ -440,20 +652,31 @@ export default function Dashboard({
               {[
                 {
                   icon: Clock3,
+
                   label: "Payments to Verify",
+
                   count: pendingReceivedOrders.length,
+
                   tab: "My Claims" as Tab,
                 },
+
                 {
                   icon: ClipboardList,
+
                   label: "Extension Requests",
+
                   count: pendingExtensions.length,
+
                   tab: "Batches" as Tab,
                 },
+
                 {
                   icon: Package,
+
                   label: "Shipping Fees to Set",
+
                   count: shippingFeesToSet.length,
+
                   tab: "My Claims" as Tab,
                 },
               ].map((action) => (
@@ -468,10 +691,13 @@ export default function Dashboard({
                     onClick={() => {
                       if (action.label === "Payments to Verify")
                         navIntent.orderFilter = "Pending"
+
                       if (action.label === "Shipping Fees to Set")
                         navIntent.orderFilter = "Pending"
+
                       if (action.label === "Extension Requests")
                         navIntent.openExtensionRequests = true
+
                       setTab(action.tab)
                     }}
                   >
@@ -506,7 +732,11 @@ export default function Dashboard({
               board={board}
               onExpand={() => setBoardExpanded(true)}
               onOpenProfile={(order) =>
-                setBuyerProfile({ name: order.buyer, contactUrl: order.buyerFb })
+                openBuyerProfile(
+                  order.buyer,
+                  order.buyerFb,
+                  order.buyerSocialLinks,
+                )
               }
               onOpenPendingPayments={() => {
                 navIntent.orderFilter = "Pending"
@@ -541,7 +771,11 @@ export default function Dashboard({
                   board={board}
                   expanded
                   onOpenProfile={(order) =>
-                    setBuyerProfile({ name: order.buyer, contactUrl: order.buyerFb })
+                    openBuyerProfile(
+                      order.buyer,
+                      order.buyerFb,
+                      order.buyerSocialLinks,
+                    )
                   }
                   onOpenPendingPayments={() => {
                     navIntent.orderFilter = "Pending"
@@ -559,6 +793,8 @@ export default function Dashboard({
           <BuyerProfileModal
             buyer={buyerProfile.name}
             contactUrl={buyerProfile.contactUrl}
+            socialLinks={buyerProfile.socialLinks}
+            orderCounts={buyerProfile.orderCounts}
             onClose={() => setBuyerProfile(null)}
           />
         )}
@@ -583,9 +819,11 @@ export default function Dashboard({
             else if (s.label === "Completed Orders") setTab("Payments")
             else {
               navIntent.openBatchCheckout = s.label === "Pending Payment"
+
               setTab("My Claims")
             }
           }
+
           return (
             <div
               key={s.label}
@@ -606,6 +844,7 @@ export default function Dashboard({
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault()
+
                   openCard()
                 }
               }}
@@ -645,10 +884,15 @@ export default function Dashboard({
                         key={h}
                         style={{
                           color: "#9CA3AF",
+
                           fontWeight: 600,
+
                           fontSize: 11,
+
                           paddingBottom: 8,
+
                           textAlign: "left",
+
                           paddingRight: 12,
                         }}
                       >
@@ -686,7 +930,9 @@ export default function Dashboard({
                       className="py-2.5 pr-3"
                       style={{
                         color: "#111827",
+
                         fontWeight: 700,
+
                         fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
@@ -720,20 +966,31 @@ export default function Dashboard({
               {[
                 {
                   icon: ClipboardList,
+
                   label: "Payments to Verify",
+
                   count: paymentsToVerify.length,
+
                   tab: "Payments" as Tab,
                 },
+
                 {
                   icon: Clock3,
+
                   label: "Extension Requests",
+
                   count: pendingExtensions.length,
+
                   tab: "Batches" as Tab,
                 },
+
                 {
                   icon: Package,
+
                   label: "Shipping Fees to Set",
+
                   count: shippingFeesToSet.length,
+
                   tab: "My Claims" as Tab,
                 },
               ].map((item) => (
@@ -741,11 +998,17 @@ export default function Dashboard({
                   key={item.label}
                   style={{
                     background: "#fff",
+
                     borderRadius: 8,
+
                     border: "1px solid #E5E7EB",
+
                     padding: "10px 14px",
+
                     display: "flex",
+
                     alignItems: "center",
+
                     gap: 10,
                   }}
                 >
@@ -758,7 +1021,9 @@ export default function Dashboard({
                     <div
                       style={{
                         fontSize: 13,
+
                         fontWeight: 600,
+
                         color: "#111827",
                       }}
                     >
@@ -774,6 +1039,7 @@ export default function Dashboard({
                     onClick={() => {
                       if (item.label === "Shipping Fees to Set")
                         navIntent.orderFilter = "Pending"
+
                       setTab(item.tab)
                     }}
                   >
@@ -784,11 +1050,17 @@ export default function Dashboard({
               <div
                 style={{
                   background: "#D4F5EA",
+
                   borderRadius: 8,
+
                   padding: "10px 14px",
+
                   fontSize: 12,
+
                   color: "#065F46",
+
                   fontWeight: 600,
+
                   textAlign: "center",
                 }}
               >
@@ -797,7 +1069,9 @@ export default function Dashboard({
                   aria-hidden="true"
                   style={{
                     display: "inline",
+
                     verticalAlign: -2,
+
                     marginRight: 4,
                   }}
                 />
@@ -826,10 +1100,15 @@ export default function Dashboard({
                   <tr>
                     {[
                       "Products",
+
                       "Batch",
+
                       "Seller",
+
                       "Amount",
+
                       "Status",
+
                       "Deadline",
                     ].map((h) => (
                       <th key={h}>{h}</th>
@@ -931,7 +1210,9 @@ export default function Dashboard({
                   aria-hidden="true"
                   style={{
                     display: "inline",
+
                     verticalAlign: -2,
+
                     marginRight: 4,
                   }}
                 />
@@ -954,7 +1235,9 @@ export default function Dashboard({
           role="buyer"
           board={board}
           onExpand={() => setBoardExpanded(true)}
-          onViewOrder={(order) => setBuyerOrderDetailsId(order.dbId || order.id)}
+          onViewOrder={(order) =>
+            setBuyerOrderDetailsId(order.dbId || order.id)
+          }
         />
         <FulfillmentLiveRegion text={board.announcement} />
       </section>
@@ -1016,6 +1299,8 @@ export default function Dashboard({
         <BuyerProfileModal
           buyer={buyerProfile.name}
           contactUrl={buyerProfile.contactUrl}
+          socialLinks={buyerProfile.socialLinks}
+          orderCounts={buyerProfile.orderCounts}
           onClose={() => setBuyerProfile(null)}
         />
       )}
@@ -1035,7 +1320,9 @@ export default function Dashboard({
           onClose={() => setShowWaitlist(false)}
           onViewBatch={(batchId) => {
             navIntent.batchId = batchId
+
             setShowWaitlist(false)
+
             setTab("Batches")
           }}
         />

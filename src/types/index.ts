@@ -47,20 +47,29 @@ export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" 
 export type Role = "Buyer" | "Seller"
 
 export type ClaimStatus = "Pending" | "Awaiting Verification" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
+
 export type ShippingState = "waiting_for_seller" | "fee_set" | "correction_requested" | "declined"
 
 export type CourierCompany = "Lalamove" | "J&T Express" | "LBC" | "Grab Express" | "2GO" | "Ninja Van" | "Others"
 
 export type ClaimReservationInput = {
   quantity: number
+
   paymentMethod: string
+
   pinLat?: number
+
   pinLng?: number
+
   pinUrl?: string
+
   pinAddress?: string
+
   acceptShipping: boolean
 }
+
 export type PaymentHistoryStatus = ClaimStatus | "Rejected" | "Pending Payment"
+
 export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Security"
 
 export type ClaimRow = {
@@ -100,9 +109,18 @@ export type ClaimRow = {
 
   buyerFb?: string
 
+  // All public social links for the buyer. `buyerFb` remains as the preferred
+  // single-link fallback for older rows and direct-contact actions.
+  buyerSocialLinks?: Record<string, string>
+
   // Seller's contact/Facebook link (buyer's "My Claims" view).
 
   sellerFb?: string
+
+  sellerSocialLinks?: Record<string, string>
+
+  // Raw database status used for accurate buyer-history counters.
+  orderStatus?: string
 
   reservedPaymentMethod?: string
 
@@ -283,8 +301,11 @@ export interface BatchStoredProduct {
 
 export interface BatchItem {
   id: number
+
   dbId?: string
+
   createdAt?: string
+
   reactionCount?: number
 
   reactedByCurrentUser?: boolean
@@ -371,9 +392,13 @@ export type FulfillmentOrder = {
 
   buyerFb?: string
 
+  buyerSocialLinks?: Record<string, string>
+
   seller?: string
 
   sellerFb?: string
+
+  sellerSocialLinks?: Record<string, string>
 
   product: string
 

@@ -12,6 +12,7 @@ import type {
   FulfillmentOrder,
   SharedState,
 } from "@/types"
+
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
 
 import {
@@ -30,6 +31,7 @@ import {
   LocationPinPicker,
   type LocationPinValue,
 } from "@/components/shared"
+
 import {
   BatchCheckoutModal,
   PaymentSubmitModal,
@@ -53,9 +55,13 @@ import {
 } from "./claimPaymentState"
 
 import { navIntent } from "@/state/navIntent"
+
 import SetShippingFeeModal from "./SetShippingFeeModal"
+
 import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal"
+
 import DeclineDeliveryOrderModal from "./DeclineDeliveryOrderModal"
+
 import {
   TrackingDetailsModal,
   type TrackingDetailsInput,
@@ -122,8 +128,11 @@ export default function MyClaims({
   setOrders,
 
   batches,
+
   setBatches,
+
   setFulfillment,
+
   user,
 
   role,
@@ -162,7 +171,40 @@ export default function MyClaims({
     return requestedFilter
   })
 
-  const [buyerProfile, setBuyerProfile] = useState<string | null>(null)
+  const [buyerProfile, setBuyerProfile] = useState<{
+    name: string
+    contactUrl?: string
+    socialLinks?: Record<string, string>
+    orderCounts: { completed: number; cancelled: number; incomplete: number }
+  } | null>(null)
+
+  const openBuyerProfile = (claim: ClaimRow) => {
+    const buyerName = claim.buyer || "Buyer"
+    const buyerOrders = claims.filter((item) => item.buyer === buyerName)
+
+    setBuyerProfile({
+      name: buyerName,
+      contactUrl: claim.buyerFb,
+      socialLinks: claim.buyerSocialLinks,
+      orderCounts: {
+        completed: buyerOrders.filter(
+          (item) =>
+            item.orderStatus === "completed" ||
+            item.fulfillmentStage === "delivered",
+        ).length,
+        cancelled: buyerOrders.filter(
+          (item) =>
+            item.orderStatus === "cancelled" ||
+            (!item.orderStatus && item.status === "Cancelled"),
+        ).length,
+        incomplete: buyerOrders.filter(
+          (item) =>
+            ["incomplete", "expired"].includes(item.orderStatus ?? "") ||
+            (!item.orderStatus && item.status === "Expired"),
+        ).length,
+      },
+    })
+  }
 
   const [orderDetailTarget, setOrderDetailTarget] = useState<ClaimRow | null>(
     null,
@@ -188,13 +230,19 @@ export default function MyClaims({
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
 
   const [isMobile, setIsMobile] = useState(false)
+
   const [shippingTarget, setShippingTarget] = useState<ClaimRow | null>(null)
+
   const [correctionTarget, setCorrectionTarget] = useState<ClaimRow | null>(
     null,
   )
+
   const [declineTarget, setDeclineTarget] = useState<ClaimRow | null>(null)
+
   const [trackingTarget, setTrackingTarget] = useState<ClaimRow | null>(null)
+
   const [pinTarget, setPinTarget] = useState<ClaimRow | null>(null)
+
   const [pinDraft, setPinDraft] = useState<LocationPinValue>({})
 
   useEffect(() => {
@@ -466,12 +514,17 @@ export default function MyClaims({
     claimIsPayable(claim) ||
     claim.shippingState === "waiting_for_seller" ||
     claim.shippingState === "correction_requested"
+
   const claimsToPay = reconciledClaims
+
     .filter(belongsToPendingPayments)
+
     .sort(newestFirst)
 
   const nonPayableClaims = reconciledClaims
+
     .filter((c) => !belongsToPendingPayments(c))
+
     .sort((left, right) => {
       // "Awaiting Verification" — proof submitted, awaiting the seller's
 
@@ -515,37 +568,58 @@ export default function MyClaims({
 
   const contactBuyer = (claim: ClaimRow) => {
     const buyerName = claim.buyer || claim.seller
+
     if (claim.buyerFb) {
       setFbToast(buyerName)
+
       window.setTimeout(() => {
         window.open(claim.buyerFb, "_blank", "noopener,noreferrer")
+
         setFbToast(null)
       }, 1200)
+
       return
     }
-    setBuyerProfile(buyerName)
+
+    openBuyerProfile(claim)
   }
 
   const asFulfillmentOrder = (claim: ClaimRow): FulfillmentOrder => ({
     id: String(claim.id),
+
     dbId: isSupabaseConfigured ? String(claim.id) : undefined,
     col: claim.fulfillmentStage === "shipped" ? "Shipped" : "Preparing",
     perspective: "seller",
     buyer: claim.buyer || "Buyer",
+
     buyerFb: claim.buyerFb,
+    buyerSocialLinks: claim.buyerSocialLinks,
     product: claim.product,
+
     qty: claim.qty,
+
     amount: claim.amount,
+
     fulfillmentStage: claim.fulfillmentStage,
+
     courierCompany: claim.courierCompany,
+
     riderName: claim.riderName,
+
     riderContact: claim.riderContact,
+
     trackingNumber: claim.trackingNumber,
+
     eta: claim.eta,
+
     trackingUrl: claim.trackingUrl,
+
     deliveryPinLat: claim.deliveryPinLat,
+
     deliveryPinLng: claim.deliveryPinLng,
+
     deliveryPinUrl: claim.deliveryPinUrl,
+
     deliveryPinAddress: claim.deliveryPinAddress,
   })
 
@@ -839,42 +913,60 @@ export default function MyClaims({
 
                   const statusStyles: Record<SellerOrderReceivedStatus, {
                     background: string
+
                     color: string
+
                     dot: string
+
                     borderColor: string
                   }> = {
                     Pending: {
                       background: "#fff5cc",
+
                       color: "#c98f00",
+
                       dot: "#f0b400",
+
                       borderColor: "#f0b400",
                     },
 
                     "Awaiting Verification": {
                       background: "#e0e7ff",
+
                       color: "#3730a3",
+
                       dot: "#6366f1",
+
                       borderColor: "#6366f1",
                     },
 
                     Verified: {
                       background: "#c8f5e4",
+
                       color: "#0a8f6a",
+
                       dot: "#2cc9a0",
+
                       borderColor: "#2cc9a0",
                     },
 
                     Expired: {
                       background: "#ffe4e8",
+
                       color: "#d9273f",
+
                       dot: "#d9273f",
+
                       borderColor: "#d9273f",
                     },
 
                     Cancelled: {
                       background: "#ccc",
+
                       color: "#555",
+
                       dot: "#777",
+
                       borderColor: "#777",
                     },
                   }
@@ -894,7 +986,7 @@ export default function MyClaims({
                         <div className="flex items-center gap-2">
                           <Avatar name={c.buyer || c.seller} size={22} />
                           <button
-                            onClick={() => setBuyerProfile(c.buyer || c.seller)}
+                            onClick={() => openBuyerProfile(c)}
                             className="seller-orders-buyer"
                           >
                             {c.buyer || c.seller}
@@ -952,7 +1044,9 @@ export default function MyClaims({
                           className="seller-orders-status"
                           style={{
                             background: badge.background,
+
                             color: badge.color,
+
                             borderColor: badge.borderColor,
                           }}
                         >
@@ -1024,7 +1118,7 @@ export default function MyClaims({
 
                                   // of fabricating a Facebook URL.
 
-                                  setBuyerProfile(buyerName)
+                                  openBuyerProfile(c)
                                 }
                               }}
                             >
@@ -1045,7 +1139,10 @@ export default function MyClaims({
         </div>
         {buyerProfile && (
           <BuyerProfileModal
-            buyer={buyerProfile}
+            buyer={buyerProfile.name}
+            contactUrl={buyerProfile.contactUrl}
+            socialLinks={buyerProfile.socialLinks}
+            orderCounts={buyerProfile.orderCounts}
             onClose={() => setBuyerProfile(null)}
           />
         )}
@@ -1182,30 +1279,40 @@ export default function MyClaims({
             onClose={() => setShippingTarget(null)}
             onRequestCorrection={() => {
               setCorrectionTarget(shippingTarget)
+
               setShippingTarget(null)
             }}
             onDecline={() => {
               setDeclineTarget(shippingTarget)
+
               setShippingTarget(null)
             }}
             onSave={async (fee) => {
               if (isSupabaseConfigured) {
                 await kargoApi.setOrderShippingFee(
                   String(shippingTarget.id),
+
                   fee,
                 )
+
                 await refreshData()
               } else {
                 const previousFee = shippingTarget.shippingFee ?? 0
+
                 const update = {
                   shippingFee: fee,
+
                   shippingState: "fee_set" as const,
+
                   deadlinePausedAt: undefined,
+
                   expiresAt: new Date(
                     Date.now() + Math.max(shippingTarget.hours, 1) * 3_600_000,
                   ).toISOString(),
+
                   amount: shippingTarget.amount - previousFee + fee,
                 }
+
                 setClaims((current) =>
                   current.map((claim) =>
                     claim.id === shippingTarget.id
@@ -1213,6 +1320,7 @@ export default function MyClaims({
                       : claim,
                   ),
                 )
+
                 setToPay((current) =>
                   current.map((payment) =>
                     String(payment.orderId ?? payment.id) ===
@@ -1222,6 +1330,7 @@ export default function MyClaims({
                   ),
                 )
               }
+
               setShippingTarget(null)
             }}
           />
@@ -1235,6 +1344,7 @@ export default function MyClaims({
                 await kargoApi.requestLocationCorrection(
                   String(correctionTarget.id),
                 )
+
                 await refreshData()
               } else {
                 setClaims((current) =>
@@ -1242,7 +1352,9 @@ export default function MyClaims({
                     claim.id === correctionTarget.id
                       ? {
                           ...claim,
+
                           shippingState: "correction_requested",
+
                           deadlinePausedAt:
                             claim.deadlinePausedAt ?? new Date().toISOString(),
                         }
@@ -1250,6 +1362,7 @@ export default function MyClaims({
                   ),
                 )
               }
+
               setCorrectionTarget(null)
             }}
           />
@@ -1263,8 +1376,10 @@ export default function MyClaims({
               if (isSupabaseConfigured) {
                 await kargoApi.declineDeliveryOrder(
                   String(declineTarget.id),
+
                   reason,
                 )
+
                 await refreshData()
               } else {
                 setClaims((current) =>
@@ -1272,14 +1387,19 @@ export default function MyClaims({
                     claim.id === declineTarget.id
                       ? {
                           ...claim,
+
                           status: "Cancelled",
+
                           shippingState: "declined",
+
                           shippingDeclineReason: reason,
+
                           deadlinePausedAt: undefined,
                         }
                       : claim,
                   ),
                 )
+
                 setToPay((current) =>
                   current.filter(
                     (payment) =>
@@ -1287,25 +1407,32 @@ export default function MyClaims({
                       String(declineTarget.id),
                   ),
                 )
+
                 setBatches((current) =>
                   current.map((batch) =>
                     batch.title !== declineTarget.batch
                       ? batch
                       : {
                           ...batch,
+
                           claimed: Math.max(
                             0,
+
                             batch.claimed - declineTarget.qty,
                           ),
+
                           products: batch.products.map((product) => {
                             const matches = declineTarget.productId
                               ? product.dbId === declineTarget.productId
                               : product.name === declineTarget.product
+
                             return matches
                               ? {
                                   ...product,
+
                                   claimed: Math.max(
                                     0,
+
                                     product.claimed - declineTarget.qty,
                                   ),
                                 }
@@ -1315,6 +1442,7 @@ export default function MyClaims({
                   ),
                 )
               }
+
               setDeclineTarget(null)
             }}
           />
@@ -1327,19 +1455,28 @@ export default function MyClaims({
               if (isSupabaseConfigured) {
                 await kargoApi.setOrderTracking(
                   String(trackingTarget.id),
+
                   details,
                 )
+
                 await refreshData()
               } else {
                 const update = {
                   fulfillmentStage: "shipped",
+
                   courierCompany: details.courier,
+
                   riderName: details.riderName,
+
                   riderContact: details.riderContact,
+
                   trackingNumber: details.trackingNumber,
+
                   eta: details.eta,
+
                   trackingUrl: details.trackingUrl,
                 }
+
                 setClaims((current) =>
                   current.map((claim) =>
                     claim.id === trackingTarget.id
@@ -1347,6 +1484,7 @@ export default function MyClaims({
                       : claim,
                   ),
                 )
+
                 setFulfillment((current) =>
                   current.map((order) =>
                     String(order.dbId ?? order.id) === String(trackingTarget.id)
@@ -1355,6 +1493,7 @@ export default function MyClaims({
                   ),
                 )
               }
+
               setTrackingTarget(null)
             }}
           />
@@ -1513,8 +1652,11 @@ export default function MyClaims({
         <p
           style={{
             marginTop: -8,
+
             marginBottom: 12,
+
             color: "#748391",
+
             fontSize: 12,
           }}
         >
@@ -1566,9 +1708,13 @@ export default function MyClaims({
               <div
                 style={{
                   color: "#111827",
+
                   fontFamily: "'Josefin Sans',sans-serif",
+
                   fontSize: 15,
+
                   fontWeight: 800,
+
                   whiteSpace: "nowrap",
                 }}
               >
@@ -1585,10 +1731,14 @@ export default function MyClaims({
                   onClick={() => {
                     setPinDraft({
                       lat: item.deliveryPinLat,
+
                       lng: item.deliveryPinLng,
+
                       url: item.deliveryPinUrl,
+
                       address: item.deliveryPinAddress,
                     })
+
                     setPinTarget(item)
                   }}
                 >
@@ -1610,8 +1760,11 @@ export default function MyClaims({
               <div
                 style={{
                   color: "#0B7A59",
+
                   fontSize: 12,
+
                   fontWeight: 600,
+
                   textAlign: "center",
                 }}
               >
@@ -2135,7 +2288,9 @@ export default function MyClaims({
       {showBatchCheckout && (
         <BatchCheckoutModal
           items={claimsToPay
+
             .filter(claimIsPayable)
+
             .map((claim) => ({ ...claim, orderId: String(claim.id) }))}
           contactPrefill={user.fb || ""}
           onSubmit={async (item, method, refNo, receipt, details) => {
@@ -2143,6 +2298,7 @@ export default function MyClaims({
               (candidate) =>
                 candidate.id === item.id && claimIsPayable(candidate),
             )
+
             if (!claim) return false
 
             return handlePay(claim, method, refNo, receipt, details)
@@ -2164,11 +2320,17 @@ export default function MyClaims({
             sellerId: payTarget.sellerId,
 
             qty: payTarget.qty,
+
             amount: payTarget.amount,
+
             hours: payTarget.hours,
+
             reservedPaymentMethod: payTarget.reservedPaymentMethod,
+
             shippingApplies: payTarget.shippingApplies,
+
             shippingFee: payTarget.shippingFee,
+
             shippingState: payTarget.shippingState,
           }}
           contactPrefill={user.fb || ""}
@@ -2222,7 +2384,9 @@ export default function MyClaims({
               try {
                 await kargoApi.requestOrderExtension(
                   String(extTarget.id),
+
                   hours,
+
                   reason,
                 )
               } catch (error) {
@@ -2273,17 +2437,24 @@ export default function MyClaims({
                   if (isSupabaseConfigured) {
                     await kargoApi.updateOrderDeliveryPin(
                       String(pinTarget.id),
+
                       pinDraft,
                     )
+
                     await refreshData()
                   } else {
                     const update = {
                       deliveryPinLat: pinDraft.lat,
+
                       deliveryPinLng: pinDraft.lng,
+
                       deliveryPinUrl: pinDraft.url,
+
                       deliveryPinAddress: pinDraft.address,
+
                       shippingState: "waiting_for_seller" as const,
                     }
+
                     setClaims((current) =>
                       current.map((claim) =>
                         claim.id === pinTarget.id
@@ -2291,6 +2462,7 @@ export default function MyClaims({
                           : claim,
                       ),
                     )
+
                     setToPay((current) =>
                       current.map((payment) =>
                         String(payment.orderId ?? payment.id) ===
@@ -2300,6 +2472,7 @@ export default function MyClaims({
                       ),
                     )
                   }
+
                   setPinTarget(null)
                 }}
               >

@@ -1,5 +1,7 @@
 import { PASSWORD_RESET_PATH } from "@/constants/auth"
+
 import { normalizeBatchCategory } from "@/constants/categories"
+
 import type {
   BatchExpenses,
   BatchType,
@@ -19,6 +21,7 @@ import type {
 import { requireSupabase } from "@/lib/supabase"
 
 import { resolveContactUrl } from "@/components/shared/contactLink"
+
 import { effectiveOrderPaymentStatus } from "./orderPaymentState"
 
 type DbProfile = {
@@ -61,16 +64,23 @@ export type LoadedAppData = {
   sellerWaitlist: SellerWaitlistGroup[]
 
   // display name -> profile id, for every user this account transacts with.
+
   profileIdByName: Record<string, string>
 }
 
 const PAYMENT_METHOD_TYPES = new Set([
   "GCash",
+
   "Maya",
+
   "Bank Transfer",
+
   "Cash on Meetup",
+
   "Cash on Delivery",
+
   "Others",
+
   "Receipt Upload",
 ])
 
@@ -82,11 +92,17 @@ function statusToClaim(status: string): ClaimRow["status"] {
   if (status === "insufficient_payment") return "Insufficient Payment"
 
   // `payment_submitted` = the buyer submitted proof and is awaiting the
+
   // seller's verification. It gets its OWN status so it shows in the filtered
+
   // table (as "Awaiting Verification") but is NOT payable — the buyer can't pay
+
   // again until the seller acts. Rejection sends the order back to
+
   // `payment_pending` (→ "Pending", payable) and a short payment lands on
+
   // `insufficient_payment` (→ "Insufficient Payment", payable again).
+
   if (status === "payment_submitted") return "Awaiting Verification"
 
   if (["payment_confirmed", "preparing", "completed"].includes(status)) {
@@ -99,7 +115,9 @@ function statusToClaim(status: string): ClaimRow["status"] {
 function statusToStep(status: string, fulfillmentStage?: string | null) {
   if (fulfillmentStage === "shipped" || fulfillmentStage === "in_transit")
     return 4
+
   if (fulfillmentStage === "delivered") return 5
+
   return (
     {
       payment_pending: 1,
@@ -125,7 +143,9 @@ function statusToStep(status: string, fulfillmentStage?: string | null) {
 
 function statusToColumn(
   status: string,
+
   fulfillmentStage?: string | null,
+
   role: FulfillmentOrder["perspective"] = "seller",
 ): FulfillmentOrder["col"] | null {
   if (fulfillmentStage === "delivered" || status === "completed")
@@ -142,7 +162,11 @@ function statusToColumn(
 
   if (status === "payment_confirmed") return "Payment Confirmed"
 
-  if (["payment_pending", "payment_submitted", "insufficient_payment"].includes(status))
+  if (
+    ["payment_pending", "payment_submitted", "insufficient_payment"].includes(
+      status,
+    )
+  )
     return role === "buyer" ? "Pending Payment" : null
 
   if (["cancelled", "expired", "incomplete"].includes(status))
@@ -217,6 +241,7 @@ export async function signIn(email: string, password: string) {
 
   const { data, error } = await client.auth.signInWithPassword({
     email,
+
     password,
   })
 
@@ -249,13 +274,21 @@ export async function signUp(input: {
   )
 
   // Every field the signup form collects travels in the auth metadata, because
+
   // `handle_new_auth_user` writes the profile row from `raw_user_meta_data` the
+
   // moment the auth user is created. That trigger runs whether or not Supabase
+
   // issues a session, so the shop name, social links and seller flag survive the
+
   // email-confirmation round trip. Writing them from here cannot be relied on:
+
   // `auth.signUp` returns no session while a confirmation is pending, and
+
   // `user_profiles` is update-authenticated only, so the write would match zero
+
   // rows without raising an error.
+
   const { data, error } = await client.auth.signUp({
     email: input.email,
 
@@ -263,8 +296,11 @@ export async function signUp(input: {
 
     options: {
       // Return the confirmation link to wherever the user signed up from. Without
+
       // this Supabase falls back to the configured Site URL, so confirming from a
+
       // local development server would land on the deployed site instead.
+
       emailRedirectTo: `${window.location.origin}/`,
 
       data: {
@@ -288,10 +324,15 @@ export async function signUp(input: {
   if (!data.user) throw new Error("Supabase did not return a user")
 
   // Supabase will not reveal whether an address is registered. For an email that
+
   // already has a confirmed account it returns a placeholder user with NO
+
   // identities, no session and no error, and sends no email at all. Reporting
+
   // that as "we emailed you" is how a buyer ends up waiting on a message that
+
   // will never arrive, so surface it as its own outcome.
+
   if (data.user.identities && data.user.identities.length === 0)
     return { status: "already_registered" as const, user: null }
 
@@ -305,12 +346,17 @@ export async function signUp(input: {
 }
 
 // Sends a fresh signup confirmation link. Supabase enforces a minimum gap between
+
 // sends (60s on this project) and answers the same way whether or not the address
+
 // has an unconfirmed account, so callers must not claim an email definitely went out.
+
 export async function resendConfirmation(email: string) {
   const { error } = await requireSupabase().auth.resend({
     type: "signup",
+
     email: email.trim(),
+
     options: { emailRedirectTo: `${window.location.origin}/` },
   })
 
@@ -330,7 +376,9 @@ export async function requestPasswordReset(email: string) {
 }
 
 // Called by the recovery screen once Supabase has accepted a reset link and
+
 // established the short-lived session that authorizes the change.
+
 export async function updatePassword(password: string) {
   const { error } = await requireSupabase().auth.updateUser({ password })
 
@@ -338,16 +386,22 @@ export async function updatePassword(password: string) {
 }
 
 // Changing a password from Settings has to prove the current one first. Supabase
+
 // does not ask for it when an authenticated user calls `updateUser`, so sign in
+
 // again with it and let that step reject a wrong password.
+
 export async function changePassword(input: {
   currentPassword: string
+
   newPassword: string
 }) {
   const client = requireSupabase()
 
   // Read the address from the session rather than the profile form: the two
+
   // differ while an email change is still waiting to be confirmed.
+
   const { data, error: userError } = await client.auth.getUser()
 
   if (userError) throw userError
@@ -358,12 +412,15 @@ export async function changePassword(input: {
 
   const { error: verifyError } = await client.auth.signInWithPassword({
     email,
+
     password: input.currentPassword,
   })
 
   if (verifyError) {
     // Only a credential rejection means the password was wrong. A rate limit or a
+
     // network fault has to surface as itself.
+
     const wrongPassword =
       verifyError.code === "invalid_credentials" ||
       /invalid login credentials/i.test(verifyError.message)
@@ -373,46 +430,61 @@ export async function changePassword(input: {
     throw verifyError
   }
 
-  const { error } = await client.auth.updateUser({ password: input.newPassword })
+  const { error } = await client.auth.updateUser({
+    password: input.newPassword,
+  })
 
   if (error) throw error
 }
 
 export async function signOut() {
   const { error } = await requireSupabase().auth.signOut()
+
   if (error) throw error
 }
 
 function formatBatchDateRange(startsOn: string, endsOn: string) {
   const start = new Date(`${startsOn}T00:00:00`)
+
   const end = new Date(`${endsOn}T00:00:00`)
+
   const startMonth = start.toLocaleDateString("en-US", { month: "short" })
+
   const endMonth = end.toLocaleDateString("en-US", { month: "short" })
+
   const startYear = start.getFullYear()
+
   const endYear = end.getFullYear()
 
   if (startMonth === endMonth && startYear === endYear) {
     return `${startMonth} ${start.getDate()}–${end.getDate()}, ${endYear}`
   }
+
   if (startYear === endYear) {
     return `${startMonth} ${start.getDate()}–${endMonth} ${end.getDate()}, ${endYear}`
   }
+
   return `${startMonth} ${start.getDate()}, ${startYear}–${endMonth} ${end.getDate()}, ${endYear}`
 }
 
 export async function setBatchReaction(batchId: string, reacted: boolean) {
   const client = requireSupabase()
+
   const { data, error } = await client.rpc("set_batch_reaction", {
     p_batch_id: batchId,
+
     p_reacted: reacted,
   })
+
   if (error) throw error
 
   const result = Array.isArray(data) ? data[0] : data
+
   if (!result) throw new Error("The reaction could not be confirmed.")
 
   return {
     reacted: Boolean(result.reacted),
+
     reactionCount: Number(result.reaction_count ?? 0),
   }
 }
@@ -428,37 +500,62 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
   const [
     { data: catalog, error: catalogError },
+
     { data: dbOrders, error: ordersError },
+
     { data: reactionCounts, error: reactionCountsError },
+
     { data: ownReactions, error: ownReactionsError },
+
     { data: buyerPaymentStates, error: buyerPaymentStatesError },
   ] = await Promise.all([
     client.from("batch_catalog").select("*"),
+
     client
+
       .from("orders")
+
       .select(
         "*,batch_products(name,batch_id,batches(title)),payments(id,amount,status,method_type,submitted_at,reference_number,receipt_path,payer_account_name,payer_phone,buyer_contact_url,rejection_reason,rejection_deadline)",
       )
+
       .order("created_at", { ascending: false }),
+
     client
+
       .from("batch_reaction_counts")
+
       .select("batch_id,batch_created_at,reaction_count")
+
       .order("reaction_count", { ascending: false })
+
       .order("batch_created_at", { ascending: false }),
+
     client
+
       .from("batch_reactions")
+
       .select("batch_id")
+
       .eq("user_id", auth.user.id),
+
     client.rpc("buyer_order_payment_states"),
   ])
+
   if (catalogError) throw catalogError
+
   if (ordersError) throw ordersError
+
   const reactionSchemaMissing = [reactionCountsError, ownReactionsError].some(
     (error) => error && ["PGRST205", "42P01"].includes(error.code),
   )
+
   if (reactionCountsError && !reactionSchemaMissing) throw reactionCountsError
+
   if (ownReactionsError && !reactionSchemaMissing) throw ownReactionsError
+
   if (buyerPaymentStatesError) throw buyerPaymentStatesError
+
   if (reactionSchemaMissing) {
     console.warn(
       "Batch reaction tables are not migrated yet; loading catalog without reaction metadata.",
@@ -468,31 +565,43 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   const reactionMetadata = new Map(
     (reactionCounts ?? []).map((row) => [
       row.batch_id,
+
       {
         count: Number(row.reaction_count ?? 0),
+
         createdAt: row.batch_created_at as string,
       },
     ]),
   )
+
   const reactedBatchIds = new Set(
     (ownReactions ?? []).map((row) => row.batch_id),
   )
+
   const buyerPaymentStateByOrderId = new Map<string, {
     effectiveStatus: string
+
     latestPaymentStatus: string | null
+
     rejectionDeadline: string | null
   }>(
     (buyerPaymentStates ?? []).map(
       (row: {
         order_id: string
+
         effective_status: string
+
         latest_payment_status: string | null
+
         rejection_deadline: string | null
       }) => [
         row.order_id as string,
+
         {
           effectiveStatus: row.effective_status as string,
+
           latestPaymentStatus: row.latest_payment_status as string | null,
+
           rejectionDeadline: row.rejection_deadline as string | null,
         },
       ],
@@ -502,6 +611,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   const participantIds = [
     ...new Set([
       ...(dbOrders ?? []).flatMap((row) => [row.buyer_id, row.seller_id]),
+
       ...(catalog ?? []).map((row) => row.seller_id),
     ]),
   ]
@@ -509,6 +619,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   const participantNames = new Map<string, string>()
 
   const participantLinks = new Map<string, string | undefined>()
+
+  const participantSocialLinks = new Map<string, Record<string, string>>()
 
   if (participantIds.length > 0) {
     const { data: participants, error: participantsError } = await client
@@ -524,23 +636,33 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     for (const participant of participants ?? []) {
       participantNames.set(participant.id, participant.display_name)
 
-      participantLinks.set(
-        participant.id,
-        resolveContactUrl(participant.social_links ?? undefined),
-      )
+      const socialLinks = (participant.social_links ??
+        {}) as Record<string, string>
+
+      participantSocialLinks.set(participant.id, socialLinks)
+
+      participantLinks.set(participant.id, resolveContactUrl(socialLinks))
     }
   }
 
   const batchMap = new Map<string, BatchType>()
+
   for (const row of catalog ?? []) {
     const reactions = reactionMetadata.get(row.batch_id)
+
     const current: BatchType = batchMap.get(row.batch_id) ?? {
       id: numericId(row.batch_id),
+
       dbId: row.batch_id,
+
       createdAt: reactions?.createdAt,
+
       reactionCount: reactions?.count ?? 0,
+
       reactedByCurrentUser: reactedBatchIds.has(row.batch_id),
+
       live: row.batch_status === "live",
+
       locked: row.batch_status === "locked",
 
       title: row.batch_title,
@@ -552,6 +674,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       sellerFb: participantLinks.get(row.seller_id),
 
       trips: formatBatchDateRange(row.starts_on, row.ends_on),
+
       items: Number(row.batch_total_items ?? 0),
 
       claimed: Number(row.batch_claimed ?? 0),
@@ -629,6 +752,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     const buyerName = participantNames.get(row.buyer_id) ?? "Buyer"
 
     const buyerPaymentState = buyerPaymentStateByOrderId.get(row.id)
+
     const effectiveStatus =
       isBuyer && buyerPaymentState
         ? buyerPaymentState.effectiveStatus
@@ -645,26 +769,43 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
     const deliveryFields = {
       reservedPaymentMethod: row.reserved_payment_method ?? undefined,
+
       shippingApplies: Boolean(row.shipping_applies),
+
       shippingState: row.shipping_state ?? undefined,
+
       shippingFee:
         row.shipping_fee == null ? undefined : Number(row.shipping_fee),
+
       deadlinePausedAt: row.deadline_paused_at ?? undefined,
+
       deliveryPinLat:
         row.delivery_pin_lat == null ? undefined : Number(row.delivery_pin_lat),
+
       deliveryPinLng:
         row.delivery_pin_lng == null ? undefined : Number(row.delivery_pin_lng),
+
       deliveryPinUrl: row.delivery_pin_url ?? undefined,
+
       deliveryPinAddress: row.delivery_pin_address ?? undefined,
+
       courierCompany: row.courier_company ?? undefined,
+
       riderName: row.rider_name ?? undefined,
+
       riderContact: row.rider_contact ?? undefined,
+
       trackingNumber: row.tracking_number ?? undefined,
+
       eta: row.eta ?? undefined,
+
       trackingUrl: row.tracking_url ?? undefined,
+
       fulfillmentStage: row.fulfillment_stage ?? undefined,
+
       declineReason: row.decline_reason ?? undefined,
     }
+
     const orderTotal =
       Number(row.total_amount) +
       (row.shipping_fee == null ? 0 : Number(row.shipping_fee))
@@ -687,6 +828,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         sellerFb: participantLinks.get(row.seller_id),
 
+        sellerSocialLinks: participantSocialLinks.get(row.seller_id),
+
+        orderStatus: effectiveStatus,
+
         qty: row.quantity,
 
         amount: orderTotal,
@@ -698,6 +843,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         expiresAt: row.reservation_expires_at,
 
         extensionRequested: row.extension_status === "pending",
+
         ...deliveryFields,
       })
 
@@ -717,27 +863,42 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         amount: orderTotal,
 
         step: statusToStep(effectiveStatus, row.fulfillment_stage),
+
         qty: row.quantity,
+
         ...deliveryFields,
       })
 
       const buyerColumn = statusToColumn(
         effectiveStatus,
+
         row.fulfillment_stage,
+
         "buyer",
       )
+
       if (buyerColumn) {
         fulfillment.push({
           id: row.id,
+
           dbId: row.id,
+
           col: buyerColumn,
+
           perspective: "buyer",
+
           buyer: buyerName,
+
           seller: sellerName,
+
           sellerFb: participantLinks.get(row.seller_id),
+          sellerSocialLinks: participantSocialLinks.get(row.seller_id),
           product: product.name,
+
           qty: row.quantity,
+
           amount: orderTotal,
+
           ...deliveryFields,
         })
       }
@@ -759,6 +920,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         buyerFb: participantLinks.get(row.buyer_id),
 
+        buyerSocialLinks: participantSocialLinks.get(row.buyer_id),
+
+        orderStatus: effectiveStatus,
+
         qty: row.quantity,
 
         amount: orderTotal,
@@ -770,25 +935,38 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         expiresAt: row.reservation_expires_at,
 
         extensionRequested: row.extension_status === "pending",
+
         ...deliveryFields,
       })
 
       const sellerColumn = statusToColumn(
         effectiveStatus,
+
         row.fulfillment_stage,
+
         "seller",
       )
+
       if (sellerColumn) {
         fulfillment.push({
           id: row.id,
+
           dbId: row.id,
+
           col: sellerColumn,
+
           perspective: "seller",
+
           buyer: buyerName,
+
           buyerFb: participantLinks.get(row.buyer_id),
+          buyerSocialLinks: participantSocialLinks.get(row.buyer_id),
           product: product.name,
+
           qty: row.quantity,
+
           amount: orderTotal,
+
           ...deliveryFields,
         })
       }
@@ -801,6 +979,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       .reduce(
         (sum: number, payment: { amount: number | string }) =>
           sum + Number(payment.amount),
+
         0,
       )
 
@@ -829,10 +1008,15 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         hours,
 
         expiresAt: row.reservation_expires_at,
+
         reservedPaymentMethod: deliveryFields.reservedPaymentMethod,
+
         shippingApplies: deliveryFields.shippingApplies,
+
         shippingState: deliveryFields.shippingState,
+
         shippingFee: deliveryFields.shippingFee,
+
         deadlinePausedAt: deliveryFields.deadlinePausedAt,
       })
     }
@@ -842,8 +1026,11 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       payHistory.push({
         id: payment.id ?? `${row.id}-${payment.submitted_at}`,
+
         orderId: row.id,
+
         submittedAt: payment.submitted_at,
+
         product: product.name,
 
         batch: product.batches.title,
@@ -860,12 +1047,19 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
             : payment.status === "verified"
               ? "Paid and Reserved"
               : "Pending",
+
         referenceNumber: payment.reference_number ?? undefined,
+
         receiptPath: payment.receipt_path ?? undefined,
+
         payerAccountName: payment.payer_account_name ?? undefined,
+
         payerPhone: payment.payer_phone ?? undefined,
+
         buyerContactUrl: payment.buyer_contact_url ?? undefined,
+
         rejectionReason: payment.rejection_reason ?? undefined,
+
         rejectionDeadline: payment.rejection_deadline ?? undefined,
       })
     }
@@ -878,20 +1072,30 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     : []
 
   const profileIdByName: Record<string, string> = {}
+
   for (const [id, name] of participantNames) {
     if (name) profileIdByName[name] = id
   }
 
   return {
     user,
+
     batches: [...batchMap.values()],
+
     claims,
+
     toPay,
+
     payHistory,
+
     orders,
+
     fulfillment,
+
     waitlist,
+
     sellerWaitlist,
+
     profileIdByName,
   }
 }
@@ -973,6 +1177,7 @@ async function loadSellerWaitlist(
 
       links.set(
         profile.id,
+
         resolveContactUrl(profile.social_links ?? undefined),
       )
     }
@@ -1051,7 +1256,9 @@ async function loadBuyerWaitlist(
 
     batch_products: Array<{
       name: string
+
       selling_price: number | string
+
       batch_id: string
     }> | null
   }
@@ -1131,18 +1338,27 @@ async function loadBuyerWaitlist(
 
 export async function claimProduct(
   productId: string,
+
   reservation: ClaimReservationInput,
 ) {
   const { data, error } = await requireSupabase().rpc(
     "claim_batch_product_with_address",
+
     {
       p_batch_product_id: productId,
+
       p_quantity: reservation.quantity,
+
       p_payment_method: reservation.paymentMethod,
+
       p_pin_lat: reservation.pinLat ?? null,
+
       p_pin_lng: reservation.pinLng ?? null,
+
       p_pin_url: reservation.pinUrl ?? null,
+
       p_accept_shipping: reservation.acceptShipping,
+
       p_pin_address: reservation.pinAddress ?? null,
     },
   )
@@ -1167,10 +1383,15 @@ export async function createBatch(batch: {
 
   products: Array<{
     name: string
+
     basePrice: number
+
     markup: number
+
     quantity: number
+
     limitPerUser?: number
+
     waitlistLimit?: number
   }>
 }) {
@@ -1238,36 +1459,50 @@ export async function createBatch(batch: {
 }
 
 // Translate a raw Supabase/Postgres error from submit_order_payment into a
+
 // clear, actionable message for the buyer. The live DB enforces:
+
 //   - unique (order_id, reference_number)  -> 23505 duplicate reference number
+
 //   - method_type CHECK                    -> 23514 unsupported method
+
 //   - amount > 0 CHECK                      -> 23514 invalid amount
+
 // Anything else falls back to the DB message so we never hide a real error.
+
 function paymentErrorMessage(error: {
   code?: string
+
   message?: string
+
   details?: string
 }): string {
   const code = error.code ?? ""
+
   const raw = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase()
 
   // Unique violation on the reference number for this order.
+
   if (code === "23505" || raw.includes("payments_order_reference_uidx")) {
     return "A payment with this reference number was already submitted for this order. Enter the exact reference number from your latest transaction — each submission needs its own reference."
   }
 
   // Check-constraint violations.
+
   if (code === "23514" || raw.includes("violates check constraint")) {
     if (raw.includes("method_type")) {
       return "That payment method is not supported. Choose GCash, Maya, Bank Transfer, Cash on Meetup, or Cash on Delivery."
     }
+
     if (raw.includes("amount")) {
       return "Enter a payment amount greater than zero."
     }
+
     return "Some of the payment details are not in the expected format. Please review the fields and try again."
   }
 
   // Not-null violation — a required field was left blank.
+
   if (code === "23502") {
     return "A required payment detail is missing. Fill in the reference number and amount, then submit again."
   }
@@ -1287,7 +1522,9 @@ export async function submitPayment(input: {
   receipt?: File
 
   payerAccountName?: string
+
   payerPhone?: string
+
   buyerContactUrl?: string
 }) {
   if (!PAYMENT_METHOD_TYPES.has(input.method)) {
@@ -1295,7 +1532,9 @@ export async function submitPayment(input: {
       "Invalid payment method. Please select GCash, Maya, bank transfer, or cash.",
     )
   }
+
   const client = requireSupabase()
+
   const { data: auth } = await client.auth.getUser()
 
   if (!auth.user) throw new Error("Authentication required")
@@ -1332,7 +1571,9 @@ export async function submitPayment(input: {
     p_receipt_path: receiptPath,
 
     p_payer_account_name: input.payerAccountName ?? null,
+
     p_payer_phone: input.payerPhone ?? null,
+
     p_buyer_contact_url: input.buyerContactUrl ?? null,
   })
 
@@ -1348,7 +1589,9 @@ export async function submitPayment(input: {
 
 export async function requestOrderExtension(
   orderId: string,
+
   hours: number,
+
   reason?: string,
 ) {
   const { error } = await requireSupabase().rpc("request_order_extension", {
@@ -1393,8 +1636,10 @@ export async function setFulfillmentStatus(orderId: string, status: string) {
 export async function setOrderShippingFee(orderId: string, fee: number) {
   const { error } = await requireSupabase().rpc("set_order_shipping_fee", {
     p_order_id: orderId,
+
     p_fee: fee,
   })
+
   if (error) throw error
 }
 
@@ -1402,54 +1647,77 @@ export async function requestLocationCorrection(orderId: string) {
   const { error } = await requireSupabase().rpc("request_location_correction", {
     p_order_id: orderId,
   })
+
   if (error) throw error
 }
 
 export async function declineDeliveryOrder(orderId: string, reason: string) {
   const { error } = await requireSupabase().rpc("decline_delivery_order", {
     p_order_id: orderId,
+
     p_reason: reason,
   })
+
   if (error) throw error
 }
 
 export async function updateOrderDeliveryPin(
   orderId: string,
+
   pin: { lat?: number; lng?: number; url?: string; address?: string },
 ) {
   const { error } = await requireSupabase().rpc(
     "update_order_delivery_pin_with_address",
+
     {
       p_order_id: orderId,
+
       p_lat: pin.lat ?? null,
+
       p_lng: pin.lng ?? null,
+
       p_url: pin.url ?? null,
+
       p_address: pin.address ?? null,
     },
   )
+
   if (error) throw error
 }
 
 export async function setOrderTracking(
   orderId: string,
+
   tracking: {
     courier: string
+
     riderName: string
+
     riderContact: string
+
     trackingNumber: string
+
     eta: string
+
     trackingUrl?: string
   },
 ) {
   const { error } = await requireSupabase().rpc("set_order_tracking", {
     p_order_id: orderId,
+
     p_courier: tracking.courier,
+
     p_rider_name: tracking.riderName,
+
     p_rider_contact: tracking.riderContact,
+
     p_tracking_number: tracking.trackingNumber,
+
     p_eta: tracking.eta,
+
     p_tracking_url: tracking.trackingUrl ?? null,
   })
+
   if (error) throw error
 }
 
@@ -1473,6 +1741,7 @@ export async function updateProfile(values: {
   const { data: auth, error: userError } = await client.auth.getUser()
 
   if (userError) throw userError
+
   if (!auth.user) throw new Error("Authentication required")
 
   const payload: Record<string, unknown> = {}
@@ -1494,6 +1763,7 @@ export async function updateProfile(values: {
     payload.notification_preferences = values.notificationPreferences
 
   const requestedEmail = values.email?.trim()
+
   const currentEmail = auth.user.email?.trim()
 
   if (
@@ -1510,13 +1780,19 @@ export async function updateProfile(values: {
   if (Object.keys(payload).length === 0) return
 
   const { data, error } = await client
+
     .from("user_profiles")
+
     .update(payload)
+
     .eq("id", auth.user.id)
+
     .select("id")
+
     .single()
 
   if (error) throw error
+
   if (!data) throw new Error("Profile update did not affect an account")
 }
 
@@ -1546,12 +1822,15 @@ export async function setProductLock(productId: string, locked: boolean) {
 
 export async function setProductWaitlistLimit(
   productId: string,
+
   limit?: number,
 ) {
   const normalized =
     limit !== undefined && limit >= 0 ? Math.floor(limit) : null
+
   const { error } = await requireSupabase().rpc("set_product_waitlist_limit", {
     p_product_id: productId,
+
     p_limit: normalized,
   })
 
@@ -1559,6 +1838,7 @@ export async function setProductWaitlistLimit(
 }
 
 // Join (or update) a waitlist entry with the quantity the buyer wants. When
+
 // stock frees up, the available amount is automatically added to My Claims.
 
 export async function joinWaitlist(productId: string, quantity: number = 1) {
@@ -1588,14 +1868,18 @@ export async function uploadProfileAvatar(file: File) {
 
     .upload(objectPath, file, {
       upsert: true,
+
       contentType: file.type || undefined,
     })
 
   if (uploadError) throw uploadError
 
   const { error: profileError } = await client
+
     .from("user_profiles")
+
     .update({ avatar_path: objectPath })
+
     .eq("id", userId)
 
   if (profileError) throw profileError
@@ -1625,6 +1909,7 @@ export async function uploadPaymentQr(file: File): Promise<string> {
 
     .upload(objectPath, file, {
       upsert: true,
+
       contentType: file.type || undefined,
     })
 
@@ -1635,15 +1920,20 @@ export async function uploadPaymentQr(file: File): Promise<string> {
 
 export function paymentQrUrl(qrPath?: string | null): string | undefined {
   if (!qrPath) return undefined
+
   return requireSupabase().storage.from("payment-qr").getPublicUrl(qrPath).data
     .publicUrl
 }
 
 export async function paymentReceiptUrl(receiptPath: string): Promise<string> {
   const { data, error } = await requireSupabase()
+
     .storage.from("payment-receipts")
+
     .createSignedUrl(receiptPath, 600)
+
   if (error) throw error
+
   return data.signedUrl
 }
 
@@ -1667,18 +1957,26 @@ export type SellerPaymentMethod = SellerReceiveMethod & {
 
 export async function loadOwnPaymentMethods(): Promise<SellerPaymentMethod[]> {
   const { data, error } = await requireSupabase()
+
     .from("seller_payment_methods")
+
     .select("id,method_type,account_name,account_number,qr_path")
+
     .eq("is_active", true)
+
     .order("method_type")
 
   if (error) throw error
 
   return (data ?? []).map((row) => ({
     id: row.id,
+
     methodType: row.method_type,
+
     accountName: row.account_name,
+
     accountNumber: row.account_number,
+
     qrUrl: paymentQrUrl(row.qr_path),
   }))
 }
@@ -1688,25 +1986,34 @@ export async function loadSellerReceiveMethods(
 ): Promise<SellerReceiveMethod[]> {
   const { data, error } = await requireSupabase().rpc(
     "seller_receive_methods",
+
     { p_seller_id: sellerId },
   )
 
   if (error) throw error
 
   return (data ?? [])
+
     .filter((row: { method_type: string }) =>
       PAYMENT_METHOD_TYPES.has(row.method_type),
     )
+
     .map(
       (row: {
         method_type: string
+
         account_name: string | null
+
         account_number: string | null
+
         qr_path: string | null
       }) => ({
         methodType: row.method_type,
+
         accountName: row.account_name,
+
         accountNumber: row.account_number,
+
         qrUrl: paymentQrUrl(row.qr_path),
       }),
     )
@@ -1759,15 +2066,20 @@ export async function updatePaymentMethod(
 ) {
   const values: Record<string, unknown> = {
     method_type: methodType,
+
     account_name: accountName,
+
     account_number: accountNumber,
   }
 
   if (qrFile) values.qr_path = await uploadPaymentQr(qrFile)
 
   const { error } = await requireSupabase()
+
     .from("seller_payment_methods")
+
     .update(values)
+
     .eq("id", id)
 
   if (error) throw error
@@ -1775,8 +2087,11 @@ export async function updatePaymentMethod(
 
 export async function deactivatePaymentMethod(id: string) {
   const { error } = await requireSupabase()
+
     .from("seller_payment_methods")
+
     .update({ is_active: false })
+
     .eq("id", id)
 
   if (error) throw error
@@ -1802,7 +2117,9 @@ export async function markNotificationRead(id?: string) {
   const client = requireSupabase()
 
   let query = client
+
     .from("notifications")
+
     .update({ read_at: new Date().toISOString() })
 
   if (id) query = query.eq("id", id)
@@ -1834,8 +2151,11 @@ export async function loadSellerPaymentSubmissions() {
 
   if (buyerIds.length) {
     const { data: profiles } = await client
+
       .from("public_profiles")
+
       .select("id,display_name")
+
       .in("id", buyerIds)
 
     for (const profile of profiles ?? [])
@@ -1871,9 +2191,13 @@ export async function loadSellerPaymentSubmissions() {
     acctName: row.payer_account_name ?? "—",
 
     receipt: row.receipt_path?.split("/").pop() ?? "No receipt",
+
     receiptPath: row.receipt_path ?? undefined,
+
     rejectReason: row.rejection_reason ?? undefined,
+
     rejectionDeadline: row.rejection_deadline ?? undefined,
+
     phone: row.payer_phone ?? undefined,
 
     amountPaid: String(row.amount),
@@ -1884,14 +2208,20 @@ export async function loadSellerPaymentSubmissions() {
 
 export async function reviewPayment(
   paymentId: string,
+
   decision: "verified" | "rejected",
+
   reason?: string,
+
   deadlineHours?: number,
 ) {
   const { error } = await requireSupabase().rpc("review_order_payment", {
     p_payment_id: paymentId,
+
     p_decision: decision,
+
     p_reason: reason ?? null,
+
     p_deadline_hours: deadlineHours ?? null,
   })
 
@@ -1920,10 +2250,13 @@ export async function loadSellerExtensionRequests() {
   const client = requireSupabase()
 
   const { data: extensionRows, error: extensionError } = await client
+
     .from("orders")
+
     .select(
       "id,buyer_id,extension_status,extension_requested_at,batch_products(name,batches(title))",
     )
+
     .eq("extension_status", "pending")
 
   if (extensionError) throw extensionError
@@ -1936,8 +2269,11 @@ export async function loadSellerExtensionRequests() {
 
   if (buyerIds.length) {
     const { data: profiles } = await client
+
       .from("public_profiles")
+
       .select("id,display_name")
+
       .in("id", buyerIds)
 
     for (const profile of profiles ?? []) {
@@ -1949,6 +2285,7 @@ export async function loadSellerExtensionRequests() {
     extensions: (extensionRows ?? []).map((row) => {
       const product = row.batch_products as unknown as {
         name: string
+
         batches: { title: string }
       }
 
@@ -1989,7 +2326,9 @@ export type FinancialSummary = {
 
 export async function getFinancialSummary(
   from: Date,
+
   to: Date,
+
   batchId?: string,
 ) {
   const { data, error } = await requireSupabase().rpc("get_financial_summary", {
@@ -2083,6 +2422,7 @@ export type PeriodOrder = {
 
 export async function getPeriodOrders(
   from: Date,
+
   to: Date,
 ): Promise<PeriodOrder[]> {
   const client = requireSupabase()
@@ -2155,6 +2495,7 @@ export async function getPeriodOrders(
 
 export async function getRecordedExpensesForPeriod(
   from: Date,
+
   to: Date,
 ): Promise<number> {
   const client = requireSupabase()
@@ -2231,6 +2572,7 @@ export async function loadBatchExpenses(
 
 export async function saveBatchExpenses(
   batchDbId: string,
+
   value: BatchExpenses,
 ) {
   // One expense record per batch (unique batch_id) → upsert on conflict.
@@ -2269,7 +2611,9 @@ export const kargoApi = {
   resendConfirmation,
 
   signOut,
+
   setBatchReaction,
+
   requestPasswordReset,
 
   updatePassword,
@@ -2291,10 +2635,15 @@ export const kargoApi = {
   expireClaim,
 
   setFulfillmentStatus,
+
   setOrderShippingFee,
+
   requestLocationCorrection,
+
   declineDeliveryOrder,
+
   updateOrderDeliveryPin,
+
   setOrderTracking,
 
   updateProfile,
@@ -2310,12 +2659,15 @@ export const kargoApi = {
   joinWaitlist,
 
   loadSellerReceiveMethods,
+
   loadOwnPaymentMethods,
 
   uploadPaymentQr,
 
   paymentQrUrl,
+
   paymentReceiptUrl,
+
   addPaymentMethod,
 
   updatePaymentMethod,
@@ -2329,6 +2681,7 @@ export const kargoApi = {
   loadSellerPaymentSubmissions,
 
   reviewPayment,
+
   notifyPaymentResubmission,
 
   decideOrderExtension,

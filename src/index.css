@@ -533,6 +533,58 @@ button {
   color: #0b7a59;
 }
 
+.buyer-profile-modal__socials {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.buyer-profile-modal__social-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: #fff;
+  color: #111827;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.buyer-profile-modal__social-link:hover {
+  background: #f3f4ff;
+  color: #191bb3;
+}
+
+.buyer-profile-modal__social-link:focus-visible {
+  outline: 2px solid #191bb3;
+  outline-offset: 2px;
+}
+
+.buyer-profile-modal__social-link span {
+  min-width: 0;
+}
+
+.buyer-profile-modal__social-link strong,
+.buyer-profile-modal__social-link small {
+  display: block;
+}
+
+.buyer-profile-modal__social-link strong {
+  font-size: 12px;
+}
+
+.buyer-profile-modal__social-link small {
+  overflow: hidden;
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .auth-signup-switch {
   margin-top: 28px;
 }
