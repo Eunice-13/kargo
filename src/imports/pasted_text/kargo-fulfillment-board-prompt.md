@@ -225,14 +225,15 @@ Do **not** run an encoding conversion, do **not** add or strip a BOM, and do **n
 4. Confirm the three files are still UTF-8 **without BOM** afterwards (first three bytes must not be `EF BB BF`).
 5. Re-check each of the ten lines in the browser (see §6, step 14).
 
-**Guard — run before committing.**
+**Guard — run before committing.** Search the repo for the mojibake lead bytes and confirm **zero** matches:
 
-```bash
-# A Latin-1-misread UTF-8 lead byte means mojibake is back.
-rg -n "[ÃÂâð]" src/ supabase/ -g '!src/imports/pasted_text/**'
+```
+[ÃÂâð]
 ```
 
-Expect **zero** matches. `src/imports/pasted_text/` is excluded only because this prompt file quotes the broken samples as documentation.
+(ripgrep equivalent: `rg -n "[ÃÂâð]" src supabase -g '!src/imports/pasted_text/**'`.)
+
+`src/imports/pasted_text/` is excluded only because this file quotes the broken samples as documentation. **Verified baseline:** exactly three tracked files match today — `Countdown.tsx`, `SetShippingFeeModal.tsx`, and `OrderDetailsModal.tsx`. After the fix the match count must be **zero**.
 
 **Ongoing rule for the whole task.** The §3.6 visual pass touches many of these same files. Type `₱`, `—`, `×`, `·`, `≥`, `≤` and `→` directly, and never paste them from a source that re-encodes — that round-trip is exactly what produced these ten defects.
 
@@ -284,7 +285,7 @@ Expect **zero** matches. `src/imports/pasted_text/` is excluded only because thi
 - [ ] No new color, font, gradient, image asset, or animation was introduced; only theme tokens, the four loaded families, and lucide icons.
 - [ ] Body/placeholder contrast passes ≥4.5:1 (≥3:1 for large text).
 - [ ] All ten inventoried strings (§3.9) render correctly: `—`, `×`, `₱`.
-- [ ] The §3.9 guard returns zero matches: `rg -n "[ÃÂâð]" src/ supabase/ -g '!src/imports/pasted_text/**'`.
+- [ ] The §3.9 guard returns zero matches (verified baseline before the fix: exactly three files).
 - [ ] `Countdown.tsx`, `OrderDetailsModal.tsx`, and `SetShippingFeeModal.tsx` are still UTF-8 **without BOM** after the fix.
 
 **Regressions**
@@ -373,5 +374,5 @@ These are settled — implement them as written.
 12. **The design system of record is the shipped code.** `INDIGO #191BA9` + `src/constants/theme.ts`, and the four fonts already loaded. The `Manrope + DM Sans` and `Inter` references in `DESIGN.md` / `AGENTS.md` are stale and are **reported, not edited**, in this pass.
 13. **Buttons: ~36px in modals, right-aligned, side-by-side; full-width stacked only ≤620px.** Fixed centrally in `index.css` with a documented contract, plus removal of the inline `flex: 1` stretchers. The blanket 44px rule becomes touch-only.
 14. **No new dependency, no schema change, no migration.** `leaflet` and `lucide-react` already exist.
-15. **Mojibake is fixed by character replacement — not by re-encoding.** All ten strings inventoried in §3.9 are corrected in `Countdown.tsx`, `OrderDetailsModal.tsx`, and `SetShippingFeeModal.tsx`. Those files are already UTF-8 without BOM and stay that way: no encoding conversion, no BOM change, no codec re-save, no helper constant. The repo guard `rg -n "[ÃÂâð]" src/ supabase/ -g '!src/imports/pasted_text/**'` must return zero.
+15. **Mojibake is fixed by character replacement — not by re-encoding.** All ten strings inventoried in §3.9 are corrected in `Countdown.tsx`, `OrderDetailsModal.tsx`, and `SetShippingFeeModal.tsx`. Those files are already UTF-8 without BOM and stay that way: no encoding conversion, no BOM change, no codec re-save, no helper constant. The §3.9 guard must return zero matches when the change is done.
 16. **Finished screenshots.** Verify the finished UI in one batched pass — seller board, buyer board, expanded views, and every modal listed in §3.6, desktop **and** 390px mobile — fix everything it shows in a single batch, confirm once, and stop.

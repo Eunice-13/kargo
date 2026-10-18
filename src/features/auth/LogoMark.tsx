@@ -12,6 +12,7 @@ export default function LogoMark({
 
   return (
     <div
+      className="auth-logo"
       style={{
         display: "inline-flex",
         flexDirection: "column",

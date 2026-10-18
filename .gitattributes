@@ -13,6 +13,11 @@
 *.tif                filter=lfs diff=lfs merge=lfs -text
 *.ico                filter=lfs diff=lfs merge=lfs -text
 *.webp               filter=lfs diff=lfs merge=lfs -text
+
+# Small runtime branding assets must be present in Vercel's Git checkout.
+# Keep them in regular Git so deployments never depend on Git LFS hydration.
+public/*.png          -filter -diff -merge -text
+src/assets/*.png      -filter -diff -merge -text
 *.psd                filter=lfs diff=lfs merge=lfs -text
 *.ai                 filter=lfs diff=lfs merge=lfs -text
 *.sketch             filter=lfs diff=lfs merge=lfs -text

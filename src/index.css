@@ -103,6 +103,11 @@ button {
   transform: translate(-1%, 1%);
 }
 
+.auth-brand .auth-logo img {
+  width: min(250px, 33vw) !important;
+  height: auto !important;
+}
+
 .auth-form-pane {
   display: flex;
   justify-content: center;
@@ -565,6 +570,14 @@ button {
 
   .auth-brand>* {
     transform: scale(.55);
+  }
+
+  .auth-brand > .auth-logo {
+    transform: none;
+  }
+
+  .auth-brand .auth-logo img {
+    width: min(220px, 54vw) !important;
   }
 
   .auth-form-pane,
@@ -1171,6 +1184,16 @@ body:has(.auth-page) #root {
   transform: translate(-1%, 1%);
 }
 
+.auth-brand > .auth-logo {
+  width: min(250px, 33vw);
+  max-width: none;
+}
+
+.auth-brand > .auth-logo img {
+  width: 100% !important;
+  height: auto !important;
+}
+
 .auth-brand svg {
   width: 100%;
   height: auto;
@@ -1448,6 +1471,11 @@ body:has(.auth-page) #root {
   .auth-brand>* {
     max-width: 74%;
     transform: none;
+  }
+
+  .auth-brand > .auth-logo {
+    width: min(74%, 13rem);
+    max-width: 74%;
   }
 
   .auth-brand span {

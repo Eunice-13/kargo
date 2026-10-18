@@ -15,7 +15,7 @@ export default function AuthLayout({
       className={`auth-page auth-page--${page}${condensed ? " auth-page--condensed" : ""}`}
     >
       <aside className="auth-brand" aria-label="Kargo">
-        <LogoMark size={page === "login" ? 190 : 170} inverse />
+        <LogoMark size={250} inverse />
       </aside>
       <section className="auth-form-pane">
         <div className="auth-form-wrap">{children}</div>
