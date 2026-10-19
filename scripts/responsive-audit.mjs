@@ -129,7 +129,7 @@ const audit = async (surface, width) => {
   if (result.home && (result.home.left !== 0 || result.home.width !== width)) {
     failures.push(`buyer home rect ${JSON.stringify(result.home)}`);
   }
-  if (result.batchColumns !== null && result.batchColumns !== 2)
+  if (result.batchColumns !== null && result.batchColumns !== 5)
     failures.push(`${result.batchColumns} batch columns`);
   if (result.categoryScrolls) failures.push("category grid scrolls");
   if (result.footerHeight !== null && result.footerHeight > 340)
@@ -255,6 +255,36 @@ for (const width of widths) {
     failures.push(...(await audit(`Buyer ${surface}`, width)));
   }
   await clickButton("Home", ".icon-tabbar button");
+  await evaluate(
+    `document.querySelector('.kargo-mobile-search-toggle[aria-label="Open search"]')?.click()`,
+  );
+  await pause(100);
+  const mobileSearch = JSON.parse(
+    await evaluate(`JSON.stringify((() => {
+      const visibleSearchBoxes = [...document.querySelectorAll('.kargo-search-wrap')]
+        .filter((element) => {
+          const rect = element.getBoundingClientRect()
+          return getComputedStyle(element).display !== 'none' && rect.width > 0 && rect.height > 0
+        })
+      return {
+        visibleCount: visibleSearchBoxes.length,
+        insideHeader: visibleSearchBoxes.every((element) => Boolean(element.closest('.kargo-header'))),
+        secondaryPanel: Boolean(document.querySelector('.kargo-mobile-search-panel')),
+        inputFocused: document.activeElement?.matches('.kargo-search input') ?? false,
+      }
+    })())`),
+  );
+  const mobileSearchFailures = [];
+  if (mobileSearch.visibleCount !== 1)
+    mobileSearchFailures.push(`${mobileSearch.visibleCount} visible search boxes`);
+  if (!mobileSearch.insideHeader) mobileSearchFailures.push("search outside header");
+  if (mobileSearch.secondaryPanel) mobileSearchFailures.push("secondary search panel");
+  if (!mobileSearch.inputFocused) mobileSearchFailures.push("search input not focused");
+  failures.push(...mobileSearchFailures);
+  console.log(JSON.stringify({ surface: "Mobile search", width, ...mobileSearch, failures: mobileSearchFailures }));
+  await evaluate(
+    `document.querySelector('.kargo-mobile-search-toggle[aria-label="Close search"]')?.click()`,
+  );
   const openedBatch = await evaluate(`(() => {
     const card = document.querySelector('.buyer-batch-card')
     card?.click()

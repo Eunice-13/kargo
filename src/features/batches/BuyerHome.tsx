@@ -140,7 +140,7 @@ function BatchCard({
       className="buyer-batch-card"
       role="button"
       tabIndex={0}
-      aria-label={`Open ${batch.title}`}
+      aria-label={`Open ${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${batch.seller}, ${batch.trips}, ${batch.claimed} of ${batch.items} claimed`}
       onClick={onOpen}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { UserInfo, Role, Tab, BatchType } from "@/types"
 
 import { INDIGO } from "@/constants/theme"
@@ -48,10 +48,25 @@ export default function Header({
   onSellerSelect?: (name: string) => void
 }) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
+
+  const toggleMobileSearch = () => {
+    setMobileSearchOpen((open) => {
+      const nextOpen = !open
+      if (nextOpen) {
+        window.requestAnimationFrame(() => {
+          headerRef.current
+            ?.querySelector<HTMLInputElement>(".kargo-search input")
+            ?.focus()
+        })
+      }
+      return nextOpen
+    })
+  }
 
   return (
-    <>
     <header
+      ref={headerRef}
       style={{
         background: "#fff",
 
@@ -61,7 +76,9 @@ export default function Header({
 
         zIndex: 50,
       }}
-      className="kargo-header seller-shell-header flex items-center px-6 gap-6 sticky top-0"
+      className={`kargo-header seller-shell-header flex items-center px-6 gap-6 sticky top-0${
+        mobileSearchOpen ? " is-mobile-search-open" : ""
+      }`}
     >
       <div
         className="kargo-brand-lockup flex items-center gap-2 flex-shrink-0"
@@ -94,9 +111,18 @@ export default function Header({
       </div>
       <SearchBox
         batches={batches}
-        onNavigate={onNavigate}
-        onBatchSelect={onBatchSelect}
-        onSellerSelect={onSellerSelect}
+        onNavigate={(tab) => {
+          onNavigate?.(tab)
+          setMobileSearchOpen(false)
+        }}
+        onBatchSelect={(id) => {
+          onBatchSelect?.(id)
+          setMobileSearchOpen(false)
+        }}
+        onSellerSelect={(name) => {
+          onSellerSelect?.(name)
+          setMobileSearchOpen(false)
+        }}
       />
       <div className="kargo-header-actions flex items-center gap-3 flex-shrink-0">
         <button
@@ -104,12 +130,18 @@ export default function Header({
           className="kargo-mobile-search-toggle"
           aria-label={mobileSearchOpen ? "Close search" : "Open search"}
           aria-expanded={mobileSearchOpen}
-          onClick={() => setMobileSearchOpen((open) => !open)}
+          onClick={toggleMobileSearch}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-            <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+          {mobileSearchOpen ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+              <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          )}
         </button>
         <NotificationsMenu role={role} onNavigate={onNavigate} />
         <UserMenu
@@ -121,25 +153,5 @@ export default function Header({
         />
       </div>
     </header>
-    {mobileSearchOpen && (
-      <div className="kargo-mobile-search-panel">
-        <SearchBox
-          batches={batches}
-          onNavigate={(tab) => {
-            onNavigate?.(tab)
-            setMobileSearchOpen(false)
-          }}
-          onBatchSelect={(id) => {
-            onBatchSelect?.(id)
-            setMobileSearchOpen(false)
-          }}
-          onSellerSelect={(name) => {
-            onSellerSelect?.(name)
-            setMobileSearchOpen(false)
-          }}
-        />
-      </div>
-    )}
-    </>
   )
 }
