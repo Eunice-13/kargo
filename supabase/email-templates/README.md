@@ -47,9 +47,10 @@ PNGs land in `scripts/out/auth-shots/` (git-ignored).
 
 - **Do not edit the templates in the Supabase dashboard.** The next `--push`
   overwrites them. Change the generator instead.
-- The banner logo comes from the public `brand-assets` bucket, the same URL the
-  Nylas worker resolves. Run `npm run upload:brand` if it is ever missing; the
-  banner wordmark is live text, so a missing image degrades quietly.
+- The banner logo uses the same versioned, public app asset as the transactional
+  email worker. The URL is deliberately not deployment-specific, preventing the
+  two providers from drifting. The banner wordmark is live text, so a missing
+  image degrades quietly.
 - Two Supabase Auth variables are easy to get wrong: `{{ .NewEmail }}` only
   exists in `email_change`, and `{{ .Token }}` is the 6-digit code used by
   `reauthentication` and `magic_link`.

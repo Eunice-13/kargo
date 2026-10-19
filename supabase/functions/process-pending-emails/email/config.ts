@@ -6,15 +6,16 @@ import { safeUrl } from "./format.ts"
 
 export type EnvReader = (name: string) => string | undefined
 
-export const LOGO_FILE = "kargo-logo-head.png"
-export const LOGO_BUCKET = "brand-assets"
+// Keep this byte-identical to DEFAULT_LOGO in scripts/build-auth-emails.mjs.
+// The query token is tied to the checked-in PNG so email clients do not keep
+// showing an older mark after the asset changes.
+export const DEFAULT_EMAIL_LOGO_URL =
+  "https://kargo-eunice-13s-projects.vercel.app/kargo-logo-head.png?v=2750d019"
 
 /**
- * Where the logo lives, in priority order:
- *   1. KARGO_EMAIL_LOGO_URL          — an explicit, already-public image URL
- *   2. KARGO_EMAIL_ASSET_BASE_URL    — your deployed site origin
- *   3. SUPABASE_URL + the public brand-assets bucket
- * A missing logo is not fatal: the banner wordmark is live text.
+ * Both providers deliberately use this exact versioned asset. Keeping the URL
+ * out of deployment-specific environment variables prevents Auth and queued
+ * emails from silently rendering different marks.
  */
 export function brandingFrom(env: EnvReader): Branding {
   const appUrl =
@@ -23,16 +24,7 @@ export function brandingFrom(env: EnvReader): Branding {
     safeUrl(env("SITE_URL")) ??
     null
 
-  const explicitLogo = safeUrl(env("KARGO_EMAIL_LOGO_URL"))
-  const assetBase = safeUrl(env("KARGO_EMAIL_ASSET_BASE_URL"))
-  const supabaseUrl = safeUrl(env("SUPABASE_URL"))
-
-  const logoUrl =
-    explicitLogo ??
-    (assetBase ? `${assetBase.replace(/\/$/, "")}/${LOGO_FILE}` : null) ??
-    (supabaseUrl ? `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/${LOGO_BUCKET}/${LOGO_FILE}` : null)
-
-  return { appUrl, logoUrl, productName: "KARGO" }
+  return { appUrl, logoUrl: DEFAULT_EMAIL_LOGO_URL, productName: "KARGO" }
 }
 
 export type ProviderName = "nylas" | "brevo"

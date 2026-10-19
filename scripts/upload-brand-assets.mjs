@@ -2,13 +2,8 @@
 //
 //   node scripts/upload-brand-assets.mjs
 //
-// The email worker resolves its banner mark in this order:
-//   1. KARGO_EMAIL_LOGO_URL
-//   2. KARGO_EMAIL_ASSET_BASE_URL + /kargo-logo-head.png
-//   3. <SUPABASE_URL>/storage/v1/object/public/brand-assets/kargo-logo-head.png
-// Running this script makes option 3 real, so no email environment change is
-// needed after the bucket exists. A missing logo is not fatal: the banner
-// wordmark is live text.
+// The email templates use the public app asset directly. This helper keeps a
+// backup copy in Supabase Storage for other consumers and disaster recovery.
 
 import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
@@ -81,4 +76,4 @@ for (const name of ASSETS) {
 
 console.log("")
 console.log(`Banner mark: ${URL.replace(/\/$/, "")}/storage/v1/object/public/${BUCKET}/kargo-logo-head.png`)
-console.log("The email worker uses that URL automatically when KARGO_EMAIL_LOGO_URL is unset.")
+console.log("Email templates continue to use the canonical public app asset.")

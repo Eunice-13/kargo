@@ -2,6 +2,10 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import { renderEmail } from "../supabase/functions/process-pending-emails/email/render.ts"
 import {
+  brandingFrom,
+  DEFAULT_EMAIL_LOGO_URL,
+} from "../supabase/functions/process-pending-emails/email/config.ts"
+import {
   buildView,
   TEMPLATE_NAMES,
   type RenderInput,
@@ -9,6 +13,34 @@ import {
 import { MARIA, SAMPLE_BRANDING, SAMPLE_EMAILS } from "../supabase/functions/process-pending-emails/email/samples.ts"
 
 const branding = { ...SAMPLE_BRANDING, appUrl: "https://app.kargo.test" }
+
+test("both email pipelines use the same versioned logo asset", async () => {
+  assert.equal(brandingFrom(() => undefined).logoUrl, DEFAULT_EMAIL_LOGO_URL)
+  assert.equal(
+    brandingFrom((name) =>
+      name === "KARGO_EMAIL_LOGO_URL" ? "https://stale.example/old-logo.png" : undefined,
+    ).logoUrl,
+    DEFAULT_EMAIL_LOGO_URL,
+  )
+
+  const templates = [
+    "confirmation",
+    "recovery",
+    "magic_link",
+    "invite",
+    "email_change",
+    "reauthentication",
+  ]
+
+  for (const name of templates) {
+    const { readFile } = await import("node:fs/promises")
+    const html = await readFile(
+      new URL(`../supabase/email-templates/${name}.html`, import.meta.url),
+      "utf8",
+    )
+    assert.ok(html.includes(`src="${DEFAULT_EMAIL_LOGO_URL}"`), `${name} logo URL`)
+  }
+})
 
 function fixture(name: string): RenderInput {
   const sample = SAMPLE_EMAILS.find((email) => email.template === name)

@@ -67,10 +67,13 @@ const FONT = {
 const M = { width: 600, radius: 16, radiusSmall: 10, gutter: 32, gutterMobile: 20 }
 
 // The ship mark is white on transparent, so it only reads on the indigo
-// masthead. Served from the public brand-assets bucket, which is the same URL
-// the Nylas worker resolves, so both halves of the brand share one asset.
-const LOGO =
-  "https://leylmztbknmlwnwgvaud.supabase.co/storage/v1/object/public/brand-assets/kargo-logo-head.png"
+// masthead. Both email pipelines share this one public asset.
+// Keep this byte-identical to DEFAULT_EMAIL_LOGO_URL in the worker config.
+// The query token is tied to the checked-in PNG so email clients do not keep
+// showing an older mark after the asset changes.
+const DEFAULT_LOGO =
+  "https://kargo-eunice-13s-projects.vercel.app/kargo-logo-head.png?v=2750d019"
+const LOGO = DEFAULT_LOGO
 
 const esc = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
