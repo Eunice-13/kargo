@@ -9,12 +9,16 @@ export default function SellerDirectoryPage({
   batches,
   onBack,
   onClaimItem,
+  onToggleReaction,
+  reactionPending,
   role,
   user,
 }: {
   batches: BatchType[]
   onBack: () => void
   onClaimItem: (batchId: number, productName: string) => void
+  onToggleReaction?: (batch: BatchType) => void
+  reactionPending?: Set<number>
   role: Role
   user: UserInfo
 }) {
@@ -82,6 +86,8 @@ export default function SellerDirectoryPage({
             seller={shopPage}
             batches={batches}
             onClaimItem={onClaimItem}
+            onToggleReaction={onToggleReaction}
+            reactionPending={reactionPending}
             role={role}
             profileData={shopPage === user.name ? user : undefined}
           />

@@ -51,6 +51,8 @@ import WaitlistModal from "./WaitlistModal"
 
 import SellerWaitlistCard from "./SellerWaitlistCard"
 
+import PopularBatchesCard from "./PopularBatchesCard"
+
 import { isSupabaseConfigured } from "@/lib/supabase"
 
 import { kargoApi } from "@/services"
@@ -706,6 +708,15 @@ export default function Dashboard({
                 </div>
               ))}
             </section>
+
+            <PopularBatchesCard
+              batches={batches}
+              sellerName={user.name}
+              onOpenBatch={(batch) => {
+                navIntent.batchId = batch.id
+                setTab("Batches")
+              }}
+            />
 
             <SellerWaitlistCard groups={sellerWaitlist} />
           </aside>

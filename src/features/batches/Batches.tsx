@@ -826,6 +826,8 @@ export default function Batches({
             seller={shopPage}
             batches={batches}
             onClaimItem={handleProfileClaim}
+            onToggleReaction={handleToggleReaction}
+            reactionPending={reactingBatchIds}
             onBatchOpen={(batchId) => {
               const requestedBatch = batches.find(
                 (batch) => batch.id === batchId,
@@ -1609,6 +1611,8 @@ export default function Batches({
           batches={batches}
           onBack={() => setSellerDir(false)}
           onClaimItem={handleProfileClaim}
+          onToggleReaction={handleToggleReaction}
+          reactionPending={reactingBatchIds}
           role={role}
           user={user}
         />

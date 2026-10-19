@@ -1,6 +1,6 @@
 import { productAvailability } from "./productAvailability"
 import { useEffect, useState } from "react"
-import { MessageCircle, Package, Clock3, CalendarDays } from "lucide-react"
+import { MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react"
 import type { BatchType, Role, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
 import { Card, Avatar, PrimaryBtn, ContactModal, PaymentIcon } from "@/components/shared"
@@ -18,6 +18,8 @@ export default function SellerShopPage({
   batches,
   onClaimItem,
   onBatchOpen,
+  onToggleReaction,
+  reactionPending,
   role,
   profileData,
 }: {
@@ -26,10 +28,13 @@ export default function SellerShopPage({
   onClaimItem?: (batchId: number, productName: string) => void
   // Opens the batch detail page (buyer taps a batch card on the storefront).
   onBatchOpen?: (batchId: number) => void
+  onToggleReaction?: (batch: BatchType) => void
+  reactionPending?: Set<number>
   role?: Role
   profileData?: UserInfo
 }) {
   const canClaim = role !== "Seller" && Boolean(onClaimItem)
+  const canReact = role !== "Seller" && Boolean(onToggleReaction)
   const sellerBatches = batches.filter((b) => b.seller === seller)
   const sellerId =
     sellerBatches.find((batch) => batch.sellerId)?.sellerId ?? profileData?.id
@@ -61,6 +66,10 @@ export default function SellerShopPage({
   const totalClaimed = sellerBatches.reduce((s, b) => s + b.claimed, 0)
   const totalAvail = sellerBatches.reduce((s, b) => s + b.items, 0)
   const claimRate = totalAvail > 0 ? Math.round((totalClaimed / totalAvail) * 100) : 0
+  const totalReactions = sellerBatches.reduce(
+    (sum, batch) => sum + (batch.reactionCount ?? 0),
+    0,
+  )
 
   // ── Contact (reuses the shared ContactModal) ───────────────────────────────
   const [showChat, setShowChat] = useState(false)
@@ -338,8 +347,11 @@ export default function SellerShopPage({
                     key={b.id}
                     batch={b}
                     canClaim={canClaim}
+                    canReact={canReact}
                     onOpen={onBatchOpen}
                     onClaimItem={onClaimItem}
+                    onToggleReaction={onToggleReaction}
+                    reactionPending={reactionPending?.has(b.id) ?? false}
                   />
                 ))}
               </div>
@@ -410,7 +422,7 @@ export default function SellerShopPage({
                   ["Completed", String(totalClaimed), "#0B7A59"],
                   ["Active Batches", String(sellerBatches.filter((b) => b.live).length), INDIGO],
                   ["Products", String(totalProducts), "#111827"],
-                  ["Claim Rate", `${claimRate}%`, AMBER],
+                  ["Reactions", String(totalReactions), "#ef3559"],
                 ].map(([label, val, color]) => (
                   <div
                     key={label}
@@ -473,18 +485,26 @@ export default function SellerShopPage({
 function StorefrontBatchCard({
   batch: b,
   canClaim,
+  canReact,
   onOpen,
   onClaimItem,
+  onToggleReaction,
+  reactionPending,
 }: {
   batch: BatchType
   canClaim: boolean
+  canReact: boolean
   onOpen?: (batchId: number) => void
   onClaimItem?: (batchId: number, productName: string) => void
+  onToggleReaction?: (batch: BatchType) => void
+  reactionPending: boolean
 }) {
   const pct = b.items > 0 ? Math.round((b.claimed / b.items) * 100) : 0
   const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"]
   const barColor = pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO
   const soldOut = b.claimed >= b.items
+  const reacted = Boolean(b.reactedByCurrentUser)
+  const count = b.reactionCount ?? 0
   const open = () => onOpen?.(b.id)
   return (
     <div
@@ -551,6 +571,42 @@ function StorefrontBatchCard({
         >
           {b.category.toUpperCase()}
         </span>
+        {canReact ? (
+          <button
+            type="button"
+            className={`seller-shop-batch__reaction${reacted ? " is-favorite" : ""}`}
+            aria-label={
+              reacted ? `Remove ${b.title} from favorites` : `Add ${b.title} to favorites`
+            }
+            aria-pressed={reacted}
+            disabled={reactionPending}
+            onClick={(event) => {
+              event.stopPropagation()
+              onToggleReaction?.(b)
+            }}
+          >
+            <Heart
+              size={22}
+              strokeWidth={2.2}
+              fill={reacted ? "currentColor" : "transparent"}
+              aria-hidden="true"
+            />
+            <span>{count}</span>
+          </button>
+        ) : (
+          <span
+            className="seller-shop-batch__reaction is-readonly"
+            aria-label={`${b.title} — ${count} reactions`}
+          >
+            <Heart
+              size={22}
+              strokeWidth={2.2}
+              fill={count > 0 ? "currentColor" : "transparent"}
+              aria-hidden="true"
+            />
+            <span>{count}</span>
+          </span>
+        )}
         {soldOut && (
           <span
             style={{
