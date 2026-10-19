@@ -283,22 +283,229 @@
     width: auto !important;
   }
 
-  .kargo-original-app main :is(p, span, small, label, a, button, input, select, textarea, td, th, dt, dd),
-  .si :is(p, span, small, label, a, button, input, select, textarea, dt, dd),
-  .kargo-footer :is(p, span, small, a) {
+  /* Phone type scale: badge 10, meta 11, control/card title 12,
+     body 13, section heading 14, page title 20, metric 22. */
+  .kargo-original-app main :is(input, select, textarea) {
     font-size: 16px !important;
-    line-height: 1.45;
   }
 
-  .kargo-original-app main [style*="font-size: 8px"],
-  .kargo-original-app main [style*="font-size: 9px"],
-  .kargo-original-app main [style*="font-size: 10px"],
-  .kargo-original-app main [style*="font-size: 11px"],
-  .kargo-original-app main [style*="font-size: 12px"],
-  .kargo-original-app main [style*="font-size: 13px"],
-  .kargo-original-app main [style*="font-size: 14px"],
-  .kargo-original-app main [style*="font-size: 15px"] {
-    font-size: 16px !important;
+  .kargo-original-app main :is(.kargo-primary, .kargo-secondary) {
+    font-size: 12px !important;
+    line-height: 1.2;
+  }
+
+  .kargo-original-app main .batch-page h1 {
+    font-size: 20px !important;
+    line-height: 1.2;
+  }
+
+  .buyer-home {
+    margin: -16px;
+    padding-bottom: 40px;
+  }
+
+  .buyer-home-filter {
+    gap: 8px;
+    margin: 20px 14px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+
+  .buyer-home-filter select,
+  .buyer-home-filter__request {
+    min-height: 32px;
+  }
+
+  .buyer-home-filter__request { font-size: 12px; }
+  .buyer-home-section { margin-top: 28px; }
+
+  .kargo-original-app main .buyer-home-section__heading h2 {
+    font-size: 14px !important;
+    line-height: 1.25;
+  }
+
+  .buyer-category-section .buyer-category-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px 8px;
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .buyer-category-section .buyer-category-grid button {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .buyer-category-section .buyer-category-grid img {
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+  }
+
+  .buyer-category-section .buyer-category-grid span {
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  .buyer-batch-page {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px 10px;
+  }
+
+  .buyer-batch-card__image-wrap {
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .buyer-batch-card__body { padding: 9px 9px 10px; }
+
+  .kargo-original-app main .buyer-batch-card__body h3 {
+    display: -webkit-box;
+    margin: 0 0 6px;
+    overflow: hidden;
+    font-size: 12px !important;
+    line-height: 1.3;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .buyer-batch-card__seller,
+  .buyer-batch-card__date {
+    gap: 5px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .buyer-batch-card__date { margin-top: 6px; }
+
+  .buyer-batch-card__progress-label {
+    margin-top: 9px;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .buyer-batch-card__progress-label strong { font-size: 10px; }
+
+  .buyer-batch-card__category {
+    top: 8px;
+    left: 8px;
+    max-width: calc(100% - 46px);
+    padding: 3px 7px;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .buyer-batch-card__favorite,
+  .seller-shop-batch__reaction {
+    top: 8px;
+    right: 8px;
+  }
+
+  .buyer-batch-card__favorite span,
+  .seller-shop-batch__reaction span { font-size: 11px; }
+
+  .buyer-batch-card__track {
+    height: 3px;
+    margin-top: 5px;
+  }
+
+  .buyer-carousel-controls button {
+    position: relative;
+    width: 28px;
+    height: 28px;
+  }
+
+  .buyer-carousel-controls {
+    margin: -8px 0;
+    padding: 8px;
+  }
+
+  .buyer-carousel-controls button::after,
+  .buyer-batch-card__favorite::after,
+  .seller-shop-batch__reaction::after {
+    position: absolute;
+    content: "";
+    inset: -8px;
+  }
+
+  .kargo-original-app .seller-stat strong,
+  .kargo-original-app .bdash-stat__value { font-size: 22px !important; }
+
+  .bdash-stat__label { font-size: 12px; }
+  .bdash-stat__sub { font-size: 11px; }
+
+  .bdash-stat__icon {
+    top: 16px;
+    right: 14px;
+  }
+
+  .seller-stats,
+  .bdash-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .seller-stat,
+  .bdash-stat {
+    min-width: 0;
+    min-height: 88px !important;
+    padding: 24px 12px 12px !important;
+  }
+
+  .seller-dashboard,
+  .bdash,
+  .seller-orders-page,
+  .seller-batches-page {
+    padding: 18px 12px 28px !important;
+  }
+
+  .kargo-original-app main .seller-dashboard-sidebar > .kargo-card,
+  .kargo-original-app main .seller-side-card { padding: 14px !important; }
+
+  .seller-orders-filters {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .kargo-original-app main .flex.items-start.gap-3 {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .kargo-original-app main .flex.items-start.gap-3 > * { min-width: 0; }
+
+  .kargo-original-app main .flex-1,
+  .kargo-original-app main .flex-1 > div {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .kargo-footer {
+    padding: 24px 16px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .kargo-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 18px 14px;
+  }
+
+  .kargo-footer h2 {
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .kargo-footer nav { gap: 7px; }
+  .kargo-footer a {
+    min-height: 22px;
+    font-size: 12px;
+  }
+
+  .kargo-footer > p {
+    margin-top: 16px;
+    font-size: 11px;
   }
 
   .kargo-original-app main .p-6,
@@ -339,7 +546,6 @@
     grid-row: 1;
   }
 
-  .buyer-batch-page,
   .orders-board {
     grid-template-columns: minmax(0, 1fr) !important;
   }
@@ -425,14 +631,17 @@
     zoom: 1;
   }
 
-  .auth-heading h1 { font-size: 32px; }
+  .auth-heading h1 { font-size: 26px; }
 
-  .auth-page :is(p, span, small, label, button, input, select, textarea) {
-    font-size: 16px !important;
+  .auth-page :is(p, span, small, label, button, a) {
+    font-size: 12px !important;
     line-height: 1.45;
   }
 
-  .auth-input-shell input { min-height: 56px; }
+  .auth-input-shell input {
+    min-height: 48px;
+    font-size: 16px !important;
+  }
 
   .auth-login-fields,
   .auth-signup-fields { gap: 28px; }

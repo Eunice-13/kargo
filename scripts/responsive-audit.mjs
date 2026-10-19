@@ -1,108 +1,270 @@
-const endpoint = "http://127.0.0.1:9338"
-const targets = await (await fetch(`${endpoint}/json`)).json()
-const target = targets.find((item) => item.type === "page")
-const ws = new WebSocket(target.webSocketDebuggerUrl)
-await new Promise((resolve) => ws.addEventListener("open", resolve))
+const endpoint = "http://127.0.0.1:9338";
+const appUrl = "http://127.0.0.1:8443";
+const quick = process.argv.includes("--quick");
+const buyerOnly = process.argv.includes("--buyer");
+const desktopOnly = process.argv.includes("--desktop");
+const widths = quick ? [320, 390] : [320, 360, 390, 414];
 
-let nextId = 0
-const pending = new Map()
+const targets = await (await fetch(`${endpoint}/json`)).json();
+const target = targets.find((item) => item.type === "page");
+if (!target) throw new Error("No debuggable browser page found on port 9338");
+
+const ws = new WebSocket(target.webSocketDebuggerUrl);
+await new Promise((resolve) => ws.addEventListener("open", resolve));
+
+let nextId = 0;
+const pending = new Map();
 ws.addEventListener("message", (event) => {
-  const message = JSON.parse(event.data)
-  const resolve = pending.get(message.id)
-  if (resolve) {
-    pending.delete(message.id)
-    resolve(message)
-  }
-})
+  const message = JSON.parse(event.data);
+  const resolve = pending.get(message.id);
+  if (!resolve) return;
+  pending.delete(message.id);
+  resolve(message);
+});
+
 const call = (method, params = {}) =>
   Promise.race([
-    new Promise((resolve) => {
-      const id = ++nextId
-      pending.set(id, resolve)
-      ws.send(JSON.stringify({ id, method, params }))
+    new Promise((resolve, reject) => {
+      const id = ++nextId;
+      pending.set(id, (message) => {
+        if (message.error) reject(new Error(`${method}: ${message.error.message}`));
+        else resolve(message);
+      });
+      ws.send(JSON.stringify({ id, method, params }));
     }),
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`CDP timeout: ${method}`)), 5000),
+      setTimeout(() => reject(new Error(`CDP timeout: ${method}`)), 30_000),
     ),
-  ])
-const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+  ]);
 
-for (const width of [320, 390]) {
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const evaluate = async (expression) => {
+  const response = await call("Runtime.evaluate", {
+    expression,
+    returnByValue: true,
+    awaitPromise: true,
+  });
+  return response.result.result.value;
+};
+
+const setViewport = async (width, mobile = true) => {
   await call("Emulation.setDeviceMetricsOverride", {
     width,
-    height: 1100,
+    height: mobile ? 1100 : 900,
     screenWidth: width,
-    screenHeight: 1100,
+    screenHeight: mobile ? 1100 : 900,
     deviceScaleFactor: 1,
-    mobile: width <= 620,
+    mobile,
     scale: 1,
-  })
-  await call("Emulation.setUserAgentOverride", {
-    userAgent:
-      width <= 620
-        ? "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1"
-        : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140 Safari/537.36",
-  })
+  });
+};
 
-  for (const page of ["Settings", "Payments"]) {
-    await call("Page.navigate", { url: "http://127.0.0.1:8443/?preview=original" })
-    await pause(700)
-    if (page === "Settings") {
-      await call("Runtime.evaluate", {
-        expression: `document.querySelector('.kargo-header-actions > div:last-child > button')?.click()`,
-      })
-      await pause(80)
-      await call("Runtime.evaluate", {
-        expression: `[...document.querySelectorAll('button')].find((button) => button.textContent.includes('Settings'))?.click()`,
-      })
-    } else if (page !== "Login") {
-      await call("Runtime.evaluate", {
-        expression: `setTimeout(() => [...document.querySelectorAll('.icon-tabbar button')].find((button) => button.textContent.includes(${JSON.stringify(page)}))?.click(), 0); true`,
-      })
-    }
-    await pause(250)
-    const response = await call("Runtime.evaluate", {
-      returnByValue: true,
-      expression: `JSON.stringify((() => {
-        const visible = (element) => {
-          const style = getComputedStyle(element)
+const navigate = async (url) => {
+  await call("Page.navigate", { url });
+  await pause(1200);
+};
+
+const clickButton = async (label, selector = "button") => {
+  const clicked = await evaluate(`(() => {
+    const button = [...document.querySelectorAll(${JSON.stringify(selector)})]
+      .find((item) => item.textContent.trim().includes(${JSON.stringify(label)}))
+    button?.click()
+    return Boolean(button)
+  })()`);
+  await pause(350);
+  return clicked;
+};
+
+const audit = async (surface, width) => {
+  const result = JSON.parse(
+    await evaluate(`JSON.stringify((() => {
+      const visible = (element) => {
+        const style = getComputedStyle(element)
+        const rect = element.getBoundingClientRect()
+        return style.display !== "none" && style.visibility !== "hidden" && rect.width > 0 && rect.height > 0
+      }
+      const hScrollers = [...document.querySelectorAll("body *")]
+        .filter(visible)
+        .filter((element) => element.scrollWidth > element.clientWidth + 4)
+        .filter((element) => !element.classList.contains("buyer-batch-grid"))
+        .filter((element) => !element.matches(".buyer-carousel-controls button, .buyer-batch-card__favorite, .seller-shop-batch__reaction"))
+        .map((element) => ({
+          name: typeof element.className === "string" && element.className.trim() ? element.className : element.tagName,
+          size: [element.clientWidth, element.scrollWidth],
+        }))
+        .slice(0, 12)
+      const home = document.querySelector(".buyer-home")?.getBoundingClientRect()
+      const batchPage = document.querySelector(".buyer-batch-page")
+      const categoryGrid = document.querySelector(".buyer-category-grid")
+      const footer = document.querySelector(".kargo-footer")?.getBoundingClientRect()
+      const style = (selector, property) => {
+        const element = document.querySelector(selector)
+        return element ? getComputedStyle(element)[property] : null
+      }
+      return {
+        surface: ${JSON.stringify(surface)},
+        width: ${width},
+        docScrollWidth: document.documentElement.scrollWidth,
+        hScrollers,
+        home: home ? { left: Math.round(home.left), width: Math.round(home.width) } : null,
+        batchColumns: batchPage ? getComputedStyle(batchPage).gridTemplateColumns.split(" ").length : null,
+        categoryScrolls: categoryGrid ? categoryGrid.scrollWidth > categoryGrid.clientWidth + 4 : null,
+        footerHeight: footer ? Math.round(footer.height) : null,
+        type: {
+          cardTitle: style(".buyer-batch-card__body h3", "fontSize"),
+          cardMeta: style(".buyer-batch-card__seller", "fontSize"),
+          progress: style(".buyer-batch-card__progress-label", "fontSize"),
+          category: style(".buyer-batch-card__category", "fontSize"),
+          sectionHeading: style(".buyer-home-section__heading h2", "fontSize"),
+          metric: style(".seller-stat strong, .bdash-stat__value", "fontSize"),
+        },
+      }
+    })())`),
+  );
+
+  const failures = [];
+  if (result.docScrollWidth !== width) failures.push(`document width ${result.docScrollWidth}`);
+  if (result.hScrollers.length)
+    failures.push(`unexpected scrollers: ${JSON.stringify(result.hScrollers)}`);
+  if (result.home && (result.home.left !== 0 || result.home.width !== width)) {
+    failures.push(`buyer home rect ${JSON.stringify(result.home)}`);
+  }
+  if (result.batchColumns !== null && result.batchColumns !== 2)
+    failures.push(`${result.batchColumns} batch columns`);
+  if (result.categoryScrolls) failures.push("category grid scrolls");
+  if (result.footerHeight !== null && result.footerHeight > 340)
+    failures.push(`footer ${result.footerHeight}px`);
+
+  console.log(JSON.stringify({ ...result, failures }));
+  return failures;
+};
+
+if (desktopOnly) {
+  const selectors = [
+    ".kargo-header",
+    ".kargo-tabbar",
+    ".kargo-tab-label",
+    ".kargo-footer",
+    ".kargo-footer__grid",
+    ".kargo-footer h2",
+    ".kargo-footer a",
+    ".buyer-home",
+    ".buyer-home__content",
+    ".buyer-home-filter select",
+    ".buyer-category-grid button",
+    ".buyer-category-grid span",
+    ".buyer-batch-page",
+    ".buyer-batch-card",
+    ".buyer-batch-card__image-wrap",
+    ".buyer-batch-card__category",
+    ".buyer-batch-card__favorite",
+    ".buyer-batch-card__body h3",
+    ".buyer-batch-card__seller",
+    ".buyer-batch-card__date",
+    ".buyer-batch-card__progress-label",
+    ".buyer-carousel-controls button",
+    ".buyer-home-section__heading h2",
+    ".seller-stats",
+    ".seller-stat",
+    ".seller-stat strong",
+    ".seller-dashboard-sidebar",
+    ".seller-side-card",
+    ".seller-board-preview",
+    ".bdash-stats",
+    ".bdash-stat",
+    ".bdash-stat__value",
+  ];
+  for (const width of [1280, 1440]) {
+    await setViewport(width, false);
+    for (const [surface, url] of [
+      ["Buyer Home", appUrl],
+      ["Seller Dashboard", `${appUrl}/?preview=original`],
+    ]) {
+      await navigate(url);
+      const measurements = JSON.parse(
+        await evaluate(`JSON.stringify(Object.fromEntries(${JSON.stringify(selectors)}.map((selector) => {
+          const element = document.querySelector(selector)
+          if (!element) return [selector, null]
           const rect = element.getBoundingClientRect()
-          return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0
-        }
-        const overflow = [...document.querySelectorAll('body *')]
-          .filter(visible)
-          .filter((element) => {
-            const rect = element.getBoundingClientRect()
-            return rect.left < -1 || rect.right > innerWidth + 1
-          })
-          .slice(0, 8)
-          .map((element) => element.className || element.tagName)
-        const targets = [...document.querySelectorAll('button,a[href],[role="button"],select,input[type="checkbox"],input[type="radio"]')]
-          .filter(visible)
-          .filter((element) => {
-            const rect = element.getBoundingClientRect()
-            return rect.width < 43.5 || rect.height < 43.5
-          })
-          .slice(0, 8)
-          .map((element) => ({ name: (element.textContent || element.getAttribute('aria-label') || element.tagName).trim().slice(0, 35), size: [Math.round(element.getBoundingClientRect().width), Math.round(element.getBoundingClientRect().height)] }))
-        const smallText = innerWidth <= 620 ? [...document.querySelectorAll('main p,main span,main small,main label,main a,main button,main input,main select,main textarea,main td,main th,.auth-page p,.auth-page span,.auth-page small,.auth-page label,.auth-page button,.auth-page input')]
-          .filter(visible)
-          .filter((element) => parseFloat(getComputedStyle(element).fontSize) < 15.5)
-          .slice(0, 8)
-          .map((element) => ({ text: (element.textContent || '').trim().slice(0, 35), size: getComputedStyle(element).fontSize })) : []
-        return {
-          page: ${JSON.stringify(page)},
-          innerWidth,
-          scrollWidth: document.documentElement.scrollWidth,
-          overflow,
-          undersizedTargets: targets,
-          smallText,
-          mobileSearch: document.querySelector('.kargo-mobile-search-toggle') ? getComputedStyle(document.querySelector('.kargo-mobile-search-toggle')).display : 'n/a',
-        }
-      })())`,
-    })
-    console.log(width, response.result.result.value)
+          const style = getComputedStyle(element)
+          return [selector, { width: Math.round(rect.width * 10) / 10, height: Math.round(rect.height * 10) / 10, fontSize: style.fontSize, display: style.display }]
+        })))`),
+      );
+      console.log(JSON.stringify({ surface, width, measurements }));
+    }
+  }
+  ws.close();
+  process.exit(0);
+}
+
+const failures = [];
+const sellerSurfaces = quick
+  ? ["Dashboard"]
+  : ["Dashboard", "Batches", "My Claims", "Payments", "Settings"];
+if (!buyerOnly) {
+  for (const width of widths) {
+    await setViewport(width);
+    for (const surface of sellerSurfaces) {
+      await navigate(`${appUrl}/?preview=original`);
+      if (surface === "Settings") {
+        await evaluate(
+          `document.querySelector('.kargo-header-actions > div:last-child > button')?.click()`,
+        );
+        await pause(100);
+        await clickButton("Settings");
+      } else if (surface !== "Dashboard") {
+        await clickButton(surface, ".icon-tabbar button");
+      }
+      failures.push(...(await audit(`Seller ${surface}`, width)));
+    }
   }
 }
 
-ws.close()
+if (quick) {
+  ws.close();
+  if (failures.length) throw new Error(`Responsive audit failed with ${failures.length} issue(s)`);
+  process.exit(0);
+}
+
+await setViewport(390);
+await navigate(appUrl);
+const hasLogin = await evaluate(
+  `Boolean(document.querySelector('.auth-page input[type="email"]'))`,
+);
+if (hasLogin) {
+  await evaluate(`(() => {
+    const setValue = (input, value) => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, value)
+      input.dispatchEvent(new Event("input", { bubbles: true }))
+    }
+    setValue(document.querySelector('input[type="email"]'), "grace@kargo.demo")
+    setValue(document.querySelector('input[type="password"]'), "KargoDemo123!")
+    return true
+  })()`);
+  await clickButton("Login");
+  await pause(2200);
+}
+
+const buyerSurfaces = ["Home", "Cart", "Dashboard", "History"];
+for (const width of widths) {
+  await setViewport(width);
+  await navigate(appUrl);
+  for (const surface of buyerSurfaces) {
+    if (surface !== "Home") await clickButton(surface, ".icon-tabbar button");
+    else await clickButton("Home", ".icon-tabbar button");
+    failures.push(...(await audit(`Buyer ${surface}`, width)));
+  }
+  await clickButton("Home", ".icon-tabbar button");
+  const openedBatch = await evaluate(`(() => {
+    const card = document.querySelector('.buyer-batch-card')
+    card?.click()
+    return Boolean(card)
+  })()`);
+  if (openedBatch) {
+    await pause(350);
+    failures.push(...(await audit("Buyer batch detail", width)));
+  }
+}
+
+ws.close();
+if (failures.length) throw new Error(`Responsive audit failed with ${failures.length} issue(s)`);

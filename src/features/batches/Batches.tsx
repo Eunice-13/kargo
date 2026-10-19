@@ -47,8 +47,6 @@ import { sortSoldOutLast } from "./batchSort"
 
 import FinancialSummaryModal from "./FinancialSummaryModal"
 
-import ItemClaimModal from "./ItemClaimModal"
-
 import SellerDirectoryPage from "./SellerDirectoryPage"
 
 import SellerShopPage from "./SellerShopPage"
@@ -218,19 +216,7 @@ export default function Batches({
     }
   }, [batchPage, user, role, setTab])
 
-  const [claimTarget, setClaimTarget] = useState<{
-    p: typeof batches[0]["products"][0]
-
-    key: string
-  } | null>(null)
-
   const [financialBatch, setFinancialBatch] = useState<BatchType | null>(null)
-
-  const [profileClaimTarget, setProfileClaimTarget] = useState<{
-    batch: BatchType
-
-    product: BatchType["products"][0]
-  } | null>(null)
 
   // Confirmation targets for consequential seller actions (#16)
 
@@ -592,36 +578,6 @@ export default function Batches({
     return true
   }
 
-  const handleProfileClaim = (batchId: number, productName?: string) => {
-    const batch = batches.find((b) => b.id === batchId)
-
-    // Target a specific item when a name is given (per-item claim from the
-
-    // View-Shop panel); otherwise fall back to the first product.
-
-    const product = productName
-      ? batch?.products.find((p) => p.name === productName)
-      : batch?.products[0]
-
-    if (
-      !batch ||
-      !product ||
-      role !== "Buyer" ||
-      !productAvailability(product, batch.locked).canClaim
-    )
-      return
-
-    setShopPage(null)
-
-    if (batch.groupOrdersEnabled) {
-      setBatchPage(batch)
-      setProfileClaimTarget(null)
-      return
-    }
-
-    setProfileClaimTarget({ batch, product })
-  }
-
   const openSellerShop = (name: string) => {
     setShopReturnBatch(batchPage)
     setBatchReturnSeller(null)
@@ -825,7 +781,6 @@ export default function Batches({
           <SellerShopPage
             seller={shopPage}
             batches={batches}
-            onClaimItem={handleProfileClaim}
             onToggleReaction={handleToggleReaction}
             reactionPending={reactingBatchIds}
             onBatchOpen={(batchId) => {
@@ -866,26 +821,6 @@ export default function Batches({
           setWaitlist={setWaitlist}
           refreshData={refreshData}
         />
-        {profileClaimTarget && (
-          <ItemClaimModal
-            batch={profileClaimTarget.batch}
-            product={profileClaimTarget.product}
-            onConfirm={async (reservation) => {
-              const claimed = await handleClaim(
-                `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
-
-                profileClaimTarget.batch,
-
-                profileClaimTarget.product,
-
-                reservation,
-              )
-
-              if (claimed) setProfileClaimTarget(null)
-            }}
-            onClose={() => setProfileClaimTarget(null)}
-          />
-        )}
       </>
     )
 
@@ -1610,32 +1545,18 @@ export default function Batches({
         <SellerDirectoryPage
           batches={batches}
           onBack={() => setSellerDir(false)}
-          onClaimItem={handleProfileClaim}
+          onBatchOpen={(batchId) => {
+            const requestedBatch = batches.find((batch) => batch.id === batchId)
+
+            if (!requestedBatch) return
+
+            openBatchFromShop(requestedBatch, requestedBatch.seller)
+          }}
           onToggleReaction={handleToggleReaction}
           reactionPending={reactingBatchIds}
           role={role}
           user={user}
         />
-        {profileClaimTarget && (
-          <ItemClaimModal
-            batch={profileClaimTarget.batch}
-            product={profileClaimTarget.product}
-            onConfirm={async (reservation) => {
-              const claimed = await handleClaim(
-                `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
-
-                profileClaimTarget.batch,
-
-                profileClaimTarget.product,
-
-                reservation,
-              )
-
-              if (claimed) setProfileClaimTarget(null)
-            }}
-            onClose={() => setProfileClaimTarget(null)}
-          />
-        )}
       </>
     )
   }
@@ -1821,26 +1742,6 @@ export default function Batches({
             )}
           </Modal>
         )}
-        {profileClaimTarget && (
-          <ItemClaimModal
-            batch={profileClaimTarget.batch}
-            product={profileClaimTarget.product}
-            onConfirm={async (reservation) => {
-              const claimed = await handleClaim(
-                `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
-
-                profileClaimTarget.batch,
-
-                profileClaimTarget.product,
-
-                reservation,
-              )
-
-              if (claimed) setProfileClaimTarget(null)
-            }}
-            onClose={() => setProfileClaimTarget(null)}
-          />
-        )}
         {financialBatch && (
           <FinancialSummaryModal
             batch={financialBatch}
@@ -1950,26 +1851,6 @@ export default function Batches({
           claim={extTarget}
           onSubmit={submitExtension}
           onClose={() => setExtTarget(null)}
-        />
-      )}
-      {profileClaimTarget && (
-        <ItemClaimModal
-          batch={profileClaimTarget.batch}
-          product={profileClaimTarget.product}
-          onConfirm={async (reservation) => {
-            const claimed = await handleClaim(
-              `${profileClaimTarget.batch.id}-${profileClaimTarget.product.name}`,
-
-              profileClaimTarget.batch,
-
-              profileClaimTarget.product,
-
-              reservation,
-            )
-
-            if (claimed) setProfileClaimTarget(null)
-          }}
-          onClose={() => setProfileClaimTarget(null)}
         />
       )}
       {financialBatch && (

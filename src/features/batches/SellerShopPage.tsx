@@ -16,7 +16,6 @@ import { sortSoldOutLast } from "./batchSort"
 export default function SellerShopPage({
   seller,
   batches,
-  onClaimItem,
   onBatchOpen,
   onToggleReaction,
   reactionPending,
@@ -25,7 +24,6 @@ export default function SellerShopPage({
 }: {
   seller: string
   batches: BatchType[]
-  onClaimItem?: (batchId: number, productName: string) => void
   // Opens the batch detail page (buyer taps a batch card on the storefront).
   onBatchOpen?: (batchId: number) => void
   onToggleReaction?: (batch: BatchType) => void
@@ -33,7 +31,7 @@ export default function SellerShopPage({
   role?: Role
   profileData?: UserInfo
 }) {
-  const canClaim = role !== "Seller" && Boolean(onClaimItem)
+  const canClaim = role === "Buyer" && Boolean(onBatchOpen)
   const canReact = role !== "Seller" && Boolean(onToggleReaction)
   const sellerBatches = batches.filter((b) => b.seller === seller)
   const sellerId =
@@ -349,7 +347,6 @@ export default function SellerShopPage({
                     canClaim={canClaim}
                     canReact={canReact}
                     onOpen={onBatchOpen}
-                    onClaimItem={onClaimItem}
                     onToggleReaction={onToggleReaction}
                     reactionPending={reactionPending?.has(b.id) ?? false}
                   />
@@ -487,7 +484,6 @@ function StorefrontBatchCard({
   canClaim,
   canReact,
   onOpen,
-  onClaimItem,
   onToggleReaction,
   reactionPending,
 }: {
@@ -495,7 +491,6 @@ function StorefrontBatchCard({
   canClaim: boolean
   canReact: boolean
   onOpen?: (batchId: number) => void
-  onClaimItem?: (batchId: number, productName: string) => void
   onToggleReaction?: (batch: BatchType) => void
   reactionPending: boolean
 }) {
@@ -661,16 +656,12 @@ function StorefrontBatchCard({
           <div style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: 999 }} />
         </div>
         {canClaim && b.products.some((p) => productAvailability(p, b.locked).canClaim) && (
-          // Wrapper stops the card's open-on-click so the CTA claims instead of
-          // navigating (PrimaryBtn's onClick takes no event).
+          // Let buyers choose a product on the batch page instead of silently
+          // selecting the first available item from the storefront.
           <div onClick={(e) => e.stopPropagation()}>
             <PrimaryBtn
               size="sm"
-              onClick={() => {
-                const firstAvailable = b.products.find((p) => productAvailability(p, b.locked).canClaim)
-                if (firstAvailable) onClaimItem?.(b.id, firstAvailable.name)
-                else open()
-              }}
+              onClick={open}
               style={{
                 width: "100%",
                 display: "flex",
@@ -687,5 +678,4 @@ function StorefrontBatchCard({
     </div>
   )
 }
-
 

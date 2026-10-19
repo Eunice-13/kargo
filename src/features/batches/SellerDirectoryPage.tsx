@@ -8,7 +8,7 @@ import SellerShopPage from "./SellerShopPage"
 export default function SellerDirectoryPage({
   batches,
   onBack,
-  onClaimItem,
+  onBatchOpen,
   onToggleReaction,
   reactionPending,
   role,
@@ -16,7 +16,7 @@ export default function SellerDirectoryPage({
 }: {
   batches: BatchType[]
   onBack: () => void
-  onClaimItem: (batchId: number, productName: string) => void
+  onBatchOpen: (batchId: number) => void
   onToggleReaction?: (batch: BatchType) => void
   reactionPending?: Set<number>
   role: Role
@@ -85,7 +85,7 @@ export default function SellerDirectoryPage({
           <SellerShopPage
             seller={shopPage}
             batches={batches}
-            onClaimItem={onClaimItem}
+            onBatchOpen={onBatchOpen}
             onToggleReaction={onToggleReaction}
             reactionPending={reactionPending}
             role={role}
@@ -283,4 +283,3 @@ export default function SellerDirectoryPage({
     </div>
   )
 }
-

@@ -998,25 +998,6 @@ button {
     width: auto !important;
   }
 
-  .kargo-original-app main :is(p, span, small, label, a, button, input, select, textarea, td, th, dt, dd),
-  .si :is(p, span, small, label, a, button, input, select, textarea, dt, dd),
-  .kargo-footer :is(p, span, small, a),
-  .kargo-mobile-search-panel :is(input, button, span) {
-    font-size: 16px !important;
-    line-height: 1.45;
-  }
-
-  .kargo-original-app main [style*="font-size: 8px"],
-  .kargo-original-app main [style*="font-size: 9px"],
-  .kargo-original-app main [style*="font-size: 10px"],
-  .kargo-original-app main [style*="font-size: 11px"],
-  .kargo-original-app main [style*="font-size: 12px"],
-  .kargo-original-app main [style*="font-size: 13px"],
-  .kargo-original-app main [style*="font-size: 14px"],
-  .kargo-original-app main [style*="font-size: 15px"] {
-    font-size: 16px !important;
-  }
-
   .kargo-original-app main .p-6,
   .seller-directory-page,
   .batch-page,
@@ -1067,7 +1048,10 @@ button {
     grid-row: 1;
   }
 
-  .buyer-batch-page,
+  .buyer-batch-page {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
   .orders-board {
     grid-template-columns: minmax(0, 1fr) !important;
   }
@@ -1140,16 +1124,9 @@ button {
     zoom: 1;
   }
 
-  .auth-heading h1 { font-size: 32px; }
+  .auth-heading h1 { font-size: 26px; }
 
-  .auth-page :is(p, span, small, label, button, input, select, textarea) {
-    font-size: 16px !important;
-    line-height: 1.45;
-  }
-
-  .auth-input-shell input {
-    min-height: 56px;
-  }
+  .auth-input-shell input { min-height: 48px; }
 
   .auth-login-fields,
   .auth-signup-fields {
@@ -5079,7 +5056,7 @@ textarea::placeholder {
   .seller-batches-page {
     width: 100%;
     box-sizing: border-box;
-    padding: 28px 14px 44px !important;
+    padding: 18px 12px 28px !important;
   }
 
   .seller-orders-layout,
@@ -5242,8 +5219,8 @@ textarea::placeholder {
   }
 
   .seller-orders-filters {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    overflow-x: visible;
     padding-bottom: 6px;
     scrollbar-width: none;
   }
@@ -5340,23 +5317,28 @@ textarea::placeholder {
   }
 
   .kargo-footer {
-    padding: 30px 16px calc(20px + env(safe-area-inset-bottom));
+    padding: 24px 16px calc(14px + env(safe-area-inset-bottom));
     text-align: center;
   }
 
   .kargo-footer__grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 14px;
   }
 
   .kargo-footer nav {
     align-items: center;
+    gap: 7px;
   }
 
   .kargo-footer a {
-    min-height: 44px;
+    min-height: 22px;
     justify-content: center;
+    font-size: 12px;
   }
+
+  .kargo-footer h2 { margin-bottom: 10px; font-size: 14px; }
+  .kargo-footer > p { margin-top: 16px; font-size: 11px; }
 }
 
 @media (max-width: 480px) {
@@ -5371,13 +5353,14 @@ textarea::placeholder {
 
   .seller-stats,
   .bdash-stats {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .seller-stat,
   .bdash-stat {
-    min-height: 124px;
-    padding: 38px 18px 16px !important;
+    min-width: 0;
+    min-height: 88px !important;
+    padding: 24px 12px 12px !important;
   }
 
   .seller-stat strong,
@@ -7843,14 +7826,14 @@ textarea::placeholder {
 
 @media (max-width: 480px) {
   .buyer-home__content { width: min(100% - 28px, 1080px); }
-  .buyer-home-filter { margin-right: 14px; margin-left: 14px; padding: 13px; }
+  .buyer-home-filter { margin: 20px 14px 0; padding: 10px 12px; }
   .buyer-home-filter select { width: 100%; flex-basis: 100%; }
-  .buyer-home-section { margin-top: 52px; }
-  .buyer-home-section__heading h2 { font-size: 18px; }
-  .buyer-carousel-controls button { width: 32px; height: 32px; }
-  .buyer-batch-page { grid-template-columns: 1fr; }
-  .buyer-category-grid button { flex-basis: 72%; }
-  .buyer-batch-card__image-wrap { height: 220px; }
+  .buyer-home-section { margin-top: 28px; }
+  .buyer-home-section__heading h2 { font-size: 14px; }
+  .buyer-carousel-controls button { width: 28px; height: 28px; }
+  .buyer-batch-page { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .buyer-category-section .buyer-category-grid button { flex-basis: auto; }
+  .buyer-batch-card__image-wrap { height: auto; aspect-ratio: 1 / 1; }
 }
 
 @media (max-width: 1080px) {
@@ -7947,11 +7930,12 @@ textarea::placeholder {
 
 @media (max-width: 480px) {
   .seller-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .seller-stat {
-    min-height: 130px;
+    min-height: 88px;
+    padding: 24px 12px 12px;
   }
 
   .seller-section-heading {
@@ -7963,9 +7947,9 @@ textarea::placeholder {
   }
 
   .kargo-footer__grid {
-    grid-template-columns: 1fr;
-    max-width: 220px;
-    margin: 0 auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+    margin: 0;
   }
 }
 
@@ -8058,7 +8042,7 @@ textarea::placeholder {
   }
 
   .kargo-footer__grid {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 /* Buyer Dashboard — restored after the seller UI merge removed this scoped block. */
@@ -8424,7 +8408,7 @@ textarea::placeholder {
     flex-basis: auto !important;
   }
 
-  .kargo-footer__grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .kargo-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 
   .seller-section-heading,
   .seller-board-heading,
@@ -8436,14 +8420,14 @@ textarea::placeholder {
 @media (max-width: 480px) {
   .seller-stats,
   .bdash-stats {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   .seller-stat,
   .bdash-stat {
     min-width: 0;
-    min-height: 124px !important;
-    padding: 38px 18px 16px !important;
+    min-height: 88px !important;
+    padding: 24px 12px 12px !important;
   }
 }
 
