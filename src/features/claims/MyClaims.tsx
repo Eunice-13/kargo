@@ -1842,7 +1842,7 @@ export default function MyClaims({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-5 flex-wrap">
+      <div className="claims-filter-row flex items-center gap-2 mb-5 flex-wrap">
         {filters.map((f) => (
           <button
             key={f}
