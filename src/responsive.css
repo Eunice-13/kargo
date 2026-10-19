@@ -388,8 +388,10 @@
     white-space: normal;
   }
 
+  /* 6 batches per carousel slide: 3 across x 2 rows.
+     Desktop keeps its 5 x 2 = 10 (.buyer-batch-page in index.css). */
   .buyer-batch-page {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 12px 8px;
   }
 

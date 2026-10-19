@@ -113,6 +113,21 @@ function useHorizontalCarousel(itemCount: number) {
   }
 }
 
+function useIsPhone() {
+  const [isPhone, setIsPhone] = useState(false)
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 620px)")
+    const sync = () => setIsPhone(query.matches)
+
+    sync()
+    query.addEventListener("change", sync)
+    return () => query.removeEventListener("change", sync)
+  }, [])
+
+  return isPhone
+}
+
 function BatchCard({
   batch,
   favorited,
@@ -258,12 +273,16 @@ function BatchSection({
   onToggleFavorite: (batch: BatchType) => void
   onOpenBatch: (batch: BatchType) => void
 }) {
+  // Phones show 6 batches per slide (3 across x 2 rows, see responsive.css).
+  // Desktop keeps its 5 x 2 layout of 10.
+  const isPhone = useIsPhone()
+  const pageSize = isPhone ? 6 : 10
   const pages = useMemo(
     () =>
-      Array.from({ length: Math.ceil(batches.length / 10) }, (_, index) =>
-        batches.slice(index * 10, index * 10 + 10),
+      Array.from({ length: Math.ceil(batches.length / pageSize) }, (_, index) =>
+        batches.slice(index * pageSize, index * pageSize + pageSize),
       ),
-    [batches],
+    [batches, pageSize],
   )
   const carousel = useHorizontalCarousel(pages.length)
   return (

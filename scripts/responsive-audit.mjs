@@ -111,6 +111,7 @@ const audit = async (surface, width) => {
         hScrollers,
         home: home ? { left: Math.round(home.left), width: Math.round(home.width) } : null,
         batchColumns: batchPage ? getComputedStyle(batchPage).gridTemplateColumns.split(" ").length : null,
+        batchPerPage: batchPage ? batchPage.children.length : null,
         batchDetailsVisible: batchPage ? [
           ".buyer-batch-card__category",
           ".buyer-batch-card__favorite span",
@@ -145,8 +146,10 @@ const audit = async (surface, width) => {
   if (result.home && (result.home.left !== 0 || result.home.width !== width)) {
     failures.push(`buyer home rect ${JSON.stringify(result.home)}`);
   }
-  if (result.batchColumns !== null && result.batchColumns !== 5)
+  if (result.batchColumns !== null && result.batchColumns !== 3)
     failures.push(`${result.batchColumns} batch columns`);
+  if (result.batchPerPage !== null && result.batchPerPage !== 6)
+    failures.push(`${result.batchPerPage} batches per page`);
   if (result.batchDetailsVisible === false) failures.push("hidden batch details");
   if (result.favoriteIconWidth !== null && result.favoriteIconWidth > 16)
     failures.push(`favorite icon ${result.favoriteIconWidth}px`);
