@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 
 import {
   Package,
@@ -110,6 +111,11 @@ export default function Dashboard({
     orderCounts: { completed: number; cancelled: number; incomplete: number }
   } | null>(null)
   const [boardExpanded, setBoardExpanded] = useState(false)
+  const [portalExpandedBoard, setPortalExpandedBoard] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(max-width: 1023px)").matches
+      : false,
+  )
 
   const [showSalesReport, setShowSalesReport] = useState(false)
 
@@ -188,6 +194,45 @@ export default function Dashboard({
 
     return () => window.removeEventListener("keydown", onKey)
   }, [boardExpanded])
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 1023px)")
+    const updatePortalTarget = () => setPortalExpandedBoard(query.matches)
+
+    updatePortalTarget()
+    query.addEventListener("change", updatePortalTarget)
+
+    return () => query.removeEventListener("change", updatePortalTarget)
+  }, [])
+
+  useEffect(() => {
+    if (!boardExpanded || !portalExpandedBoard) return
+
+    const scrollX = window.scrollX
+    const scrollY = window.scrollY
+    const previousOverflow = document.documentElement.style.overflow
+    document.documentElement.style.overflow = "hidden"
+
+    return () => {
+      document.documentElement.style.overflow = previousOverflow
+      window.scrollTo(scrollX, scrollY)
+    }
+  }, [boardExpanded, portalExpandedBoard])
+
+  const mountExpandedBoard = (layer: ReactNode, preserveSellerScope = false) => {
+    if (!portalExpandedBoard) return layer
+
+    return createPortal(
+      preserveSellerScope ? (
+        <div className="seller-dashboard" style={{ display: "contents" }}>
+          {layer}
+        </div>
+      ) : (
+        layer
+      ),
+      document.body,
+    )
+  }
 
   const activeClaims = claims
 
@@ -787,42 +832,47 @@ export default function Dashboard({
           <FulfillmentLiveRegion text={board.announcement} />
         </section>
 
-        {boardExpanded && (
-          <div
-            className="seller-board-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Fulfillment Board — expanded view"
-          >
-            <header>
-              <div>
-                <button type="button" onClick={() => setBoardExpanded(false)}>
-                  <X size={16} aria-hidden="true" /> Back to Dashboard
-                </button>
-                <h2>Fulfillment Board</h2>
+        {boardExpanded &&
+          mountExpandedBoard(
+            <>
+              <div className="seller-board-dialog-backdrop hidden" aria-hidden="true" />
+              <div
+                className="seller-board-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Fulfillment Board — expanded view"
+              >
+                <header>
+                  <div>
+                    <button type="button" onClick={() => setBoardExpanded(false)}>
+                      <X size={16} aria-hidden="true" /> Back to Dashboard
+                    </button>
+                    <h2>Fulfillment Board</h2>
+                  </div>
+                  <span>Track all orders across fulfillment stages</span>
+                </header>
+                <div className="seller-board-dialog__body">
+                  <div className="seller-board-dialog__columns">
+                    <FulfillmentBoard
+                      fulfillment={fulfillment}
+                      role="seller"
+                      board={board}
+                      expanded
+                      onOpenProfile={(order) =>
+                        openBuyerProfile(
+                          order.buyer,
+                          order.buyerFb,
+                          order.buyerSocialLinks,
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+                <FulfillmentLiveRegion text={board.announcement} />
               </div>
-              <span>Track all orders across fulfillment stages</span>
-            </header>
-            <div className="seller-board-dialog__body">
-              <div className="seller-board-dialog__columns">
-                <FulfillmentBoard
-                  fulfillment={fulfillment}
-                  role="seller"
-                  board={board}
-                  expanded
-                  onOpenProfile={(order) =>
-                    openBuyerProfile(
-                      order.buyer,
-                      order.buyerFb,
-                      order.buyerSocialLinks,
-                    )
-                  }
-                />
-              </div>
-            </div>
-            <FulfillmentLiveRegion text={board.announcement} />
-          </div>
-        )}
+            </>,
+            true,
+          )}
 
         {buyerProfile && (
           <BuyerProfileModal
@@ -1276,37 +1326,41 @@ export default function Dashboard({
         />
         <FulfillmentLiveRegion text={board.announcement} />
       </section>
-      {boardExpanded && (
-        <div
-          className="seller-board-dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Fulfillment Board — expanded view"
-        >
-          <header>
-            <div>
-              <button type="button" onClick={() => setBoardExpanded(false)}>
-                <X size={16} aria-hidden="true" /> Back to Dashboard
-              </button>
-              <h2>Fulfillment Board</h2>
+      {boardExpanded &&
+        mountExpandedBoard(
+          <>
+            <div className="seller-board-dialog-backdrop hidden" aria-hidden="true" />
+            <div
+              className="seller-board-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Fulfillment Board — expanded view"
+            >
+              <header>
+                <div>
+                  <button type="button" onClick={() => setBoardExpanded(false)}>
+                    <X size={16} aria-hidden="true" /> Back to Dashboard
+                  </button>
+                  <h2>Fulfillment Board</h2>
+                </div>
+                <span>Track all orders across fulfillment stages</span>
+              </header>
+              <div className="seller-board-dialog__body">
+                <div className="seller-board-dialog__columns">
+                  <FulfillmentBoard
+                    fulfillment={fulfillment}
+                    role="buyer"
+                    board={board}
+                    expanded
+                    onViewOrder={(order) =>
+                      setBuyerOrderDetailsId(order.dbId || order.id)
+                    }
+                  />
+                </div>
             </div>
-            <span>Track all orders across fulfillment stages</span>
-          </header>
-          <div className="seller-board-dialog__body">
-            <div className="seller-board-dialog__columns">
-              <FulfillmentBoard
-                fulfillment={fulfillment}
-                role="buyer"
-                board={board}
-                expanded
-                onViewOrder={(order) =>
-                  setBuyerOrderDetailsId(order.dbId || order.id)
-                }
-              />
             </div>
-          </div>
-        </div>
-      )}
+          </>,
+        )}
       {buyerOrderDetailsId &&
         (() => {
           const order = orders.find(
