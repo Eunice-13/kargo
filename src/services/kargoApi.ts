@@ -924,7 +924,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         expiresAt,
 
+        extensionStatus: row.extension_status ?? "none",
         extensionRequested: row.extension_status === "pending",
+        extensionRequestedHours: row.extension_requested_hours ?? undefined,
+        extensionDecidedAt: row.extension_decided_at ?? undefined,
 
         ...deliveryFields,
       })
@@ -1023,7 +1026,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         expiresAt,
 
+        extensionStatus: row.extension_status ?? "none",
         extensionRequested: row.extension_status === "pending",
+        extensionRequestedHours: row.extension_requested_hours ?? undefined,
+        extensionDecidedAt: row.extension_decided_at ?? undefined,
 
         ...deliveryFields,
       })

@@ -147,7 +147,9 @@ export default function Batches({
 
     setClaims((prev) =>
       prev.map((c) =>
-        c.id === extTarget.id ? { ...c, extensionRequested: true } : c,
+        c.id === extTarget.id
+          ? { ...c, extensionRequested: true, extensionStatus: "pending", extensionRequestedHours: hours }
+          : c,
       ),
     )
 

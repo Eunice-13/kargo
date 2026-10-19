@@ -115,6 +115,12 @@ export type ClaimRow = {
 
   expiresAt?: string
 
+  extensionStatus?: "none" | "pending" | "approved" | "denied"
+
+  extensionRequestedHours?: number
+
+  extensionDecidedAt?: string
+
   extensionRequested?: boolean
 
   // Who placed the order (seller's "Orders Received" view). Falls back to

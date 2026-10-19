@@ -1789,13 +1789,19 @@ export default function MyClaims({
                   Update location
                 </SecondaryBtn>
               ) : (
-                <PrimaryBtn
-                  size="sm"
-                  disabled={!claimIsPayable(item)}
-                  onClick={() => claimIsPayable(item) && setPayTarget(item)}
-                >
-                  Pay Now
-                </PrimaryBtn>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <PrimaryBtn size="sm" disabled={!claimIsPayable(item)} onClick={() => claimIsPayable(item) && setPayTarget(item)}>
+                    Pay Now
+                  </PrimaryBtn>
+                  {claimIsPayable(item) && !item.extensionRequested && item.extensionStatus !== "pending" && (
+                    <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
+                      Request Extension
+                    </SecondaryBtn>
+                  )}
+                  {(item.extensionRequested || item.extensionStatus === "pending") && <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-700">Extension requested</span>}
+                  {item.extensionStatus === "approved" && <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">Extension approved</span>}
+                  {item.extensionStatus === "denied" && <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">Extension declined</span>}
+                </div>
               )}
             </Card>
           ))}
@@ -2448,7 +2454,9 @@ export default function MyClaims({
 
             setClaims((prev) =>
               prev.map((c) =>
-                c.id === extTarget.id ? { ...c, extensionRequested: true } : c,
+                c.id === extTarget.id
+                  ? { ...c, extensionRequested: true, extensionStatus: "pending", extensionRequestedHours: hours }
+                  : c,
               ),
             )
 
