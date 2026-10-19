@@ -168,14 +168,6 @@ export default function Login({
             Sign up
           </button>
         </div>
-
-        {!isSupabaseConfigured && (
-          <div className="auth-demo-note">
-            <p>
-              <strong>Demo:</strong> any email + password <code>password123</code>
-            </p>
-          </div>
-        )}
       </div>
     </AuthLayout>
   )

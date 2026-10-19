@@ -816,13 +816,6 @@ export default function MyClaims({
             profile…
           </div>
         )}
-        <button
-          type="button"
-          onClick={() => setTab("Dashboard")}
-          className="seller-orders-back"
-        >
-          Back to Dashboard
-        </button>
         <header className="seller-orders-heading">
           <h1>Orders Received</h1>
           <p>Manage orders from your buyers</p>
@@ -1708,10 +1701,14 @@ export default function MyClaims({
         </p>
         <div className="space-y-3 pending-payments-list">
           {claimsToPay.map((item) => (
-            <Card key={item.id} className="flex items-center gap-4">
+            <Card
+              key={item.id}
+              className="pending-payment-card flex items-center gap-4"
+            >
               <ProductThumb name={item.product} />
-              <div className="min-w-0 flex-1">
+              <div className="pending-payment-card__info min-w-0 flex-1">
                 <div
+                  className="pending-payment-card__title"
                   style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}
                 >
                   {item.product}
@@ -1723,15 +1720,34 @@ export default function MyClaims({
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>
+                <div className="pending-payment-card__meta mt-0.5 flex flex-wrap items-center gap-2">
+                  <span
+                    className="pending-payment-card__seller"
+                    style={{ fontSize: 11, color: "#9CA3AF" }}
+                  >
                     {item.seller}
                   </span>
-                  <span style={{ color: "#D1D5DB" }}>·</span>
-                  <span style={{ fontSize: 11, color: "#6B7280" }}>
+                  <span
+                    className="pending-payment-card__dot"
+                    style={{ color: "#D1D5DB" }}
+                  >
+                    ·
+                  </span>
+                  <span
+                    className="pending-payment-card__method"
+                    data-fallback={
+                      item.reservedPaymentMethod ? undefined : "true"
+                    }
+                    style={{ fontSize: 11, color: "#6B7280" }}
+                  >
                     {item.reservedPaymentMethod || "Payment method selected"}
                   </span>
-                  <span style={{ color: "#D1D5DB" }}>·</span>
+                  <span
+                    className="pending-payment-card__dot pending-payment-card__dot--trail"
+                    style={{ color: "#D1D5DB" }}
+                  >
+                    ·
+                  </span>
                   <Countdown
                     hours={item.hours}
                     expiresAt={item.expiresAt}
@@ -1750,6 +1766,7 @@ export default function MyClaims({
                 )}
               </div>
               <div
+                className="pending-payment-card__amount"
                 style={{
                   color: "#111827",
 
@@ -1764,7 +1781,7 @@ export default function MyClaims({
               >
                 ₱{item.amount.toLocaleString()}
                 {item.shippingFee !== undefined && (
-                  <div className="text-right text-[10px] font-normal text-gray-500">
+                  <div className="pending-payment-card__shipping text-right text-[10px] font-normal text-gray-500">
                     Includes ₱{item.shippingFee.toLocaleString()} shipping
                   </div>
                 )}
@@ -1789,7 +1806,7 @@ export default function MyClaims({
                   Update location
                 </SecondaryBtn>
               ) : (
-                <div className="flex flex-wrap items-center justify-end gap-2">
+                <div className="pending-payment-card__actions flex flex-wrap items-center justify-end gap-2">
                   <PrimaryBtn size="sm" disabled={!claimIsPayable(item)} onClick={() => claimIsPayable(item) && setPayTarget(item)}>
                     Pay Now
                   </PrimaryBtn>

@@ -114,7 +114,13 @@ function useHorizontalCarousel(itemCount: number) {
 }
 
 function useIsPhone() {
-  const [isPhone, setIsPhone] = useState(false)
+  // Read the query on the first render so a phone never paints the desktop
+  // page size first and re-paginates a frame later.
+  const [isPhone, setIsPhone] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 620px)").matches,
+  )
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 620px)")
