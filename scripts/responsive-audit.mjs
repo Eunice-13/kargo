@@ -97,6 +97,9 @@ const audit = async (surface, width) => {
       const batchPage = document.querySelector(".buyer-batch-page")
       const categoryGrid = document.querySelector(".buyer-category-grid")
       const footer = document.querySelector(".kargo-footer")?.getBoundingClientRect()
+      const filter = document.querySelector(".buyer-home-filter")
+      const filterRect = filter?.getBoundingClientRect()
+      const favoriteIcon = document.querySelector(".buyer-batch-card__favorite svg")?.getBoundingClientRect()
       const style = (selector, property) => {
         const element = document.querySelector(selector)
         return element ? getComputedStyle(element)[property] : null
@@ -108,6 +111,19 @@ const audit = async (surface, width) => {
         hScrollers,
         home: home ? { left: Math.round(home.left), width: Math.round(home.width) } : null,
         batchColumns: batchPage ? getComputedStyle(batchPage).gridTemplateColumns.split(" ").length : null,
+        batchDetailsVisible: batchPage ? [
+          ".buyer-batch-card__category",
+          ".buyer-batch-card__favorite span",
+          ".buyer-batch-card__seller",
+          ".buyer-batch-card__date",
+          ".buyer-batch-card__progress-label",
+        ].every((selector) => {
+          const element = document.querySelector(selector)
+          return element ? visible(element) : false
+        }) : null,
+        favoriteIconWidth: favoriteIcon ? Math.round(favoriteIcon.width) : null,
+        filterHeight: filterRect ? Math.round(filterRect.height) : null,
+        filterColumns: filter ? getComputedStyle(filter).gridTemplateColumns.split(" ").length : null,
         categoryScrolls: categoryGrid ? categoryGrid.scrollWidth > categoryGrid.clientWidth + 4 : null,
         footerHeight: footer ? Math.round(footer.height) : null,
         type: {
@@ -131,6 +147,13 @@ const audit = async (surface, width) => {
   }
   if (result.batchColumns !== null && result.batchColumns !== 5)
     failures.push(`${result.batchColumns} batch columns`);
+  if (result.batchDetailsVisible === false) failures.push("hidden batch details");
+  if (result.favoriteIconWidth !== null && result.favoriteIconWidth > 16)
+    failures.push(`favorite icon ${result.favoriteIconWidth}px`);
+  if (result.filterHeight !== null && result.filterHeight > 52)
+    failures.push(`filter ${result.filterHeight}px tall`);
+  if (result.filterColumns !== null && result.filterColumns !== 2)
+    failures.push(`${result.filterColumns} filter columns`);
   if (result.categoryScrolls) failures.push("category grid scrolls");
   if (result.footerHeight !== null && result.footerHeight > 340)
     failures.push(`footer ${result.footerHeight}px`);

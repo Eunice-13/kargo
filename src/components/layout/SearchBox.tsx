@@ -106,7 +106,7 @@ export default function SearchBox({
 
             setSearchOpen(e.target.value.length > 0)
           }}
-          placeholder="Search products, batches, and sellers here..."
+          placeholder="Search batches, products, or sellers"
           style={{
             background: "transparent",
 

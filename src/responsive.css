@@ -270,15 +270,33 @@
   }
 
   .kargo-header.is-mobile-search-open .kargo-search {
-    min-height: 44px;
+    min-height: 42px;
+    padding: 3px 4px 3px 14px !important;
+    border: 1px solid rgba(255, 255, 255, .42) !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    box-shadow: 0 4px 14px rgba(8, 25, 74, .2) !important;
   }
 
   .kargo-header.is-mobile-search-open .kargo-search input {
     font-size: 16px !important;
   }
 
+  .kargo-header.is-mobile-search-open .kargo-search-submit {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    background: #e7f3ff;
+    color: #18324a;
+  }
+
   .kargo-header.is-mobile-search-open .kargo-header-actions {
     margin-left: 0 !important;
+  }
+
+  .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle {
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .12);
   }
 
   .kargo-notifications-popover {
@@ -311,18 +329,33 @@
   }
 
   .buyer-home-filter {
-    gap: 8px;
-    margin: 20px 14px 0;
-    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin: 12px 14px 0;
+    padding: 6px;
+    border: 1px solid #dfe6ee;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(24, 50, 74, .09);
+  }
+
+  .buyer-home-filter > strong { display: none; }
+
+  .buyer-home-filter select {
+    width: 100% !important;
+    min-width: 0;
+    min-height: 36px;
+    flex: none;
+    padding: 0 28px 0 10px;
+    border: 1px solid #e4e9ef;
     border-radius: 8px;
+    background-color: #f6f8fa;
+    color: #253545;
+    font-size: 12px !important;
+    font-weight: 650;
   }
 
-  .buyer-home-filter select,
-  .buyer-home-filter__request {
-    min-height: 32px;
-  }
-
-  .buyer-home-filter__request { font-size: 12px; }
   .buyer-home-section { margin-top: 28px; }
 
   .kargo-original-app main .buyer-home-section__heading h2 {
@@ -394,31 +427,99 @@
   }
 
   .buyer-batch-card__seller,
-  .buyer-batch-card__date,
-  .buyer-batch-card__progress-label,
-  .buyer-batch-card__category { display: none; }
+  .buyer-batch-card__date {
+    justify-content: center;
+    gap: 2px;
+    font-size: 8px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .buyer-batch-card__seller { margin-top: 4px; }
+
+  .buyer-batch-card__seller > :first-child { display: none; }
+
+  .buyer-batch-card__date { margin-top: 3px; }
+
+  .buyer-batch-card__date svg {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 auto;
+  }
+
+  .buyer-batch-card__progress-label {
+    display: grid;
+    justify-content: center;
+    gap: 0;
+    margin-top: 4px;
+    font-size: 7px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .buyer-batch-card__progress-label strong { font-size: inherit; }
+
+  .buyer-batch-card__body :is(span, strong) {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .buyer-batch-card__category {
+    top: auto;
+    bottom: 3px;
+    left: 3px;
+    max-width: calc(100% - 6px);
+    padding: 2px 3px;
+    font-size: 6px;
+    line-height: 1;
+    overflow-wrap: anywhere;
+    text-align: center;
+    white-space: normal;
+  }
 
   .buyer-batch-card__favorite {
     top: 0;
     right: 0;
+    display: flex;
     width: 44px;
     min-width: 44px;
     height: 44px;
-    padding: 0;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 1px;
+    padding: 6px 5px 0 0;
     background: transparent;
     box-shadow: none;
   }
 
-  .buyer-batch-card__favorite svg {
-    width: 22px;
-    height: 22px;
-    padding: 3px;
+  .buyer-batch-card__favorite::before {
+    position: absolute;
+    top: 3px;
+    right: 2px;
+    width: 31px;
+    height: 20px;
     border-radius: 999px;
     background: rgba(255, 255, 255, .94);
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .22));
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+    content: "";
   }
 
-  .buyer-batch-card__favorite span { display: none; }
+  .buyer-batch-card__favorite svg {
+    z-index: 1;
+    width: 14px;
+    height: 14px;
+  }
+
+  .buyer-batch-card__favorite span {
+    z-index: 1;
+    display: block;
+    font-size: 7px;
+    line-height: 14px;
+  }
 
   .buyer-batch-card__track {
     height: 2px;
@@ -530,6 +631,197 @@
 
   :is(.mobile-data-page, .seller-dashboard, .bdash) tbody {
     grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  /* Compact phone tables: Product, Status, Deadline. */
+  :is(.bdash, .seller-dashboard) :is(.bdash-table-wrap, .seller-orders-table-wrap),
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table),
+  .mobile-data-page .mobile-claims-table-wrap,
+  .mobile-data-page table.mobile-claims-table {
+    display: revert !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    border-radius: 9px !important;
+    box-shadow: 0 1px 4px rgba(18, 30, 71, .12) !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table),
+  .mobile-data-page table.mobile-claims-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    font-size: 12px !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) thead,
+  .mobile-data-page table.mobile-claims-table thead {
+    display: table-header-group !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) tbody,
+  .mobile-data-page table.mobile-claims-table tbody {
+    display: table-row-group !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) tbody tr,
+  .mobile-data-page table.mobile-claims-table tbody tr {
+    display: table-row !important;
+    height: 44px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #eef1f5 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) tbody td,
+  .mobile-data-page table.mobile-claims-table tbody td {
+    display: table-cell !important;
+    padding: 8px 10px !important;
+    overflow: hidden !important;
+    color: #374151 !important;
+    font-size: 12px !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) tbody td::before,
+  .mobile-data-page table.mobile-claims-table tbody td::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+    display: none !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) :is(th, td):nth-child(1),
+  .mobile-data-page table.mobile-claims-table :is(th, td):nth-child(1) {
+    width: auto;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) :is(th, td):nth-child(5),
+  .mobile-data-page table.mobile-claims-table :is(th, td):nth-child(2) {
+    width: 72px;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) :is(th, td):nth-child(6),
+  .mobile-data-page table.mobile-claims-table :is(th, td):nth-child(3) {
+    width: 84px;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) thead th,
+  .mobile-data-page table.mobile-claims-table thead th {
+    display: table-cell !important;
+    padding: 8px 10px !important;
+    background: #6995d7 !important;
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: .02em !important;
+    text-align: left !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-cell-product, .seller-product-cell),
+  :is(.bdash, .seller-dashboard) :is(.bdash-cell-product, .seller-product-cell) span,
+  .mobile-data-page .mobile-claims-product span {
+    overflow: hidden;
+    color: #171717 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-data-page .mobile-claims-product {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+  }
+
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) tbody td:nth-child(6),
+  .mobile-data-page table.mobile-claims-table tbody td:nth-child(3) {
+    font-size: 11px !important;
+  }
+
+  .mobile-claims-empty {
+    padding: 18px 0;
+    color: #9ca3af;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .bdash {
+    gap: 26px !important;
+  }
+
+  .bdash-main,
+  .seller-orders-layout {
+    gap: 16px !important;
+  }
+
+  .bdash-section-head {
+    margin-bottom: 12px !important;
+  }
+
+  .bdash-viewall {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .bdash-empty {
+    padding: 18px 0 !important;
+    font-size: 12px !important;
+  }
+
+  .bdash-side {
+    padding: 14px !important;
+    border-radius: 9px !important;
+  }
+
+  .kargo-original-app main .bdash-side h2 {
+    margin: 0 0 12px !important;
+    font-size: 14px !important;
+  }
+
+  .bdash-deadline {
+    min-height: 56px !important;
+    margin-bottom: 8px !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .bdash-deadline__name { font-size: 12px !important; }
+  .bdash-deadline__seller,
+  .bdash-deadline__time { font-size: 11px !important; }
+  .bdash-deadline__amount { font-size: 12px !important; }
+
+  .bdash-payall {
+    padding: 11px 0 !important;
+    font-size: 13px !important;
+  }
+
+  .bdash-cleared {
+    padding: 10px 12px !important;
+    font-size: 11px !important;
+  }
+
+  .kargo-original-app main .seller-dashboard-sidebar {
+    gap: 14px !important;
+  }
+
+  .kargo-original-app main .seller-side-card {
+    border-radius: 9px !important;
+  }
+
+  .kargo-original-app main .seller-section-heading h2 {
+    font-size: 14px !important;
   }
 
   .settings-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }

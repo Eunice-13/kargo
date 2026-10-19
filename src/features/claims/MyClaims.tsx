@@ -1927,7 +1927,76 @@ export default function MyClaims({
         </div>
       </div>
 
-      {isMobile || viewMode === "card" ? (
+      {isMobile ? (
+        <div className="mobile-claims-table-wrap">
+          <table className="claims-history-table mobile-claims-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Status</th>
+                <th>Deadline</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((c, index) => (
+                <tr
+                  key={c.id}
+                  className="cursor-pointer"
+                  style={{ background: index % 2 ? "#FAFAFA" : "#fff" }}
+                  onClick={() => {
+                    const order = orders.find((candidate) =>
+                      candidate.dbId
+                        ? candidate.dbId === String(c.id)
+                        : candidate.id === String(c.id) ||
+                          (!isSupabaseConfigured &&
+                            candidate.product === c.product &&
+                            candidate.batch === c.batch &&
+                            candidate.seller === c.seller),
+                    ) || {
+                      id: String(c.id),
+                      dbId: isSupabaseConfigured ? String(c.id) : undefined,
+                      product: c.product,
+                      batch: c.batch,
+                      seller: c.seller,
+                      amount: c.amount,
+                      step: 3,
+                      rated: false,
+                    }
+
+                    setViewOrder(order)
+                  }}
+                >
+                  <td>
+                    <div className="mobile-claims-product">
+                      <ProductThumb name={c.product} />
+                      <span>{c.product}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <StatusBadge status={c.status} />
+                  </td>
+                  <td>
+                    {c.status === "Pending" && c.hours > 0 ? (
+                      <Countdown
+                        hours={c.hours}
+                        expiresAt={c.expiresAt}
+                        paused={Boolean(c.deadlinePausedAt)}
+                      />
+                    ) : (
+                      <span aria-label="No active deadline">{"\u2014"}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div className="mobile-claims-empty">
+              No {filter.toLowerCase()} claims found.
+            </div>
+          )}
+        </div>
+      ) : viewMode === "card" ? (
         <>
           {filtered.length === 0 && (
             <div

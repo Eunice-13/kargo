@@ -101,6 +101,8 @@ export default function Dashboard({
 }: SharedState) {
   const [showPayAll, setShowPayAll] = useState(false)
 
+  const [isPhone, setIsPhone] = useState(false)
+
   const [buyerProfile, setBuyerProfile] = useState<{
     name: string
     contactUrl?: string
@@ -118,6 +120,16 @@ export default function Dashboard({
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
 
   const board = useFulfillmentBoard(setFulfillment)
+
+  useEffect(() => {
+    const phoneQuery = window.matchMedia("(max-width: 620px)")
+    const updatePhoneState = () => setIsPhone(phoneQuery.matches)
+
+    updatePhoneState()
+    phoneQuery.addEventListener("change", updatePhoneState)
+
+    return () => phoneQuery.removeEventListener("change", updatePhoneState)
+  }, [])
 
   const openBuyerProfile = (
     name: string,
@@ -190,6 +202,19 @@ export default function Dashboard({
   // All", matching the Seller Dashboard's Recent Orders preview pattern.
 
   const RECENT_CLAIMS_PREVIEW = 7
+  const PHONE_CLAIMS_PREVIEW = 3
+
+  const urgentPhonePreview = (rows: typeof claims) => {
+    const urgent = rows
+      .filter((claim) => claim.status === "Pending" && claim.hours > 0)
+      .slice()
+      .sort((a, b) => a.hours - b.hours)
+    const remaining = rows.filter(
+      (claim) => !(claim.status === "Pending" && claim.hours > 0),
+    )
+
+    return [...urgent, ...remaining].slice(0, PHONE_CLAIMS_PREVIEW)
+  }
 
   const recentClaims = claims
 
@@ -198,6 +223,10 @@ export default function Dashboard({
     .sort((a, b) => Number(b.id) - Number(a.id))
 
     .slice(0, RECENT_CLAIMS_PREVIEW)
+
+  const visibleRecentClaims = isPhone
+    ? urgentPhonePreview(recentClaims)
+    : recentClaims
 
   const payableToPay = toPay.filter(
     (item) =>
@@ -218,6 +247,10 @@ export default function Dashboard({
   const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name)
 
   const mySellerOrders = claims.filter((claim) => claim.seller === user.name)
+
+  const visibleSellerOrders = isPhone
+    ? urgentPhonePreview(mySellerOrders)
+    : mySellerOrders.slice(0, RECENT_CLAIMS_PREVIEW)
 
   // Only submitted proofs await seller verification. `payment_pending` means
 
@@ -596,7 +629,7 @@ export default function Dashboard({
                   </tr>
                 </thead>
                 <tbody>
-                  {mySellerOrders.slice(0, 7).map((claim, index) => {
+                  {visibleSellerOrders.map((claim, index) => {
                     const buyerName = claim.buyer || claim.seller
 
                     return (
@@ -1118,7 +1151,7 @@ export default function Dashboard({
                   </tr>
                 </thead>
                 <tbody>
-                  {recentClaims.map((c) => (
+                  {visibleRecentClaims.map((c) => (
                     <tr
                       key={c.id}
                       className="cursor-pointer"
