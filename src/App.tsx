@@ -149,6 +149,21 @@ export default function App() {
         ? "Batches"
         : linkedTab ?? (originalPreview ? "Dashboard" : "Batches"),
   )
+  // Reset scroll to the top on every tab change. "Pages" here are tabs driven by
+  // React state (no router), so navigating between them otherwise keeps whatever
+  // scroll offset the previous tab had. There is no history-based scroll
+  // restoration to preserve: browser back/forward does not switch tabs.
+  useEffect(() => {
+    if (stage !== "app") return
+
+    // Reset the window and any inner scroll containers (mobile uses a scrollable
+    // #root). "auto" avoids a visible scroll animation on navigation.
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+
+    const root = document.getElementById("root")
+    if (root) root.scrollTop = 0
+  }, [tab, stage])
+
   const [user, setUser] = useState<UserInfo>({
     name: originalPreview ? "Alex Jordan" : "",
 
