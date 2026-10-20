@@ -633,6 +633,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
   const participantNames = new Map<string, string>()
 
+  const participantShopNames = new Map<string, string>()
+
   const participantLinks = new Map<string, string | undefined>()
 
   const participantSocialLinks = new Map<string, Record<string, string>>()
@@ -642,7 +644,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       .from("public_profiles")
 
-      .select("id,display_name,social_links")
+      .select("id,display_name,shop_name,social_links")
 
       .in("id", participantIds)
 
@@ -650,6 +652,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
     for (const participant of participants ?? []) {
       participantNames.set(participant.id, participant.display_name)
+
+      if (participant.shop_name) {
+        participantShopNames.set(participant.id, participant.shop_name)
+      }
 
       const socialLinks = (participant.social_links ??
         {}) as Record<string, string>
@@ -704,7 +710,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       galleryImages: (row.batch_gallery_paths ?? []).map((path: string) =>
         batchMediaUrl(path),
-      ).filter((url): url is string => Boolean(url)),
+      ).filter((url: string | undefined): url is string => Boolean(url)),
 
       groupOrdersEnabled: Boolean(row.group_orders_enabled),
 
@@ -1135,9 +1141,18 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         orderId: row.id,
 
+        seller: participantNames.get(row.seller_id) ?? batchMap.get(product.batch_id)?.seller ?? undefined,
+
+        sellerShopName: participantShopNames.get(row.seller_id),
+
         submittedAt: payment.submitted_at,
 
         product: product.name,
+
+        imageUrl: batchMap
+          .get(product.batch_id)
+          ?.products.find((batchProduct) => batchProduct.dbId === row.batch_product_id)
+          ?.imageUrl,
 
         batch: product.batches.title,
 

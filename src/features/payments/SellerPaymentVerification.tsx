@@ -10,7 +10,7 @@ import {
   PaymentIcon,
   StatusBadge,
 } from "@/components/shared"
-import { Pencil, Plus, Trash2, Upload } from "lucide-react"
+import { Pencil, Plus, Search, Trash2, Upload } from "lucide-react"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { verificationDisplayStatus, type VerifyItem } from "./verifyTypes"
@@ -89,6 +89,8 @@ export default function SellerPaymentVerification({
   const [methodNumber, setMethodNumber] = useState("")
   const [methodQr, setMethodQr] = useState<File | undefined>()
   const [savingMethod, setSavingMethod] = useState(false)
+  const [historySearch, setHistorySearch] = useState("")
+  const [historyDateOrder, setHistoryDateOrder] = useState<"newest" | "oldest">("newest")
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
@@ -281,8 +283,35 @@ export default function SellerPaymentVerification({
       )
     })
   const pendingItems = currentVerifyItems.filter((item) => item.status === "Pending")
-  const historyItems = currentVerifyItems.filter((item) => item.status === "Verified")
-  const renderTable = (items: VerifyItem[], showAmountPaid: boolean) => (
+  const historyItems = currentVerifyItems
+    .filter((item) => item.status === "Verified")
+    .filter((item) => {
+      const query = historySearch.trim().toLocaleLowerCase()
+      const searchableDetails = [
+        item.buyer,
+        item.product,
+        item.amount,
+        item.ref,
+        item.date,
+        item.method,
+        item.acctName,
+        item.phone,
+        item.orderId,
+        item.groupOrderId,
+      ]
+        .filter((detail) => detail != null)
+        .join(" ")
+        .toLocaleLowerCase()
+      return !query || searchableDetails.includes(query)
+    })
+    .sort((left, right) => {
+      const leftTime = left.submittedAt ? new Date(left.submittedAt).getTime() : new Date(left.date).getTime()
+      const rightTime = right.submittedAt ? new Date(right.submittedAt).getTime() : new Date(right.date).getTime()
+      const safeLeft = Number.isFinite(leftTime) ? leftTime : Number(left.id) || 0
+      const safeRight = Number.isFinite(rightTime) ? rightTime : Number(right.id) || 0
+      return historyDateOrder === "newest" ? safeRight - safeLeft : safeLeft - safeRight
+    })
+  const renderTable = (items: VerifyItem[], showAmountPaid: boolean, emptyMessage?: string) => (
     <Card className="!p-0 overflow-hidden seller-payment-table mobile-data-page">
       <div style={{ overflowX: "auto" }}>
         <table className="w-full text-[13px]">
@@ -456,7 +485,7 @@ export default function SellerPaymentVerification({
                 >
                   {showAmountPaid
                     ? "No payments awaiting review."
-                    : "No paid and reserved payments yet."}
+                    : emptyMessage ?? "No paid and reserved payments yet."}
                 </td>
               </tr>
             )}
@@ -597,7 +626,32 @@ export default function SellerPaymentVerification({
         <p style={{ marginTop: -8, marginBottom: 12, color: "#748391", fontSize: 12 }}>
           Verified payments for paid and reserved orders.
         </p>
-        {renderTable(historyItems, false)}
+        <div className="payment-history-controls">
+          <label className="payment-history-search">
+            <Search size={16} aria-hidden="true" />
+            <input
+              type="search"
+              value={historySearch}
+              onChange={(event) => setHistorySearch(event.target.value)}
+              placeholder="Search buyer or order details"
+              aria-label="Search payment history by buyer or order details"
+            />
+          </label>
+          <select
+            className="payment-history-date-sort"
+            value={historyDateOrder}
+            onChange={(event) => setHistoryDateOrder(event.target.value as "newest" | "oldest")}
+            aria-label="Sort transactions by date"
+          >
+            <option value="newest">Latest transactions</option>
+            <option value="oldest">Oldest transactions</option>
+          </select>
+        </div>
+        {renderTable(
+          historyItems,
+          false,
+          historySearch ? "No payments match your search." : undefined,
+        )}
       </section>
       </>
       )}

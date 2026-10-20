@@ -234,6 +234,8 @@ export default function MyClaims({
 
   const [isMobile, setIsMobile] = useState(false)
 
+  const [showAllPendingPayments, setShowAllPendingPayments] = useState(false)
+
   const [shippingTarget, setShippingTarget] = useState<ClaimRow | null>(null)
 
   const [correctionTarget, setCorrectionTarget] = useState<ClaimRow | null>(
@@ -527,7 +529,27 @@ export default function MyClaims({
 
     .filter(belongsToPendingPayments)
 
-    .sort(newestFirst)
+    .sort((left, right) => {
+      const leftPaused = Boolean(left.deadlinePausedAt)
+      const rightPaused = Boolean(right.deadlinePausedAt)
+      if (leftPaused !== rightPaused) return leftPaused ? 1 : -1
+
+      const deadlineTime = (claim: ClaimRow) => {
+        const parsedDeadline = claim.expiresAt
+          ? new Date(claim.expiresAt).getTime()
+          : NaN
+        return Number.isFinite(parsedDeadline)
+          ? parsedDeadline
+          : Date.now() + Math.max(0, claim.hours) * 3_600_000
+      }
+
+      return deadlineTime(left) - deadlineTime(right) || newestFirst(left, right)
+    })
+
+  const pendingPaymentLimit = isMobile ? 3 : 5
+  const visiblePendingPayments = showAllPendingPayments
+    ? claimsToPay
+    : claimsToPay.slice(0, pendingPaymentLimit)
 
   const itemPreviewBatch = itemPreview
     ? batches.find(
@@ -1716,7 +1738,7 @@ export default function MyClaims({
           Submit payment before each reservation deadline.
         </p>
         <div className="space-y-3 pending-payments-list">
-          {claimsToPay.map((item) => (
+          {visiblePendingPayments.map((item) => (
             <Card
               key={item.id}
               className="pending-payment-card flex items-center gap-4"
@@ -1851,6 +1873,18 @@ export default function MyClaims({
               )}
             </Card>
           ))}
+          {claimsToPay.length > pendingPaymentLimit && (
+            <button
+              type="button"
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
+              onClick={() => setShowAllPendingPayments((showing) => !showing)}
+              aria-expanded={showAllPendingPayments}
+            >
+              {showAllPendingPayments
+                ? "Show fewer pendings"
+                : `Show all ${claimsToPay.length} pendings`}
+            </button>
+          )}
           {claimsToPay.length === 0 && (
             <Card>
               <div
@@ -2479,6 +2513,7 @@ export default function MyClaims({
         <Modal
           title={itemPreview.product}
           variant="detail"
+          showTitleIcon={false}
           width={760}
           onClose={() => setItemPreview(null)}
         >

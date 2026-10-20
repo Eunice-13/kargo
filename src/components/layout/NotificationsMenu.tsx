@@ -197,8 +197,9 @@ export default function NotificationsMenu({
                   }
                 }}
                 style={{
-                  padding: "10px 14px",
-                  borderBottom: "1px solid #F9FAFB",
+                  padding: "12px 14px",
+                  borderBottom:
+                    i === notifs.length - 1 ? "none" : "1px solid #DDE3ED",
                   background: isRead ? "#fff" : "#FAFBFF",
                   display: "flex",
                   alignItems: "flex-start",
