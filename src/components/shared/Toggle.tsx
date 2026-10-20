@@ -19,6 +19,7 @@ export default function Toggle({
   return (
     <button
       type="button"
+      className={`kargo-toggle${compact ? " kargo-toggle--compact" : ""}`}
       role="switch"
       aria-checked={on}
       aria-label={label}

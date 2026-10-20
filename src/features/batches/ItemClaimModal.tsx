@@ -401,7 +401,7 @@ export default function ItemClaimModal({
               seller before you can pay. Your payment deadline pauses while you
               wait.
             </div>
-            <label className="flex cursor-pointer items-start gap-3 text-xs leading-5 text-gray-700">
+            <label className="item-claim-shipping-ack flex cursor-pointer items-start gap-3 text-xs leading-5 text-gray-700">
               <input
                 type="checkbox"
                 checked={acceptedShipping}

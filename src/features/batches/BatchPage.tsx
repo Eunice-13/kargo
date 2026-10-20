@@ -587,6 +587,7 @@ export default function BatchPage({
       {/* Hero header — same cover photo the Home batch card shows (seller upload
           or category default), with a scrim so the white title stays legible. */}
       <div
+        className="batch-hero"
         style={{
           height: 220,
 
@@ -726,7 +727,10 @@ export default function BatchPage({
           >
             {batch.title}
           </h1>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div
+            className="batch-hero-meta"
+            style={{ display: "flex", gap: 12, alignItems: "center" }}
+          >
             <span
               style={{
                 background: "rgba(255,255,255,0.2)",

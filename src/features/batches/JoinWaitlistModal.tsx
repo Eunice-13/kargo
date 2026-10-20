@@ -75,6 +75,7 @@ export default function JoinWaitlistModal({
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
             <button
               type="button"
+              className="join-waitlist-stepper__button"
               aria-label="Decrease quantity"
               onClick={() => setQty((q) => Math.max(1, q - 1))}
               style={stepBtn}
@@ -94,6 +95,7 @@ export default function JoinWaitlistModal({
             </span>
             <button
               type="button"
+              className="join-waitlist-stepper__button"
               aria-label="Increase quantity"
               onClick={() => setQty((q) => Math.min(maxQty, q + 1))}
               style={stepBtn}

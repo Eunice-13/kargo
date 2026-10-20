@@ -31,6 +31,7 @@ export default function ShareButton({
     return (
       <button
         type="button"
+        className="kargo-share-button--compact"
         onClick={onShare}
         aria-label={`Share ${title ?? "batch"}`}
         title="Copy shareable link"
