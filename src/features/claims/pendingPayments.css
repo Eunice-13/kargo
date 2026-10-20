@@ -1,0 +1,211 @@
+/* Reuse the shared Card surface, border, radius and shadow. */
+.pending-payments-list {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+.pending-payments-list .kargo-card.pending-product-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 12px;
+  padding: 12px !important;
+  color: var(--kargo-ink);
+  font-size: 12px;
+  line-height: 1.4;
+  min-width: 0;
+}
+.pending-product-card > img {
+  grid-area: 1 / 1 / 2 / 2;
+  width: 48px;
+  height: 48px;
+  align-self: start;
+}
+.pending-product-card__info {
+  grid-area: 1 / 2 / 2 / 3;
+  min-width: 0;
+}
+.pending-product-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.pending-product-card__secondary {
+  font-size: 11px;
+  color: var(--kargo-muted);
+  overflow-wrap: anywhere;
+}
+.pending-product-card__quantity {
+  margin-top: 6px;
+  color: var(--kargo-muted);
+  overflow-wrap: anywhere;
+}
+.pending-product-card__amount {
+  grid-area: 2 / 2 / 3 / 3;
+  font-weight: 700;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.pending-product-card__note {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--kargo-muted);
+}
+.pending-product-card__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+}
+.pending-product-card__actions {
+  grid-area: 3 / 1 / 4 / 3;
+  min-width: 0;
+}
+.pending-product-card__actions .kargo-primary,
+.pending-product-card__actions .kargo-secondary {
+  min-height: 44px;
+}
+.pending-product-card__actions .kargo-primary {
+  flex: 1 1 auto;
+}
+.checkout-waiting {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  color: var(--kargo-muted);
+  font-size: 11px;
+}
+.pending-pay-help {
+  position: relative;
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pending-pay-help__trigger > button:disabled {
+  pointer-events: none;
+}
+.pending-pay-help__trigger:focus-visible,
+.pending-pay-help__close:focus-visible {
+  outline: 2px solid var(--kargo-focus);
+  outline-offset: 2px;
+  border-radius: 7px;
+}
+.checkout-help__popover {
+  position: absolute;
+  z-index: 10;
+  bottom: 100%;
+  right: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: min(400px, calc(100vw - 48px));
+  padding: 6px 10px;
+  border: 1px solid var(--kargo-line);
+  border-radius: 8px;
+  background: var(--kargo-surface);
+  color: var(--kargo-ink-soft);
+  font-size: 12px;
+  font-weight: 400;
+}
+@media (min-width: 640px) {
+  .pending-payments-list .kargo-card.pending-product-card {
+    grid-template-columns: 64px minmax(0, 1fr) minmax(160px, 240px);
+    gap: 2px 16px;
+    padding: 14px 16px !important;
+  }
+  .pending-product-card > img {
+    grid-area: 1 / 1 / 3 / 2;
+    width: 64px;
+    height: 64px;
+    align-self: center;
+  }
+  .pending-product-card__info {
+    grid-area: 1 / 2 / 3 / 3;
+  }
+  .pending-product-card__amount {
+    grid-area: 1 / 3 / 2 / 4;
+    text-align: right;
+  }
+  .pending-product-card__actions {
+    grid-area: 2 / 3 / 3 / 4;
+  }
+  .pending-product-card__actions .kargo-primary {
+    flex: 0 0 auto;
+  }
+}
+.pending-product-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+@media (min-width: 640px) {
+  .pending-pay-help {
+    flex: 0 0 auto;
+  }
+}
+
+.pending-pay-help__trigger {
+  display: inline-flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  cursor: pointer;
+}
+.pending-pay-help__close {
+  display: block;
+  min-height: 44px;
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--kargo-line);
+  border-radius: 7px;
+  background: var(--kargo-surface);
+  color: var(--kargo-navy);
+  cursor: pointer;
+}
+
+/* Deadline label design ported from jamey's branch: the countdown reads as a
+   rounded chip with a clock marker, so time is a boundary of its own rather
+   than loose text. Neutral by default, dark amber under 24h, red when urgent. */
+.pending-product-card__status [role="timer"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #f1f5f7;
+  color: #3d4d5a !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+}
+
+/* The sub-24h AMBER (#FFC24B) is unreadable as text; use a dark amber on a
+   warm tint instead. The component sets that color inline as rgb(255,194,75). */
+.pending-product-card__status [role="timer"][style*="255, 194, 75"] {
+  background: #fdf6e7;
+  color: #8a5a08 !important;
+}
+
+/* Urgent (<6h) carries the component's `cu` class. */
+.pending-product-card__status [role="timer"].cu {
+  background: #fdeeec;
+  color: #c0392b !important;
+}
+
+/* Clock marker, tinted to the chip's own text color. */
+.pending-product-card__status [role="timer"]::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E") center / contain no-repeat;
+}

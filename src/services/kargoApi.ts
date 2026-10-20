@@ -2729,7 +2729,7 @@ export async function deactivatePaymentMethod(id: string) {
   if (error) throw error
 }
 
-export async function loadNotifications() {
+export async function loadNotifications(offset = 0, pageSize = 20) {
   const { data, error } = await requireSupabase()
 
     .from("notifications")
@@ -2738,11 +2738,19 @@ export async function loadNotifications() {
 
     .order("created_at", { ascending: false })
 
-    .limit(20)
+    .order("id", { ascending: false })
+
+    .range(offset, offset + pageSize - 1)
 
   if (error) throw error
 
   return data ?? []
+}
+
+export async function loadUnreadNotificationCount() {
+  const { count, error } = await requireSupabase().from("notifications").select("id", { count: "exact", head: true }).is("read_at", null)
+  if (error) throw error
+  return count ?? 0
 }
 
 export async function markNotificationRead(id?: string) {
@@ -3346,6 +3354,8 @@ export const kargoApi = {
   deactivatePaymentMethod,
 
   loadNotifications,
+
+  loadUnreadNotificationCount,
 
   markNotificationRead,
 

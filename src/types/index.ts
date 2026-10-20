@@ -42,7 +42,7 @@ export type UserInfo = {
   memberSince?: string
 }
 
-export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings"
+export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings" | "Notifications"
 
 export type Role = "Buyer" | "Seller"
 

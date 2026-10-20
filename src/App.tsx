@@ -23,6 +23,8 @@ import {
   requestSellerOpen,
 } from "@/state/navIntent"
 
+import { useScrollToTopOnRouteChange } from "@/state/routeScroll"
+
 import { BATCHES_INIT } from "@/data/batches"
 
 import { CLAIMS_INIT } from "@/data/claims"
@@ -58,6 +60,7 @@ import { Footer, Header, TabBar, TabContent } from "@/components/layout"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 
 import { kargoApi } from "@/services"
+import { NotificationsProvider } from "@/features/notifications"
 
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
@@ -68,6 +71,7 @@ const ARRIVED_VIA_CONFIRMATION_LINK = hasSignupConfirmationFragment()
 // Email CTAs deep-link to the tab where the action lives (?tab=Orders). Accept
 // the app's labels plus the few words a person might expect instead.
 const TAB_DEEP_LINKS: Record<string, Tab> = {
+  notifications: "Notifications",
   dashboard: "Dashboard",
   home: "Dashboard",
   batches: "Batches",
@@ -147,6 +151,11 @@ export default function App() {
         ? "Batches"
         : linkedTab ?? (originalPreview ? "Dashboard" : "Batches"),
   )
+  // Every page opens at the top. The shell owns this policy (see
+  // state/routeScroll.ts); the key is the current stage plus tab, and tabs with
+  // their own sub-pages extend it themselves.
+  useScrollToTopOnRouteChange(`${stage}:${tab}`)
+
   const [user, setUser] = useState<UserInfo>({
     name: originalPreview ? "Alex Jordan" : "",
 
@@ -591,6 +600,7 @@ export default function App() {
           />
         )}
       {stage === "app" && (
+        <NotificationsProvider key={`${user.id ?? user.email}:${role}`} role={role}>
         <div
           className="kargo-original-app"
           style={{
@@ -665,6 +675,7 @@ export default function App() {
             />
           )}
         </div>
+        </NotificationsProvider>
       )}
     </>
   )

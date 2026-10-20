@@ -72,8 +72,8 @@ begin
       target.seller_id,
       'extension_requested',
       'Payment extension requested for ' || target.order_number,
-      'A buyer requested ' || target.extension_requested_hours || ' additional hours for order ' || target.order_number ||
-        '. Reason: ' || target.extension_reason,
+      'A buyer requested ' || target.extension_requested_hours || ' additional hours for order ' || target.order_number || '.',
+      'Reason: ' || target.extension_reason,
       jsonb_build_object(
         'order_id', target.id,
         'requested_hours', target.extension_requested_hours,

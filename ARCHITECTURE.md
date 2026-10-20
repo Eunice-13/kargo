@@ -34,6 +34,12 @@ src/
                                 written by App, Header (search), and Batches for
                                 cross-tab deep-linking. Exported as the SAME mutable
                                 object (intentionally not React state).
+    routeScroll.ts              Global navigation scroll policy: `scrollToTop`
+                                and `useScrollToTopOnRouteChange(routeKey)`. The
+                                app shell keys it on stage + tab; tabs with their
+                                own sub-pages (Batches) extend the key. Every page
+                                therefore opens at the top without per-page scroll
+                                code.
 
   components/
     shared/                     UI used by 2+ features. Leaf atoms (Card, SH,
