@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { ExternalLink, PackageOpen } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ChevronDown, ExternalLink, PackageOpen } from "lucide-react"
 
 import type { FulfillmentOrder } from "@/types"
 import {
@@ -22,6 +22,14 @@ import FulfillmentDetails from "./FulfillmentDetails"
 import type { useFulfillmentBoard } from "./useFulfillmentBoard"
 
 type BoardController = ReturnType<typeof useFulfillmentBoard>
+
+const SELLER_BOARD_ORDER = [
+  "Payment Confirmed",
+  "Preparing",
+  "Shipped",
+  "Delivered",
+  "Cancelled",
+] as const
 
 export default function FulfillmentBoard({
   fulfillment,
@@ -51,7 +59,23 @@ export default function FulfillmentBoard({
       return {}
     return Object.fromEntries(SELLER_COLUMNS.map((column) => [column, true]))
   })
-  const columns = role === "seller" ? SELLER_COLUMNS : BUYER_COLUMNS
+  useEffect(() => {
+    if (role !== "seller") return
+
+    const mobile = window.matchMedia("(max-width: 620px)")
+    const syncCollapsedState = () => {
+      setCollapsed(
+        mobile.matches
+          ? Object.fromEntries(SELLER_COLUMNS.map((column) => [column, true]))
+          : {},
+      )
+    }
+
+    syncCollapsedState()
+    mobile.addEventListener("change", syncCollapsedState)
+    return () => mobile.removeEventListener("change", syncCollapsedState)
+  }, [role])
+  const columns = role === "seller" ? SELLER_BOARD_ORDER : BUYER_COLUMNS
   const scopedOrders = fulfillment.filter((order) => order.perspective === role)
 
   if (loading) {
@@ -159,14 +183,27 @@ export default function FulfillmentBoard({
                           />
                         )}
                       </button>
-                      {role === "seller" && onOpenProfile && (
-                        <button
-                          type="button"
-                          className="fulfillment-board__profile-link"
-                          onClick={() => onOpenProfile(order)}
-                        >
-                          View buyer profile
-                        </button>
+                      {role === "seller" && (onOpenProfile || expanded) && (
+                        <div className="fulfillment-board__card-footer">
+                          {onOpenProfile && (
+                            <button
+                              type="button"
+                              className="fulfillment-board__profile-link"
+                              onClick={() => onOpenProfile(order)}
+                            >
+                              View buyer profile
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className={`fulfillment-board__status-toggle${isOpen ? " is-open" : ""}`}
+                            aria-label={`${isOpen ? "Hide" : "Select"} tracking status for ${order.product}`}
+                            aria-expanded={isOpen}
+                            onClick={() => board.toggle(order.id)}
+                          >
+                            <ChevronDown size={16} aria-hidden="true" />
+                          </button>
+                        </div>
                       )}
                       {isOpen && role === "seller" && (
                         <FulfillmentDetails

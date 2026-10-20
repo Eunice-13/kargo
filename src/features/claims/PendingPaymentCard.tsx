@@ -10,16 +10,25 @@ import "./pendingPayments.css";
 export default function PendingPaymentCard({
   item,
   imageUrl,
+  onPreview,
   children,
 }: {
   item: ClaimRow;
   imageUrl?: string;
+  onPreview: () => void;
   children: ReactNode;
 }) {
   const waiting = item.shippingState === "waiting_for_seller";
   return (
     <Card className="pending-product-card">
-      <ProductThumb name={item.product} imageUrl={imageUrl} />
+      <button
+        type="button"
+        className="buyer-claim-item-preview-trigger"
+        aria-label={`Enlarge photo of ${item.product}`}
+        onClick={onPreview}
+      >
+        <ProductThumb name={item.product} imageUrl={imageUrl} />
+      </button>
       <div className="pending-product-card__info">
         <div className="pending-product-card__name">{item.product}</div>
         <div className="pending-product-card__meta pending-product-card__secondary">

@@ -6992,6 +6992,15 @@ textarea::placeholder {
   gap: 8px;
 }
 
+.seller-board-heading {
+  margin: 0 0 12px;
+  padding-inline: 0;
+}
+
+.seller-board-preview {
+  padding-top: 20px;
+}
+
 .seller-board-heading button,
 .seller-board-dialog header button {
   display: inline-flex;
@@ -7947,6 +7956,10 @@ textarea::placeholder {
     display: flex;
     min-height: 250px;
     padding: 24px 18px;
+  }
+
+  .seller-board-heading {
+    margin-inline: 0;
   }
 
   .seller-board-preview .seller-board-column {
@@ -9081,7 +9094,7 @@ textarea::placeholder {
   min-width: 0;
   overflow: hidden;
   border-radius: 12px;
-  background: #f7f8fa;
+  background: transparent;
 }
 
 .fulfillment-board__column-head {
@@ -9112,6 +9125,10 @@ textarea::placeholder {
 
 .fulfillment-board__collapse { display: none; }
 
+.fulfillment-board.is-expanded .fulfillment-board__collapse {
+  display: none !important;
+}
+
 .fulfillment-board__cards {
   display: grid;
   gap: 8px;
@@ -9122,7 +9139,7 @@ textarea::placeholder {
   overflow: hidden;
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 4px 14px rgb(17 24 39 / 7%);
+  box-shadow: 0 2px 8px rgb(17 24 39 / 4%);
 }
 
 .fulfillment-board__card-trigger {
@@ -9162,7 +9179,38 @@ textarea::placeholder {
   cursor: pointer;
 }
 
-.fulfillment-board__profile-link { width: 100%; padding: 0 10px 9px; text-align: left; }
+.fulfillment-board__card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 8px;
+}
+
+.fulfillment-board__profile-link { flex: 1; min-width: 0; padding: 0; text-align: left; }
+
+.fulfillment-board__status-toggle {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  max-height: 18px !important;
+  flex: 0 0 18px;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #fff;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.fulfillment-board__status-toggle svg { transition: transform .15s ease; }
+.fulfillment-board__status-toggle.is-open svg { transform: rotate(180deg); }
 .fulfillment-board__more { padding: 7px; }
 .fulfillment-board__column-empty { padding: 17px 8px; color: #8a93a3; font-size: 11px; text-align: center; }
 
@@ -9215,6 +9263,23 @@ textarea::placeholder {
 
 @media (max-width: 620px) {
   .buyer-fulfillment-section { margin-top: 16px; padding: 14px 12px; border-radius: 12px; }
+  .seller-fulfillment-section .seller-board-heading {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .seller-fulfillment-section .seller-board-heading > div {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+  .seller-fulfillment-section .seller-board-heading button {
+    gap: 4px;
+    padding: 6px 7px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
   .fulfillment-board { display: grid; grid-template-columns: minmax(0, 1fr); overflow: visible; }
   .fulfillment-board.is-expanded { grid-template-columns: minmax(0, 1fr); }
   .seller-board-dialog__columns > .fulfillment-board { width: 100%; }
