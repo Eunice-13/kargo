@@ -1741,13 +1741,17 @@ export default function MyClaims({
         </p>
         <div className="space-y-3 pending-payments-list">
           {visiblePendingPayments.map((item) => (
-            <Card
-        <div className="pending-payments-list">
-          {claimsToPay.map((item) => (
             <PendingPaymentCard
               key={item.id}
               item={item}
-              imageUrl={item.productId ? batches.flatMap((batch) => batch.products).find((product) => product.dbId === item.productId)?.imageUrl : undefined}
+              imageUrl={
+                item.productId
+                  ? batches
+                      .flatMap((batch) => batch.products)
+                      .find((product) => product.dbId === item.productId)
+                      ?.imageUrl
+                  : undefined
+              }
             >
               {item.shippingState === "correction_requested" ? (
                 <SecondaryBtn
@@ -1755,14 +1759,10 @@ export default function MyClaims({
                   onClick={() => {
                     setPinDraft({
                       lat: item.deliveryPinLat,
-
                       lng: item.deliveryPinLng,
-
                       url: item.deliveryPinUrl,
-
                       address: item.deliveryPinAddress,
                     })
-
                     setPinTarget(item)
                   }}
                 >
@@ -1770,24 +1770,44 @@ export default function MyClaims({
                 </SecondaryBtn>
               ) : (
                 <div className="pending-payment-card__actions flex flex-wrap items-center justify-end gap-2">
-                  <PendingPaymentHint waiting={item.shippingState === "waiting_for_seller"}>
-                  <PrimaryBtn size="sm" disabled={!claimIsPayable(item)} onClick={() => claimIsPayable(item) && setPayTarget(item)}>
-                    Pay Now
-                  </PrimaryBtn>
+                  <PendingPaymentHint
+                    waiting={item.shippingState === "waiting_for_seller"}
+                  >
+                    <PrimaryBtn
+                      size="sm"
+                      disabled={!claimIsPayable(item)}
+                      onClick={() => claimIsPayable(item) && setPayTarget(item)}
+                    >
+                      Pay Now
+                    </PrimaryBtn>
                   </PendingPaymentHint>
-                  {claimIsPayable(item) && !item.extensionRequested && item.extensionStatus !== "pending" && (
-                    <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
-                      Request Extension
-                    </SecondaryBtn>
+                  {claimIsPayable(item) &&
+                    !item.extensionRequested &&
+                    item.extensionStatus !== "pending" && (
+                      <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
+                        Request Extension
+                      </SecondaryBtn>
+                    )}
+                  {(item.extensionRequested ||
+                    item.extensionStatus === "pending") && (
+                    <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-700">
+                      Extension requested
+                    </span>
                   )}
-                  {(item.extensionRequested || item.extensionStatus === "pending") && <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-700">Extension requested</span>}
-                  {item.extensionStatus === "approved" && <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">Extension approved</span>}
-                  {item.extensionStatus === "denied" && <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">Extension declined</span>}
+                  {item.extensionStatus === "approved" && (
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+                      Extension approved
+                    </span>
+                  )}
+                  {item.extensionStatus === "denied" && (
+                    <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">
+                      Extension declined
+                    </span>
+                  )}
                 </div>
               )}
             </PendingPaymentCard>
-          ))}
-          {claimsToPay.length > pendingPaymentLimit && (
+          ))}          {claimsToPay.length > pendingPaymentLimit && (
             <button
               type="button"
               className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
