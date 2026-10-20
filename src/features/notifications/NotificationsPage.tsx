@@ -23,7 +23,7 @@ export default function NotificationsPage({ onNavigate }: { onNavigate: (tab: Ta
             onClick={() => void markRead()}
             className="min-h-11 text-xs font-semibold text-[var(--kargo-navy)]"
           >
-            Mark all read
+            Mark all as read
           </button>
         )}
       </div>

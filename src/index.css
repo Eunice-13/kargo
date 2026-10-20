@@ -1782,12 +1782,17 @@ select:hover {
   animation: fadeSlideUp .28s cubic-bezier(.22, 1, .36, 1) both;
 }
 
+/* Tab transitions animate transform, so they must not fill forwards. A leftover
+   transform (even translateX(0)) turns the tab wrapper into the containing block
+   for position: fixed children, which makes the expanded fulfillment board open
+   at the page's scroll offset and paint under the sticky tab bar instead of
+   covering the viewport. "backwards" holds only the pre-animation frame. */
 .pr {
-  animation: fadeSlideRight .28s cubic-bezier(.22, 1, .36, 1) both;
+  animation: fadeSlideRight .28s cubic-bezier(.22, 1, .36, 1) backwards;
 }
 
 .pl {
-  animation: fadeSlideLeft .28s cubic-bezier(.22, 1, .36, 1) both;
+  animation: fadeSlideLeft .28s cubic-bezier(.22, 1, .36, 1) backwards;
 }
 
 .fi {
