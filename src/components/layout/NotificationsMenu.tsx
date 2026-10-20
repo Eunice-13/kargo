@@ -45,7 +45,7 @@ export default function NotificationsMenu({
           width: 36,
           height: 36,
         }}
-        className="relative flex items-center justify-center transition-colors hover:bg-gray-100 bp"
+        className="kargo-notification-trigger relative flex items-center justify-center transition-colors hover:bg-gray-100 bp"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path

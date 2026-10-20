@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ImageUp } from "lucide-react"
+import { ImageUp, X } from "lucide-react"
 
 import type { BatchType, GroupDiscountType, SellingUnit } from "@/types"
 
@@ -58,6 +58,10 @@ export default function NewBatchModal({
   const [coverFile, setCoverFile] = useState<File | null>(null)
 
   const [coverPreview, setCoverPreview] = useState("")
+
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([])
+
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
 
   const [cat, setCat] = useState("Food")
 
@@ -139,6 +143,31 @@ export default function NewBatchModal({
     setError("")
     setCoverFile(file)
     setCoverPreview(URL.createObjectURL(file))
+  }
+
+  const chooseGalleryImages = (files: FileList | null) => {
+    const selected = Array.from(files ?? [])
+    if (!selected.length) return
+    if (selected.some((file) => !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024)) {
+      setError("Choose image files that are each 5 MB or smaller.")
+      return
+    }
+
+    setError("")
+    setGalleryFiles((current) => [...current, ...selected])
+    setGalleryPreviews((current) => [
+      ...current,
+      ...selected.map((file) => URL.createObjectURL(file)),
+    ])
+  }
+
+  const removeGalleryImage = (index: number) => {
+    setGalleryPreviews((current) => {
+      const preview = current[index]
+      if (preview) URL.revokeObjectURL(preview)
+      return current.filter((_, currentIndex) => currentIndex !== index)
+    })
+    setGalleryFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))
   }
 
   const formatDateRange = (s: string, e: string) => {
@@ -284,7 +313,11 @@ export default function NewBatchModal({
         timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal)
 
       let uploadedMedia:
-        | { coverImage?: string; productImages: Array<string | undefined> }
+        | {
+            coverImage?: string
+            galleryImages: string[]
+            productImages: Array<string | undefined>
+          }
         | undefined
 
       if (isSupabaseConfigured) {
@@ -302,6 +335,8 @@ export default function NewBatchModal({
           notes: desc.trim() || undefined,
 
           coverFile: coverFile ?? undefined,
+
+          galleryFiles,
 
           groupOrdersEnabled,
 
@@ -370,6 +405,8 @@ export default function NewBatchModal({
         notes: desc.trim() || undefined,
 
         coverImage: uploadedMedia?.coverImage ?? (coverPreview || undefined),
+
+        galleryImages: uploadedMedia?.galleryImages ?? galleryPreviews,
 
         groupOrdersEnabled,
 
@@ -580,6 +617,41 @@ export default function NewBatchModal({
               onChange={(event) => chooseCoverImage(event.target.files?.[0])}
             />
           </label>
+          <div className="batch-gallery-upload">
+            <span className="batch-gallery-upload__label">
+              Batch Photos <span>(optional, multiple)</span>
+            </span>
+            <label className="batch-image-upload batch-image-upload--gallery">
+              <ImageUp size={16} aria-hidden="true" />
+              <span>{galleryFiles.length ? `Add more photos (${galleryFiles.length} selected)` : "Add batch photos"}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                onChange={(event) => {
+                  chooseGalleryImages(event.currentTarget.files)
+                  event.currentTarget.value = ""
+                }}
+              />
+            </label>
+            {galleryPreviews.length > 0 && (
+              <div className="batch-gallery-upload__previews">
+                {galleryPreviews.map((preview, index) => (
+                  <div className="batch-gallery-upload__preview" key={preview}>
+                    <img src={preview} alt={`Batch photo ${index + 1}`} />
+                    <button
+                      type="button"
+                      aria-label={`Remove batch photo ${index + 1}`}
+                      onClick={() => removeGalleryImage(index)}
+                    >
+                      <X size={13} aria-hidden="true" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <small>Each photo must be 5 MB or smaller.</small>
+          </div>
         </div>
         <div className="batch-meta-grid grid gap-4">
           <div>

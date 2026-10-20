@@ -12,7 +12,7 @@ import {
   PrimaryBtn,
   SecondaryBtn,
   Avatar,
-  SummaryBlock,
+  ProductThumb,
   LocationPinPicker,
   type LocationPinValue,
 } from "@/components/shared"
@@ -21,6 +21,7 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 
 import type { SellerReceiveMethod } from "@/services/kargoApi"
+import { productImageUrl } from "@/components/shared/ProductThumb"
 
 export default function ItemClaimModal({
   batch,
@@ -44,6 +45,8 @@ export default function ItemClaimModal({
 
     waitlist: number
 
+    imageUrl?: string
+
     locked?: boolean
 
     limitPerUser?: number
@@ -55,6 +58,8 @@ export default function ItemClaimModal({
   const [qty, setQty] = useState(1)
 
   const [showReminders, setShowReminders] = useState(false)
+
+  const [showPhotoZoom, setShowPhotoZoom] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
 
@@ -147,16 +152,24 @@ export default function ItemClaimModal({
     qty <= left
 
   return (
+    <>
     <Modal title="Review Claim" onClose={onClose} width={480}>
       <div className="space-y-4">
-        <SummaryBlock
-          title={product.name}
-          product={product.name}
-          details={[
-            `from ${batch.title}`,
-            `₱${product.price.toLocaleString()}`,
-          ]}
-        />
+        <section className="kargo-summary-block" aria-label={product.name}>
+          <button
+            type="button"
+            className="claim-review-photo-button"
+            aria-label={`Zoom photo of ${product.name}`}
+            onClick={() => setShowPhotoZoom(true)}
+          >
+            <ProductThumb name={product.name} imageUrl={product.imageUrl} />
+          </button>
+          <div>
+            <strong>{product.name}</strong>
+            <span>from {batch.title}</span>
+            <span>₱{product.price.toLocaleString()}</span>
+          </div>
+        </section>
 
         {/* Seller trust row */}
         <div
@@ -543,5 +556,21 @@ export default function ItemClaimModal({
         </div>
       </div>
     </Modal>
+    {showPhotoZoom && (
+      <Modal
+        title={`${product.name} photo`}
+        variant="detail"
+        width={900}
+        onClose={() => setShowPhotoZoom(false)}
+      >
+        <div className="claim-review-photo-zoom">
+          <img
+            src={productImageUrl(product.name, 1200, product.imageUrl)}
+            alt={product.name}
+          />
+        </div>
+      </Modal>
+    )}
+    </>
   )
 }

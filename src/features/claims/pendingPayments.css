@@ -168,7 +168,44 @@
   cursor: pointer;
 }
 
-/* Match the existing countdown's urgent red within Pending Payments. */
+/* Deadline label design ported from jamey's branch: the countdown reads as a
+   rounded chip with a clock marker, so time is a boundary of its own rather
+   than loose text. Neutral by default, dark amber under 24h, red when urgent. */
 .pending-product-card__status [role="timer"] {
-  color: #ef4444 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #f1f5f7;
+  color: #3d4d5a !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+}
+
+/* The sub-24h AMBER (#FFC24B) is unreadable as text; use a dark amber on a
+   warm tint instead. The component sets that color inline as rgb(255,194,75). */
+.pending-product-card__status [role="timer"][style*="255, 194, 75"] {
+  background: #fdf6e7;
+  color: #8a5a08 !important;
+}
+
+/* Urgent (<6h) carries the component's `cu` class. */
+.pending-product-card__status [role="timer"].cu {
+  background: #fdeeec;
+  color: #c0392b !important;
+}
+
+/* Clock marker, tinted to the chip's own text color. */
+.pending-product-card__status [role="timer"]::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E") center / contain no-repeat;
 }

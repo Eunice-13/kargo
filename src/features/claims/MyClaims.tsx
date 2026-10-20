@@ -14,6 +14,7 @@ import type {
 } from "@/types"
 
 import { INDIGO, CREAM, TODAY } from "@/constants/theme"
+import { productImageUrl } from "@/components/shared/ProductThumb"
 
 import {
   Modal,
@@ -160,6 +161,8 @@ export default function MyClaims({
   const [cancelling, setCancelling] = useState(false)
 
   const [viewOrder, setViewOrder] = useState<OrderRow | null>(null)
+
+  const [itemPreview, setItemPreview] = useState<ClaimRow | null>(null)
 
   const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
 
@@ -527,6 +530,19 @@ export default function MyClaims({
     .filter(belongsToPendingPayments)
 
     .sort(newestFirst)
+
+  const itemPreviewBatch = itemPreview
+    ? batches.find(
+        (candidate) =>
+          candidate.title === itemPreview.batch &&
+          candidate.seller === itemPreview.seller,
+      )
+    : undefined
+  const itemPreviewProduct = itemPreviewBatch?.products.find((product) =>
+    itemPreview?.productId
+      ? product.dbId === itemPreview.productId
+      : product.name === itemPreview?.product,
+  )
 
   const nonPayableClaims = reconciledClaims
 
@@ -1892,7 +1908,14 @@ export default function MyClaims({
             {filtered.map((c) => (
               <Card key={c.id}>
                 <div className="flex items-start gap-3">
-                  <ProductThumb name={c.product} />
+                  <button
+                    type="button"
+                    className="buyer-claim-item-preview-trigger"
+                    aria-label={`View ${c.product} details`}
+                    onClick={() => setItemPreview(c)}
+                  >
+                    <ProductThumb name={c.product} />
+                  </button>
                   <div className="flex-1">
                     <div
                       style={{
@@ -1905,7 +1928,13 @@ export default function MyClaims({
                         fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
-                      {c.product}
+                      <button
+                        type="button"
+                        className="buyer-claim-item-preview-name"
+                        onClick={() => setItemPreview(c)}
+                      >
+                        {c.product}
+                      </button>
                     </div>
                     <div
                       style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}
@@ -2114,10 +2143,21 @@ export default function MyClaims({
                   >
                     <td style={{ padding: "10px 14px" }}>
                       <div className="flex items-center gap-2.5">
-                        <ProductThumb name={c.product} />
-                        <span style={{ fontWeight: 500, color: "#111827" }}>
+                        <button
+                          type="button"
+                          className="buyer-claim-item-preview-trigger"
+                          aria-label={`View ${c.product} details`}
+                          onClick={() => setItemPreview(c)}
+                        >
+                          <ProductThumb name={c.product} />
+                        </button>
+                        <button
+                          type="button"
+                          className="buyer-claim-item-preview-name"
+                          onClick={() => setItemPreview(c)}
+                        >
                           {c.product}
-                        </span>
+                        </button>
                       </div>
                     </td>
                     <td
@@ -2326,6 +2366,19 @@ export default function MyClaims({
 
             shippingState: payTarget.shippingState,
           }}
+          imageUrl={
+            batches
+              .find(
+                (candidate) =>
+                  candidate.title === payTarget.batch &&
+                  candidate.seller === payTarget.seller,
+              )
+              ?.products.find((product) =>
+                payTarget.productId
+                  ? product.dbId === payTarget.productId
+                  : product.name === payTarget.product,
+              )?.imageUrl
+          }
           contactPrefill={user.fb || ""}
           onConfirm={(method, refNo, receipt, details) =>
             handlePay(payTarget, method, refNo, receipt, details)
@@ -2333,6 +2386,44 @@ export default function MyClaims({
           onClose={() => setPayTarget(null)}
         />
       )}
+      {itemPreview && (
+        <Modal
+          title={itemPreview.product}
+          variant="detail"
+          width={760}
+          onClose={() => setItemPreview(null)}
+        >
+          <div className="buyer-claim-item-preview">
+            <div className="buyer-claim-item-preview__photo">
+              <img
+                src={
+                  itemPreviewProduct?.imageUrl ??
+                  productImageUrl(itemPreview.product, 900)
+                }
+                alt={itemPreview.product}
+              />
+            </div>
+            <div className="buyer-claim-item-preview__details">
+              <h2>{itemPreview.product}</h2>
+              <p>Batch: {itemPreview.batch}</p>
+              <p>Seller: {itemPreview.seller}</p>
+              {itemPreviewProduct && (
+                <>
+                  <strong>
+                    ₱{itemPreviewProduct.price.toLocaleString()} / {itemPreviewProduct.sellingUnit ?? "piece"}
+                  </strong>
+                  {itemPreviewProduct.sellingUnit === "box" && (
+                    <p>{itemPreviewProduct.piecesPerBox ?? 1} pieces per box</p>
+                  )}
+                </>
+              )}
+              <p>Claim quantity: {itemPreview.qty}</p>
+              <p>Claim total: ₱{itemPreview.amount.toLocaleString()}</p>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {viewOrder && (
         <OrderDetailsModal
           order={orders.find((order) => order.id === viewOrder.id) ?? viewOrder}

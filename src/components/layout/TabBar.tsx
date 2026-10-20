@@ -45,7 +45,7 @@ export default function TabBar({
         }))
       : [
           { tab: "Batches" as Tab, label: "Home", icon: Home },
-          { tab: "My Claims" as Tab, label: "Cart", icon: ShoppingCart },
+          { tab: "My Claims" as Tab, label: "Claims", icon: ShoppingCart },
           { tab: "Dashboard" as Tab, label: "Dashboard", icon: LayoutGrid },
           { tab: "Payments" as Tab, label: "History", icon: History },
         ]

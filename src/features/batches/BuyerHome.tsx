@@ -482,7 +482,6 @@ export default function BuyerHome({
         <BatchSection
           title="Popular Batches"
           batches={popular}
-          showControls={false}
           reactionPending={reactionPending}
           onToggleFavorite={onToggleReaction}
           onOpenBatch={onOpenBatch}
