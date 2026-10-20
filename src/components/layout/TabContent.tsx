@@ -6,6 +6,7 @@ import { Batches } from "@/features/batches"
 import { MyClaims } from "@/features/claims"
 import { Payments } from "@/features/payments"
 import { Orders } from "@/features/orders"
+import { NotificationsPage } from "@/features/notifications"
 import { Settings } from "@/features/settings"
 
 export default function TabContent({
@@ -37,6 +38,7 @@ export default function TabContent({
     Payments: <Payments {...shared} />,
     Orders: <Orders {...shared} />,
     Settings: <Settings {...shared} />,
+    Notifications: <NotificationsPage onNavigate={shared.setTab} />,
   }
   return (
     <div key={displayed} className={animClass}>

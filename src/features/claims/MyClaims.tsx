@@ -57,6 +57,8 @@ import {
 import { navIntent } from "@/state/navIntent"
 
 import SetShippingFeeModal from "./SetShippingFeeModal"
+import PendingPaymentCard from "./PendingPaymentCard"
+import PendingPaymentHint from "./PendingPaymentHint"
 
 import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal"
 
@@ -1699,93 +1701,13 @@ export default function MyClaims({
         >
           Submit payment before each reservation deadline.
         </p>
-        <div className="space-y-3 pending-payments-list">
+        <div className="pending-payments-list">
           {claimsToPay.map((item) => (
-            <Card
+            <PendingPaymentCard
               key={item.id}
-              className="pending-payment-card flex items-center gap-4"
+              item={item}
+              imageUrl={item.productId ? batches.flatMap((batch) => batch.products).find((product) => product.dbId === item.productId)?.imageUrl : undefined}
             >
-              <ProductThumb name={item.product} />
-              <div className="pending-payment-card__info min-w-0 flex-1">
-                <div
-                  className="pending-payment-card__title"
-                  style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}
-                >
-                  {item.product}
-                  {item.qty > 1 ? (
-                    <span
-                      style={{ marginLeft: 6, color: "#6B7280", fontSize: 12 }}
-                    >
-                      ×{item.qty}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="pending-payment-card__meta mt-0.5 flex flex-wrap items-center gap-2">
-                  <span
-                    className="pending-payment-card__seller"
-                    style={{ fontSize: 11, color: "#9CA3AF" }}
-                  >
-                    {item.seller}
-                  </span>
-                  <span
-                    className="pending-payment-card__dot"
-                    style={{ color: "#D1D5DB" }}
-                  >
-                    ·
-                  </span>
-                  <span
-                    className="pending-payment-card__method"
-                    data-fallback={
-                      item.reservedPaymentMethod ? undefined : "true"
-                    }
-                    style={{ fontSize: 11, color: "#6B7280" }}
-                  >
-                    {item.reservedPaymentMethod || "Payment method selected"}
-                  </span>
-                  <span
-                    className="pending-payment-card__dot pending-payment-card__dot--trail"
-                    style={{ color: "#D1D5DB" }}
-                  >
-                    ·
-                  </span>
-                  <Countdown
-                    hours={item.hours}
-                    expiresAt={item.expiresAt}
-                    paused={Boolean(item.deadlinePausedAt)}
-                  />
-                </div>
-                {item.shippingState === "waiting_for_seller" && (
-                  <div className="mt-1 text-[11px] font-semibold text-amber-700">
-                    Waiting for seller to set the shipping fee
-                  </div>
-                )}
-                {item.shippingState === "correction_requested" && (
-                  <div className="mt-1 text-[11px] font-semibold text-amber-700">
-                    Seller requested a corrected delivery location
-                  </div>
-                )}
-              </div>
-              <div
-                className="pending-payment-card__amount"
-                style={{
-                  color: "#111827",
-
-                  fontFamily: "'Josefin Sans',sans-serif",
-
-                  fontSize: 15,
-
-                  fontWeight: 800,
-
-                  whiteSpace: "nowrap",
-                }}
-              >
-                ₱{item.amount.toLocaleString()}
-                {item.shippingFee !== undefined && (
-                  <div className="pending-payment-card__shipping text-right text-[10px] font-normal text-gray-500">
-                    Includes ₱{item.shippingFee.toLocaleString()} shipping
-                  </div>
-                )}
-              </div>
               {item.shippingState === "correction_requested" ? (
                 <SecondaryBtn
                   size="sm"
@@ -1807,9 +1729,11 @@ export default function MyClaims({
                 </SecondaryBtn>
               ) : (
                 <div className="pending-payment-card__actions flex flex-wrap items-center justify-end gap-2">
+                  <PendingPaymentHint waiting={item.shippingState === "waiting_for_seller"}>
                   <PrimaryBtn size="sm" disabled={!claimIsPayable(item)} onClick={() => claimIsPayable(item) && setPayTarget(item)}>
                     Pay Now
                   </PrimaryBtn>
+                  </PendingPaymentHint>
                   {claimIsPayable(item) && !item.extensionRequested && item.extensionStatus !== "pending" && (
                     <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
                       Request Extension
@@ -1820,7 +1744,7 @@ export default function MyClaims({
                   {item.extensionStatus === "denied" && <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">Extension declined</span>}
                 </div>
               )}
-            </Card>
+            </PendingPaymentCard>
           ))}
           {claimsToPay.length === 0 && (
             <Card>
