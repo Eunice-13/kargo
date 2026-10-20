@@ -1375,7 +1375,7 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    flex-wrap: nowrap !important;
+    flex-wrap: nowrap;
     overflow-x: auto !important;
     overscroll-behavior-inline: contain;
     scrollbar-width: thin;
@@ -1926,7 +1926,7 @@
     min-width: 0;
     height: 44px;
     min-height: 44px;
-    flex-wrap: nowrap;
+    flex-wrap: nowrap !important;
     gap: 6px;
     box-sizing: border-box;
     padding: 0 0 0 14px !important;
@@ -2967,5 +2967,432 @@
       .fulfillment-board__actions a
     ) {
     min-height: 44px !important;
+  }
+}
+
+/* ===== Scoped mobile control repairs ===== */
+@media (max-width: 767px) {
+  /* Bottom tab navigation: four equal columns with complete labels. */
+  .icon-tabbar {
+    height: calc(60px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
+  }
+
+  .icon-tabbar > div:first-child {
+    display: grid !important;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .icon-tabbar > div:first-child > button {
+    width: 100%;
+    min-width: 0 !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    flex: none !important;
+    padding: 4px 1px !important;
+    border-bottom-width: 3px !important;
+    box-sizing: border-box;
+  }
+
+  .icon-tabbar > div:first-child > button > svg {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+  }
+
+  .icon-tabbar .kargo-tab-label {
+    max-width: none;
+    overflow: visible;
+    font-size: 11px;
+    line-height: 1;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  /* Checkbox rows inspected in auth, claim, group-order, and batch forms. */
+  .auth-terms,
+  .kargo-modal__content .item-claim-shipping-ack,
+  .kargo-modal__content .group-order-ack,
+  .kargo-modal__content .batch-group-config__toggle {
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: nowrap !important;
+    min-height: 44px;
+    align-items: flex-start !important;
+    justify-content: flex-start;
+    gap: 10px !important;
+  }
+
+  .auth-terms > input[type="checkbox"],
+  .kargo-modal__content .item-claim-shipping-ack > input[type="checkbox"],
+  .kargo-modal__content .group-order-ack > input[type="checkbox"],
+  .kargo-modal__content .batch-group-config__toggle > input[type="checkbox"] {
+    order: -1;
+    width: 20px !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    flex: 0 0 20px;
+    margin: 2px 0 0 !important;
+  }
+
+  .auth-terms > span,
+  .kargo-modal__content .item-claim-shipping-ack > span,
+  .kargo-modal__content .group-order-ack > span,
+  .kargo-modal__content .batch-group-config__toggle > span {
+    min-width: 0;
+    flex: 1 1 auto;
+    margin: 0;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  /* Inspected icon-only controls: modal close, search, steppers, and card tools. */
+  .kargo-modal__close,
+  .kargo-mobile-search-toggle,
+  .kargo-header.is-mobile-search-open .kargo-search-submit {
+    display: inline-flex !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex: 0 0 44px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    line-height: 1;
+  }
+
+  .join-waitlist-stepper__button {
+    display: inline-flex !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    flex: 0 0 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    line-height: 1;
+  }
+
+  .seller-batch-actions > .kargo-secondary,
+  .seller-batch-actions > .kargo-share-button--compact {
+    display: inline-flex !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex: 0 0 44px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    line-height: 1;
+  }
+
+  .kargo-modal__close > svg,
+  .kargo-mobile-search-toggle > svg,
+  .kargo-search-submit > svg,
+  .seller-batch-actions > .kargo-secondary > svg,
+  .seller-batch-actions > .kargo-share-button--compact > svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+  }
+
+  /* Circular controls retain equal axes even inside stretching flex rows. */
+  .buyer-carousel-controls > button {
+    display: inline-flex !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    aspect-ratio: 1 / 1;
+    flex: 0 0 44px;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    box-sizing: border-box;
+  }
+
+  .buyer-carousel-controls > button > svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    margin: 0;
+  }
+
+  /* Expanded and inline Fulfillment Board icon/glyph controls. */
+  .seller-board-dialog > header button {
+    display: inline-flex !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex: 0 0 44px !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border-radius: 7px !important;
+    line-height: 1;
+  }
+
+  .seller-board-dialog > header button > svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    margin: 0;
+  }
+
+  .fulfillment-board .fulfillment-board__collapse,
+  .seller-board-dialog .fulfillment-board__collapse {
+    display: inline-flex !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex: 0 0 44px;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    box-sizing: border-box;
+    line-height: 1;
+  }
+
+  .fulfillment-board .fulfillment-board__collapse::after,
+  .seller-board-dialog .fulfillment-board__collapse::after {
+    display: block;
+    margin: 0;
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  /* Order and claim filters: uniform chips that wrap instead of scrolling. */
+  .seller-orders-filters,
+  .claims-filter-row {
+    display: flex !important;
+    width: 100%;
+    max-width: 100%;
+    flex-wrap: wrap !important;
+    align-items: center;
+    gap: 8px !important;
+    overflow: visible !important;
+    white-space: normal;
+  }
+
+  .kargo-original-app .seller-orders-filters > button,
+  .kargo-original-app .claims-filter-row > button {
+    display: inline-flex !important;
+    width: auto;
+    min-width: 0;
+    height: 40px !important;
+    min-height: 40px !important;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 12px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap !important;
+  }
+
+  .claims-filter-row > button > span {
+    display: inline-flex;
+    min-width: 18px;
+    min-height: 18px;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0 !important;
+    padding: 0 5px !important;
+    border-radius: 999px;
+    font-size: 9px !important;
+    line-height: 18px;
+  }
+
+  /* Settings navigation: identical cell and icon/label alignment. */
+  .settings-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-nav > button {
+    display: inline-flex !important;
+    width: 100% !important;
+    min-width: 0;
+    height: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 8px !important;
+    text-align: center;
+  }
+
+  .settings-nav > button > svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+  }
+
+  /* The shared switch keeps its desktop track dimensions; the global mobile
+     tap-target floor previously expanded only its height into a circle. */
+  .kargo-original-app button.kargo-toggle,
+  .auth-page button.kargo-toggle {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    flex: 0 0 44px;
+    padding: 0 !important;
+    border-radius: 999px !important;
+  }
+
+  .kargo-original-app button.kargo-toggle > div,
+  .auth-page button.kargo-toggle > div {
+    top: 3px !important;
+    left: 3px !important;
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .kargo-original-app button.kargo-toggle[aria-checked="true"] > div,
+  .auth-page button.kargo-toggle[aria-checked="true"] > div {
+    left: 23px !important;
+  }
+
+  .kargo-original-app button.kargo-toggle--compact,
+  .auth-page button.kargo-toggle--compact {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 22px !important;
+    min-height: 22px !important;
+    flex-basis: 40px;
+  }
+
+  .kargo-original-app button.kargo-toggle--compact > div,
+  .auth-page button.kargo-toggle--compact > div {
+    top: 3px !important;
+    left: 3px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .kargo-original-app button.kargo-toggle--compact[aria-checked="true"] > div,
+  .auth-page button.kargo-toggle--compact[aria-checked="true"] > div {
+    left: 21px !important;
+  }
+
+  /* Batch-cover photo controls: matching rows without changing positioning
+     or upload/button behavior. */
+  .kargo-original-app .batch-hero-photo-action,
+  .kargo-original-app button.batch-group-settings-action {
+    display: inline-flex;
+    right: 12px;
+    width: auto;
+    min-width: 144px;
+    height: 36px;
+    min-height: 36px !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    font-size: 13px;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .kargo-original-app .batch-hero-photo-action {
+    top: 12px;
+  }
+
+  .kargo-original-app button.batch-group-settings-action {
+    top: 56px;
+  }
+
+  .batch-hero-photo-action > svg,
+  .batch-group-settings-action > svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+  }
+
+  /* Selling-unit badges stay clear of the bottom hero metadata. */
+  .batch-cover-badges--hero {
+    top: auto;
+    right: 12px;
+    bottom: 12px;
+    left: auto;
+    max-width: calc(100% - 24px);
+    justify-content: flex-end;
+  }
+
+  .batch-cover-badges > span {
+    display: inline-flex;
+    min-height: 28px;
+    flex: 0 0 auto;
+    align-items: center;
+    padding: 0 8px;
+    box-sizing: border-box;
+    white-space: nowrap;
+  }
+
+  .batch-hero-meta {
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 8px !important;
+    padding-bottom: 36px;
+  }
+
+  .batch-hero:has(.batch-cover-badges--hero > .is-group) .batch-hero-meta {
+    padding-bottom: 70px;
+  }
+
+  .batch-hero-meta > span {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Text controls are scoped to inspected action regions, not every button. */
+  .kargo-modal__content .kargo-primary,
+  .kargo-modal__content .kargo-secondary,
+  .auth-login-fields > .kargo-primary,
+  .auth-signup-fields > .kargo-primary,
+  .seller-orders-review,
+  .seller-orders-contact,
+  .seller-batches-add,
+  .seller-batch-quick-action {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding-right: 16px;
+    padding-left: 16px;
+    box-sizing: border-box;
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .kargo-modal-actions {
+    gap: 10px;
+  }
+
+  .kargo-modal-actions > .kargo-primary,
+  .kargo-modal-actions > .kargo-secondary {
+    width: 100%;
   }
 }
