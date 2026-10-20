@@ -8,10 +8,13 @@ import {
   ProductThumb,
   StatusBadge,
   Countdown,
+  Modal,
 } from "@/components/shared"
+import { productImageUrl } from "@/components/shared/ProductThumb"
 import TransactionDetailModal from "./TransactionDetailModal"
 import SellerPaymentVerification from "./SellerPaymentVerification"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
+import { Search } from "lucide-react"
 
 export default function Payments({
   payHistory,
@@ -21,7 +24,47 @@ export default function Payments({
   refreshData,
 }: SharedState) {
   const [txDetail, setTxDetail] = useState<PayHistRow | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<{
+    name: string
+    imageUrl?: string
+  } | null>(null)
+  const [searchName, setSearchName] = useState("")
+  const [dateOrder, setDateOrder] = useState<"newest" | "oldest">("newest")
   const resolvedPayments = completedPayments(payHistory, claims)
+  const filteredPayments = resolvedPayments
+    .filter((payment) => {
+      const query = searchName.trim().toLocaleLowerCase()
+      const searchableDetails = [
+        payment.seller,
+        payment.sellerShopName,
+        payment.product,
+        payment.batch,
+        payment.method,
+        payment.amount,
+        payment.date,
+        payment.status,
+        payment.referenceNumber,
+        payment.payerAccountName,
+        payment.payerPhone,
+        payment.orderId,
+        payment.id,
+      ]
+        .filter((detail) => detail != null)
+        .join(" ")
+        .toLocaleLowerCase()
+      return !query || searchableDetails.includes(query)
+    })
+    .sort((left, right) => {
+      const leftTime = left.submittedAt
+        ? new Date(left.submittedAt).getTime()
+        : new Date(left.date).getTime()
+      const rightTime = right.submittedAt
+        ? new Date(right.submittedAt).getTime()
+        : new Date(right.date).getTime()
+      const safeLeft = Number.isFinite(leftTime) ? leftTime : Number(left.id) || 0
+      const safeRight = Number.isFinite(rightTime) ? rightTime : Number(right.id) || 0
+      return dateOrder === "newest" ? safeRight - safeLeft : safeLeft - safeRight
+    })
 
   useEffect(() => {
     if (!isSupabaseConfigured || role !== "Buyer") return
@@ -53,8 +96,29 @@ export default function Payments({
       <div>
         <SH title="Payment History" />
         <p style={{ marginTop: -8, marginBottom: 12, color: "#748391", fontSize: 12 }}>
-          Completed payments, newest first.
+          Completed payments. Search by seller, shop, or order details and sort by transaction date.
         </p>
+        <div className="payment-history-controls">
+          <label className="payment-history-search">
+            <Search size={16} aria-hidden="true" />
+            <input
+              type="search"
+              value={searchName}
+              onChange={(event) => setSearchName(event.target.value)}
+              placeholder="Search seller, shop, or order details"
+              aria-label="Search payment history by seller, shop, or order details"
+            />
+          </label>
+          <select
+            className="payment-history-date-sort"
+            value={dateOrder}
+            onChange={(event) => setDateOrder(event.target.value as "newest" | "oldest")}
+            aria-label="Sort transactions by date"
+          >
+            <option value="newest">Latest transactions</option>
+            <option value="oldest">Oldest transactions</option>
+          </select>
+        </div>
         <Card className="!p-0 overflow-hidden payment-history-table">
           <div style={{ overflowX: "auto" }}>
             <table className="w-full text-[13px]">
@@ -63,6 +127,7 @@ export default function Payments({
                   {[
                     "Product",
                     "Batch",
+                    "Seller",
                     "Method",
                     "Amount",
                     "Date",
@@ -85,7 +150,7 @@ export default function Payments({
                 </tr>
               </thead>
               <tbody>
-                {resolvedPayments.map((p, i) => (
+                {filteredPayments.map((p, i) => (
                     <tr
                       key={p.id}
                       style={{
@@ -96,10 +161,28 @@ export default function Payments({
                     >
                       <td style={{ padding: "10px 14px" }}>
                         <div className="flex items-center gap-2">
-                          <ProductThumb name={p.product} />
                           <span style={{ fontWeight: 500, color: "#111827" }}>
                             {p.product}
                           </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPhotoPreview({ name: p.product, imageUrl: p.imageUrl })
+                            }
+                            aria-label={`Enlarge photo of ${p.product}`}
+                            title="Enlarge product photo"
+                            style={{
+                              display: "inline-flex",
+                              flex: "0 0 auto",
+                              padding: 0,
+                              border: 0,
+                              borderRadius: 8,
+                              background: "transparent",
+                              cursor: "zoom-in",
+                            }}
+                          >
+                            <ProductThumb name={p.product} imageUrl={p.imageUrl} />
+                          </button>
                         </div>
                       </td>
                       <td
@@ -110,6 +193,22 @@ export default function Payments({
                         }}
                       >
                         {p.batch || "—"}
+                      </td>
+                      <td style={{ padding: "10px 14px", color: "#374151", fontSize: 12 }}>
+                        {(() => {
+                          return p.seller ? (
+                            <div>
+                              <div style={{ color: "#111827", fontWeight: 600 }}>
+                                {p.seller}
+                              </div>
+                              {p.sellerShopName && (
+                                <div style={{ marginTop: 2, color: "#748391", fontSize: 11 }}>
+                                  {p.sellerShopName}
+                                </div>
+                              )}
+                            </div>
+                          ) : "—"
+                        })()}
                       </td>
                       <td
                         style={{
@@ -154,10 +253,12 @@ export default function Payments({
                       </td>
                     </tr>
                   ))}
-                {resolvedPayments.length === 0 && (
+                {filteredPayments.length === 0 && (
                   <tr>
-                    <td colSpan={7} style={{ padding: 28, textAlign: "center", color: "#748391", fontSize: 12 }}>
-                      No resolved payments yet.
+                    <td colSpan={8} style={{ padding: 28, textAlign: "center", color: "#748391", fontSize: 12 }}>
+                      {resolvedPayments.length === 0
+                        ? "No resolved payments yet."
+                        : "No payments match your search."}
                     </td>
                   </tr>
                 )}
@@ -171,6 +272,27 @@ export default function Payments({
           tx={txDetail}
           onClose={() => setTxDetail(null)}
         />
+      )}
+      {photoPreview && (
+        <Modal
+          title={photoPreview.name}
+          onClose={() => setPhotoPreview(null)}
+          width={720}
+          showTitleIcon={false}
+        >
+          <img
+            src={productImageUrl(photoPreview.name, 1000, photoPreview.imageUrl)}
+            alt={photoPreview.name}
+            style={{
+              display: "block",
+              width: "100%",
+              maxHeight: "72dvh",
+              objectFit: "contain",
+              borderRadius: 10,
+              background: "#f8fafc",
+            }}
+          />
+        </Modal>
       )}
     </div>
   )

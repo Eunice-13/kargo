@@ -58,8 +58,6 @@ import {
 import { navIntent } from "@/state/navIntent"
 
 import SetShippingFeeModal from "./SetShippingFeeModal"
-import PendingPaymentCard from "./PendingPaymentCard"
-import PendingPaymentHint from "./PendingPaymentHint"
 
 import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal"
 
@@ -235,6 +233,8 @@ export default function MyClaims({
   const [viewMode, setViewMode] = useState<"table" | "card">("table")
 
   const [isMobile, setIsMobile] = useState(false)
+
+  const [showAllPendingPayments, setShowAllPendingPayments] = useState(false)
 
   const [shippingTarget, setShippingTarget] = useState<ClaimRow | null>(null)
 
@@ -529,7 +529,27 @@ export default function MyClaims({
 
     .filter(belongsToPendingPayments)
 
-    .sort(newestFirst)
+    .sort((left, right) => {
+      const leftPaused = Boolean(left.deadlinePausedAt)
+      const rightPaused = Boolean(right.deadlinePausedAt)
+      if (leftPaused !== rightPaused) return leftPaused ? 1 : -1
+
+      const deadlineTime = (claim: ClaimRow) => {
+        const parsedDeadline = claim.expiresAt
+          ? new Date(claim.expiresAt).getTime()
+          : NaN
+        return Number.isFinite(parsedDeadline)
+          ? parsedDeadline
+          : Date.now() + Math.max(0, claim.hours) * 3_600_000
+      }
+
+      return deadlineTime(left) - deadlineTime(right) || newestFirst(left, right)
+    })
+
+  const pendingPaymentLimit = isMobile ? 3 : 5
+  const visiblePendingPayments = showAllPendingPayments
+    ? claimsToPay
+    : claimsToPay.slice(0, pendingPaymentLimit)
 
   const itemPreviewBatch = itemPreview
     ? batches.find(
@@ -1717,13 +1737,106 @@ export default function MyClaims({
         >
           Submit payment before each reservation deadline.
         </p>
-        <div className="pending-payments-list">
-          {claimsToPay.map((item) => (
-            <PendingPaymentCard
+        <div className="space-y-3 pending-payments-list">
+          {visiblePendingPayments.map((item) => (
+            <Card
               key={item.id}
-              item={item}
-              imageUrl={item.productId ? batches.flatMap((batch) => batch.products).find((product) => product.dbId === item.productId)?.imageUrl : undefined}
+              className="pending-payment-card flex items-center gap-4"
             >
+              <button
+                type="button"
+                className="buyer-claim-item-preview-trigger"
+                aria-label={`View ${item.product} details`}
+                onClick={() => setItemPreview(item)}
+              >
+                <ProductThumb name={item.product} />
+              </button>
+              <div className="pending-payment-card__info min-w-0 flex-1">
+                <div
+                  className="pending-payment-card__title"
+                  style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}
+                >
+                  <button
+                    type="button"
+                    className="buyer-claim-item-preview-name"
+                    onClick={() => setItemPreview(item)}
+                  >
+                    {item.product}
+                  </button>
+                  {item.qty > 1 ? (
+                    <span
+                      style={{ marginLeft: 6, color: "#6B7280", fontSize: 12 }}
+                    >
+                      ×{item.qty}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="pending-payment-card__meta mt-0.5 flex flex-wrap items-center gap-2">
+                  <span
+                    className="pending-payment-card__seller"
+                    style={{ fontSize: 11, color: "#9CA3AF" }}
+                  >
+                    {item.seller}
+                  </span>
+                  <span
+                    className="pending-payment-card__dot"
+                    style={{ color: "#D1D5DB" }}
+                  >
+                    ·
+                  </span>
+                  <span
+                    className="pending-payment-card__method"
+                    data-fallback={
+                      item.reservedPaymentMethod ? undefined : "true"
+                    }
+                    style={{ fontSize: 11, color: "#6B7280" }}
+                  >
+                    {item.reservedPaymentMethod || "Payment method selected"}
+                  </span>
+                  <span
+                    className="pending-payment-card__dot pending-payment-card__dot--trail"
+                    style={{ color: "#D1D5DB" }}
+                  >
+                    ·
+                  </span>
+                  <Countdown
+                    hours={item.hours}
+                    expiresAt={item.expiresAt}
+                    paused={Boolean(item.deadlinePausedAt)}
+                  />
+                </div>
+                {item.shippingState === "waiting_for_seller" && (
+                  <div className="mt-1 text-[11px] font-semibold text-amber-700">
+                    Waiting for seller to set the shipping fee
+                  </div>
+                )}
+                {item.shippingState === "correction_requested" && (
+                  <div className="mt-1 text-[11px] font-semibold text-amber-700">
+                    Seller requested a corrected delivery location
+                  </div>
+                )}
+              </div>
+              <div
+                className="pending-payment-card__amount"
+                style={{
+                  color: "#111827",
+
+                  fontFamily: "'Josefin Sans',sans-serif",
+
+                  fontSize: 15,
+
+                  fontWeight: 800,
+
+                  whiteSpace: "nowrap",
+                }}
+              >
+                ₱{item.amount.toLocaleString()}
+                {item.shippingFee !== undefined && (
+                  <div className="pending-payment-card__shipping text-right text-[10px] font-normal text-gray-500">
+                    Includes ₱{item.shippingFee.toLocaleString()} shipping
+                  </div>
+                )}
+              </div>
               {item.shippingState === "correction_requested" ? (
                 <SecondaryBtn
                   size="sm"
@@ -1745,11 +1858,9 @@ export default function MyClaims({
                 </SecondaryBtn>
               ) : (
                 <div className="pending-payment-card__actions flex flex-wrap items-center justify-end gap-2">
-                  <PendingPaymentHint waiting={item.shippingState === "waiting_for_seller"}>
                   <PrimaryBtn size="sm" disabled={!claimIsPayable(item)} onClick={() => claimIsPayable(item) && setPayTarget(item)}>
                     Pay Now
                   </PrimaryBtn>
-                  </PendingPaymentHint>
                   {claimIsPayable(item) && !item.extensionRequested && item.extensionStatus !== "pending" && (
                     <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
                       Request Extension
@@ -1760,8 +1871,20 @@ export default function MyClaims({
                   {item.extensionStatus === "denied" && <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">Extension declined</span>}
                 </div>
               )}
-            </PendingPaymentCard>
+            </Card>
           ))}
+          {claimsToPay.length > pendingPaymentLimit && (
+            <button
+              type="button"
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
+              onClick={() => setShowAllPendingPayments((showing) => !showing)}
+              aria-expanded={showAllPendingPayments}
+            >
+              {showAllPendingPayments
+                ? "Show fewer pendings"
+                : `Show all ${claimsToPay.length} pendings`}
+            </button>
+          )}
           {claimsToPay.length === 0 && (
             <Card>
               <div
@@ -2390,6 +2513,7 @@ export default function MyClaims({
         <Modal
           title={itemPreview.product}
           variant="detail"
+          showTitleIcon={false}
           width={760}
           onClose={() => setItemPreview(null)}
         >

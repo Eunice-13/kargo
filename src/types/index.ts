@@ -218,9 +218,15 @@ export type PayHistRow = {
 
   orderId?: string
 
+  seller?: string
+
+  sellerShopName?: string
+
   submittedAt?: string
 
   product: string
+
+  imageUrl?: string
 
   batch: string
 

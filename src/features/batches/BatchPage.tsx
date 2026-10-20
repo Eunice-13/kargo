@@ -1436,6 +1436,7 @@ export default function BatchPage({
         <Modal
           title={selectedGalleryItem?.name ?? `${batch.title} photo`}
           variant="detail"
+          showTitleIcon={false}
           width={900}
           onClose={() => setGalleryZoomOpen(false)}
         >
@@ -1452,6 +1453,7 @@ export default function BatchPage({
         <Modal
           title={`${photoPreview.name} photo`}
           variant="detail"
+          showTitleIcon={false}
           width={900}
           onClose={() => setPhotoPreview(null)}
         >

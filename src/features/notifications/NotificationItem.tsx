@@ -35,8 +35,8 @@ export default function NotificationItem({
   const Icon = icons[n.icon] ?? Bell;
   return (
     <div
-      className="flex min-w-0 items-start gap-2.5 border-b border-gray-50 px-3.5 py-2.5"
-      style={{ background: n.unread ? "#FAFBFF" : "#fff" }}
+      className="flex min-w-0 items-start gap-2.5 border-b px-3.5 py-2.5 last:border-b-0"
+      style={{ background: n.unread ? "#FAFBFF" : "#fff", borderBottomColor: "#DDE3ED" }}
     >
       <span
         aria-hidden="true"

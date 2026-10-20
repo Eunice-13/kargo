@@ -101,6 +101,7 @@ export default function Modal({
   width = 480,
   topOffset = HEADER_HEIGHT,
   variant,
+  showTitleIcon = true,
 }: {
   title: string
   onClose: () => void
@@ -108,6 +109,7 @@ export default function Modal({
   width?: number
   topOffset?: number
   variant?: ModalVariant
+  showTitleIcon?: boolean
 }) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
@@ -205,7 +207,7 @@ export default function Modal({
       >
         <header className="kargo-modal__header">
           <div className="kargo-modal__title-group">
-            {title && (
+            {title && showTitleIcon && (
               <span className="kargo-modal__title-icon" aria-hidden="true">
                 <VariantIcon size={18} />
               </span>

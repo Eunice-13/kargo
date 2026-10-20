@@ -3,6 +3,138 @@
   display: none;
 }
 
+@media (max-width: 620px) {
+  .kargo-original-app .bdash-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .kargo-original-app .bdash-stats .bdash-stat {
+    min-width: 0;
+    min-height: 0 !important;
+    aspect-ratio: 1 / 1;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 24px 12px 14px !important;
+  }
+
+  .bdash-stat__icon {
+    top: 12px;
+    right: 12px;
+  }
+
+  .bdash-stat__label {
+    margin-top: 9px;
+  }
+
+  .kargo-original-app .bdash-stats .bdash-stat__sub {
+    display: block;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal !important;
+    line-height: 1.25;
+  }
+}
+
+.payment-history-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.payment-history-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(100%, 420px);
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  background: #fff;
+  color: #748391;
+  box-sizing: border-box;
+}
+
+.payment-history-search:focus-within {
+  border-color: #6892d5;
+  box-shadow: 0 0 0 3px rgba(104, 146, 213, .14);
+}
+
+.payment-history-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0 !important;
+  outline: none;
+  box-shadow: none !important;
+  background: transparent;
+  color: #1f2937;
+  font: inherit;
+  font-size: 13px;
+}
+
+.payment-history-date-sort {
+  appearance: none;
+  min-height: 40px;
+  padding: 0 36px 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  background: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  color: #374151;
+  font: inherit;
+  font-size: 13px;
+}
+
+@media (max-width: 620px) {
+  .payment-history-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .payment-history-search {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  .payment-history-date-sort {
+    width: 100%;
+    max-width: none;
+    padding-right: 36px;
+    padding-left: 12px;
+    font-size: 13px;
+  }
+}
+
+/* Use the same labeled icon navigation on desktop as on mobile. */
+@media (min-width: 621px) {
+  .icon-tabbar > div:first-child > button {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .icon-tabbar .kargo-tab-label {
+    display: block !important;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 1024px) {
   html,
   body,
@@ -3542,5 +3674,23 @@
   .kargo-header .kargo-search-submit svg {
     width: 15px;
     height: 15px;
+  }
+}
+
+@media (max-width: 767px) {
+  .kargo-original-app .bdash .bdash-table :is(th, td):nth-child(5) {
+    width: 112px !important;
+    min-width: 112px !important;
+  }
+
+  .kargo-original-app .bdash .bdash-table tbody td:nth-child(5) {
+    overflow: visible !important;
+  }
+
+  .kargo-original-app .bdash .bdash-table tbody td:nth-child(5) [role="status"] {
+    flex-shrink: 0;
+    padding-right: 6px !important;
+    padding-left: 6px !important;
+    font-size: 9px !important;
   }
 }

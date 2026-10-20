@@ -269,9 +269,7 @@ export default function Dashboard({
 
     .slice(0, RECENT_CLAIMS_PREVIEW)
 
-  const visibleRecentClaims = isPhone
-    ? urgentPhonePreview(recentClaims)
-    : recentClaims
+  const visibleRecentClaims = recentClaims
 
   const payableToPay = toPay.filter(
     (item) =>
@@ -361,7 +359,7 @@ export default function Dashboard({
 
       sc: GREEN,
 
-      bg: "#E8F9F3",
+      bg: "linear-gradient(135deg, #E8F9F3 0%, #DDF7EC 55%, #CFF2E2 100%)",
     },
 
     {
@@ -375,7 +373,7 @@ export default function Dashboard({
 
       sc: AMBER,
 
-      bg: "#FFF8E8",
+      bg: "linear-gradient(135deg, #FFF8E8 0%, #FFF3D8 55%, #FFECC4 100%)",
     },
 
     {
@@ -389,7 +387,7 @@ export default function Dashboard({
 
       sc: "#EF4444",
 
-      bg: "#FDECEC",
+      bg: "linear-gradient(135deg, #FDECEC 0%, #FBE3E6 55%, #F7D5DA 100%)",
     },
 
     {
@@ -403,7 +401,7 @@ export default function Dashboard({
 
       sc: "#6B7280",
 
-      bg: "#FFFFFF",
+      bg: "linear-gradient(135deg, #FFFFFF 0%, #F5F7FB 55%, #E9EEF7 100%)",
     },
   ]
 
@@ -419,7 +417,7 @@ export default function Dashboard({
 
       sc: "#64E894",
 
-      bg: "#ECFFF4",
+      bg: "linear-gradient(135deg, #ECFFF4 0%, #DCF8E9 55%, #CFF1DF 100%)",
     },
 
     {
@@ -433,7 +431,7 @@ export default function Dashboard({
 
       sc: "#F4D85D",
 
-      bg: "#FFFBE3",
+      bg: "linear-gradient(135deg, #FFFBE3 0%, #FFF5D3 55%, #FFEDBD 100%)",
     },
 
     {
@@ -447,7 +445,7 @@ export default function Dashboard({
 
       sc: "#E62B48",
 
-      bg: "#FFF0F2",
+      bg: "linear-gradient(135deg, #FFF0F2 0%, #FCE2E6 55%, #F8D4DA 100%)",
     },
 
     {
@@ -461,7 +459,7 @@ export default function Dashboard({
 
       sc: "#6B7280",
 
-      bg: "#FFFFFF",
+      bg: "linear-gradient(135deg, #FFFFFF 0%, #F5F7FB 55%, #E9EEF7 100%)",
     },
   ]
 

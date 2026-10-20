@@ -723,6 +723,7 @@ export default function PaymentSubmitModal({
       <Modal
         title={`${item.product} photo`}
         variant="detail"
+        showTitleIcon={false}
         width={900}
         onClose={() => setShowPhotoZoom(false)}
       >

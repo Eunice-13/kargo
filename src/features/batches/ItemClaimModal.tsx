@@ -560,6 +560,7 @@ export default function ItemClaimModal({
       <Modal
         title={`${product.name} photo`}
         variant="detail"
+        showTitleIcon={false}
         width={900}
         onClose={() => setShowPhotoZoom(false)}
       >
