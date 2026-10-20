@@ -58,6 +58,7 @@ import { Footer, Header, TabBar, TabContent } from "@/components/layout"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 
 import { kargoApi } from "@/services"
+import { NotificationsProvider } from "@/features/notifications"
 
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
@@ -68,6 +69,7 @@ const ARRIVED_VIA_CONFIRMATION_LINK = hasSignupConfirmationFragment()
 // Email CTAs deep-link to the tab where the action lives (?tab=Orders). Accept
 // the app's labels plus the few words a person might expect instead.
 const TAB_DEEP_LINKS: Record<string, Tab> = {
+  notifications: "Notifications",
   dashboard: "Dashboard",
   home: "Dashboard",
   batches: "Batches",
@@ -591,6 +593,7 @@ export default function App() {
           />
         )}
       {stage === "app" && (
+        <NotificationsProvider key={`${user.id ?? user.email}:${role}`} role={role}>
         <div
           className="kargo-original-app"
           style={{
@@ -663,6 +666,7 @@ export default function App() {
             />
           )}
         </div>
+        </NotificationsProvider>
       )}
     </>
   )
