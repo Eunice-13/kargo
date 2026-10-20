@@ -8,8 +8,9 @@ import {
   Modal,
   PrimaryBtn,
   SecondaryBtn,
-  SummaryBlock,
+  ProductThumb,
 } from "@/components/shared"
+import { productImageUrl } from "@/components/shared/ProductThumb"
 
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
 
@@ -41,6 +42,7 @@ export default function PaymentSubmitModal({
   onClose,
 
   contactPrefill = "",
+  imageUrl,
 }: {
   item: ToPayRow
 
@@ -57,6 +59,7 @@ export default function PaymentSubmitModal({
   onClose: () => void
 
   contactPrefill?: string
+  imageUrl?: string
 }) {
   useEffect(() => {
     const closeIfExpired = () => {
@@ -119,6 +122,8 @@ export default function PaymentSubmitModal({
 
   const [submitting, setSubmitting] = useState(false)
 
+  const [showPhotoZoom, setShowPhotoZoom] = useState(false)
+
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -176,16 +181,24 @@ export default function PaymentSubmitModal({
   }
 
   return (
+    <>
     <Modal title="Submit Payment" onClose={onClose} width={480}>
       <div className="space-y-4">
-        <SummaryBlock
-          title={item.product}
-          product={item.product}
-          details={[
-            `Seller: ${item.seller}`,
-            `₱${item.amount.toLocaleString()}`,
-          ]}
-        />
+        <section className="kargo-summary-block" aria-label={item.product}>
+          <button
+            type="button"
+            className="claim-review-photo-button"
+            aria-label={`Zoom photo of ${item.product}`}
+            onClick={() => setShowPhotoZoom(true)}
+          >
+            <ProductThumb name={item.product} imageUrl={imageUrl} />
+          </button>
+          <div>
+            <strong>{item.product}</strong>
+            <span>Seller: {item.seller}</span>
+            <span>₱{item.amount.toLocaleString()}</span>
+          </div>
+        </section>
 
         <div>
           <label
@@ -706,5 +719,21 @@ export default function PaymentSubmitModal({
         </div>
       </div>
     </Modal>
+    {showPhotoZoom && (
+      <Modal
+        title={`${item.product} photo`}
+        variant="detail"
+        width={900}
+        onClose={() => setShowPhotoZoom(false)}
+      >
+        <div className="claim-review-photo-zoom">
+          <img
+            src={productImageUrl(item.product, 1200, imageUrl)}
+            alt={item.product}
+          />
+        </div>
+      </Modal>
+    )}
+    </>
   )
 }

@@ -372,6 +372,9 @@ export interface BatchItem {
 
   coverImage?: string
 
+  // Additional seller-uploaded images for the batch gallery.
+  galleryImages?: string[]
+
   groupOrdersEnabled?: boolean
 
   groupDiscountType?: GroupDiscountType

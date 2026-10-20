@@ -702,6 +702,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       coverImage: batchMediaUrl(row.batch_cover_path),
 
+      galleryImages: (row.batch_gallery_paths ?? []).map((path: string) =>
+        batchMediaUrl(path),
+      ).filter((url): url is string => Boolean(url)),
+
       groupOrdersEnabled: Boolean(row.group_orders_enabled),
 
       groupDiscountType: row.group_discount_type ?? undefined,
@@ -1485,6 +1489,8 @@ export async function createBatch(batch: {
 
   coverFile?: File
 
+  galleryFiles?: File[]
+
   groupOrdersEnabled?: boolean
 
   groupDiscountType?: GroupDiscountType
@@ -1582,6 +1588,25 @@ export async function createBatch(batch: {
     if (coverError) throw coverError
   }
 
+  const galleryPaths = await Promise.all(
+    (batch.galleryFiles ?? []).map((file, index) =>
+      uploadBatchMediaFile(
+        client,
+        auth.user.id,
+        created.id,
+        `gallery-${index + 1}`,
+        file,
+      ),
+    ),
+  )
+  if (galleryPaths.length > 0) {
+    const { error: galleryError } = await client
+      .from("batches")
+      .update({ gallery_paths: galleryPaths })
+      .eq("id", created.id)
+    if (galleryError) throw galleryError
+  }
+
   const productImagePaths = await Promise.all(
     batch.products.map((product, index) =>
       product.imageFile
@@ -1632,6 +1657,9 @@ export async function createBatch(batch: {
   return {
     id: created.id as string,
     coverImage: batchMediaUrl(coverPath),
+    galleryImages: galleryPaths
+      .map((path) => batchMediaUrl(path))
+      .filter((url): url is string => Boolean(url)),
     productImages: (createdProducts ?? []).map((_, index) =>
       batchMediaUrl(productImagePaths[index]),
     ),
@@ -1696,6 +1724,41 @@ export async function updateBatchCover(batchId: string, file: File) {
     .eq("id", batchId)
   if (error) throw error
   return batchMediaUrl(path) as string
+}
+
+export async function addBatchGalleryImages(batchId: string, files: File[]) {
+  if (files.length === 0) return []
+
+  const client = requireSupabase()
+  const { data: auth } = await client.auth.getUser()
+  if (!auth.user) throw new Error("Authentication required")
+
+  const { data: batch, error: loadError } = await client
+    .from("batches")
+    .select("gallery_paths")
+    .eq("id", batchId)
+    .single()
+  if (loadError) throw loadError
+
+  const addedPaths = await Promise.all(
+    files.map((file, index) =>
+      uploadBatchMediaFile(
+        client,
+        auth.user.id,
+        batchId,
+        `gallery-${Date.now()}-${index + 1}`,
+        file,
+      ),
+    ),
+  )
+  const galleryPaths = [...(batch.gallery_paths ?? []), ...addedPaths]
+  const { error: saveError } = await client
+    .from("batches")
+    .update({ gallery_paths: galleryPaths })
+    .eq("id", batchId)
+  if (saveError) throw saveError
+
+  return addedPaths.map((path) => batchMediaUrl(path) as string)
 }
 
 export async function updateProductImage(
@@ -3202,6 +3265,7 @@ export const kargoApi = {
 
   createBatch,
   updateBatchCover,
+  addBatchGalleryImages,
   updateProductImage,
   updateBatchGroupSettings,
   loadMyGroupOrder,

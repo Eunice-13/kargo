@@ -4,7 +4,7 @@ import { canManageBatch } from "./batchAccess"
 
 import { useState } from "react"
 
-import { Lock, ArrowLeft, Plane, Check, Link2, ImageUp, Users } from "lucide-react"
+import { Lock, ArrowLeft, ArrowRight, Plane, Check, Link2, ImageUp, Users } from "lucide-react"
 
 import type {
   ClaimRow,
@@ -15,12 +15,12 @@ import type {
   WaitlistEntry,
   ClaimReservationInput,
 } from "@/types"
+import { batchImage } from "@/constants/categories"
 import {
   INDIGO,
   CYAN_L,
   GREEN,
   AMBER,
-  CAT_GRAD,
   batchCoverSrc,
 } from "@/constants/theme"
 
@@ -34,7 +34,9 @@ import {
   Toggle,
   ContactModal,
   ShareButton,
+  Modal,
 } from "@/components/shared"
+import { productImageUrl } from "@/components/shared/ProductThumb"
 
 import ItemClaimModal from "./ItemClaimModal"
 
@@ -152,6 +154,43 @@ export default function BatchPage({
 
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
 
+  const [photoPreview, setPhotoPreview] =
+    useState<(typeof batch.products)[number] | null>(null)
+
+  const [galleryZoomOpen, setGalleryZoomOpen] = useState(false)
+
+  const uploadedGalleryItems = [
+    ...(batch.galleryImages ?? []).map((imageUrl, index) => ({
+      key: `batch-${index}`,
+      imageUrl,
+      name: `Batch photo ${index + 1}`,
+    })),
+    ...batch.products
+      .filter((product) => product.imageUrl)
+      .map((product, index) => ({
+        key: product.dbId ?? product.id ?? `product-${index}`,
+        imageUrl: product.imageUrl!,
+        name: product.name,
+      })),
+  ]
+  const galleryItems = uploadedGalleryItems.length
+    ? uploadedGalleryItems
+    : [
+        {
+          key: "sample-cover",
+          imageUrl: batchCoverSrc(batch.coverImage, batch.category),
+          name: batch.coverImage ? "Cover photo" : "Sample cover photo",
+        },
+        ...[1, 2].map((index) => ({
+          key: `sample-${index}`,
+          imageUrl: batchImage(batch.category, `${batch.id}-sample-${index}`),
+          name: `Sample batch photo ${index}`,
+        })),
+      ]
+  const [selectedProductIndex, setSelectedProductIndex] = useState(0)
+  const selectedGalleryItem =
+    galleryItems[selectedProductIndex] ?? galleryItems[0]
+
   const changeCoverPhoto = async (file?: File) => {
     if (!file || !canEdit) return
     setUploadingPhoto("cover")
@@ -171,6 +210,32 @@ export default function BatchPage({
       )
     } catch (error) {
       alert(error instanceof Error ? error.message : "Unable to update photo.")
+    } finally {
+      setUploadingPhoto(null)
+    }
+  }
+
+  const addBatchPhotos = async (files: File[]) => {
+    if (!files.length || !canEdit) return
+    setUploadingPhoto("gallery")
+    try {
+      const imageUrls = isSupabaseConfigured
+        ? batch.dbId
+          ? await kargoApi.addBatchGalleryImages(batch.dbId, files)
+          : (() => {
+              throw new Error("This batch is missing its database identifier.")
+            })()
+        : files.map((file) => URL.createObjectURL(file))
+
+      setBatches((current) =>
+        current.map((item) =>
+          item.id === batch.id
+            ? { ...item, galleryImages: [...(item.galleryImages ?? []), ...imageUrls] }
+            : item,
+        ),
+      )
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Unable to add batch photos.")
     } finally {
       setUploadingPhoto(null)
     }
@@ -215,8 +280,6 @@ export default function BatchPage({
   }
 
   const pct = Math.round((batch.claimed / batch.items) * 100)
-
-  const grad = CAT_GRAD[batch.category] || CAT_GRAD["Mixed"]
 
   const reserveHrs = batch.reserveHours || 48
 
@@ -584,187 +647,135 @@ export default function BatchPage({
         />
       </div>
 
-      {/* Hero header — same cover photo the Home batch card shows (seller upload
-          or category default), with a scrim so the white title stays legible. */}
-      <div
-        className="batch-hero"
-        style={{
-          height: 220,
-
-          background: grad,
-
-          borderRadius: 12,
-
-          display: "flex",
-
-          alignItems: "flex-end",
-
-          padding: 20,
-
-          position: "relative",
-
-          marginBottom: 24,
-
-          overflow: "hidden",
-        }}
-      >
-        <img
-          src={batchCoverSrc(batch.coverImage, batch.category)}
-          alt=""
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-
-            inset: 0,
-
-            width: "100%",
-
-            height: "100%",
-
-            objectFit: "cover",
-          }}
-        />
-        {canEdit && (
-          <label className="batch-hero-photo-action">
-            <ImageUp size={15} aria-hidden="true" />
-            <span>{uploadingPhoto === "cover" ? "Uploading…" : "Change photo"}</span>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              disabled={uploadingPhoto !== null}
-              onChange={(event) => changeCoverPhoto(event.target.files?.[0])}
+      <section className="batch-gallery" aria-label={`${batch.title} photos`}>
+        <div className="batch-gallery__main">
+          {role === "Buyer" ? (
+            <button
+              type="button"
+              className="batch-gallery__zoom-trigger"
+              aria-label={`Zoom ${selectedGalleryItem?.name ?? `${batch.title} cover`}`}
+              onClick={() => setGalleryZoomOpen(true)}
+            >
+              <img
+                src={selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)}
+                alt={selectedGalleryItem?.name ?? `${batch.title} cover`}
+              />
+            </button>
+          ) : (
+            <img
+              src={selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)}
+              alt={selectedGalleryItem?.name ?? `${batch.title} cover`}
             />
-          </label>
-        )}
-        {canEdit && (
-          <button
-            type="button"
-            className="batch-group-settings-action"
-            onClick={() => setGroupSettingsOpen(true)}
-          >
-            <Users size={15} aria-hidden="true" /> Selling & groups
-          </button>
-        )}
-        {role === "Buyer" && batch.groupOrdersEnabled && (
-          <button
-            type="button"
-            className="batch-group-order-action"
-            onClick={() => {
-              setGroupOrderProductId(null)
-              setGroupOrderOpen(true)
-            }}
-          >
-            <Users size={15} aria-hidden="true" /> Group Order
-          </button>
-        )}
-        <div className="batch-cover-badges batch-cover-badges--hero">
-          <span>
-            {new Set(
-              batch.products.map((product) =>
-                product.sellingUnit === "box" ? "box" : "piece",
-              ),
-            ).size > 1
-              ? "Mixed"
-              : batch.products[0]?.sellingUnit === "box"
-                ? "Per Box"
-                : "Per Piece"}
-          </span>
-          {batch.groupOrdersEnabled && (
-            <span className="is-group">Group Order Available</span>
+          )}
+          {galleryItems.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="batch-gallery__arrow batch-gallery__arrow--previous"
+                aria-label="Previous item photo"
+                onClick={() =>
+                  setSelectedProductIndex((index) =>
+                    (index - 1 + galleryItems.length) % galleryItems.length,
+                  )
+                }
+              >
+                <ArrowLeft size={22} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="batch-gallery__arrow batch-gallery__arrow--next"
+                aria-label="Next item photo"
+                onClick={() =>
+                  setSelectedProductIndex((index) =>
+                    (index + 1) % galleryItems.length,
+                  )
+                }
+              >
+                <ArrowRight size={22} aria-hidden="true" />
+              </button>
+            </>
           )}
         </div>
-        {/* Scrim keeps the white title legible over the photo. */}
-        <div
-          style={{
-            position: "absolute",
-
-            inset: 0,
-
-            background:
-              "linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0) 75%)",
-          }}
-        />
-        {batch.locked && role === "Buyer" && (
-          <span
-            style={{
-              position: "absolute",
-
-              top: 16,
-
-              right: 16,
-
-              background: "rgba(0,0,0,0.55)",
-
-              color: "#fff",
-
-              fontSize: 11,
-
-              fontWeight: 700,
-
-              padding: "4px 10px",
-
-              borderRadius: 999,
-            }}
-          >
-            <>
+        <div className="batch-gallery__side">
+          <h1>{batch.title}</h1>
+          {batch.locked && role === "Buyer" && (
+            <span className="batch-gallery__status">
               <Lock size={14} aria-hidden="true" /> Not Accepting Orders
-            </>
-          </span>
-        )}
-        <div style={{ position: "relative" }}>
-          <h1
-            style={{
-              fontFamily: "'Josefin Sans',sans-serif",
-
-              fontSize: 22,
-
-              fontWeight: 800,
-
-              color: "#fff",
-
-              marginBottom: 4,
-            }}
-          >
-            {batch.title}
-          </h1>
-          <div
-            className="batch-hero-meta"
-            style={{ display: "flex", gap: 12, alignItems: "center" }}
-          >
-            <span
-              style={{
-                background: "rgba(255,255,255,0.2)",
-
-                color: "#fff",
-
-                fontSize: 11,
-
-                fontWeight: 600,
-
-                padding: "3px 10px",
-
-                borderRadius: 999,
-              }}
-            >
-              {batch.category}
             </span>
-            <span
-              style={{
-                color: "rgba(255,255,255,0.85)",
-                fontSize: 12,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-              }}
-            >
-              <Plane size={12} aria-hidden="true" /> {batch.trips}
-            </span>
-            <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 12 }}>
-              48h reservation window
-            </span>
+          )}
+          <div className="batch-gallery__meta">
+            <span>{batch.category}</span>
+            <span><Plane size={12} aria-hidden="true" /> {batch.trips}</span>
+            <span>48h reservation window</span>
+          </div>
+          <div className="batch-gallery__thumbnails" aria-label="Batch photos and item photos">
+            {galleryItems.map((item, index) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`batch-gallery__thumbnail${index === selectedProductIndex ? " is-selected" : ""}`}
+                onClick={() => setSelectedProductIndex(index)}
+                aria-label={`Show ${item.name}`}
+                aria-pressed={index === selectedProductIndex}
+              >
+                <img src={item.imageUrl} alt="" />
+                <span>{item.name}</span>
+              </button>
+            ))}
+          </div>
+          <div className="batch-gallery__actions">
+            {canEdit && (
+              <label className="batch-hero-photo-action">
+                <ImageUp size={15} aria-hidden="true" />
+                <span>{uploadingPhoto === "gallery" ? "Uploading…" : "Add batch photos"}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple
+                  disabled={uploadingPhoto !== null}
+                  onChange={(event) => {
+                    void addBatchPhotos(Array.from(event.target.files ?? []))
+                    event.currentTarget.value = ""
+                  }}
+                />
+              </label>
+            )}
+            {canEdit && (
+              <label className="batch-hero-photo-action">
+                <ImageUp size={15} aria-hidden="true" />
+                <span>{uploadingPhoto === "cover" ? "Uploading…" : "Change cover"}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  disabled={uploadingPhoto !== null}
+                  onChange={(event) => changeCoverPhoto(event.target.files?.[0])}
+                />
+              </label>
+            )}
+            {canEdit && (
+              <button
+                type="button"
+                className="batch-group-settings-action"
+                onClick={() => setGroupSettingsOpen(true)}
+              >
+                <Users size={15} aria-hidden="true" /> Selling & groups
+              </button>
+            )}
+            {role === "Buyer" && batch.groupOrdersEnabled && (
+              <button
+                type="button"
+                className="batch-group-order-action"
+                onClick={() => {
+                  setGroupOrderProductId(null)
+                  setGroupOrderOpen(true)
+                }}
+              >
+                <Users size={15} aria-hidden="true" /> Group Order
+              </button>
+            )}
           </div>
         </div>
-      </div>
+      </section>
 
       {batch.notes && (
         <div
@@ -866,7 +877,14 @@ export default function BatchPage({
                   style={{ display: "flex", alignItems: "center", gap: 14 }}
                 >
                   <div className="batch-product-photo-control">
-                    <ProductThumb name={p.name} imageUrl={p.imageUrl} />
+                    <button
+                      type="button"
+                      className="claim-review-photo-button"
+                      aria-label={`Zoom photo of ${p.name}`}
+                      onClick={() => setPhotoPreview(p)}
+                    >
+                      <ProductThumb name={p.name} imageUrl={p.imageUrl} />
+                    </button>
                     {canEdit && (
                       <label>
                         <ImageUp size={12} aria-hidden="true" />
@@ -1413,6 +1431,38 @@ export default function BatchPage({
           </Card>
         </div>
       </div>
+
+      {galleryZoomOpen && role === "Buyer" && (
+        <Modal
+          title={selectedGalleryItem?.name ?? `${batch.title} photo`}
+          variant="detail"
+          width={900}
+          onClose={() => setGalleryZoomOpen(false)}
+        >
+          <div className="claim-review-photo-zoom">
+            <img
+              src={selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)}
+              alt={selectedGalleryItem?.name ?? `${batch.title} cover`}
+            />
+          </div>
+        </Modal>
+      )}
+
+      {photoPreview && (
+        <Modal
+          title={`${photoPreview.name} photo`}
+          variant="detail"
+          width={900}
+          onClose={() => setPhotoPreview(null)}
+        >
+          <div className="claim-review-photo-zoom">
+            <img
+              src={productImageUrl(photoPreview.name, 1200, photoPreview.imageUrl)}
+              alt={photoPreview.name}
+            />
+          </div>
+        </Modal>
+      )}
 
       {claimTarget && (
         <ItemClaimModal
