@@ -637,7 +637,9 @@ export default function App() {
             />
           </main>
           <Footer />
-          {showOnboarding && <Onboarding onDone={() => setOnboard(false)} />}
+          {showOnboarding && (
+            <Onboarding onDone={() => setOnboard(false)} role={role} />
+          )}
           {showNewBatch && (
             <NewBatchModal
               onCreate={(b) => setBatches((prev) => [b, ...prev])}

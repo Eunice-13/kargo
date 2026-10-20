@@ -42,7 +42,15 @@ export default function FulfillmentBoard({
   onOpenProfile?: (order: FulfillmentOrder) => void
   onViewOrder?: (order: FulfillmentOrder) => void
 }) {
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    if (
+      role !== "seller" ||
+      typeof window === "undefined" ||
+      window.innerWidth > 620
+    )
+      return {}
+    return Object.fromEntries(SELLER_COLUMNS.map((column) => [column, true]))
+  })
   const columns = role === "seller" ? SELLER_COLUMNS : BUYER_COLUMNS
   const scopedOrders = fulfillment.filter((order) => order.perspective === role)
 
@@ -62,7 +70,7 @@ export default function FulfillmentBoard({
     )
   }
 
-  if (scopedOrders.length === 0) {
+  if (scopedOrders.length === 0 && role === "buyer") {
     return (
       <div>
         <EmptyState
@@ -80,12 +88,17 @@ export default function FulfillmentBoard({
 
   return (
     <>
-      <div className={`fulfillment-board${expanded ? " is-expanded" : ""}`}>
+      <div
+        className={`fulfillment-board${expanded ? " is-expanded" : ""}${role === "seller" ? " fulfillment-board--seller" : ""}`}
+      >
         {columns.map((column) => {
           const columnOrders = scopedOrders.filter((order) => order.col === column)
           const visibleOrders = expanded ? columnOrders : columnOrders.slice(0, 3)
           return (
-            <section className="fulfillment-board__column" key={column}>
+            <section
+              className={`fulfillment-board__column${collapsed[column] ? " is-collapsed" : ""}`}
+              key={column}
+            >
               <header
                 className="fulfillment-board__column-head"
                 style={{ background: STAGE_COLORS[column].background }}

@@ -3840,3 +3840,53 @@
     font-size: 9px !important;
   }
 }
+
+@media (max-width: 480px) {
+  .seller-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .seller-stat {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    aspect-ratio: 1 / 1;
+    min-height: 0 !important;
+    padding: 24px 12px 14px !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .fulfillment-board--seller .fulfillment-board__column {
+    overflow: visible;
+    background: transparent;
+  }
+
+  .fulfillment-board--seller .fulfillment-board__column-head {
+    position: relative;
+    min-height: 44px;
+    border-radius: 9px;
+    padding: 8px 50px 8px 12px;
+  }
+
+  .fulfillment-board--seller .fulfillment-board__collapse {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: inline-flex !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    min-height: 44px !important;
+    justify-content: flex-end;
+    padding: 0 14px !important;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+  }
+
+  .fulfillment-board--seller .fulfillment-board__column.is-collapsed .fulfillment-board__column-head {
+    border-radius: 9px;
+  }
+}
