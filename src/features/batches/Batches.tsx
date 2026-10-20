@@ -31,6 +31,8 @@ import { INDIGO, CORAL, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme
 
 import { navIntent, subscribeNavIntent } from "@/state/navIntent"
 
+import { useScrollToTopOnRouteChange } from "@/state/routeScroll"
+
 import {
   Modal,
   Card,
@@ -165,6 +167,18 @@ export default function Batches({
   })
 
   const [contact, setContact] = useState<BatchType | null>(null)
+
+  // The Batches tab renders several pages of its own (Home, a batch, a seller
+  // shop, the seller directory). Report which one is on screen so the shared
+  // scroll policy in state/routeScroll.ts starts each of them at the top.
+  useScrollToTopOnRouteChange(
+    [
+      "Batches",
+      sellerDir ? "directory" : "",
+      shopPage ?? "",
+      batchPage?.id ?? "",
+    ].join(":"),
+  )
 
   useEffect(() => {
     const applyNavigationIntent = () => {

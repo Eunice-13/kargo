@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react"
 import type { BatchType, Role, UserInfo } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card, PrimaryBtn, SH, Avatar } from "@/components/shared"
+import { useScrollToTopOnRouteChange } from "@/state/routeScroll"
 import SellerShopPage from "./SellerShopPage"
 
 export default function SellerDirectoryPage({
@@ -25,6 +26,10 @@ export default function SellerDirectoryPage({
   const [query, setQuery] = useState("")
   const [chip, setChip] = useState<"All" | "Has Active Batch">("All")
   const [shopPage, setShopPage] = useState<string | null>(null)
+
+  // Opening a seller from the directory swaps this component to its shop page.
+  // Tell the shared scroll policy so the shop opens at the top.
+  useScrollToTopOnRouteChange(`SellerDirectory:${shopPage ?? ""}`)
 
   // Group batches by seller.
   const sellerBatches = new Map<string, BatchType[]>()
