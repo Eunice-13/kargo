@@ -415,7 +415,7 @@ export default function Dashboard({
 
       sub: "Open + Scheduled",
 
-      sc: "#64E894",
+      sc: GREEN,
 
       bg: "linear-gradient(135deg, #ECFFF4 0%, #DCF8E9 55%, #CFF1DF 100%)",
     },
@@ -429,7 +429,7 @@ export default function Dashboard({
 
       sub: "Payment proofs to review",
 
-      sc: "#F4D85D",
+      sc: AMBER,
 
       bg: "linear-gradient(135deg, #FFFBE3 0%, #FFF5D3 55%, #FFEDBD 100%)",
     },
@@ -443,7 +443,7 @@ export default function Dashboard({
 
       sub: "Awaiting your approval",
 
-      sc: "#E62B48",
+      sc: "#EF4444",
 
       bg: "linear-gradient(135deg, #FFF0F2 0%, #FCE2E6 55%, #F8D4DA 100%)",
     },

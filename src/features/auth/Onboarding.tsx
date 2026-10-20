@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { ArrowLeft } from "lucide-react"
 import { INDIGO, CORAL } from "@/constants/theme"
 import { PrimaryBtn } from "@/components/shared"
+import type { Role } from "@/types"
 
 // ─── Onboarding spotlight ─────────────────────────────────────────────────────
 export const TOUR_STEPS = [
@@ -26,7 +27,37 @@ export const TOUR_STEPS = [
     copy: "Review your payments and deadlines, and upload a receipt for an order that needs payment.",
   },
 ]
-export default function Onboarding({ onDone }: { onDone: () => void }) {
+const SELLER_TOUR_STEPS = [
+  {
+    selector: "[data-spotlight='dashboard-tab']",
+    headline: "Dashboard",
+    copy: "Track your claims, pending payments, waitlist positions, and upcoming deadlines.",
+  },
+  {
+    selector: "[data-spotlight='batches-tab']",
+    headline: "Batches",
+    copy: "Create and manage your pasabuy batches and the items available to buyers.",
+  },
+  {
+    selector: "[data-spotlight='claims-tab']",
+    headline: "My Claims",
+    copy: "Review the orders buyers have placed for your batches and manage their status.",
+  },
+  {
+    selector: "[data-spotlight='payments-tab']",
+    headline: "Payments",
+    copy: "Review completed payments and transaction details for your orders.",
+  },
+]
+
+export default function Onboarding({
+  onDone,
+  role,
+}: {
+  onDone: () => void
+  role: Role
+}) {
+  const tourSteps = role === "Seller" ? SELLER_TOUR_STEPS : TOUR_STEPS
   const [step, setStep] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
   const [dir, setDir] = useState<"l" | "r">("l")
@@ -34,10 +65,10 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     const el = document.querySelector(
-      TOUR_STEPS[step].selector,
+      tourSteps[step].selector,
     ) as HTMLElement | null
     if (el) setRect(el.getBoundingClientRect())
-  }, [step])
+  }, [step, tourSteps])
 
   useEffect(() => {
     const previousBodyOverflow = document.body.style.overflow
@@ -74,7 +105,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
     : 0
   const tooltipY = rect ? sy + sh + 14 : 0
   const arrowX = rect ? rect.left + rect.width / 2 - tooltipX : tooltipW / 2
-  const isLast = step === TOUR_STEPS.length - 1
+  const isLast = step === tourSteps.length - 1
 
   return (
     <>
@@ -172,7 +203,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
               style={{
                 height: "100%",
                 background: INDIGO,
-                width: `${((step + 1) / TOUR_STEPS.length) * 100}%`,
+                width: `${((step + 1) / tourSteps.length) * 100}%`,
                 transition: "width 0.3s cubic-bezier(.22,1,.36,1)",
               }}
             />
@@ -180,13 +211,13 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
           <div style={{ padding: "16px 18px 14px" }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-1.5">
-                {TOUR_STEPS.map((_, i) => (
+                {tourSteps.map((_, i) => (
                   <div
                     key={i}
                     onClick={() => go(i, i > step ? "l" : "r")}
                     role="button"
                     tabIndex={0}
-                    aria-label={`Go to tour step ${i + 1} of ${TOUR_STEPS.length}`}
+                    aria-label={`Go to tour step ${i + 1} of ${tourSteps.length}`}
                     aria-current={i === step ? "step" : undefined}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
@@ -229,7 +260,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                   marginBottom: 6,
                 }}
               >
-                {TOUR_STEPS[step].headline}
+                {tourSteps[step].headline}
               </h3>
               <p
                 style={{
@@ -239,7 +270,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                   marginBottom: 14,
                 }}
               >
-                {TOUR_STEPS[step].copy}
+                {tourSteps[step].copy}
               </p>
             </div>
             <div className="flex items-center justify-between">
