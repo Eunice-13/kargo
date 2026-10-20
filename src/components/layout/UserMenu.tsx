@@ -33,12 +33,14 @@ export default function UserMenu({
   }, [])
 
   return (
-    <div ref={userRef} style={{ position: "relative" }}>
+    <div ref={userRef} className="kargo-user-menu" style={{ position: "relative" }}>
       <button
         type="button"
         aria-label={`Open profile menu for ${user.name || "User"}`}
+        aria-haspopup="menu"
+        aria-expanded={showUser}
         onClick={() => setShowUser((s) => !s)}
-        className="flex items-center gap-2 bp"
+        className="flex items-center gap-2 bp kargo-user-menu__trigger"
         style={{
           background: "none",
           border: "none",
@@ -47,7 +49,9 @@ export default function UserMenu({
           borderRadius: 8,
         }}
       >
-        <Avatar name={user.name || "User"} size={32} imageUrl={user.avatarUrl} />
+        <span className="kargo-user-menu__avatar-wrap">
+          <Avatar name={user.name || "User"} size={32} imageUrl={user.avatarUrl} />
+        </span>
         <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>
           {displayLabel || user.name.split(" ")[0] || "User"}
         </span>

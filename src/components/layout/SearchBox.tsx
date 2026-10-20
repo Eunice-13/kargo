@@ -105,8 +105,13 @@ export default function SearchBox({
             setSearchQ(e.target.value)
 
             setSearchOpen(e.target.value.length > 0)
+
+            const input = e.currentTarget
+            window.requestAnimationFrame(() => {
+              if (input.scrollWidth <= input.clientWidth) input.scrollLeft = 0
+            })
           }}
-          placeholder="Search batches, products, or sellers"
+          placeholder="Search batches or items"
           style={{
             background: "transparent",
 

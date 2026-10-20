@@ -7340,6 +7340,10 @@ textarea::placeholder {
   font-family: 'Quicksand', 'DM Sans', sans-serif;
 }
 
+.kargo-footer__top {
+  display: none;
+}
+
 .kargo-footer__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(160px, 210px));
@@ -7378,15 +7382,34 @@ textarea::placeholder {
 
 .kargo-footer__social-mark {
   display: inline-grid;
-  width: 15px;
-  height: 15px;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
   place-items: center;
-  border-radius: 2px;
-  background: #fff;
-  color: #3150bc;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
   font-family: Arial, sans-serif;
   font-size: 10px;
   font-weight: 800;
+}
+
+.kargo-footer__social-mark svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.kargo-footer__instagram-icon {
+  fill: none !important;
+  stroke: currentColor;
+  stroke-width: 2.5;
+}
+
+.kargo-footer__instagram-dot {
+  fill: currentColor;
+  stroke: none;
 }
 
 .kargo-footer>p {

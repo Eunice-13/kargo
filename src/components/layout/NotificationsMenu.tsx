@@ -87,6 +87,7 @@ export default function NotificationsMenu({
       <button
         type="button"
         aria-label={`Notifications${hasUnread ? " (unread)" : ""}`}
+        aria-expanded={showNotif}
         onClick={() => setShowNotif((s) => !s)}
         style={{
           position: "relative",
@@ -99,7 +100,7 @@ export default function NotificationsMenu({
           alignItems: "center",
           justifyContent: "center",
         }}
-        className="hover:bg-gray-100 transition-colors bp"
+        className="kargo-notification-trigger hover:bg-gray-100 transition-colors bp"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
           <path
