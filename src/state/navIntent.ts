@@ -1,11 +1,13 @@
 // Navigation intent — set before navigating to Batches so the tab can deep-link on mount
 export const navIntent: {
+  openAddressSettings: boolean;
   openBatchCheckout: boolean;
   batchId: number | null;
   sellerName: string | null;
   orderFilter: "Pending" | null;
   openExtensionRequests: boolean;
 } = {
+  openAddressSettings: false,
   openBatchCheckout: false,
   batchId: null,
   sellerName: null,
@@ -33,4 +35,9 @@ export function subscribeNavIntent(listener: NavIntentListener) {
   return () => {
     listeners.delete(listener)
   }
+}
+
+export function requestAddressSettings() {
+  navIntent.openAddressSettings = true;
+  listeners.forEach(listener => listener());
 }

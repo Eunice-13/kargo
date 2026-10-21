@@ -74,7 +74,7 @@ export type ClaimReservationInput = {
 
 export type PaymentHistoryStatus = ClaimStatus | "Rejected" | "Pending Payment"
 
-export type SettingsSection = "Profile" | "Linked Accounts" | "Notifications" | "Security"
+export type SettingsSection = "My Addresses" | "Profile" | "Linked Accounts" | "Notifications" | "Security"
 
 export type ClaimRow = {
   id: EntityId
