@@ -25,6 +25,7 @@ export default function SetShippingFeeModal({
 }) {
   const [fee, setFee] = useState(String(claim.shippingFee ?? ""))
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const numericFee = Number(fee)
   const valid =
     fee.trim() !== "" && Number.isFinite(numericFee) && numericFee >= 0
@@ -84,8 +85,30 @@ export default function SetShippingFeeModal({
             loading={saving}
             onClick={async () => {
               setSaving(true)
+              setError(null)
               try {
                 await onSave(numericFee)
+              } catch (err) {
+                // Supabase/PostgREST errors are plain objects ({ message, code,
+                // details, hint }), not Error instances, so read the message off
+                // whatever shape we get. Log the raw error for the Postgres code.
+                console.error("Set shipping fee failed:", err)
+                const parts =
+                  err && typeof err === "object"
+                    ? [
+                        (err as { message?: unknown }).message,
+                        (err as { details?: unknown }).details,
+                        (err as { hint?: unknown }).hint,
+                      ].filter(
+                        (part): part is string =>
+                          typeof part === "string" && part.trim() !== "",
+                      )
+                    : []
+                setError(
+                  parts.length > 0
+                    ? parts.join(" — ")
+                    : "Could not save the shipping fee. Please try again.",
+                )
               } finally {
                 setSaving(false)
               }
@@ -94,6 +117,11 @@ export default function SetShippingFeeModal({
             Save fee and resume timer
           </PrimaryBtn>
         </div>
+        {error && (
+          <p role="alert" className="text-sm font-medium text-red-600">
+            {error}
+          </p>
+        )}
       </div>
     </Modal>
   )
