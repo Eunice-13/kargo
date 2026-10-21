@@ -4,6 +4,7 @@ export type VerifyItem = {
   id: EntityId
   orderId?: string
   groupOrderId?: string
+  combinedDeliveryGroupId?: string
   buyer: string
   product: string
   amount: number

@@ -1,0 +1,27 @@
+{
+  "status": "REVIEW_SOURCE_ONLY_NOT_EXECUTABLE_BASELINE",
+  "postgresVersion": "17.6",
+  "sha256": "6f61407aef941551fa46b6358ef9ccfe74c03d1e181bb6800d69357389b94a97",
+  "historyRecords": 26,
+  "columns": 195,
+  "functions": 56,
+  "policies": 59,
+  "constraints": 89,
+  "views": 3,
+  "correctedExtensionFunction": true,
+  "rlsEventTrigger": true,
+  "notCopied": [
+    "application records",
+    "auth users",
+    "storage objects",
+    "Vault values",
+    "production keys"
+  ],
+  "remaining": [
+    "managed schema dependency ordering",
+    "complete pg_dump-equivalent review",
+    "storage bucket configuration",
+    "cron local side-effect isolation",
+    "full local schema comparison after runtime startup"
+  ]
+}

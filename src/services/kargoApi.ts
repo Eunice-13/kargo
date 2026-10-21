@@ -1,3 +1,5 @@
+import { loadPaymentCompatibleRows } from "./paymentReadCompatibility"
+import { combinedDeliveryMutationError } from "./combinedDeliveryErrors"
 import { PASSWORD_RESET_PATH } from "@/constants/auth"
 
 import { normalizeBatchCategory } from "@/constants/categories"
@@ -516,15 +518,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   ] = await Promise.all([
     client.from("batch_catalog").select("*"),
 
-    client
-
-      .from("orders")
-
-      .select(
-        "*,batch_products(name,batch_id,batches(title)),payments(id,amount,status,method_type,submitted_at,reference_number,receipt_path,payer_account_name,payer_phone,buyer_contact_url,rejection_reason,rejection_deadline)",
-      )
-
-      .order("created_at", { ascending: false }),
+    loadPaymentCompatibleRows(client, "orders"),
 
     client
 
@@ -1140,6 +1134,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         id: payment.id ?? `${row.id}-${payment.submitted_at}`,
 
         orderId: row.id,
+        combinedDeliveryGroupId: payment.combined_delivery_group_id ?? undefined,
+        reservationIds: payment.combined_delivery_group_id ? (payment.combined ?? []).map((link: any) => link.order_id as string) : undefined,
 
         seller: participantNames.get(row.seller_id) ?? batchMap.get(product.batch_id)?.seller ?? undefined,
 
@@ -1147,7 +1143,9 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         submittedAt: payment.submitted_at,
 
-        product: product.name,
+        product: payment.combined_delivery_group_id
+          ? `Combined delivery · ${(payment.combined ?? []).map((link: any) => `${link.orders?.batch_products?.name ?? "Product"} × ${link.orders?.quantity ?? "—"}`).join(", ")}`
+          : product.name,
 
         imageUrl: batchMap
           .get(product.batch_id)
@@ -2067,6 +2065,7 @@ function paymentErrorMessage(error: {
 
 export async function submitPayment(input: {
   orderId: string
+  combinedDeliveryGroupId?: string
 
   method: string
 
@@ -2114,8 +2113,10 @@ export async function submitPayment(input: {
       )
   }
 
-  const { data, error } = await client.rpc("submit_order_payment", {
-    p_order_id: input.orderId,
+  const { data, error } = await client.rpc(input.combinedDeliveryGroupId ? "submit_combined_delivery_payment" : "submit_order_payment", {
+    ...(input.combinedDeliveryGroupId
+      ? { p_group_id: input.combinedDeliveryGroupId }
+      : { p_order_id: input.orderId }),
 
     p_method_type: input.method,
 
@@ -2132,7 +2133,7 @@ export async function submitPayment(input: {
     p_buyer_contact_url: input.buyerContactUrl ?? null,
   })
 
-  if (error) throw new Error(paymentErrorMessage(error))
+  if (error) throw new Error(paymentErrorMessage(input.combinedDeliveryGroupId ? combinedDeliveryMutationError(error) : error))
 
   const result = data as { accepted?: boolean; error?: string } | null
 
@@ -2773,13 +2774,7 @@ export async function markNotificationRead(id?: string) {
 export async function loadSellerPaymentSubmissions() {
   const client = requireSupabase()
 
-  const { data, error } = await client
-
-    .from("payments")
-
-    .select("*,orders!inner(id,total_amount,buyer_id,group_order_id,batch_products(name),group_orders!orders_group_order_id_fkey(id,final_subtotal,shipping_fee,group_order_commitments(quantity)))")
-
-    .order("submitted_at", { ascending: false })
+  const { data, error } = await loadPaymentCompatibleRows(client, "submissions")
 
   if (error) throw error
 
@@ -2808,14 +2803,19 @@ export async function loadSellerPaymentSubmissions() {
     orderId: row.orders.id as string,
 
     groupOrderId: row.orders.group_order_id ?? undefined,
+    combinedDeliveryGroupId: row.combined_delivery_group_id ?? undefined,
 
     buyer: names.get(row.orders.buyer_id) ?? "Buyer",
 
-    product: row.orders.group_order_id
+    product: row.combined_delivery_group_id
+      ? `Combined delivery · ${(row.combined ?? []).map((link: any) => `${link.orders?.batch_products?.name ?? "Product"} × ${link.orders?.quantity ?? "—"}`).join(", ")}`
+      : row.orders.group_order_id
       ? `Group Order · ${row.orders.group_orders?.group_order_commitments?.length ?? 0} items`
       : row.orders.batch_products.name as string,
 
-    amount: row.orders.group_order_id
+    amount: row.combined_delivery_group_id
+      ? Number(row.amount)
+      : row.orders.group_order_id
       ? Number(row.orders.group_orders?.final_subtotal ?? 0) +
         Number(row.orders.group_orders?.shipping_fee ?? 0)
       : Number(row.orders.total_amount),
@@ -2861,8 +2861,9 @@ export async function reviewPayment(
   reason?: string,
 
   deadlineHours?: number,
+  combinedDeliveryGroupId?: string,
 ) {
-  const { error } = await requireSupabase().rpc("review_order_payment", {
+  const { error } = await requireSupabase().rpc(combinedDeliveryGroupId ? "review_combined_delivery_payment" : "review_order_payment", {
     p_payment_id: paymentId,
 
     p_decision: decision,

@@ -30,7 +30,7 @@ export default function RejectPaymentModal({
 }) {
   const [deadlineHours, setDeadlineHours] = useState("24")
   const parsedDeadlineHours = Number(deadlineHours)
-  const isWrongAmt = rejectReason === "Wrong amount transferred"
+  const isWrongAmt = !rejectTarget.combinedDeliveryGroupId && rejectReason === "Wrong amount transferred"
   const isOther = rejectReason === "Other"
   const deadlineValid = Number.isFinite(parsedDeadlineHours) && parsedDeadlineHours > 0
   const canProceed =

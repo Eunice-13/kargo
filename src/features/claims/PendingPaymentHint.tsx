@@ -3,8 +3,10 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 export default function PendingPaymentHint({
   waiting,
   children,
+  sharedFeeSet = false,
 }: {
   waiting: boolean;
+  sharedFeeSet?: boolean;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -66,10 +68,12 @@ export default function PendingPaymentHint({
           className="checkout-help__popover"
         >
           <span id={titleId} className="sr-only">
-            Waiting for shipping fee
+            {sharedFeeSet ? "Combined payment unavailable" : "Waiting for shipping fee"}
           </span>
           <span className="block">
-            The seller needs to set the shipping fee before payment can proceed.
+            {sharedFeeSet
+              ? "The shared shipping fee is set. Your payment deadline remains paused until combined payment is available."
+              : "The seller needs to set the shipping fee before payment can proceed."}
           </span>
           <button type="button" onClick={close} className="pending-pay-help__close">
             Got it

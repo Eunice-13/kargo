@@ -1,0 +1,59 @@
+{
+  "sourceDirectory": "supabase/migrations (to update profile database name)",
+  "duplicateVersions": [
+    {
+      "version": "202610010005",
+      "files": [
+        "202610010005_restore_payment_method_lifecycle.sql",
+        "202610010005_zero_waitlist_limit.sql"
+      ]
+    },
+    {
+      "version": "202610190002",
+      "files": [
+        "202610190002_batch_group_orders.sql",
+        "202610190002_branded_email_design.sql"
+      ]
+    },
+    {
+      "version": "202610200001",
+      "files": [
+        "202610200001_extension_request_emails.sql",
+        "202610200001_read_notification_retention.sql"
+      ]
+    },
+    {
+      "version": "202610200002",
+      "files": [
+        "202610200002_batch_gallery_images.sql",
+        "202610200002_combined_delivery_foundations.sql"
+      ]
+    }
+  ],
+  "combinedDelivery": [
+    {
+      "file": "202610200002_combined_delivery_foundations.sql",
+      "sha256": "905915c1aa178dad9791a841b210b5722e658ae6cbc5aba99936f2b37c2cb5bc"
+    },
+    {
+      "file": "202610210001_combined_delivery_buyer_requests.sql",
+      "sha256": "69f26e20f0380f88cd22d7be35b293a58e30d1f6e5bbf4f8139bf4331406c5b2"
+    },
+    {
+      "file": "202610210002_combined_delivery_seller_review.sql",
+      "sha256": "af910eab1b7dc734d040ae1e7422aaebe658dd7c013e8d589b815a813cb5e871"
+    },
+    {
+      "file": "202610210003_combined_delivery_recovery.sql",
+      "sha256": "4759d6373cf4b9937618ae8ba29350e17cc739f6c0b0276bd41c1b03ad999f65"
+    },
+    {
+      "file": "202610210004_combined_delivery_batch_integrity.sql",
+      "sha256": "7f3696e0a54f6566afce5de6add395a9b29089bb34a3eacdac16c5b534b8edb2"
+    },
+    {
+      "file": "202610210005_combined_delivery_payments.sql",
+      "sha256": "2ca17531233fea7ab9d160eccd17e5e99c309125743cfcde035453da0ba05b1d"
+    }
+  ]
+}

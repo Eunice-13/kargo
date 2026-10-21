@@ -9,6 +9,7 @@ let server, Item, Provider, Page, Menu;
 before(async () => {
   server = await createServer({
     configFile: false,
+    envFile: false, // Tests must never load production environment files.
     plugins: [react()],
     resolve: { alias: { "@": fileURLToPath(new URL("../src", import.meta.url)) } },
     server: { middlewareMode: true, hmr: false, ws: false },
