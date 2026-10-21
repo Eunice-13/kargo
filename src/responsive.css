@@ -661,6 +661,255 @@
     margin-top: 4px;
   }
 
+  /* Popular batches: the rank badge takes the free top-left corner, since the
+     category chip already sits at the bottom on phones. */
+  .buyer-home-section__title { gap: 8px; }
+
+  .buyer-hot-flame {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    border-radius: 9px;
+  }
+
+  .buyer-hot-flame svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .buyer-hot-flame::after {
+    inset: -4px;
+    border-radius: 12px;
+  }
+
+  .buyer-hot-pill {
+    padding: 2px 6px;
+    font-size: 8px;
+  }
+
+  .buyer-hot-heading__row { gap: 6px; }
+
+  .buyer-hot-heading__note {
+    margin-top: 2px;
+    font-size: 10px;
+  }
+
+  .buyer-batch-card__rank {
+    top: 3px;
+    bottom: auto;
+    left: 3px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 10px;
+    box-shadow: 0 2px 6px rgba(16, 26, 38, .22);
+  }
+
+  .buyer-batch-card.is-rank-1 .buyer-batch-card__rank {
+    height: 21px;
+    padding: 0 7px 0 5px;
+    font-size: 10.5px;
+  }
+
+  .buyer-batch-card__rank svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* Popular podium on phones: the same fan, scaled to fit 362px of content. */
+  .buyer-podium {
+    gap: 0;
+    padding: 14px 0 6px;
+  }
+
+  .buyer-podium::before { inset: -10% -4% -6%; }
+
+  .buyer-podium::after {
+    bottom: -2px;
+    width: 92%;
+    height: 18px;
+  }
+
+  .buyer-podium__slot {
+    display: flex;
+    width: auto;
+    margin: 0;
+  }
+
+  .buyer-podium__slot--1 {
+    width: 142px;
+    transform: translateY(-6px);
+  }
+
+  .buyer-podium__slot--2 {
+    width: 118px;
+    margin-right: -9px;
+  }
+
+  .buyer-podium__slot--3 {
+    width: 118px;
+    margin-left: -9px;
+  }
+
+  .buyer-podium__slot--1::before { inset: -6% -14% 8%; }
+
+  .buyer-podium__slot--1 .buyer-podium__card {
+    --podium-tilt: 0deg;
+    animation-delay: .04s, 0s;
+  }
+
+  .buyer-podium__slot--2 .buyer-podium__card {
+    --podium-tilt: -7deg;
+    animation-delay: .16s, 1.2s;
+  }
+
+  .buyer-podium__slot--3 .buyer-podium__card {
+    --podium-tilt: 7deg;
+    animation-delay: .22s, 2s;
+  }
+
+  .buyer-podium__card {
+    animation-name: buyer-podium-card-in, buyer-podium-float-sm;
+  }
+
+  .buyer-podium__card:hover {
+    transform: rotate(var(--podium-tilt, 0deg));
+  }
+
+  .buyer-podium .buyer-batch-card__image-wrap {
+    width: 100%;
+    height: 96px;
+  }
+
+  .buyer-podium .buyer-batch-card__body { padding: 9px 7px 10px; }
+  .buyer-podium__slot--1 .buyer-batch-card__body { padding: 9px 9px 10px; }
+
+  .kargo-original-app main .buyer-podium .buyer-batch-card__body h3 {
+    min-height: 2.4em;
+    margin-bottom: 0;
+    font-size: 10.5px !important;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .kargo-original-app main .buyer-podium__slot--1 .buyer-batch-card__body h3 {
+    font-size: 12px !important;
+  }
+
+  /* Every podium card carries the same story: seller, claimed count, bar. */
+  .buyer-podium .buyer-batch-card__seller {
+    justify-content: center;
+    gap: 4px;
+    margin-top: 3px;
+    font-size: 9.5px;
+    text-align: center;
+  }
+
+  .buyer-podium .buyer-batch-card__date { display: none; }
+
+  .buyer-podium .buyer-batch-card__progress-label {
+    justify-content: center;
+    gap: 0;
+    margin-top: 4px;
+    font-size: 9px;
+    text-align: center;
+  }
+
+  .buyer-podium .buyer-batch-card__track {
+    height: 3px;
+    margin-top: 4px;
+  }
+
+  /* The side cards tuck under the champion, so their labels stay centered. */
+  .buyer-podium__slot--2 .buyer-batch-card__category,
+  .buyer-podium__slot--3 .buyer-batch-card__category {
+    display: none;
+  }
+
+  .buyer-podium .buyer-batch-card__rank {
+    top: 5px;
+    right: auto;
+    bottom: auto;
+    left: 5px;
+    height: 18px;
+    padding: 0 6px;
+    font-size: 9px;
+  }
+
+  .buyer-podium .buyer-batch-card.is-rank-2 .buyer-batch-card__rank,
+  .buyer-podium .buyer-batch-card.is-rank-3 .buyer-batch-card__rank {
+    top: 5px;
+    right: auto;
+    bottom: auto;
+    left: 5px;
+    height: 18px;
+    padding: 0 6px;
+    font-size: 9px;
+  }
+
+  /* #3 tucks under the champion on its left, so its badge moves outward. */
+  .buyer-podium__slot--3 .buyer-batch-card__rank {
+    right: 5px;
+    left: auto;
+  }
+
+  .buyer-podium .buyer-batch-card.is-rank-1 .buyer-batch-card__rank {
+    top: 6px;
+    right: auto;
+    bottom: auto;
+    left: 6px;
+    height: 22px;
+    padding: 0 8px 0 6px;
+    font-size: 10.5px;
+  }
+
+  .buyer-podium .buyer-batch-card.is-rank-1 .buyer-batch-card__rank svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .buyer-toplist-toggle {
+    width: fit-content;
+    min-width: 0;
+    min-height: 40px;
+    margin: 18px auto 0;
+    padding: 0 16px;
+    font-size: 12.5px;
+  }
+
+  .buyer-toplist { gap: 6px; padding-top: 2px; }
+
+  .buyer-toplist__row {
+    grid-template-columns: 32px 44px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 8px 9px 8px 8px;
+    border-radius: 10px;
+  }
+
+  .buyer-toplist__chevron { display: none; }
+
+  .buyer-toplist__rank {
+    height: 26px;
+    min-width: 30px;
+    padding: 0 5px;
+    font-size: 10.5px;
+  }
+
+  .buyer-toplist__thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 7px;
+  }
+
+  .buyer-toplist__title { font-size: 12.5px; }
+  .buyer-toplist__meta { font-size: 10px; }
+
+  .buyer-toplist__bar {
+    height: 2px;
+    margin-top: 3px;
+  }
+
+  .buyer-toplist__hearts { font-size: 11px; }
+
   .buyer-carousel-controls button {
     position: relative;
     width: 28px;
