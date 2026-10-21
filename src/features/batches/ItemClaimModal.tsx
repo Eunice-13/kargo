@@ -1,3 +1,5 @@
+import SavedAddressSelector from "@/components/shared/SavedAddressSelector"
+import DeliveryAddressFields from "@/components/shared/DeliveryAddressFields"
 import { productAvailability } from "./productAvailability"
 
 import { useEffect, useState } from "react"
@@ -13,7 +15,6 @@ import {
   SecondaryBtn,
   Avatar,
   ProductThumb,
-  LocationPinPicker,
   type LocationPinValue,
 } from "@/components/shared"
 import { isSupabaseConfigured } from "@/lib/supabase"
@@ -89,6 +90,7 @@ export default function ItemClaimModal({
     isSupabaseConfigured ? "" : "GCash",
   )
   const [pin, setPin] = useState<LocationPinValue>({})
+  const [savedPinVersion, setSavedPinVersion] = useState(0)
   const [acceptedShipping, setAcceptedShipping] = useState(false)
   const left = product.qty - product.claimed
 
@@ -408,7 +410,11 @@ export default function ItemClaimModal({
                 map.
               </p>
             </div>
-            <LocationPinPicker value={pin} onChange={setPin} />
+            <SavedAddressSelector value={pin} onChange={(next) => {
+              setPin(next)
+              setSavedPinVersion(version => version + 1)
+            }} onManage={onClose} />
+            <DeliveryAddressFields mapKey={savedPinVersion} value={pin} onChange={setPin} />
             <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
               The shipping fee is shouldered by the buyer and will be set by the
               seller before you can pay. Your payment deadline pauses while you

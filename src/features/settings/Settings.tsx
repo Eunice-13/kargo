@@ -1,5 +1,7 @@
+import MyAddressesSection from "./MyAddressesSection"
+import { navIntent } from "@/state/navIntent"
 import { useState, useEffect } from "react"
-import { UserRound, Link2, Bell, Lock } from "lucide-react"
+import { UserRound, Link2, Bell, Lock, MapPin } from "lucide-react"
 import type { SettingsSection, SharedState } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card } from "@/components/shared"
@@ -12,6 +14,7 @@ import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 
 const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
+  "My Addresses": MapPin,
   Profile: UserRound,
   "Linked Accounts": Link2,
   Notifications: Bell,
@@ -19,7 +22,7 @@ const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
 }
 
 export default function Settings({ user, setUser, role }: SharedState) {
-  const [section, setSection] = useState<SettingsSection>("Profile")
+  const [section, setSection] = useState<SettingsSection>(() => role === "Buyer" && navIntent.openAddressSettings ? "My Addresses" : "Profile")
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(user.socialLinks ?? (user.fb ? { Facebook: user.fb } : {}))
   const [socialVisibility, setSocialVisibility] = useState<Record<string, boolean>>(user.socialVisibility ?? {})
   // Preferences use an opt-out model: a key missing from the saved map means
@@ -44,6 +47,7 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl)
   const sections: SettingsSection[] = [
     "Profile",
+    ...(role === "Buyer" ? ["My Addresses" as const] : []),
     "Linked Accounts",
     "Notifications",
     "Security",
@@ -51,6 +55,13 @@ export default function Settings({ user, setUser, role }: SharedState) {
   useEffect(() => {
     if (!sections.includes(section)) setSection("Profile")
   }, [role])
+
+  useEffect(() => {
+    if (section === "My Addresses") {
+      navIntent.openAddressSettings = false
+      document.getElementById("my-addresses")?.focus()
+    }
+  }, [section])
 
   const saveProfile = async () => {
     const newName = [firstName, lastName].filter(Boolean).join(" ") || user.name
@@ -151,6 +162,7 @@ export default function Settings({ user, setUser, role }: SharedState) {
           </Card>
         </div>
         <Card>
+          {section === "My Addresses" && role === "Buyer" && <MyAddressesSection />}
           {section === "Profile" && (
             <ProfileSection
               user={user}

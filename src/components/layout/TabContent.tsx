@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import type { Tab, SharedState } from "@/types"
+import { navIntent, subscribeNavIntent } from "@/state/navIntent"
 import { TABS } from "./TabBar"
 import { Dashboard } from "@/features/dashboard"
 import { Batches } from "@/features/batches"
@@ -21,6 +22,9 @@ export default function TabContent({
   const [displayed, setDisplayed] = useState(tab)
   const [animClass, setAnimClass] = useState("fi")
   const prev = useRef(tab)
+  useEffect(() => subscribeNavIntent(() => {
+    if (navIntent.openAddressSettings) shared.setTab("Settings")
+  }), [shared.setTab])
   const tabOrder = TABS
 
   useEffect(() => {
