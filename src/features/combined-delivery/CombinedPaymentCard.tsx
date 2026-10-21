@@ -74,15 +74,9 @@ export default function CombinedPaymentCard({
             name={first?.order?.batch_products?.name ?? "Combined delivery"}
             imageUrl={first ? imageForOrder(first.order_id) : undefined}
           />
-          <div className="pending-product-card__info">
+          <div className="pending-product-card__info claims-to-pay-combined-info">
             <div className="pending-product-card__name claims-to-pay-product__name">
               Combined Delivery
-            </div>
-            <div className="pending-product-card__meta claims-to-pay-combined-seller">
-              <Avatar name={seller} size={22} />
-              <span className="claims-to-pay-combined-seller__copy">
-                <strong>{seller}</strong>
-              </span>
             </div>
             <div className="claims-to-pay-combined-note">
               <button
@@ -93,32 +87,59 @@ export default function CombinedPaymentCard({
                 View details
               </button>
             </div>
-            <div className="pending-product-card__status claims-to-pay-combined-status">
-              <span role="status" className="pending-product-card__secondary">
-                {!validDetails
-                  ? "Payment details need refreshing"
-                  : expired && account.status !== "pending_review"
-                    ? "Payment deadline expired"
-                    : statusLabels[account.status]}
+
+            {/* Labeled rows mirroring the regular To-Pay card: a muted label on
+                the left, value on the right. */}
+            <div className="pending-product-card__meta claims-to-pay-combined-seller">
+              <span className="claims-to-pay-combined-label">Seller</span>
+              <span className="claims-to-pay-combined-value">
+                <Avatar name={seller} size={22} />
+                <span className="claims-to-pay-combined-seller__copy">
+                  <strong>{seller}</strong>
+                </span>
               </span>
-              {validDetails && account.status !== "pending_review" && (
-                <Countdown
-                  id={`combined-${request.id}`}
-                  hours={0}
-                  expiresAt={account.deadline}
-                  compact
-                />
-              )}
             </div>
-          </div>
-          <div className="pending-product-card__amount">
-            <span className="sr-only">Combined total </span>
-            {Number.isFinite(Number(account.total))
-              ? `₱${Number(account.total).toLocaleString()}`
-              : "Unavailable"}
-            <span className="pending-product-card__note">
-              Includes ₱{Number(account.shipping_fee).toLocaleString()} shipping
-            </span>
+
+            <div className="pending-product-card__status claims-to-pay-combined-status">
+              <span className="claims-to-pay-combined-label">Deadline</span>
+              <span className="claims-to-pay-combined-value">
+                {!validDetails ? (
+                  <span role="status" className="pending-product-card__secondary">
+                    Payment details need refreshing
+                  </span>
+                ) : expired && account.status !== "pending_review" ? (
+                  <span role="status" className="pending-product-card__secondary">
+                    Payment deadline expired
+                  </span>
+                ) : account.status === "pending_review" ? (
+                  <span role="status" className="pending-product-card__secondary">
+                    {statusLabels[account.status]}
+                  </span>
+                ) : (
+                  <Countdown
+                    id={`combined-${request.id}`}
+                    hours={0}
+                    expiresAt={account.deadline}
+                    compact
+                  />
+                )}
+              </span>
+            </div>
+
+            <div className="pending-product-card__amount claims-to-pay-combined-amount">
+              <span className="claims-to-pay-combined-label">Amount</span>
+              <span className="claims-to-pay-combined-value">
+                <span className="claims-to-pay-combined-amount__total">
+                  <span className="sr-only">Combined total </span>
+                  {Number.isFinite(Number(account.total))
+                    ? `₱${Number(account.total).toLocaleString()}`
+                    : "Unavailable"}
+                </span>
+                <span className="pending-product-card__note">
+                  Includes ₱{Number(account.shipping_fee).toLocaleString()} shipping
+                </span>
+              </span>
+            </div>
           </div>
           <div
             role="group"

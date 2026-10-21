@@ -236,6 +236,14 @@ button {
   color: #374151;
 }
 
+/* The toggle is vertically centered with translateY(-50%). The global mobile
+   ":active { transform: scale() }" rule would replace that transform and make
+   the button jump on tap, so keep the centering and fold the press-scale in.
+   Scoped under the shell to outrank the generic :is(button):active rule. */
+.auth-input-shell .auth-password-toggle:active {
+  transform: translateY(-50%) scale(.96) !important;
+}
+
 .auth-password-toggle:focus-visible {
   outline: 2px solid #668fd3;
   outline-offset: 1px;
@@ -745,14 +753,9 @@ button {
 }
 
 .claims-to-pay-flow > .pending-payments-list .pending-product-card__status [role="timer"] {
-  min-height: 0;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.claims-to-pay-flow > .pending-payments-list .pending-product-card__status [role="timer"]::before {
-  display: none;
+  /* chip styling comes from the shared .claims-to-pay-combined-status timer
+     rule so the combined row's deadline matches the regular rows */
+  font-variant-numeric: tabular-nums;
 }
 
 .claims-to-pay-flow > .pending-payments-list .pending-product-card__note {
@@ -784,12 +787,39 @@ button {
 .claims-to-pay-table td:nth-child(4) { width: 14%; }
 .claims-to-pay-table td:nth-child(5) { width: 18%; }
 
-.claims-to-pay-product,
+/* Center every column's content (and the matching header labels) in the
+   desktop table. Per-column flex rules below carry the matching alignment so
+   nothing later in the file overrides this. */
+.claims-to-pay-table td {
+  text-align: center;
+}
+
+.claims-to-pay-table-header span {
+  justify-self: center;
+  text-align: center;
+}
+
 .claims-to-pay-seller {
   display: flex;
   min-width: 0;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+}
+
+/* Product is the identity column: the photo sits at a fixed left edge so every
+   row's photo lines up down the column, with the title beside it. Centering
+   this column makes the photos zigzag, so it stays left-aligned. */
+.claims-to-pay-product {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.claims-to-pay-product__copy {
+  text-align: left;
 }
 
 .claims-to-pay-product > .buyer-claim-item-preview-trigger {
@@ -848,6 +878,25 @@ button {
 .claims-to-pay-seller {
   color: var(--kargo-ink-soft);
   font-weight: 600;
+}
+
+/* Combined card labeled rows. The label is hidden by default (desktop table
+   layout has its own column headers); mobile reveals it as a left-side label. */
+.claims-to-pay-combined-label {
+  display: none;
+}
+
+.claims-to-pay-combined-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.claims-to-pay-combined-amount__total {
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .claims-to-pay-combined-seller {
@@ -909,7 +958,7 @@ button {
 .claims-to-pay-combined-status {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 2px;
 }
 
@@ -920,9 +969,46 @@ button {
   font-weight: 600;
 }
 
-.claims-to-pay-deadline [role="timer"] {
+/* Countdown as a pill chip, matching the a7fd1a0 time label style: neutral by
+   default, dark amber under 24h, red when urgent. Applies to the regular rows
+   and the combined-delivery row so every deadline reads the same. */
+.claims-to-pay-deadline [role="timer"],
+.claims-to-pay-combined-status [role="timer"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #f1f5f7;
+  color: #3d4d5a !important;
   font-size: 12px !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .01em;
+}
+
+.claims-to-pay-deadline [role="timer"][style*="255, 194, 75"],
+.claims-to-pay-combined-status [role="timer"][style*="255, 194, 75"] {
+  background: #fdf6e7;
+  color: #8a5a08 !important;
+}
+
+.claims-to-pay-deadline [role="timer"].cu,
+.claims-to-pay-combined-status [role="timer"].cu {
+  background: #fdeeec;
+  color: #c0392b !important;
+}
+
+.claims-to-pay-deadline [role="timer"]::before,
+.claims-to-pay-combined-status [role="timer"]::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.5V12l3.2 2'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .claims-to-pay-deadline--paused {
@@ -952,11 +1038,15 @@ button {
   width: 100%;
 }
 
+.claims-to-pay-table td:nth-child(5) {
+  text-align: center;
+}
+
 .claims-to-pay-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 6px;
 }
 
@@ -1147,6 +1237,15 @@ button {
     line-height: 1.3;
   }
 
+  /* Combined card Amount: stack the total over the shipping note (column), like
+     the regular rows, instead of the default inline value row. */
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-amount .claims-to-pay-combined-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
   .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions .kargo-secondary {
     grid-column: 2;
     grid-row: 3;
@@ -1170,6 +1269,32 @@ button {
   .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions::after {
     content: "";
     flex: 0 0 106px;
+  }
+
+  /* Center the combined-delivery row's Seller / Deadline / Amount / Actions so
+     the first row matches the centered table rows below it. The product title
+     (grid-col 2) stays left, matching the table's Product column. */
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__meta {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__status {
+    align-items: center;
+    text-align: center;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__amount {
+    align-items: center;
+    text-align: center !important;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions {
+    justify-content: center;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions::after {
+    content: none;
   }
 }
 
@@ -1334,11 +1459,100 @@ button {
   .seller-orders-page td:nth-child(7)::before { content: "Status"; }
   .seller-orders-page td:nth-child(8)::before { content: "Actions"; }
 
-  .claims-to-pay-table td:nth-child(1)::before { content: "Product"; }
   .claims-to-pay-table td:nth-child(2)::before { content: "Seller"; }
   .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
   .claims-to-pay-table td:nth-child(4)::before { content: "Amount"; }
-  .claims-to-pay-table td:nth-child(5)::before { content: "Actions"; }
+
+  /* a7fd1a0 card layout on mobile: a large photo on the left, with the labeled
+     details (Seller, Deadline, Amount) and actions stacked to its right. */
+  .claims-to-pay-table tbody tr {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 14px;
+    row-gap: 8px;
+  }
+
+  /* Photo cell spans down the left; the name sits beside the photo (row 1). */
+  .claims-to-pay-table td:nth-child(1) {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .claims-to-pay-table td:nth-child(1)::before {
+    content: none !important;
+  }
+
+  .claims-to-pay-product {
+    display: flex !important;
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* Title and its links are pushed to the right edge of the row and
+     right-justified (photo stays at the left). */
+  .claims-to-pay-product__copy {
+    flex: 0 1 auto;
+    min-width: 0;
+    text-align: right;
+  }
+
+  .claims-to-pay-product__links {
+    justify-content: flex-end;
+  }
+
+  /* Match the a7fd1a0 photo size (force past the ProductThumb w-9/h-9 utility
+     and the generic mobile img max-width rule). */
+  .claims-to-pay-table .claims-to-pay-product > .buyer-claim-item-preview-trigger {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .claims-to-pay-table .claims-to-pay-product > .buyer-claim-item-preview-trigger > img {
+    width: 80px !important;
+    height: 80px !important;
+    max-width: none !important;
+    border-radius: 12px;
+    object-fit: cover;
+  }
+
+  /* Seller / Deadline / Amount keep their labels and stack to the right. */
+  .claims-to-pay-table td:nth-child(2),
+  .claims-to-pay-table td:nth-child(3),
+  .claims-to-pay-table td:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  /* Actions: two smaller buttons, always side by side (a hard 2-col grid so
+     they never wrap), no "Actions" label. */
+  .claims-to-pay-table td:nth-child(5)::before {
+    content: none !important;
+  }
+
+  .claims-to-pay-table td:nth-child(5) {
+    grid-column: 1 / -1;
+    display: block !important;
+    justify-content: flex-start;
+  }
+
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .kargo-primary,
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .kargo-secondary {
+    width: 100%;
+    min-width: 0 !important;
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
 
   .claims-to-pay-table-card {
     overflow: visible;
@@ -5687,11 +5901,100 @@ textarea::placeholder {
   .seller-orders-page td:nth-child(7)::before { content: "Status"; }
   .seller-orders-page td:nth-child(8)::before { content: "Actions"; }
 
-  .claims-to-pay-table td:nth-child(1)::before { content: "Product"; }
   .claims-to-pay-table td:nth-child(2)::before { content: "Seller"; }
   .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
   .claims-to-pay-table td:nth-child(4)::before { content: "Amount"; }
-  .claims-to-pay-table td:nth-child(5)::before { content: "Actions"; }
+
+  /* a7fd1a0 card layout on mobile: a large photo on the left, with the labeled
+     details (Seller, Deadline, Amount) and actions stacked to its right. */
+  .claims-to-pay-table tbody tr {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 14px;
+    row-gap: 8px;
+  }
+
+  /* Photo cell spans down the left; the name sits beside the photo (row 1). */
+  .claims-to-pay-table td:nth-child(1) {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .claims-to-pay-table td:nth-child(1)::before {
+    content: none !important;
+  }
+
+  .claims-to-pay-product {
+    display: flex !important;
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* Title and its links are pushed to the right edge of the row and
+     right-justified (photo stays at the left). */
+  .claims-to-pay-product__copy {
+    flex: 0 1 auto;
+    min-width: 0;
+    text-align: right;
+  }
+
+  .claims-to-pay-product__links {
+    justify-content: flex-end;
+  }
+
+  /* Match the a7fd1a0 photo size (force past the ProductThumb w-9/h-9 utility
+     and the generic mobile img max-width rule). */
+  .claims-to-pay-table .claims-to-pay-product > .buyer-claim-item-preview-trigger {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .claims-to-pay-table .claims-to-pay-product > .buyer-claim-item-preview-trigger > img {
+    width: 80px !important;
+    height: 80px !important;
+    max-width: none !important;
+    border-radius: 12px;
+    object-fit: cover;
+  }
+
+  /* Seller / Deadline / Amount keep their labels and stack to the right. */
+  .claims-to-pay-table td:nth-child(2),
+  .claims-to-pay-table td:nth-child(3),
+  .claims-to-pay-table td:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  /* Actions: two smaller buttons, always side by side (a hard 2-col grid so
+     they never wrap), no "Actions" label. */
+  .claims-to-pay-table td:nth-child(5)::before {
+    content: none !important;
+  }
+
+  .claims-to-pay-table td:nth-child(5) {
+    grid-column: 1 / -1;
+    display: block !important;
+    justify-content: flex-start;
+  }
+
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .kargo-primary,
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .kargo-secondary {
+    width: 100%;
+    min-width: 0 !important;
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
 
   .claims-history-table td:nth-child(1)::before { content: "Product"; }
   .claims-history-table td:nth-child(2)::before { content: "Batch"; }
@@ -5774,31 +6077,118 @@ textarea::placeholder {
     width: 100%;
   }
 
-  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions {
+  /* Combined-delivery card on mobile: mirror the regular To-Pay card — 80px
+     photo top-left with the title beside it, then labeled Seller / Deadline /
+     Amount rows full width, then Pay Now full width. */
+  .claims-to-pay-flow > .pending-payments-list .kargo-card.pending-product-card {
+    display: grid !important;
+    grid-template-columns: 80px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 10px;
+    padding: 14px !important;
+    border-radius: 0 !important;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card > img {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 80px !important;
+    height: 80px !important;
+    max-width: none !important;
+    border-radius: 12px;
+    object-fit: cover;
+    margin: 0 !important;
+    align-self: center;
+  }
+
+  /* Title + "View details" sit beside the photo (row 1), right-justified. */
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-info {
     display: contents;
   }
 
-  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions .kargo-secondary {
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__name {
     grid-column: 2;
-    grid-row: 2;
-    justify-self: start;
-    min-height: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--kargo-navy);
-    font-size: 10px;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    grid-row: 1;
+    align-self: end;
+    text-align: right;
   }
 
-  .claims-to-pay-flow > .pending-payments-list .pending-product-card__amount {
-    grid-row: 3;
+  /* "View details" stays, tucked under the title on the right. */
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-note {
+    display: flex;
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    justify-content: flex-end;
+    margin: 0;
+  }
+
+  /* Labeled rows: each spans both columns with the label left, value right.
+     flex-direction:row is forced because the base combined-status rule sets
+     column, which would otherwise stack the Deadline label over its chip. */
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-seller,
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-status,
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-amount {
+    display: flex !important;
+    grid-column: 1 / 3;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Match the regular row label (td::before): 12px, #6b7280, weight 700. */
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-label {
+    display: inline-block;
+    flex: 0 0 auto;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-value {
+    justify-content: flex-end;
+    text-align: right;
+    min-width: 0;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-amount .claims-to-pay-combined-value {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0;
+    text-align: right;
+    line-height: 1.25;
+  }
+
+  /* Match the regular card exactly: total is 14px/800, the "Includes … shipping"
+     note is 10px/500 muted (same as .claims-to-pay-amount span). */
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-amount .claims-to-pay-combined-amount__total {
+    color: var(--kargo-ink);
+    font-size: 14px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-amount .pending-product-card__note {
+    display: block;
+    margin-top: 2px;
+    color: var(--kargo-muted);
+    font-size: 10px !important;
+    font-weight: 500;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions {
+    display: flex !important;
+    grid-column: 1 / 3;
+    width: 100%;
   }
 
   .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions .kargo-primary {
-    grid-column: 1 / 3;
-    grid-row: 4;
     width: 100%;
   }
 

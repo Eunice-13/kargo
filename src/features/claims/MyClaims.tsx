@@ -569,7 +569,13 @@ export default function MyClaims({
       : product.name === itemPreview?.product,
   )
 
-  const claimsForList = reconciledClaims.sort((left, right) => {
+  // Payable claims (fresh "Pending" / "Insufficient Payment") live ONLY in the
+  // upper "My Claims To Pay" table. Exclude them here so the lower "My Claims"
+  // list — and every filter (All, Awaiting Verification, Paid and Reserved,
+  // Expired, Cancelled) — never repeats a payable row.
+  const claimsForList = reconciledClaims
+    .filter((c) => !belongsToPendingPayments(c))
+    .sort((left, right) => {
       // "Awaiting Verification" — proof submitted, awaiting the seller's
 
       // decision — stays pinned at the top of the list (newest first among
@@ -1866,11 +1872,11 @@ export default function MyClaims({
                                     </span>
                                   ) : (
                                     <>
-                                      <span className="claims-to-pay-deadline__status">
-                                        {item.status === "Pending"
-                                          ? "Awaiting payment"
-                                          : item.status}
-                                      </span>
+                                      {item.status !== "Pending" && (
+                                        <span className="claims-to-pay-deadline__status">
+                                          {item.status}
+                                        </span>
+                                      )}
                                       <Countdown
                                         id={item.id}
                                         hours={item.hours}
