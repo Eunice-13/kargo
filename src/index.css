@@ -705,6 +705,474 @@ button {
   }
 }
 
+/* ===== Buyer claims-to-pay table ===== */
+.claims-to-pay-table-card,
+.claims-to-pay-total-bar {
+  overflow: hidden;
+  border: 1px solid #e7eaf1;
+  border-radius: 14px;
+  background: var(--kargo-surface);
+  box-shadow: 0 8px 24px rgba(18, 30, 71, .08);
+}
+
+.claims-to-pay-table-header {
+  display: grid;
+  grid-template-columns: 34% 18% 16% 14% 18%;
+  align-items: center;
+  min-height: 48px;
+  background: #6b8fd4;
+  color: #fff;
+}
+
+.claims-to-pay-table-header span {
+  padding: 0 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: uppercase;
+}
+
+.claims-to-pay-flow > .combined-delivery-request-prompt,
+.claims-to-pay-flow > [role="status"] {
+  margin: 0 !important;
+  padding: 12px 18px;
+  border-bottom: 1px solid #eef0f4;
+}
+
+.claims-to-pay-flow > .pending-payments-list {
+  gap: 0;
+  margin: 0 !important;
+}
+
+.claims-to-pay-flow > .pending-payments-list .pending-product-card__status [role="timer"] {
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.claims-to-pay-flow > .pending-payments-list .pending-product-card__status [role="timer"]::before {
+  display: none;
+}
+
+.claims-to-pay-flow > .pending-payments-list .pending-product-card__note {
+  display: block;
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+.claims-to-pay-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.claims-to-pay-table td {
+  padding: 16px 18px;
+  color: var(--kargo-ink-soft);
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.claims-to-pay-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.claims-to-pay-table td:nth-child(1) { width: 34%; }
+.claims-to-pay-table td:nth-child(2) { width: 18%; }
+.claims-to-pay-table td:nth-child(3) { width: 16%; }
+.claims-to-pay-table td:nth-child(4) { width: 14%; }
+.claims-to-pay-table td:nth-child(5) { width: 18%; }
+
+.claims-to-pay-product,
+.claims-to-pay-seller {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.claims-to-pay-product > .buyer-claim-item-preview-trigger {
+  display: grid;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.claims-to-pay-product__copy,
+.claims-to-pay-seller span {
+  min-width: 0;
+}
+
+.claims-to-pay-product__name {
+  color: var(--kargo-ink);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.claims-to-pay-quantity {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: var(--kargo-navy);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.claims-to-pay-product__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 4px;
+  color: var(--kargo-muted);
+  font-size: 10px;
+}
+
+.claims-to-pay-product__links button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--kargo-navy);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.claims-to-pay-seller {
+  color: var(--kargo-ink-soft);
+  font-weight: 600;
+}
+
+.claims-to-pay-combined-seller {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  gap: 8px;
+  color: var(--kargo-ink-soft);
+}
+
+.claims-to-pay-combined-seller__copy {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.claims-to-pay-combined-seller__copy strong {
+  color: var(--kargo-ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.claims-to-pay-combined-seller__copy small {
+  color: var(--kargo-muted);
+  font-size: 10px;
+}
+
+.claims-to-pay-combined-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 8px;
+  margin-top: 2px;
+  color: var(--kargo-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.claims-to-pay-combined-note button {
+  width: max-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--kargo-navy);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.claims-to-pay-combined-note button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.claims-to-pay-deadline,
+.claims-to-pay-combined-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.claims-to-pay-deadline__status,
+.claims-to-pay-combined-status > [role="status"] {
+  color: var(--kargo-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.claims-to-pay-deadline [role="timer"] {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.claims-to-pay-deadline--paused {
+  color: #9a6700;
+  font-weight: 700;
+}
+
+.claims-to-pay-amount {
+  color: var(--kargo-ink);
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.claims-to-pay-amount span {
+  display: block;
+  margin-top: 2px;
+  color: var(--kargo-muted);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.claims-to-pay-actions,
+.claims-to-pay-actions .pending-pay-help,
+.claims-to-pay-actions .pending-pay-help__trigger {
+  width: 100%;
+}
+
+.claims-to-pay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.claims-to-pay-actions .kargo-primary {
+  min-width: 94px;
+}
+
+.claims-to-pay-empty-row td {
+  width: 100% !important;
+  padding: 34px 18px;
+  color: #0b7a59;
+  font-weight: 700;
+  text-align: center;
+}
+
+.claims-to-pay-toggle {
+  display: block;
+  width: 100%;
+  padding: 13px 18px;
+  border: 0;
+  border-top: 1px solid #eef0f4;
+  background: var(--kargo-surface);
+  color: var(--kargo-navy);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+}
+
+.claims-to-pay-toggle:hover {
+  background: #f7f8ff;
+}
+
+.claims-to-pay-total-bar {
+  display: grid;
+  grid-template-columns: 34% 18% 16% 14% 18%;
+  align-items: center;
+  margin-top: 12px;
+  padding: 14px 18px;
+}
+
+.claims-to-pay-total {
+  display: flex;
+  grid-column: 3 / 5;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-right: 18px;
+  color: var(--kargo-navy);
+  text-transform: uppercase;
+}
+
+.claims-to-pay-total span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.claims-to-pay-total strong {
+  font-size: 18px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.claims-to-pay-total-bar > .kargo-primary {
+  grid-column: 5;
+  justify-self: stretch;
+}
+
+@media (min-width: 1025px) {
+  .claims-to-pay-table-header {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    min-height: 0;
+  }
+
+  .claims-to-pay-table-header span {
+    padding: 10px 14px;
+  }
+
+  .claims-to-pay-actions .pending-pay-help,
+  .claims-to-pay-actions .pending-pay-help__trigger {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .claims-to-pay-actions > .kargo-secondary {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .kargo-card.pending-product-card {
+    display: grid;
+    grid-template-columns: 64px calc(20% - 64px) repeat(4, 20%);
+    gap: 0;
+    min-height: 68px;
+    padding: 12px 0 !important;
+    border: 0 !important;
+    background: #f8fafc !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list article:nth-child(even) .pending-product-card {
+    background: #f8fafc;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card > img {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    align-self: center;
+    margin-left: 18px;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__info {
+    display: contents;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions {
+    display: flex;
+    grid-column: 6;
+    grid-row: 1 / 3;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    box-sizing: border-box;
+    padding: 0 18px;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__name {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    box-sizing: border-box;
+    margin: 0;
+    padding-right: 18px;
+    color: var(--kargo-ink);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: normal;
+    letter-spacing: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__meta {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    align-self: center;
+    box-sizing: border-box;
+    padding: 0 18px;
+    font-weight: 600;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .claims-to-pay-combined-note {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    box-sizing: border-box;
+    margin: 0;
+    padding-right: 18px;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__status {
+    grid-column: 4;
+    grid-row: 1 / 3;
+    align-self: center;
+    box-sizing: border-box;
+    padding: 0 18px;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__amount {
+    grid-column: 5;
+    grid-row: 1 / 3;
+    align-self: center;
+    box-sizing: border-box;
+    padding: 0 18px;
+    color: var(--kargo-ink);
+    font-size: 14px;
+    font-weight: 800 !important;
+    text-align: left;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__amount .pending-product-card__note {
+    color: var(--kargo-muted);
+    font-size: 10px;
+    font-weight: 500 !important;
+    line-height: 1.3;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions .kargo-secondary {
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: start;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--kargo-navy);
+    font-size: 10px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions .kargo-primary {
+    flex: 0 0 94px;
+    min-width: 94px;
+    margin: 0;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions::after {
+    content: "";
+    flex: 0 0 106px;
+  }
+}
+
 /* ===== Site-wide phone and tablet polish (desktop starts at 1025px) ===== */
 .kargo-mobile-search-toggle,
 .kargo-mobile-search-panel {
@@ -871,6 +1339,65 @@ button {
   .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
   .claims-to-pay-table td:nth-child(4)::before { content: "Amount"; }
   .claims-to-pay-table td:nth-child(5)::before { content: "Actions"; }
+
+  .claims-to-pay-table-card {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .claims-to-pay-table-header {
+    display: none;
+  }
+
+  .claims-to-pay-table td:nth-child(n) {
+    width: 100%;
+  }
+
+  .claims-to-pay-table tbody tr:nth-child(even) {
+    background: #fff;
+  }
+
+  .claims-to-pay-empty-row {
+    display: block !important;
+  }
+
+  .claims-to-pay-empty-row td {
+    display: block !important;
+    padding: 28px 18px !important;
+    text-align: center;
+  }
+
+  .claims-to-pay-empty-row td::before {
+    content: none !important;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list {
+    margin-bottom: 14px !important;
+  }
+
+  .claims-to-pay-toggle {
+    margin-top: 12px;
+    border: 1px solid var(--kargo-line);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(18, 30, 71, .08);
+  }
+
+  .claims-to-pay-total-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+  }
+
+  .claims-to-pay-total {
+    grid-column: 1;
+    justify-content: flex-start;
+    padding-right: 0;
+  }
+
+  .claims-to-pay-total-bar > .kargo-primary {
+    grid-column: 2;
+  }
 
   .claims-history-table td:nth-child(1)::before { content: "Product"; }
   .claims-history-table td:nth-child(2)::before { content: "Batch"; }
@@ -5245,6 +5772,50 @@ textarea::placeholder {
 
   .pending-payments-list .kargo-card > .kargo-primary {
     width: 100%;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions {
+    display: contents;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions .kargo-secondary {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--kargo-navy);
+    font-size: 10px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__amount {
+    grid-row: 3;
+  }
+
+  .claims-to-pay-flow > .pending-payments-list .pending-product-card__actions .kargo-primary {
+    grid-column: 1 / 3;
+    grid-row: 4;
+    width: 100%;
+  }
+
+  .claims-to-pay-total-bar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .claims-to-pay-total,
+  .claims-to-pay-total-bar > .kargo-primary {
+    grid-column: 1;
+    width: 100%;
+  }
+
+  .claims-to-pay-total {
+    justify-content: space-between;
   }
 
   .seller-batches-grid {

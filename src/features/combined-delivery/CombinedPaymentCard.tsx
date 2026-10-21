@@ -1,17 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
+import Avatar from "@/components/shared/Avatar";
 import Card from "@/components/shared/Card";
 import Countdown from "@/components/shared/Countdown";
 import PrimaryBtn from "@/components/shared/PrimaryBtn";
 import ProductThumb from "@/components/shared/ProductThumb";
-import SecondaryBtn from "@/components/shared/SecondaryBtn";
 import { PaymentSubmitModal } from "@/features/payments";
 import { kargoApi } from "@/services";
 
-const money = (value: number) =>
-  Number.isFinite(value)
-    ? new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(value)
-    : "Unavailable";
 const statusLabels = {
   ready: "Awaiting payment",
   pending_review: "Awaiting verification",
@@ -79,21 +75,25 @@ export default function CombinedPaymentCard({
             imageUrl={first ? imageForOrder(first.order_id) : undefined}
           />
           <div className="pending-product-card__info">
-            <h3 className="pending-product-card__name">Combined delivery</h3>
-            <p className="pending-product-card__meta pending-product-card__secondary">
-              {seller} · {request.payment_method}
-            </p>
-            <ul className="my-1 space-y-0.5 text-xs text-[var(--kargo-ink-soft)]">
-              {request.members.map((member) => (
-                <li key={member.order_id} className="break-words">
-                  {member.order?.batch_products?.name ?? "Reserved product"}{" "}
-                  <span className="text-[var(--kargo-muted)]">
-                    × {member.order?.quantity ?? "—"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <div className="pending-product-card__status">
+            <div className="pending-product-card__name claims-to-pay-product__name">
+              Combined Delivery
+            </div>
+            <div className="pending-product-card__meta claims-to-pay-combined-seller">
+              <Avatar name={seller} size={22} />
+              <span className="claims-to-pay-combined-seller__copy">
+                <strong>{seller}</strong>
+              </span>
+            </div>
+            <div className="claims-to-pay-combined-note">
+              <button
+                type="button"
+                disabled={actionsDisabled}
+                onClick={onDetails}
+              >
+                View details
+              </button>
+            </div>
+            <div className="pending-product-card__status claims-to-pay-combined-status">
               <span role="status" className="pending-product-card__secondary">
                 {!validDetails
                   ? "Payment details need refreshing"
@@ -113,12 +113,11 @@ export default function CombinedPaymentCard({
           </div>
           <div className="pending-product-card__amount">
             <span className="sr-only">Combined total </span>
-            {Number.isFinite(Number(account.total)) ? money(Number(account.total)) : "Unavailable"}
+            {Number.isFinite(Number(account.total))
+              ? `₱${Number(account.total).toLocaleString()}`
+              : "Unavailable"}
             <span className="pending-product-card__note">
-              Items subtotal {money(Number(account.items_subtotal))}
-            </span>
-            <span className="pending-product-card__note">
-              Shared shipping fee {money(Number(account.shipping_fee))}
+              Includes ₱{Number(account.shipping_fee).toLocaleString()} shipping
             </span>
           </div>
           <div
@@ -126,9 +125,6 @@ export default function CombinedPaymentCard({
             aria-label={`Payment actions for ${seller}`}
             className="pending-product-card__actions flex flex-wrap gap-2"
           >
-            <SecondaryBtn size="sm" disabled={actionsDisabled} onClick={onDetails}>
-              View details
-            </SecondaryBtn>
             <PrimaryBtn size="sm" disabled={!payable} onClick={() => setPaying(true)}>
               {account.status === "pending_review" ? "Awaiting verification" : "Pay Now"}
             </PrimaryBtn>

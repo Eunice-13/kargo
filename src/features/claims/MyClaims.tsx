@@ -59,7 +59,6 @@ import {
 import { navIntent } from "@/state/navIntent"
 
 import SetShippingFeeModal from "./SetShippingFeeModal"
-import PendingPaymentCard from "./PendingPaymentCard"
 import PendingPaymentHint from "./PendingPaymentHint"
 
 import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal"
@@ -513,11 +512,11 @@ export default function MyClaims({
     "Cancelled",
   ]
 
-  // Payable claims (fresh "Pending" or "Insufficient Payment") live ONLY in the
+  // Payable claims (fresh "Pending" or "Insufficient Payment") are highlighted
 
-  // upper "My Claims To Pay" table. The filtered table below never shows a
+  // in the upper "My Claims To Pay" table and remain visible in the complete
 
-  // payable row, so there's exactly one place to pay from.
+  // My Claims list below.
 
   const reconciledClaims = claims.map((claim) =>
     reconcileRejectedClaim(claim, payHistory),
@@ -554,6 +553,9 @@ export default function MyClaims({
     ? claimsToPay
     : claimsToPay.slice(0, pendingPaymentLimit)
 
+  const payableClaims = claimsToPay.filter(claimIsPayable)
+  const totalDue = payableClaims.reduce((sum, item) => sum + item.amount, 0)
+
   const itemPreviewBatch = itemPreview
     ? batches.find(
         (candidate) =>
@@ -567,11 +569,7 @@ export default function MyClaims({
       : product.name === itemPreview?.product,
   )
 
-  const nonPayableClaims = reconciledClaims
-
-    .filter((c) => !belongsToPendingPayments(c))
-
-    .sort((left, right) => {
+  const claimsForList = reconciledClaims.sort((left, right) => {
       // "Awaiting Verification" — proof submitted, awaiting the seller's
 
       // decision — stays pinned at the top of the list (newest first among
@@ -607,8 +605,8 @@ export default function MyClaims({
 
   const filtered =
     filter === "All"
-      ? nonPayableClaims
-      : nonPayableClaims.filter((c) => c.status === filter)
+      ? claimsForList
+      : claimsForList.filter((c) => c.status === filter)
 
   const [fbToast, setFbToast] = useState<string | null>(null)
 
@@ -1727,144 +1725,255 @@ export default function MyClaims({
   return (
     <div className="p-6 buyer-claims-page mobile-data-page">
       <div className="mb-6">
-        <SH title="Pending Claim Payments" />
-        <p
-          style={{
-            marginTop: -8,
+        <SH title="My Claims To Pay" />
+        <div className="claims-to-pay-table-card">
+          <div className="claims-to-pay-table-header" role="row">
+            <span role="columnheader">Product</span>
+            <span role="columnheader">Seller</span>
+            <span role="columnheader">Deadline</span>
+            <span role="columnheader">Amount</span>
+            <span role="columnheader">Actions</span>
+          </div>
+          <div className="claims-to-pay-flow">
+            <BuyerCombinedDelivery
+              key={user.id ?? user.email}
+              buyerId={user.id}
+              claims={reconciledClaims}
+              onRecovered={refreshData}
+              imageForOrder={(id) => {
+                const productId = reconciledClaims.find(
+                  (claim) => String(claim.id) === id,
+                )?.productId
+                return productId
+                  ? batches
+                      .flatMap((batch) => batch.products)
+                      .find((product) => product.dbId === productId)?.imageUrl
+                  : undefined
+              }}
+            >
+              {({ requestForOrder, openRequest, combinedPaymentOrder }) => (
+                <>
+                  <table className="claims-to-pay-table">
+                    <thead className="sr-only">
+                      <tr>
+                        <th>Product</th>
+                        <th>Seller</th>
+                        <th>Deadline</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visiblePendingPayments
+                        .filter(
+                          (item) => !combinedPaymentOrder(String(item.id)),
+                        )
+                        .map((item) => {
+                          const deliveryRequest = requestForOrder(String(item.id))
+                          const imageUrl = item.productId
+                            ? batches
+                                .flatMap((batch) => batch.products)
+                                .find(
+                                  (product) => product.dbId === item.productId,
+                                )?.imageUrl
+                            : undefined
 
-            marginBottom: 12,
-
-            color: "#748391",
-
-            fontSize: 12,
-          }}
-        >
-          Submit payment before each reservation deadline.
-        </p>
-        <BuyerCombinedDelivery
-          key={user.id ?? user.email}
-          buyerId={user.id}
-          claims={reconciledClaims}
-          onRecovered={refreshData}
-          imageForOrder={(id) => {
-            const productId = reconciledClaims.find((claim) => String(claim.id) === id)?.productId;
-            return productId
-              ? batches.flatMap((batch) => batch.products).find((product) => product.dbId === productId)
-                  ?.imageUrl
-              : undefined;
-          }}
-        >
-          {({ requestForOrder, openRequest, combinedPaymentOrder }) => (
-            <div className="space-y-3 pending-payments-list">
-              {visiblePendingPayments.filter((item) => !combinedPaymentOrder(String(item.id))).map((item) => (
-                <PendingPaymentCard
-                  key={item.id}
-                  onPreview={() => setItemPreview(item)}
-                  item={item}
-                  deliveryRequest={requestForOrder(String(item.id))}
-                  imageUrl={
-                    item.productId
-                      ? batches
-                          .flatMap((batch) => batch.products)
-                          .find((product) => product.dbId === item.productId)?.imageUrl
-                      : undefined
-                  }
-                >
-                  {item.shippingState === "correction_requested" ? (
-                    <SecondaryBtn
-                      size="sm"
-                      onClick={() => {
-                        setPinDraft({
-                          lat: item.deliveryPinLat,
-                          lng: item.deliveryPinLng,
-                          url: item.deliveryPinUrl,
-                          address: item.deliveryPinAddress,
-                        });
-                        setPinTarget(item);
-                      }}
+                          return (
+                            <tr key={item.id}>
+                              <td>
+                                <div className="claims-to-pay-product">
+                                  <button
+                                    type="button"
+                                    className="buyer-claim-item-preview-trigger"
+                                    aria-label={`Enlarge photo of ${item.product}`}
+                                    onClick={() => setItemPreview(item)}
+                                  >
+                                    <ProductThumb
+                                      name={item.product}
+                                      imageUrl={imageUrl}
+                                    />
+                                  </button>
+                                  <div className="claims-to-pay-product__copy">
+                                    <div className="claims-to-pay-product__name">
+                                      {item.product}
+                                      {item.qty > 1 && (
+                                        <span className="claims-to-pay-quantity">
+                                          ×{item.qty}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="claims-to-pay-product__links">
+                                      {item.shippingState ===
+                                        "correction_requested" && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setPinDraft({
+                                              lat: item.deliveryPinLat,
+                                              lng: item.deliveryPinLng,
+                                              url: item.deliveryPinUrl,
+                                              address: item.deliveryPinAddress,
+                                            })
+                                            setPinTarget(item)
+                                          }}
+                                        >
+                                          Update location
+                                        </button>
+                                      )}
+                                      {item.shippingState !==
+                                        "correction_requested" &&
+                                        deliveryRequest && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              openRequest(deliveryRequest)
+                                            }
+                                          >
+                                            View request
+                                          </button>
+                                        )}
+                                      {(item.extensionRequested ||
+                                        item.extensionStatus === "pending") && (
+                                        <span>Extension requested</span>
+                                      )}
+                                      {item.extensionStatus === "approved" && (
+                                        <span>Extension approved</span>
+                                      )}
+                                      {item.extensionStatus === "denied" && (
+                                        <span>Extension declined</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td>
+                                <div className="claims-to-pay-seller">
+                                  <Avatar name={item.seller} size={22} />
+                                  <span>{item.seller}</span>
+                                </div>
+                              </td>
+                              <td>
+                                <div className="claims-to-pay-deadline">
+                                  {item.shippingState ===
+                                  "waiting_for_seller" ? (
+                                    <span className="claims-to-pay-deadline--paused">
+                                      Waiting for seller
+                                    </span>
+                                  ) : item.shippingState ===
+                                    "correction_requested" ? (
+                                    <span className="claims-to-pay-deadline--paused">
+                                      Location update required
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <span className="claims-to-pay-deadline__status">
+                                        {item.status === "Pending"
+                                          ? "Awaiting payment"
+                                          : item.status}
+                                      </span>
+                                      <Countdown
+                                        id={item.id}
+                                        hours={item.hours}
+                                        expiresAt={item.expiresAt}
+                                        paused={Boolean(item.deadlinePausedAt)}
+                                      />
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                              <td>
+                                <div className="claims-to-pay-amount">
+                                  ₱{item.amount.toLocaleString()}
+                                  {deliveryRequest?.status ===
+                                  "shipping_fee_set" ? (
+                                    <span>
+                                      Item subtotal · shared fee in request
+                                    </span>
+                                  ) : item.shippingState ===
+                                    "waiting_for_seller" ? (
+                                    <span>Shipping fee pending</span>
+                                  ) : item.shippingFee !== undefined ? (
+                                    <span>
+                                      Includes ₱
+                                      {item.shippingFee.toLocaleString()} shipping
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </td>
+                              <td>
+                                <div className="claims-to-pay-actions">
+                                  <PendingPaymentHint
+                                    waiting={
+                                      item.shippingState === "waiting_for_seller"
+                                    }
+                                    sharedFeeSet={
+                                      deliveryRequest?.status ===
+                                      "shipping_fee_set"
+                                    }
+                                  >
+                                    <PrimaryBtn
+                                      size="sm"
+                                      disabled={!claimIsPayable(item)}
+                                      onClick={() =>
+                                        claimIsPayable(item) && setPayTarget(item)
+                                      }
+                                    >
+                                      Pay Now
+                                    </PrimaryBtn>
+                                  </PendingPaymentHint>
+                                  {claimIsPayable(item) &&
+                                    !item.extensionRequested &&
+                                    item.extensionStatus !== "pending" && (
+                                      <SecondaryBtn
+                                        size="sm"
+                                        onClick={() => setExtTarget(item)}
+                                      >
+                                        Request Extension
+                                      </SecondaryBtn>
+                                    )}
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      {claimsToPay.length === 0 && (
+                        <tr className="claims-to-pay-empty-row">
+                          <td colSpan={5}>No pending payments.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                  {claimsToPay.length > pendingPaymentLimit && (
+                    <button
+                      type="button"
+                      className="claims-to-pay-toggle"
+                      onClick={() =>
+                        setShowAllPendingPayments((showing) => !showing)
+                      }
+                      aria-expanded={showAllPendingPayments}
                     >
-                      Update location
-                    </SecondaryBtn>
-                  ) : (
-                    <div className="pending-payment-card__actions flex flex-wrap items-center justify-end gap-2">
-                      <PendingPaymentHint
-                        waiting={item.shippingState === "waiting_for_seller"}
-                        sharedFeeSet={requestForOrder(String(item.id))?.status === "shipping_fee_set"}
-                      >
-                        <PrimaryBtn
-                          size="sm"
-                          disabled={!claimIsPayable(item)}
-                          onClick={() => claimIsPayable(item) && setPayTarget(item)}
-                        >
-                          Pay Now
-                        </PrimaryBtn>
-                      </PendingPaymentHint>
-                      {claimIsPayable(item) &&
-                        !item.extensionRequested &&
-                        item.extensionStatus !== "pending" && (
-                          <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
-                            Request Extension
-                          </SecondaryBtn>
-                        )}
-                      {(item.extensionRequested || item.extensionStatus === "pending") && (
-                        <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-700">
-                          Extension requested
-                        </span>
-                      )}
-                      {item.extensionStatus === "approved" && (
-                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
-                          Extension approved
-                        </span>
-                      )}
-                      {item.extensionStatus === "denied" && (
-                        <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">
-                          Extension declined
-                        </span>
-                      )}
-                      {requestForOrder(String(item.id)) && (
-                        <SecondaryBtn
-                          size="sm"
-                          onClick={() => openRequest(requestForOrder(String(item.id))!)}
-                        >
-                          View request
-                        </SecondaryBtn>
-                      )}
-                    </div>
+                      {showAllPendingPayments
+                        ? "Show fewer pendings"
+                        : `Show all ${claimsToPay.length} pendings`}
+                    </button>
                   )}
-                </PendingPaymentCard>
-              ))}{" "}
-              {claimsToPay.length > pendingPaymentLimit && (
-                <button
-                  type="button"
-                  className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
-                  onClick={() => setShowAllPendingPayments((showing) => !showing)}
-                  aria-expanded={showAllPendingPayments}
-                >
-                  {showAllPendingPayments
-                    ? "Show fewer pendings"
-                    : `Show all ${claimsToPay.length} pendings`}
-                </button>
+                </>
               )}
-              {claimsToPay.length === 0 && (
-                <Card>
-                  <div
-                    style={{
-                      color: "#0B7A59",
-
-                      fontSize: 12,
-
-                      fontWeight: 600,
-
-                      textAlign: "center",
-                    }}
-                  >
-                    No pending payments.
-                  </div>
-                </Card>
-              )}
-            </div>
-          )}
-        </BuyerCombinedDelivery>
+            </BuyerCombinedDelivery>
+          </div>
+        </div>
+        <div className="claims-to-pay-total-bar">
+          <div className="claims-to-pay-total">
+            <span>Total Due:</span>
+            <strong>₱{totalDue.toLocaleString()}</strong>
+          </div>
+          <PrimaryBtn
+            disabled={payableClaims.length === 0}
+            onClick={() => setShowBatchCheckout(true)}
+          >
+            Batch Checkout
+          </PrimaryBtn>
+        </div>
       </div>
 
       <SH title="My Claims" />
@@ -2308,7 +2417,11 @@ export default function MyClaims({
                       )}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      <div
+                        className={`flex items-center gap-1.5 flex-wrap ${
+                          c.status === "Pending" ? "justify-end" : ""
+                        }`}
+                      >
                         {claimIsPayable(c) && (
                           <PrimaryBtn
                             size="sm"
@@ -2408,11 +2521,10 @@ export default function MyClaims({
       )}
       {showBatchCheckout && (
         <BatchCheckoutModal
-          items={claimsToPay
-
-            .filter(claimIsPayable)
-
-            .map((claim) => ({ ...claim, orderId: String(claim.id) }))}
+          items={payableClaims.map((claim) => ({
+            ...claim,
+            orderId: String(claim.id),
+          }))}
           contactPrefill={user.fb || ""}
           onSubmit={async (item, method, refNo, receipt, details) => {
             const claim = claimsToPay.find(
