@@ -146,7 +146,11 @@ test("rejected requests show the reason and keep the products, without approval 
   );
   assert.match(html, /Different dispatch requirements/);
   assert.match(html, /Product A/);
-  assert.match(html, /individual shipping flow/);
+  assert.match(html, /Combined delivery rejected/);
+  assert.match(html, /Your reservations will remain separate\./);
+  assert.match(html, /Seller&#x27;s message|Seller&apos;s message|Seller's message/);
+  assert.equal(html.split("Different dispatch requirements").length - 1, 1);
+  assert.match(html, /overflow-wrap:anywhere/);
   assert.doesNotMatch(html, /Cancel request|Confirm Request|Pay Now|Approve/);
 });
 test("card keeps its horizontal layout and replaces the duplicate waiting label with the request status", () => {
@@ -386,4 +390,30 @@ test("refreshing combined proof form communicates its disabled submission withou
   const standalone = renderToStaticMarkup(createElement(PaymentForm, props));
   assert.match(standalone, /Confirm Order/);
   assert.doesNotMatch(standalone, /Checking payment availability/);
+});
+
+test("rejected requests omit the message box for absent or blank reasons", () => {
+  for (const decision_reason of [null, "", "   "]) {
+    const html = renderToStaticMarkup(
+      createElement(Dialog, {
+        ...baseProps,
+        existing: { ...existing, status: "rejected", decision_reason },
+      }),
+    );
+    assert.match(html, /Your reservations will remain separate/);
+    assert.doesNotMatch(html, /Seller(?:&#x27;|&apos;|')s message/);
+  }
+});
+test("rejected messages preserve long text and escape seller-provided markup", () => {
+  const reason = "Packaging ".repeat(80) + "<script>unsafe()</script>";
+  const html = renderToStaticMarkup(
+    createElement(Dialog, {
+      ...baseProps,
+      existing: { ...existing, status: "rejected", decision_reason: reason },
+    }),
+  );
+  assert.match(html, /whitespace-pre-wrap/);
+  assert.equal(html.split("Packaging ").length - 1, 80);
+  assert.match(html, /&lt;script&gt;/);
+  assert.doesNotMatch(html, /<script>/);
 });
