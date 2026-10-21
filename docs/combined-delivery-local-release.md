@@ -1,0 +1,132 @@
+# Smart Combined Delivery local release
+
+Branch: `jenna`. Local feature commit only; no merge, push, deployment or production access.
+
+Reconciled overlapping claims changes from teammate commit `a1b6675c2cf5abfd9d216814765f5ba250e75b55` (remote main `a76f49d10eaf9a483c14553565dac69516714776`) by preserving product-photo previews, claim headings and mobile claim styling alongside combined-delivery statuses and grouped-payment handling. Unrelated dashboard, fulfillment and payment-list changes were not imported. This is source-level reconciliation, not a Git merge; remote main is not an ancestor of this release.
+
+Checks during finalization: TypeScript passed; eight focused PendingPaymentCard tests passed, including preview/status coexistence; staged whitespace/conflict-marker/runtime-artifact checks passed; seven release migration hashes match the previously validated manifest. No SQL or backup tests repeated.
+
+Production prerequisites remain: hosted Vercel configuration verification and explicit deployment approval. Prior recovery limitations remain documented separately. Local backup helpers, backup reports, Python cache files and unrelated notification-test changes are intentionally not part of this feature commit.
+
+## Files included
+
+- `docs/combined-delivery-deployment-readiness.md`
+- `docs/combined-delivery-local-release.md`
+- `docs/combined-delivery-local-validation.md`
+- `docs/combined-delivery-phase-1.md`
+- `docs/combined-delivery-phase-2.md`
+- `docs/combined-delivery-phase-3-1.md`
+- `docs/combined-delivery-phase-3-2.md`
+- `docs/combined-delivery-phase-3.md`
+- `docs/combined-delivery-phase-4-concurrency-preflight.md`
+- `docs/combined-delivery-phase-4-preflight.md`
+- `docs/combined-delivery-phase-4.md`
+- `docs/combined-delivery-phase-5.md`
+- `docs/combined-delivery-phase-6-1.md`
+- `docs/combined-delivery-phase-6-2.md`
+- `docs/combined-delivery-phase-6-3-baseline-review.json`
+- `docs/combined-delivery-phase-6-3-runtime.md`
+- `docs/combined-delivery-phase-6-3.md`
+- `docs/combined-delivery-phase-6.md`
+- `docs/combined-delivery-production-runbook.md`
+- `docs/combined-delivery-staging-migration-inventory.json`
+- `docs/combined-payment-schema-compatibility.md`
+- `docs/missing-batches-investigation.md`
+- `scripts/audit-combined-delivery-preflight.mjs`
+- `scripts/local-staging/authenticated-validation.mjs`
+- `scripts/local-staging/build-baseline.mjs`
+- `scripts/local-staging/capture-schema.sql`
+- `scripts/local-staging/check.mjs`
+- `scripts/local-staging/compare-baseline.mjs`
+- `scripts/local-staging/configure-local.mjs`
+- `scripts/local-staging/container-safety.mjs`
+- `scripts/local-staging/database.mjs`
+- `scripts/local-staging/inspect-runtime.mjs`
+- `scripts/local-staging/isolation.mjs`
+- `scripts/local-staging/migration-sql.mjs`
+- `scripts/local-staging/prepare-concurrency-template.mjs`
+- `scripts/local-staging/prepare-release-bundle.mjs`
+- `scripts/local-staging/rehearse-release.mjs`
+- `scripts/local-staging/run-app.mjs`
+- `scripts/local-staging/validate-migrations.mjs`
+- `scripts/local-staging/vite.config.mjs`
+- `scripts/test-combined-delivery-concurrency.mjs`
+- `scripts/test-combined-delivery-db.mjs`
+- `scripts/verify-staging.mjs`
+- `src/features/claims/MyClaims.tsx`
+- `src/features/claims/PendingPaymentCard.tsx`
+- `src/features/claims/PendingPaymentHint.tsx`
+- `src/features/claims/pendingPayments.css`
+- `src/features/combined-delivery/BuyerCombinedDelivery.tsx`
+- `src/features/combined-delivery/CombinedDeliveryRequestDialog.tsx`
+- `src/features/combined-delivery/CombinedPaymentCard.tsx`
+- `src/features/combined-delivery/DeliveryAvailabilityNotice.tsx`
+- `src/features/combined-delivery/SellerCombinedDelivery.tsx`
+- `src/features/combined-delivery/availability.ts`
+- `src/features/combined-delivery/batchEligibility.ts`
+- `src/features/combined-delivery/combinedDelivery.css`
+- `src/features/combined-delivery/eligibility.ts`
+- `src/features/combined-delivery/index.ts`
+- `src/features/combined-delivery/requestEligibility.ts`
+- `src/features/combined-delivery/useBuyerDeliveryRequests.ts`
+- `src/features/payments/PaymentSubmitModal.tsx`
+- `src/features/payments/RejectPaymentModal.tsx`
+- `src/features/payments/SellerPaymentVerification.tsx`
+- `src/features/payments/verifyTypes.ts`
+- `src/services/combinedDelivery.ts`
+- `src/services/combinedDeliveryErrors.ts`
+- `src/services/kargoApi.ts`
+- `src/services/paymentReadCompatibility.ts`
+- `src/types/combinedDelivery.ts`
+- `src/types/index.ts`
+- `staging/.gitignore`
+- `staging/config.example.json`
+- `supabase/migrations (to update profile database name)/202610200002_combined_delivery_foundations.sql`
+- `supabase/migrations (to update profile database name)/202610210001_combined_delivery_buyer_requests.sql`
+- `supabase/migrations (to update profile database name)/202610210002_combined_delivery_seller_review.sql`
+- `supabase/migrations (to update profile database name)/202610210003_combined_delivery_recovery.sql`
+- `supabase/migrations (to update profile database name)/202610210004_combined_delivery_batch_integrity.sql`
+- `supabase/migrations (to update profile database name)/202610210005_combined_delivery_payments.sql`
+- `supabase/migrations (to update profile database name)/202610230001_combined_payment_method_compatibility.sql`
+- `supabase/release-bundles/combined-delivery/README.md`
+- `supabase/release-bundles/combined-delivery/manifest.json`
+- `supabase/release-bundles/combined-delivery/migrations/202610240001_combined_delivery_foundations.sql`
+- `supabase/release-bundles/combined-delivery/migrations/202610240002_combined_delivery_buyer_requests.sql`
+- `supabase/release-bundles/combined-delivery/migrations/202610240003_combined_delivery_seller_review.sql`
+- `supabase/release-bundles/combined-delivery/migrations/202610240004_combined_delivery_recovery.sql`
+- `supabase/release-bundles/combined-delivery/migrations/202610240005_combined_delivery_batch_integrity.sql`
+- `supabase/release-bundles/combined-delivery/migrations/202610240006_combined_delivery_payments.sql`
+- `supabase/release-bundles/combined-delivery/migrations/202610240007_combined_payment_method_compatibility.sql`
+- `supabase/rollbacks/202610200002_combined_delivery_foundations.sql`
+- `supabase/rollbacks/202610210001_combined_delivery_buyer_requests.sql`
+- `supabase/rollbacks/202610210002_combined_delivery_seller_review.sql`
+- `supabase/rollbacks/202610210003_combined_delivery_recovery.sql`
+- `supabase/rollbacks/202610210004_combined_delivery_batch_integrity.sql`
+- `supabase/rollbacks/202610210005_combined_delivery_payments.sql`
+- `supabase/tests/combined_delivery_batch_integrity.sql`
+- `supabase/tests/combined_delivery_buyer_requests.sql`
+- `supabase/tests/combined_delivery_foundations.sql`
+- `supabase/tests/combined_delivery_payments.sql`
+- `supabase/tests/combined_delivery_recovery.sql`
+- `supabase/tests/combined_delivery_seller_review.sql`
+- `supabase/tests/fixtures/combined_delivery_minimal_schema.sql`
+- `supabase/tests/fixtures/combined_delivery_payment_schema.sql`
+- `tests/appDataCompatibility.test.mjs`
+- `tests/combinedDeliveryAvailability.test.ts`
+- `tests/combinedDeliveryEligibility.test.ts`
+- `tests/combinedDeliveryErrors.test.ts`
+- `tests/combinedDeliveryReleaseBundle.test.mjs`
+- `tests/combinedDeliveryRequest.test.ts`
+- `tests/combinedDeliveryRequestUi.test.mjs`
+- `tests/fixtures/AppDataClient.ts`
+- `tests/fixtures/BrowserPaymentForm.tsx`
+- `tests/fixtures/PaymentModalShared.ts`
+- `tests/fixtures/RenderModal.tsx`
+- `tests/fixtures/localRuntime.mjs`
+- `tests/localContainerSafety.test.mjs`
+- `tests/localMigrationSql.test.mjs`
+- `tests/localRuntimeMetadata.test.mjs`
+- `tests/localStagingIsolation.test.mjs`
+- `tests/paymentReadCompatibility.test.ts`
+- `tests/pendingPaymentCard.test.mjs`
+- `tests/stagingSafety.test.mjs`

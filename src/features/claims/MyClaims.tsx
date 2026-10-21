@@ -1,4 +1,5 @@
 import { OrderDetailsModal } from "@/features/orders"
+import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combined-delivery"
 
 import { useEffect, useRef, useState, type SetStateAction } from "react"
 
@@ -860,6 +861,7 @@ export default function MyClaims({
           <h1>Orders Received</h1>
           <p>Manage orders from your buyers</p>
         </header>
+        <SellerCombinedDelivery key={user.id ?? user.email} sellerId={user.id} onRecovered={refreshData} />
         <div
           className="seller-orders-filters"
           role="group"
@@ -1725,7 +1727,7 @@ export default function MyClaims({
   return (
     <div className="p-6 buyer-claims-page mobile-data-page">
       <div className="mb-6">
-        <SH title="Pending Payments" />
+        <SH title="Pending Claim Payments" />
         <p
           style={{
             marginTop: -8,
@@ -1739,105 +1741,133 @@ export default function MyClaims({
         >
           Submit payment before each reservation deadline.
         </p>
-        <div className="space-y-3 pending-payments-list">
-          {visiblePendingPayments.map((item) => (
-            <PendingPaymentCard
-              key={item.id}
-              item={item}
-              imageUrl={
-                item.productId
-                  ? batches
-                      .flatMap((batch) => batch.products)
-                      .find((product) => product.dbId === item.productId)
-                      ?.imageUrl
-                  : undefined
-              }
-            >
-              {item.shippingState === "correction_requested" ? (
-                <SecondaryBtn
-                  size="sm"
-                  onClick={() => {
-                    setPinDraft({
-                      lat: item.deliveryPinLat,
-                      lng: item.deliveryPinLng,
-                      url: item.deliveryPinUrl,
-                      address: item.deliveryPinAddress,
-                    })
-                    setPinTarget(item)
-                  }}
+        <BuyerCombinedDelivery
+          key={user.id ?? user.email}
+          buyerId={user.id}
+          claims={reconciledClaims}
+          onRecovered={refreshData}
+          imageForOrder={(id) => {
+            const productId = reconciledClaims.find((claim) => String(claim.id) === id)?.productId;
+            return productId
+              ? batches.flatMap((batch) => batch.products).find((product) => product.dbId === productId)
+                  ?.imageUrl
+              : undefined;
+          }}
+        >
+          {({ requestForOrder, openRequest, combinedPaymentOrder }) => (
+            <div className="space-y-3 pending-payments-list">
+              {visiblePendingPayments.filter((item) => !combinedPaymentOrder(String(item.id))).map((item) => (
+                <PendingPaymentCard
+                  key={item.id}
+                  onPreview={() => setItemPreview(item)}
+                  item={item}
+                  deliveryRequest={requestForOrder(String(item.id))}
+                  imageUrl={
+                    item.productId
+                      ? batches
+                          .flatMap((batch) => batch.products)
+                          .find((product) => product.dbId === item.productId)?.imageUrl
+                      : undefined
+                  }
                 >
-                  Update location
-                </SecondaryBtn>
-              ) : (
-                <div className="pending-payment-card__actions flex flex-wrap items-center justify-end gap-2">
-                  <PendingPaymentHint
-                    waiting={item.shippingState === "waiting_for_seller"}
-                  >
-                    <PrimaryBtn
+                  {item.shippingState === "correction_requested" ? (
+                    <SecondaryBtn
                       size="sm"
-                      disabled={!claimIsPayable(item)}
-                      onClick={() => claimIsPayable(item) && setPayTarget(item)}
+                      onClick={() => {
+                        setPinDraft({
+                          lat: item.deliveryPinLat,
+                          lng: item.deliveryPinLng,
+                          url: item.deliveryPinUrl,
+                          address: item.deliveryPinAddress,
+                        });
+                        setPinTarget(item);
+                      }}
                     >
-                      Pay Now
-                    </PrimaryBtn>
-                  </PendingPaymentHint>
-                  {claimIsPayable(item) &&
-                    !item.extensionRequested &&
-                    item.extensionStatus !== "pending" && (
-                      <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
-                        Request Extension
-                      </SecondaryBtn>
-                    )}
-                  {(item.extensionRequested ||
-                    item.extensionStatus === "pending") && (
-                    <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-700">
-                      Extension requested
-                    </span>
+                      Update location
+                    </SecondaryBtn>
+                  ) : (
+                    <div className="pending-payment-card__actions flex flex-wrap items-center justify-end gap-2">
+                      <PendingPaymentHint
+                        waiting={item.shippingState === "waiting_for_seller"}
+                        sharedFeeSet={requestForOrder(String(item.id))?.status === "shipping_fee_set"}
+                      >
+                        <PrimaryBtn
+                          size="sm"
+                          disabled={!claimIsPayable(item)}
+                          onClick={() => claimIsPayable(item) && setPayTarget(item)}
+                        >
+                          Pay Now
+                        </PrimaryBtn>
+                      </PendingPaymentHint>
+                      {claimIsPayable(item) &&
+                        !item.extensionRequested &&
+                        item.extensionStatus !== "pending" && (
+                          <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
+                            Request Extension
+                          </SecondaryBtn>
+                        )}
+                      {(item.extensionRequested || item.extensionStatus === "pending") && (
+                        <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-700">
+                          Extension requested
+                        </span>
+                      )}
+                      {item.extensionStatus === "approved" && (
+                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+                          Extension approved
+                        </span>
+                      )}
+                      {item.extensionStatus === "denied" && (
+                        <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">
+                          Extension declined
+                        </span>
+                      )}
+                      {requestForOrder(String(item.id)) && (
+                        <SecondaryBtn
+                          size="sm"
+                          onClick={() => openRequest(requestForOrder(String(item.id))!)}
+                        >
+                          View request
+                        </SecondaryBtn>
+                      )}
+                    </div>
                   )}
-                  {item.extensionStatus === "approved" && (
-                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
-                      Extension approved
-                    </span>
-                  )}
-                  {item.extensionStatus === "denied" && (
-                    <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700">
-                      Extension declined
-                    </span>
-                  )}
-                </div>
+                </PendingPaymentCard>
+              ))}{" "}
+              {claimsToPay.length > pendingPaymentLimit && (
+                <button
+                  type="button"
+                  className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
+                  onClick={() => setShowAllPendingPayments((showing) => !showing)}
+                  aria-expanded={showAllPendingPayments}
+                >
+                  {showAllPendingPayments
+                    ? "Show fewer pendings"
+                    : `Show all ${claimsToPay.length} pendings`}
+                </button>
               )}
-            </PendingPaymentCard>
-          ))}          {claimsToPay.length > pendingPaymentLimit && (
-            <button
-              type="button"
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
-              onClick={() => setShowAllPendingPayments((showing) => !showing)}
-              aria-expanded={showAllPendingPayments}
-            >
-              {showAllPendingPayments
-                ? "Show fewer pendings"
-                : `Show all ${claimsToPay.length} pendings`}
-            </button>
+              {claimsToPay.length === 0 && (
+                <Card>
+                  <div
+                    style={{
+                      color: "#0B7A59",
+
+                      fontSize: 12,
+
+                      fontWeight: 600,
+
+                      textAlign: "center",
+                    }}
+                  >
+                    No pending payments.
+                  </div>
+                </Card>
+              )}
+            </div>
           )}
-          {claimsToPay.length === 0 && (
-            <Card>
-              <div
-                style={{
-                  color: "#0B7A59",
-
-                  fontSize: 12,
-
-                  fontWeight: 600,
-
-                  textAlign: "center",
-                }}
-              >
-                No pending payments.
-              </div>
-            </Card>
-          )}
-        </div>
+        </BuyerCombinedDelivery>
       </div>
+
+      <SH title="My Claims" />
 
       <div className="claims-filter-row flex items-center gap-2 mb-5 flex-wrap">
         {filters.map((f) => (
@@ -1964,7 +1994,7 @@ export default function MyClaims({
           >
             {filtered.map((c) => (
               <Card key={c.id}>
-                <div className="flex items-start gap-3">
+                <div className="claims-card__summary flex items-start gap-3">
                   <button
                     type="button"
                     className="buyer-claim-item-preview-trigger"
@@ -1973,7 +2003,7 @@ export default function MyClaims({
                   >
                     <ProductThumb name={c.product} />
                   </button>
-                  <div className="flex-1">
+                  <div className="claims-card__info min-w-0 flex-1">
                     <div
                       style={{
                         fontSize: 13,
@@ -1999,12 +2029,15 @@ export default function MyClaims({
                       {c.batch}
                     </div>
                     <div
+                      className="claims-card__seller"
                       style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
                     >
                       Seller: {c.seller}
                     </div>
                   </div>
-                  <StatusBadge status={c.status} />
+                  <div className="claims-card__status">
+                    <StatusBadge status={c.status} />
+                  </div>
                 </div>
                 {c.status === "Pending" && c.hours > 0 && (
                   <div

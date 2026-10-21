@@ -221,6 +221,7 @@ export default function SellerPaymentVerification({
                 decision,
                 item.rejectReason,
                 deadlineHours,
+                item.combinedDeliveryGroupId,
               )
               .then(
                 () => {

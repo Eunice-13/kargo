@@ -215,6 +215,8 @@ export type ToPayRow = {
 
 export type PayHistRow = {
   id: EntityId
+  combinedDeliveryGroupId?: string
+  reservationIds?: string[]
 
   orderId?: string
 

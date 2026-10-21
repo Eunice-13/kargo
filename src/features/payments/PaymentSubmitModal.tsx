@@ -43,6 +43,8 @@ export default function PaymentSubmitModal({
 
   contactPrefill = "",
   imageUrl,
+  requireProof = false,
+  submissionDisabled = false,
 }: {
   item: ToPayRow
 
@@ -60,6 +62,8 @@ export default function PaymentSubmitModal({
 
   contactPrefill?: string
   imageUrl?: string
+  requireProof?: boolean
+  submissionDisabled?: boolean
 }) {
   useEffect(() => {
     const closeIfExpired = () => {
@@ -161,7 +165,7 @@ export default function PaymentSubmitModal({
 
   const methodLocked = Boolean(item.reservedPaymentMethod)
 
-  const isCash = method === "Cash on Meetup" || method === "Cash on Delivery"
+  const isCash = !requireProof && (method === "Cash on Meetup" || method === "Cash on Delivery")
 
   const numericAmountPaid = Number(amountPaid)
 
@@ -184,6 +188,7 @@ export default function PaymentSubmitModal({
     <>
     <Modal title="Submit Payment" onClose={onClose} width={480}>
       <div className="space-y-4">
+        {submissionDisabled && <p role="status" className="text-xs text-[var(--kargo-muted)]">Checking payment availability…</p>}
         <section className="kargo-summary-block" aria-label={item.product}>
           <button
             type="button"
@@ -704,6 +709,7 @@ export default function PaymentSubmitModal({
             }}
             disabled={
               submitting ||
+              submissionDisabled ||
               !method ||
               (!isCash
                 ? !refNo.trim() || !uploaded || !phone.trim() || !hasValidAmount

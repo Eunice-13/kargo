@@ -13,6 +13,7 @@ let claimIsPayable;
 before(async () => {
   server = await createServer({
     configFile: false,
+    envFile: false, // Tests must never load production environment files.
     plugins: [react()],
     resolve: { alias: { "@": fileURLToPath(new URL("../src", import.meta.url)) } },
     server: { middlewareMode: true, hmr: false, ws: false },
@@ -126,4 +127,15 @@ test("aggregate group records retain their amount and are not split into invente
   assert.equal((html.match(/class="kargo-card p-5 pending-product-card"/g) ?? []).length, 1);
   assert.match(html, /₱1,200/);
   assert.match(html, /Qty: 5/);
+});
+
+test("photo preview remains available alongside combined delivery status", () => {
+  const html = renderToStaticMarkup(createElement(Card, {
+    item: claim,
+    onPreview: () => {},
+    deliveryRequest: { status: "pending_approval" },
+  }));
+  assert.match(html, /aria-label="Enlarge photo of Test product"/);
+  assert.match(html, /Combined delivery requested/);
+  assert.doesNotMatch(html, /Waiting for seller/);
 });

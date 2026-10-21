@@ -1,0 +1,223 @@
+{
+  "status": "prepared-only-not-production-approved",
+  "historyBasis": "Captured 26-record production metadata snapshot; revalidate before release. Do not repair or fabricate history.",
+  "capturedHistory": [
+    {
+      "version": "202609200001",
+      "name": "initial_kargo_schema"
+    },
+    {
+      "version": "202609200002",
+      "name": "batch_expenses"
+    },
+    {
+      "version": "202609230001",
+      "name": "profile_reviews"
+    },
+    {
+      "version": "202609240001",
+      "name": "spec_updates"
+    },
+    {
+      "version": "202609250001",
+      "name": "per_user_limit"
+    },
+    {
+      "version": "202609260001",
+      "name": "waitlist_offers_schema"
+    },
+    {
+      "version": "202609260002",
+      "name": "waitlist_offers_rpcs"
+    },
+    {
+      "version": "202609260003",
+      "name": "expiry_sweep_cron"
+    },
+    {
+      "version": "202609270001",
+      "name": "expired_payment_guard"
+    },
+    {
+      "version": "202609270002",
+      "name": "payment_proof_details"
+    },
+    {
+      "version": "202609270003",
+      "name": "remove_payer_account_number"
+    },
+    {
+      "version": "202609270004",
+      "name": "fix_payment_method_mapping"
+    },
+    {
+      "version": "202609270005",
+      "name": "payment_history_realtime"
+    },
+    {
+      "version": "202609270006",
+      "name": "rejected_payment_deadline"
+    },
+    {
+      "version": "202609280001",
+      "name": "batch_reactions"
+    },
+    {
+      "version": "202609280002",
+      "name": "normalize_batch_categories"
+    },
+    {
+      "version": "202609280003",
+      "name": "set_batch_reaction_rpc"
+    },
+    {
+      "version": "202609290001",
+      "name": "profile_ratings"
+    },
+    {
+      "version": "202609300001",
+      "name": "consolidate_batch_categories"
+    },
+    {
+      "version": "202609300002",
+      "name": "remove_unused_features"
+    },
+    {
+      "version": "202609300003",
+      "name": "seller_batch_expense_totals"
+    },
+    {
+      "version": "202609300004",
+      "name": "pending_only_buyer_cancellation"
+    },
+    {
+      "version": "202609300005",
+      "name": "notify_payment_resubmission"
+    },
+    {
+      "version": "202609300006",
+      "name": "buyer_order_payment_states"
+    },
+    {
+      "version": "202609300007",
+      "name": "reopen_mia_sk_ii_payment"
+    },
+    {
+      "version": "202610180001",
+      "name": "tracking_and_buyer_shipping"
+    }
+  ],
+  "migrations": [
+    {
+      "order": 1,
+      "version": "202610240001",
+      "file": "202610240001_combined_delivery_foundations.sql",
+      "source": "202610200002_combined_delivery_foundations.sql",
+      "sha256": "905915c1aa178dad9791a841b210b5722e658ae6cbc5aba99936f2b37c2cb5bc"
+    },
+    {
+      "order": 2,
+      "version": "202610240002",
+      "file": "202610240002_combined_delivery_buyer_requests.sql",
+      "source": "202610210001_combined_delivery_buyer_requests.sql",
+      "sha256": "69f26e20f0380f88cd22d7be35b293a58e30d1f6e5bbf4f8139bf4331406c5b2"
+    },
+    {
+      "order": 3,
+      "version": "202610240003",
+      "file": "202610240003_combined_delivery_seller_review.sql",
+      "source": "202610210002_combined_delivery_seller_review.sql",
+      "sha256": "af910eab1b7dc734d040ae1e7422aaebe658dd7c013e8d589b815a813cb5e871"
+    },
+    {
+      "order": 4,
+      "version": "202610240004",
+      "file": "202610240004_combined_delivery_recovery.sql",
+      "source": "202610210003_combined_delivery_recovery.sql",
+      "sha256": "4759d6373cf4b9937618ae8ba29350e17cc739f6c0b0276bd41c1b03ad999f65"
+    },
+    {
+      "order": 5,
+      "version": "202610240005",
+      "file": "202610240005_combined_delivery_batch_integrity.sql",
+      "source": "202610210004_combined_delivery_batch_integrity.sql",
+      "sha256": "7f3696e0a54f6566afce5de6add395a9b29089bb34a3eacdac16c5b534b8edb2"
+    },
+    {
+      "order": 6,
+      "version": "202610240006",
+      "file": "202610240006_combined_delivery_payments.sql",
+      "source": "202610210005_combined_delivery_payments.sql",
+      "sha256": "2ca17531233fea7ab9d160eccd17e5e99c309125743cfcde035453da0ba05b1d"
+    },
+    {
+      "order": 7,
+      "version": "202610240007",
+      "file": "202610240007_combined_payment_method_compatibility.sql",
+      "source": "202610230001_combined_payment_method_compatibility.sql",
+      "sha256": "0179454073405c1db0275712114d735f2ba8a4cb4b8dec18e5851231de43f922"
+    }
+  ],
+  "collisions": [
+    {
+      "legacyVersion": "202610010005",
+      "files": [
+        {
+          "sourceIdentity": "202610010005_restore_payment_method_lifecycle.sql",
+          "sha256": "1778dcaf72a5ed5e49cc60300325b03f47ed6702432847d4ec8c975034a3248b",
+          "disposition": "Captured schema contains lifecycle objects; do not replay historical source."
+        },
+        {
+          "sourceIdentity": "202610010005_zero_waitlist_limit.sql",
+          "sha256": "147b3a75c2a6b02fcb90ccc5547f02408be69b6e95ff6c47852cb2894e8f88d2",
+          "disposition": "Absent optional change; excluded from this feature release."
+        }
+      ]
+    },
+    {
+      "legacyVersion": "202610190002",
+      "files": [
+        {
+          "sourceIdentity": "202610190002_batch_group_orders.sql",
+          "sha256": "101474b43aedf5227a20ae5538b66f88faa8044547b67a9c2557c26d7f0e4b98",
+          "disposition": "Captured schema contains group-order objects; do not replay historical source."
+        },
+        {
+          "sourceIdentity": "202610190002_branded_email_design.sql",
+          "sha256": "9044e05b9c74ebe95544d8314529d62333f9247dd619209681f41e38d5261028",
+          "disposition": "Captured schema contains brand-assets policy; verify any required storage configuration separately; do not replay historical source."
+        }
+      ]
+    },
+    {
+      "legacyVersion": "202610200001",
+      "files": [
+        {
+          "sourceIdentity": "202610200001_extension_request_emails.sql",
+          "sha256": "87c9e16881b54ee924fd1040cd142a6742255a2d8e976d5e1a7e54bad02729d9",
+          "disposition": "Captured schema contains corrected function; source has known seven-value/six-column defect. Excluded; never overwrite corrected definition."
+        },
+        {
+          "sourceIdentity": "202610200001_read_notification_retention.sql",
+          "sha256": "702fe53213a0667b3a8b360ca080e38d16571d4c767dab313d2d1b4cbec2e170",
+          "disposition": "Absent optional change; excluded from this feature release."
+        }
+      ]
+    },
+    {
+      "legacyVersion": "202610200002",
+      "files": [
+        {
+          "sourceIdentity": "202610200002_batch_gallery_images.sql",
+          "sha256": "5f643eaad57a40fcc70f1949aa1be3803a5b0a36f2f9a3b7eafea92ffc845e7f",
+          "disposition": "Captured schema contains gallery column/view; do not replay historical source."
+        },
+        {
+          "sourceIdentity": "202610200002_combined_delivery_foundations.sql",
+          "sha256": "905915c1aa178dad9791a841b210b5722e658ae6cbc5aba99936f2b37c2cb5bc",
+          "disposition": "Unapplied feature delta mapped to unique release version 202610240001."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "environment": "staging",
+  "projectRef": "REPLACE_WITH_APPROVED_STAGING_REF",
+  "confirmedProjectRef": "REPLACE_AFTER_INDEPENDENT_DASHBOARD_CHECK",
+  "supabaseUrl": "https://REPLACE_WITH_APPROVED_STAGING_REF.supabase.co",
+  "publishableKey": "REPLACE_WITH_STAGING_PUBLISHABLE_KEY",
+  "databaseUrl": "postgresql://postgres:REPLACE_PASSWORD@db.REPLACE_WITH_APPROVED_STAGING_REF.supabase.co:5432/postgres?sslmode=verify-full",
+  "isolationApproved": false,
+  "schemaBaselineVerified": false
+}

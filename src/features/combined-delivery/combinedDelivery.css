@@ -1,0 +1,12 @@
+.combined-delivery-dialog button:focus-visible,
+.delivery-availability-notice button:focus-visible {
+  outline: 2px solid var(--kargo-focus);
+  outline-offset: 3px;
+}
+
+.combined-delivery-dialog button,
+.delivery-availability-notice button,
+.combined-delivery-request-prompt button,
+.combined-delivery-requests > .kargo-card button {
+  min-height: 44px;
+}
