@@ -782,8 +782,8 @@
   .pending-payment-card__actions > .kargo-secondary {
     flex: 0 0 auto;
     padding-inline: 10px !important;
-    border-color: transparent !important;
-    background: transparent !important;
+    border: 1px solid #c7d4dc !important;
+    background: #fff !important;
     color: #246b8f !important;
   }
 
@@ -3712,6 +3712,53 @@
 }
 
 @media (max-width: 620px) {
+  .mobile-data-page .claims-card__summary {
+    position: relative;
+  }
+
+  .mobile-data-page .claims-card__info {
+    padding-top: 24px;
+  }
+
+  .mobile-data-page .claims-card__seller {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-data-page .claims-card__status {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+
+  .mobile-data-page .claims-card-grid .buyer-claim-item-preview-trigger {
+    display: grid;
+    width: 92px;
+    height: 92px;
+    flex: 0 0 92px;
+    place-items: center;
+  }
+
+  .mobile-data-page .claims-card-grid .buyer-claim-item-preview-trigger > img {
+    width: 88px;
+    height: 88px;
+  }
+
+  .seller-dashboard .seller-board-heading {
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .seller-dashboard .seller-board-heading > div {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
   .fulfillment-board--seller .fulfillment-board__column {
     overflow: visible;
     background: transparent;
@@ -3742,5 +3789,55 @@
 
   .fulfillment-board--seller .fulfillment-board__column.is-collapsed .fulfillment-board__column-head {
     border-radius: 9px;
+  }
+}
+@media (max-width: 620px) {
+  .seller-fulfillment-section .seller-board-heading {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+  }
+
+  .seller-fulfillment-section .seller-board-heading h2 {
+    flex: 0 1 auto;
+    font-size: 15px !important;
+    white-space: nowrap;
+  }
+
+  .seller-fulfillment-section .seller-board-heading > div {
+    flex: 0 0 auto;
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+  }
+
+  .seller-fulfillment-section .seller-board-heading button {
+    min-height: 34px !important;
+    padding: 5px 7px !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  .seller-fulfillment-section .seller-board-heading > div > button:nth-child(2) {
+    display: none !important;
+  }
+
+  button.fulfillment-board__status-toggle,
+  .seller-fulfillment-section button.fulfillment-board__status-toggle {
+    box-sizing: border-box !important;
+    width: 18px !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    max-height: 18px !important;
+    flex: 0 0 18px !important;
+    align-self: center !important;
+    padding: 0 !important;
+  }
+
+  button.fulfillment-board__status-toggle svg {
+    width: 11px;
+    height: 11px;
   }
 }

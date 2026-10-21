@@ -161,9 +161,6 @@ export default function Payments({
                     >
                       <td style={{ padding: "10px 14px" }}>
                         <div className="flex items-center gap-2">
-                          <span style={{ fontWeight: 500, color: "#111827" }}>
-                            {p.product}
-                          </span>
                           <button
                             type="button"
                             onClick={() =>
@@ -183,6 +180,9 @@ export default function Payments({
                           >
                             <ProductThumb name={p.product} imageUrl={p.imageUrl} />
                           </button>
+                          <span style={{ fontWeight: 500, color: "#111827" }}>
+                            {p.product}
+                          </span>
                         </div>
                       </td>
                       <td

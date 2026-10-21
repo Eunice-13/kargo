@@ -1725,7 +1725,7 @@ export default function MyClaims({
   return (
     <div className="p-6 buyer-claims-page mobile-data-page">
       <div className="mb-6">
-        <SH title="Pending Payments" />
+        <SH title="Pending Claim Payments" />
         <p
           style={{
             marginTop: -8,
@@ -1744,6 +1744,7 @@ export default function MyClaims({
             <PendingPaymentCard
               key={item.id}
               item={item}
+              onPreview={() => setItemPreview(item)}
               imageUrl={
                 item.productId
                   ? batches
@@ -1838,6 +1839,8 @@ export default function MyClaims({
           )}
         </div>
       </div>
+
+      <SH title="My Claims" />
 
       <div className="claims-filter-row flex items-center gap-2 mb-5 flex-wrap">
         {filters.map((f) => (
@@ -1964,7 +1967,7 @@ export default function MyClaims({
           >
             {filtered.map((c) => (
               <Card key={c.id}>
-                <div className="flex items-start gap-3">
+                <div className="claims-card__summary flex items-start gap-3">
                   <button
                     type="button"
                     className="buyer-claim-item-preview-trigger"
@@ -1973,7 +1976,7 @@ export default function MyClaims({
                   >
                     <ProductThumb name={c.product} />
                   </button>
-                  <div className="flex-1">
+                  <div className="claims-card__info min-w-0 flex-1">
                     <div
                       style={{
                         fontSize: 13,
@@ -1999,12 +2002,15 @@ export default function MyClaims({
                       {c.batch}
                     </div>
                     <div
+                      className="claims-card__seller"
                       style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
                     >
                       Seller: {c.seller}
                     </div>
                   </div>
-                  <StatusBadge status={c.status} />
+                  <div className="claims-card__status">
+                    <StatusBadge status={c.status} />
+                  </div>
                 </div>
                 {c.status === "Pending" && c.hours > 0 && (
                   <div
