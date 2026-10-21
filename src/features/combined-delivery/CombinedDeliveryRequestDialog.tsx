@@ -1,5 +1,6 @@
 import "./combinedDelivery.css";
 import { useRef, useState } from "react";
+import { MessageSquare, XCircle } from "lucide-react";
 import type {
   CombinedDeliveryRequest,
   CombinedDeliveryRequestCandidate,
@@ -122,21 +123,44 @@ export default function CombinedDeliveryRequestDialog({
             </p>
           </div>
         )}
-        {existing && (
-          <p className="text-xs font-semibold">
-            {existing.status === "pending_approval"
-              ? "Combined delivery requested — waiting for the seller to review."
-              : existing.status === "awaiting_shipping_fee"
-                ? "Combined delivery approved — waiting for the shared shipping fee."
-                : existing.status === "shipping_fee_set"
-                  ? "The shared shipping fee is set. View your combined payment and deadline in Pending Payments."
-                  : existing.status === "rejected"
-                    ? "Combined delivery was rejected. These reservations remain in their individual shipping flow."
-                    : "This combined delivery request is no longer active."}
-            {existing.decision_reason && (
-              <span className="mt-1 block font-normal">{existing.decision_reason}</span>
+        {existing?.status === "rejected" ? (
+          <section aria-label="Combined delivery rejected" className="space-y-3 text-xs">
+            <div className="flex items-start gap-2">
+              <XCircle size={18} className="shrink-0 text-red-700" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="font-semibold text-[var(--kargo-ink)]">Combined delivery rejected</p>
+                <p className="mt-1 text-[var(--kargo-muted)]">
+                  Your reservations will remain separate.
+                </p>
+              </div>
+            </div>
+            {existing.decision_reason?.trim() && (
+              <div className="min-w-0 rounded-lg bg-[var(--kargo-line)]/30 p-3">
+                <h3 className="flex items-center gap-1.5 font-semibold text-[var(--kargo-ink)]">
+                  <MessageSquare size={13} className="shrink-0" aria-hidden="true" />
+                  Seller&apos;s message
+                </h3>
+                <p className="mt-1.5 whitespace-pre-wrap [overflow-wrap:anywhere]">
+                  {existing.decision_reason}
+                </p>
+              </div>
             )}
-          </p>
+          </section>
+        ) : (
+          existing && (
+            <p className="text-xs font-semibold">
+              {existing.status === "pending_approval"
+                ? "Combined delivery requested — waiting for the seller to review."
+                : existing.status === "awaiting_shipping_fee"
+                  ? "Combined delivery approved — waiting for the shared shipping fee."
+                  : existing.status === "shipping_fee_set"
+                    ? "The shared shipping fee is set. View your combined payment and deadline in Pending Payments."
+                    : "This combined delivery request is no longer active."}
+              {existing.decision_reason && (
+                <span className="mt-1 block font-normal">{existing.decision_reason}</span>
+              )}
+            </p>
+          )
         )}
         <ul className="divide-y divide-[var(--kargo-line)]">
           {existing
