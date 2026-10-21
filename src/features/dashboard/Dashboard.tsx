@@ -799,20 +799,20 @@ export default function Dashboard({
         </div>
 
         <section className="seller-fulfillment-section">
-          <div className="seller-section-heading seller-board-heading">
-            <h2>Fulfillment Board</h2>
-            <div>
-              <button type="button" onClick={() => setShowSalesReport(true)}>
-                <FileText size={14} aria-hidden="true" />
-                Sales Report
-              </button>
-              <button type="button" onClick={() => setBoardExpanded(true)}>
-                <Maximize2 size={14} aria-hidden="true" />
-                Expand
-              </button>
-            </div>
-          </div>
           <div className="seller-board-preview">
+            <div className="seller-section-heading seller-board-heading">
+              <h2>Fulfillment Board</h2>
+              <div>
+                <button type="button" onClick={() => setShowSalesReport(true)}>
+                  <FileText size={14} aria-hidden="true" />
+                  Sales Report
+                </button>
+                <button type="button" onClick={() => setBoardExpanded(true)}>
+                  <Maximize2 size={14} aria-hidden="true" />
+                  Expand
+                </button>
+              </div>
+            </div>
             <FulfillmentBoard
               fulfillment={fulfillment}
               role="seller"
