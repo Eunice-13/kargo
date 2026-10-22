@@ -1,3 +1,4 @@
+import { membershipError, resolveGroupMembership } from "./groupMembership"
 import { loadPaymentCompatibleRows } from "./paymentReadCompatibility"
 import { combinedDeliveryMutationError } from "./combinedDeliveryErrors"
 import { PASSWORD_RESET_PATH } from "@/constants/auth"
@@ -1925,7 +1926,7 @@ export async function loadMyGroupOrder(batchId: string) {
 
   const { data, error } = await client
     .from("group_order_members")
-    .select("group_order_id,group_orders!inner(batch_id,status)")
+    .select("group_order_id,group_orders!inner(batch_id,status,created_at)")
     .eq("user_id", userId)
     .eq("status", "active")
     .eq("group_orders.batch_id", batchId)
@@ -1936,18 +1937,17 @@ export async function loadMyGroupOrder(batchId: string) {
       "payment_submitted",
       "payment_confirmed",
     ])
-    .limit(1)
-    .maybeSingle()
 
   if (error) throw error
-  return data ? loadGroupOrder(data.group_order_id) : null
+  const selected = resolveGroupMembership((data ?? []) as unknown as Parameters<typeof resolveGroupMembership>[0])
+  return selected ? loadGroupOrder(selected.group_order_id) : null
 }
 
 export async function startGroupOrder(batchId: string) {
   const { data, error } = await requireSupabase().rpc("start_group_order", {
     p_batch_id: batchId,
   })
-  if (error) throw error
+  if (error) throw membershipError(error)
   return loadGroupOrder(data.id)
 }
 
@@ -1955,7 +1955,7 @@ export async function joinGroupOrder(code: string) {
   const { data, error } = await requireSupabase().rpc("join_group_order", {
     p_referral_code: code,
   })
-  if (error) throw error
+  if (error) throw membershipError(error)
   return loadGroupOrder(data.id)
 }
 

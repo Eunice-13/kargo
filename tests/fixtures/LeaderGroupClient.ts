@@ -25,11 +25,13 @@ export function requireSupabase() {
         },
         eq(field: string, value: unknown) {
           state.filters.push({ table, field, value });
-          conditions.push((r) => r[field] === value);
+          conditions.push((r) => field.split(".").reduce((v: any, key) => v?.[key], r) === value);
           return query;
         },
         in(field: string, values: unknown[]) {
-          conditions.push((r) => values.includes(r[field]));
+          conditions.push((r) =>
+            values.includes(field.split(".").reduce((v: any, key) => v?.[key], r)),
+          );
           return query;
         },
         single() {

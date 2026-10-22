@@ -1,3 +1,5 @@
+import GroupMembershipNotice from "./GroupMembershipNotice"
+import { GroupMembershipConflict } from "@/services/groupMembership"
 import { useEffect, useMemo, useState } from "react"
 import { Link2, RefreshCw, Users } from "lucide-react"
 
@@ -66,6 +68,7 @@ export default function GroupOrderModal({
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
   const [error, setError] = useState("")
+  const [membershipConflict, setMembershipConflict] = useState<GroupMembershipConflict | null>(null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [methods, setMethods] = useState<SellerReceiveMethod[]>([])
   const [paymentMethod, setPaymentMethod] = useState("")
@@ -79,7 +82,16 @@ export default function GroupOrderModal({
       ? await kargoApi.loadGroupOrder(groupOrderId, true)
       : await kargoApi.loadMyGroupOrder(batch.dbId)
     if (current && current.batchId !== batch.dbId) throw new Error("This group no longer belongs to the selected batch.")
+    // An invitation must not silently reopen a completed historical group.
+    if (!groupOrderId && initialCode && current?.status === "payment_confirmed") {
+      setGroup(null)
+      return
+    }
     setGroup(current)
+    if (!groupOrderId && initialCode && current && current.referralCode !== initialCode.trim().toUpperCase() &&
+        ["forming", "waiting_for_seller", "payment_pending", "payment_submitted"].includes(current.status)) {
+      setMembershipConflict(new GroupMembershipConflict(current.status === "forming"))
+    }
     if (current) {
       const own = Object.fromEntries(
         current.commitments
@@ -147,11 +159,15 @@ export default function GroupOrderModal({
 
   const run = async (action: () => Promise<void>) => {
     setError("")
+    setMembershipConflict(null)
     setWorking(true)
     try {
       await action()
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to update group order.")
+      if (caught instanceof GroupMembershipConflict) {
+        setMembershipConflict(caught)
+        await syncGroup().catch(() => setGroup(null))
+      } else setError(caught instanceof Error ? caught.message : "Unable to update group order.")
     } finally {
       setWorking(false)
     }
@@ -474,6 +490,7 @@ export default function GroupOrderModal({
         {group && group.status !== "forming" && onOpenClaims && (
           <SecondaryBtn onClick={onOpenClaims}>Open My Claims</SecondaryBtn>
         )}
+        {membershipConflict && <GroupMembershipNotice message={membershipConflict.message} status={group?.status} />}
         {error && <p className="group-order-error" role="alert">{error}</p>}
       </div>
     </Modal>

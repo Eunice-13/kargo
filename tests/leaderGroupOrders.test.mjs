@@ -10,6 +10,7 @@ let server,
   state,
   loadLedGroupOrders,
   loadGroupOrder,
+  loadMyGroupOrder,
   List,
   Section,
   sortLeaderGroups,
@@ -34,7 +35,7 @@ before(async () => {
   });
   ({ state } = await server.ssrLoadModule("/tests/fixtures/LeaderGroupClient.ts"));
   ({ loadLedGroupOrders } = await server.ssrLoadModule("/src/services/leaderGroupOrders.ts"));
-  ({ loadGroupOrder } = await server.ssrLoadModule("/src/services/kargoApi.ts"));
+  ({ loadGroupOrder, loadMyGroupOrder } = await server.ssrLoadModule("/src/services/kargoApi.ts"));
   ({ GroupOrderList: List, default: Section } = await server.ssrLoadModule(
     "/src/features/dashboard/MyGroupOrders.tsx",
   ));
@@ -186,4 +187,38 @@ test("modal retains original batch entry path and uses exact ID for dashboard op
   assert.match(source, /loadMyGroupOrder\(batch.dbId\)/);
   assert.match(source, /groupOrderId && !group/);
   assert.match(source, /!readOnly/);
+});
+
+test("batch resolution chooses active membership instead of the first historical row", async () => {
+  state.rows.group_order_members = [
+    {
+      user_id: "leader",
+      status: "active",
+      group_order_id: "old",
+      group_orders: { batch_id: "batch-a", status: "payment_confirmed", created_at: "2026-02-01" },
+    },
+    {
+      user_id: "leader",
+      status: "active",
+      group_order_id: "current",
+      group_orders: { batch_id: "batch-a", status: "forming", created_at: "2026-01-01" },
+    },
+  ];
+  state.rows.group_orders = [raw("old"), raw("current")];
+  assert.equal((await loadMyGroupOrder("batch-a")).id, "current");
+});
+test("friendly notice never suggests leaving after checkout", async () => {
+  const Notice = (await server.ssrLoadModule("/src/features/batches/GroupMembershipNotice.tsx"))
+    .default;
+  const message =
+    "You can only join one group order per batch. You're already a member of another group in this batch.";
+  for (const status of ["payment_pending", "waiting_for_seller", undefined]) {
+    const html = renderToStaticMarkup(createElement(Notice, { message, status }));
+    assert.match(html, /role="alert"/);
+    assert.doesNotMatch(html, /leave your current group first/);
+  }
+  assert.match(
+    renderToStaticMarkup(createElement(Notice, { message, status: "forming" })),
+    /leave your current group first/,
+  );
 });
