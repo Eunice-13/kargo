@@ -1841,11 +1841,20 @@ export async function updateBatchGroupSettings(input: {
   }
 }
 
-async function loadGroupOrder(groupOrderId: string): Promise<GroupOrder> {
+export async function loadGroupOrder(groupOrderId: string, leaderOnly = false): Promise<GroupOrder> {
   const client = requireSupabase()
+  let ownerId: string | undefined
+  if (leaderOnly) {
+    const { data, error } = await client.auth.getUser()
+    if (error) throw error
+    ownerId = data.user?.id
+    if (!ownerId) throw new Error("Sign in to view your group orders.")
+  }
+  let groupQuery = client.from("group_orders").select("*").eq("id", groupOrderId)
+  if (leaderOnly) groupQuery = groupQuery.eq("leader_id", ownerId!)
   const [{ data: group, error: groupError }, { data: members, error: memberError }, { data: commitments, error: commitmentError }] =
     await Promise.all([
-      client.from("group_orders").select("*").eq("id", groupOrderId).single(),
+      groupQuery.single(),
       client
         .from("group_order_members")
         .select("user_id,role,status")
@@ -3292,6 +3301,7 @@ export const kargoApi = {
   addBatchGalleryImages,
   updateProductImage,
   updateBatchGroupSettings,
+  loadGroupOrder,
   loadMyGroupOrder,
   startGroupOrder,
   joinGroupOrder,

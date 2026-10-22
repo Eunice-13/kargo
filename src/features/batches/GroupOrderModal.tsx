@@ -42,10 +42,16 @@ export default function GroupOrderModal({
   batch,
   initialProductId,
   initialCode = "",
+  groupOrderId,
+  readOnly = false,
+  onOpenClaims,
   onClose,
   onCheckoutComplete,
 }: {
   batch: BatchType
+  groupOrderId?: string
+  readOnly?: boolean
+  onOpenClaims?: () => void
   initialProductId?: string
   initialCode?: string
   onClose: () => void
@@ -69,7 +75,10 @@ export default function GroupOrderModal({
 
   const syncGroup = async () => {
     if (!batch.dbId) return
-    const current = await kargoApi.loadMyGroupOrder(batch.dbId)
+    const current = groupOrderId
+      ? await kargoApi.loadGroupOrder(groupOrderId, true)
+      : await kargoApi.loadMyGroupOrder(batch.dbId)
+    if (current && current.batchId !== batch.dbId) throw new Error("This group no longer belongs to the selected batch.")
     setGroup(current)
     if (current) {
       const own = Object.fromEntries(
@@ -87,7 +96,7 @@ export default function GroupOrderModal({
         setError(caught instanceof Error ? caught.message : "Unable to load group order."),
       )
       .finally(() => setLoading(false))
-  }, [batch.dbId])
+  }, [batch.dbId, groupOrderId])
 
   useEffect(() => {
     if (!checkoutOpen || !batch.sellerId) return
@@ -156,6 +165,13 @@ export default function GroupOrderModal({
     )
   }
 
+  if (groupOrderId && !group) {
+    return <Modal title="Group Order" onClose={onClose} width={620}>
+      <p role="alert">{error || "This group is unavailable or you no longer have leader access."}</p>
+      <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
+    </Modal>
+  }
+
   return (
     <Modal title="Group Order" onClose={onClose} width={680}>
       <div className="group-order-modal">
@@ -211,7 +227,7 @@ export default function GroupOrderModal({
                 <span>Referral code</span>
                 <strong>{group.referralCode}</strong>
               </div>
-              {group.isLeader && group.status === "forming" && (
+              {group.isLeader && group.status === "forming" && !readOnly && (
                 <div className="group-order-share-actions">
                   <button
                     type="button"
@@ -244,7 +260,7 @@ export default function GroupOrderModal({
                   <div key={member.userId}>
                     <span>{member.name}</span>
                     <small>{member.role === "leader" ? "Leader" : "Member"}</small>
-                    {group.isLeader && member.role !== "leader" && group.status === "forming" && (
+                    {group.isLeader && member.role !== "leader" && group.status === "forming" && !readOnly && (
                       <button
                         type="button"
                         onClick={() =>
@@ -302,7 +318,7 @@ export default function GroupOrderModal({
                     min="1"
                     max={Math.max(1, product.qty - product.claimed)}
                     value={quantities[product.dbId ?? product.name] ?? 1}
-                    disabled={group.status !== "forming"}
+                    disabled={readOnly || group.status !== "forming"}
                     onChange={(event) =>
                       setQuantities((current) => ({
                         ...current,
@@ -312,7 +328,7 @@ export default function GroupOrderModal({
                   />
                   <SecondaryBtn
                     size="sm"
-                    disabled={working || group.status !== "forming" || !product.dbId}
+                    disabled={readOnly || working || group.status !== "forming" || !product.dbId}
                     onClick={() =>
                       run(async () =>
                         setGroup(
@@ -349,13 +365,13 @@ export default function GroupOrderModal({
               </div>
             </section>
 
-            {group.isLeader && group.status === "forming" && !checkoutOpen && (
+            {group.isLeader && group.status === "forming" && !readOnly && !checkoutOpen && (
               <PrimaryBtn disabled={!canCheckout} onClick={() => setCheckoutOpen(true)}>
                 Checkout Group Order
               </PrimaryBtn>
             )}
 
-            {checkoutOpen && (
+            {checkoutOpen && !readOnly && (
               <section className="group-order-checkout">
                 <div className="group-order-section-title"><strong>Leader checkout</strong></div>
                 <div className="group-order-methods">
@@ -438,7 +454,7 @@ export default function GroupOrderModal({
               </p>
             )}
 
-            {group.status === "forming" && (
+            {group.status === "forming" && !readOnly && (
               <button
                 type="button"
                 className="group-order-leave"
@@ -455,6 +471,9 @@ export default function GroupOrderModal({
           </>
         )}
 
+        {group && group.status !== "forming" && onOpenClaims && (
+          <SecondaryBtn onClick={onOpenClaims}>Open My Claims</SecondaryBtn>
+        )}
         {error && <p className="group-order-error" role="alert">{error}</p>}
       </div>
     </Modal>
