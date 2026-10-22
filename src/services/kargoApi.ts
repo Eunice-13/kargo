@@ -1,3 +1,4 @@
+import { batchFormationDeadline } from "./groupFormation"
 import { membershipError, resolveGroupMembership } from "./groupMembership"
 import { loadPaymentCompatibleRows } from "./paymentReadCompatibility"
 import { combinedDeliveryMutationError } from "./combinedDeliveryErrors"
@@ -1851,7 +1852,7 @@ export async function loadGroupOrder(groupOrderId: string, leaderOnly = false): 
     ownerId = data.user?.id
     if (!ownerId) throw new Error("Sign in to view your group orders.")
   }
-  let groupQuery = client.from("group_orders").select("*").eq("id", groupOrderId)
+  let groupQuery = client.from("group_orders").select("*,batches(ends_on)").eq("id", groupOrderId)
   if (leaderOnly) groupQuery = groupQuery.eq("leader_id", ownerId!)
   const [{ data: group, error: groupError }, { data: members, error: memberError }, { data: commitments, error: commitmentError }] =
     await Promise.all([
@@ -1867,6 +1868,7 @@ export async function loadGroupOrder(groupOrderId: string, leaderOnly = false): 
     ])
 
   if (groupError) throw groupError
+  if (!group.batches?.ends_on) throw new Error("This group’s batch is unavailable.")
   if (memberError) throw memberError
   if (commitmentError) throw commitmentError
 
@@ -1891,7 +1893,7 @@ export async function loadGroupOrder(groupOrderId: string, leaderOnly = false): 
     leaderName: names.get(group.leader_id) ?? "Group leader",
     referralCode: group.referral_code,
     status: group.status,
-    formationDeadline: group.formation_deadline,
+    formationDeadline: batchFormationDeadline(group.batches.ends_on),
     regularSubtotal: Number(group.regular_subtotal ?? 0),
     discountAmount: Number(group.discount_amount ?? 0),
     finalSubtotal: Number(group.final_subtotal ?? 0),

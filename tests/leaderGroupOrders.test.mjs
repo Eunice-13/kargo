@@ -58,7 +58,7 @@ const raw = (id, batch = "batch-a", leader = "leader") => ({
   formation_deadline: "2099-01-01T00:00:00Z",
   payment_deadline: null,
   created_at: "2026-01-01T00:00:00Z",
-  batches: { title: batch },
+  batches: { title: batch, ends_on: "2099-01-01" },
   group_order_members: [],
 });
 const summary = (id, status = "forming") => ({

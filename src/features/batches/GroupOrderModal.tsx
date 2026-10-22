@@ -1,3 +1,4 @@
+import { formationExpired, formatFormationDeadline } from "@/services/groupFormation"
 import { groupOrderErrorMessage, groupCommitmentMaximum, validGroupCommitmentQuantity } from "./groupOrderFeedback"
 import GroupMembershipNotice from "./GroupMembershipNotice"
 import { GroupMembershipConflict } from "@/services/groupMembership"
@@ -60,6 +61,11 @@ export default function GroupOrderModal({
   onClose: () => void
   onCheckoutComplete: () => Promise<void>
 }) {
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
   const [group, setGroup] = useState<GroupOrder | null>(null)
   const [joining, setJoining] = useState(Boolean(initialCode))
   const [code, setCode] = useState(initialCode)
@@ -124,6 +130,7 @@ export default function GroupOrderModal({
       )
   }, [checkoutOpen, batch.sellerId])
 
+  const formationClosed = Boolean(group && formationExpired(group.status, group.formationDeadline, now))
   const activeMembers = group?.members.filter((member) => member.status === "active") ?? []
   const subtotal = useMemo(
     () =>
@@ -244,7 +251,7 @@ export default function GroupOrderModal({
                 <span>Referral code</span>
                 <strong>{group.referralCode}</strong>
               </div>
-              {group.isLeader && group.status === "forming" && !readOnly && (
+              {group.isLeader && group.status === "forming" && !formationClosed && !readOnly && (
                 <div className="group-order-share-actions">
                   <button
                     type="button"
@@ -267,6 +274,11 @@ export default function GroupOrderModal({
               )}
             </header>
 
+            <p className="group-order-status" role="status">
+              Formation deadline: <time dateTime={group.formationDeadline}>{formatFormationDeadline(group.formationDeadline)}</time>
+              {formationClosed && <span className="block">The formation deadline has passed. Checkout is closed and un-checked-out commitments no longer reserve stock.</span>}
+            </p>
+
             <section className="group-order-members">
               <div className="group-order-section-title">
                 <strong>Members</strong>
@@ -277,7 +289,7 @@ export default function GroupOrderModal({
                   <div key={member.userId}>
                     <span>{member.name}</span>
                     <small>{member.role === "leader" ? "Leader" : "Member"}</small>
-                    {group.isLeader && member.role !== "leader" && group.status === "forming" && !readOnly && (
+                    {group.isLeader && member.role !== "leader" && group.status === "forming" && !formationClosed && !readOnly && (
                       <button
                         type="button"
                         onClick={() =>
@@ -320,7 +332,7 @@ export default function GroupOrderModal({
             <section className="group-order-products">
               <div className="group-order-section-title">
                 <strong>Your commitments</strong>
-                <span>Inventory is reserved after saving.</span>
+                <span>{formationClosed || group.status === "expired" ? "Commitments are retained for history; inventory is released." : "Inventory is reserved after saving."}</span>
               </div>
               {batch.products.map((product) => {
                 const key = product.dbId ?? product.name
@@ -351,7 +363,7 @@ export default function GroupOrderModal({
                     step="1"
                     max={Math.max(1, maximum)}
                     value={quantity}
-                    disabled={readOnly || group.status !== "forming"}
+                    disabled={readOnly || formationClosed || group.status !== "forming"}
                     onChange={(event) =>
                       setQuantities((current) => ({
                         ...current,
@@ -361,7 +373,7 @@ export default function GroupOrderModal({
                   />
                   <SecondaryBtn
                     size="sm"
-                    disabled={readOnly || working || group.status !== "forming" || !product.dbId || !valid}
+                    disabled={readOnly || formationClosed || working || group.status !== "forming" || !product.dbId || !valid}
                     onClick={() =>
                       run(async () => {
                         if (!valid) { setError(`Choose a whole-number quantity between 1 and ${maximum}.`); return }
@@ -399,13 +411,13 @@ export default function GroupOrderModal({
               </div>
             </section>
 
-            {group.isLeader && group.status === "forming" && !readOnly && !checkoutOpen && (
+            {group.isLeader && group.status === "forming" && !formationClosed && !readOnly && !checkoutOpen && (
               <PrimaryBtn disabled={!canCheckout} onClick={() => setCheckoutOpen(true)}>
                 Checkout Group Order
               </PrimaryBtn>
             )}
 
-            {checkoutOpen && !readOnly && (
+            {checkoutOpen && !readOnly && !formationClosed && (
               <section className="group-order-checkout">
                 <div className="group-order-section-title"><strong>Leader checkout</strong></div>
                 <div className="group-order-methods">
@@ -488,7 +500,7 @@ export default function GroupOrderModal({
               </p>
             )}
 
-            {group.status === "forming" && !readOnly && (
+            {group.status === "forming" && !formationClosed && !readOnly && (
               <button
                 type="button"
                 className="group-order-leave"
