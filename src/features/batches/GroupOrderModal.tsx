@@ -1,3 +1,4 @@
+import { groupOrderErrorMessage, groupCommitmentMaximum, validGroupCommitmentQuantity } from "./groupOrderFeedback"
 import GroupMembershipNotice from "./GroupMembershipNotice"
 import { GroupMembershipConflict } from "@/services/groupMembership"
 import { useEffect, useMemo, useState } from "react"
@@ -105,7 +106,7 @@ export default function GroupOrderModal({
   useEffect(() => {
     syncGroup()
       .catch((caught) =>
-        setError(caught instanceof Error ? caught.message : "Unable to load group order."),
+        setError(groupOrderErrorMessage(caught, "Unable to load group order.")),
       )
       .finally(() => setLoading(false))
   }, [batch.dbId, groupOrderId])
@@ -119,7 +120,7 @@ export default function GroupOrderModal({
         setPaymentMethod(available[0]?.methodType ?? "")
       })
       .catch((caught) =>
-        setError(caught instanceof Error ? caught.message : "Unable to load payment methods."),
+        setError(groupOrderErrorMessage(caught, "Unable to load payment methods.")),
       )
   }, [checkoutOpen, batch.sellerId])
 
@@ -167,7 +168,7 @@ export default function GroupOrderModal({
       if (caught instanceof GroupMembershipConflict) {
         setMembershipConflict(caught)
         await syncGroup().catch(() => setGroup(null))
-      } else setError(caught instanceof Error ? caught.message : "Unable to update group order.")
+      } else setError(groupOrderErrorMessage(caught, "Unable to update group order."))
     } finally {
       setWorking(false)
     }
@@ -321,19 +322,35 @@ export default function GroupOrderModal({
                 <strong>Your commitments</strong>
                 <span>Inventory is reserved after saving.</span>
               </div>
-              {batch.products.map((product) => (
-                <div key={product.dbId ?? product.name} className="group-order-product-row">
+              {batch.products.map((product) => {
+                const key = product.dbId ?? product.name
+                const ownSaved = group.commitments.find(commitment =>
+                  commitment.productId === product.dbId && commitment.userId === group.currentUserId)?.quantity ?? 0
+                const maximum = groupCommitmentMaximum(product, ownSaved)
+                const hintId = `group-quantity-hint-${encodeURIComponent(key)}`
+                const quantity = quantities[key] ?? 1
+                const valid = validGroupCommitmentQuantity(quantity, maximum)
+                return (
+                <div key={key} className="group-order-product-row">
                   <div>
                     <strong>{product.name}</strong>
                     <span>
                       ₱{product.price.toLocaleString()} / {product.sellingUnit === "box" ? "box" : "piece"}
                     </span>
+                  <p id={hintId} className="mt-1 text-xs text-[var(--kargo-muted)]">
+                    {product.limitPerUser ? `Limit: ${product.limitPerUser} per buyer. ` : ""}
+                    {maximum > 0 ? `Available for your commitment: ${maximum}.` : "No quantity is currently available."}
+                  </p>
                   </div>
                   <input
+                    aria-label={`Quantity for ${product.name}`}
+                    aria-describedby={hintId}
+                    aria-invalid={!valid}
                     type="number"
                     min="1"
-                    max={Math.max(1, product.qty - product.claimed)}
-                    value={quantities[product.dbId ?? product.name] ?? 1}
+                    step="1"
+                    max={Math.max(1, maximum)}
+                    value={quantity}
                     disabled={readOnly || group.status !== "forming"}
                     onChange={(event) =>
                       setQuantities((current) => ({
@@ -344,23 +361,24 @@ export default function GroupOrderModal({
                   />
                   <SecondaryBtn
                     size="sm"
-                    disabled={readOnly || working || group.status !== "forming" || !product.dbId}
+                    disabled={readOnly || working || group.status !== "forming" || !product.dbId || !valid}
                     onClick={() =>
-                      run(async () =>
+                      run(async () => {
+                        if (!valid) { setError(`Choose a whole-number quantity between 1 and ${maximum}.`); return }
                         setGroup(
                           await kargoApi.setGroupCommitment(
                             group.id,
                             product.dbId!,
-                            quantities[product.dbId ?? product.name] ?? 1,
+                            quantity,
                           ),
-                        ),
-                      )
+                        )
+                      })
                     }
                   >
                     Save
                   </SecondaryBtn>
                 </div>
-              ))}
+              )})}
             </section>
 
             <section className="group-order-summary">
