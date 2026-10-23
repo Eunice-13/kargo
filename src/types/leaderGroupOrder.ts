@@ -8,4 +8,13 @@ export type LeaderGroupOrder = {
   formationDeadline: string;
   paymentDeadline: string | null;
   createdAt: string;
+  sellerName?: string;
+  members?: { id: string; name: string }[];
+  ownItemCount?: number;
+  ownSubtotal?: number;
+  amount?: number;
+  amountIsSubtotal?: boolean;
+  amountRemaining?: number;
+  shippingPending?: boolean;
+  fulfillmentStage?: string;
 };

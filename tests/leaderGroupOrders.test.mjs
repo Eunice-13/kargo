@@ -147,7 +147,7 @@ test("active groups sort before historical groups, without mutating caller data"
   assert(!groupCanManage(summary("paid", "payment_confirmed")));
   assert(!groupCanManage({ ...summary("past"), formationDeadline: "2020-01-01T00:00:00Z" }));
 });
-test("compact responsive list has correct management/view actions and safe batch fallback", () => {
+test("expandable list has collapsed accessible details and safe batch fallback", () => {
   const html = renderToStaticMarkup(
     createElement(List, {
       groups: [
@@ -158,18 +158,18 @@ test("compact responsive list has correct management/view actions and safe batch
       onOpen: () => {},
     }),
   );
-  assert.match(html, /Manage Group/);
-  assert.equal(html.split("View Group").length - 1, 2);
+  assert.equal((html.match(/aria-expanded="false"/g) ?? []).length, 3);
+  assert.match(html, /aria-controls=/);
   assert.match(html, /Batch unavailable/);
-  assert.match(html, /sm:flex-row/);
-  assert.match(html, /flex-col/);
-  assert.match(html, /overflow-wrap:anywhere/);
+  assert.match(html, /group-shortcut-summary/);
+  assert.match(html, /group-shortcut-panel/);
+  assert.match(html, /inert=/);
 });
-test("section remains hidden before any leader records are present", () => {
+test("section remains hidden without an authenticated buyer", () => {
   assert.equal(
     renderToStaticMarkup(
       createElement(Section, {
-        buyerId: "leader",
+        buyerId: undefined,
         batches: [],
         onOpenClaims: () => {},
         onUpdated: async () => {},
@@ -221,4 +221,137 @@ test("friendly notice never suggests leaving after checkout", async () => {
     renderToStaticMarkup(createElement(Notice, { message, status: "forming" })),
     /leave your current group first/,
   );
+});
+
+test("leader summary uses real member profiles, own items, one shipping fee and verified balance", async () => {
+  state.rows.group_orders = [
+    {
+      ...raw("financial"),
+      status: "payment_pending",
+      checked_out_at: "2026-10-23T00:00:00Z",
+      final_subtotal: 500,
+      shipping_fee: 50,
+      payment_order_id: "representative",
+      batches: { title: "Batch", ends_on: "2099-01-01", seller_id: "seller" },
+      group_order_members: [
+        { user_id: "leader", status: "active" },
+        { user_id: "member", status: "active" },
+        { user_id: "left", status: "left" },
+      ],
+      group_order_commitments: [
+        { user_id: "leader", quantity: 2, unit_selling_price: 100 },
+        { user_id: "member", quantity: 3, unit_selling_price: 100 },
+      ],
+      orders: [
+        {
+          id: "representative",
+          fulfillment_stage: "shipped",
+          payments: [
+            { status: "verified", amount: 100 },
+            { status: "rejected", amount: 900 },
+          ],
+        },
+      ],
+    },
+  ];
+  state.rows.public_profiles = [
+    { id: "seller", display_name: "Test seller" },
+    { id: "leader", display_name: "Leader" },
+    { id: "member", display_name: "Member" },
+  ];
+  const [g] = await loadLedGroupOrders();
+  assert.equal(g.sellerName, "Test seller");
+  assert.equal(g.members.length, 2);
+  assert.equal(g.ownItemCount, 2);
+  assert.equal(g.ownSubtotal, 200);
+  assert.equal(g.amount, 550);
+  assert.equal(g.amountRemaining, 450);
+  assert.equal(g.fulfillmentStage, "shipped");
+});
+test("progress does not invent shipping and expired deadlines never offer payment", async () => {
+  const { groupProgress, groupTimeLeft } = await server.ssrLoadModule(
+    "/src/features/dashboard/groupOrderProgress.ts",
+  );
+  const pending = {
+    ...summary("p", "payment_pending"),
+    paymentDeadline: "2099-01-01T00:00:00Z",
+    amountRemaining: 550,
+  };
+  assert.equal(groupProgress(pending).payable, true);
+  assert.equal(
+    groupProgress({ ...pending, paymentDeadline: "2020-01-01T00:00:00Z" }).payable,
+    false,
+  );
+  assert.equal(groupProgress({ ...pending, amountRemaining: 0 }).payable, false);
+  assert.equal(groupProgress(summary("paid", "payment_confirmed")).step, 3);
+  assert.equal(
+    groupProgress({ ...summary("paid", "payment_confirmed"), fulfillmentStage: "delivered" }).step,
+    5,
+  );
+  assert.equal(groupProgress(summary("review", "payment_submitted")).payable, false);
+  assert.equal(
+    groupTimeLeft("2026-10-23T01:02:03Z", Date.parse("2026-10-23T00:00:00Z")),
+    "01:02:03",
+  );
+});
+test("expanded details show real item subtotal, progress and payment countdown without invented nudge", async () => {
+  const { GroupOrderDetails } = await server.ssrLoadModule(
+    "/src/features/dashboard/GroupOrderRow.tsx",
+  );
+  const html = renderToStaticMarkup(
+    createElement(GroupOrderDetails, {
+      group: {
+        ...summary("due", "payment_pending"),
+        paymentDeadline: "2099-01-01T00:00:00Z",
+        ownItemCount: 2,
+        ownSubtotal: 200,
+        members: Array.from({ length: 6 }, (_, i) => ({ id: String(i), name: `Member ${i}` })),
+      },
+      now: Date.parse("2098-12-31T23:00:00Z"),
+      onOpen: () => {},
+      onPay: () => {},
+    }),
+  );
+  assert.match(html, /Your items · 2 items/);
+  assert.match(html, /6 members/);
+  assert.match(html, /\+2/);
+  assert.match(html, /Due in 01:00:00/);
+  assert.match(html, /aria-current="step"/);
+  assert.doesNotMatch(html, /Nudge seller/);
+});
+test("authenticated initial load shows skeletons instead of hiding the section", () => {
+  const html = renderToStaticMarkup(
+    createElement(Section, {
+      buyerId: "leader",
+      batches: [],
+      onOpenClaims: () => {},
+      onUpdated: async () => {},
+    }),
+  );
+  assert.match(html, /Loading group orders/);
+  assert.match(html, /aria-busy="true"/);
+});
+test("mobile details form an accordion while desktop rows expand independently", async () => {
+  const { toggleGroupDetails } = await server.ssrLoadModule(
+    "/src/features/dashboard/groupOrderProgress.ts",
+  );
+  const original = new Set(["a"]);
+  assert.deepEqual([...toggleGroupDetails(original, "b", true)], ["b"]);
+  assert.deepEqual([...toggleGroupDetails(original, "b", false)], ["a", "b"]);
+  assert.deepEqual([...toggleGroupDetails(original, "a", true)], []);
+  assert.deepEqual([...original], ["a"]);
+});
+test("historical un-checked-out groups retain their item subtotal", async () => {
+  state.rows.group_orders = [
+    {
+      ...raw("expired"),
+      status: "expired",
+      checked_out_at: null,
+      final_subtotal: 0,
+      group_order_commitments: [{ user_id: "leader", quantity: 2, unit_selling_price: 100 }],
+    },
+  ];
+  const [group] = await loadLedGroupOrders();
+  assert.equal(group.amount, 200);
+  assert.equal(group.amountIsSubtotal, true);
 });

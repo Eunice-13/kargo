@@ -1,62 +1,51 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Users } from "lucide-react";
+import { RefreshCw, Users } from "lucide-react";
 import type { BatchType } from "@/types";
 import type { LeaderGroupOrder } from "@/types/leaderGroupOrder";
 import { GroupOrderModal } from "@/features/batches";
-import SecondaryBtn from "@/components/shared/SecondaryBtn";
+import GroupOrderRow from "./GroupOrderRow";
+import { groupProgress, toggleGroupDetails } from "./groupOrderProgress";
+import "./myGroupOrders.css";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { loadLedGroupOrders } from "@/services/leaderGroupOrders";
-import {
-  groupCanManage,
-  groupStatusLabels,
-  sortLeaderGroups,
-} from "./leaderGroupOrderPresentation";
+import { groupCanManage, groupIsActive, sortLeaderGroups } from "./leaderGroupOrderPresentation";
 
 export function GroupOrderList({
   groups,
   onOpen,
+  onPay,
 }: {
   groups: LeaderGroupOrder[];
   onOpen: (group: LeaderGroupOrder) => void;
+  onPay?: () => void;
 }) {
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   return (
-    <ul className="divide-y divide-[var(--kargo-line)]">
-      {sortLeaderGroups(groups).map((group) => {
-        const due = group.status === "forming" ? group.formationDeadline : group.paymentDeadline;
-        return (
-          <li
-            key={group.id}
-            className="flex min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
-          >
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-[var(--kargo-ink)] [overflow-wrap:anywhere]">
-                {group.batchTitle ?? "Batch unavailable"}
-              </h3>
-              <p className="mt-1 text-xs text-[var(--kargo-muted)]">
-                {groupStatusLabels[group.status] ?? group.status}
-                {due && Number.isFinite(Date.parse(due)) && (
-                  <span>
-                    {" "}
-                    · {group.status === "forming" ? "Formation deadline" : "Payment deadline"}:{" "}
-                    {new Date(due).toLocaleString("en-PH", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    })}
-                  </span>
-                )}
-              </p>
-            </div>
-            <div className="shrink-0 self-start sm:self-auto">
-              <SecondaryBtn
-                onClick={() => onOpen(group)}
-                ariaLabel={`${groupCanManage(group) ? "Manage" : "View"} group for ${group.batchTitle ?? "unavailable batch"}`}
-              >
-                {groupCanManage(group) ? "Manage Group" : "View Group"}
-              </SecondaryBtn>
-            </div>
-          </li>
-        );
-      })}
+    <ul className="group-shortcut-list">
+      {sortLeaderGroups(groups, now).map((group) => (
+        <GroupOrderRow
+          key={group.id}
+          group={group}
+          now={now}
+          expanded={expanded.has(group.id)}
+          onOpen={() => onOpen(group)}
+          onPay={onPay}
+          onToggle={() =>
+            setExpanded((current) =>
+              toggleGroupDetails(
+                current,
+                group.id,
+                window.matchMedia("(max-width: 767px)").matches,
+              ),
+            )
+          }
+        />
+      ))}
     </ul>
   );
 }
@@ -65,16 +54,18 @@ export default function MyGroupOrders({
   batches,
   onOpenClaims,
   onUpdated,
+  onBrowseGroups,
 }: {
   buyerId?: string;
   batches: BatchType[];
   onOpenClaims: () => void;
   onUpdated: () => Promise<void>;
+  onBrowseGroups?: () => void;
 }) {
   const [groups, setGroups] = useState<LeaderGroupOrder[]>([]);
   const [selected, setSelected] = useState<LeaderGroupOrder | null>(null);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const generation = useRef(0);
   const reload = useCallback(async () => {
     if (!buyerId || !isSupabaseConfigured) return;
@@ -98,29 +89,71 @@ export default function MyGroupOrders({
     };
   }, [reload]);
   const batch = selected ? batches.find((b) => b.dbId === selected.batchId) : undefined;
-  if (!groups.length && !error) return null;
+  if (!buyerId || !isSupabaseConfigured) return null;
+  const activeCount = groups.filter((group) => groupIsActive(group)).length;
+  const paymentCount = groups.filter((group) => groupProgress(group).payable).length;
   return (
     <section className="bdash-card mb-5" aria-label="My Group Orders" aria-busy={loading}>
-      <div className="bdash-section-head">
-        <h2 className="flex items-center gap-2">
-          <Users size={16} aria-hidden="true" />
-          My Group Orders
-        </h2>
+      <div className="group-shortcut-heading">
+        <div>
+          <h2>My Group Orders</h2>
+          <p>
+            {loading && !groups.length ? (
+              "Loading your group orders…"
+            ) : error && !groups.length ? (
+              "Group summaries unavailable."
+            ) : (
+              <>
+                {activeCount} active {activeCount === 1 ? "group" : "groups"} · {paymentCount}{" "}
+                {paymentCount === 1 ? "needs" : "need"} payment
+              </>
+            )}
+          </p>
+        </div>
         <button
           type="button"
-          className="bdash-viewall"
+          className="group-shortcut-button group-shortcut-refresh"
+          aria-label="Refresh group orders"
           disabled={loading}
           onClick={() => void reload()}
         >
-          Refresh
+          <RefreshCw size={18} aria-hidden="true" />
         </button>
       </div>
       {error && (
-        <p role="alert" className="mb-2 text-xs text-[var(--kargo-muted)]">
-          {error}
-        </p>
+        <div role="alert" className="group-shortcut-empty">
+          <p>{error}</p>
+          <button
+            type="button"
+            className="group-shortcut-button"
+            disabled={loading}
+            onClick={() => void reload()}
+          >
+            Try again
+          </button>
+        </div>
       )}
-      <GroupOrderList groups={groups} onOpen={setSelected} />
+      {loading && !groups.length ? (
+        <div aria-label="Loading group orders" className="group-shortcut-skeletons">
+          {[0, 1].map((index) => (
+            <div key={index} className="group-shortcut-skeleton" />
+          ))}
+        </div>
+      ) : groups.length ? (
+        <GroupOrderList groups={groups} onOpen={setSelected} onPay={onOpenClaims} />
+      ) : (
+        !error && (
+          <div className="group-shortcut-empty">
+            <Users size={24} aria-hidden="true" />
+            <p>No group orders yet.</p>
+            {onBrowseGroups && (
+              <button type="button" className="group-shortcut-button" onClick={onBrowseGroups}>
+                Browse batches
+              </button>
+            )}
+          </div>
+        )
+      )}
       {selected && !batch && (
         <div role="alert" className="mt-2 text-xs text-[var(--kargo-muted)]">
           This group’s batch is no longer available to your account. Your existing reservations are
