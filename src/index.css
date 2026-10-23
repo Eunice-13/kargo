@@ -11811,13 +11811,14 @@ textarea::placeholder {
   display: grid;
   grid-template-columns: minmax(0, min(480px, 45%)) minmax(0, 1fr);
   align-items: start;
-  gap: 16px;
+  gap: 24px;
   min-height: 400px;
   margin-bottom: 24px;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e7eaf1;
+  border-radius: 16px;
   background: #fff;
+  box-shadow: 0 10px 30px rgba(18, 30, 71, .07);
 }
 
 .batch-gallery__main {
@@ -11829,7 +11830,10 @@ textarea::placeholder {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: #f3f4f6;
+  border-radius: 14px;
+  /* Soft neutral behind product shots so any letterboxing reads intentional. */
+  background: linear-gradient(160deg, #f4f6fb 0%, #eef0f6 100%);
+  box-shadow: inset 0 0 0 1px rgba(18, 30, 71, .05);
 }
 
 .batch-gallery__main > img,
@@ -11839,7 +11843,13 @@ textarea::placeholder {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  /* Fill the frame so listing photos feel immersive, not boxed in grey. */
+  object-fit: cover;
+  transition: transform .4s cubic-bezier(.2, .7, .2, 1);
+}
+
+.batch-gallery__zoom-trigger:hover img {
+  transform: scale(1.04);
 }
 
 .batch-gallery__zoom-trigger {
@@ -11863,18 +11873,35 @@ textarea::placeholder {
   position: absolute;
   top: 50%;
   display: grid;
-  width: 40px;
-  height: 52px;
+  width: 38px;
+  height: 38px;
   place-items: center;
   border: 0;
-  background: rgb(0 0 0 / 48%);
-  color: #fff;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .92);
+  color: #1f2550;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(18, 30, 71, .18);
   transform: translateY(-50%);
+  transition: background .15s, box-shadow .15s, transform .12s;
 }
 
-.batch-gallery__arrow--previous { left: 0; }
-.batch-gallery__arrow--next { right: 0; }
+.batch-gallery__arrow:hover {
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(18, 30, 71, .26);
+}
+
+.batch-gallery__arrow:active {
+  transform: translateY(-50%) scale(.94);
+}
+
+.batch-gallery__arrow:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--kargo-focus) 50%, transparent);
+  outline-offset: 2px;
+}
+
+.batch-gallery__arrow--previous { left: 10px; }
+.batch-gallery__arrow--next { right: 10px; }
 
 .batch-gallery__side {
   width: 100%;
@@ -11883,10 +11910,26 @@ textarea::placeholder {
 }
 
 .batch-gallery__side h1 {
-  margin: 0 0 12px;
+  position: relative;
+  margin: 0 0 14px;
+  padding-left: 14px;
   color: #171923;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+}
+
+/* Brand accent bar leading the title, consistent on every batch. */
+.batch-gallery__side h1::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--kargo-navy, #2e3192), #6995d7);
 }
 
 .batch-gallery__status,
@@ -11904,11 +11947,78 @@ textarea::placeholder {
   font-weight: 700;
 }
 
+/* Meta facts render as individual designed chip-cards: icon + stacked
+   label/value, each fact type with its own accent. Consistent across batches. */
 .batch-gallery__meta {
   flex-wrap: wrap;
-  margin-bottom: 16px;
-  color: #667085;
-  font-size: 12px;
+  margin-bottom: 18px;
+  gap: 10px;
+}
+
+.batch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 13px;
+  border: 1px solid #e7eaf1;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(18, 30, 71, .06);
+  white-space: nowrap;
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+
+.batch-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(18, 30, 71, .1);
+}
+
+/* Icon sits in a soft tinted tile that carries each chip's accent color. */
+.batch-chip > svg {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  padding: 6px;
+  border-radius: 8px;
+  background: var(--chip-tint, #eef0f8);
+  color: var(--chip-ink, #434a68);
+}
+
+.batch-chip__text {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.1;
+}
+
+.batch-chip__label {
+  color: #9aa3bd;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.batch-chip__value {
+  color: #27304f;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* Per-type accents. */
+.batch-chip--category {
+  --chip-tint: color-mix(in srgb, var(--kargo-navy, #2e3192) 14%, #fff);
+  --chip-ink: var(--kargo-navy, #2e3192);
+}
+
+.batch-chip--trip {
+  --chip-tint: #e6f6ef;
+  --chip-ink: #0b7a59;
+}
+
+.batch-chip--window {
+  --chip-tint: #fdf2e3;
+  --chip-ink: #b4690e;
 }
 
 .batch-gallery__thumbnails {
@@ -11922,15 +12032,28 @@ textarea::placeholder {
 .batch-gallery__thumbnail {
   min-width: 0;
   padding: 4px;
-  border: 1px solid transparent;
-  border-radius: 4px;
+  border: 1px solid #e7eaf1;
+  border-radius: 10px;
   background: #fff;
   cursor: pointer;
   text-align: left;
+  transition: border-color .15s, box-shadow .15s, transform .12s;
+}
+
+.batch-gallery__thumbnail:hover {
+  border-color: #c7cdfb;
+  box-shadow: 0 4px 12px rgba(18, 30, 71, .1);
+  transform: translateY(-1px);
 }
 
 .batch-gallery__thumbnail.is-selected {
-  border-color: #ee4d2d;
+  border-color: var(--kargo-navy, #2e3192);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--kargo-navy, #2e3192) 22%, transparent);
+}
+
+.batch-gallery__thumbnail:focus-visible {
+  outline: 2px solid var(--kargo-navy, #2e3192);
+  outline-offset: 1px;
 }
 
 .batch-gallery__thumbnail img {
@@ -11938,15 +12061,17 @@ textarea::placeholder {
   width: 100%;
   height: auto;
   aspect-ratio: 1;
+  border-radius: 7px;
   object-fit: cover;
 }
 
 .batch-gallery__thumbnail span {
   display: block;
-  margin-top: 4px;
+  margin-top: 5px;
   overflow: hidden;
   color: #344054;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -4,7 +4,7 @@ import { canManageBatch } from "./batchAccess"
 
 import { useState } from "react"
 
-import { Lock, ArrowLeft, ArrowRight, Plane, Check, Link2, ImageUp, Users } from "lucide-react"
+import { Lock, ArrowLeft, ArrowRight, Plane, Check, Link2, ImageUp, Users, Tag, CalendarDays, Clock } from "lucide-react"
 
 import type {
   ClaimRow,
@@ -159,7 +159,30 @@ export default function BatchPage({
 
   const [galleryZoomOpen, setGalleryZoomOpen] = useState(false)
 
-  const uploadedGalleryItems = [
+  // Per-batch photo overrides keyed by batch title. The PLM thrift batch is a
+  // live DB record whose stored images don't match its ukay-ukay listing, so
+  // its first two gallery photos are swapped for curated thrift shots at render
+  // time (purely visual; the database is left untouched).
+  const BATCH_PHOTO_OVERRIDES: Record<
+    string,
+    { imageUrl: string; name: string }[]
+  > = {
+    "PLM - October 2026": [
+      {
+        imageUrl:
+          "https://filebroker-cdn.lazada.com.ph/kf/Se45419c8921b45289b11e40d6b67fa415.jpg",
+        name: "Floral Wide-Leg Jeans",
+      },
+      {
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTlH8LVnHJwC6jlvsk1HbSiFA9A5MGG_KcVAu-V3Jh_T8QmHZfGKWAWdJ3&s=10",
+        name: "Assorted Thrifted Denim",
+      },
+    ],
+  }
+  const photoOverrides = BATCH_PHOTO_OVERRIDES[batch.title.trim()] ?? []
+
+  const baseGalleryItems = [
     ...(batch.galleryImages ?? []).map((imageUrl, index) => ({
       key: `batch-${index}`,
       imageUrl,
@@ -173,6 +196,17 @@ export default function BatchPage({
         name: product.name,
       })),
   ]
+  // Exchange the first N photos for the override images and their captions,
+  // keeping each item's key so selection stays stable.
+  const uploadedGalleryItems = baseGalleryItems.map((item, index) =>
+    index < photoOverrides.length
+      ? {
+          ...item,
+          imageUrl: photoOverrides[index].imageUrl,
+          name: photoOverrides[index].name,
+        }
+      : item,
+  )
   const galleryItems = uploadedGalleryItems.length
     ? uploadedGalleryItems
     : [
@@ -704,9 +738,27 @@ export default function BatchPage({
             </span>
           )}
           <div className="batch-gallery__meta">
-            <span>{batch.category}</span>
-            <span><Plane size={12} aria-hidden="true" /> {batch.trips}</span>
-            <span>48h reservation window</span>
+            <span className="batch-chip batch-chip--category">
+              <Tag size={13} aria-hidden="true" />
+              <span className="batch-chip__text">
+                <span className="batch-chip__label">Category</span>
+                <span className="batch-chip__value">{batch.category}</span>
+              </span>
+            </span>
+            <span className="batch-chip batch-chip--trip">
+              <CalendarDays size={13} aria-hidden="true" />
+              <span className="batch-chip__text">
+                <span className="batch-chip__label">Trip dates</span>
+                <span className="batch-chip__value">{batch.trips}</span>
+              </span>
+            </span>
+            <span className="batch-chip batch-chip--window">
+              <Clock size={13} aria-hidden="true" />
+              <span className="batch-chip__text">
+                <span className="batch-chip__label">Reservation</span>
+                <span className="batch-chip__value">48h window</span>
+              </span>
+            </span>
           </div>
           <div className="batch-gallery__thumbnails" aria-label="Batch photos and item photos">
             {galleryItems.map((item, index) => (
