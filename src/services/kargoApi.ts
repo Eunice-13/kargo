@@ -1,3 +1,5 @@
+import { batchFormationDeadline } from "./groupFormation"
+import { membershipError, resolveGroupMembership } from "./groupMembership"
 import { loadPaymentCompatibleRows } from "./paymentReadCompatibility"
 import { combinedDeliveryMutationError } from "./combinedDeliveryErrors"
 import { PASSWORD_RESET_PATH } from "@/constants/auth"
@@ -1841,11 +1843,20 @@ export async function updateBatchGroupSettings(input: {
   }
 }
 
-async function loadGroupOrder(groupOrderId: string): Promise<GroupOrder> {
+export async function loadGroupOrder(groupOrderId: string, leaderOnly = false): Promise<GroupOrder> {
   const client = requireSupabase()
+  let ownerId: string | undefined
+  if (leaderOnly) {
+    const { data, error } = await client.auth.getUser()
+    if (error) throw error
+    ownerId = data.user?.id
+    if (!ownerId) throw new Error("Sign in to view your group orders.")
+  }
+  let groupQuery = client.from("group_orders").select("*,batches(ends_on)").eq("id", groupOrderId)
+  if (leaderOnly) groupQuery = groupQuery.eq("leader_id", ownerId!)
   const [{ data: group, error: groupError }, { data: members, error: memberError }, { data: commitments, error: commitmentError }] =
     await Promise.all([
-      client.from("group_orders").select("*").eq("id", groupOrderId).single(),
+      groupQuery.single(),
       client
         .from("group_order_members")
         .select("user_id,role,status")
@@ -1857,6 +1868,7 @@ async function loadGroupOrder(groupOrderId: string): Promise<GroupOrder> {
     ])
 
   if (groupError) throw groupError
+  if (!group.batches?.ends_on) throw new Error("This group’s batch is unavailable.")
   if (memberError) throw memberError
   if (commitmentError) throw commitmentError
 
@@ -1881,7 +1893,7 @@ async function loadGroupOrder(groupOrderId: string): Promise<GroupOrder> {
     leaderName: names.get(group.leader_id) ?? "Group leader",
     referralCode: group.referral_code,
     status: group.status,
-    formationDeadline: group.formation_deadline,
+    formationDeadline: batchFormationDeadline(group.batches.ends_on),
     regularSubtotal: Number(group.regular_subtotal ?? 0),
     discountAmount: Number(group.discount_amount ?? 0),
     finalSubtotal: Number(group.final_subtotal ?? 0),
@@ -1916,7 +1928,7 @@ export async function loadMyGroupOrder(batchId: string) {
 
   const { data, error } = await client
     .from("group_order_members")
-    .select("group_order_id,group_orders!inner(batch_id,status)")
+    .select("group_order_id,group_orders!inner(batch_id,status,created_at)")
     .eq("user_id", userId)
     .eq("status", "active")
     .eq("group_orders.batch_id", batchId)
@@ -1927,18 +1939,17 @@ export async function loadMyGroupOrder(batchId: string) {
       "payment_submitted",
       "payment_confirmed",
     ])
-    .limit(1)
-    .maybeSingle()
 
   if (error) throw error
-  return data ? loadGroupOrder(data.group_order_id) : null
+  const selected = resolveGroupMembership((data ?? []) as unknown as Parameters<typeof resolveGroupMembership>[0])
+  return selected ? loadGroupOrder(selected.group_order_id) : null
 }
 
 export async function startGroupOrder(batchId: string) {
   const { data, error } = await requireSupabase().rpc("start_group_order", {
     p_batch_id: batchId,
   })
-  if (error) throw error
+  if (error) throw membershipError(error)
   return loadGroupOrder(data.id)
 }
 
@@ -1946,7 +1957,7 @@ export async function joinGroupOrder(code: string) {
   const { data, error } = await requireSupabase().rpc("join_group_order", {
     p_referral_code: code,
   })
-  if (error) throw error
+  if (error) throw membershipError(error)
   return loadGroupOrder(data.id)
 }
 
@@ -3292,6 +3303,7 @@ export const kargoApi = {
   addBatchGalleryImages,
   updateProductImage,
   updateBatchGroupSettings,
+  loadGroupOrder,
   loadMyGroupOrder,
   startGroupOrder,
   joinGroupOrder,

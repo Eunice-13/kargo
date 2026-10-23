@@ -688,6 +688,12 @@ export default function MyClaims({
       return
     }
 
+    if (currentClaim.groupOrderId) {
+      alert("This item belongs to a Group Order and cannot be cancelled individually.")
+      setCancelTarget(null)
+      return
+    }
+
     setCancelling(true)
 
     try {
@@ -2642,25 +2648,26 @@ export default function MyClaims({
       )}
       {cancelTarget && (
         <Modal
-          title="Cancel this claim?"
+          title={cancelTarget.groupOrderId ? "Group Order item" : "Cancel this claim?"}
           onClose={() => !cancelling && setCancelTarget(null)}
           width={420}
         >
           <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
+            {cancelTarget.groupOrderId ? "This item belongs to a Group Order and cannot be cancelled individually." : <>
             Cancel your claim for <strong>{cancelTarget.product}</strong>? This
-            cannot be undone, and the quantity will become available to other
-            buyers.
+            cannot be undone, and the quantity will become available to other buyers.
+            </>}
           </p>
           <div className="kargo-modal-actions">
             <SecondaryBtn
               onClick={() => setCancelTarget(null)}
               disabled={cancelling}
             >
-              Keep Claim
+              {cancelTarget.groupOrderId ? "Close" : "Keep Claim"}
             </SecondaryBtn>
             <PrimaryBtn
               onClick={handleCancelClaim}
-              disabled={cancelling}
+              disabled={cancelling || Boolean(cancelTarget.groupOrderId)}
               style={{ background: "#DC2626" }}
             >
               {cancelling ? "Cancelling…" : "Cancel Claim"}
