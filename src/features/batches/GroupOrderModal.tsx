@@ -1,3 +1,7 @@
+import { formationExpired, formatFormationDeadline } from "@/services/groupFormation"
+import { groupOrderErrorMessage, groupCommitmentMaximum, validGroupCommitmentQuantity } from "./groupOrderFeedback"
+import GroupMembershipNotice from "./GroupMembershipNotice"
+import { GroupMembershipConflict } from "@/services/groupMembership"
 import { useEffect, useMemo, useState } from "react"
 import { Link2, RefreshCw, Users } from "lucide-react"
 
@@ -42,15 +46,26 @@ export default function GroupOrderModal({
   batch,
   initialProductId,
   initialCode = "",
+  groupOrderId,
+  readOnly = false,
+  onOpenClaims,
   onClose,
   onCheckoutComplete,
 }: {
   batch: BatchType
+  groupOrderId?: string
+  readOnly?: boolean
+  onOpenClaims?: () => void
   initialProductId?: string
   initialCode?: string
   onClose: () => void
   onCheckoutComplete: () => Promise<void>
 }) {
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
   const [group, setGroup] = useState<GroupOrder | null>(null)
   const [joining, setJoining] = useState(Boolean(initialCode))
   const [code, setCode] = useState(initialCode)
@@ -60,6 +75,7 @@ export default function GroupOrderModal({
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
   const [error, setError] = useState("")
+  const [membershipConflict, setMembershipConflict] = useState<GroupMembershipConflict | null>(null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [methods, setMethods] = useState<SellerReceiveMethod[]>([])
   const [paymentMethod, setPaymentMethod] = useState("")
@@ -69,8 +85,20 @@ export default function GroupOrderModal({
 
   const syncGroup = async () => {
     if (!batch.dbId) return
-    const current = await kargoApi.loadMyGroupOrder(batch.dbId)
+    const current = groupOrderId
+      ? await kargoApi.loadGroupOrder(groupOrderId, true)
+      : await kargoApi.loadMyGroupOrder(batch.dbId)
+    if (current && current.batchId !== batch.dbId) throw new Error("This group no longer belongs to the selected batch.")
+    // An invitation must not silently reopen a completed historical group.
+    if (!groupOrderId && initialCode && current?.status === "payment_confirmed") {
+      setGroup(null)
+      return
+    }
     setGroup(current)
+    if (!groupOrderId && initialCode && current && current.referralCode !== initialCode.trim().toUpperCase() &&
+        ["forming", "waiting_for_seller", "payment_pending", "payment_submitted"].includes(current.status)) {
+      setMembershipConflict(new GroupMembershipConflict(current.status === "forming"))
+    }
     if (current) {
       const own = Object.fromEntries(
         current.commitments
@@ -84,10 +112,10 @@ export default function GroupOrderModal({
   useEffect(() => {
     syncGroup()
       .catch((caught) =>
-        setError(caught instanceof Error ? caught.message : "Unable to load group order."),
+        setError(groupOrderErrorMessage(caught, "Unable to load group order.")),
       )
       .finally(() => setLoading(false))
-  }, [batch.dbId])
+  }, [batch.dbId, groupOrderId])
 
   useEffect(() => {
     if (!checkoutOpen || !batch.sellerId) return
@@ -98,10 +126,11 @@ export default function GroupOrderModal({
         setPaymentMethod(available[0]?.methodType ?? "")
       })
       .catch((caught) =>
-        setError(caught instanceof Error ? caught.message : "Unable to load payment methods."),
+        setError(groupOrderErrorMessage(caught, "Unable to load payment methods.")),
       )
   }, [checkoutOpen, batch.sellerId])
 
+  const formationClosed = Boolean(group && formationExpired(group.status, group.formationDeadline, now))
   const activeMembers = group?.members.filter((member) => member.status === "active") ?? []
   const subtotal = useMemo(
     () =>
@@ -138,11 +167,15 @@ export default function GroupOrderModal({
 
   const run = async (action: () => Promise<void>) => {
     setError("")
+    setMembershipConflict(null)
     setWorking(true)
     try {
       await action()
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to update group order.")
+      if (caught instanceof GroupMembershipConflict) {
+        setMembershipConflict(caught)
+        await syncGroup().catch(() => setGroup(null))
+      } else setError(groupOrderErrorMessage(caught, "Unable to update group order."))
     } finally {
       setWorking(false)
     }
@@ -154,6 +187,13 @@ export default function GroupOrderModal({
         <p className="group-order-loading">Loading group order…</p>
       </Modal>
     )
+  }
+
+  if (groupOrderId && !group) {
+    return <Modal title="Group Order" onClose={onClose} width={620}>
+      <p role="alert">{error || "This group is unavailable or you no longer have leader access."}</p>
+      <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
+    </Modal>
   }
 
   return (
@@ -211,7 +251,7 @@ export default function GroupOrderModal({
                 <span>Referral code</span>
                 <strong>{group.referralCode}</strong>
               </div>
-              {group.isLeader && group.status === "forming" && (
+              {group.isLeader && group.status === "forming" && !formationClosed && !readOnly && (
                 <div className="group-order-share-actions">
                   <button
                     type="button"
@@ -234,6 +274,11 @@ export default function GroupOrderModal({
               )}
             </header>
 
+            <p className="group-order-status" role="status">
+              Formation deadline: <time dateTime={group.formationDeadline}>{formatFormationDeadline(group.formationDeadline)}</time>
+              {formationClosed && <span className="block">The formation deadline has passed. Checkout is closed and un-checked-out commitments no longer reserve stock.</span>}
+            </p>
+
             <section className="group-order-members">
               <div className="group-order-section-title">
                 <strong>Members</strong>
@@ -244,7 +289,7 @@ export default function GroupOrderModal({
                   <div key={member.userId}>
                     <span>{member.name}</span>
                     <small>{member.role === "leader" ? "Leader" : "Member"}</small>
-                    {group.isLeader && member.role !== "leader" && group.status === "forming" && (
+                    {group.isLeader && member.role !== "leader" && group.status === "forming" && !formationClosed && !readOnly && (
                       <button
                         type="button"
                         onClick={() =>
@@ -287,22 +332,38 @@ export default function GroupOrderModal({
             <section className="group-order-products">
               <div className="group-order-section-title">
                 <strong>Your commitments</strong>
-                <span>Inventory is reserved after saving.</span>
+                <span>{formationClosed || group.status === "expired" ? "Commitments are retained for history; inventory is released." : "Inventory is reserved after saving."}</span>
               </div>
-              {batch.products.map((product) => (
-                <div key={product.dbId ?? product.name} className="group-order-product-row">
+              {batch.products.map((product) => {
+                const key = product.dbId ?? product.name
+                const ownSaved = group.commitments.find(commitment =>
+                  commitment.productId === product.dbId && commitment.userId === group.currentUserId)?.quantity ?? 0
+                const maximum = groupCommitmentMaximum(product, ownSaved)
+                const hintId = `group-quantity-hint-${encodeURIComponent(key)}`
+                const quantity = quantities[key] ?? 1
+                const valid = validGroupCommitmentQuantity(quantity, maximum)
+                return (
+                <div key={key} className="group-order-product-row">
                   <div>
                     <strong>{product.name}</strong>
                     <span>
                       ₱{product.price.toLocaleString()} / {product.sellingUnit === "box" ? "box" : "piece"}
                     </span>
+                  <p id={hintId} className="mt-1 text-xs text-[var(--kargo-muted)]">
+                    {product.limitPerUser ? `Limit: ${product.limitPerUser} per buyer. ` : ""}
+                    {maximum > 0 ? `Available for your commitment: ${maximum}.` : "No quantity is currently available."}
+                  </p>
                   </div>
                   <input
+                    aria-label={`Quantity for ${product.name}`}
+                    aria-describedby={hintId}
+                    aria-invalid={!valid}
                     type="number"
                     min="1"
-                    max={Math.max(1, product.qty - product.claimed)}
-                    value={quantities[product.dbId ?? product.name] ?? 1}
-                    disabled={group.status !== "forming"}
+                    step="1"
+                    max={Math.max(1, maximum)}
+                    value={quantity}
+                    disabled={readOnly || formationClosed || group.status !== "forming"}
                     onChange={(event) =>
                       setQuantities((current) => ({
                         ...current,
@@ -312,23 +373,24 @@ export default function GroupOrderModal({
                   />
                   <SecondaryBtn
                     size="sm"
-                    disabled={working || group.status !== "forming" || !product.dbId}
+                    disabled={readOnly || formationClosed || working || group.status !== "forming" || !product.dbId || !valid}
                     onClick={() =>
-                      run(async () =>
+                      run(async () => {
+                        if (!valid) { setError(`Choose a whole-number quantity between 1 and ${maximum}.`); return }
                         setGroup(
                           await kargoApi.setGroupCommitment(
                             group.id,
                             product.dbId!,
-                            quantities[product.dbId ?? product.name] ?? 1,
+                            quantity,
                           ),
-                        ),
-                      )
+                        )
+                      })
                     }
                   >
                     Save
                   </SecondaryBtn>
                 </div>
-              ))}
+              )})}
             </section>
 
             <section className="group-order-summary">
@@ -349,13 +411,13 @@ export default function GroupOrderModal({
               </div>
             </section>
 
-            {group.isLeader && group.status === "forming" && !checkoutOpen && (
+            {group.isLeader && group.status === "forming" && !formationClosed && !readOnly && !checkoutOpen && (
               <PrimaryBtn disabled={!canCheckout} onClick={() => setCheckoutOpen(true)}>
                 Checkout Group Order
               </PrimaryBtn>
             )}
 
-            {checkoutOpen && (
+            {checkoutOpen && !readOnly && !formationClosed && (
               <section className="group-order-checkout">
                 <div className="group-order-section-title"><strong>Leader checkout</strong></div>
                 <div className="group-order-methods">
@@ -438,7 +500,7 @@ export default function GroupOrderModal({
               </p>
             )}
 
-            {group.status === "forming" && (
+            {group.status === "forming" && !formationClosed && !readOnly && (
               <button
                 type="button"
                 className="group-order-leave"
@@ -455,6 +517,10 @@ export default function GroupOrderModal({
           </>
         )}
 
+        {group && group.status !== "forming" && onOpenClaims && (
+          <SecondaryBtn onClick={onOpenClaims}>Open My Claims</SecondaryBtn>
+        )}
+        {membershipConflict && <GroupMembershipNotice message={membershipConflict.message} status={group?.status} />}
         {error && <p className="group-order-error" role="alert">{error}</p>}
       </div>
     </Modal>
