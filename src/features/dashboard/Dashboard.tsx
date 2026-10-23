@@ -1,4 +1,3 @@
-import MyGroupOrders from "./MyGroupOrders"
 import { useState, useEffect, useMemo, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 
@@ -945,8 +944,6 @@ export default function Dashboard({
           )
         })}
       </div>
-      {role === "Buyer" && <MyGroupOrders key={user.id ?? user.email} buyerId={user.id}
-        batches={batches} onOpenClaims={() => setTab("My Claims")} onUpdated={refreshData} />}
       {role === "Seller" && (
         <div
           className="grid gap-6"
