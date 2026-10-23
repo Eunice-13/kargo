@@ -182,6 +182,14 @@ export default function BatchPage({
   }
   const photoOverrides = BATCH_PHOTO_OVERRIDES[batch.title.trim()] ?? []
 
+  // Display-only category correction for the PLM thrift batch (its DB record
+  // still reads "Food"). Visual only — does not touch the stored category.
+  const BATCH_CATEGORY_OVERRIDES: Record<string, string> = {
+    "PLM - October 2026": "Apparel",
+  }
+  const displayCategory =
+    BATCH_CATEGORY_OVERRIDES[batch.title.trim()] ?? batch.category
+
   const baseGalleryItems = [
     ...(batch.galleryImages ?? []).map((imageUrl, index) => ({
       key: `batch-${index}`,
@@ -742,7 +750,7 @@ export default function BatchPage({
               <Tag size={13} aria-hidden="true" />
               <span className="batch-chip__text">
                 <span className="batch-chip__label">Category</span>
-                <span className="batch-chip__value">{batch.category}</span>
+                <span className="batch-chip__value">{displayCategory}</span>
               </span>
             </span>
             <span className="batch-chip batch-chip--trip">
