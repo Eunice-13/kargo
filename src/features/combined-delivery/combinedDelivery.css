@@ -10,3 +10,397 @@
 .combined-delivery-requests > .kargo-card button {
   min-height: 44px;
 }
+
+/* ─── Combined delivery request form ──────────────────────────────────────
+   Scoped refinement of the request/review dialog. Chrome (header, buttons,
+   backdrop, focus) comes from the shared modal system; this only shapes the
+   content so a buyer can parse who/what, items + cost, destination, and the
+   confirmation gate at a glance. Colors and tokens stay on-system. */
+
+.cdd {
+  --cdd-tint: color-mix(in srgb, var(--kargo-navy) 5%, #fff);
+  --cdd-tint-strong: color-mix(in srgb, var(--kargo-navy) 9%, #fff);
+  --cdd-line: color-mix(in srgb, var(--kargo-navy) 14%, var(--kargo-line));
+  --cdd-radius: 12px;
+}
+
+/* Intro helper line */
+.cdd__intro {
+  margin: 0;
+  color: var(--kargo-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Context select (seller · batch · destination) */
+.cdd__field {
+  display: block;
+}
+
+.cdd__field-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--kargo-ink-soft);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Identity: who is fulfilling + which batch */
+.cdd__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--cdd-line);
+  border-radius: var(--cdd-radius);
+  background: var(--cdd-tint);
+}
+
+.cdd__identity-seller {
+  color: var(--kargo-ink);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.cdd__identity-meta {
+  color: var(--kargo-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Status banner for existing requests */
+.cdd__status {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--cdd-line);
+  border-left: 3px solid var(--kargo-navy);
+  border-radius: var(--cdd-radius);
+  background: var(--cdd-tint);
+}
+
+.cdd__status--rejected {
+  border-left-color: #dc2626;
+  background: color-mix(in srgb, #dc2626 6%, #fff);
+}
+
+.cdd__status-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.cdd__status-title {
+  color: var(--kargo-ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.cdd__status-note {
+  margin-top: 3px;
+  color: var(--kargo-ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.cdd__status-note--muted {
+  color: var(--kargo-muted);
+}
+
+/* Seller message callout (rejection reason) */
+.cdd__message {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--kargo-ink) 4%, #fff);
+}
+
+.cdd__message-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--kargo-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cdd__message-body {
+  margin-top: 6px;
+  color: var(--kargo-ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Section label above the item list */
+.cdd__section-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--kargo-ink-soft);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cdd__section-hint {
+  color: var(--kargo-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Item list as quiet cards */
+.cdd__items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cdd__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--kargo-line);
+  border-radius: var(--cdd-radius);
+  background: #fff;
+}
+
+label.cdd__item {
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+label.cdd__item:hover {
+  border-color: color-mix(in srgb, var(--kargo-navy) 28%, var(--kargo-line));
+  background: var(--cdd-tint);
+}
+
+label.cdd__item:has(input:focus-visible) {
+  outline: 3px solid color-mix(in srgb, var(--kargo-focus) 40%, transparent);
+  outline-offset: 2px;
+}
+
+label.cdd__item.is-selected {
+  border-color: color-mix(in srgb, var(--kargo-navy) 45%, transparent);
+  background: var(--cdd-tint-strong);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kargo-navy) 24%, transparent);
+}
+
+.cdd__item-check {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--kargo-navy);
+}
+
+.cdd__item img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+.cdd__item-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cdd__item-name {
+  color: var(--kargo-ink);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.cdd__item-qty {
+  margin-top: 1px;
+  color: var(--kargo-muted);
+  font-size: 11px;
+}
+
+.cdd__item-price {
+  flex-shrink: 0;
+  color: var(--kargo-ink);
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Destination panel */
+.cdd__destination {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--cdd-line);
+  border-radius: var(--cdd-radius);
+  background: var(--cdd-tint);
+}
+
+.cdd__destination-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--kargo-navy);
+}
+
+.cdd__destination-body {
+  min-width: 0;
+}
+
+.cdd__destination-label {
+  color: var(--kargo-ink-soft);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cdd__destination-address {
+  margin-top: 3px;
+  color: var(--kargo-ink);
+  font-size: 12.5px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.cdd__destination-pin {
+  margin-top: 4px;
+  color: var(--kargo-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Confirmation gate */
+.cdd__confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid var(--cdd-line);
+  border-radius: var(--cdd-radius);
+  background: #fff;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+
+.cdd__confirm:hover {
+  border-color: color-mix(in srgb, var(--kargo-navy) 28%, var(--kargo-line));
+}
+
+.cdd__confirm.is-checked {
+  border-color: color-mix(in srgb, var(--kargo-navy) 40%, transparent);
+  background: var(--cdd-tint);
+}
+
+.cdd__confirm:has(input:focus-visible) {
+  outline: 3px solid color-mix(in srgb, var(--kargo-focus) 40%, transparent);
+  outline-offset: 2px;
+}
+
+.cdd__confirm-check {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  accent-color: var(--kargo-navy);
+}
+
+.cdd__confirm-text {
+  color: var(--kargo-ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Totals summary */
+.cdd__summary {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--cdd-line);
+  border-radius: var(--cdd-radius);
+  background: var(--cdd-tint);
+}
+
+.cdd__summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cdd__summary-row + .cdd__summary-row {
+  margin-top: 8px;
+}
+
+.cdd__summary-row dt {
+  color: var(--kargo-ink-soft);
+  font-size: 12px;
+}
+
+.cdd__summary-row dd {
+  margin: 0;
+  color: var(--kargo-ink);
+  font-size: 12.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.cdd__summary-row dd.is-pending {
+  color: var(--kargo-muted);
+  font-weight: 500;
+}
+
+.cdd__summary-row--total {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cdd-line);
+}
+
+.cdd__summary-row--total dt {
+  color: var(--kargo-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cdd__summary-row--total dd {
+  color: var(--kargo-navy);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* Inline notices (eligibility, recovery, invalidation) */
+.cdd__notice {
+  margin: 0;
+  color: var(--kargo-muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.cdd__error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, #dc2626 35%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, #dc2626 6%, #fff);
+  color: #b91c1c;
+  font-size: 12px;
+  line-height: 1.45;
+}

@@ -1,6 +1,6 @@
 import "./combinedDelivery.css";
 import { useRef, useState } from "react";
-import { MessageSquare, XCircle } from "lucide-react";
+import { MapPin, MessageSquare, XCircle } from "lucide-react";
 import type {
   CombinedDeliveryRequest,
   CombinedDeliveryRequestCandidate,
@@ -83,18 +83,18 @@ export default function CombinedDeliveryRequestDialog({
         if (!busy) onClose();
       }}
     >
-      <div className="combined-delivery-dialog space-y-4 text-sm text-[var(--kargo-ink-soft)]">
+      <div className="combined-delivery-dialog cdd space-y-4 text-sm text-[var(--kargo-ink-soft)]">
         {!existing && (
-          <p className="text-xs text-[var(--kargo-muted)]">
+          <p className="cdd__intro">
             Request one delivery for these items. The seller will review your request and set the
             combined shipping fee.
           </p>
         )}
         {!existing && options.length > 1 && (
-          <label className="block text-xs font-semibold">
-            Seller, batch and destination
+          <label className="cdd__field">
+            <span className="cdd__field-label">Seller, batch and destination</span>
             <select
-              className="mt-1 min-h-11 w-full rounded-lg border border-[var(--kargo-line)] bg-[var(--kargo-surface)] px-2 text-xs"
+              className="min-h-11 w-full rounded-lg border border-[var(--kargo-line)] bg-[var(--kargo-surface)] px-2 text-xs"
               value={contextIndex}
               disabled={busy}
               onChange={(event) => {
@@ -114,135 +114,150 @@ export default function CombinedDeliveryRequestDialog({
           </label>
         )}
         {first && !existing && (
-          <div className="text-xs">
-            <p>
-              <strong>{first.sellerName}</strong>
-            </p>
-            <p className="text-[var(--kargo-muted)]">
+          <div className="cdd__identity">
+            <p className="cdd__identity-seller">{first.sellerName}</p>
+            <p className="cdd__identity-meta">
               Batch: {first.batchName} · {first.paymentMethod}
             </p>
           </div>
         )}
         {existing?.status === "rejected" ? (
-          <section aria-label="Combined delivery rejected" className="space-y-3 text-xs">
-            <div className="flex items-start gap-2">
-              <XCircle size={18} className="shrink-0 text-red-700" aria-hidden="true" />
+          <section aria-label="Combined delivery rejected" className="space-y-3">
+            <div className="cdd__status cdd__status--rejected">
+              <XCircle
+                size={18}
+                className="cdd__status-icon text-red-700"
+                aria-hidden="true"
+              />
               <div className="min-w-0">
-                <p className="font-semibold text-[var(--kargo-ink)]">Combined delivery rejected</p>
-                <p className="mt-1 text-[var(--kargo-muted)]">
+                <p className="cdd__status-title">Combined delivery rejected</p>
+                <p className="cdd__status-note cdd__status-note--muted">
                   Your reservations will remain separate.
                 </p>
+                {existing.decision_reason?.trim() && (
+                  <div className="cdd__message">
+                    <h3 className="cdd__message-head">
+                      <MessageSquare size={13} className="shrink-0" aria-hidden="true" />
+                      Seller&apos;s message
+                    </h3>
+                    <p className="cdd__message-body">{existing.decision_reason}</p>
+                  </div>
+                )}
               </div>
             </div>
-            {existing.decision_reason?.trim() && (
-              <div className="min-w-0 rounded-lg bg-[var(--kargo-line)]/30 p-3">
-                <h3 className="flex items-center gap-1.5 font-semibold text-[var(--kargo-ink)]">
-                  <MessageSquare size={13} className="shrink-0" aria-hidden="true" />
-                  Seller&apos;s message
-                </h3>
-                <p className="mt-1.5 whitespace-pre-wrap [overflow-wrap:anywhere]">
-                  {existing.decision_reason}
-                </p>
-              </div>
-            )}
           </section>
         ) : (
           existing && (
-            <p className="text-xs font-semibold">
-              {existing.status === "pending_approval"
-                ? "Combined delivery requested — waiting for the seller to review."
-                : existing.status === "awaiting_shipping_fee"
-                  ? "Combined delivery approved — waiting for the shared shipping fee."
-                  : existing.status === "shipping_fee_set"
-                    ? "The shared shipping fee is set. View your combined payment and deadline in Pending Payments."
-                    : "This combined delivery request is no longer active."}
-              {existing.decision_reason && (
-                <span className="mt-1 block font-normal">{existing.decision_reason}</span>
-              )}
-            </p>
+            <div className="cdd__status">
+              <div className="min-w-0">
+                <p className="cdd__status-title">
+                  {existing.status === "pending_approval"
+                    ? "Combined delivery requested — waiting for the seller to review."
+                    : existing.status === "awaiting_shipping_fee"
+                      ? "Combined delivery approved — waiting for the shared shipping fee."
+                      : existing.status === "shipping_fee_set"
+                        ? "The shared shipping fee is set. View your combined payment and deadline in Pending Payments."
+                        : "This combined delivery request is no longer active."}
+                </p>
+                {existing.decision_reason && (
+                  <p className="cdd__status-note">{existing.decision_reason}</p>
+                )}
+              </div>
+            </div>
           )
         )}
-        <ul className="divide-y divide-[var(--kargo-line)]">
-          {existing
-            ? existing.members.map((member) => (
-                <li key={member.order_id} className="flex min-w-0 items-center gap-3 py-2">
-                  <ProductThumb
-                    name={member.order?.batch_products?.name ?? "Reserved product"}
-                    imageUrl={imageForOrder(member.order_id)}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="break-words text-xs font-semibold">
-                      {member.order?.batch_products?.name ?? "Reserved product"}
-                    </p>
-                    <p className="text-xs text-[var(--kargo-muted)]">
-                      Qty: {member.order?.quantity ?? "—"}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-xs tabular-nums">
-                    {money(member.item_subtotal)}
-                  </span>
-                </li>
-              ))
-            : context.map((order) => (
-                <li key={order.id}>
-                  <label className="flex min-h-11 min-w-0 cursor-pointer items-center gap-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selection.has(order.id)}
-                      disabled={busy}
-                      onChange={(event) => {
-                        setSelection((current) => {
-                          const next = new Set(current);
-                          if (event.target.checked) next.add(order.id);
-                          else next.delete(order.id);
-                          return next;
-                        });
-                        setConfirmed(false);
-                      }}
-                      className="h-4 w-4 shrink-0 accent-[var(--kargo-navy)]"
-                    />
-                    <ProductThumb name={order.product} imageUrl={imageForOrder(order.id)} />
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words text-xs font-semibold">{order.product}</p>
-                      <p className="text-xs text-[var(--kargo-muted)]">Qty: {order.qty}</p>
-                    </div>
-                    <span className="shrink-0 text-xs tabular-nums">
-                      {money(order.itemSubtotal)}
-                    </span>
-                  </label>
-                </li>
-              ))}
-        </ul>
-        <div className="space-y-1 text-xs">
-          <p className="font-semibold">Delivery destination</p>
-          <p className="break-words">{address}</p>
-          <p className="text-[var(--kargo-muted)]">
-            Pin: {lat}, {lng}
+        <div>
+          <p className="cdd__section-label">
+            {existing ? "Items in this request" : "Items to combine"}
+            {!existing && (
+              <span className="cdd__section-hint">
+                {selected.length} of {context.length} selected
+              </span>
+            )}
           </p>
+          <ul className="cdd__items">
+            {existing
+              ? existing.members.map((member) => (
+                  <li key={member.order_id} className="cdd__item">
+                    <ProductThumb
+                      name={member.order?.batch_products?.name ?? "Reserved product"}
+                      imageUrl={imageForOrder(member.order_id)}
+                    />
+                    <div className="cdd__item-body">
+                      <p className="cdd__item-name">
+                        {member.order?.batch_products?.name ?? "Reserved product"}
+                      </p>
+                      <p className="cdd__item-qty">Qty: {member.order?.quantity ?? "—"}</p>
+                    </div>
+                    <span className="cdd__item-price">{money(member.item_subtotal)}</span>
+                  </li>
+                ))
+              : context.map((order) => (
+                  <li key={order.id}>
+                    <label
+                      className={`cdd__item${selection.has(order.id) ? " is-selected" : ""}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selection.has(order.id)}
+                        disabled={busy}
+                        onChange={(event) => {
+                          setSelection((current) => {
+                            const next = new Set(current);
+                            if (event.target.checked) next.add(order.id);
+                            else next.delete(order.id);
+                            return next;
+                          });
+                          setConfirmed(false);
+                        }}
+                        className="cdd__item-check"
+                      />
+                      <ProductThumb name={order.product} imageUrl={imageForOrder(order.id)} />
+                      <div className="cdd__item-body">
+                        <p className="cdd__item-name">{order.product}</p>
+                        <p className="cdd__item-qty">Qty: {order.qty}</p>
+                      </div>
+                      <span className="cdd__item-price">{money(order.itemSubtotal)}</span>
+                    </label>
+                  </li>
+                ))}
+          </ul>
+        </div>
+        <div className="cdd__destination">
+          <MapPin size={16} className="cdd__destination-icon" aria-hidden="true" />
+          <div className="cdd__destination-body">
+            <p className="cdd__destination-label">Delivery destination</p>
+            <p className="cdd__destination-address">{address}</p>
+            <p className="cdd__destination-pin">
+              Pin: {lat}, {lng}
+            </p>
+          </div>
         </div>
         {!existing && (
-          <label className="flex min-h-11 items-start gap-2 text-xs">
+          <label className={`cdd__confirm${confirmed ? " is-checked" : ""}`}>
             <input
               type="checkbox"
               checked={confirmed}
               disabled={busy}
               onChange={(event) => setConfirmed(event.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--kargo-navy)]"
+              className="cdd__confirm-check"
             />
-            <span>
+            <span className="cdd__confirm-text">
               I confirm these selected reservations use this same saved pin and full delivery
               address, including unit or building details.
             </span>
           </label>
         )}
-        <dl className="space-y-1 border-t border-[var(--kargo-line)] pt-3 text-xs">
-          <div className="flex justify-between gap-3">
+        <dl className="cdd__summary">
+          <div className="cdd__summary-row">
             <dt>Items subtotal</dt>
-            <dd className="font-semibold tabular-nums">{money(subtotal)}</dd>
+            <dd>{money(subtotal)}</dd>
           </div>
-          <div className="flex justify-between gap-3">
+          <div className="cdd__summary-row">
             <dt>Shipping fee</dt>
-            <dd>
+            <dd
+              className={existing?.shipping_fee != null ? undefined : "is-pending"}
+            >
               {existing?.shipping_fee != null
                 ? money(existing.shipping_fee)
                 : existing?.status === "awaiting_shipping_fee"
@@ -251,7 +266,7 @@ export default function CombinedDeliveryRequestDialog({
             </dd>
           </div>
           {existing?.shipping_fee != null && (
-            <div className="flex justify-between gap-3 font-semibold">
+            <div className="cdd__summary-row cdd__summary-row--total">
               <dt>
                 {existing.status === "invalidated" ? "Previous combined total" : "Group total"}
               </dt>
@@ -264,12 +279,12 @@ export default function CombinedDeliveryRequestDialog({
           )}
         </dl>
         {!existing && !eligibility.eligible && (
-          <p className="text-xs text-[var(--kargo-muted)]">
+          <p className="cdd__notice">
             {eligibility.feedback[0] ?? "Select at least two eligible reservations."}
           </p>
         )}
         {error && (
-          <p role="alert" className="text-xs text-red-700">
+          <p role="alert" className="cdd__error">
             {error}
           </p>
         )}
@@ -277,13 +292,13 @@ export default function CombinedDeliveryRequestDialog({
           ["awaiting_shipping_fee", "shipping_fee_set"].includes(existing.status) &&
           existing.payment?.status !== "pending_review" &&
           onRecoverRequest && (
-            <p className="text-xs text-[var(--kargo-muted)]">
+            <p className="cdd__notice">
               If this request is no longer eligible, check eligibility to return its reservations to
               individual shipping. Valid approved requests stay unchanged.
             </p>
           )}
         {existing?.status === "invalidated" && (
-          <p className="text-xs text-[var(--kargo-muted)]">
+          <p className="cdd__notice">
             This request is no longer payable. Any previous shared fee is historical and is not
             applied to individual reservations. Shipping or location-correction pauses remain until
             the seller resolves them.

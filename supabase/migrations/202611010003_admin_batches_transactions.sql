@@ -493,7 +493,7 @@ begin
 
   if v is null then raise exception 'Order not found' using errcode = 'P0002'; end if;
 
-  select coalesce(jsonb_agg(row_to_json(p) order by p.submitted_at desc), '[]'::jsonb)
+  select coalesce(jsonb_agg(row_to_json(p) order by p."submittedAt" desc), '[]'::jsonb)
     into v_payments
   from (
     select id, status, method_type as method, amount, reference_number as "referenceNumber",
