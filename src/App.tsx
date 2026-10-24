@@ -55,6 +55,8 @@ import {
 
 import { NewBatchModal } from "@/features/batches"
 
+import { AdminProfile } from "@/features/admin"
+
 import { Footer, Header, TabBar, TabContent } from "@/components/layout"
 
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
@@ -207,6 +209,8 @@ export default function App() {
 
   const [showApplyToSell, setShowApplyToSell] = useState(false)
 
+  const [showAdminProfile, setShowAdminProfile] = useState(false)
+
   // Role is fixed by seller capability (can_sell). There is no in-app role
 
   // switch: a seller-capable account is always a Seller, everyone else a Buyer.
@@ -225,7 +229,7 @@ export default function App() {
     "Users",
     "Batches",
     "Transactions",
-    "Settings",
+    "Security",
     "Notifications",
   ]
   const NON_ADMIN_ALLOWED_TABS: Tab[] = [
@@ -753,7 +757,9 @@ export default function App() {
 
               setStage("login")
             }}
-            onSettings={() => setTab("Settings")}
+            onSettings={() =>
+              role === "Admin" ? setShowAdminProfile(true) : setTab("Settings")
+            }
             onApplyToSell={() => setShowApplyToSell(true)}
             role={role}
             batches={batches}
@@ -795,8 +801,8 @@ export default function App() {
           {showApplyToSell && (
             <ApplyToSellModal
               onEnableSeller={async () => {
-                if (isSupabaseConfigured)
-                  await kargoApi.updateProfile({ canSell: true })
+                // Phase-1 revoked direct can_sell updates; go through the RPC.
+                if (isSupabaseConfigured) await kargoApi.enableSellerAccess()
 
                 setUser((current) => ({
                   ...current,
@@ -808,6 +814,9 @@ export default function App() {
               }}
               onClose={() => setShowApplyToSell(false)}
             />
+          )}
+          {showAdminProfile && (
+            <AdminProfile user={user} onClose={() => setShowAdminProfile(false)} />
           )}
         </div>
         </NotificationsProvider>

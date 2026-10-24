@@ -14,7 +14,7 @@ import {
   AdminUsers,
   AdminBatches,
   AdminTransactions,
-  AdminSettings,
+  AdminSecurity,
 } from "@/features/admin"
 
 export default function TabContent({
@@ -52,10 +52,11 @@ export default function TabContent({
     "My Claims": <MyClaims {...shared} />,
     Payments: <Payments {...shared} />,
     Orders: <Orders {...shared} />,
-    Settings: isAdmin ? <AdminSettings /> : <Settings {...shared} />,
+    Settings: <Settings {...shared} />,
     Notifications: <NotificationsPage onNavigate={shared.setTab} />,
     Users: <AdminUsers />,
     Transactions: <AdminTransactions />,
+    Security: <AdminSecurity />,
   }
   return (
     <div key={displayed} className={animClass}>

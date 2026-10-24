@@ -1,45 +1,47 @@
-import { useState } from "react"
+import { useState } from "react";
 
-import { Modal, PrimaryBtn, SecondaryBtn, Avatar, CardSkeleton } from "@/components/shared"
-import { adminApi } from "@/services"
-import { ADMIN_ACTION_LABELS } from "@/constants/admin"
+import { Modal, PrimaryBtn, SecondaryBtn, Avatar, CardSkeleton } from "@/components/shared";
+import { adminApi } from "@/services";
+import { ADMIN_ACTION_LABELS } from "@/constants/admin";
 
-import { useAdminResource } from "../useAdminResource"
-import AdminBadge from "./AdminBadge"
-import AdminConfirmModal from "./AdminConfirmModal"
+import { useAdminResource } from "../useAdminResource";
+import AdminBadge from "./AdminBadge";
+import AdminConfirmModal from "./AdminConfirmModal";
+import { AdminEmptyText, AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
 
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`
+const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
-  })
+  });
 
 type PendingAction =
   | { kind: "suspend" }
   | { kind: "restore" }
   | { kind: "grant" }
   | { kind: "revoke" }
-  | null
+  | null;
 
 export default function AdminUserDetailModal({
   userId,
   onClose,
   onChanged,
 }: {
-  userId: string
-  onClose: () => void
-  onChanged: () => void
+  userId: string;
+  onClose: () => void;
+  onChanged: () => void;
 }) {
   const { data, loading, error, refresh } = useAdminResource(
     () => adminApi.getUser(userId),
     [userId],
-  )
-  const [pending, setPending] = useState<PendingAction>(null)
+  );
+  const [pending, setPending] = useState<PendingAction>(null);
 
-  const roleTone = data?.isAdmin ? "admin" : data?.canSell ? "seller" : "buyer"
-  const roleLabel = data?.isAdmin ? "Admin" : data?.canSell ? "Seller" : "Buyer"
+  const roleTone = data?.isAdmin ? "admin" : data?.canSell ? "seller" : "buyer";
+  const roleLabel = data?.isAdmin ? "Admin" : data?.canSell ? "Seller" : "Buyer";
+  const destructive = pending?.kind === "suspend" || pending?.kind === "revoke";
 
   return (
     <>
@@ -51,20 +53,19 @@ export default function AdminUserDetailModal({
           </div>
         )}
         {!loading && error && (
-          <p role="alert" style={{ color: "#B42318", fontSize: 13 }}>
+          <p role="alert" className="admin-form-error">
             {error}
           </p>
         )}
         {!loading && data && (
           <div className="space-y-5">
-            {/* Identity */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Avatar name={data.name} size={48} imageUrl={undefined} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "#171923" }}>{data.name}</div>
-                <div style={{ fontSize: 12, color: "#748391" }}>{data.email}</div>
+            <div className="admin-detail-hero">
+              <Avatar name={data.name} size={52} imageUrl={undefined} />
+              <div className="admin-detail-hero__identity">
+                <h2>{data.name}</h2>
+                <p>{data.email}</p>
               </div>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <div className="admin-detail-hero__badges">
                 <AdminBadge tone={roleTone} label={roleLabel} />
                 <AdminBadge
                   tone={data.accountStatus}
@@ -74,93 +75,78 @@ export default function AdminUserDetailModal({
             </div>
 
             {data.accountStatus === "suspended" && data.accountStatusReason && (
-              <div
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  background: "#FEECEC",
-                  color: "#B42318",
-                  fontSize: 12.5,
-                }}
-              >
-                Suspended — {data.accountStatusReason}
+              <div className="admin-callout admin-callout--danger">
+                <p>
+                  <strong>Suspended.</strong> {data.accountStatusReason}
+                </p>
               </div>
             )}
 
-            {/* Facts grid */}
-            <div
-              style={{
-                display: "grid",
-                gap: 10,
-                gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-              }}
-            >
-              <Fact label="User ID" value={data.id} mono />
-              <Fact label="Joined" value={fmtDate(data.createdAt)} />
-              <Fact label="Buyer orders" value={String(data.buyerOrders)} />
-              <Fact label="Seller orders" value={String(data.sellerOrders)} />
-              <Fact label="Seller GMV (30d)" value={peso(data.sellerGmv30)} />
-              <Fact label="Live batches" value={String(data.liveBatches)} />
-            </div>
+            <AdminModalSection title="Account">
+              <AdminFactGrid>
+                <AdminFact label="User ID" value={data.id} mono />
+                <AdminFact label="Joined" value={fmtDate(data.createdAt)} />
+                <AdminFact
+                  label="Last sign-in"
+                  value={data.lastSignInAt ? fmtDate(data.lastSignInAt) : "Never"}
+                />
+                <AdminFact label="Buyer orders" value={String(data.buyerOrders)} />
+                <AdminFact label="Buyer spend (30d)" value={peso(data.buyerSpend30)} />
+                {data.canSell && (
+                  <>
+                    <AdminFact label="Seller orders" value={String(data.sellerOrders)} />
+                    <AdminFact label="Seller GMV (30d)" value={peso(data.sellerGmv30)} />
+                    <AdminFact label="Live batches" value={String(data.liveBatches)} />
+                  </>
+                )}
+              </AdminFactGrid>
+            </AdminModalSection>
 
-            {/* Recent orders */}
-            <Section title="Recent activity">
+            <AdminModalSection title="Recent orders" hint="Latest 5">
               {data.recentOrders.length === 0 ? (
-                <Muted>No recent orders.</Muted>
+                <AdminEmptyText>No recent orders for this account.</AdminEmptyText>
               ) : (
-                <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                <ul className="admin-row-list">
                   {data.recentOrders.map((o) => (
-                    <li
-                      key={o.id}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 8,
-                        padding: "6px 0",
-                        borderBottom: "1px solid #F3F4F6",
-                        fontSize: 13,
-                      }}
-                    >
-                      <span style={{ color: "#374151" }}>
-                        {o.order_number} · {o.status.replace(/_/g, " ")}
+                    <li key={o.id} className="admin-row-list__item">
+                      <span className="admin-row-list__main">
+                        <strong>{o.order_number}</strong>
+                        <span>{o.status.replace(/_/g, " ")}</span>
                       </span>
-                      <strong style={{ color: "#171923" }}>{peso(o.total_amount)}</strong>
+                      <span className="admin-row-list__value">{peso(o.total_amount)}</span>
                     </li>
                   ))}
                 </ul>
               )}
-            </Section>
+            </AdminModalSection>
 
-            {/* Moderation history */}
-            <Section title="Moderation history">
+            <AdminModalSection title="Moderation history" hint="Newest first">
               {data.moderationHistory.length === 0 ? (
-                <Muted>No admin actions recorded for this account.</Muted>
+                <AdminEmptyText>No admin actions recorded for this account.</AdminEmptyText>
               ) : (
-                <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                <ul className="admin-row-list">
                   {data.moderationHistory.map((h) => (
-                    <li
-                      key={h.id}
-                      style={{ padding: "6px 0", borderBottom: "1px solid #F3F4F6", fontSize: 12.5 }}
-                    >
-                      <strong>{ADMIN_ACTION_LABELS[h.action] ?? h.action}</strong>
-                      {h.reason ? ` — ${h.reason}` : ""}{" "}
-                      <span style={{ color: "#9aa3bd" }}>· {fmtDate(h.created_at)}</span>
+                    <li key={h.id} className="admin-row-list__item">
+                      <span className="admin-row-list__main">
+                        <strong>{ADMIN_ACTION_LABELS[h.action] ?? h.action}</strong>
+                        {h.reason && <span>{h.reason}</span>}
+                      </span>
+                      <span className="admin-row-list__meta">{fmtDate(h.created_at)}</span>
                     </li>
                   ))}
                 </ul>
               )}
-            </Section>
+            </AdminModalSection>
 
-            {/* Actions (hidden for admin targets; team is managed in Settings) */}
             {!data.isAdmin && (
-              <div
-                className="kargo-modal-actions"
-                style={{ flexWrap: "wrap", justifyContent: "flex-start" }}
-              >
+              <div className="admin-modal-footer">
                 {data.accountStatus === "active" ? (
-                  <DangerBtn onClick={() => setPending({ kind: "suspend" })}>
+                  <SecondaryBtn
+                    style={{ borderColor: "#FECACA", background: "#FEF2F2", color: "#B91C1C" }}
+                    onClick={() => setPending({ kind: "suspend" })}
+                  >
                     Suspend account
-                  </DangerBtn>
+                  </SecondaryBtn>
                 ) : (
                   <PrimaryBtn size="sm" onClick={() => setPending({ kind: "restore" })}>
                     Restore account
@@ -210,83 +196,28 @@ export default function AdminUserDetailModal({
                   ? "Grant access"
                   : "Revoke access"
           }
+          tone={destructive ? "danger" : "default"}
           // Suspend/revoke are the destructive ones — require typing the name.
           confirmWord={
             pending.kind === "suspend" || pending.kind === "revoke" ? data.name : undefined
           }
           onConfirm={async (reason) => {
             if (pending.kind === "suspend") {
-              await adminApi.setAccountStatus(userId, "suspended", reason)
+              await adminApi.setAccountStatus(userId, "suspended", reason);
             } else if (pending.kind === "restore") {
-              await adminApi.setAccountStatus(userId, "active", reason)
+              await adminApi.setAccountStatus(userId, "active", reason);
             } else if (pending.kind === "grant") {
-              await adminApi.setSellerAccess(userId, true, reason)
+              await adminApi.setSellerAccess(userId, true, reason);
             } else {
-              await adminApi.setSellerAccess(userId, false, reason)
+              await adminApi.setSellerAccess(userId, false, reason);
             }
-            setPending(null)
-            refresh()
-            onChanged()
+            setPending(null);
+            refresh();
+            onChanged();
           }}
           onClose={() => setPending(null)}
         />
       )}
     </>
-  )
-}
-
-function Fact({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#9aa3bd", letterSpacing: ".05em" }}>
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: 13,
-          color: "#171923",
-          fontWeight: 600,
-          overflowWrap: "anywhere",
-          fontFamily: mono ? "monospace" : undefined,
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h3 style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 800, color: "#171923" }}>{title}</h3>
-      {children}
-    </div>
-  )
-}
-
-function Muted({ children }: { children: React.ReactNode }) {
-  return <p style={{ color: "#748391", fontSize: 12.5, margin: 0 }}>{children}</p>
-}
-
-function DangerBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        minHeight: 44,
-        padding: "0 14px",
-        borderRadius: 7,
-        border: "1px solid #FECACA",
-        background: "#FEF2F2",
-        color: "#B91C1C",
-        fontWeight: 700,
-        fontSize: 13,
-        cursor: "pointer",
-      }}
-    >
-      {children}
-    </button>
-  )
+  );
 }

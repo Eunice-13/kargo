@@ -62,9 +62,10 @@ export type Tab =
   | "Notifications"
   | "Users"
   | "Transactions"
+  | "Security"
 
 // The five admin top-level tabs (a subset of Tab, for role-aware helpers).
-export type AdminTab = "Dashboard" | "Users" | "Batches" | "Transactions" | "Settings"
+export type AdminTab = "Dashboard" | "Users" | "Batches" | "Transactions" | "Security"
 
 export type Role = "Buyer" | "Seller" | "Admin"
 
@@ -412,6 +413,12 @@ export interface BatchItem {
   groupDiscountValue?: number
 
   groupDiscountMinSubtotal?: number
+
+  // Admin moderation state, surfaced to the owning seller so a hidden/flagged
+  // batch shows a notice in their Batches tab. Buyers never see hidden batches.
+  moderationStatus?: "visible" | "flagged" | "hidden"
+
+  moderationReason?: string
 
   products: BatchStoredProduct[]
 }

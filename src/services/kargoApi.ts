@@ -741,6 +741,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       notes: row.notes ?? undefined,
 
+      moderationStatus: row.moderation_status ?? undefined,
+
+      moderationReason: row.moderation_reason ?? undefined,
+
       coverImage: batchMediaUrl(row.batch_cover_path),
 
       galleryImages: (row.batch_gallery_paths ?? []).map((path: string) =>
@@ -2297,6 +2301,13 @@ export async function setGroupOrderShippingFee(groupOrderId: string, fee: number
   if (error) throw error
 }
 
+// Self-service "Start Selling". The admin foundation revoked direct updates of
+// user_profiles.can_sell, so seller enablement goes through this RPC.
+export async function enableSellerAccess() {
+  const { error } = await requireSupabase().rpc("enable_seller_access")
+  if (error) throw error
+}
+
 export async function requestGroupLocationCorrection(groupOrderId: string) {
   const { error } = await requireSupabase().rpc("request_group_location_correction", {
     p_group_order_id: groupOrderId,
@@ -3365,6 +3376,7 @@ export const kargoApi = {
 
   setOrderShippingFee,
   setGroupOrderShippingFee,
+  enableSellerAccess,
   requestGroupLocationCorrection,
   updateGroupDeliveryPin,
   declineGroupDeliveryOrder,

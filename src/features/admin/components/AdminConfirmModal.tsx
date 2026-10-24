@@ -1,96 +1,143 @@
-import { useState } from "react"
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { useState } from "react";
+import { Check, ShieldAlert } from "lucide-react";
 
-// Destructive-action confirmation: consequence copy, required reason, and an
-// optional typed-name confirmation (for suspend/revoke/cancel/override).
+import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared";
+
+// Destructive-action confirmation: consequence copy, a required reason, and an
+// optional typed confirmation (for suspend/revoke/cancel/override). `tone`
+// keeps non-destructive actions (restore/grant/verify) visually calm.
 export default function AdminConfirmModal({
   title,
   consequence,
   confirmLabel = "Confirm",
   confirmWord,
   minReason = 8,
+  tone = "danger",
   onConfirm,
   onClose,
 }: {
-  title: string
-  consequence: string
-  confirmLabel?: string
+  title: string;
+  consequence: string;
+  confirmLabel?: string;
   // When set, the admin must type this exactly (e.g. the target's name).
-  confirmWord?: string
-  minReason?: number
-  onConfirm: (reason: string) => Promise<void>
-  onClose: () => void
+  confirmWord?: string;
+  minReason?: number;
+  tone?: "danger" | "default";
+  onConfirm: (reason: string) => Promise<void>;
+  onClose: () => void;
 }) {
-  const [reason, setReason] = useState("")
-  const [typed, setTyped] = useState("")
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [reason, setReason] = useState("");
+  const [typed, setTyped] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const reasonOk = reason.trim().length >= minReason
-  const typedOk = !confirmWord || typed.trim() === confirmWord.trim()
-  const valid = reasonOk && typedOk
+  const destructive = tone === "danger";
+  const reasonLength = reason.trim().length;
+  const reasonOk = reasonLength >= minReason;
+  const typedOk = !confirmWord || typed.trim() === confirmWord.trim();
+  const typedStarted = typed.trim().length > 0;
+  const valid = reasonOk && typedOk;
 
   return (
-    <Modal title={title} variant="danger" width={480} onClose={onClose}>
-      <div className="space-y-4">
-        <p style={{ color: "#475467", fontSize: 13, lineHeight: 1.5 }}>{consequence}</p>
+    <Modal title={title} variant={destructive ? "danger" : "confirm"} width={492} onClose={onClose}>
+      <div className="admin-confirm">
+        <div className={`admin-callout admin-callout--${destructive ? "danger" : "info"}`}>
+          <span className="admin-callout__icon" aria-hidden="true">
+            {destructive ? <ShieldAlert size={18} /> : <Check size={18} />}
+          </span>
+          <p>{consequence}</p>
+        </div>
 
-        <label className="block text-xs font-semibold text-gray-700">
-          Reason (recorded in the audit log)
-          <textarea
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            rows={3}
-            placeholder={`At least ${minReason} characters`}
-            className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-          />
-        </label>
+        {minReason > 0 && (
+          <div className="admin-field">
+            <div className="admin-field__head">
+              <label htmlFor="admin-confirm-reason">Reason</label>
+              <span className={`admin-field__count${reasonOk ? " is-valid" : ""}`}>
+                {reasonOk
+                  ? "Ready"
+                  : reasonLength === 0
+                    ? `At least ${minReason}`
+                    : `${minReason - reasonLength} more`}
+              </span>
+            </div>
+            <textarea
+              id="admin-confirm-reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              rows={3}
+              placeholder="What happened, and why is this action needed?"
+              aria-describedby="admin-confirm-reason-hint"
+              aria-invalid={reason.length > 0 ? !reasonOk : undefined}
+            />
+            <p id="admin-confirm-reason-hint" className="admin-field__hint">
+              Saved to the audit log with your name. At least {minReason} characters.
+            </p>
+          </div>
+        )}
 
         {confirmWord && (
-          <label className="block text-xs font-semibold text-gray-700">
-            Type <span style={{ color: "#B42318" }}>{confirmWord}</span> to confirm
-            <input
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-            />
-          </label>
+          <div className="admin-field">
+            <label htmlFor="admin-confirm-word">
+              Type <strong>{confirmWord}</strong> to confirm
+            </label>
+            <div className="admin-field__match">
+              <input
+                id="admin-confirm-word"
+                value={typed}
+                onChange={(event) => setTyped(event.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+                aria-invalid={typedStarted && !typedOk}
+              />
+              {typedOk && typedStarted && (
+                <Check className="admin-field__match-icon" size={16} aria-hidden="true" />
+              )}
+            </div>
+            <p className="admin-field__hint">
+              {typedOk
+                ? "Matches. You can confirm."
+                : typedStarted
+                  ? "Doesn't match yet."
+                  : "Prevents changes to the wrong record."}
+            </p>
+          </div>
         )}
 
         {error && (
-          <p role="alert" className="text-sm font-medium text-red-600">
+          <p role="alert" className="admin-form-error">
             {error}
           </p>
         )}
+      </div>
 
-        <div className="kargo-modal-actions">
-          <SecondaryBtn onClick={onClose} disabled={saving}>
-            Cancel
-          </SecondaryBtn>
-          <PrimaryBtn
-            disabled={!valid || saving}
-            loading={saving}
-            onClick={async () => {
-              setSaving(true)
-              setError(null)
-              try {
-                await onConfirm(reason.trim())
-                onClose()
-              } catch (err) {
-                setError(
-                  err instanceof Error
-                    ? err.message
-                    : "Could not complete the action. Please try again.",
-                )
-              } finally {
-                setSaving(false)
-              }
-            }}
-          >
-            {confirmLabel}
-          </PrimaryBtn>
-        </div>
+      <div className="admin-modal-footer">
+        <SecondaryBtn onClick={onClose} disabled={saving}>
+          Cancel
+        </SecondaryBtn>
+        <PrimaryBtn
+          disabled={!valid || saving}
+          loading={saving}
+          style={destructive ? { background: "#B42318" } : undefined}
+          onClick={async () => {
+            setSaving(true);
+            setError(null);
+            try {
+              await onConfirm(reason.trim());
+              onClose();
+            } catch (err) {
+              setError(
+                err instanceof Error
+                  ? err.message
+                  : "Could not complete the action. Please try again.",
+              );
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          {confirmLabel}
+        </PrimaryBtn>
       </div>
     </Modal>
-  )
+  );
 }

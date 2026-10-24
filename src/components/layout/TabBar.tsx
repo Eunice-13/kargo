@@ -9,7 +9,7 @@ import {
   LayoutGrid,
   Package,
   ReceiptText,
-  Settings as SettingsIcon,
+  ShieldCheck,
   ShoppingCart,
   Users as UsersIcon,
 } from "lucide-react"
@@ -17,7 +17,7 @@ import {
 export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
 
 // Admin-only tab set. Kept separate so buyer/seller tabs are never affected.
-const ADMIN_TABS: Tab[] = ["Dashboard", "Users", "Batches", "Transactions", "Settings"]
+const ADMIN_TABS: Tab[] = ["Dashboard", "Users", "Batches", "Transactions", "Security"]
 
 // Ordered tab list for a role (used for rendering and slide direction).
 export function tabsForRole(role: Role): Tab[] {
@@ -39,7 +39,7 @@ const ADMIN_TAB_ICONS = {
   Users: UsersIcon,
   Batches: Package,
   Transactions: ReceiptText,
-  Settings: SettingsIcon,
+  Security: ShieldCheck,
 } as const
 
 export default function TabBar({

@@ -45,7 +45,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_confirmed order_status[] := array['payment_confirmed','preparing','completed']::public.order_status[];
+  v_confirmed public.order_status[] := array['payment_confirmed','preparing','completed']::public.order_status[];
   v_gmv_30 numeric;
   v_orders_30 integer;
   v_active_sellers integer;
@@ -104,14 +104,14 @@ begin
     into v_chart
   from (
     select
-      (current_date - g.offset) as day,
+      (current_date - g.n) as day,
       coalesce((
         select sum(o.total_amount)
         from public.orders o
         where o.status = any(v_confirmed)
-          and o.created_at::date = (current_date - g.offset)
+          and o.created_at::date = (current_date - g.n)
       ), 0) as gmv
-    from generate_series(13, 0, -1) as g(offset)
+    from generate_series(13, 0, -1) as g(n)
   ) d;
 
   -- Recent admin activity (last 8 audit rows).
@@ -179,7 +179,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_confirmed order_status[] := array['payment_confirmed','preparing','completed']::public.order_status[];
+  v_confirmed public.order_status[] := array['payment_confirmed','preparing','completed']::public.order_status[];
   v_limit integer := least(greatest(coalesce(p_limit, 25), 1), 100);
   v_offset integer := greatest(coalesce(p_offset, 0), 0);
   v_search text := nullif(trim(coalesce(p_search, '')), '');
@@ -205,7 +205,7 @@ begin
       or (p_role = 'buyer' and not p.can_sell and not public.is_admin(p.id)))
     and (p_status = 'all' or p.account_status::text = p_status);
 
-  select coalesce(jsonb_agg(row_to_json(f) order by f.created_at desc), '[]'::jsonb)
+  select coalesce(jsonb_agg(row_to_json(f) order by f."createdAt" desc), '[]'::jsonb)
     into v_rows
   from (
     select
@@ -219,10 +219,15 @@ begin
       p.account_status as "accountStatus",
       p.created_at as "createdAt",
       p.updated_at as "updatedAt",
+      u.last_sign_in_at as "lastSignInAt",
       coalesce((select count(*) from public.orders o where o.buyer_id = p.id), 0) as orders,
+      -- Role-aware money metric (30d): sellers see what they sold; buyers see
+      -- what they spent. Confirmed/paid orders only.
+      case when p.can_sell then 'seller' else 'buyer' end as "gmvRole",
       coalesce((
         select sum(o.total_amount) from public.orders o
-        where o.seller_id = p.id and o.status = any(v_confirmed)
+        where (case when p.can_sell then o.seller_id else o.buyer_id end) = p.id
+          and o.status = any(v_confirmed)
           and o.created_at >= now() - interval '30 days'
       ), 0) as "gmv30"
     from public.user_profiles p
@@ -263,7 +268,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_confirmed order_status[] := array['payment_confirmed','preparing','completed']::public.order_status[];
+  v_confirmed public.order_status[] := array['payment_confirmed','preparing','completed']::public.order_status[];
   v_profile jsonb;
   v_recent jsonb;
   v_history jsonb;
@@ -283,11 +288,17 @@ begin
     'accountStatusReason', p.account_status_reason,
     'createdAt', p.created_at,
     'updatedAt', p.updated_at,
+    'lastSignInAt', u.last_sign_in_at,
     'buyerOrders', coalesce((select count(*) from public.orders o where o.buyer_id = p.id), 0),
     'sellerOrders', coalesce((select count(*) from public.orders o where o.seller_id = p.id), 0),
     'sellerGmv30', coalesce((
       select sum(o.total_amount) from public.orders o
       where o.seller_id = p.id and o.status = any(v_confirmed)
+        and o.created_at >= now() - interval '30 days'
+    ), 0),
+    'buyerSpend30', coalesce((
+      select sum(o.total_amount) from public.orders o
+      where o.buyer_id = p.id and o.status = any(v_confirmed)
         and o.created_at >= now() - interval '30 days'
     ), 0),
     'liveBatches', coalesce((

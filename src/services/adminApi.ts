@@ -1,18 +1,46 @@
 import { requireSupabase } from "@/lib/supabase"
 
 import type {
+  AdminAuditFilters,
+  AdminAuditRow,
+  AdminBatchDetail,
+  AdminBatchFilters,
+  AdminBatchRow,
+  AdminCombinedListResult,
   AdminDashboardData,
   AdminListResult,
+  AdminOrderDetail,
+  AdminOrderFilters,
+  AdminOrderRow,
+  AdminPaymentDetail,
+  AdminPaymentFilters,
+  AdminPaymentRow,
+  AdminTeamMember,
   AdminUserDetail,
   AdminUserFilters,
   AdminUserRow,
   AdminUserSearchResult,
+  BatchModerationAction,
 } from "@/features/admin/adminTypes"
 
 import {
   demoAdminDashboard,
+  demoCancelOrder,
+  demoGetBatch,
+  demoGetOrder,
+  demoGetPayment,
   demoGetUser,
+  demoGrantAdmin,
+  demoListAudit,
+  demoListBatches,
+  demoListCombinedPayments,
+  demoListOrders,
+  demoListPayments,
+  demoListTeam,
   demoListUsers,
+  demoModerateBatch,
+  demoReviewPayment,
+  demoRevokeAdmin,
   demoSearchUsers,
   demoSetAccountStatus,
   demoSetSellerAccess,
@@ -101,6 +129,164 @@ export const adminApi = {
       p_user_id: userId,
       p_enabled: enabled,
       p_reason: reason,
+    })
+  },
+
+  // ─── Batches ──────────────────────────────────────────────────────────────
+
+  async listBatches(
+    filters: AdminBatchFilters,
+    limit = 25,
+    offset = 0,
+  ): Promise<AdminListResult<AdminBatchRow>> {
+    if (demoMode) return demoListBatches(filters, limit, offset)
+    return callAdmin("admin_list_batches", {
+      p_search: filters.search ?? null,
+      p_status: filters.status ?? "all",
+      p_moderation: filters.moderation ?? "all",
+      p_category: filters.category ?? "all",
+      p_limit: limit,
+      p_offset: offset,
+    })
+  },
+
+  async getBatch(batchId: string): Promise<AdminBatchDetail> {
+    if (demoMode) return demoGetBatch(batchId)
+    return callAdmin("admin_get_batch", { p_batch_id: batchId })
+  },
+
+  async moderateBatch(
+    batchId: string,
+    action: BatchModerationAction,
+    reason: string,
+  ): Promise<{ changed: boolean }> {
+    if (demoMode) return demoModerateBatch(batchId, action, reason)
+    return callAdmin("admin_moderate_batch", {
+      p_batch_id: batchId,
+      p_action: action,
+      p_reason: reason,
+    })
+  },
+
+  // ─── Orders ───────────────────────────────────────────────────────────────
+
+  async listOrders(
+    filters: AdminOrderFilters,
+    limit = 25,
+    offset = 0,
+  ): Promise<AdminListResult<AdminOrderRow>> {
+    if (demoMode) return demoListOrders(filters, limit, offset)
+    return callAdmin("admin_list_orders", {
+      p_search: filters.search ?? null,
+      p_status: filters.status ?? "all",
+      p_days: filters.days ?? 30,
+      p_limit: limit,
+      p_offset: offset,
+    })
+  },
+
+  async getOrder(orderId: string): Promise<AdminOrderDetail> {
+    if (demoMode) return demoGetOrder(orderId)
+    return callAdmin("admin_get_order", { p_order_id: orderId })
+  },
+
+  async cancelOrder(orderId: string, reason: string): Promise<{ changed: boolean }> {
+    if (demoMode) return demoCancelOrder(orderId, reason)
+    return callAdmin("admin_cancel_order", { p_order_id: orderId, p_reason: reason })
+  },
+
+  // ─── Payments ─────────────────────────────────────────────────────────────
+
+  async listPayments(
+    filters: AdminPaymentFilters,
+    limit = 25,
+    offset = 0,
+  ): Promise<AdminListResult<AdminPaymentRow>> {
+    if (demoMode) return demoListPayments(filters, limit, offset)
+    return callAdmin("admin_list_payments", {
+      p_search: filters.search ?? null,
+      p_status: filters.status ?? "all",
+      p_days: filters.days ?? 30,
+      p_limit: limit,
+      p_offset: offset,
+    })
+  },
+
+  async getPayment(paymentId: string): Promise<AdminPaymentDetail> {
+    if (demoMode) return demoGetPayment(paymentId)
+    return callAdmin("admin_get_payment", { p_payment_id: paymentId })
+  },
+
+  async reviewPayment(
+    paymentId: string,
+    decision: "verified" | "rejected",
+    reason: string,
+  ): Promise<{ changed: boolean; status?: string }> {
+    if (demoMode) return demoReviewPayment(paymentId, decision, reason)
+    return callAdmin("admin_review_payment", {
+      p_payment_id: paymentId,
+      p_decision: decision,
+      p_reason: reason,
+    })
+  },
+
+  // Short-lived signed URL for a private payment receipt. Never cached/logged.
+  async receiptUrl(path: string): Promise<string | null> {
+    if (demoMode || !path) return null
+    const { data, error } = await requireSupabase()
+      .storage.from("payment-receipts")
+      .createSignedUrl(path, 60)
+    if (error) return null
+    return data?.signedUrl ?? null
+  },
+
+  // ─── Combined payments (read-only) ──────────────────────────────────────────
+
+  async listCombinedPayments(
+    filters: { search?: string; status?: string },
+    limit = 25,
+    offset = 0,
+  ): Promise<AdminCombinedListResult> {
+    if (demoMode) return demoListCombinedPayments(filters, limit, offset)
+    return callAdmin("admin_list_combined_payments", {
+      p_search: filters.search ?? null,
+      p_status: filters.status ?? "all",
+      p_limit: limit,
+      p_offset: offset,
+    })
+  },
+
+  // ─── Team ─────────────────────────────────────────────────────────────────
+
+  async listTeam(): Promise<{ rows: AdminTeamMember[] }> {
+    if (demoMode) return demoListTeam()
+    return callAdmin("admin_list_team", {})
+  },
+
+  async grantAdmin(userId: string, reason: string): Promise<{ changed: boolean }> {
+    if (demoMode) return demoGrantAdmin(userId, reason)
+    return callAdmin("admin_grant_admin", { p_user_id: userId, p_reason: reason })
+  },
+
+  async revokeAdmin(userId: string, reason: string): Promise<{ changed: boolean }> {
+    if (demoMode) return demoRevokeAdmin(userId, reason)
+    return callAdmin("admin_revoke_admin", { p_user_id: userId, p_reason: reason })
+  },
+
+  // ─── Audit log ──────────────────────────────────────────────────────────────
+
+  async listAudit(
+    filters: AdminAuditFilters,
+    limit = 25,
+    offset = 0,
+  ): Promise<AdminListResult<AdminAuditRow>> {
+    if (demoMode) return demoListAudit(filters, limit, offset)
+    return callAdmin("admin_list_audit", {
+      p_search: filters.search ?? null,
+      p_action: filters.action ?? "all",
+      p_days: filters.days ?? 30,
+      p_limit: limit,
+      p_offset: offset,
     })
   },
 }

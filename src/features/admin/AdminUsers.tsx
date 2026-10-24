@@ -72,7 +72,7 @@ export default function AdminUsers() {
     u.isAdmin ? "Admin" : u.canSell ? "Seller" : "Buyer"
 
   return (
-    <div className="p-6 mobile-data-page">
+    <div className="p-6 admin-page">
       <AdminPageHeader
         title="Users"
         subtitle="Find any account, verify sellers, and control access."
@@ -124,7 +124,7 @@ export default function AdminUsers() {
             <table className="admin-users-table" style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#6892D5" }}>
-                  {["Account", "Type", "Status", "Joined", "Orders", "GMV 30d", ""].map((h) => (
+                  {["Account", "Type", "Status", "Last sign-in", "Orders", "Spend / GMV 30d", ""].map((h) => (
                     <th
                       key={h}
                       style={{

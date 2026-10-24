@@ -24,3 +24,8 @@ Use one clear page-level hierarchy. Prefer a surface over a nested card when a s
 
 ## Applied pass
 The current pass updates the global shell, typography, motion, focus behavior, responsive behavior, scrollbar treatment, and design documentation while preserving the existing product flows and data model. The top navigation now includes the already-implemented Reports destination alongside Dashboard, Batches, My Claims, and Payments.
+
+## Admin console
+The admin back office is the same product, not a second design system. It reuses the shell, cards, tables, buttons, badges, modals, spacing, and type of the buyer/seller app — only the tab set and a quiet "Admin console" chip in the header change. The admin's five tabs are **Dashboard, Users, Batches, Transactions, Security**; personal profile and password live behind the avatar menu, keeping the governance tabs focused on operations.
+
+Admin status, role, and moderation are communicated with pill badges (text + shape + tone, never color alone): active/suspended, buyer/seller/admin, and visible/flagged/hidden. Destructive actions (suspend, revoke, cancel, override, hide, close) always route through a confirmation that requires a written reason and, for the most consequential ones, typing the target's name; every such action is written to an immutable audit log. Tables stay horizontally scrollable on small screens rather than collapsing, lists always show loading/empty/error states, feedback is inline (no browser alerts), and reduced-motion is respected. Money is shown role-aware: sellers see what they sold, buyers see what they spent.

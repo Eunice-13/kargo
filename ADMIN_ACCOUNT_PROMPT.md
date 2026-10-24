@@ -574,8 +574,8 @@ Layout, top to bottom:
    - Right side: "Updated {time}" + a secondary Refresh button.
 
 2. **KPI row** (5 cards; 3+2 desktop, 2 per row tablet, 1 column mobile):
-   - GMV (30d) — verified/confirmed/completed orders only
-   - Orders (30d)
+   - GMV (30d) — confirmed payments in the last 30 days, using `payment_confirmed_at` (an approval today counts today, even for an older order)
+   - Orders (30d) — orders whose payment was confirmed in the same 30-day window
    - Active sellers
    - Pending seller verifications
    - Payments awaiting review
@@ -589,7 +589,7 @@ Layout, top to bottom:
      - Suspended accounts → Users / Suspended
      - Paid orders not shipped in 7+ days → Transactions / Orders
    - If a count is 0: "All clear" with a green check, not a red zero.
-   - Right: 14-day GMV bar chart. Inline CSS/SVG only; no chart library. Include an `sr-only` table of dates and values. Bars use `INDIGO` at low opacity with the current day solid; hover/focus shows the value.
+   - Right: 14-day GMV bar chart. Inline CSS/SVG only; no chart library. Include an `sr-only` table of dates and values. Bars use `INDIGO` at low opacity with the current day solid; hover/focus shows the value. GMV and order counts land on the payment-confirmed date, not the order-created date.
 
 4. **Bottom row**:
    - Recent admin activity (last 8 audit rows): actor, action, target, relative time. Link to Settings / Audit log.

@@ -130,6 +130,59 @@ live in small leaf files (e.g. `features/settings/types.ts`,
 - **New seed data**: add a file under `data/` and import it into `App.tsx` state.
 - **New theme color / constant**: add to `constants/theme.ts`.
 
+## Admin console
+
+The Admin account is a governance/support capability layered on the existing app,
+not a third marketplace persona. It shares the same shell, components, and visual
+language. `Role` is now `"Buyer" | "Seller" | "Admin"`, resolved in `App.tsx`
+(`adminEnabled` wins, then `sellerEnabled`, else Buyer). Everything admin is gated
+on `role === "Admin"`; buyer/seller paths are untouched.
+
+```
+src/
+  features/admin/
+    index.ts                    exposes the 5 tab screens + AdminProfile
+    AdminDashboard.tsx          KPIs, needs-attention queue, 14-day GMV chart
+    AdminUsers.tsx              accounts directory + AdminUserDetailModal
+    AdminBatches.tsx            moderation list + AdminBatchDetailModal
+    AdminTransactions.tsx       Orders / Payments / Combined sub-tabs
+    AdminSecurity.tsx           Team + Audit log sub-tabs
+    AdminProfile.tsx            personal profile + password (opened from avatar menu)
+    useAdminResource.ts         data/loading/error/refresh hook (stale-response safe)
+    adminTypes.ts               UI row/detail types for adminApi results
+    components/                 AdminPageHeader, AdminStatCard, AdminFilterBar,
+                                AdminBadge, AdminConfirmModal, AdminSectionTabs,
+                                AdminStates, and the detail/confirm modals
+  services/
+    adminApi.ts                 typed RPC wrapper (callAdmin + AdminAccessError) and
+                                an in-memory demo adapter toggled by setAdminDemoMode
+  constants/admin.ts            ADMIN_TONES, filter options, action labels
+  data/admin.ts                 ?preview=admin in-memory demo seed + adapters
+```
+
+- Admin top tabs: Dashboard, Users, Batches, Transactions, Security. `Tab` gained
+  `"Users" | "Transactions" | "Security"`; `AdminTab` lists the five. `tabsForRole`
+  in `TabBar.tsx` returns the admin set for admins, the buyer/seller set otherwise.
+  `TabContent` branches shared tab names (Dashboard/Batches) on role.
+- Admin data flows through `adminApi` (never the buyer/seller loaders).
+  `loadCurrentAppData` short-circuits for admins with an empty snapshot.
+- Admin pages use the `admin-page` class, NOT `mobile-data-page` (the latter
+  restructures tables into labelled cards; admin tables scroll horizontally).
+- `?preview=admin` boots an in-memory admin demo (no Supabase), mirroring
+  `?preview=original`.
+
+### Supabase (admin)
+
+Migrations under `supabase/migrations/202611010001..04` add ONLY: `admin_members`
+and `admin_audit_log` tables, an `account_status` column + moderation columns on
+existing tables, and a set of `security definer`, `is_admin()`-gated RPCs
+(`admin_dashboard`, `admin_list_*`, `admin_get_*`, and audited writes
+`admin_set_account_status`, `admin_set_seller_access`, `admin_moderate_batch`,
+`admin_cancel_order`, `admin_review_payment`, `admin_grant/revoke_admin`). Seller
+BIR verification is intentionally out of scope (that infrastructure was removed in
+`202609300002` before this work). `can_sell` self-updates are revoked; the
+"Start Selling" flow uses the `enable_seller_access()` RPC.
+
 ## Conventions
 
 - Components are default exports (see AGENTS.md). Per-folder `index.ts` files re-export

@@ -12,7 +12,7 @@ export default function AdminPlaceholder({
   blurb: string
 }) {
   return (
-    <div className="p-6 mobile-data-page">
+    <div className="p-6 admin-page">
       <SH title={title} />
       <p
         style={{

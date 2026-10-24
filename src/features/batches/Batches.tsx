@@ -1201,6 +1201,33 @@ export default function Batches({
                           >
                             {b.title}
                           </h3>
+                          {role === "Seller" &&
+                            (b.moderationStatus === "hidden" ||
+                              b.moderationStatus === "flagged") && (
+                              <div
+                                style={{
+                                  marginBottom: 8,
+                                  padding: "6px 9px",
+                                  borderRadius: 8,
+                                  background:
+                                    b.moderationStatus === "hidden"
+                                      ? "#FEECEC"
+                                      : "#FDF2E3",
+                                  color:
+                                    b.moderationStatus === "hidden"
+                                      ? "#B42318"
+                                      : "#B4690E",
+                                  fontSize: 10.5,
+                                  fontWeight: 600,
+                                  lineHeight: 1.35,
+                                }}
+                              >
+                                {b.moderationStatus === "hidden"
+                                  ? "Hidden from the catalog by an admin."
+                                  : "Flagged for admin review."}
+                                {b.moderationReason ? ` ${b.moderationReason}` : ""}
+                              </div>
+                            )}
                           <div
                             className={`flex items-center gap-1.5 mb-3 ${
                               role === "Seller" ? "seller-batch-organizer" : ""
