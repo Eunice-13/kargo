@@ -1,4 +1,3 @@
-import MyGroupOrders from "./MyGroupOrders"
 import { useState, useEffect, useMemo, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 
@@ -416,7 +415,7 @@ export default function Dashboard({
 
       sub: "Open + Scheduled",
 
-      sc: GREEN,
+      sc: "#64E894",
 
       bg: "linear-gradient(135deg, #ECFFF4 0%, #DCF8E9 55%, #CFF1DF 100%)",
     },
@@ -430,7 +429,7 @@ export default function Dashboard({
 
       sub: "Payment proofs to review",
 
-      sc: AMBER,
+      sc: "#F4D85D",
 
       bg: "linear-gradient(135deg, #FFFBE3 0%, #FFF5D3 55%, #FFEDBD 100%)",
     },
@@ -444,7 +443,7 @@ export default function Dashboard({
 
       sub: "Awaiting your approval",
 
-      sc: "#EF4444",
+      sc: "#E62B48",
 
       bg: "linear-gradient(135deg, #FFF0F2 0%, #FCE2E6 55%, #F8D4DA 100%)",
     },
@@ -800,20 +799,20 @@ export default function Dashboard({
         </div>
 
         <section className="seller-fulfillment-section">
-          <div className="seller-board-preview">
-            <div className="seller-section-heading seller-board-heading">
-              <h2>Fulfillment Board</h2>
-              <div>
-                <button type="button" onClick={() => setShowSalesReport(true)}>
-                  <FileText size={14} aria-hidden="true" />
-                  Sales Report
-                </button>
-                <button type="button" onClick={() => setBoardExpanded(true)}>
-                  <Maximize2 size={14} aria-hidden="true" />
-                  Expand
-                </button>
-              </div>
+          <div className="seller-section-heading seller-board-heading">
+            <h2>Fulfillment Board</h2>
+            <div>
+              <button type="button" onClick={() => setShowSalesReport(true)}>
+                <FileText size={14} aria-hidden="true" />
+                Sales Report
+              </button>
+              <button type="button" onClick={() => setBoardExpanded(true)}>
+                <Maximize2 size={14} aria-hidden="true" />
+                Expand
+              </button>
             </div>
+          </div>
+          <div className="seller-board-preview">
             <FulfillmentBoard
               fulfillment={fulfillment}
               role="seller"
@@ -844,7 +843,7 @@ export default function Dashboard({
                 <header>
                   <div>
                     <button type="button" onClick={() => setBoardExpanded(false)}>
-                      <X size={16} aria-hidden="true" /> Back to Dashboard
+                      <X size={16} aria-hidden="true" />
                     </button>
                     <h2>Fulfillment Board</h2>
                   </div>
@@ -945,8 +944,6 @@ export default function Dashboard({
           )
         })}
       </div>
-      {role === "Buyer" && <MyGroupOrders key={user.id ?? user.email} buyerId={user.id}
-        batches={batches} onBrowseGroups={() => setTab("Batches")} onOpenClaims={() => setTab("My Claims")} onUpdated={refreshData} />}
       {role === "Seller" && (
         <div
           className="grid gap-6"
@@ -1340,7 +1337,7 @@ export default function Dashboard({
               <header>
                 <div>
                   <button type="button" onClick={() => setBoardExpanded(false)}>
-                    <X size={16} aria-hidden="true" /> Back to Dashboard
+                    <X size={16} aria-hidden="true" />
                   </button>
                   <h2>Fulfillment Board</h2>
                 </div>

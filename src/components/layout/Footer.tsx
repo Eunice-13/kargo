@@ -26,7 +26,35 @@ const socialLinks = [
   { label: "YouTube", href: "#youtube", mark: "" },
 ]
 
-export default function Footer() {
+import type { Role } from "@/types"
+
+export default function Footer({ role }: { role?: Role }) {
+  // Admins get a slim internal footer, not the marketing one.
+  if (role === "Admin") {
+    return (
+      <footer
+        className="kargo-footer kargo-footer--admin"
+        style={{
+          padding: "18px 24px",
+          borderTop: "1px solid #E5E7EB",
+          background: "#fff",
+          color: "#667085",
+          fontSize: 12,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <span style={{ fontWeight: 600 }}>KARGO Admin · Internal use only</span>
+        <a href="mailto:support@kargo.ph" style={{ color: "#2e3192", fontWeight: 600 }}>
+          support@kargo.ph
+        </a>
+      </footer>
+    )
+  }
+
   return (
     <footer className="kargo-footer">
       <div className="kargo-footer__grid">

@@ -29,6 +29,16 @@ export type UserInfo = {
 
   sellerEnabled?: boolean
 
+  // Governance capability: an active row in admin_members. Mapped from a second
+  // query in profileFor; binary (there is exactly one admin role).
+  adminEnabled?: boolean
+
+  // Mirrors user_profiles.account_status. A suspended account sees the
+  // AccountSuspended screen instead of the app shell, for every role.
+  accountStatus?: "active" | "suspended"
+
+  accountStatusReason?: string
+
   // Email/notification opt-outs, keyed by NOTIF_DEFAULTS keys (e.g. "waitlist",
 
   // "claims"). Missing key = opted in. Persisted to profiles.notification_preferences.
@@ -42,9 +52,21 @@ export type UserInfo = {
   memberSince?: string
 }
 
-export type Tab = "Dashboard" | "Batches" | "My Claims" | "Payments" | "Orders" | "Settings" | "Notifications"
+export type Tab =
+  | "Dashboard"
+  | "Batches"
+  | "My Claims"
+  | "Payments"
+  | "Orders"
+  | "Settings"
+  | "Notifications"
+  | "Users"
+  | "Transactions"
 
-export type Role = "Buyer" | "Seller"
+// The five admin top-level tabs (a subset of Tab, for role-aware helpers).
+export type AdminTab = "Dashboard" | "Users" | "Batches" | "Transactions" | "Settings"
+
+export type Role = "Buyer" | "Seller" | "Admin"
 
 export type ClaimStatus = "Pending" | "Awaiting Verification" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
 

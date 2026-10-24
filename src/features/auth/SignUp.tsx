@@ -1,6 +1,9 @@
 import { useCallback, useRef, useState } from "react"
 import { Camera, Plane, ShoppingBasket } from "lucide-react"
 import type { Role, UserInfo } from "@/types"
+
+// Signup can only ever create a Buyer or Seller; Admin is granted out-of-band.
+type SignupRole = Exclude<Role, "Admin">
 import { PrimaryBtn, Toggle } from "@/components/shared"
 import { isSupabaseConfigured } from "@/lib/supabase"
 import { kargoApi } from "@/services"
@@ -24,7 +27,7 @@ export default function SignUp({
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState<Role>("Buyer")
+  const [role, setRole] = useState<SignupRole>("Buyer")
   const [errs, setErrs] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
@@ -255,7 +258,7 @@ export default function SignUp({
           <div className="auth-role-field">
             <label className="auth-section-label">I want to join as a...</label>
             <div className="auth-role-options">
-              {(["Buyer", "Seller"] as Role[]).map((option) => (
+              {(["Buyer", "Seller"] as SignupRole[]).map((option) => (
                 <button
                   type="button"
                   key={option}

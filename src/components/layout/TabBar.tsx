@@ -8,10 +8,21 @@ import {
   Home,
   LayoutGrid,
   Package,
+  ReceiptText,
+  Settings as SettingsIcon,
   ShoppingCart,
+  Users as UsersIcon,
 } from "lucide-react"
 
 export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
+
+// Admin-only tab set. Kept separate so buyer/seller tabs are never affected.
+const ADMIN_TABS: Tab[] = ["Dashboard", "Users", "Batches", "Transactions", "Settings"]
+
+// Ordered tab list for a role (used for rendering and slide direction).
+export function tabsForRole(role: Role): Tab[] {
+  return role === "Admin" ? ADMIN_TABS : TABS
+}
 
 const TAB_ICONS = {
   Dashboard: LayoutGrid,
@@ -21,6 +32,14 @@ const TAB_ICONS = {
   "My Claims": ClipboardList,
 
   Payments: History,
+} as const
+
+const ADMIN_TAB_ICONS = {
+  Dashboard: LayoutGrid,
+  Users: UsersIcon,
+  Batches: Package,
+  Transactions: ReceiptText,
+  Settings: SettingsIcon,
 } as const
 
 export default function TabBar({
@@ -37,11 +56,17 @@ export default function TabBar({
   role: Role
 }) {
   const visibleTabs =
-    role === "Seller"
+    role === "Admin"
+      ? ADMIN_TABS.map((tab) => ({
+          tab,
+          label: tab,
+          icon: ADMIN_TAB_ICONS[tab as keyof typeof ADMIN_TAB_ICONS],
+        }))
+      : role === "Seller"
       ? TABS.map((tab) => ({
           tab,
           label: tab,
-          icon: TAB_ICONS[(tab as keyof typeof TAB_ICONS)],
+          icon: TAB_ICONS[tab as keyof typeof TAB_ICONS],
         }))
       : [
           { tab: "Batches" as Tab, label: "Home", icon: Home },
@@ -61,7 +86,11 @@ export default function TabBar({
         height: 44,
       }}
       className={`kargo-tabbar icon-tabbar flex items-center ${
-        role === "Seller" ? "seller-tabbar" : "sticky top-14"
+        role === "Admin"
+          ? "admin-tabbar sticky top-14"
+          : role === "Seller"
+          ? "seller-tabbar"
+          : "sticky top-14"
       }`}
     >
       {/* Tabs — equally distributed across available width */}
@@ -72,53 +101,52 @@ export default function TabBar({
           // entry's tab against the active tab so only the intended one lights.
           const visuallyActive = active === tab
           return (
-          <button
-            key={tab}
-            data-seller-active={visuallyActive ? "true" : undefined}
-            data-spotlight={
-              tab === "Dashboard"
-                ? "dashboard-tab"
-                : tab === "Batches"
-                  ? "batches-tab"
-                  : tab === "My Claims"
-                    ? "claims-tab"
-                    : tab === "Payments"
-                      ? "payments-tab"
-                      : undefined
-            }
-            onClick={() => setActive(tab)}
-            aria-current={visuallyActive ? "page" : undefined}
-            style={{
-              fontFamily: "'Josefin Sans',sans-serif",
-              color: visuallyActive ? INDIGO : "#6B7280",
-              fontWeight: visuallyActive ? 700 : 500,
-              fontSize: 13,
-              borderBottom:
-                visuallyActive
+            <button
+              key={tab}
+              data-seller-active={visuallyActive ? "true" : undefined}
+              data-spotlight={
+                tab === "Dashboard"
+                  ? "dashboard-tab"
+                  : tab === "Batches"
+                    ? "batches-tab"
+                    : tab === "My Claims"
+                      ? "claims-tab"
+                      : tab === "Payments"
+                        ? "payments-tab"
+                        : undefined
+              }
+              onClick={() => setActive(tab)}
+              aria-current={visuallyActive ? "page" : undefined}
+              style={{
+                fontFamily: "'Josefin Sans',sans-serif",
+                color: visuallyActive ? INDIGO : "#6B7280",
+                fontWeight: visuallyActive ? 700 : 500,
+                fontSize: 13,
+                borderBottom: visuallyActive
                   ? `2px solid ${INDIGO}`
                   : "2px solid transparent",
-              height: 44,
-              flex: 1,
-              paddingLeft: 4,
-              paddingRight: 4,
-              borderRadius: 0,
-              background: "transparent",
-              transition: "color 0.15s,border-color 0.15s",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-            className="hover:text-gray-800"
-            aria-label={
-              tab === "My Claims" && role === "Seller"
-                ? "Orders Received"
-                : label
-            }
-          >
-            <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
-            <span className="kargo-tab-label">{label}</span>
-          </button>
+                height: 44,
+                flex: 1,
+                paddingLeft: 4,
+                paddingRight: 4,
+                borderRadius: 0,
+                background: "transparent",
+                transition: "color 0.15s,border-color 0.15s",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+              className="hover:text-gray-800"
+              aria-label={
+                tab === "My Claims" && role === "Seller"
+                  ? "Orders Received"
+                  : label
+              }
+            >
+              <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
+              <span className="kargo-tab-label">{label}</span>
+            </button>
           )
         })}
       </div>

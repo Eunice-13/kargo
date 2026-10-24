@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import { ShieldCheck } from "lucide-react"
 import type { UserInfo, Role, Tab, BatchType } from "@/types"
 
 import { INDIGO } from "@/constants/theme"
@@ -49,6 +50,7 @@ export default function Header({
 }) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
+  const isAdmin = role === "Admin"
 
   const toggleMobileSearch = () => {
     setMobileSearchOpen((open) => {
@@ -109,47 +111,71 @@ export default function Header({
           KARGO
         </span>
       </div>
-      <SearchBox
-        batches={batches}
-        onNavigate={(tab) => {
-          onNavigate?.(tab)
-          setMobileSearchOpen(false)
-        }}
-        onBatchSelect={(id) => {
-          onBatchSelect?.(id)
-          setMobileSearchOpen(false)
-        }}
-        onSellerSelect={(name) => {
-          onSellerSelect?.(name)
-          setMobileSearchOpen(false)
-        }}
-      />
+      {isAdmin ? (
+        // Admins have no marketplace search; show a quiet console chip instead.
+        <div className="kargo-admin-console-chip" style={{ flex: 1, minWidth: 0 }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: 999,
+              border: "1px solid #E5E7EB",
+              background: "#f7f8fc",
+              color: INDIGO,
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            <ShieldCheck size={14} aria-hidden="true" /> Admin console
+          </span>
+        </div>
+      ) : (
+        <SearchBox
+          batches={batches}
+          onNavigate={(tab) => {
+            onNavigate?.(tab)
+            setMobileSearchOpen(false)
+          }}
+          onBatchSelect={(id) => {
+            onBatchSelect?.(id)
+            setMobileSearchOpen(false)
+          }}
+          onSellerSelect={(name) => {
+            onSellerSelect?.(name)
+            setMobileSearchOpen(false)
+          }}
+        />
+      )}
       <div className="kargo-header-actions flex items-center gap-3 flex-shrink-0">
-        <button
-          type="button"
-          className="kargo-mobile-search-toggle"
-          aria-label={mobileSearchOpen ? "Close search" : "Open search"}
-          aria-expanded={mobileSearchOpen}
-          onClick={toggleMobileSearch}
-        >
-          {mobileSearchOpen ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-              <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          )}
-        </button>
+        {!isAdmin && (
+          <button
+            type="button"
+            className="kargo-mobile-search-toggle"
+            aria-label={mobileSearchOpen ? "Close search" : "Open search"}
+            aria-expanded={mobileSearchOpen}
+            onClick={toggleMobileSearch}
+          >
+            {mobileSearchOpen ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                <path d="m16.5 16.5 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            )}
+          </button>
+        )}
         <NotificationsMenu role={role} onNavigate={onNavigate} />
         <UserMenu
           user={user}
           onSettings={onSettings}
           onLogout={onLogout}
-          onApplyToSell={onApplyToSell}
-          displayLabel="User"
+          onApplyToSell={isAdmin ? undefined : onApplyToSell}
+          displayLabel={isAdmin ? "Admin" : "User"}
         />
       </div>
     </header>

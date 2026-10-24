@@ -46,6 +46,10 @@ type DbProfile = {
 
   can_sell: boolean
 
+  account_status: "active" | "suspended" | null
+
+  account_status_reason: string | null
+
   notification_preferences: Record<string, boolean> | null
 
   created_at: string
@@ -200,7 +204,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     .from("user_profiles")
 
     .select(
-      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,notification_preferences,created_at",
+      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,account_status,account_status_reason,notification_preferences,created_at",
     )
 
     .eq("id", id)
@@ -210,6 +214,18 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
   if (error) throw error
 
   const profile = data as DbProfile
+
+  // Admin capability is a separate, binary membership row. A plain user can only
+  // read their own row (admin_members_select_own), so this is safe for everyone.
+  const { data: adminRow } = await client
+    .from("admin_members")
+    .select("granted_at")
+    .eq("user_id", id)
+    .is("revoked_at", null)
+    .maybeSingle()
+
+  const adminEnabled = Boolean(adminRow)
+  const accountStatus = profile.account_status ?? "active"
 
   const avatarUrl = profile.avatar_path
     ? client.storage.from("profile-avatars").getPublicUrl(profile.avatar_path)
@@ -223,7 +239,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
 
     email,
 
-    role: profile.can_sell ? "Seller" : "Buyer",
+    role: adminEnabled ? "Admin" : profile.can_sell ? "Seller" : "Buyer",
 
     bio: profile.bio ?? undefined,
 
@@ -238,6 +254,12 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     memberSince: profile.created_at,
 
     sellerEnabled: profile.can_sell,
+
+    adminEnabled,
+
+    accountStatus,
+
+    accountStatusReason: profile.account_status_reason ?? undefined,
 
     notificationPreferences: profile.notification_preferences ?? {},
   }
@@ -504,6 +526,23 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   if (!auth.user) return null
 
   const user = await profileFor(auth.user.id, auth.user.email ?? "")
+
+  // Admins use their own data surface (adminApi); the buyer/seller loaders below
+  // would be blocked by participant RLS anyway, so return an empty snapshot.
+  if (user.adminEnabled) {
+    return {
+      user,
+      batches: [],
+      claims: [],
+      toPay: [],
+      payHistory: [],
+      orders: [],
+      fulfillment: [],
+      waitlist: [],
+      sellerWaitlist: [],
+      profileIdByName: {},
+    }
+  }
 
   const [
     { data: catalog, error: catalogError },

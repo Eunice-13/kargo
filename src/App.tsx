@@ -59,7 +59,7 @@ import { Footer, Header, TabBar, TabContent } from "@/components/layout"
 
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 
-import { kargoApi } from "@/services"
+import { kargoApi, setAdminDemoMode } from "@/services"
 import { NotificationsProvider } from "@/features/notifications"
 
 import { deadlineHasPassed } from "@/features/claims/claimExpiry"
@@ -95,6 +95,17 @@ export default function App() {
 
   const originalPreview = searchParams?.get("preview") === "original"
 
+  // Admin demo boot: ?preview=admin mounts the admin console in-memory (no
+  // Supabase), mirroring ?preview=original for buyer/seller. Separate flag so
+  // the buyer/seller demo is never affected.
+  const adminPreview = searchParams?.get("preview") === "admin"
+
+  // Either demo bypasses auth/boot and seeds the app stage directly.
+  const anyPreview = originalPreview || adminPreview
+
+  // Route adminApi to its in-memory demo adapter for ?preview=admin (no DB).
+  setAdminDemoMode(adminPreview)
+
   // Shareable batch deep link: ?batch=<id> boots into the Batches tab and opens
 
   // that batch's claim page via the existing navIntent hook (3.1).
@@ -116,7 +127,9 @@ export default function App() {
   })()
 
   const landingTab = (u: UserInfo): Tab =>
-    sharedBatchId !== null
+    u.adminEnabled
+      ? "Dashboard"
+      : sharedBatchId !== null
       ? "Batches"
       : linkedTab ?? (u.sellerEnabled ? "Dashboard" : "Batches")
 
@@ -125,7 +138,7 @@ export default function App() {
   }, [sharedBatchId])
 
   const [stage, setStage] = useState<AppStage>(
-    originalPreview ? "app" : "login",
+    anyPreview ? "app" : "login",
   )
 
   // A recovery link can land either on the reset path or, when the redirect is
@@ -136,7 +149,7 @@ export default function App() {
   )
 
   const [booting, setBooting] = useState(
-    isSupabaseConfigured && !originalPreview,
+    isSupabaseConfigured && !anyPreview,
   )
 
   const [showReservationGate, setShowReservationGate] = useState(
@@ -147,7 +160,9 @@ export default function App() {
 
   const [tab, setTab] = useState<Tab>(
     () =>
-      sharedBatchId !== null
+      adminPreview
+        ? "Dashboard"
+        : sharedBatchId !== null
         ? "Batches"
         : linkedTab ?? (originalPreview ? "Dashboard" : "Batches"),
   )
@@ -156,26 +171,37 @@ export default function App() {
   // their own sub-pages extend it themselves.
   useScrollToTopOnRouteChange(`${stage}:${tab}`)
 
-  const [user, setUser] = useState<UserInfo>({
-    name: originalPreview ? "Alex Jordan" : "",
-
-    email: originalPreview ? "alex@kargo.demo" : "",
-
-    role: "Buyer",
-
-    sellerEnabled: originalPreview,
-
-    bio: originalPreview
-      ? "Curated pasabuy finds with careful packing and clear trip updates."
-      : "",
-
-    socialLinks: originalPreview
+  const [user, setUser] = useState<UserInfo>(
+    adminPreview
       ? {
-          Facebook: "https://facebook.com/alex.jordan",
-          Instagram: "https://instagram.com/alexjordan",
+          name: "KARGO Admin",
+          email: "admin@kargo.demo",
+          role: "Admin",
+          adminEnabled: true,
+          accountStatus: "active",
+          socialLinks: {},
         }
-      : {},
-  })
+      : {
+          name: originalPreview ? "Alex Jordan" : "",
+
+          email: originalPreview ? "alex@kargo.demo" : "",
+
+          role: "Buyer",
+
+          sellerEnabled: originalPreview,
+
+          bio: originalPreview
+            ? "Curated pasabuy finds with careful packing and clear trip updates."
+            : "",
+
+          socialLinks: originalPreview
+            ? {
+                Facebook: "https://facebook.com/alex.jordan",
+                Instagram: "https://instagram.com/alexjordan",
+              }
+            : {},
+        },
+  )
 
   const [showNewBatch, setShowNewBatch] = useState(false)
 
@@ -185,11 +211,44 @@ export default function App() {
 
   // switch: a seller-capable account is always a Seller, everyone else a Buyer.
 
-  const role: Role = user.sellerEnabled ? "Seller" : "Buyer"
+  const role: Role = user.adminEnabled
+    ? "Admin"
+    : user.sellerEnabled
+      ? "Seller"
+      : "Buyer"
+
+  // Allowed-tab guard: keep admins inside the admin tab set and buyers/sellers
+  // inside theirs. If the active tab isn't valid for the role (e.g. after a
+  // role change or a stale deep link), snap back to the role's landing tab.
+  const ADMIN_ALLOWED_TABS: Tab[] = [
+    "Dashboard",
+    "Users",
+    "Batches",
+    "Transactions",
+    "Settings",
+    "Notifications",
+  ]
+  const NON_ADMIN_ALLOWED_TABS: Tab[] = [
+    "Dashboard",
+    "Batches",
+    "My Claims",
+    "Payments",
+    "Orders",
+    "Settings",
+    "Notifications",
+  ]
+  useEffect(() => {
+    if (stage !== "app") return
+    const allowed = role === "Admin" ? ADMIN_ALLOWED_TABS : NON_ADMIN_ALLOWED_TABS
+    if (!allowed.includes(tab)) setTab(landingTab(user))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, tab, stage])
 
   // Shared mutable data
 
-  const useSeeds = originalPreview || !isSupabaseConfigured
+  // Admin demo doesn't use buyer/seller seed data; it has its own in-memory
+  // surface, so keep the seed arrays empty for the admin preview.
+  const useSeeds = originalPreview || (!isSupabaseConfigured && !adminPreview)
 
   const [claims, setClaims] = useState<ClaimRow[]>(useSeeds ? CLAIMS_INIT : [])
 
@@ -384,7 +443,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (!isSupabaseConfigured || originalPreview || !supabase) return
+    if (!isSupabaseConfigured || anyPreview || !supabase) return
 
     refreshData().finally(() => setBooting(false))
 
@@ -423,7 +482,7 @@ export default function App() {
   // buyer and seller sessions. Related database changes can arrive as separate
   // realtime events, so each event reloads one coherent app snapshot.
   useEffect(() => {
-    if (!isSupabaseConfigured || originalPreview || !supabase || !user.id) return
+    if (!isSupabaseConfigured || anyPreview || !supabase || !user.id) return
     const client = supabase
 
     let refreshQueued = false
@@ -561,6 +620,82 @@ export default function App() {
     )
   }
 
+  // A suspended account never mounts the app shell, for any role. is_admin()
+  // also requires an active account, so a suspended admin is locked out here too.
+  if (stage === "app" && user.accountStatus === "suspended") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: CREAM,
+          padding: 24,
+          fontFamily: "'Inter',sans-serif",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 420,
+            width: "100%",
+            background: "#fff",
+            border: "1px solid #E5E7EB",
+            borderRadius: 16,
+            boxShadow: "0 10px 30px rgba(18,30,71,.08)",
+            padding: 28,
+            textAlign: "center",
+          }}
+        >
+          <h1
+            style={{
+              margin: "0 0 10px",
+              fontFamily: "'Josefin Sans',sans-serif",
+              fontSize: 22,
+              fontWeight: 800,
+              color: "#171923",
+            }}
+          >
+            Account suspended
+          </h1>
+          <p style={{ color: "#475467", fontSize: 14, lineHeight: 1.55, margin: "0 0 8px" }}>
+            Your KARGO account is currently suspended and cannot access the app.
+          </p>
+          {user.accountStatusReason && (
+            <p style={{ color: "#475467", fontSize: 13, lineHeight: 1.5, margin: "0 0 12px" }}>
+              Reason: {user.accountStatusReason}
+            </p>
+          )}
+          <p style={{ color: "#667085", fontSize: 13, margin: "0 0 20px" }}>
+            Think this is a mistake? Contact{" "}
+            <a href="mailto:support@kargo.ph" style={{ color: "#2e3192", fontWeight: 600 }}>
+              support@kargo.ph
+            </a>
+            .
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (isSupabaseConfigured) void kargoApi.signOut()
+              setStage("login")
+            }}
+            style={{
+              minHeight: 44,
+              padding: "0 18px",
+              borderRadius: 8,
+              border: "1px solid #E5E7EB",
+              background: "#fff",
+              color: "#2e3192",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Log out
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {stage === "signup" && (
@@ -646,7 +781,7 @@ export default function App() {
               onNewBatch={() => setShowNewBatch(true)}
             />
           </main>
-          <Footer />
+          <Footer role={role} />
           {showOnboarding && (
             <Onboarding onDone={() => setOnboard(false)} role={role} />
           )}

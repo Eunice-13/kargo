@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { UserRound, Settings as SettingsIcon, LogOut, Store, Clock3, AlertTriangle } from "lucide-react"
+import { UserRound, Settings as SettingsIcon, LogOut, Store, Clock3, AlertTriangle, ShieldCheck } from "lucide-react"
 import type { UserInfo } from "@/types"
 import { Avatar } from "@/components/shared"
 
@@ -101,8 +101,27 @@ export default function UserMenu({
               {user.email}
             </div>
           </div>
-          {/* Seller status / apply entry point — reflects verification state */}
+          {/* Seller status / apply entry point — reflects verification state.
+              Admins get a single Administrator row instead (no seller CTA). */}
           {(() => {
+            if (user.adminEnabled) {
+              return (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "9px 14px",
+                    borderBottom: "1px solid #F3F4F6",
+                    fontSize: 12,
+                    color: "#2e3192",
+                    fontWeight: 700,
+                  }}
+                >
+                  <ShieldCheck size={15} aria-hidden="true" /> Administrator
+                </div>
+              )
+            }
             const s = sellerMenuStatus(user.sellerEnabled)
             if (s === "Verified") {
               return (
