@@ -2978,7 +2978,7 @@ export async function loadSellerExtensionRequests() {
     .from("orders")
 
     .select(
-      "id,buyer_id,extension_status,extension_requested_at,batch_products(name,batches(title))",
+      "id,buyer_id,extension_status,extension_requested_at,extension_reason,batch_products(name,batches(title))",
     )
 
     .eq("extension_status", "pending")
@@ -3023,6 +3023,8 @@ export async function loadSellerExtensionRequests() {
         batch: product.batches.title,
 
         requestedAt: new Date(row.extension_requested_at).toLocaleDateString(),
+
+        reason: row.extension_reason ?? "",
 
         status: row.extension_status as "pending" | "approved" | "denied",
       }

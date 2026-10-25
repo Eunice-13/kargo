@@ -251,6 +251,8 @@ export default function Batches({
 
     requestedAt: string
 
+    reason?: string
+
     status: "pending" | "approved" | "denied"
   }
 
@@ -1721,6 +1723,20 @@ export default function Batches({
                         <div style={{ fontSize: 11, color: "#9CA3AF" }}>
                           Requested {req.requestedAt}
                         </div>
+                        {req.reason?.trim() && (
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#9CA3AF",
+                              marginTop: 4,
+                              whiteSpace: "pre-wrap",
+                              overflowWrap: "anywhere",
+                            }}
+                          >
+                            <span style={{ fontWeight: 600 }}>Reason: </span>
+                            {req.reason}
+                          </div>
+                        )}
                       </div>
                       {req.status === "pending" ? (
                         <div className="flex gap-2">
