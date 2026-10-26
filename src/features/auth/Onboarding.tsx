@@ -40,7 +40,7 @@ const SELLER_TOUR_STEPS = [
   },
   {
     selector: "[data-spotlight='claims-tab']",
-    headline: "My Claims",
+    headline: "Orders",
     copy: "Review the orders buyers have placed for your batches and manage their status.",
   },
   {

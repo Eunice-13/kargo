@@ -39,6 +39,262 @@
   }
 }
 
+/* Admin tables become readable labeled cards on phones, matching the seller
+   and buyer mobile data views instead of forcing horizontal table scrolling. */
+@media (max-width: 620px) {
+  .admin-tabbar > div:first-child > button {
+    flex: 1 1 20% !important;
+    padding-inline: 1px !important;
+  }
+
+  .admin-tabbar {
+    position: fixed !important;
+    top: auto !important;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 70 !important;
+    width: 100%;
+    height: calc(60px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 0 !important;
+    background: #fff !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+  }
+
+  .admin-tabbar > div:first-child {
+    display: grid !important;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .admin-tabbar > div:first-child > button {
+    width: 100%;
+    min-width: 0 !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    flex: none !important;
+    padding: 4px 1px !important;
+    border-bottom-width: 3px !important;
+    box-sizing: border-box;
+  }
+
+  .admin-tabbar > div:first-child > button > svg {
+    width: 18px;
+    height: 18px;
+    flex-basis: 18px;
+  }
+
+  .admin-tabbar .kargo-tab-label {
+    font-size: 9px;
+  }
+
+  .admin-page {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: clip;
+    padding: 14px !important;
+  }
+
+  .admin-page-header,
+  .admin-page-header > div,
+  .admin-stats,
+  .admin-grid,
+  .admin-grid--wide {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .admin-page-header__actions {
+    justify-content: space-between;
+  }
+
+  .admin-stats {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px;
+  }
+
+  .admin-stat {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    box-sizing: border-box;
+    padding: 24px 12px 14px;
+  }
+
+  .admin-stat::before {
+    height: 6px;
+  }
+
+  .admin-stat > svg {
+    top: 12px;
+    right: 12px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .admin-stat strong {
+    margin-bottom: 8px;
+    font-size: 22px;
+  }
+
+  .admin-stat span {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .admin-stat small {
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .admin-stat:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    width: calc(50% - 5px);
+    justify-self: center;
+  }
+
+  .admin-stat span,
+  .admin-stat small {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .admin-chart-card,
+  .admin-queue-card {
+    min-width: 0;
+  }
+
+  .admin-page .admin-filter-bar > select,
+  .admin-page .admin-filter-bar > button {
+    min-width: 0;
+  }
+
+  .admin-page [style*="overflowX"] {
+    overflow: visible !important;
+  }
+
+  .admin-page .kargo-card:has(> div > table:not(.sr-only)) {
+    overflow: visible !important;
+  }
+
+  .admin-page table:not(.sr-only),
+  .admin-page table:not(.sr-only) tbody {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .admin-page table:not(.sr-only) thead {
+    display: none !important;
+  }
+
+  .admin-page table:not(.sr-only) tbody {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .admin-page table:not(.sr-only) tbody tr {
+    display: grid !important;
+    gap: 9px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px;
+    background: #fff !important;
+    box-shadow: 0 2px 7px rgb(18 30 71 / 8%);
+  }
+
+  .admin-page table:not(.sr-only) tbody td {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow-wrap: anywhere;
+    text-align: right;
+    white-space: normal !important;
+  }
+
+  .admin-page table:not(.sr-only) tbody td::before {
+    flex: 0 0 94px;
+    color: #748391;
+    content: "";
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .035em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  .admin-users-table td:nth-child(1)::before { content: "Account"; }
+  .admin-users-table td:nth-child(2)::before { content: "Type"; }
+  .admin-users-table td:nth-child(3)::before { content: "Status"; }
+  .admin-users-table td:nth-child(4)::before { content: "Last sign-in"; }
+  .admin-users-table td:nth-child(5)::before { content: "Orders"; }
+  .admin-users-table td:nth-child(6)::before { content: "Spend / GMV"; }
+  .admin-users-table td:nth-child(7)::before { content: "Details"; }
+
+  .admin-batches-table td:nth-child(1)::before { content: "Batch"; }
+  .admin-batches-table td:nth-child(2)::before { content: "Seller"; }
+  .admin-batches-table td:nth-child(3)::before { content: "Category"; }
+  .admin-batches-table td:nth-child(4)::before { content: "Claimed"; }
+  .admin-batches-table td:nth-child(5)::before { content: "Status"; }
+  .admin-batches-table td:nth-child(6)::before { content: "Moderation"; }
+  .admin-batches-table td:nth-child(7)::before { content: "Details"; }
+
+  .admin-orders-table td:nth-child(1)::before { content: "Order #"; }
+  .admin-orders-table td:nth-child(2)::before { content: "Product"; }
+  .admin-orders-table td:nth-child(3)::before { content: "Buyer"; }
+  .admin-orders-table td:nth-child(4)::before { content: "Seller"; }
+  .admin-orders-table td:nth-child(5)::before { content: "Amount"; }
+  .admin-orders-table td:nth-child(6)::before { content: "Status"; }
+  .admin-orders-table td:nth-child(7)::before { content: "Created"; }
+
+  .admin-payments-table td:nth-child(1)::before { content: "Order #"; }
+  .admin-payments-table td:nth-child(2)::before { content: "Buyer"; }
+  .admin-payments-table td:nth-child(3)::before { content: "Seller"; }
+  .admin-payments-table td:nth-child(4)::before { content: "Method"; }
+  .admin-payments-table td:nth-child(5)::before { content: "Amount"; }
+  .admin-payments-table td:nth-child(6)::before { content: "Status"; }
+  .admin-payments-table td:nth-child(7)::before { content: "Submitted"; }
+
+  .admin-combined-table td:nth-child(1)::before { content: "Group"; }
+  .admin-combined-table td:nth-child(2)::before { content: "Buyer"; }
+  .admin-combined-table td:nth-child(3)::before { content: "Seller"; }
+  .admin-combined-table td:nth-child(4)::before { content: "Members"; }
+  .admin-combined-table td:nth-child(5)::before { content: "Shipping fee"; }
+  .admin-combined-table td:nth-child(6)::before { content: "Status"; }
+
+  .admin-team-table td:nth-child(1)::before { content: "Name"; }
+  .admin-team-table td:nth-child(2)::before { content: "Email"; }
+  .admin-team-table td:nth-child(3)::before { content: "Granted by"; }
+  .admin-team-table td:nth-child(4)::before { content: "Granted"; }
+  .admin-team-table td:nth-child(5)::before { content: "Access"; }
+
+  .admin-audit-table td:nth-child(1)::before { content: "When"; }
+  .admin-audit-table td:nth-child(2)::before { content: "Actor"; }
+  .admin-audit-table td:nth-child(3)::before { content: "Action"; }
+  .admin-audit-table td:nth-child(4)::before { content: "Target"; }
+  .admin-audit-table td:nth-child(5)::before { content: "Reason"; }
+}
+
 .payment-history-controls {
   display: flex;
   align-items: center;
@@ -279,13 +535,14 @@
   .bdash-table td:nth-child(6)::before { content: "Deadline"; }
 
   .seller-orders-page td:nth-child(1)::before { content: "Buyer"; }
-  .seller-orders-page td:nth-child(2)::before { content: "Product"; }
-  .seller-orders-page td:nth-child(3)::before { content: "Method"; }
-  .seller-orders-page td:nth-child(4)::before { content: "Amount"; }
-  .seller-orders-page td:nth-child(5)::before { content: "Amount paid"; }
-  .seller-orders-page td:nth-child(6)::before { content: "Deadline"; }
-  .seller-orders-page td:nth-child(7)::before { content: "Status"; }
-  .seller-orders-page td:nth-child(8)::before { content: "Actions"; }
+  .seller-orders-page td:nth-child(2)::before { content: "Ordered"; }
+  .seller-orders-page td:nth-child(3)::before { content: "Product"; }
+  .seller-orders-page td:nth-child(4)::before { content: "Method"; }
+  .seller-orders-page td:nth-child(5)::before { content: "Amount"; }
+  .seller-orders-page td:nth-child(6)::before { content: "Amount paid"; }
+  .seller-orders-page td:nth-child(7)::before { content: "Deadline"; }
+  .seller-orders-page td:nth-child(8)::before { content: "Status"; }
+  .seller-orders-page td:nth-child(9)::before { content: "Actions"; }
 
   .claims-to-pay-table td:nth-child(2)::before { content: "Seller"; }
   .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
@@ -1780,6 +2037,122 @@
 
   .fulfillment-board__card-trigger {
     padding: 10px !important;
+  }
+}
+
+/* Keep the mobile admin bar outside app-shell clipping and stacking contexts. */
+@media (max-width: 1024px) {
+  body.admin-mobile-nav {
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  body > .admin-tabbar {
+    position: fixed !important;
+    inset: auto 0 0 !important;
+    z-index: 99999 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: calc(60px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    border-top: 1px solid #e5e7eb !important;
+    border-bottom: 0 !important;
+    background: #fff !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+  }
+
+  body > .admin-tabbar > div:first-child {
+    display: grid !important;
+    width: 100% !important;
+    max-width: none !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  body > .admin-tabbar > div:first-child > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    flex: none !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app {
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    overflow-x: clip !important;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom)) !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app main,
+  body.admin-mobile-nav .kargo-original-app main > div,
+  body.admin-mobile-nav .kargo-original-app .admin-page {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app .admin-stats {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Admin mobile layout overrides come after the shared four-tab navigation
+   rules because the admin console has five destinations. */
+@media (max-width: 767px) {
+  .kargo-original-app main,
+  .kargo-original-app main > .fi,
+  .kargo-original-app main > .pl,
+  .admin-page {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .admin-stats {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .admin-stat {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .admin-tabbar {
+    position: fixed !important;
+    inset: auto 0 0 !important;
+    z-index: 999 !important;
+    display: flex !important;
+    width: 100% !important;
+    height: calc(60px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    background: #fff !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+  }
+
+  .admin-tabbar > div:first-child {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .admin-tabbar > div:first-child > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    flex: none !important;
+    padding: 4px 1px !important;
   }
 }
 
@@ -4169,5 +4542,155 @@
   button.fulfillment-board__status-toggle svg {
     width: 11px;
     height: 11px;
+  }
+}
+
+/* Final admin mobile sizing: keep grid tracks within the phone viewport and
+   render all five admin destinations in the bottom navigation. */
+@media (max-width: 767px) {
+  html.admin-mobile-nav,
+  body.admin-mobile-nav {
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  #root.admin-mobile-nav,
+  .kargo-original-app.admin-mobile-nav {
+    overflow: visible !important;
+  }
+
+  .kargo-original-app main,
+  .kargo-original-app main > div,
+  .kargo-original-app .admin-page {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  .kargo-original-app .admin-page > .admin-stats,
+  .kargo-original-app .admin-page > .admin-grid {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .kargo-original-app .admin-page > .admin-stats > *,
+  .kargo-original-app .admin-page > .admin-grid > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  html,
+  body,
+  #root,
+  .kargo-original-app,
+  .kargo-original-app main,
+  .kargo-original-app main > div,
+  .admin-page {
+    width: 100%;
+    min-width: 0 !important;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-stats {
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .admin-stat {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .admin-tabbar {
+    position: fixed !important;
+    top: auto !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 999 !important;
+    width: 100% !important;
+    height: calc(60px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+    background: #fff !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+  }
+
+  .admin-tabbar > div:first-child {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  .admin-tabbar > div:first-child > button {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    flex: none !important;
+  }
+}
+
+/* Keep the admin dashboard's actual layout box no wider than the mobile app. */
+@media (max-width: 767px) {
+  body.admin-mobile-nav #root,
+  body.admin-mobile-nav .kargo-original-app,
+  body.admin-mobile-nav .kargo-original-app main,
+  body.admin-mobile-nav .kargo-original-app main > div,
+  body.admin-mobile-nav .kargo-original-app .admin-page {
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app .admin-page {
+    overflow-x: clip !important;
+    padding: 14px !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app .admin-page-header,
+  body.admin-mobile-nav .kargo-original-app .admin-page-header > div,
+  body.admin-mobile-nav .kargo-original-app .admin-stats,
+  body.admin-mobile-nav .kargo-original-app .admin-grid,
+  body.admin-mobile-nav .kargo-original-app .admin-grid--wide {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app .admin-stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app .admin-stat {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app .admin-stat:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    width: calc(50% - 5px) !important;
+    justify-self: center;
+  }
+
+  body.admin-mobile-nav .kargo-original-app .admin-grid,
+  body.admin-mobile-nav .kargo-original-app .admin-grid--wide {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.admin-mobile-nav .kargo-original-app .admin-page-header__actions {
+    width: 100% !important;
+    justify-content: space-between;
   }
 }

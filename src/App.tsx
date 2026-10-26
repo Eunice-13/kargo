@@ -17,6 +17,7 @@ import type {
 } from "@/types"
 
 import { CREAM } from "@/constants/theme"
+import kargoLogoUrl from "@/assets/kargo-logo.png"
 
 import {
   requestBatchOpen,
@@ -96,6 +97,7 @@ export default function App() {
       : null
 
   const originalPreview = searchParams?.get("preview") === "original"
+  const loadingPreview = searchParams?.get("preview") === "loading"
 
   // Admin demo boot: ?preview=admin mounts the admin console in-memory (no
   // Supabase), mirroring ?preview=original for buyer/seller. Separate flag so
@@ -609,17 +611,42 @@ export default function App() {
     )
   }
 
-  if (booting) {
+  if (booting || loadingPreview) {
     return (
       <div
+        role="status"
+        aria-live="polite"
         style={{
           minHeight: "100vh",
-          display: "grid",
-          placeItems: "center",
-          background: CREAM,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 14,
+          background: "radial-gradient(ellipse at center, #3546D4 0%, #202BAE 58%, #151A78 100%)",
+          color: "#fff",
+          fontFamily: "'Quicksand',sans-serif",
         }}
       >
-        Loading KARGO…
+        <div
+          className="kargo-loading-logo"
+          style={{
+            display: "grid",
+            placeItems: "center",
+            width: 148,
+            height: 148,
+          }}
+        >
+          <img
+            src={kargoLogoUrl}
+            alt="KARGO"
+            style={{ width: 126, height: 126, objectFit: "contain" }}
+          />
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: ".04em" }}>
+          Loading KARGO…
+        </span>
+        <span className="kargo-loading-progress" aria-hidden="true" />
       </div>
     )
   }

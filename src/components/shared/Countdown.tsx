@@ -4,14 +4,16 @@ import { AMBER } from "@/constants/theme"
 
 const deadlineTimestamps = new Map<string, number>()
 
-// TODO: This currently uses local state/mock intervals; refactor to absolute system timestamps (Date.now() vs target deadline) for production.
+// Display the persisted deadline against the browser clock, so ticking does not
+// depend on a server request after the order is loaded.
 
 function getDeadlineTimestamp(key: string, hours: number) {
   const existing = deadlineTimestamps.get(key)
 
   if (existing) return existing
 
-  const deadline = Date.now() + Math.max(0, hours * 3_600_000)
+  const safeHours = Number.isFinite(hours) ? Math.max(0, hours) : 0
+  const deadline = Date.now() + safeHours * 3_600_000
 
   deadlineTimestamps.set(key, deadline)
 
@@ -33,8 +35,9 @@ export default function Countdown({
 }) {
   const deadlineKey = String(id ?? `hours-${hours}`)
 
-  const deadline = expiresAt
-    ? new Date(expiresAt).getTime()
+  const parsedExpiry = expiresAt ? new Date(expiresAt).getTime() : Number.NaN
+  const deadline = Number.isFinite(parsedExpiry)
+    ? parsedExpiry
     : getDeadlineTimestamp(deadlineKey, hours)
 
   const [remaining, setRemaining] = useState(() =>
@@ -72,18 +75,21 @@ export default function Countdown({
       </span>
     )
   }
-  const label = compact
-    ? currentHours >= 24
-      ? `${days}d ${clockHours}h`
-      : `${Math.ceil(currentHours)}h`
-    : days > 0
-      ? `${days}d ${String(clockHours).padStart(2, "0")}h`
-      : `${String(clockHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+  const label =
+    remaining === 0
+      ? "Expired"
+      : compact
+        ? currentHours >= 24
+          ? `${days}d ${clockHours}h`
+          : `${Math.ceil(currentHours)}h`
+        : days > 0
+          ? `${days}d ${String(clockHours).padStart(2, "0")}h`
+          : `${String(clockHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 
   return (
     <span
       role="timer"
-      aria-label={`${label} remaining`}
+      aria-label={remaining === 0 ? "Expired" : `${label} remaining`}
       className={`text-xs font-medium tabular-nums${urgent ? " cu" : ""}`}
       style={{
         color: compact

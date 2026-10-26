@@ -19,6 +19,33 @@ import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
 import type { SellerPaymentMethod } from "@/services"
 
+const LOCAL_PAYMENT_METHODS_KEY = "kargo.localSellerPaymentMethods"
+
+function readLocalPaymentMethods(): SellerPaymentMethod[] {
+  try {
+    const value = localStorage.getItem(LOCAL_PAYMENT_METHODS_KEY)
+    return value ? (JSON.parse(value) as SellerPaymentMethod[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeLocalPaymentMethods(methods: SellerPaymentMethod[]) {
+  localStorage.setItem(LOCAL_PAYMENT_METHODS_KEY, JSON.stringify(methods))
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () =>
+      typeof reader.result === "string"
+        ? resolve(reader.result)
+        : reject(new Error("Unable to read QR image."))
+    reader.onerror = () => reject(new Error("Unable to read QR image."))
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function SellerPaymentVerification({
   view = "history",
   refreshData,
@@ -26,6 +53,10 @@ export default function SellerPaymentVerification({
   view?: "pending" | "history"
   refreshData?: () => Promise<void>
 }) {
+  const localPaymentMode =
+    !isSupabaseConfigured ||
+    new URLSearchParams(window.location.search).get("preview") === "original"
+
   const VERIFY_SEED: VerifyItem[] = [
     {
       id: 1,
@@ -104,11 +135,16 @@ export default function SellerPaymentVerification({
       )
   }, [])
 
-  const reloadPaymentMethods = () =>
-    kargoApi.loadOwnPaymentMethods().then(setPaymentMethods)
+  const reloadPaymentMethods = async () => {
+    if (localPaymentMode) {
+      setPaymentMethods(readLocalPaymentMethods())
+      return
+    }
+    setPaymentMethods(await kargoApi.loadOwnPaymentMethods())
+  }
 
   useEffect(() => {
-    if (!isSupabaseConfigured || view !== "history") return
+    if (view !== "history") return
     reloadPaymentMethods()
       .catch((error) =>
         alert(
@@ -117,7 +153,7 @@ export default function SellerPaymentVerification({
             : "Unable to load configured payment methods.",
         ),
       )
-  }, [view])
+  }, [view, localPaymentMode])
 
   const openMethodEditor = (method?: SellerPaymentMethod) => {
     setMethodEditor(method ?? "new")
@@ -128,9 +164,25 @@ export default function SellerPaymentVerification({
   }
 
   const savePaymentMethod = async () => {
+    if (!methodEditor) return
     setSavingMethod(true)
     try {
-      if (methodEditor === "new") {
+      if (localPaymentMode) {
+        const existing = readLocalPaymentMethods()
+        const qrUrl = methodQr ? await readFileAsDataUrl(methodQr) : undefined
+        const nextMethod: SellerPaymentMethod = {
+          id: methodEditor === "new" ? `local-${crypto.randomUUID()}` : methodEditor.id,
+          methodType,
+          accountName: methodName.trim() || null,
+          accountNumber: methodNumber.trim() || null,
+          qrUrl: qrUrl ?? (methodEditor === "new" ? undefined : methodEditor.qrUrl),
+        }
+        const next = methodEditor === "new"
+          ? [...existing, nextMethod]
+          : existing.map((method) => method.id === nextMethod.id ? nextMethod : method)
+        writeLocalPaymentMethods(next)
+        setPaymentMethods(next)
+      } else if (methodEditor === "new") {
         await kargoApi.addPaymentMethod(
           methodType,
           methodName.trim(),
@@ -147,7 +199,7 @@ export default function SellerPaymentVerification({
           methodQr,
         )
       }
-      await reloadPaymentMethods()
+      if (!localPaymentMode) await reloadPaymentMethods()
       setMethodEditor(null)
     } catch (error) {
       alert(error instanceof Error ? error.message : "Unable to save payment method.")
@@ -377,7 +429,7 @@ export default function SellerPaymentVerification({
                   </td>
                   <td style={{ padding: "12px 14px" }}>
                     <span className="inline-flex items-center gap-1 text-[12px]">
-                      <PaymentIcon method={item.method} size={15} />
+                      {showAmountPaid && <PaymentIcon method={item.method} size={15} />}
                       {item.method}
                     </span>
                   </td>
@@ -563,8 +615,8 @@ export default function SellerPaymentVerification({
               }}
             >
               {paymentMethods.map((method) => (
-                <div
-                  key={`${method.methodType}-${method.accountNumber ?? "cash"}`}
+                        <div
+                  key={method.id}
                   style={{
                     border: "1px solid #E5E7EB",
                     borderRadius: 10,
@@ -592,8 +644,14 @@ export default function SellerPaymentVerification({
                     <button type="button" aria-label={`Delete ${method.methodType}`} onClick={async () => {
                       if (!window.confirm(`Delete ${method.methodType}?`)) return
                       try {
-                        await kargoApi.deactivatePaymentMethod(method.id)
-                        await reloadPaymentMethods()
+                        if (localPaymentMode) {
+                          const next = readLocalPaymentMethods().filter((item) => item.id !== method.id)
+                          writeLocalPaymentMethods(next)
+                          setPaymentMethods(next)
+                        } else {
+                          await kargoApi.deactivatePaymentMethod(method.id)
+                          await reloadPaymentMethods()
+                        }
                       } catch (error) {
                         alert(error instanceof Error ? error.message : "Unable to delete payment method.")
                       }

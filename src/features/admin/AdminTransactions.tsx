@@ -228,7 +228,7 @@ function OrdersSection() {
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table className="admin-orders-table" style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#6892D5" }}>
                   <Th>Order #</Th>
@@ -345,7 +345,7 @@ function PaymentsSection() {
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table className="admin-payments-table" style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#6892D5" }}>
                   <Th>Order #</Th>
@@ -442,7 +442,7 @@ function CombinedSection() {
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table className="admin-combined-table" style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#6892D5" }}>
                   <Th>Group</Th>

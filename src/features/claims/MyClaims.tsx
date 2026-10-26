@@ -113,6 +113,12 @@ function paidAt(claim: ClaimRow, payHistory: PayHistRow[]) {
     }, 0)
 }
 
+function hasOrderDeadline(claim: ClaimRow) {
+  if (claim.deadlinePausedAt) return true
+  if (claim.expiresAt && Number.isFinite(new Date(claim.expiresAt).getTime())) return true
+  return Number.isFinite(claim.hours) && claim.hours > 0
+}
+
 export default function MyClaims({
   claims,
 
@@ -913,6 +919,7 @@ export default function MyClaims({
             <table className="seller-orders-table">
               <colgroup>
                 <col className="seller-orders-col-buyer" />
+                <col className="seller-orders-col-ordered" />
                 <col className="seller-orders-col-product" />
                 <col className="seller-orders-col-method" />
                 <col className="seller-orders-col-amount" />
@@ -925,6 +932,8 @@ export default function MyClaims({
                 <tr>
                   {[
                     "BUYER",
+
+                    "ORDER DATE",
 
                     "PRODUCT",
 
@@ -1043,6 +1052,15 @@ export default function MyClaims({
                           </button>
                         </div>
                       </td>
+                      <td className="seller-orders-ordered">
+                        {c.createdAt && Number.isFinite(new Date(c.createdAt).getTime())
+                          ? new Date(c.createdAt).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "-"}
+                      </td>
                       <td>
                         <div className="flex items-center gap-2">
                           <ProductThumb name={c.product} />
@@ -1089,7 +1107,9 @@ export default function MyClaims({
                         )}
                       </td>
                       <td className="seller-orders-deadline">
-                        {c.status === "Pending" && c.hours > 0 ? (
+                        {c.status === "Expired" ? (
+                          <span className="seller-orders-dash">Expired</span>
+                        ) : c.status === "Pending" && hasOrderDeadline(c) ? (
                           <Countdown
                             hours={c.hours}
                             expiresAt={c.expiresAt}

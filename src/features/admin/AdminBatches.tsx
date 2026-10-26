@@ -92,7 +92,7 @@ export default function AdminBatches() {
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table className="admin-batches-table" style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#6892D5" }}>
                   {["Batch", "Seller", "Category", "Claimed", "Status", "Moderation", ""].map((h) => (

@@ -1451,13 +1451,14 @@ button {
   .bdash-table td:nth-child(6)::before { content: "Deadline"; }
 
   .seller-orders-page td:nth-child(1)::before { content: "Buyer"; }
-  .seller-orders-page td:nth-child(2)::before { content: "Product"; }
-  .seller-orders-page td:nth-child(3)::before { content: "Method"; }
-  .seller-orders-page td:nth-child(4)::before { content: "Amount"; }
-  .seller-orders-page td:nth-child(5)::before { content: "Amount paid"; }
-  .seller-orders-page td:nth-child(6)::before { content: "Deadline"; }
-  .seller-orders-page td:nth-child(7)::before { content: "Status"; }
-  .seller-orders-page td:nth-child(8)::before { content: "Actions"; }
+  .seller-orders-page td:nth-child(2)::before { content: "Ordered"; }
+  .seller-orders-page td:nth-child(3)::before { content: "Product"; }
+  .seller-orders-page td:nth-child(4)::before { content: "Method"; }
+  .seller-orders-page td:nth-child(5)::before { content: "Amount"; }
+  .seller-orders-page td:nth-child(6)::before { content: "Amount paid"; }
+  .seller-orders-page td:nth-child(7)::before { content: "Deadline"; }
+  .seller-orders-page td:nth-child(8)::before { content: "Status"; }
+  .seller-orders-page td:nth-child(9)::before { content: "Actions"; }
 
   .claims-to-pay-table td:nth-child(2)::before { content: "Seller"; }
   .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
@@ -1896,6 +1897,46 @@ button {
 
   .kargo-footer {
     font-size: 16px;
+  }
+}
+
+.kargo-loading-logo {
+  filter: drop-shadow(0 8px 18px rgb(25 27 169 / 12%));
+  animation: kargo-loading-breathe 1.8s ease-in-out infinite;
+}
+
+.kargo-loading-progress {
+  display: block;
+  width: 112px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 30%);
+}
+
+.kargo-loading-progress::after {
+  display: block;
+  width: 42%;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+  content: "";
+  animation: kargo-loading-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes kargo-loading-breathe {
+  50% { transform: translateY(-3px) scale(1.025); }
+}
+
+@keyframes kargo-loading-progress {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kargo-loading-logo,
+  .kargo-loading-progress::after {
+    animation: none;
   }
 }
 
@@ -5893,13 +5934,14 @@ textarea::placeholder {
   .bdash-table td:nth-child(6)::before { content: "Deadline"; }
 
   .seller-orders-page td:nth-child(1)::before { content: "Buyer"; }
-  .seller-orders-page td:nth-child(2)::before { content: "Product"; }
-  .seller-orders-page td:nth-child(3)::before { content: "Method"; }
-  .seller-orders-page td:nth-child(4)::before { content: "Amount"; }
-  .seller-orders-page td:nth-child(5)::before { content: "Amount paid"; }
-  .seller-orders-page td:nth-child(6)::before { content: "Deadline"; }
-  .seller-orders-page td:nth-child(7)::before { content: "Status"; }
-  .seller-orders-page td:nth-child(8)::before { content: "Actions"; }
+  .seller-orders-page td:nth-child(2)::before { content: "Ordered"; }
+  .seller-orders-page td:nth-child(3)::before { content: "Product"; }
+  .seller-orders-page td:nth-child(4)::before { content: "Method"; }
+  .seller-orders-page td:nth-child(5)::before { content: "Amount"; }
+  .seller-orders-page td:nth-child(6)::before { content: "Amount paid"; }
+  .seller-orders-page td:nth-child(7)::before { content: "Deadline"; }
+  .seller-orders-page td:nth-child(8)::before { content: "Status"; }
+  .seller-orders-page td:nth-child(9)::before { content: "Actions"; }
 
   .claims-to-pay-table td:nth-child(2)::before { content: "Seller"; }
   .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
@@ -7266,13 +7308,14 @@ textarea::placeholder {
 }
 
 .seller-orders-page .seller-orders-col-buyer { width: 11%; }
-.seller-orders-page .seller-orders-col-product { width: 15%; }
-.seller-orders-page .seller-orders-col-method { width: 10%; }
-.seller-orders-page .seller-orders-col-amount { width: 9%; }
-.seller-orders-page .seller-orders-col-paid { width: 13%; }
-.seller-orders-page .seller-orders-col-deadline { width: 11%; }
-.seller-orders-page .seller-orders-col-status { width: 12%; }
-.seller-orders-page .seller-orders-col-actions { width: 19%; }
+.seller-orders-page .seller-orders-col-ordered { width: 10%; }
+.seller-orders-page .seller-orders-col-product { width: 14%; }
+.seller-orders-page .seller-orders-col-method { width: 9%; }
+.seller-orders-page .seller-orders-col-amount { width: 8%; }
+.seller-orders-page .seller-orders-col-paid { width: 12%; }
+.seller-orders-page .seller-orders-col-deadline { width: 10%; }
+.seller-orders-page .seller-orders-col-status { width: 11%; }
+.seller-orders-page .seller-orders-col-actions { width: 15%; }
 
 .seller-orders-page .seller-orders-review,
 .seller-orders-page .seller-orders-contact {
@@ -13692,14 +13735,153 @@ textarea::placeholder {
   max-width: 100%;
 }
 
-/* The admin tab bar carries five tabs; let it scroll rather than squash. */
-.admin-tabbar > div:first-child {
+.admin-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.admin-page-header h2 {
+  margin-bottom: 12px;
+  font-size: 22px !important;
+  font-weight: 800 !important;
+}
+
+.admin-page-header__subtitle {
+  margin: -8px 0 0;
+  color: #748391;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.admin-filter-control {
+  min-height: 42px !important;
+  padding: 9px 12px !important;
+  border: 1px solid #d5dce8 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: #344054 !important;
+  font: inherit;
+  font-size: 13px !important;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.admin-filter-search {
+  flex: 1 1 260px;
   min-width: 0;
+}
+
+.admin-filter-control:focus {
+  border-color: #6892d5 !important;
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(104 146 213 / 18%);
+}
+
+.admin-page [role="tablist"] {
+  margin-bottom: 18px !important;
+}
+
+.admin-page table {
+  border-collapse: separate !important;
+  border-spacing: 0;
+}
+
+.admin-page table thead tr {
+  background: #6892d5 !important;
+}
+
+.admin-page table th {
+  padding: 12px 14px !important;
+  letter-spacing: .04em;
+}
+
+.admin-page table tbody tr {
+  transition: background-color 140ms ease;
+}
+
+.admin-page table tbody tr:hover {
+  background: #f5f8fd !important;
+}
+
+.admin-page :is(button, [role="button"]):focus-visible {
+  outline: 3px solid rgb(46 49 146 / 28%);
+  outline-offset: 2px;
+}
+
+/* The admin tab bar carries five tabs; let it scroll rather than squash. */
+.admin-tabbar {
+  position: sticky !important;
+  top: 0 !important;
+  bottom: auto !important;
+  z-index: 40 !important;
+  width: 100% !important;
+  height: 64px !important;
+  padding-bottom: 0 !important;
+  box-sizing: border-box;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  background: #f8f8f8 !important;
+  box-shadow: 0 8px 18px rgba(30, 39, 91, .16) !important;
+}
+
+.admin-tabbar > div:first-child {
+  display: grid !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-tabbar > div:first-child > button {
+  width: 100%;
+  min-width: 0 !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  flex: none !important;
 }
 
 @media (max-width: 620px) {
   .admin-page {
     padding: 14px !important;
+  }
+
+  .admin-page-header h2 {
+    font-size: 20px !important;
+  }
+
+  .admin-page-header__actions {
+    width: 100%;
+  }
+
+  .admin-filter-bar {
+    align-items: stretch;
+  }
+
+  .admin-filter-search {
+    flex-basis: 100%;
+  }
+
+  .admin-filter-bar > select,
+  .admin-filter-bar > button {
+    flex: 1 1 140px;
   }
 
   /* Table wrappers already set overflow-x:auto inline; make sure the table
