@@ -30,7 +30,14 @@ export default function AuditDetailModal({
   onClose: () => void;
 }) {
   return (
-    <Modal title="Audit entry" variant="detail" width={580} onClose={onClose}>
+    <Modal
+      title="Audit entry"
+      variant="detail"
+      width={580}
+      className="admin-modal"
+      overlayClassName="admin-modal-overlay"
+      onClose={onClose}
+    >
       <div className="space-y-5">
         <AdminModalSection title="What happened">
           <AdminFactGrid>

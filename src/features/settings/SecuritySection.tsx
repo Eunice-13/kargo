@@ -95,6 +95,7 @@ export default function SecuritySection() {
                 className="placeholder:text-gray-400"
               />
               <button
+                className="kargo-password-visibility"
                 type="button"
                 onClick={() => setVisiblePasswords((current) => ({
                   ...current,

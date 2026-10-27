@@ -12,7 +12,7 @@ import {
   UserX,
 } from "lucide-react";
 
-import { Card, CardSkeleton, Avatar } from "@/components/shared";
+import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
 import { ADMIN_ACTION_LABELS } from "@/constants/admin";
 import { adminApi } from "@/services";
@@ -94,13 +94,13 @@ type QueueItem = {
 const STAT_STYLES = {
   green: {
     background: "linear-gradient(135deg, #E8F9F3 0%, #DDF7EC 55%, #CFF2E2 100%)",
-    accent: "#07684B",
+    accent: "#3FBF8F",
     strip: "#75EEA3",
   },
   indigo: {
-    background: "linear-gradient(135deg, #EEF0FB 0%, #E4E6F8 55%, #D8DBF4 100%)",
-    accent: "#2E3192",
-    strip: "#8C90F2",
+    background: "linear-gradient(135deg, #E0E7FF 0%, #DEF3FA 100%)",
+    accent: "#191BA9",
+    strip: "#191BA9",
   },
   amber: {
     background: "linear-gradient(135deg, #FFF8E8 0%, #FFF3D8 55%, #FFECC4 100%)",
@@ -121,13 +121,13 @@ const STAT_STYLES = {
 
 const PIPELINE_META: Record<string, { label: string; tone: string }> = {
   payment_pending: { label: "Awaiting payment", tone: "#B4690E" },
-  payment_submitted: { label: "Awaiting review", tone: "#2E3192" },
+  payment_submitted: { label: "Awaiting review", tone: "#191BA9" },
   insufficient_payment: { label: "Insufficient payment", tone: "#B42318" },
   payment_confirmed: { label: "Payment confirmed", tone: "#0B7A59" },
   preparing: { label: "Preparing", tone: "#0E7490" },
   completed: { label: "Completed", tone: "#15803D" },
-  cancelled: { label: "Cancelled", tone: "#98A2B3" },
-  expired: { label: "Expired", tone: "#98A2B3" },
+  cancelled: { label: "Cancelled", tone: "#9CA3AF" },
+  expired: { label: "Expired", tone: "#9CA3AF" },
   incomplete: { label: "Incomplete", tone: "#B42318" },
 };
 
@@ -158,24 +158,10 @@ export default function AdminDashboard({ setTab }: SharedState) {
         subtitle="What needs attention across KARGO right now."
         actions={
           <>
-            <span style={{ fontSize: 12, color: "#9aa3bd" }}>Updated {updated}</span>
-            <button
-              type="button"
-              onClick={refresh}
-              style={{
-                minHeight: 36,
-                padding: "0 14px",
-                borderRadius: 8,
-                border: "1px solid #E5E7EB",
-                background: "#fff",
-                color: INDIGO,
-                fontWeight: 600,
-                fontSize: 13,
-                cursor: "pointer",
-              }}
-            >
+            <span style={{ fontSize: 12, color: "var(--kargo-muted)" }}>Updated {updated}</span>
+            <PrimaryBtn className="admin-action-primary" size="sm" onClick={refresh}>
               Refresh
-            </button>
+            </PrimaryBtn>
           </>
         }
       />
@@ -316,7 +302,7 @@ export default function AdminDashboard({ setTab }: SharedState) {
 const QUEUE_TONES: Record<QueueItem["tone"], { bg: string; fg: string }> = {
   warn: { bg: "#FDF2E3", fg: "#B4690E" },
   danger: { bg: "#FEECEC", fg: "#B42318" },
-  info: { bg: "#EEF0FB", fg: "#2E3192" },
+  info: { bg: "#E0E7FF", fg: "#191BA9" },
 };
 
 function NeedsAttention({
@@ -411,7 +397,7 @@ function NeedsAttention({
                 >
                   {clear ? "0" : item.count}
                 </span>
-                <ChevronRight size={16} color="#C7CDDB" aria-hidden="true" />
+                <ChevronRight size={16} color="#6B7280" aria-hidden="true" />
               </button>
             </li>
           );
@@ -705,13 +691,13 @@ function PipelineChart({
       </div>
 
       {visible.length === 0 ? (
-        <p style={{ color: "#748391", fontSize: 13 }}>No orders in the last 30 days.</p>
+        <p style={{ color: "var(--kargo-muted)", fontSize: 13 }}>No orders in the last 30 days.</p>
       ) : (
         <ul className="admin-pipeline">
           {visible.map((row) => {
             const meta = PIPELINE_META[row.status] ?? {
               label: row.status.replace(/_/g, " "),
-              tone: "#98A2B3",
+              tone: "#9CA3AF",
             };
             const share = total > 0 ? Math.round((row.count / total) * 100) : 0;
             return (

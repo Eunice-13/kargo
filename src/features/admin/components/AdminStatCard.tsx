@@ -44,7 +44,7 @@ export default function AdminStatCard({
           : undefined
       }
     >
-      <Icon size={20} aria-hidden="true" style={{ color: accent }} />
+      <Icon className="admin-stat__icon" size={20} aria-hidden="true" style={{ color: accent }} />
       <strong>{value}</strong>
       <span>{label}</span>
       <small style={{ color: accent }}>{sub}</small>

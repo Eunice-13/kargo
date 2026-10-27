@@ -45,7 +45,14 @@ export default function AdminUserDetailModal({
 
   return (
     <>
-      <Modal title={data?.name ?? "Account"} variant="detail" width={720} onClose={onClose}>
+      <Modal
+        title={data?.name ?? "Account"}
+        variant="detail"
+        width={720}
+        className="admin-modal"
+        overlayClassName="admin-modal-overlay"
+        onClose={onClose}
+      >
         {loading && (
           <div className="space-y-3">
             <CardSkeleton />
