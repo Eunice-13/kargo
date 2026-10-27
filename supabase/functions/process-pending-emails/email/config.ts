@@ -10,7 +10,7 @@ export type EnvReader = (name: string) => string | undefined
 // The query token is tied to the checked-in PNG so email clients do not keep
 // showing an older mark after the asset changes.
 export const DEFAULT_EMAIL_LOGO_URL =
-  "https://kargo-eunice-13s-projects.vercel.app/kargo-logo-head.png?v=2750d019"
+  "https://kargo-psi.vercel.app/kargo-logo-head.png?v=2750d019"
 
 /**
  * Both providers deliberately use this exact versioned asset. Keeping the URL

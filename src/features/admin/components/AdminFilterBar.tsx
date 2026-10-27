@@ -14,30 +14,14 @@ export default function AdminFilterBar({
   children?: ReactNode
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 8,
-        marginBottom: 14,
-        alignItems: "center",
-      }}
-    >
+    <div className="admin-filter-bar">
       <input
         type="search"
         value={search}
         onChange={(e) => onSearch(e.target.value)}
         placeholder={searchPlaceholder}
         aria-label={searchPlaceholder}
-        style={{
-          flex: "1 1 220px",
-          minWidth: 0,
-          minHeight: 40,
-          padding: "8px 12px",
-          border: "1px solid #E5E7EB",
-          borderRadius: 7,
-          fontSize: 13,
-        }}
+        className="admin-filter-control admin-filter-search"
       />
       {children}
     </div>
@@ -61,15 +45,7 @@ export function AdminSelect({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       aria-label={ariaLabel}
-      style={{
-        minHeight: 40,
-        padding: "8px 10px",
-        border: "1px solid #E5E7EB",
-        borderRadius: 7,
-        fontSize: 13,
-        background: "#fff",
-        color: "#374151",
-      }}
+      className="admin-filter-control"
     >
       {children}
     </select>

@@ -13,22 +13,13 @@ export default function AdminPageHeader({
   actions?: ReactNode
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: 12,
-        flexWrap: "wrap",
-        marginBottom: 16,
-      }}
-    >
+    <div className="admin-page-header">
       <div style={{ minWidth: 0 }}>
         <SH title={title} />
-        <p style={{ marginTop: -8, color: "#748391", fontSize: 12 }}>{subtitle}</p>
+        <p className="admin-page-header__subtitle">{subtitle}</p>
       </div>
       {actions && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div className="admin-page-header__actions">
           {actions}
         </div>
       )}

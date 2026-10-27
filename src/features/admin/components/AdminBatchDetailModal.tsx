@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Lock } from "lucide-react";
 
-import { Modal, PrimaryBtn, SecondaryBtn, CardSkeleton } from "@/components/shared";
-import { batchCoverSrc } from "@/constants/theme";
+import { Modal, PrimaryBtn, SecondaryBtn, CardSkeleton, BatchMedia } from "@/components/shared";
 import { toneForStatus } from "@/constants/admin";
 import { adminApi } from "@/services";
 import type { BatchModerationAction } from "../adminTypes";
@@ -57,7 +56,14 @@ export default function AdminBatchDetailModal({
 
   return (
     <>
-      <Modal title={data?.title ?? "Batch"} variant="detail" width={680} onClose={onClose}>
+      <Modal
+        title={data?.title ?? "Batch"}
+        variant="detail"
+        width={680}
+        className="admin-modal"
+        overlayClassName="admin-modal-overlay"
+        onClose={onClose}
+      >
         {loading && <CardSkeleton />}
         {!loading && error && (
           <p role="alert" className="admin-form-error">
@@ -67,9 +73,11 @@ export default function AdminBatchDetailModal({
         {!loading && data && (
           <div className="space-y-5">
             <div className="admin-detail-hero">
-              <img
-                src={batchCoverSrc(data.coverPath ?? undefined, data.category)}
+              <BatchMedia
+                src={data.coverPath ?? undefined}
                 alt=""
+                width={1200}
+                height={600}
                 className="admin-detail-hero__thumb"
               />
               <div className="admin-detail-hero__identity">

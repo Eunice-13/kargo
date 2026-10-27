@@ -57,6 +57,8 @@ export default function AdminPaymentDetailModal({
         title={`Payment · ${data?.orderNumber ?? ""}`}
         variant="detail"
         width={640}
+        className="admin-modal"
+        overlayClassName="admin-modal-overlay"
         onClose={onClose}
       >
         {loading && <CardSkeleton />}

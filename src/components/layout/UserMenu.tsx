@@ -52,10 +52,19 @@ export default function UserMenu({
         <span className="kargo-user-menu__avatar-wrap">
           <Avatar name={user.name || "User"} size={32} imageUrl={user.avatarUrl} />
         </span>
-        <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>
+        <span
+          className="kargo-user-menu__label"
+          style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}
+        >
           {displayLabel || user.name.split(" ")[0] || "User"}
         </span>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <svg
+          className="kargo-user-menu__chevron"
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
+          fill="none"
+        >
           <path
             d="M3 4.5l3 3 3-3"
             stroke="#9CA3AF"

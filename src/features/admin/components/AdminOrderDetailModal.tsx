@@ -32,7 +32,14 @@ export default function AdminOrderDetailModal({
 
   return (
     <>
-      <Modal title={data?.orderNumber ?? "Order"} variant="detail" width={640} onClose={onClose}>
+      <Modal
+        title={data?.orderNumber ?? "Order"}
+        variant="detail"
+        width={640}
+        className="admin-modal"
+        overlayClassName="admin-modal-overlay"
+        onClose={onClose}
+      >
         {loading && <CardSkeleton />}
         {!loading && error && (
           <p role="alert" className="admin-form-error">

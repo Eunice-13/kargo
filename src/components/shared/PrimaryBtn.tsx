@@ -5,6 +5,7 @@ export default function PrimaryBtn({
   children,
   onClick,
   size = "md",
+  className = "",
   style = {},
   loading = false,
   disabled = false,
@@ -12,6 +13,7 @@ export default function PrimaryBtn({
   children: React.ReactNode
   onClick?: () => void
   size?: "sm" | "md"
+  className?: string
   style?: React.CSSProperties
   loading?: boolean
   disabled?: boolean
@@ -30,7 +32,7 @@ export default function PrimaryBtn({
       }}
       className={`kargo-primary font-semibold hover:opacity-90 bp ${
         size === "sm" ? "px-3 py-1.5 text-[12px]" : "px-4 py-2 text-[13px]"
-      } ${loading ? "lsh" : ""}`}
+      } ${loading ? "lsh" : ""} ${className}`}
     >
       {loading ? (
         <span className="flex items-center justify-center gap-2">

@@ -72,7 +72,7 @@ const M = { width: 600, radius: 16, radiusSmall: 10, gutter: 32, gutterMobile: 2
 // The query token is tied to the checked-in PNG so email clients do not keep
 // showing an older mark after the asset changes.
 const DEFAULT_LOGO =
-  "https://kargo-eunice-13s-projects.vercel.app/kargo-logo-head.png?v=2750d019"
+  "https://kargo-psi.vercel.app/kargo-logo-head.png?v=2750d019"
 const LOGO = DEFAULT_LOGO
 
 const esc = (s) =>
@@ -179,7 +179,7 @@ const footer = (year) => `<tr>
     <div class="k-footer-mark" style="font-family:${FONT.display};font-size:11px;font-weight:800;letter-spacing:0.26em;color:${C.indigo}">KARGO</div>
     <div class="k-footer-text" style="margin-top:9px;font-family:${FONT.body};font-size:11.5px;line-height:1.65;color:${C.mutedText}">
       You are receiving this because someone used this address on KARGO. If this was not you, ignore this email and nothing will change.
-      <a href="https://kargo-eunice-13s-projects.vercel.app/" style="color:${C.indigo};text-decoration:underline">Open KARGO</a>
+      <a href="https://kargo-psi.vercel.app/" style="color:${C.indigo};text-decoration:underline">Open KARGO</a>
     </div>
   </td>
 </tr>
@@ -267,7 +267,7 @@ const document = ({ view, year }) => `<!doctype html>
 
 // -------------------------------------------------------------- content ----
 
-const APP = "https://kargo-eunice-13s-projects.vercel.app/"
+const APP = "https://kargo-psi.vercel.app/"
 
 const TEMPLATES = {
   confirmation: {

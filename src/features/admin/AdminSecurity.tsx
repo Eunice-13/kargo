@@ -11,6 +11,7 @@ import { useAdminResource } from "./useAdminResource";
 import {
   AdminPageHeader,
   AdminFilterBar,
+  AdminSelect,
   AdminBadge,
   AdminEmptyState,
   AdminSectionTabs,
@@ -63,8 +64,8 @@ function TeamSection() {
         style={{
           padding: "10px 12px",
           borderRadius: 10,
-          background: "#F7F8FC",
-          color: "#475467",
+          background: "var(--kargo-canvas)",
+          color: "var(--kargo-ink-soft)",
           fontSize: 12,
           lineHeight: 1.5,
           marginBottom: 14,
@@ -94,7 +95,10 @@ function TeamSection() {
       {!loading && data && data.rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table
+              className="admin-team-table"
+              style={{ width: "100%", borderCollapse: "collapse" }}
+            >
               <thead>
                 <tr style={{ background: "#6892D5" }}>
                   {["Name", "Email", "Granted by", "Granted", ""].map((h) => (
@@ -121,22 +125,22 @@ function TeamSection() {
                     <td style={{ padding: "10px 14px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <Avatar name={m.name} size={28} />
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#171923" }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--kargo-ink)" }}>
                           {m.name}
                         </span>
                       </div>
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "#667085" }}>
+                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
                       {m.email ?? "—"}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "#667085" }}>
+                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
                       {m.grantedBy ?? "—"}
                     </td>
                     <td
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
-                        color: "#9aa3bd",
+                        color: "var(--kargo-muted)",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -144,6 +148,7 @@ function TeamSection() {
                     </td>
                     <td style={{ padding: "10px 14px", textAlign: "right" }}>
                       <button
+                        className="admin-danger-link"
                         type="button"
                         onClick={() => setRevoke(m)}
                         style={{
@@ -240,42 +245,16 @@ function AuditSection() {
         onSearch={setSearch}
         searchPlaceholder="Search actor, target, or action"
       >
-        <select
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-          aria-label="Filter audit by date"
-          style={{
-            minHeight: 40,
-            padding: "8px 10px",
-            border: "1px solid #E5E7EB",
-            borderRadius: 7,
-            fontSize: 13,
-            background: "#fff",
-          }}
-        >
+        <AdminSelect value={days} onChange={setDays} ariaLabel="Filter audit by date">
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
           <option value="90">Last 90 days</option>
           <option value="0">All time</option>
-        </select>
+        </AdminSelect>
         {rows.length > 0 && (
-          <button
-            type="button"
-            onClick={exportCsv}
-            style={{
-              minHeight: 40,
-              padding: "0 12px",
-              borderRadius: 7,
-              border: "1px solid #E5E7EB",
-              background: "#fff",
-              color: INDIGO,
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
+          <PrimaryBtn className="admin-action-primary" size="sm" onClick={exportCsv}>
             Export CSV
-          </button>
+          </PrimaryBtn>
         )}
       </AdminFilterBar>
 
@@ -295,7 +274,10 @@ function AuditSection() {
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table
+              className="admin-audit-table"
+              style={{ width: "100%", borderCollapse: "collapse" }}
+            >
               <thead>
                 <tr style={{ background: "#6892D5" }}>
                   {["When", "Actor", "Action", "Target", "Reason"].map((h) => (
@@ -327,7 +309,7 @@ function AuditSection() {
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
-                        color: "#9aa3bd",
+                        color: "var(--kargo-muted)",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -349,14 +331,14 @@ function AuditSection() {
                     <td style={{ padding: "10px 14px" }}>
                       <AdminBadge tone="info" label={ADMIN_ACTION_LABELS[a.action] ?? a.action} />
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "#667085" }}>
+                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
                       {a.targetLabel ?? a.targetType}
                     </td>
                     <td
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
-                        color: "#9aa3bd",
+                        color: "var(--kargo-muted)",
                         maxWidth: 240,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -372,6 +354,7 @@ function AuditSection() {
           </div>
           {rows.length < total && (
             <button
+              className="admin-load-more"
               type="button"
               onClick={() => setOffset(rows.length)}
               disabled={loading}
@@ -380,7 +363,7 @@ function AuditSection() {
                 width: "100%",
                 padding: 12,
                 border: "none",
-                borderTop: "1px solid #EEF0F4",
+                borderTop: "1px solid var(--kargo-line)",
                 background: "#fff",
                 color: INDIGO,
                 fontWeight: 700,

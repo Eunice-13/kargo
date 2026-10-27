@@ -1,5 +1,5 @@
-import { useRef } from "react"
-import { INDIGO } from "@/constants/theme"
+import { useRef } from "react";
+import { INDIGO } from "@/constants/theme";
 
 // Accessible segmented control (tablist with arrow-key navigation). Scrolls
 // horizontally on mobile. Used for Transactions sub-tabs.
@@ -8,14 +8,15 @@ export default function AdminSectionTabs<T extends string>({
   active,
   onChange,
 }: {
-  tabs: { value: T; label: string; count?: number }[]
-  active: T
-  onChange: (value: T) => void
+  tabs: { value: T; label: string; count?: number }[];
+  active: T;
+  onChange: (value: T) => void;
 }) {
-  const refs = useRef<(HTMLButtonElement | null)[]>([])
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
   return (
     <div
+      className="admin-section-tabs"
       role="tablist"
       aria-label="Sections"
       style={{
@@ -27,12 +28,13 @@ export default function AdminSectionTabs<T extends string>({
       }}
     >
       {tabs.map((t, i) => {
-        const selected = t.value === active
+        const selected = t.value === active;
         return (
           <button
+            className="admin-section-tab"
             key={t.value}
             ref={(el) => {
-              refs.current[i] = el
+              refs.current[i] = el;
             }}
             role="tab"
             aria-selected={selected}
@@ -40,18 +42,17 @@ export default function AdminSectionTabs<T extends string>({
             onClick={() => onChange(t.value)}
             onKeyDown={(e) => {
               if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-                e.preventDefault()
-                const dir = e.key === "ArrowRight" ? 1 : -1
-                const next = (i + dir + tabs.length) % tabs.length
-                onChange(tabs[next].value)
-                refs.current[next]?.focus()
+                e.preventDefault();
+                const dir = e.key === "ArrowRight" ? 1 : -1;
+                const next = (i + dir + tabs.length) % tabs.length;
+                onChange(tabs[next].value);
+                refs.current[next]?.focus();
               }
             }}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              minHeight: 40,
               padding: "0 14px",
               border: "none",
               borderBottom: selected ? `2px solid ${INDIGO}` : "2px solid transparent",
@@ -67,6 +68,7 @@ export default function AdminSectionTabs<T extends string>({
             {t.label}
             {t.count != null && t.count > 0 && (
               <span
+                className="admin-section-tab__count"
                 style={{
                   background: selected ? INDIGO : "#E5E7EB",
                   color: selected ? "#fff" : "#6B7280",
@@ -80,8 +82,8 @@ export default function AdminSectionTabs<T extends string>({
               </span>
             )}
           </button>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

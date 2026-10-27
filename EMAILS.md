@@ -104,6 +104,13 @@ Both adapters live in `providers/index.ts`:
 - Brevo receives `htmlContent` and `textContent`, so the plain-text part ships as
   a real multipart alternative.
 
+Supabase Auth mail (`confirmation`, `recovery`, `magiclink`, `invite`,
+`email_change`, `reauthentication`) does **not** go through `EMAIL_PROVIDER`. It
+is sent by GoTrue over the SMTP relay configured in the Supabase dashboard, which
+is a separate setting. That relay must not rewrite links — see
+`docs/auth-smtp-split.md`. Brevo rewrites every URL through `*.sendibt2.com`
+regardless of which adapter sent it.
+
 Retries are shared: `5xx`, `408`, `409`, `425`, and `429` return the row to
 `pending` with exponential backoff. Other failures are permanent. Rows stop after
 five attempts. A render failure is permanent by definition.

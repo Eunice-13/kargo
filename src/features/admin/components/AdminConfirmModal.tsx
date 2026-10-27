@@ -39,7 +39,14 @@ export default function AdminConfirmModal({
   const valid = reasonOk && typedOk;
 
   return (
-    <Modal title={title} variant={destructive ? "danger" : "confirm"} width={492} onClose={onClose}>
+    <Modal
+      title={title}
+      variant={destructive ? "danger" : "confirm"}
+      width={492}
+      className="admin-modal"
+      overlayClassName="admin-modal-overlay"
+      onClose={onClose}
+    >
       <div className="admin-confirm">
         <div className={`admin-callout admin-callout--${destructive ? "danger" : "info"}`}>
           <span className="admin-callout__icon" aria-hidden="true">
@@ -82,6 +89,7 @@ export default function AdminConfirmModal({
             </label>
             <div className="admin-field__match">
               <input
+                className="admin-field__match-control"
                 id="admin-confirm-word"
                 value={typed}
                 onChange={(event) => setTyped(event.target.value)}
