@@ -1,8 +1,8 @@
-import type { Role, Tab } from "@/types"
-import { useEffect, useState } from "react"
-import { createPortal } from "react-dom"
+import type { Role, Tab } from "@/types";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
-import { INDIGO } from "@/constants/theme"
+import { INDIGO } from "@/constants/theme";
 
 import {
   ClipboardList,
@@ -14,16 +14,16 @@ import {
   ShieldCheck,
   ShoppingCart,
   Users as UsersIcon,
-} from "lucide-react"
+} from "lucide-react";
 
-export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"]
+export const TABS: Tab[] = ["Dashboard", "Batches", "My Claims", "Payments"];
 
 // Admin-only tab set. Kept separate so buyer/seller tabs are never affected.
-const ADMIN_TABS: Tab[] = ["Dashboard", "Users", "Batches", "Transactions", "Security"]
+const ADMIN_TABS: Tab[] = ["Dashboard", "Users", "Batches", "Transactions", "Security"];
 
 // Ordered tab list for a role (used for rendering and slide direction).
 export function tabsForRole(role: Role): Tab[] {
-  return role === "Admin" ? ADMIN_TABS : TABS
+  return role === "Admin" ? ADMIN_TABS : TABS;
 }
 
 const TAB_ICONS = {
@@ -34,7 +34,7 @@ const TAB_ICONS = {
   "My Claims": ClipboardList,
 
   Payments: History,
-} as const
+} as const;
 
 const ADMIN_TAB_ICONS = {
   Dashboard: LayoutGrid,
@@ -42,7 +42,7 @@ const ADMIN_TAB_ICONS = {
   Batches: Package,
   Transactions: ReceiptText,
   Security: ShieldCheck,
-} as const
+} as const;
 
 export default function TabBar({
   active,
@@ -51,35 +51,35 @@ export default function TabBar({
 
   role,
 }: {
-  active: Tab
+  active: Tab;
 
-  setActive: (t: Tab) => void
+  setActive: (t: Tab) => void;
 
-  role: Role
+  role: Role;
 }) {
   const [isMobile, setIsMobile] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(max-width: 1024px)").matches,
-  )
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
+  );
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 1024px)")
-    const updateMobileState = () => setIsMobile(mediaQuery.matches)
-    updateMobileState()
-    mediaQuery.addEventListener("change", updateMobileState)
-    return () => mediaQuery.removeEventListener("change", updateMobileState)
-  }, [])
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const updateMobileState = () => setIsMobile(mediaQuery.matches);
+    updateMobileState();
+    mediaQuery.addEventListener("change", updateMobileState);
+    return () => mediaQuery.removeEventListener("change", updateMobileState);
+  }, []);
 
   useEffect(() => {
-    if (role !== "Admin" || !isMobile) return
+    if (role !== "Admin" || !isMobile) return;
 
-    document.documentElement.classList.add("admin-mobile-nav")
-    document.body.classList.add("admin-mobile-nav")
+    document.documentElement.classList.add("admin-mobile-nav");
+    document.body.classList.add("admin-mobile-nav");
 
     return () => {
-      document.documentElement.classList.remove("admin-mobile-nav")
-      document.body.classList.remove("admin-mobile-nav")
-    }
-  }, [role, isMobile])
+      document.documentElement.classList.remove("admin-mobile-nav");
+      document.body.classList.remove("admin-mobile-nav");
+    };
+  }, [role, isMobile]);
 
   const visibleTabs =
     role === "Admin"
@@ -89,18 +89,18 @@ export default function TabBar({
           icon: ADMIN_TAB_ICONS[tab as keyof typeof ADMIN_TAB_ICONS],
         }))
       : role === "Seller"
-      ? TABS.map((tab) => ({
-          tab,
-          label: tab === "My Claims" ? "Orders" : tab,
-          icon: TAB_ICONS[tab as keyof typeof TAB_ICONS],
-        }))
-      : [
-          { tab: "Batches" as Tab, label: "Home", icon: Home },
-          { tab: "My Claims" as Tab, label: "Claims", icon: ShoppingCart },
-          { tab: "Dashboard" as Tab, label: "Dashboard", icon: LayoutGrid },
-          { tab: "Payments" as Tab, label: "History", icon: History },
-        ]
-  const isAdminMobile = role === "Admin" && isMobile
+        ? TABS.map((tab) => ({
+            tab,
+            label: tab === "My Claims" ? "Orders" : tab,
+            icon: TAB_ICONS[tab as keyof typeof TAB_ICONS],
+          }))
+        : [
+            { tab: "Batches" as Tab, label: "Home", icon: Home },
+            { tab: "My Claims" as Tab, label: "Claims", icon: ShoppingCart },
+            { tab: "Dashboard" as Tab, label: "Dashboard", icon: LayoutGrid },
+            { tab: "Payments" as Tab, label: "History", icon: History },
+          ];
+  const isAdminMobile = role === "Admin" && isMobile;
   const tabBar = (
     <div
       style={{
@@ -131,16 +131,16 @@ export default function TabBar({
         role === "Admin"
           ? "admin-tabbar sticky top-14"
           : role === "Seller"
-          ? "seller-tabbar"
-          : "sticky top-14"
+            ? "seller-tabbar"
+            : "sticky top-14"
       }`}
     >
       {/* Tabs — equally distributed across available width */}
       <div
+        className={role === "Admin" ? "admin-tabbar__items" : undefined}
         style={{
           display: role === "Admin" ? "grid" : "flex",
-          gridTemplateColumns:
-            role === "Admin" ? "repeat(5, minmax(0, 1fr))" : undefined,
+          gridTemplateColumns: role === "Admin" ? "repeat(5, minmax(0, 1fr))" : undefined,
           flex: 1,
           width: "100%",
           height: "100%",
@@ -151,7 +151,7 @@ export default function TabBar({
           // Highlight exactly one tab at a time. Because the buyer tab list can
           // map two entries to the same underlying tab, compare the whole
           // entry's tab against the active tab so only the intended one lights.
-          const visuallyActive = active === tab
+          const visuallyActive = active === tab;
           return (
             <button
               key={tab}
@@ -174,9 +174,7 @@ export default function TabBar({
                 color: visuallyActive ? INDIGO : "#6B7280",
                 fontWeight: visuallyActive ? 700 : 500,
                 fontSize: 13,
-                borderBottom: visuallyActive
-                  ? `2px solid ${INDIGO}`
-                  : "2px solid transparent",
+                borderBottom: visuallyActive ? `2px solid ${INDIGO}` : "2px solid transparent",
                 height: isAdminMobile ? 60 : 44,
                 flex: isAdminMobile ? "none" : 1,
                 minWidth: 0,
@@ -196,23 +194,19 @@ export default function TabBar({
                 overflow: "hidden",
                 textOverflow: "ellipsis",
               }}
-              className="hover:text-gray-800"
-              aria-label={
-                tab === "My Claims" && role === "Seller"
-                  ? "Orders Received"
-                  : label
-              }
+              className={`${role === "Admin" ? "admin-tabbar__item " : ""}hover:text-gray-800`}
+              aria-label={tab === "My Claims" && role === "Seller" ? "Orders Received" : label}
             >
               <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
               <span className="kargo-tab-label">{label}</span>
             </button>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 
-  if (isAdminMobile) return createPortal(tabBar, document.body)
+  if (isAdminMobile) return createPortal(tabBar, document.body);
 
-  return tabBar
+  return tabBar;
 }

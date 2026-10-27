@@ -102,6 +102,8 @@ export default function Modal({
   topOffset = HEADER_HEIGHT,
   variant,
   showTitleIcon = true,
+  className = "",
+  overlayClassName = "",
 }: {
   title: string
   onClose: () => void
@@ -110,6 +112,8 @@ export default function Modal({
   topOffset?: number
   variant?: ModalVariant
   showTitleIcon?: boolean
+  className?: string
+  overlayClassName?: string
 }) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
@@ -186,7 +190,7 @@ export default function Modal({
 
   return createPortal(
     <div
-      className={`fi kargo-modal-overlay${isClosing ? " is-closing" : ""}`}
+      className={`fi kargo-modal-overlay${isClosing ? " is-closing" : ""} ${overlayClassName}`}
       style={{ top: topOffset }}
       onClick={(event) => {
         if (event.target === event.currentTarget) requestClose()
@@ -199,7 +203,7 @@ export default function Modal({
         aria-labelledby={titleId}
         tabIndex={-1}
         data-variant={resolvedVariant}
-        className={`si kargo-modal${isClosing ? " is-closing" : ""}`}
+        className={`si kargo-modal${isClosing ? " is-closing" : ""} ${className}`}
         style={{
           maxWidth: width,
           maxHeight: `calc(100dvh - ${topOffset + 32}px)`,

@@ -59,15 +59,23 @@ export default function AdminAddAdminModal({
   const valid = !!selected && reasonOk && typedOk;
 
   return (
-    <Modal title="Add admin" variant="confirm" width={500} onClose={onClose}>
+    <Modal
+      title="Add admin"
+      variant="confirm"
+      width={500}
+      className="admin-modal"
+      overlayClassName="admin-modal-overlay"
+      onClose={onClose}
+    >
       <div className="admin-confirm">
         {!selected ? (
           <>
             <div className="admin-field">
               <label htmlFor="admin-search-account">Find an existing account</label>
               <div className="admin-search">
-                <Search size={16} aria-hidden="true" />
+                <Search className="admin-search__icon" size={16} aria-hidden="true" />
                 <input
+                  className="admin-search__control"
                   id="admin-search-account"
                   type="search"
                   value={query}
@@ -102,13 +110,17 @@ export default function AdminAddAdminModal({
               <ul className="admin-search-results" aria-label="Matching accounts">
                 {results.map((r) => (
                   <li key={r.id}>
-                    <button type="button" onClick={() => setSelected(r)}>
+                    <button
+                      className="admin-search-result"
+                      type="button"
+                      onClick={() => setSelected(r)}
+                    >
                       <Avatar name={r.name} size={30} />
                       <span className="admin-search-results__text">
                         <strong>{r.name}</strong>
                         <span>{r.email}</span>
                       </span>
-                      <UserRound size={15} aria-hidden="true" />
+                      <UserRound className="admin-search-result__icon" size={15} aria-hidden="true" />
                     </button>
                   </li>
                 ))}
@@ -167,6 +179,7 @@ export default function AdminAddAdminModal({
               </label>
               <div className="admin-field__match">
                 <input
+                  className="admin-field__match-control"
                   id="admin-grant-typed"
                   value={typed}
                   onChange={(event) => setTyped(event.target.value)}

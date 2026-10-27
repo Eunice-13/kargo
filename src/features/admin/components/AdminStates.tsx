@@ -1,6 +1,6 @@
-import { AlertTriangle, Inbox, ShieldAlert } from "lucide-react"
-import type { LucideIcon } from "lucide-react"
-import { Card, EmptyState, PrimaryBtn } from "@/components/shared"
+import { AlertTriangle, Inbox, ShieldAlert } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Card, EmptyState, PrimaryBtn } from "@/components/shared";
 
 // Inline error card with Retry. Never blanks the page.
 export function AdminErrorState({
@@ -8,9 +8,9 @@ export function AdminErrorState({
   onRetry,
   accessDenied = false,
 }: {
-  message: string
-  onRetry?: () => void
-  accessDenied?: boolean
+  message: string;
+  onRetry?: () => void;
+  accessDenied?: boolean;
 }) {
   return (
     <Card>
@@ -23,10 +23,10 @@ export function AdminErrorState({
           )}
         </span>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontWeight: 700, color: "#171923", fontSize: 14 }}>
+          <div style={{ fontWeight: 700, color: "var(--kargo-ink)", fontSize: 14 }}>
             {accessDenied ? "Admin access required" : "Couldn't load this view"}
           </div>
-          <p style={{ color: "#667085", fontSize: 13, margin: "4px 0 0" }}>{message}</p>
+          <p style={{ color: "var(--kargo-muted)", fontSize: 13, margin: "4px 0 0" }}>{message}</p>
           {onRetry && !accessDenied && (
             <div style={{ marginTop: 12 }}>
               <PrimaryBtn size="sm" onClick={onRetry}>
@@ -37,7 +37,7 @@ export function AdminErrorState({
         </div>
       </div>
     </Card>
-  )
+  );
 }
 
 // Thin admin wrapper over the shared EmptyState.
@@ -46,9 +46,9 @@ export function AdminEmptyState({
   message,
   icon = Inbox,
 }: {
-  title: string
-  message: string
-  icon?: LucideIcon
+  title: string;
+  message: string;
+  icon?: LucideIcon;
 }) {
-  return <EmptyState icon={icon} title={title} message={message} />
+  return <EmptyState icon={icon} title={title} message={message} />;
 }

@@ -1,4 +1,4 @@
-import { ADMIN_TONES, type AdminTone } from "@/constants/admin"
+import { ADMIN_TONES, type AdminTone } from "@/constants/admin";
 
 // Status/role/moderation pill. Matches StatusBadge: rounded-full, 11px semibold,
 // dot + label. `tone` is either a named key in ADMIN_TONES or a resolved
@@ -7,12 +7,13 @@ export default function AdminBadge({
   tone,
   label,
 }: {
-  tone: keyof typeof ADMIN_TONES | string | AdminTone
-  label: string
+  tone: keyof typeof ADMIN_TONES | string | AdminTone;
+  label: string;
 }) {
-  const t = typeof tone === "string" ? ADMIN_TONES[tone] ?? ADMIN_TONES.info : tone
+  const t = typeof tone === "string" ? (ADMIN_TONES[tone] ?? ADMIN_TONES.info) : tone;
   return (
     <span
+      className="admin-badge"
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -27,6 +28,7 @@ export default function AdminBadge({
       }}
     >
       <span
+        className="admin-badge__dot"
         aria-hidden="true"
         style={{
           width: 6,
@@ -38,5 +40,5 @@ export default function AdminBadge({
       />
       {label}
     </span>
-  )
+  );
 }

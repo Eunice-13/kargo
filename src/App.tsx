@@ -768,7 +768,7 @@ export default function App() {
       {stage === "app" && (
         <NotificationsProvider key={`${user.id ?? user.email}:${role}`} role={role}>
         <div
-          className="kargo-original-app"
+          className={`kargo-original-app${role === "Admin" ? " admin-app" : ""}`}
           style={{
             background: CREAM,
 
