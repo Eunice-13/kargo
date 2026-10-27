@@ -152,7 +152,7 @@ export default function AdminDashboard({ setTab }: SharedState) {
   const chart = data?.chart ?? [];
 
   return (
-    <div className="p-6 admin-page">
+    <div className="p-6 admin-page admin-page--dashboard">
       <AdminPageHeader
         title="Dashboard"
         subtitle="What needs attention across KARGO right now."
@@ -240,7 +240,7 @@ export default function AdminDashboard({ setTab }: SharedState) {
               onViewOrders={() => goto({ tab: "Transactions", subtab: "Orders" })}
             />
 
-            <Card>
+            <Card className="admin-activity-card">
               <AdminPanelHeader
                 title="Recent admin activity"
                 hint="Actions taken in this console."
@@ -267,7 +267,7 @@ export default function AdminDashboard({ setTab }: SharedState) {
               )}
             </Card>
 
-            <Card>
+            <Card className="admin-seller-card">
               <AdminPanelHeader
                 title="Top sellers (30d)"
                 hint="Ranked by payments confirmed in the last 30 days."
@@ -675,7 +675,7 @@ function PipelineChart({
   const max = Math.max(1, ...visible.map((row) => row.count));
 
   return (
-    <Card>
+    <Card className="admin-pipeline-card">
       <div className="admin-chart-head">
         <div>
           <h2 className="admin-chart-title">Where orders stand</h2>

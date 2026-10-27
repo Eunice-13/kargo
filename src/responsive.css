@@ -83,13 +83,13 @@
   }
 
   .admin-tabbar > div:first-child > button > svg {
-    width: 18px;
-    height: 18px;
-    flex-basis: 18px;
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
   }
 
   .admin-tabbar .kargo-tab-label {
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .admin-page {
@@ -4692,5 +4692,431 @@
   body.admin-mobile-nav .kargo-original-app .admin-page-header__actions {
     width: 100% !important;
     justify-content: space-between;
+  }
+}
+
+
+/* Admin dashboard phone presentation; the shared dashboard styles stay intact. */
+@media (max-width: 767px) {
+  /* Match the shell-qualified legacy overrides without affecting other tabs. */
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) {
+    padding: 18px 12px 28px !important;
+    color: #17212b;
+    font-family: "DM Sans", sans-serif;
+  }
+
+  .admin-page--dashboard .admin-page-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-page-header > div {
+    width: auto !important;
+  }
+
+  .admin-page--dashboard .admin-page-header > div:first-child > div {
+    margin-bottom: 5px;
+  }
+
+  .admin-page--dashboard .admin-page-header h2 {
+    margin: 0;
+    color: #17212b !important;
+    font-family: "Manrope", sans-serif !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+  }
+
+  .admin-page--dashboard .admin-page-header__subtitle {
+    margin: 0;
+    color: #748391;
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+
+  .admin-page--dashboard .admin-page-header__actions {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .admin-page--dashboard .admin-page-header__actions > span {
+    color: #748391 !important;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-page-header__actions > button,
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-chart-link,
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-panel-link {
+    position: relative;
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 28px !important;
+    padding: 6px 12px !important;
+    border: 0;
+    border-radius: 999px !important;
+    background: #18324a !important;
+    color: #fff !important;
+    font-family: "DM Sans", sans-serif !important;
+    font-size: 12px !important;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+
+  /* Keep compact pills' pointer targets at least 44px tall. */
+  .admin-page--dashboard .admin-page-header__actions > button::after,
+  .admin-page--dashboard .admin-chart-link::after,
+  .admin-page--dashboard .admin-panel-link::after {
+    position: absolute;
+    inset: -8px 0;
+    content: "";
+  }
+
+  .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-stats {
+    gap: 12px !important;
+    margin-bottom: 16px;
+  }
+
+  .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-stat {
+    display: flex;
+    min-height: 0;
+    aspect-ratio: 1 / 1;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 24px 12px 14px;
+  }
+
+  .admin-page--dashboard .admin-stat::before {
+    height: 8px;
+  }
+
+  .admin-page--dashboard .admin-stat__icon {
+    top: 16px;
+    right: 14px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .admin-page--dashboard .admin-stat strong {
+    margin-bottom: 0;
+    color: #17212b;
+    font-family: "Manrope", sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .admin-page--dashboard .admin-stat > span {
+    margin-top: 9px;
+    color: #748391;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .admin-page--dashboard .admin-stat small {
+    margin-top: 7px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-stat:last-child:nth-child(odd) {
+    display: grid;
+    width: 100% !important;
+    height: 88px;
+    min-height: 88px;
+    aspect-ratio: auto;
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: repeat(2, auto);
+    align-content: center;
+    align-items: center;
+    gap: 2px 12px;
+    padding: 14px 44px 14px 14px;
+    justify-self: stretch;
+  }
+
+  .admin-page--dashboard .admin-stat:last-child:nth-child(odd) strong {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    font-size: 24px;
+  }
+
+  .admin-page--dashboard .admin-stat:last-child:nth-child(odd) > span,
+  .admin-page--dashboard .admin-stat:last-child:nth-child(odd) small {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .admin-page--dashboard > .admin-grid {
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .admin-page--dashboard > .admin-grid:last-child {
+    margin-bottom: 0;
+  }
+
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) :is(
+    .admin-queue-card,
+    .admin-chart-card,
+    .admin-pipeline-card,
+    .admin-activity-card,
+    .admin-seller-card
+  ) {
+    min-width: 0;
+    padding: 14px !important;
+    border: 1px solid #e4e9ee !important;
+    border-radius: 9px !important;
+    box-shadow: 0 4px 13px rgba(18, 30, 71, 0.18) !important;
+  }
+
+  .admin-page--dashboard :is(.admin-panel-head, .admin-chart-head) {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .admin-page--dashboard .admin-chart-head > div {
+    min-width: 0;
+  }
+
+  .admin-page--dashboard :is(.admin-panel-head__text h2, .admin-chart-title) {
+    color: #17212b;
+    font-family: "Manrope", sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700;
+  }
+
+  .admin-page--dashboard :is(.admin-panel-head__text p, .admin-chart-sub) {
+    color: #748391;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .admin-page--dashboard .admin-queue {
+    gap: 0;
+  }
+
+  .admin-page--dashboard .admin-queue-row {
+    min-height: 56px !important;
+    gap: 8px;
+    padding: 10px 0;
+    border: 0;
+    border-bottom: 1px solid #e4e9ee;
+    border-radius: 0;
+  }
+
+  .admin-page--dashboard .admin-queue > li:last-child .admin-queue-row {
+    border-bottom: 0;
+  }
+
+  .admin-page--dashboard .admin-queue-row__icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .admin-page--dashboard .admin-queue-row > svg {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+  }
+
+  .admin-page--dashboard :is(
+    .admin-queue-row__title,
+    .admin-queue-row__desc,
+    .admin-activity-row__main,
+    .admin-activity-row__main strong,
+    .admin-pipeline__labels > span:first-child
+  ) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-page--dashboard .admin-queue-row__title {
+    font-size: 12px;
+  }
+
+  .admin-page--dashboard .admin-queue-row__desc {
+    color: #748391;
+    font-size: 11px;
+  }
+
+  .admin-page--dashboard :is(.admin-activity-row, .admin-seller-row) {
+    min-height: 56px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom-color: #e4e9ee;
+    font-size: 12px;
+  }
+
+  .admin-page--dashboard .admin-activity-row__main strong {
+    display: block;
+    color: #17212b;
+    font-family: "Manrope", sans-serif;
+    font-size: 12px;
+  }
+
+  .admin-page--dashboard :is(
+    .admin-activity-row__target,
+    .admin-activity-row__time,
+    .admin-seller-row__orders
+  ) {
+    color: #748391;
+    font-size: 11px;
+  }
+
+  .admin-page--dashboard .admin-seller-row {
+    display: grid;
+    grid-template-columns: 20px 28px minmax(0, 1fr) auto;
+    gap: 2px 8px;
+  }
+
+  .admin-page--dashboard .admin-seller-row__rank,
+  .admin-page--dashboard .admin-seller-row > :nth-child(2) {
+    grid-row: 1 / 3;
+  }
+
+  .admin-page--dashboard .admin-seller-row__shop {
+    grid-column: 3;
+    grid-row: 1;
+    font-size: 12px;
+  }
+
+  .admin-page--dashboard .admin-seller-row__orders {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .admin-page--dashboard .admin-seller-row__gmv {
+    grid-column: 4;
+    grid-row: 1 / 3;
+    color: #17212b;
+    font-family: "Manrope", sans-serif;
+    font-size: 12px;
+  }
+
+  .admin-page--dashboard .admin-pipeline {
+    gap: 0;
+  }
+
+  .admin-page--dashboard .admin-pipeline__row {
+    min-height: 44px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e4e9ee;
+  }
+
+  .admin-page--dashboard .admin-pipeline__row:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-page--dashboard .admin-pipeline__labels > span {
+    min-width: 0;
+  }
+
+  .admin-page--dashboard .admin-pipeline__labels > span:last-child {
+    flex: 0 0 auto;
+    color: #748391;
+  }
+
+  .admin-page--dashboard .admin-pipeline__track {
+    height: 5px;
+  }
+
+  .admin-page--dashboard .admin-chart-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Keep the accessible table out of the visual layout despite legacy table sizing. */
+  .admin-page--dashboard .admin-chart-card > table.sr-only {
+    width: 1px !important;
+    min-width: 0 !important;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+  }
+
+  .admin-page--dashboard .admin-chart-summary > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .admin-page--dashboard .admin-chart-summary span {
+    color: #748391;
+    font-size: 9px;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-page--dashboard .admin-chart-summary strong {
+    color: #17212b;
+    font-family: "Manrope", sans-serif;
+    font-size: 16px;
+  }
+
+  .admin-page--dashboard .admin-chart-readout {
+    min-height: 44px;
+    gap: 4px;
+    padding: 8px;
+    color: #748391;
+    font-size: 11px;
+  }
+
+  .admin-page--dashboard .admin-chart-readout strong {
+    font-family: "Manrope", sans-serif;
+  }
+
+  .admin-page--dashboard .admin-chart-row {
+    --admin-chart-plot-height: 72px;
+  }
+
+  .admin-page--dashboard .admin-chart-row--orders {
+    --admin-chart-plot-height: 24px;
+  }
+
+  .admin-page--dashboard .admin-chart-row__body {
+    display: block;
+  }
+
+  .admin-page--dashboard .admin-chart-yaxis {
+    display: none;
+  }
+
+  .admin-page--dashboard .admin-chart-plot {
+    gap: 2px;
+  }
+
+  .admin-page--dashboard .admin-chart-bar {
+    width: 45%;
+    max-width: 8px;
+  }
+
+  .admin-page--dashboard .admin-chart-xaxis {
+    gap: 2px;
+    margin-left: 0;
+    font-size: 9px;
+  }
+
+  .admin-page--dashboard .admin-chart-xaxis span:not(.is-active):not(.is-end) {
+    visibility: hidden;
+  }
+
+  .admin-page--dashboard .admin-chart-xaxis span:first-child {
+    text-align: left;
+  }
+
+  .admin-page--dashboard .admin-chart-xaxis span:last-child {
+    text-align: right;
+  }
+
+  .admin-tabbar > div:first-child > button[aria-current="page"] {
+    color: #18324a !important;
+    border-bottom-color: #d85b4d !important;
   }
 }
