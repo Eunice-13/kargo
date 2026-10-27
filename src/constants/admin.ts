@@ -79,4 +79,8 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   restore_account: "Restored account",
   grant_seller: "Granted seller access",
   revoke_seller: "Revoked seller access",
+  grant_admin: "Invited admin",
+  accept_admin: "Accepted admin invitation",
+  decline_admin: "Declined admin invitation",
+  revoke_admin: "Revoked admin access",
 };

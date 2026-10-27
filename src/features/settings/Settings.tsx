@@ -1,11 +1,12 @@
 import MyAddressesSection from "./MyAddressesSection"
-import { navIntent } from "@/state/navIntent"
+import { navIntent, subscribeNavIntent } from "@/state/navIntent"
 import { useState, useEffect } from "react"
-import { UserRound, Link2, Bell, Lock, MapPin } from "lucide-react"
+import { UserRound, Link2, Bell, Lock, MapPin, ShieldCheck } from "lucide-react"
 import type { SettingsSection, SharedState } from "@/types"
 import { INDIGO } from "@/constants/theme"
 import { Card } from "@/components/shared"
 import ProfileSection from "./ProfileSection"
+import AccountStatusSection from "./AccountStatusSection"
 import LinkedAccountsSection from "./LinkedAccountsSection"
 import NotificationsSection from "./NotificationsSection"
 import { NOTIF_DEFAULT_STATE } from "./notifDefaults"
@@ -16,13 +17,20 @@ import { kargoApi } from "@/services"
 const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
   "My Addresses": MapPin,
   Profile: UserRound,
+  "Account status": ShieldCheck,
   "Linked Accounts": Link2,
   Notifications: Bell,
   Security: Lock,
 }
 
 export default function Settings({ user, setUser, role }: SharedState) {
-  const [section, setSection] = useState<SettingsSection>(() => role === "Buyer" && navIntent.openAddressSettings ? "My Addresses" : "Profile")
+  const [section, setSection] = useState<SettingsSection>(() =>
+    navIntent.openAccountStatus
+      ? "Account status"
+      : role === "Buyer" && navIntent.openAddressSettings
+        ? "My Addresses"
+        : "Profile",
+  )
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(user.socialLinks ?? (user.fb ? { Facebook: user.fb } : {}))
   const [socialVisibility, setSocialVisibility] = useState<Record<string, boolean>>(user.socialVisibility ?? {})
   // Preferences use an opt-out model: a key missing from the saved map means
@@ -47,6 +55,7 @@ export default function Settings({ user, setUser, role }: SharedState) {
   const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl)
   const sections: SettingsSection[] = [
     "Profile",
+    "Account status",
     ...(role === "Buyer" ? ["My Addresses" as const] : []),
     "Linked Accounts",
     "Notifications",
@@ -62,6 +71,18 @@ export default function Settings({ user, setUser, role }: SharedState) {
       document.getElementById("my-addresses")?.focus()
     }
   }, [section])
+
+  // A restore notification deep-links here. Consume the intent on mount and
+  // listen while mounted, so tapping it while already on Settings still jumps.
+  useEffect(() => {
+    const consume = () => {
+      if (!navIntent.openAccountStatus) return
+      navIntent.openAccountStatus = false
+      setSection("Account status")
+    }
+    consume()
+    return subscribeNavIntent(consume)
+  }, [])
 
   const saveProfile = async () => {
     const newName = [firstName, lastName].filter(Boolean).join(" ") || user.name
@@ -185,6 +206,7 @@ export default function Settings({ user, setUser, role }: SharedState) {
               saving={savingProfile}
             />
           )}
+          {section === "Account status" && <AccountStatusSection user={user} />}
           {section === "Linked Accounts" && (
             <LinkedAccountsSection
               links={socialLinks}

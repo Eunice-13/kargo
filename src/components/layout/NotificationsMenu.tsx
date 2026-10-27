@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import type { Role, Tab } from "@/types"
 import { CREAM } from "@/constants/theme"
 import { NotificationItem, useNotifications } from "@/features/notifications"
+import { requestAccountStatusSettings } from "@/state/navIntent"
 
 export default function NotificationsMenu({
   onNavigate,
@@ -118,6 +119,7 @@ export default function NotificationsMenu({
                 void markRead(notification.id).then((ok) => {
                   if (!ok) return
                   setOpen(false)
+                  if (notification.intent === "account-status") requestAccountStatusSettings()
                   onNavigate?.(notification.tab)
                 })
               }}

@@ -11,6 +11,9 @@ export type NotificationItemData = {
   time: string;
   unread: boolean;
   tab: Tab;
+  // Optional destination inside the tab. A restore notice opens
+  // Settings → Account status so the when/why is one tap away.
+  intent?: "account-status";
 };
 const PAGE_SIZE = 20;
 const tabs: Tab[] = [
@@ -98,6 +101,7 @@ export default function NotificationsProvider({
         time: new Date(n.created_at).toLocaleString(),
         unread: !n.read_at,
         tab: destination(n.target_path || n.context?.tab),
+        intent: n.context?.account_status ? "account-status" : undefined,
       }));
       setNotifications((current) => [
         ...current,

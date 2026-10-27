@@ -3,6 +3,7 @@ import type { AdminTab } from "@/types"
 // Navigation intent — set before navigating to Batches so the tab can deep-link on mount
 export const navIntent: {
   openAddressSettings: boolean;
+  openAccountStatus: boolean;
   openBatchCheckout: boolean;
   batchId: number | null;
   sellerName: string | null;
@@ -16,6 +17,7 @@ export const navIntent: {
   adminTargetId: string | null;
 } = {
   openAddressSettings: false,
+  openAccountStatus: false,
   openBatchCheckout: false,
   batchId: null,
   sellerName: null,
@@ -51,6 +53,13 @@ export function subscribeNavIntent(listener: NavIntentListener) {
 
 export function requestAddressSettings() {
   navIntent.openAddressSettings = true;
+  listeners.forEach(listener => listener());
+}
+
+// Deep-link into Settings → Account status (used by the restore notification,
+// so "your account has been restored" opens the when/why details).
+export function requestAccountStatusSettings() {
+  navIntent.openAccountStatus = true;
   listeners.forEach(listener => listener());
 }
 

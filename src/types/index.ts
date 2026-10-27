@@ -29,9 +29,13 @@ export type UserInfo = {
 
   sellerEnabled?: boolean
 
-  // Governance capability: an active row in admin_members. Mapped from a second
-  // query in profileFor; binary (there is exactly one admin role).
+  // Governance capability: an accepted, non-revoked row in admin_members. Mapped
+  // from a second query in profileFor; binary (there is exactly one admin role).
   adminEnabled?: boolean
+
+  // An admin invitation is waiting for this account's answer. Until it is
+  // accepted, is_admin() is false and AdminInviteModal is shown on sign-in.
+  adminInvitePending?: boolean
 
   // Mirrors user_profiles.account_status. A suspended account sees the
   // AccountSuspended screen instead of the app shell, for every role.
@@ -97,7 +101,7 @@ export type ClaimReservationInput = {
 
 export type PaymentHistoryStatus = ClaimStatus | "Rejected" | "Pending Payment"
 
-export type SettingsSection = "My Addresses" | "Profile" | "Linked Accounts" | "Notifications" | "Security"
+export type SettingsSection = "My Addresses" | "Profile" | "Account status" | "Linked Accounts" | "Notifications" | "Security"
 
 export type ClaimRow = {
   id: EntityId

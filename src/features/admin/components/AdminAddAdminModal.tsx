@@ -120,7 +120,11 @@ export default function AdminAddAdminModal({
                         <strong>{r.name}</strong>
                         <span>{r.email}</span>
                       </span>
-                      <UserRound className="admin-search-result__icon" size={15} aria-hidden="true" />
+                      <UserRound
+                        className="admin-search-result__icon"
+                        size={15}
+                        aria-hidden="true"
+                      />
                     </button>
                   </li>
                 ))}
@@ -192,6 +196,7 @@ export default function AdminAddAdminModal({
                 )}
               </div>
               <p className="admin-field__hint">
+                They get admin access only after they accept the invitation at their next sign-in.
                 Every admin can do everything, including managing the team. This is logged.
               </p>
             </div>

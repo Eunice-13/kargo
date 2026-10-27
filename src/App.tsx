@@ -56,7 +56,7 @@ import {
 
 import { NewBatchModal } from "@/features/batches"
 
-import { AdminProfile } from "@/features/admin"
+import { AdminInviteModal, AdminProfile } from "@/features/admin"
 
 import { Footer, Header, TabBar, TabContent } from "@/components/layout"
 
@@ -104,11 +104,16 @@ export default function App() {
   // the buyer/seller demo is never affected.
   const adminPreview = searchParams?.get("preview") === "admin"
 
+  // Reviewer boot for the admin invitation gate: ?preview=admin-invite is a
+  // buyer with an unanswered admin invitation, so Accept/Decline can be tried
+  // without a second real account.
+  const invitePreview = searchParams?.get("preview") === "admin-invite"
+
   // Either demo bypasses auth/boot and seeds the app stage directly.
-  const anyPreview = originalPreview || adminPreview
+  const anyPreview = originalPreview || adminPreview || invitePreview
 
   // Route adminApi to its in-memory demo adapter for ?preview=admin (no DB).
-  setAdminDemoMode(adminPreview)
+  setAdminDemoMode(adminPreview || invitePreview)
 
   // Shareable batch deep link: ?batch=<id> boots into the Batches tab and opens
 
@@ -185,7 +190,16 @@ export default function App() {
           accountStatus: "active",
           socialLinks: {},
         }
-      : {
+      : invitePreview
+        ? {
+            name: "Alex Jordan",
+            email: "alex@kargo.demo",
+            role: "Buyer",
+            adminInvitePending: true,
+            accountStatus: "active",
+            socialLinks: {},
+          }
+        : {
           name: originalPreview ? "Alex Jordan" : "",
 
           email: originalPreview ? "alex@kargo.demo" : "",
@@ -212,6 +226,11 @@ export default function App() {
   const [showApplyToSell, setShowApplyToSell] = useState(false)
 
   const [showAdminProfile, setShowAdminProfile] = useState(false)
+
+  // "Decide later" on an admin invitation is scoped to this sign-in: closing the
+  // modal hides it until the next login, but the invitation stays pending in the
+  // database (and is_admin() stays false) until it is answered.
+  const [inviteDismissedFor, setInviteDismissedFor] = useState<string | null>(null)
 
   // Role is fixed by seller capability (can_sell). There is no in-app role
 
@@ -573,6 +592,7 @@ export default function App() {
     setUser(u)
     setTab(landingTab(u))
     setStage("app")
+    setInviteDismissedFor(null)
 
     // Shared-link buyers should reach the requested batch immediately; keep the
     // existing onboarding tour for normal signups only.
@@ -583,6 +603,7 @@ export default function App() {
     setUser(u)
     setTab(landingTab(u))
     setStage("app")
+    setInviteDismissedFor(null)
 
     if (isSupabaseConfigured) refreshData()
   }
@@ -782,6 +803,8 @@ export default function App() {
             onLogout={() => {
               if (isSupabaseConfigured) void kargoApi.signOut()
 
+              setInviteDismissedFor(null)
+
               setStage("login")
             }}
             onSettings={() =>
@@ -845,6 +868,25 @@ export default function App() {
           {showAdminProfile && (
             <AdminProfile user={user} onClose={() => setShowAdminProfile(false)} />
           )}
+          {user.adminInvitePending &&
+            inviteDismissedFor !== (user.id ?? user.email) && (
+              <AdminInviteModal
+                onDismiss={() => setInviteDismissedFor(user.id ?? user.email)}
+                onResolved={(accepted) => {
+                  setInviteDismissedFor(null)
+                  // The RPC already committed, so clear the pending flag locally
+                  // and let the refresh reconcile the rest (role, tabs, data).
+                  setUser((current) => ({
+                    ...current,
+                    adminEnabled: accepted,
+                    adminInvitePending: false,
+                  }))
+                  if (isSupabaseConfigured && !anyPreview) {
+                    void refreshData().catch(() => {})
+                  }
+                }}
+              />
+            )}
         </div>
         </NotificationsProvider>
       )}

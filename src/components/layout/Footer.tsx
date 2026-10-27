@@ -48,8 +48,8 @@ export default function Footer({ role }: { role?: Role }) {
         }}
       >
         <span style={{ fontWeight: 600 }}>KARGO Admin · Internal use only</span>
-        <a href="mailto:support@kargo.ph" style={{ color: "var(--kargo-navy)", fontWeight: 600 }}>
-          support@kargo.ph
+        <a href="mailto:kargoph2026@gmail.com" style={{ color: "var(--kargo-navy)", fontWeight: 600 }}>
+          kargoph2026@gmail.com
         </a>
       </footer>
     );

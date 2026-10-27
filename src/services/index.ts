@@ -7,4 +7,6 @@ export type {
   PeriodOrder,
   SellerPaymentMethod,
   SellerReceiveMethod,
+  AccountStatusEvent,
+  MyAccountStatus,
 } from "./kargoApi"

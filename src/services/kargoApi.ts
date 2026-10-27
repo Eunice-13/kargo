@@ -217,14 +217,22 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
 
   // Admin capability is a separate, binary membership row. A plain user can only
   // read their own row (admin_members_select_own), so this is safe for everyone.
+  // `select("*")` is deliberate: it keeps working on a database where the
+  // invitation migration has not run yet (accepted_at then comes back undefined,
+  // which we treat as already accepted).
   const { data: adminRow } = await client
     .from("admin_members")
-    .select("granted_at")
+    .select("*")
     .eq("user_id", id)
     .is("revoked_at", null)
     .maybeSingle()
 
-  const adminEnabled = Boolean(adminRow)
+  const membership = adminRow as { accepted_at?: string | null } | null
+
+  // null accepted_at means the grant is still an invitation, so the account has
+  // no admin power yet (is_admin() agrees). undefined means the column is absent.
+  const adminInvitePending = Boolean(membership) && membership?.accepted_at === null
+  const adminEnabled = Boolean(membership) && !adminInvitePending
   const accountStatus = profile.account_status ?? "active"
 
   const avatarUrl = profile.avatar_path
@@ -256,6 +264,8 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     sellerEnabled: profile.can_sell,
 
     adminEnabled,
+
+    adminInvitePending,
 
     accountStatus,
 
@@ -2832,6 +2842,31 @@ export async function markNotificationRead(id?: string) {
   if (error) throw error
 }
 
+export type AccountStatusEvent = {
+  action: string
+  reason: string | null
+  actorName: string
+  createdAt: string
+}
+
+export type MyAccountStatus = {
+  status: "active" | "suspended"
+  reason: string | null
+  changedAt: string | null
+  changedBy: string | null
+  history: AccountStatusEvent[]
+}
+
+// The caller's own moderation trail (who changed the status, when, and why).
+// Backed by my_account_status(), which is pinned to auth.uid() server-side.
+export async function loadMyAccountStatus(): Promise<MyAccountStatus | null> {
+  const { data, error } = await requireSupabase().rpc("my_account_status", {})
+
+  if (error) throw error
+
+  return (data as MyAccountStatus | null) ?? null
+}
+
 export async function loadSellerPaymentSubmissions() {
   const client = requireSupabase()
 
@@ -3424,6 +3459,8 @@ export const kargoApi = {
   loadUnreadNotificationCount,
 
   markNotificationRead,
+
+  loadMyAccountStatus,
 
   loadSellerPaymentSubmissions,
 

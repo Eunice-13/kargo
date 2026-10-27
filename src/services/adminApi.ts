@@ -8,6 +8,7 @@ import type {
   AdminBatchRow,
   AdminCombinedListResult,
   AdminDashboardData,
+  AdminInvite,
   AdminListResult,
   AdminOrderDetail,
   AdminOrderFilters,
@@ -24,9 +25,12 @@ import type {
 } from "@/features/admin/adminTypes"
 
 import {
+  demoAcceptAdminInvite,
   demoAdminDashboard,
   demoCancelOrder,
+  demoDeclineAdminInvite,
   demoGetBatch,
+  demoGetMyInvite,
   demoGetOrder,
   demoGetPayment,
   demoGetUser,
@@ -271,6 +275,25 @@ export const adminApi = {
   async revokeAdmin(userId: string, reason: string): Promise<{ changed: boolean }> {
     if (demoMode) return demoRevokeAdmin(userId, reason)
     return callAdmin("admin_revoke_admin", { p_user_id: userId, p_reason: reason })
+  },
+
+  // ─── The invitee's own invitation (no admin rights required) ───────────────
+
+  async getMyInvite(): Promise<AdminInvite | null> {
+    if (demoMode) return demoGetMyInvite()
+    return callAdmin<AdminInvite | null>("admin_my_invite", {})
+  },
+
+  async acceptAdminInvite(): Promise<{ accepted: boolean; changed: boolean }> {
+    if (demoMode) return demoAcceptAdminInvite()
+    return callAdmin("admin_accept_invite", {})
+  },
+
+  async declineAdminInvite(
+    reason?: string,
+  ): Promise<{ declined: boolean; changed: boolean }> {
+    if (demoMode) return demoDeclineAdminInvite(reason ?? null)
+    return callAdmin("admin_decline_invite", { p_reason: reason?.trim() || null })
   },
 
   // ─── Audit log ──────────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import type { Tab } from "@/types";
+import { requestAccountStatusSettings } from "@/state/navIntent";
 import { useNotifications } from "./NotificationsProvider";
 import NotificationItem from "./NotificationItem";
 export default function NotificationsPage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
@@ -41,7 +42,9 @@ export default function NotificationsPage({ onNavigate }: { onNavigate: (tab: Ta
             onMarkRead={() => void markRead(n.id)}
             onOpen={() => {
               void markRead(n.id).then((ok) => {
-                if (ok) onNavigate(n.tab);
+                if (!ok) return;
+                if (n.intent === "account-status") requestAccountStatusSettings();
+                onNavigate(n.tab);
               });
             }}
           />

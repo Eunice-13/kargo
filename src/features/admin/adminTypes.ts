@@ -271,8 +271,19 @@ export type AdminTeamMember = {
   email: string | null;
   avatarPath: string | null;
   grantedAt: string;
+  // Null while the invitation is unanswered — the row exists, but is_admin()
+  // is false until they accept, so this person is not an admin yet.
+  acceptedAt: string | null;
   grantedBy: string | null;
   accountStatus: AdminAccountStatus;
+};
+
+// The caller's own pending invitation from admin_my_invite(). Null when there
+// is nothing waiting for an answer.
+export type AdminInvite = {
+  pending: boolean;
+  grantedAt: string | null;
+  grantedBy: string | null;
 };
 
 export type AdminAuditRow = {

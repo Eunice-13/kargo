@@ -698,6 +698,7 @@ export function demoListCombinedPayments(
 import type {
   AdminAuditFilters,
   AdminAuditRow,
+  AdminInvite,
   AdminTeamMember,
 } from "@/features/admin/adminTypes";
 
@@ -708,6 +709,7 @@ const DEMO_TEAM: AdminTeamMember[] = [
     email: "admin@kargo.demo",
     avatarPath: null,
     grantedAt: iso(200),
+    acceptedAt: iso(200),
     grantedBy: null,
     accountStatus: "active",
   },
@@ -742,14 +744,51 @@ export function demoListTeam(): { rows: AdminTeamMember[] } {
   return { rows: DEMO_TEAM };
 }
 
-export function demoGrantAdmin(_userId: string, _reason: string): { changed: boolean } {
+export function demoGrantAdmin(userId: string, _reason: string): { changed: boolean } {
+  if (DEMO_TEAM.some((m) => m.id === userId)) return { changed: false };
+  const u = DEMO_USERS.find((x) => x.id === userId);
+  if (!u) throw new Error("User not found");
+  DEMO_TEAM.push({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    avatarPath: u.avatarPath,
+    grantedAt: iso(0),
+    acceptedAt: null,
+    grantedBy: "KARGO Admin",
+    accountStatus: u.accountStatus,
+  });
   return { changed: true };
 }
 
 export function demoRevokeAdmin(userId: string, _reason: string): { changed: boolean } {
-  if (DEMO_TEAM.length <= 1) throw new Error("Cannot revoke the last active admin");
+  const active = DEMO_TEAM.filter((m) => m.acceptedAt !== null);
+  if (active.length <= 1 && active.some((m) => m.id === userId)) {
+    throw new Error("Cannot revoke the last active admin");
+  }
   if (userId === "demo-u-admin") throw new Error("You cannot revoke your own admin access");
+  const index = DEMO_TEAM.findIndex((m) => m.id === userId);
+  if (index < 0) return { changed: false };
+  DEMO_TEAM.splice(index, 1);
   return { changed: true };
+}
+
+// The demo admin preview is always the signed-in admin, so there is never a
+// pending invitation to answer — except in ?preview=admin-invite, where the
+// modal fetches this to show who the invitation came from.
+export function demoGetMyInvite(): AdminInvite | null {
+  return { pending: true, grantedAt: iso(0), grantedBy: "KARGO Admin" };
+}
+
+export function demoAcceptAdminInvite(): { accepted: boolean; changed: boolean } {
+  return { accepted: true, changed: true };
+}
+
+export function demoDeclineAdminInvite(_reason: string | null): {
+  declined: boolean;
+  changed: boolean;
+} {
+  return { declined: true, changed: true };
 }
 
 export function demoListAudit(

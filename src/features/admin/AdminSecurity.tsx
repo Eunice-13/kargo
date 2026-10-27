@@ -144,7 +144,11 @@ function TeamSection() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {fmtDate(m.grantedAt)}
+                      {m.acceptedAt === null ? (
+                        <AdminBadge tone="warn" label="Invite pending" />
+                      ) : (
+                        fmtDate(m.grantedAt)
+                      )}
                     </td>
                     <td style={{ padding: "10px 14px", textAlign: "right" }}>
                       <button
@@ -160,7 +164,7 @@ function TeamSection() {
                           cursor: "pointer",
                         }}
                       >
-                        Revoke
+                        {m.acceptedAt === null ? "Cancel invite" : "Revoke"}
                       </button>
                     </td>
                   </tr>
@@ -174,11 +178,15 @@ function TeamSection() {
       {adding && <AdminAddAdminModal onClose={() => setAdding(false)} onAdded={refresh} />}
       {revoke && (
         <AdminConfirmModal
-          title="Revoke admin access"
-          consequence="This removes the account's admin access immediately. You cannot revoke your own access or the last active admin."
-          confirmLabel="Revoke access"
-          confirmWord={revoke.name}
-          tone="danger"
+          title={revoke.acceptedAt === null ? "Cancel admin invitation" : "Revoke admin access"}
+          consequence={
+            revoke.acceptedAt === null
+              ? "This cancels the invitation before it was accepted. They never gain admin access and can be invited again later."
+              : "This removes the account's admin access immediately. You cannot revoke your own access or the last active admin."
+          }
+          confirmLabel={revoke.acceptedAt === null ? "Cancel invitation" : "Revoke access"}
+          confirmWord={revoke.acceptedAt === null ? undefined : revoke.name}
+          tone={revoke.acceptedAt === null ? "default" : "danger"}
           onConfirm={async (reason) => {
             await adminApi.revokeAdmin(revoke.id, reason);
             setRevoke(null);
