@@ -33,13 +33,19 @@ export function useFulfillmentBoard(
     moving.current.add(order.id);
     try {
       if (isSupabaseConfigured) {
-        const status = {
+        // Confirmed orders cannot be cancelled from the board, so "Cancelled"
+        // is intentionally absent here; canAdvanceFulfillment already blocks it.
+        const statusByColumn: Partial<Record<SellerColumn, string>> = {
           "Payment Confirmed": "payment_confirmed",
           Preparing: "preparing",
           Shipped: "shipped",
           Delivered: "completed",
-          Cancelled: "cancelled",
-        }[col];
+        };
+        const status = statusByColumn[col];
+        if (!status) {
+          alert(FULFILLMENT_TRANSITION_MESSAGE);
+          return;
+        }
         try {
           await kargoApi.setFulfillmentStatus(order.id, status);
         } catch (error) {

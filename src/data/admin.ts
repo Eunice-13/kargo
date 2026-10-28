@@ -570,6 +570,9 @@ export function demoCancelOrder(orderId: string, _reason: string): { changed: bo
   const o = DEMO_ORDERS.find((x) => x.id === orderId);
   if (!o) throw new Error("Order not found");
   if (o.status === "completed") throw new Error("A completed order cannot be cancelled");
+  // Once payment is confirmed, the order can no longer be cancelled by anyone.
+  if (["payment_confirmed", "preparing", "completed"].includes(o.status))
+    throw new Error("A confirmed order cannot be cancelled");
   o.status = "cancelled";
   return { changed: true };
 }

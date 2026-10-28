@@ -42,6 +42,13 @@ before(async () => {
     ),
   );
   assert.deepEqual(await row(historical), original, "migration must not rewrite existing orders");
+  // Layered on top: once payment is confirmed, an order can never be cancelled.
+  await db.exec(
+    readFileSync(
+      new URL("../supabase/migrations/202611050001_no_cancel_after_payment.sql", import.meta.url),
+      "utf8",
+    ),
+  );
   // A privileged application operation still runs the same row trigger.
   await db.exec(`create function public.test_admin_move(p_id uuid, p_stage text)
     returns void language sql security definer as $$
@@ -74,12 +81,14 @@ after(async () => {
   await db?.close();
 });
 
-test("board permits only the next stage or cancellation; terminal stages cannot reopen", () => {
+test("board permits only the next stage; confirmed orders cannot be cancelled and terminals cannot reopen", () => {
   const stages = ["Payment Confirmed", "Preparing", "Shipped", "Delivered", "Cancelled"];
+  // Cancelled is never reachable from any board stage: every board order is
+  // already payment-confirmed, and confirmed orders cannot be cancelled.
   const expected = {
-    "Payment Confirmed": ["Payment Confirmed", "Preparing", "Cancelled"],
-    Preparing: ["Preparing", "Shipped", "Cancelled"],
-    Shipped: ["Shipped", "Delivered", "Cancelled"],
+    "Payment Confirmed": ["Payment Confirmed", "Preparing"],
+    Preparing: ["Preparing", "Shipped"],
+    Shipped: ["Shipped", "Delivered"],
     Delivered: ["Delivered"],
     Cancelled: ["Cancelled"],
   };
@@ -184,24 +193,79 @@ test("admin security-definer operations cannot bypass the row guard", async () =
   assert.equal((await row(id)).fulfillment_stage, "shipped");
 });
 
-test("cancellation is terminal and delivery cannot be cancelled or have history erased", async () => {
+test("confirmed orders cannot be cancelled by any path, at any stage", async () => {
+  // The board RPC no longer accepts 'cancelled' at all.
+  await assert.rejects(move(await order("payment_confirmed"), "cancelled"), /Invalid fulfillment/);
+
+  // Every confirmed/in-fulfillment stage: direct and privileged SQL that tries
+  // to cancel/void is rejected by the row trigger. Covers the admin path, which
+  // ultimately performs the same UPDATE under the same trigger.
   for (const [status, stage] of [
     ["payment_confirmed", null],
     ["preparing", "preparing"],
     ["preparing", "shipped"],
+    ["preparing", "in_transit"],
   ]) {
-    const id = await order(status, stage);
-    await move(id, "cancelled");
-    await move(id, "cancelled");
-    await assert.rejects(move(id, "payment_confirmed"), /Terminal/);
+    for (const terminal of ["cancelled", "incomplete", "expired"]) {
+      const id = await order(status, stage);
+      const before = await row(id);
+      await assert.rejects(
+        db.query("update orders set status=$2,fulfillment_stage=null where id=$1", [id, terminal]),
+        /confirmed order cannot be cancelled/,
+      );
+      assert.deepEqual(await row(id), before, "rejected cancellation must not change the row");
+    }
   }
+
+  // A confirmed order remains non-cancellable even when identified only by
+  // payment_confirmed_at (e.g. a legacy row already advanced to shipped).
+  const stamped = await order("preparing", "shipped");
+  await db.query("update orders set payment_confirmed_at=now() where id=$1", [stamped]);
+  await assert.rejects(
+    db.query("update orders set status='cancelled',fulfillment_stage=null where id=$1", [stamped]),
+    /confirmed order cannot be cancelled/,
+  );
+
+  // A privileged security-definer admin move cannot sneak a cancellation past
+  // the trigger either.
+  await db.exec(`create or replace function public.test_admin_cancel(p_id uuid)
+    returns void language sql security definer as $$
+      update public.orders set status='cancelled', fulfillment_stage=null where id=p_id
+    $$; grant execute on function public.test_admin_cancel(uuid) to authenticated;`);
+  const confirmed = await order("preparing", "shipped");
+  await db.exec("set role authenticated");
+  try {
+    await assert.rejects(
+      db.query("select public.test_admin_cancel($1)", [confirmed]),
+      /confirmed order cannot be cancelled/,
+    );
+  } finally {
+    await db.exec("reset role");
+  }
+  assert.equal((await row(confirmed)).status, "preparing");
+});
+
+test("delivery cannot be cancelled or have its history erased", async () => {
   const id = await order("preparing", "shipped");
   await move(id, "completed");
-  await assert.rejects(move(id, "cancelled"), /Delivered/);
+  await assert.rejects(
+    db.query("update orders set status='cancelled',fulfillment_stage=null where id=$1", [id]),
+    /confirmed order cannot be cancelled/,
+  );
   await assert.rejects(
     db.query("update orders set completed_at=null where id=$1", [id]),
     /history/,
   );
+});
+
+test("unpaid orders can still be cancelled (buyer self-cancel / seller decline are unaffected)", async () => {
+  // The no-cancel rule keys on payment confirmation, so pre-payment states
+  // remain cancellable exactly as before.
+  for (const status of ["payment_pending", "payment_submitted", "insufficient_payment"]) {
+    const id = await order(status);
+    await db.query("update orders set status='cancelled' where id=$1", [id]);
+    assert.equal((await row(id)).status, "cancelled");
+  }
 });
 
 test("authorization unchanged and payment corrections before preparation still work", async () => {

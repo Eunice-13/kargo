@@ -17,7 +17,6 @@ export default function FulfillmentDetails({
   onMove: (order: FulfillmentOrder, col: SellerColumn) => void;
   onSaveTracking: (order: FulfillmentOrder, tracking: TrackingDetailsInput) => void | Promise<void>;
 }) {
-  const [confirmCancel, setConfirmCancel] = useState(false);
   const [confirmComplete, setConfirmComplete] = useState(false);
   const [confirmShip, setConfirmShip] = useState(false);
   const [showTracking, setShowTracking] = useState(false);
@@ -46,12 +45,13 @@ export default function FulfillmentDetails({
         value={order.col}
         onChange={(e) => {
           const next = e.target.value as SellerColumn;
+          // Confirmed orders cannot be cancelled: "Cancelled" is never a valid
+          // forward transition, so it is rejected here like any backward move.
           if (!canAdvanceFulfillment(order.col, next)) {
             alert(FULFILLMENT_TRANSITION_MESSAGE);
             return;
           }
-          if (next === "Cancelled") setConfirmCancel(true);
-          else if (next === "Delivered") setConfirmComplete(true);
+          if (next === "Delivered") setConfirmComplete(true);
           else if (next === "Shipped") setConfirmShip(true);
           else onMove(order, next);
         }}
@@ -91,24 +91,6 @@ export default function FulfillmentDetails({
         >
           {order.trackingNumber ? "Edit tracking details" : "Add tracking details"}
         </button>
-      )}
-      {confirmCancel && (
-        <Modal title="Cancel this order?" onClose={() => setConfirmCancel(false)} width={420}>
-          <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-            This ends {order.product} for {order.buyer}. Cancelled orders cannot be reopened.
-          </p>
-          <div className="kargo-modal-actions">
-            <SecondaryBtn onClick={() => setConfirmCancel(false)}>Keep order</SecondaryBtn>
-            <PrimaryBtn
-              onClick={() => {
-                setConfirmCancel(false);
-                onMove(order, "Cancelled");
-              }}
-            >
-              Move to Cancelled
-            </PrimaryBtn>
-          </div>
-        </Modal>
       )}
       {confirmComplete && (
         <Modal

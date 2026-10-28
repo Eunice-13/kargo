@@ -12,12 +12,17 @@ Canonical forward path:
 Payment Confirmed → Preparing → Shipped → (In Transit) → Delivered
 ```
 
-- `Cancelled` (and the DB-level `incomplete` / `expired`) is a terminal side
-  branch reachable from any pre-delivery stage. It is not a delivery stage.
 - `Delivered` is terminal. `in_transit` is a legacy stage the UI no longer
   emits but the DB still ranks for existing rows.
 - The one allowed "skip" is `Shipped → Delivered` (sellers may mark delivered
   directly without re-emitting in-transit).
+- **Cancellation is NOT available from the board.** As of
+  `202611050001_no_cancel_after_payment.sql`, once an order's payment is
+  confirmed it can never be cancelled — by sellers or admins — at any
+  fulfillment stage. The `Cancelled` column still exists only to *display*
+  orders that were cancelled while unpaid (buyer self-cancel, seller delivery
+  decline) and historical cancelled rows; it can no longer be *entered*. See
+  "No cancellation after payment" below.
 
 Stage ranks used by the backend guard: `payment_confirmed`=1, `preparing`=2,
 `shipped`=3, `in_transit`=4, `delivered`/`completed`=5. "Forward" means
@@ -58,6 +63,35 @@ that bypasses the row trigger.
   `admin_audit_log`) are unchanged.
 - `completed_at` is now immutable once set (fulfilled-total integrity).
 
+## No cancellation after payment
+
+Added in `supabase/migrations/202611050001_no_cancel_after_payment.sql`
+(supersedes the cancellation branch of the forward-only work). Rule: **once
+payment is confirmed, the order can never be cancelled, regardless of
+fulfillment stage, with no admin override.**
+
+"Payment confirmed" is identified by `orders.payment_confirmed_at IS NOT NULL`
+(stamped once at confirmation, never cleared — the same canonical signal GMV
+uses), with status ∈ {`payment_confirmed`, `preparing`, `completed`} as a
+fallback for any legacy confirmed row missing the timestamp. This is
+stage-independent by design, so a confirmed order that has advanced to
+preparing/shipped/delivered is equally protected.
+
+Enforcement, every cancellation path:
+
+| Path | Actor | Behavior after this change |
+|------|-------|----------------------------|
+| `set_fulfillment_status(..., 'cancelled')` (seller board) | seller | `'cancelled'`/`'incomplete'` removed from the RPC allow-list → "Invalid fulfillment status". The board UI no longer offers a transition into `Cancelled` (`canAdvanceFulfillment`). |
+| `admin_cancel_order` | admin | Rejects with "A confirmed order cannot be cancelled" when `payment_confirmed_at` is set or status ∈ {confirmed, preparing}. Completed/already-cancelled guards unchanged. No override. |
+| `guard_forward_fulfillment` row trigger | any UPDATE (direct SQL, future RPCs, security-definer) | Rejects any transition into `cancelled`/`incomplete`/`expired` from a confirmed order. This is the authoritative, un-bypassable layer. |
+| `cancel_order` (buyer self-cancel) | buyer | Unchanged — already gated to `status = 'payment_pending'`, i.e. never a confirmed order. |
+| `decline_delivery_order` (seller decline) | seller | Unchanged — already gated to `status = 'payment_pending'`. |
+
+Frontend: `AdminOrderDetailModal` hides the Cancel action and shows "Confirmed
+orders cannot be cancelled" when payment is confirmed; `demoCancelOrder` mirrors
+the backend. The seller board's confirm-cancel modal and the `Cancelled` move
+mapping were removed.
+
 ## Dependencies GMV Phase 2 (Payment Integrity) MUST preserve
 
 These are contracts the forward-only change relies on. Phase 2 payment
@@ -86,12 +120,14 @@ verification / cancellation work must not break them.
    change to `completed_at` once set. Phase 2 must not attempt to clear or
    rewrite it (e.g. on a refund); model reversals with a separate field.
 
-4. **Cancellation remains the terminal branch.** `cancel_order` /
-   `admin_cancel_order` must route cancellation through status
-   `cancelled`/`incomplete`/`expired`. These are terminal: the guard forbids
-   reopening them and forbids cancelling an already-`delivered` order. Phase 2
-   cancellation-on-payment-failure must respect that a delivered order cannot be
-   cancelled.
+4. **Confirmed orders are never cancellable.** Phase 2 payment-integrity work
+   must NOT cancel a payment-confirmed order on a late payment dispute, chargeback,
+   or reversal. The row trigger rejects any transition of a confirmed order into
+   `cancelled`/`incomplete`/`expired`, and `admin_cancel_order` refuses with no
+   override. Model a post-confirmation payment problem with a separate flag/column
+   or a dedicated dispute/refund state — never by cancelling the order. Pre-payment
+   cancellation (`cancel_order`, `decline_delivery_order`, gated to
+   `payment_pending`) is the only cancellation Phase 2 may rely on.
 
 5. **The row trigger is the single chokepoint.** Phase 2 must not add a
    `SECURITY DEFINER` function, role grant, or RLS policy that updates
@@ -104,13 +140,16 @@ verification / cancellation work must not break them.
 
 ## Tests
 
-- `tests/forwardFulfillment.test.mjs` — ephemeral PGlite + SSR-rendered board.
-  Covers: client transition matrix, rendered-board option gating, every forward
+- `tests/forwardFulfillment.test.mjs` — ephemeral PGlite + SSR-rendered board,
+  loads both `202611040001` and `202611050001`. Covers: client transition
+  matrix (Cancelled unreachable), rendered-board option gating, every forward
   edge + optional in-transit + idempotent retries + notifications, every
   backward/skip RPC rejection, direct-SQL and payment-style reset rejection,
-  admin security-definer bypass rejection, cancellation terminality,
-  delivered-cannot-be-cancelled / `completed_at` immutability, authorization,
-  and pre-preparation payment corrections still working.
+  admin security-definer bypass rejection, **confirmed orders non-cancellable by
+  board RPC / direct SQL / security-definer admin move at every stage and via
+  `payment_confirmed_at`**, delivered non-cancellable, `completed_at`
+  immutability, **unpaid orders still cancellable**, authorization, and
+  pre-preparation payment corrections still working.
 - Regression: `orderPaymentState`, `paymentVerificationState`,
   `claimPaymentState`, `paymentReadCompatibility`, `notifications`,
   `claimExpiry`, `combinedDeliveryReleaseBundle`, `combinedDeliveryRequest`,
