@@ -84,7 +84,7 @@ function fakeData(perBucketDelivered: number[]): FulfillmentAnalytics {
       in_transit: 0,
       delivered: 0,
       cancelled: 0,
-      incomplete: 0,
+      expired: 0,
     },
     chart: perBucketDelivered.map((d) => ({
       bucketStart: "2026-10-01T00:00:00+08:00",
@@ -96,7 +96,7 @@ function fakeData(perBucketDelivered: number[]): FulfillmentAnalytics {
         in_transit: 0,
         delivered: d,
         cancelled: 0,
-        incomplete: 0,
+        expired: 0,
       },
     })),
   };
@@ -126,7 +126,7 @@ test("bucketCount returns 0 for a stage key the payload omits (no crash, no NaN)
   const counts = { delivered: 5 } as Record<string, number>;
   assert.equal(bucketCount(counts as never, "delivered"), 5);
   assert.equal(bucketCount(counts as never, "in_transit"), 0);
-  assert.equal(bucketCount(counts as never, "incomplete"), 0);
+  assert.equal(bucketCount(counts as never, "expired"), 0);
 });
 
 test("bucketCount coerces non-finite / undefined values to 0", () => {
@@ -144,7 +144,7 @@ test("chartScale never yields NaN even when buckets omit the requested stage", (
       { bucketStart: "e", bucketEnd: "f", counts: { delivered: 9 } },
     ],
   } as unknown as FulfillmentAnalytics;
-  const scale = chartScale(data, ["delivered", "shipped", "incomplete"]);
+  const scale = chartScale(data, ["delivered", "shipped", "expired"]);
   assert.ok(Number.isFinite(scale.max), "max must be finite");
   assert.ok(scale.max >= 9, "max covers the real peak");
   assert.ok(

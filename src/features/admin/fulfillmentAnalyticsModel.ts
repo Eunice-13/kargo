@@ -10,7 +10,7 @@ export const ANALYTICS_STAGES: { key: Stage; label: string; color: string; dash?
   { key: "in_transit", label: "In transit", color: "#8755C7", dash: "7 3" },
   { key: "delivered", label: "Delivered", color: "#0B8C69" },
   { key: "cancelled", label: "Cancelled", color: "#B42318", dash: "4 3" },
-  { key: "incomplete", label: "Incomplete", color: "#64748B", dash: "2 4" },
+  { key: "expired", label: "Expired", color: "#64748B", dash: "2 4" },
 ];
 export const PERIODS = [
   ["today", "Today"],

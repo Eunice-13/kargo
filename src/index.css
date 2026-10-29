@@ -7884,9 +7884,14 @@ textarea::placeholder {
 .admin-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  align-items: start;
+  /* Stretch so cards in the same row share one height instead of each sizing
+     to its own content (which made the pipeline/activity/sellers cards uneven). */
+  align-items: stretch;
   gap: 16px;
   margin-bottom: 20px;
+}
+.admin-grid > * {
+  min-width: 0;
 }
 
 .admin-grid--wide {
