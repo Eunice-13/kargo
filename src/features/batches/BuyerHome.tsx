@@ -207,7 +207,7 @@ function BatchCard({
     >
       <div className="buyer-batch-card__image-wrap">
         <img
-          src={batchImage(batch.category, batch.id)}
+          src={batch.coverImage ?? batchImage(batch.category, batch.id)}
           alt=""
           draggable={false}
           className="buyer-batch-card__image"
@@ -479,7 +479,7 @@ function PopularSection({
                   >
                     <span className="buyer-podium__peek-photo">
                       <img
-                        src={batchImage(batch.category, batch.id)}
+                        src={batch.coverImage ?? batchImage(batch.category, batch.id)}
                         alt=""
                         draggable={false}
                       />
@@ -582,7 +582,7 @@ function PopularSection({
                             </span>
                             <span className="buyer-toplist__thumb">
                               <img
-                                src={batchImage(batch.category, batch.id)}
+                                src={batch.coverImage ?? batchImage(batch.category, batch.id)}
                                 alt=""
                                 loading="lazy"
                                 draggable={false}

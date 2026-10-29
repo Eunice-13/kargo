@@ -1,0 +1,820 @@
+{
+  "takenAt": "2026-10-29T14-09-06-455Z",
+  "batches": [
+    {
+      "id": "020bc0f8-cdd0-42cb-a0b4-46e5b6534974",
+      "title": "Dubai Luxury Edit — January 2027",
+      "category": "Luxury",
+      "cover_path": "curated-media/020bc0f8-cdd0-42cb-a0b4-46e5b6534974/cover.jpg",
+      "gallery_paths": [
+        "curated-media/020bc0f8-cdd0-42cb-a0b4-46e5b6534974/gallery-1.jpg",
+        "curated-media/020bc0f8-cdd0-42cb-a0b4-46e5b6534974/gallery-2.jpg",
+        "curated-media/020bc0f8-cdd0-42cb-a0b4-46e5b6534974/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "61531f40-494c-448f-b8e2-8b501678d8b9",
+      "title": "Seoul Skincare Run — October 2026",
+      "category": "Beauty",
+      "cover_path": "curated-media/61531f40-494c-448f-b8e2-8b501678d8b9/cover.jpg",
+      "gallery_paths": [
+        "curated-media/61531f40-494c-448f-b8e2-8b501678d8b9/gallery-1.jpg",
+        "curated-media/61531f40-494c-448f-b8e2-8b501678d8b9/gallery-2.jpg",
+        "curated-media/61531f40-494c-448f-b8e2-8b501678d8b9/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "41583129-9100-430d-ba10-44e24f9f9069",
+      "title": "US Holiday Grocery Haul — November 2026",
+      "category": "Food",
+      "cover_path": "curated-media/41583129-9100-430d-ba10-44e24f9f9069/cover.jpg",
+      "gallery_paths": [
+        "curated-media/41583129-9100-430d-ba10-44e24f9f9069/gallery-1.jpg",
+        "curated-media/41583129-9100-430d-ba10-44e24f9f9069/gallery-2.jpg",
+        "curated-media/41583129-9100-430d-ba10-44e24f9f9069/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "6e06577c-c141-417c-b343-6fe989a01cca",
+      "title": "Taiwan Night Market Finds — October 2026",
+      "category": "Food",
+      "cover_path": "curated-media/6e06577c-c141-417c-b343-6fe989a01cca/cover.jpg",
+      "gallery_paths": [
+        "curated-media/6e06577c-c141-417c-b343-6fe989a01cca/gallery-1.jpg",
+        "curated-media/6e06577c-c141-417c-b343-6fe989a01cca/gallery-2.jpg",
+        "curated-media/6e06577c-c141-417c-b343-6fe989a01cca/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "118074de-ede7-4f33-ac26-228062b95fd0",
+      "title": "Bangkok Market Mix — November 2026",
+      "category": "Others",
+      "cover_path": "curated-media/118074de-ede7-4f33-ac26-228062b95fd0/cover.jpg",
+      "gallery_paths": [
+        "curated-media/118074de-ede7-4f33-ac26-228062b95fd0/gallery-1.jpg",
+        "curated-media/118074de-ede7-4f33-ac26-228062b95fd0/gallery-2.jpg",
+        "curated-media/118074de-ede7-4f33-ac26-228062b95fd0/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "6f54e432-a87d-45c6-8b69-779bab027fdf",
+      "title": "Nagoya Food Finds — February 2027",
+      "category": "Food",
+      "cover_path": "curated-media/6f54e432-a87d-45c6-8b69-779bab027fdf/cover.jpg",
+      "gallery_paths": [
+        "curated-media/6f54e432-a87d-45c6-8b69-779bab027fdf/gallery-1.jpg",
+        "curated-media/6f54e432-a87d-45c6-8b69-779bab027fdf/gallery-2.jpg",
+        "curated-media/6f54e432-a87d-45c6-8b69-779bab027fdf/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "b240fc50-9b32-4253-bd31-c872f8e51fad",
+      "title": "Singapore Luxe Finds — December 2026",
+      "category": "Luxury",
+      "cover_path": "curated-media/b240fc50-9b32-4253-bd31-c872f8e51fad/cover.jpg",
+      "gallery_paths": [
+        "curated-media/b240fc50-9b32-4253-bd31-c872f8e51fad/gallery-1.jpg",
+        "curated-media/b240fc50-9b32-4253-bd31-c872f8e51fad/gallery-2.jpg",
+        "curated-media/b240fc50-9b32-4253-bd31-c872f8e51fad/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "2e0fb6c5-2e78-43df-9ab9-c8def8abed24",
+      "title": "Singapore Skincare Edit — December 2026",
+      "category": "Beauty",
+      "cover_path": "curated-media/2e0fb6c5-2e78-43df-9ab9-c8def8abed24/cover.jpg",
+      "gallery_paths": [
+        "curated-media/2e0fb6c5-2e78-43df-9ab9-c8def8abed24/gallery-1.jpg",
+        "curated-media/2e0fb6c5-2e78-43df-9ab9-c8def8abed24/gallery-2.jpg",
+        "curated-media/2e0fb6c5-2e78-43df-9ab9-c8def8abed24/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "4817ee27-8b0a-4937-9676-4fe35401270e",
+      "title": "Australia Snack Run — December 2026",
+      "category": "Food",
+      "cover_path": "curated-media/4817ee27-8b0a-4937-9676-4fe35401270e/cover.jpg",
+      "gallery_paths": [
+        "curated-media/4817ee27-8b0a-4937-9676-4fe35401270e/gallery-1.jpg",
+        "curated-media/4817ee27-8b0a-4937-9676-4fe35401270e/gallery-2.jpg",
+        "curated-media/4817ee27-8b0a-4937-9676-4fe35401270e/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "554f9ab5-1daf-47ef-881d-4be594913c44",
+      "title": "Test",
+      "category": "Apparel",
+      "cover_path": "curated-media/554f9ab5-1daf-47ef-881d-4be594913c44/cover.jpg",
+      "gallery_paths": [
+        "curated-media/554f9ab5-1daf-47ef-881d-4be594913c44/gallery-1.jpg",
+        "curated-media/554f9ab5-1daf-47ef-881d-4be594913c44/gallery-2.jpg",
+        "curated-media/554f9ab5-1daf-47ef-881d-4be594913c44/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "a2e64eae-7812-4bc3-b670-4c7d0c174897",
+      "title": "Japan Trip — March 2026",
+      "category": "Food",
+      "cover_path": "curated-media/a2e64eae-7812-4bc3-b670-4c7d0c174897/cover.jpg",
+      "gallery_paths": [
+        "curated-media/a2e64eae-7812-4bc3-b670-4c7d0c174897/gallery-1.jpg",
+        "curated-media/a2e64eae-7812-4bc3-b670-4c7d0c174897/gallery-2.jpg",
+        "curated-media/a2e64eae-7812-4bc3-b670-4c7d0c174897/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "65d9971f-fe32-4b3e-b5e8-5cf2e24b0442",
+      "title": "South Korea - Dec. 2026",
+      "category": "Others",
+      "cover_path": "curated-media/65d9971f-fe32-4b3e-b5e8-5cf2e24b0442/cover.jpg",
+      "gallery_paths": [
+        "curated-media/65d9971f-fe32-4b3e-b5e8-5cf2e24b0442/gallery-1.jpg",
+        "curated-media/65d9971f-fe32-4b3e-b5e8-5cf2e24b0442/gallery-2.jpg",
+        "curated-media/65d9971f-fe32-4b3e-b5e8-5cf2e24b0442/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "b004c8aa-90b6-4c80-bb1d-65b8299b1657",
+      "title": "Vietnam Market Mix — November 2026",
+      "category": "Others",
+      "cover_path": "curated-media/b004c8aa-90b6-4c80-bb1d-65b8299b1657/cover.jpg",
+      "gallery_paths": [
+        "curated-media/b004c8aa-90b6-4c80-bb1d-65b8299b1657/gallery-1.jpg",
+        "curated-media/b004c8aa-90b6-4c80-bb1d-65b8299b1657/gallery-2.jpg",
+        "curated-media/b004c8aa-90b6-4c80-bb1d-65b8299b1657/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "982889e6-b552-450a-9fd3-68f0949f33ea",
+      "title": "Hong Kong Beauty Run — January 2027",
+      "category": "Beauty",
+      "cover_path": "curated-media/982889e6-b552-450a-9fd3-68f0949f33ea/cover.jpg",
+      "gallery_paths": [
+        "curated-media/982889e6-b552-450a-9fd3-68f0949f33ea/gallery-1.jpg",
+        "curated-media/982889e6-b552-450a-9fd3-68f0949f33ea/gallery-2.jpg",
+        "curated-media/982889e6-b552-450a-9fd3-68f0949f33ea/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "1b221241-e670-4e3d-8328-5b9b0dbeabdd",
+      "title": "Japan Autumn Finds — October 2026",
+      "category": "Food",
+      "cover_path": "curated-media/1b221241-e670-4e3d-8328-5b9b0dbeabdd/cover.jpg",
+      "gallery_paths": [
+        "curated-media/1b221241-e670-4e3d-8328-5b9b0dbeabdd/gallery-1.jpg",
+        "curated-media/1b221241-e670-4e3d-8328-5b9b0dbeabdd/gallery-2.jpg",
+        "curated-media/1b221241-e670-4e3d-8328-5b9b0dbeabdd/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "2a653b0c-293c-4870-b010-543802377f6e",
+      "title": "Tokyo Variety Run — December 2026",
+      "category": "Others",
+      "cover_path": "curated-media/2a653b0c-293c-4870-b010-543802377f6e/cover.jpg",
+      "gallery_paths": [
+        "curated-media/2a653b0c-293c-4870-b010-543802377f6e/gallery-1.jpg",
+        "curated-media/2a653b0c-293c-4870-b010-543802377f6e/gallery-2.jpg",
+        "curated-media/2a653b0c-293c-4870-b010-543802377f6e/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "a04a2f1a-c424-4c26-a46b-e68fd0963fbd",
+      "title": "Kyoto Seasonal Mix — February 2027",
+      "category": "Others",
+      "cover_path": "curated-media/a04a2f1a-c424-4c26-a46b-e68fd0963fbd/cover.jpg",
+      "gallery_paths": [
+        "curated-media/a04a2f1a-c424-4c26-a46b-e68fd0963fbd/gallery-1.jpg",
+        "curated-media/a04a2f1a-c424-4c26-a46b-e68fd0963fbd/gallery-2.jpg",
+        "curated-media/a04a2f1a-c424-4c26-a46b-e68fd0963fbd/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "d4a11c86-2717-47eb-a70e-e598193f3c5c",
+      "title": "Orchard Road Luxury — March 2027",
+      "category": "Luxury",
+      "cover_path": "curated-media/d4a11c86-2717-47eb-a70e-e598193f3c5c/cover.jpg",
+      "gallery_paths": [
+        "curated-media/d4a11c86-2717-47eb-a70e-e598193f3c5c/gallery-1.jpg",
+        "curated-media/d4a11c86-2717-47eb-a70e-e598193f3c5c/gallery-2.jpg",
+        "curated-media/d4a11c86-2717-47eb-a70e-e598193f3c5c/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "61fd8576-d037-4645-9d15-c4d9e2ded2cd",
+      "title": "California Pantry Run — November 2026",
+      "category": "Food",
+      "cover_path": "curated-media/61fd8576-d037-4645-9d15-c4d9e2ded2cd/cover.jpg",
+      "gallery_paths": [
+        "curated-media/61fd8576-d037-4645-9d15-c4d9e2ded2cd/gallery-1.jpg",
+        "curated-media/61fd8576-d037-4645-9d15-c4d9e2ded2cd/gallery-2.jpg",
+        "curated-media/61fd8576-d037-4645-9d15-c4d9e2ded2cd/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "3c358f99-f1c5-450c-a8eb-84c32dc8f0c4",
+      "title": "Jeju Local Flavors — January 2027",
+      "category": "Food",
+      "cover_path": "curated-media/3c358f99-f1c5-450c-a8eb-84c32dc8f0c4/cover.jpg",
+      "gallery_paths": [
+        "curated-media/3c358f99-f1c5-450c-a8eb-84c32dc8f0c4/gallery-1.jpg",
+        "curated-media/3c358f99-f1c5-450c-a8eb-84c32dc8f0c4/gallery-2.png",
+        "curated-media/3c358f99-f1c5-450c-a8eb-84c32dc8f0c4/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "28f22f1e-6d37-4f14-929b-299db19a8981",
+      "title": "Incheon Skincare Run — March 2027",
+      "category": "Beauty",
+      "cover_path": "curated-media/28f22f1e-6d37-4f14-929b-299db19a8981/cover.jpg",
+      "gallery_paths": [
+        "curated-media/28f22f1e-6d37-4f14-929b-299db19a8981/gallery-1.jpg",
+        "curated-media/28f22f1e-6d37-4f14-929b-299db19a8981/gallery-2.jpg",
+        "curated-media/28f22f1e-6d37-4f14-929b-299db19a8981/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a",
+      "title": "Bangkok Thrift Haul — May 2027",
+      "category": "Apparel",
+      "cover_path": "curated-media/6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a/cover.jpg",
+      "gallery_paths": [
+        "curated-media/6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a/gallery-1.jpg",
+        "curated-media/6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a/gallery-2.jpg",
+        "curated-media/6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "9b5ff5e6-0222-45ce-966a-7ace4590263b",
+      "title": "Busan Barrier Care — January 2027",
+      "category": "Beauty",
+      "cover_path": "curated-media/9b5ff5e6-0222-45ce-966a-7ace4590263b/cover.jpg",
+      "gallery_paths": [
+        "curated-media/9b5ff5e6-0222-45ce-966a-7ace4590263b/gallery-1.png",
+        "curated-media/9b5ff5e6-0222-45ce-966a-7ace4590263b/gallery-2.png",
+        "curated-media/9b5ff5e6-0222-45ce-966a-7ace4590263b/gallery-3.png"
+      ]
+    },
+    {
+      "id": "47ae5ce7-8c82-42f3-a87c-7c05b1ddc422",
+      "title": "New York Snack Drop — January 2027",
+      "category": "Food",
+      "cover_path": "curated-media/47ae5ce7-8c82-42f3-a87c-7c05b1ddc422/cover.jpg",
+      "gallery_paths": [
+        "curated-media/47ae5ce7-8c82-42f3-a87c-7c05b1ddc422/gallery-1.jpg",
+        "curated-media/47ae5ce7-8c82-42f3-a87c-7c05b1ddc422/gallery-2.jpg",
+        "curated-media/47ae5ce7-8c82-42f3-a87c-7c05b1ddc422/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "c47de380-74ef-4ed9-b4bf-1a067cdb904a",
+      "title": "Phuket Beauty Market — February 2027",
+      "category": "Beauty",
+      "cover_path": "curated-media/c47de380-74ef-4ed9-b4bf-1a067cdb904a/cover.jpg",
+      "gallery_paths": [
+        "curated-media/c47de380-74ef-4ed9-b4bf-1a067cdb904a/gallery-1.jpg",
+        "curated-media/c47de380-74ef-4ed9-b4bf-1a067cdb904a/gallery-2.png",
+        "curated-media/c47de380-74ef-4ed9-b4bf-1a067cdb904a/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "8c5ae7c1-8239-48a1-b189-660dcec1ca71",
+      "title": "Osaka Street Food — October 2026",
+      "category": "Food",
+      "cover_path": "curated-media/8c5ae7c1-8239-48a1-b189-660dcec1ca71/cover.jpg",
+      "gallery_paths": [
+        "curated-media/8c5ae7c1-8239-48a1-b189-660dcec1ca71/gallery-1.png",
+        "curated-media/8c5ae7c1-8239-48a1-b189-660dcec1ca71/gallery-2.jpg",
+        "curated-media/8c5ae7c1-8239-48a1-b189-660dcec1ca71/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "5ab288d0-afd1-42bb-b5d8-1903b9fd8260",
+      "title": "Seoul Glow Edit — November 2026",
+      "category": "Beauty",
+      "cover_path": "curated-media/5ab288d0-afd1-42bb-b5d8-1903b9fd8260/cover.jpg",
+      "gallery_paths": [
+        "curated-media/5ab288d0-afd1-42bb-b5d8-1903b9fd8260/gallery-1.jpg",
+        "curated-media/5ab288d0-afd1-42bb-b5d8-1903b9fd8260/gallery-2.jpg",
+        "curated-media/5ab288d0-afd1-42bb-b5d8-1903b9fd8260/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "27d22a19-59c5-4c60-a778-924a6889aa6d",
+      "title": "Seattle Grocery Haul — March 2027",
+      "category": "Food",
+      "cover_path": "curated-media/27d22a19-59c5-4c60-a778-924a6889aa6d/cover.jpg",
+      "gallery_paths": [
+        "curated-media/27d22a19-59c5-4c60-a778-924a6889aa6d/gallery-1.jpg",
+        "curated-media/27d22a19-59c5-4c60-a778-924a6889aa6d/gallery-2.jpg",
+        "curated-media/27d22a19-59c5-4c60-a778-924a6889aa6d/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "b2280905-0e79-4de8-a3e1-c847b4fb04e8",
+      "title": "Paris Beauty Edit — February 2027",
+      "category": "Beauty",
+      "cover_path": "curated-media/b2280905-0e79-4de8-a3e1-c847b4fb04e8/cover.jpg",
+      "gallery_paths": [
+        "curated-media/b2280905-0e79-4de8-a3e1-c847b4fb04e8/gallery-1.jpg",
+        "curated-media/b2280905-0e79-4de8-a3e1-c847b4fb04e8/gallery-2.jpg",
+        "curated-media/b2280905-0e79-4de8-a3e1-c847b4fb04e8/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "3fee7983-a9c7-437a-95a2-da3a31596e20",
+      "title": "London Luxury Finds — February 2027",
+      "category": "Luxury",
+      "cover_path": "curated-media/3fee7983-a9c7-437a-95a2-da3a31596e20/cover.jpg",
+      "gallery_paths": [
+        "curated-media/3fee7983-a9c7-437a-95a2-da3a31596e20/gallery-1.jpg",
+        "curated-media/3fee7983-a9c7-437a-95a2-da3a31596e20/gallery-2.jpg",
+        "curated-media/3fee7983-a9c7-437a-95a2-da3a31596e20/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "1559ca98-8228-41d1-8adf-77244e29fd59",
+      "title": "Bangkok Beauty Picks — November 2026",
+      "category": "Beauty",
+      "cover_path": "curated-media/1559ca98-8228-41d1-8adf-77244e29fd59/cover.jpg",
+      "gallery_paths": [
+        "curated-media/1559ca98-8228-41d1-8adf-77244e29fd59/gallery-1.jpg",
+        "curated-media/1559ca98-8228-41d1-8adf-77244e29fd59/gallery-2.jpg",
+        "curated-media/1559ca98-8228-41d1-8adf-77244e29fd59/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "733862f5-5235-441a-bffa-d878c71d27b8",
+      "title": "Singapore Designer Edit — February 2027",
+      "category": "Luxury",
+      "cover_path": "curated-media/733862f5-5235-441a-bffa-d878c71d27b8/cover.jpg",
+      "gallery_paths": [
+        "curated-media/733862f5-5235-441a-bffa-d878c71d27b8/gallery-1.jpg",
+        "curated-media/733862f5-5235-441a-bffa-d878c71d27b8/gallery-2.jpg",
+        "curated-media/733862f5-5235-441a-bffa-d878c71d27b8/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "3cd741d4-706e-41e1-8111-61003b3e1f0f",
+      "title": "Chiang Mai Beauty Finds — March 2027",
+      "category": "Beauty",
+      "cover_path": "curated-media/3cd741d4-706e-41e1-8111-61003b3e1f0f/cover.jpg",
+      "gallery_paths": [
+        "curated-media/3cd741d4-706e-41e1-8111-61003b3e1f0f/gallery-1.jpg",
+        "curated-media/3cd741d4-706e-41e1-8111-61003b3e1f0f/gallery-2.jpg",
+        "curated-media/3cd741d4-706e-41e1-8111-61003b3e1f0f/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "0a34ace0-f1b9-45ef-87c8-f250235d56d8",
+      "title": "Japan Spring Mix — April 2027",
+      "category": "Others",
+      "cover_path": "curated-media/0a34ace0-f1b9-45ef-87c8-f250235d56d8/cover.jpg",
+      "gallery_paths": [
+        "curated-media/0a34ace0-f1b9-45ef-87c8-f250235d56d8/gallery-1.jpg",
+        "curated-media/0a34ace0-f1b9-45ef-87c8-f250235d56d8/gallery-2.jpg",
+        "curated-media/0a34ace0-f1b9-45ef-87c8-f250235d56d8/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "0598d5c4-8f02-41b0-a277-1bb9737b9417",
+      "title": "Tokyo Streetwear Drop — April 2027",
+      "category": "Apparel",
+      "cover_path": "curated-media/0598d5c4-8f02-41b0-a277-1bb9737b9417/cover.jpg",
+      "gallery_paths": [
+        "curated-media/0598d5c4-8f02-41b0-a277-1bb9737b9417/gallery-1.jpg",
+        "curated-media/0598d5c4-8f02-41b0-a277-1bb9737b9417/gallery-2.jpg",
+        "curated-media/0598d5c4-8f02-41b0-a277-1bb9737b9417/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "0ffb4cb9-f6c4-4518-812c-53f312cb42fd",
+      "title": "Seoul Fashion Week Finds — May 2027",
+      "category": "Apparel",
+      "cover_path": "curated-media/0ffb4cb9-f6c4-4518-812c-53f312cb42fd/cover.jpg",
+      "gallery_paths": [
+        "curated-media/0ffb4cb9-f6c4-4518-812c-53f312cb42fd/gallery-1.jpg",
+        "curated-media/0ffb4cb9-f6c4-4518-812c-53f312cb42fd/gallery-2.jpg",
+        "curated-media/0ffb4cb9-f6c4-4518-812c-53f312cb42fd/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "2522dadf-196e-47e8-83e3-a397c9ca7590",
+      "title": "Hanoi Vietnam 2026",
+      "category": "Luxury",
+      "cover_path": "curated-media/2522dadf-196e-47e8-83e3-a397c9ca7590/cover.jpg",
+      "gallery_paths": [
+        "curated-media/2522dadf-196e-47e8-83e3-a397c9ca7590/gallery-1.jpg",
+        "curated-media/2522dadf-196e-47e8-83e3-a397c9ca7590/gallery-2.jpg",
+        "curated-media/2522dadf-196e-47e8-83e3-a397c9ca7590/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "aad57080-26f1-4142-8ffc-5901cf9f0ac5",
+      "title": "PLM - October 2026",
+      "category": "Apparel",
+      "cover_path": "cd535f9e-bc03-44c3-9c9d-e4b125b958cc/aad57080-26f1-4142-8ffc-5901cf9f0ac5/cover-1792747448156.jpg",
+      "gallery_paths": [
+        "cd535f9e-bc03-44c3-9c9d-e4b125b958cc/aad57080-26f1-4142-8ffc-5901cf9f0ac5/gallery-1-1792512128643.jpg",
+        "curated-media/aad57080-26f1-4142-8ffc-5901cf9f0ac5/gallery-2.jpg",
+        "curated-media/aad57080-26f1-4142-8ffc-5901cf9f0ac5/gallery-3.jpg"
+      ]
+    },
+    {
+      "id": "829cd1f5-83d9-4f01-8f5b-40b9b52fa508",
+      "title": "New York Trip 27'",
+      "category": "Others",
+      "cover_path": "859be91c-6fef-4399-bfe9-5cbd7fc2c90d/829cd1f5-83d9-4f01-8f5b-40b9b52fa508/cover-1792713623154.png",
+      "gallery_paths": [
+        "859be91c-6fef-4399-bfe9-5cbd7fc2c90d/829cd1f5-83d9-4f01-8f5b-40b9b52fa508/gallery-1-1792713624414.png",
+        "859be91c-6fef-4399-bfe9-5cbd7fc2c90d/829cd1f5-83d9-4f01-8f5b-40b9b52fa508/gallery-2-1792713624414.png",
+        "curated-media/829cd1f5-83d9-4f01-8f5b-40b9b52fa508/gallery-3.jpg"
+      ]
+    }
+  ],
+  "products": [
+    {
+      "id": "d7e8fd69-dd37-4357-b7ff-8b0b88aa8333",
+      "batch_id": "020bc0f8-cdd0-42cb-a0b4-46e5b6534974",
+      "name": "Nars Blush",
+      "image_path": "curated-media/020bc0f8-cdd0-42cb-a0b4-46e5b6534974/product-d7e8fd69-dd37-4357-b7ff-8b0b88aa8333.jpg"
+    },
+    {
+      "id": "d7a44d81-5d41-486d-91f2-a2af99a5301e",
+      "batch_id": "aad57080-26f1-4142-8ffc-5901cf9f0ac5",
+      "name": "Thrifted Pants",
+      "image_path": "cd535f9e-bc03-44c3-9c9d-e4b125b958cc/aad57080-26f1-4142-8ffc-5901cf9f0ac5/product-d7a44d81-5d41-486d-91f2-a2af99a5301e-1792748732030.jpg"
+    },
+    {
+      "id": "374183c7-8970-46d2-92f8-ad0aa8cecccb",
+      "batch_id": "a2e64eae-7812-4bc3-b670-4c7d0c174897",
+      "name": "Shiseido Sunscreen",
+      "image_path": "curated-media/a2e64eae-7812-4bc3-b670-4c7d0c174897/product-374183c7-8970-46d2-92f8-ad0aa8cecccb.jpg"
+    },
+    {
+      "id": "4779205a-df41-4da5-ab72-a24772e0ad55",
+      "batch_id": "b2280905-0e79-4de8-a3e1-c847b4fb04e8",
+      "name": "French Pharmacy Set",
+      "image_path": "curated-media/b2280905-0e79-4de8-a3e1-c847b4fb04e8/product-4779205a-df41-4da5-ab72-a24772e0ad55.jpg"
+    },
+    {
+      "id": "fcdb23f7-74fd-4934-8074-d678d1e160be",
+      "batch_id": "1b221241-e670-4e3d-8328-5b9b0dbeabdd",
+      "name": "Meiji Chocolate",
+      "image_path": "curated-media/1b221241-e670-4e3d-8328-5b9b0dbeabdd/product-fcdb23f7-74fd-4934-8074-d678d1e160be.jpg"
+    },
+    {
+      "id": "e599cb91-8ef3-46fa-bc64-93a41abbfbed",
+      "batch_id": "b004c8aa-90b6-4c80-bb1d-65b8299b1657",
+      "name": "Vietnamese Coffee Set",
+      "image_path": "curated-media/b004c8aa-90b6-4c80-bb1d-65b8299b1657/product-e599cb91-8ef3-46fa-bc64-93a41abbfbed.jpg"
+    },
+    {
+      "id": "b6669a99-a193-4420-a2c8-50313cd0e375",
+      "batch_id": "41583129-9100-430d-ba10-44e24f9f9069",
+      "name": "Trader Joe's Snacks",
+      "image_path": "curated-media/41583129-9100-430d-ba10-44e24f9f9069/product-b6669a99-a193-4420-a2c8-50313cd0e375.jpg"
+    },
+    {
+      "id": "802cf924-4f05-4422-ba14-e9d75aff5d95",
+      "batch_id": "118074de-ede7-4f33-ac26-228062b95fd0",
+      "name": "Thai Snack Box",
+      "image_path": "curated-media/118074de-ede7-4f33-ac26-228062b95fd0/product-802cf924-4f05-4422-ba14-e9d75aff5d95.jpg"
+    },
+    {
+      "id": "aac1970b-07e8-4b65-80b7-fbd3d92f1c8d",
+      "batch_id": "65d9971f-fe32-4b3e-b5e8-5cf2e24b0442",
+      "name": "KitKat",
+      "image_path": "cd535f9e-bc03-44c3-9c9d-e4b125b958cc/65d9971f-fe32-4b3e-b5e8-5cf2e24b0442/product-aac1970b-07e8-4b65-80b7-fbd3d92f1c8d-1792347725187.webp"
+    },
+    {
+      "id": "2e274c75-2bed-4dfe-b95e-0361b929aff6",
+      "batch_id": "982889e6-b552-450a-9fd3-68f0949f33ea",
+      "name": "Charlotte Tilbury Set",
+      "image_path": "curated-media/982889e6-b552-450a-9fd3-68f0949f33ea/product-2e274c75-2bed-4dfe-b95e-0361b929aff6.jpg"
+    },
+    {
+      "id": "54e656a8-6e6b-45fd-8207-1daafea3c2e5",
+      "batch_id": "982889e6-b552-450a-9fd3-68f0949f33ea",
+      "name": "Rare Beauty Blush",
+      "image_path": "curated-media/982889e6-b552-450a-9fd3-68f0949f33ea/product-54e656a8-6e6b-45fd-8207-1daafea3c2e5.jpg"
+    },
+    {
+      "id": "423a3fa5-78a3-4d3a-9abc-f79e1ca4e7af",
+      "batch_id": "3fee7983-a9c7-437a-95a2-da3a31596e20",
+      "name": "Liberty Beauty Box",
+      "image_path": "curated-media/3fee7983-a9c7-437a-95a2-da3a31596e20/product-423a3fa5-78a3-4d3a-9abc-f79e1ca4e7af.jpg"
+    },
+    {
+      "id": "a72756c7-f455-4770-814a-b1f714a9f38b",
+      "batch_id": "a2e64eae-7812-4bc3-b670-4c7d0c174897",
+      "name": "Tokyo Banana",
+      "image_path": "curated-media/a2e64eae-7812-4bc3-b670-4c7d0c174897/product-a72756c7-f455-4770-814a-b1f714a9f38b.jpg"
+    },
+    {
+      "id": "0712d7bd-b3d7-4333-b8cd-351ed61d15d4",
+      "batch_id": "1b221241-e670-4e3d-8328-5b9b0dbeabdd",
+      "name": "KitKat Sakura",
+      "image_path": "curated-media/1b221241-e670-4e3d-8328-5b9b0dbeabdd/product-0712d7bd-b3d7-4333-b8cd-351ed61d15d4.jpg"
+    },
+    {
+      "id": "2606305b-0b8b-49ac-87ad-d5a917c5d932",
+      "batch_id": "1b221241-e670-4e3d-8328-5b9b0dbeabdd",
+      "name": "Tokyo Banana",
+      "image_path": "curated-media/1b221241-e670-4e3d-8328-5b9b0dbeabdd/product-2606305b-0b8b-49ac-87ad-d5a917c5d932.jpg"
+    },
+    {
+      "id": "86602088-a882-49f8-803d-afa152f25ee7",
+      "batch_id": "2e0fb6c5-2e78-43df-9ab9-c8def8abed24",
+      "name": "SK-II Essence",
+      "image_path": "curated-media/2e0fb6c5-2e78-43df-9ab9-c8def8abed24/product-86602088-a882-49f8-803d-afa152f25ee7.jpg"
+    },
+    {
+      "id": "393c484d-3ca8-406f-9e37-89c24a36c9fc",
+      "batch_id": "1b221241-e670-4e3d-8328-5b9b0dbeabdd",
+      "name": "Shiseido Sunscreen",
+      "image_path": "curated-media/1b221241-e670-4e3d-8328-5b9b0dbeabdd/product-393c484d-3ca8-406f-9e37-89c24a36c9fc.jpg"
+    },
+    {
+      "id": "a9414c37-be55-4a77-af69-11cd30c9b15c",
+      "batch_id": "118074de-ede7-4f33-ac26-228062b95fd0",
+      "name": "Mistine Sunscreen",
+      "image_path": "curated-media/118074de-ede7-4f33-ac26-228062b95fd0/product-a9414c37-be55-4a77-af69-11cd30c9b15c.jpg"
+    },
+    {
+      "id": "fa63ed84-a30a-41e7-9925-ac735b15c7ec",
+      "batch_id": "0598d5c4-8f02-41b0-a277-1bb9737b9417",
+      "name": "Uniqlo U Collection Tee",
+      "image_path": "curated-media/0598d5c4-8f02-41b0-a277-1bb9737b9417/product-fa63ed84-a30a-41e7-9925-ac735b15c7ec.jpg"
+    },
+    {
+      "id": "5934c598-3661-49f1-a528-14ed00ef2184",
+      "batch_id": "61531f40-494c-448f-b8e2-8b501678d8b9",
+      "name": "Korean Skincare Set",
+      "image_path": "curated-media/61531f40-494c-448f-b8e2-8b501678d8b9/product-5934c598-3661-49f1-a528-14ed00ef2184.jpg"
+    },
+    {
+      "id": "43b53a16-c8d1-4499-8d18-bb098a9999b1",
+      "batch_id": "61531f40-494c-448f-b8e2-8b501678d8b9",
+      "name": "Laneige Lip Mask",
+      "image_path": "curated-media/61531f40-494c-448f-b8e2-8b501678d8b9/product-43b53a16-c8d1-4499-8d18-bb098a9999b1.jpg"
+    },
+    {
+      "id": "4820774c-0ce4-414c-b942-e7e3c429aaa9",
+      "batch_id": "61531f40-494c-448f-b8e2-8b501678d8b9",
+      "name": "COSRX Snail Cream",
+      "image_path": "curated-media/61531f40-494c-448f-b8e2-8b501678d8b9/product-4820774c-0ce4-414c-b942-e7e3c429aaa9.jpg"
+    },
+    {
+      "id": "f94846c5-c0af-4f00-ab75-161ed0a7048f",
+      "batch_id": "61531f40-494c-448f-b8e2-8b501678d8b9",
+      "name": "Paldo Bibimmyeon",
+      "image_path": "curated-media/61531f40-494c-448f-b8e2-8b501678d8b9/product-f94846c5-c0af-4f00-ab75-161ed0a7048f.jpg"
+    },
+    {
+      "id": "ff86d04e-692c-4589-8c87-6d4f4e612cfc",
+      "batch_id": "41583129-9100-430d-ba10-44e24f9f9069",
+      "name": "Muji Skincare",
+      "image_path": "curated-media/41583129-9100-430d-ba10-44e24f9f9069/product-ff86d04e-692c-4589-8c87-6d4f4e612cfc.jpg"
+    },
+    {
+      "id": "556cb988-7507-4cc7-8ab2-2244a73b46c2",
+      "batch_id": "2e0fb6c5-2e78-43df-9ab9-c8def8abed24",
+      "name": "Hada Labo Serum",
+      "image_path": "curated-media/2e0fb6c5-2e78-43df-9ab9-c8def8abed24/product-556cb988-7507-4cc7-8ab2-2244a73b46c2.jpg"
+    },
+    {
+      "id": "1736c788-676d-4aaa-be28-4ec5ad56952f",
+      "batch_id": "2e0fb6c5-2e78-43df-9ab9-c8def8abed24",
+      "name": "Innisfree Sheet Mask",
+      "image_path": "curated-media/2e0fb6c5-2e78-43df-9ab9-c8def8abed24/product-1736c788-676d-4aaa-be28-4ec5ad56952f.jpg"
+    },
+    {
+      "id": "a7acf0b4-5795-43e5-a274-2d7c7e4bf7c7",
+      "batch_id": "4817ee27-8b0a-4937-9676-4fe35401270e",
+      "name": "Tim Tam Assorted",
+      "image_path": "curated-media/4817ee27-8b0a-4937-9676-4fe35401270e/product-a7acf0b4-5795-43e5-a274-2d7c7e4bf7c7.jpg"
+    },
+    {
+      "id": "1e23ae15-341a-4a67-b83a-77b0e41e1749",
+      "batch_id": "4817ee27-8b0a-4937-9676-4fe35401270e",
+      "name": "Aesop Hand Cream",
+      "image_path": "curated-media/4817ee27-8b0a-4937-9676-4fe35401270e/product-1e23ae15-341a-4a67-b83a-77b0e41e1749.jpg"
+    },
+    {
+      "id": "6e171f99-d1ff-4809-a87c-b612bf371b08",
+      "batch_id": "020bc0f8-cdd0-42cb-a0b4-46e5b6534974",
+      "name": "MAC Lipstick Set",
+      "image_path": "curated-media/020bc0f8-cdd0-42cb-a0b4-46e5b6534974/product-6e171f99-d1ff-4809-a87c-b612bf371b08.jpg"
+    },
+    {
+      "id": "d1482a29-b4fa-45f4-901c-c3f14bc1b5aa",
+      "batch_id": "6e06577c-c141-417c-b343-6fe989a01cca",
+      "name": "Dr. Wu Serum",
+      "image_path": "curated-media/6e06577c-c141-417c-b343-6fe989a01cca/product-d1482a29-b4fa-45f4-901c-c3f14bc1b5aa.jpg"
+    },
+    {
+      "id": "aa27fd56-ba19-4d0f-ae60-e03dfba0f205",
+      "batch_id": "6e06577c-c141-417c-b343-6fe989a01cca",
+      "name": "Pineapple Cake Box",
+      "image_path": "curated-media/6e06577c-c141-417c-b343-6fe989a01cca/product-aa27fd56-ba19-4d0f-ae60-e03dfba0f205.jpg"
+    },
+    {
+      "id": "a7543a4a-df33-4327-bf8d-196f4f51c04d",
+      "batch_id": "a2e64eae-7812-4bc3-b670-4c7d0c174897",
+      "name": "Meiji Chocolate",
+      "image_path": "curated-media/a2e64eae-7812-4bc3-b670-4c7d0c174897/product-a7543a4a-df33-4327-bf8d-196f4f51c04d.jpg"
+    },
+    {
+      "id": "a57b98d3-4bb2-4b35-8f99-e41d5f964317",
+      "batch_id": "829cd1f5-83d9-4f01-8f5b-40b9b52fa508",
+      "name": "Statue of Liberty",
+      "image_path": "859be91c-6fef-4399-bfe9-5cbd7fc2c90d/829cd1f5-83d9-4f01-8f5b-40b9b52fa508/product-1-1792713626486.png"
+    },
+    {
+      "id": "8d7bb2e7-81a0-4b4c-b07f-8c694d71a50a",
+      "batch_id": "829cd1f5-83d9-4f01-8f5b-40b9b52fa508",
+      "name": "Statue of Liberty (Crown Only)",
+      "image_path": "859be91c-6fef-4399-bfe9-5cbd7fc2c90d/829cd1f5-83d9-4f01-8f5b-40b9b52fa508/product-2-1792713626486.png"
+    },
+    {
+      "id": "01630ff7-1ef8-4aa4-b605-fc19aaa9a285",
+      "batch_id": "829cd1f5-83d9-4f01-8f5b-40b9b52fa508",
+      "name": "Statue of Liberty (Souvenir)",
+      "image_path": "859be91c-6fef-4399-bfe9-5cbd7fc2c90d/829cd1f5-83d9-4f01-8f5b-40b9b52fa508/product-3-1792713626486.png"
+    },
+    {
+      "id": "9500f61d-f4ec-482e-a48c-4afec53896a5",
+      "batch_id": "3fee7983-a9c7-437a-95a2-da3a31596e20",
+      "name": "Jo Malone Mini Set",
+      "image_path": "curated-media/3fee7983-a9c7-437a-95a2-da3a31596e20/product-9500f61d-f4ec-482e-a48c-4afec53896a5.jpg"
+    },
+    {
+      "id": "a32bc1d4-b294-4e3e-bfe2-0d5a3a8bd948",
+      "batch_id": "b004c8aa-90b6-4c80-bb1d-65b8299b1657",
+      "name": "Herbal Skincare Kit",
+      "image_path": "curated-media/b004c8aa-90b6-4c80-bb1d-65b8299b1657/product-a32bc1d4-b294-4e3e-bfe2-0d5a3a8bd948.jpg"
+    },
+    {
+      "id": "8800fc12-2202-42f8-abd4-231631230a5e",
+      "batch_id": "1559ca98-8228-41d1-8adf-77244e29fd59",
+      "name": "Cathy Doll Lip Set",
+      "image_path": "curated-media/1559ca98-8228-41d1-8adf-77244e29fd59/product-8800fc12-2202-42f8-abd4-231631230a5e.jpg"
+    },
+    {
+      "id": "08e103ed-bbd2-4d13-8ee0-2e64b8905386",
+      "batch_id": "3c358f99-f1c5-450c-a8eb-84c32dc8f0c4",
+      "name": "Jeju Tangerine Sweets",
+      "image_path": "curated-media/3c358f99-f1c5-450c-a8eb-84c32dc8f0c4/product-08e103ed-bbd2-4d13-8ee0-2e64b8905386.jpg"
+    },
+    {
+      "id": "0c10baba-1a4d-4a0a-bcf6-171206a79630",
+      "batch_id": "47ae5ce7-8c82-42f3-a87c-7c05b1ddc422",
+      "name": "Whole Foods Snack Bag",
+      "image_path": "curated-media/47ae5ce7-8c82-42f3-a87c-7c05b1ddc422/product-0c10baba-1a4d-4a0a-bcf6-171206a79630.jpg"
+    },
+    {
+      "id": "7018b6ef-c991-4a84-9c1e-7ebd41e37794",
+      "batch_id": "8c5ae7c1-8239-48a1-b189-660dcec1ca71",
+      "name": "Osaka Takoyaki Kit",
+      "image_path": "curated-media/8c5ae7c1-8239-48a1-b189-660dcec1ca71/product-7018b6ef-c991-4a84-9c1e-7ebd41e37794.jpg"
+    },
+    {
+      "id": "0fa89cdc-6d7b-412e-92a1-19fecec459d8",
+      "batch_id": "a04a2f1a-c424-4c26-a46b-e68fd0963fbd",
+      "name": "Kyoto Market Bundle",
+      "image_path": "curated-media/a04a2f1a-c424-4c26-a46b-e68fd0963fbd/product-0fa89cdc-6d7b-412e-92a1-19fecec459d8.jpg"
+    },
+    {
+      "id": "ec62cde8-da8a-45f5-8627-52f56b09c3d0",
+      "batch_id": "27d22a19-59c5-4c60-a778-924a6889aa6d",
+      "name": "Seattle Coffee Sampler",
+      "image_path": "curated-media/27d22a19-59c5-4c60-a778-924a6889aa6d/product-ec62cde8-da8a-45f5-8627-52f56b09c3d0.jpg"
+    },
+    {
+      "id": "b2d106ef-e8ba-4efb-b457-481f4c5f0bf4",
+      "batch_id": "0a34ace0-f1b9-45ef-87c8-f250235d56d8",
+      "name": "Sakura Lifestyle Box",
+      "image_path": "curated-media/0a34ace0-f1b9-45ef-87c8-f250235d56d8/product-b2d106ef-e8ba-4efb-b457-481f4c5f0bf4.jpg"
+    },
+    {
+      "id": "e1ec17f4-2579-4450-a22c-4fb9df36e7b5",
+      "batch_id": "0ffb4cb9-f6c4-4518-812c-53f312cb42fd",
+      "name": "Musinsa Cargo Pants",
+      "image_path": "curated-media/0ffb4cb9-f6c4-4518-812c-53f312cb42fd/product-e1ec17f4-2579-4450-a22c-4fb9df36e7b5.jpg"
+    },
+    {
+      "id": "bc9f8b99-2aae-4ad8-b8e8-86e96fa32919",
+      "batch_id": "0ffb4cb9-f6c4-4518-812c-53f312cb42fd",
+      "name": "Korean Oversized Knit",
+      "image_path": "curated-media/0ffb4cb9-f6c4-4518-812c-53f312cb42fd/product-bc9f8b99-2aae-4ad8-b8e8-86e96fa32919.jpg"
+    },
+    {
+      "id": "7519e2a7-4707-4b9f-aeb4-1933d10a47f4",
+      "batch_id": "a2e64eae-7812-4bc3-b670-4c7d0c174897",
+      "name": "KitKat Sakura",
+      "image_path": "curated-media/a2e64eae-7812-4bc3-b670-4c7d0c174897/product-7519e2a7-4707-4b9f-aeb4-1933d10a47f4.jpg"
+    },
+    {
+      "id": "35b441e1-f8cb-4254-b27a-e6da913e79c1",
+      "batch_id": "b240fc50-9b32-4253-bd31-c872f8e51fad",
+      "name": "TWG Tea Gift Box",
+      "image_path": "curated-media/b240fc50-9b32-4253-bd31-c872f8e51fad/product-35b441e1-f8cb-4254-b27a-e6da913e79c1.jpg"
+    },
+    {
+      "id": "648268f3-f617-487a-ab3b-d6b0797115e3",
+      "batch_id": "9b5ff5e6-0222-45ce-966a-7ace4590263b",
+      "name": "Etude SoonJung Set",
+      "image_path": "curated-media/9b5ff5e6-0222-45ce-966a-7ace4590263b/product-648268f3-f617-487a-ab3b-d6b0797115e3.jpg"
+    },
+    {
+      "id": "ca40d046-6998-4cc7-b52b-8cba8f31d744",
+      "batch_id": "c47de380-74ef-4ed9-b4bf-1a067cdb904a",
+      "name": "Srichand Powder Duo",
+      "image_path": "curated-media/c47de380-74ef-4ed9-b4bf-1a067cdb904a/product-ca40d046-6998-4cc7-b52b-8cba8f31d744.jpg"
+    },
+    {
+      "id": "a7132dee-6c12-41e7-b350-091c354d0bbd",
+      "batch_id": "6f54e432-a87d-45c6-8b69-779bab027fdf",
+      "name": "Nagoya Miso Snack Set",
+      "image_path": "curated-media/6f54e432-a87d-45c6-8b69-779bab027fdf/product-a7132dee-6c12-41e7-b350-091c354d0bbd.jpg"
+    },
+    {
+      "id": "cfea9bdb-427c-40e3-a165-05035f3b93ab",
+      "batch_id": "5ab288d0-afd1-42bb-b5d8-1903b9fd8260",
+      "name": "Round Lab Sunscreen",
+      "image_path": "curated-media/5ab288d0-afd1-42bb-b5d8-1903b9fd8260/product-cfea9bdb-427c-40e3-a165-05035f3b93ab.jpg"
+    },
+    {
+      "id": "4e10d919-1c5d-479e-946d-516fcc5f693e",
+      "batch_id": "3cd741d4-706e-41e1-8111-61003b3e1f0f",
+      "name": "Oriental Princess Set",
+      "image_path": "curated-media/3cd741d4-706e-41e1-8111-61003b3e1f0f/product-4e10d919-1c5d-479e-946d-516fcc5f693e.jpg"
+    },
+    {
+      "id": "d1d80c67-536a-4fff-a929-c0ad8bc0b754",
+      "batch_id": "0598d5c4-8f02-41b0-a277-1bb9737b9417",
+      "name": "GU Wide Trousers",
+      "image_path": "curated-media/0598d5c4-8f02-41b0-a277-1bb9737b9417/product-d1d80c67-536a-4fff-a929-c0ad8bc0b754.jpg"
+    },
+    {
+      "id": "9dcd6270-916a-4cbc-a66d-53c2509f5ad5",
+      "batch_id": "6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a",
+      "name": "Chatuchak Vintage Denim",
+      "image_path": "curated-media/6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a/product-9dcd6270-916a-4cbc-a66d-53c2509f5ad5.jpg"
+    },
+    {
+      "id": "a855911d-72c6-462f-b891-01a5c4876b04",
+      "batch_id": "6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a",
+      "name": "Platinum Mall Graphic Tee",
+      "image_path": "curated-media/6f63a0ee-f0e6-4fa6-9ec2-5e8e82566d7a/product-a855911d-72c6-462f-b891-01a5c4876b04.jpg"
+    },
+    {
+      "id": "731d0ed1-9866-412d-9c69-3716533eb48d",
+      "batch_id": "2522dadf-196e-47e8-83e3-a397c9ca7590",
+      "name": "Testing Product",
+      "image_path": "curated-media/2522dadf-196e-47e8-83e3-a397c9ca7590/product-731d0ed1-9866-412d-9c69-3716533eb48d.jpg"
+    },
+    {
+      "id": "2f127f4e-0091-4b30-8e85-f3aeb6171527",
+      "batch_id": "b2280905-0e79-4de8-a3e1-c847b4fb04e8",
+      "name": "Bioderma Duo",
+      "image_path": "curated-media/b2280905-0e79-4de8-a3e1-c847b4fb04e8/product-2f127f4e-0091-4b30-8e85-f3aeb6171527.jpg"
+    },
+    {
+      "id": "597ddc74-97d1-4761-902f-15319948af0c",
+      "batch_id": "2a653b0c-293c-4870-b010-543802377f6e",
+      "name": "Don Quijote Favorites",
+      "image_path": "curated-media/2a653b0c-293c-4870-b010-543802377f6e/product-597ddc74-97d1-4761-902f-15319948af0c.jpg"
+    },
+    {
+      "id": "7f283b05-82e6-45e6-813a-16c6c348b25d",
+      "batch_id": "733862f5-5235-441a-bffa-d878c71d27b8",
+      "name": "Charles & Keith Wallet",
+      "image_path": "curated-media/733862f5-5235-441a-bffa-d878c71d27b8/product-7f283b05-82e6-45e6-813a-16c6c348b25d.jpg"
+    },
+    {
+      "id": "e647f9a8-3eb3-44c0-a51d-66bfde69018a",
+      "batch_id": "28f22f1e-6d37-4f14-929b-299db19a8981",
+      "name": "Anua Heartleaf Kit",
+      "image_path": "curated-media/28f22f1e-6d37-4f14-929b-299db19a8981/product-e647f9a8-3eb3-44c0-a51d-66bfde69018a.jpg"
+    },
+    {
+      "id": "0ad52f5b-3e19-4da3-8610-482bb6029646",
+      "batch_id": "61fd8576-d037-4645-9d15-c4d9e2ded2cd",
+      "name": "Trader Joe's Cookie Box",
+      "image_path": "curated-media/61fd8576-d037-4645-9d15-c4d9e2ded2cd/product-0ad52f5b-3e19-4da3-8610-482bb6029646.jpg"
+    },
+    {
+      "id": "66306a45-92bc-40a4-b86e-7b7430323923",
+      "batch_id": "d4a11c86-2717-47eb-a70e-e598193f3c5c",
+      "name": "Bacha Coffee Gift Set",
+      "image_path": "curated-media/d4a11c86-2717-47eb-a70e-e598193f3c5c/product-66306a45-92bc-40a4-b86e-7b7430323923.jpg"
+    },
+    {
+      "id": "521b202d-b596-4af8-b3d3-d3c823af949c",
+      "batch_id": "554f9ab5-1daf-47ef-881d-4be594913c44",
+      "name": "Test",
+      "image_path": "curated-media/554f9ab5-1daf-47ef-881d-4be594913c44/product-521b202d-b596-4af8-b3d3-d3c823af949c.png"
+    }
+  ]
+}

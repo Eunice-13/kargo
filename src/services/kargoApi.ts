@@ -1731,6 +1731,10 @@ function assertBatchImage(file: File) {
 function batchMediaUrl(path?: string | null) {
   if (!path) return undefined
 
+  // Absolute URLs (externally hosted images) and blob/data URLs are used as-is.
+  // Only bucket-relative storage paths get resolved through Supabase storage.
+  if (/^(?:https?:|blob:|data:|\/)/i.test(path)) return path
+
   return requireSupabase().storage.from(BATCH_MEDIA_BUCKET).getPublicUrl(path)
     .data.publicUrl
 }
