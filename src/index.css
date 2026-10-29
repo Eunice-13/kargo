@@ -15109,6 +15109,19 @@ textarea::placeholder {
   font-family: "Josefin Sans", "DM Sans", sans-serif;
 }
 
+/* Admins have a console badge instead of the centered marketplace search. */
+@media (min-width: 1025px) {
+  .seller-shell-header.admin-shell-header {
+    grid-template-columns: max-content minmax(0, 1fr) auto;
+    column-gap: 16px !important;
+  }
+
+  .admin-shell-header .kargo-admin-console-chip {
+    align-self: center;
+    justify-self: start;
+  }
+}
+
 @media (min-width: 768px) {
   .seller-shell-header.admin-shell-header
     .kargo-header-actions

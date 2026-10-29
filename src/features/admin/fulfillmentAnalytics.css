@@ -294,6 +294,7 @@
   min-width: 0;
   width: 100%;
   margin-top: 8px;
+  position: relative;
 }
 .fulfillment-trend__plot {
   display: block;
@@ -312,52 +313,70 @@
   stroke: var(--fa-border);
   stroke-width: 1;
 }
-.fulfillment-trend__readout {
+/* Floating tooltip that appears next to the selected day on the chart. */
+.fulfillment-trend__tooltip {
+  position: absolute;
+  top: 10px;
+  z-index: 3;
+  min-width: 124px;
+  max-width: min(168px, 58%);
+  padding: 7px 9px;
   border: 1px solid var(--fa-border);
-  border-radius: 14px;
-  padding: 13px 16px;
-  margin-top: 12px;
-  background: var(--fa-soft);
+  border-radius: 10px;
+  background: var(--fa-surface);
+  box-shadow:
+    0 3px 8px -3px rgba(16, 24, 40, 0.14),
+    0 10px 24px -16px rgba(16, 24, 40, 0.26);
+  /* Informational only (YouTube-style): never intercepts the pointer, so moving
+     across the chart never triggers a leave/flicker and it hides cleanly. */
+  pointer-events: none;
+  transition: left 0.08s linear;
 }
-.fulfillment-trend__readout-heading {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  font-size: 13px;
-  margin-bottom: 8px;
+/* Anchor the card to the right of the point by default, to its left near the edge. */
+.fulfillment-trend__tooltip[data-side="right"] {
+  transform: translateX(10px);
+}
+.fulfillment-trend__tooltip[data-side="left"] {
+  transform: translateX(-10px) translateX(-100%);
+}
+.fulfillment-trend__tooltip-heading {
+  font-size: 11.5px;
+  font-weight: 700;
   color: var(--fa-ink);
+  margin-bottom: 3px;
 }
-.fulfillment-trend__readout-heading span {
-  color: var(--fa-muted);
-  font-size: 11px;
-  font-weight: 500;
-}
-.fulfillment-trend__values {
+.fulfillment-trend__tooltip-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 2px 14px;
+  gap: 1px;
 }
-.fulfillment-trend__values button {
+.fulfillment-trend__tooltip-rows li {
   display: flex;
   align-items: center;
-  gap: 8px;
-  text-align: left;
-  border: 0;
-  background: transparent;
+  gap: 6px;
+  width: 100%;
   color: var(--fa-ink-soft);
-  font-size: 12.5px;
-  min-height: 38px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  transition: background 0.12s;
+  font-size: 11px;
+  min-height: 20px;
+  padding: 1px 2px;
 }
-.fulfillment-trend__values button:hover {
-  background: color-mix(in srgb, var(--fa-indigo) 6%, transparent);
+.fulfillment-trend__tooltip-rows .fulfillment-stage-dot {
+  width: 7px;
+  height: 7px;
+  flex-basis: 7px;
 }
-.fulfillment-trend__values button strong {
+.fulfillment-trend__tooltip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fulfillment-trend__tooltip-rows strong {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
   color: var(--fa-ink);
+  font-size: 11px;
 }
 .fulfillment-trend__hint,
 .fulfillment-analytics__coverage {
@@ -783,13 +802,22 @@
   .fulfillment-analytics__focus select {
     flex: 1;
   }
-  .fulfillment-trend__values {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 10px;
+  /* Compact floating tooltip on narrow screens. */
+  .fulfillment-trend__tooltip {
+    min-width: 148px;
+    max-width: 76%;
+    padding: 9px 11px;
+    top: 10px;
   }
-  .fulfillment-trend__values button {
+  .fulfillment-trend__tooltip[data-side="right"] {
+    transform: translateX(10px);
+  }
+  .fulfillment-trend__tooltip[data-side="left"] {
+    transform: translateX(-10px) translateX(-100%);
+  }
+  .fulfillment-trend__tooltip-rows li {
     font-size: 11px;
-    min-height: 42px;
+    min-height: 20px;
   }
 
   /* Drill-down becomes a bottom sheet on mobile. */

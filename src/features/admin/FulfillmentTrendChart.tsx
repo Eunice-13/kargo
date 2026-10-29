@@ -26,6 +26,10 @@ export default function FulfillmentTrendChart({
   const host = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(800);
   const [selected, setSelected] = useState(Math.max(0, data.chart.length - 1));
+  // The day tooltip is a transient hover affordance (YouTube-style): it only
+  // shows while the user is hovering/scrubbing the chart or navigating by
+  // keyboard, and hides as soon as the pointer leaves.
+  const [active, setActive] = useState(false);
   const pointer = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   useEffect(() => {
     if (!host.current) return;
@@ -84,6 +88,7 @@ export default function FulfillmentTrendChart({
         onKeyDown={(event) => {
           if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
             event.preventDefault();
+            setActive(true);
             setSelected(
               event.key === "Home"
                 ? 0
@@ -95,8 +100,12 @@ export default function FulfillmentTrendChart({
           if (event.key === "Enter" && bucket && visible.includes(focused))
             onOpen(focused, bucket.bucketStart);
         }}
+        onPointerEnter={(event) => {
+          if (event.pointerType === "mouse") setActive(true);
+        }}
         onPointerDown={(event) => {
           pointer.current = { x: event.clientX, y: event.clientY, moved: false };
+          setActive(true);
           selectAt(event.clientX, event.currentTarget);
         }}
         onPointerMove={(event) => {
@@ -105,8 +114,10 @@ export default function FulfillmentTrendChart({
             Math.hypot(event.clientX - pointer.current.x, event.clientY - pointer.current.y) > 8
           )
             pointer.current.moved = true;
-          if (event.pointerType === "mouse" || pointer.current)
+          if (event.pointerType === "mouse" || pointer.current) {
+            setActive(true);
             selectAt(event.clientX, event.currentTarget);
+          }
         }}
         onPointerUp={(event) => {
           const tapped = pointer.current && !pointer.current.moved;
@@ -117,10 +128,13 @@ export default function FulfillmentTrendChart({
         }}
         onPointerCancel={() => {
           pointer.current = null;
+          setActive(false);
         }}
         onPointerLeave={() => {
           pointer.current = null;
+          setActive(false);
         }}
+        onBlur={() => setActive(false)}
       >
         {scale.ticks.map((tick) => (
           <g key={tick} aria-hidden="true">
@@ -160,7 +174,7 @@ export default function FulfillmentTrendChart({
                 strokeLinejoin="round"
                 strokeLinecap="round"
               />
-              {bucket && (
+              {active && bucket && (
                 <circle
                   cx={x(index)}
                   cy={y(bucket.counts[s.key])}
@@ -173,7 +187,7 @@ export default function FulfillmentTrendChart({
             </g>
           );
         })}
-        {bucket && (
+        {active && bucket && (
           <line
             x1={x(index)}
             x2={x(index)}
@@ -205,7 +219,7 @@ export default function FulfillmentTrendChart({
           Select a stage above to show its trend.
         </p>
       )}
-      {bucket && visible.length > 0 && (
+      {active && bucket && visible.length > 0 && (
         <div
           className="fulfillment-trend__tooltip"
           // Float next to the selected point. Anchor by the point's horizontal
@@ -221,25 +235,17 @@ export default function FulfillmentTrendChart({
           <ul className="fulfillment-trend__tooltip-rows">
             {series.map((s) => (
               <li key={s.key}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onFocusStage(s.key);
-                    onOpen(s.key, bucket.bucketStart);
-                  }}
-                  aria-label={`View ${bucket.counts[s.key]} ${s.label} orders for ${analyticsDate(bucket.bucketStart, data.grouping)}`}
-                >
-                  <span className="fulfillment-stage-dot" style={{ background: s.color }} />
-                  <span className="fulfillment-trend__tooltip-label">{s.label}</span>
-                  <strong>{bucket.counts[s.key].toLocaleString()}</strong>
-                </button>
+                <span className="fulfillment-stage-dot" style={{ background: s.color }} />
+                <span className="fulfillment-trend__tooltip-label">{s.label}</span>
+                <strong>{bucket.counts[s.key].toLocaleString()}</strong>
               </li>
             ))}
           </ul>
         </div>
       )}
       <p className="fulfillment-trend__hint">
-        Hover or drag to inspect · tap a count to view orders. Arrow keys and Enter work too.
+        Hover a day to see its breakdown. Use the stage chips above and “View orders” to open
+        orders. Arrow keys and Enter work too.
       </p>
       <details className="fulfillment-trend__data">
         <summary>View accessible chart data</summary>
