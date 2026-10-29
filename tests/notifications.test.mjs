@@ -30,7 +30,9 @@ const notification = {
   text: "A reservation update",
   time: "Today",
   unread: true,
-  tab: "My Claims",
+  route: { kind: "page", tab: "My Claims" },
+  cue: "Open in Claims",
+  context: null,
 };
 test("history rows expose unread state and an independent mark-read action", () => {
   const html = renderToStaticMarkup(
@@ -39,7 +41,9 @@ test("history rows expose unread state and an independent mark-read action", () 
   assert.match(html, /Mark as read/);
   assert.match(html, /\(unread\)/);
   assert.match(html, />Unread</);
-  assert.match(html, /go to My Claims/);
+  // Every row names where a tap goes, visibly and to screen readers.
+  assert.match(html, /notification-cue[^>]*>Open in Claims/);
+  assert.match(html, /\(unread\), Open in Claims/);
   const read = renderToStaticMarkup(
     createElement(Item, {
       notification: { ...notification, unread: false },
@@ -55,7 +59,7 @@ test("compact notification rows clamp descriptions and retain the full accessibl
     createElement(Item, { notification, compact: true, busy: false, onOpen() {} }),
   );
   assert.match(html, /line-clamp-2/);
-  assert.match(html, /aria-label="A reservation update \(unread\), go to My Claims"/);
+  assert.match(html, /aria-label="A reservation update \(unread\), Open in Claims"/);
   assert.doesNotMatch(html, /Mark as read/);
 });
 test("page renders existing demo history and header badge shares its unread state", () => {
@@ -70,5 +74,5 @@ test("page renders existing demo history and header badge shares its unread stat
   assert.match(html, /Notifications \(2 unread\)/);
   assert.match(html, /2 unread/);
   assert.equal((html.match(/>Mark as read</g) ?? []).length, 2);
-  assert.equal((html.match(/go to /g) ?? []).length, 5);
+  assert.equal((html.match(/>Open in /g) ?? []).length, 5);
 });

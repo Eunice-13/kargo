@@ -182,13 +182,17 @@ export default function Batches({
 
   useEffect(() => {
     const applyNavigationIntent = () => {
-      if (navIntent.batchId !== null) {
-        const requestedBatch = batches.find(
-          (batch) => batch.id === navIntent.batchId,
+      if (navIntent.batchId !== null || navIntent.batchDbId !== null) {
+        // Share links use the numeric id; notifications only know the uuid.
+        const requestedBatch = batches.find((batch) =>
+          navIntent.batchDbId !== null
+            ? batch.dbId === navIntent.batchDbId
+            : batch.id === navIntent.batchId,
         )
 
         if (requestedBatch) {
           navIntent.batchId = null
+          navIntent.batchDbId = null
           setBatchReturnSeller(null)
           setShopReturnBatch(null)
           setShopPage(null)
@@ -196,6 +200,10 @@ export default function Batches({
             setBatchPage(requestedBatch)
           } else {
             setBatchPage(null)
+
+            // A batch the user cannot open must not leave its group modal
+            // request behind for the next batch they visit.
+            navIntent.batchGroupOrderId = null
 
             setTab("Dashboard")
           }
@@ -299,6 +307,22 @@ export default function Batches({
 
     return requested
   })
+
+  // Notifications deep-link here while Batches may already be mounted, so react
+  // to the intent instead of only reading it on mount.
+  useEffect(() => {
+    const openRequested = () => {
+      if (!navIntent.openExtensionRequests) return
+
+      navIntent.openExtensionRequests = false
+
+      setShowExtReqModal(true)
+    }
+
+    openRequested()
+
+    return subscribeNavIntent(openRequested)
+  }, [])
 
   // Confirmation target for extension approve/deny (#16)
 

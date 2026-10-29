@@ -2,7 +2,7 @@ import { productAvailability } from "./productAvailability"
 
 import { canManageBatch } from "./batchAccess"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Lock, ArrowLeft, ArrowRight, Plane, Check, Link2, ImageUp, Users, Tag, CalendarDays, Clock } from "lucide-react"
 
@@ -47,6 +47,8 @@ import BatchGroupSettingsModal from "./BatchGroupSettingsModal"
 import { toggleBatchLock } from "./toggleBatchLock"
 
 import { isSupabaseConfigured } from "@/lib/supabase"
+
+import { navIntent, subscribeNavIntent } from "@/state/navIntent"
 
 import { kargoApi } from "@/services"
 
@@ -131,9 +133,32 @@ export default function BatchPage({
 
   const [groupOrderProductId, setGroupOrderProductId] = useState<string | null>(null)
 
+  // A notification can open this batch straight onto one of its group orders.
+  // Read it once on mount, and again if the batch is already on screen.
+  const [groupOrderTargetId, setGroupOrderTargetId] = useState<string | null>(() => {
+    const requested =
+      role === "Buyer" && batch.groupOrdersEnabled ? navIntent.batchGroupOrderId : null
+    if (requested) navIntent.batchGroupOrderId = null
+    return requested
+  })
+
   const [groupOrderOpen, setGroupOrderOpen] = useState(
-    role === "Buyer" && batch.groupOrdersEnabled && Boolean(sharedGroupCode),
+    role === "Buyer" &&
+      batch.groupOrdersEnabled &&
+      (Boolean(sharedGroupCode) || Boolean(groupOrderTargetId)),
   )
+
+  useEffect(() => {
+    if (role !== "Buyer" || !batch.groupOrdersEnabled) return
+    const openRequestedGroup = () => {
+      const requested = navIntent.batchGroupOrderId
+      if (!requested) return
+      navIntent.batchGroupOrderId = null
+      setGroupOrderTargetId(requested)
+      setGroupOrderOpen(true)
+    }
+    return subscribeNavIntent(openRequestedGroup)
+  }, [role, batch.groupOrdersEnabled])
 
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false)
 
@@ -1568,13 +1593,16 @@ export default function BatchPage({
       )}
       {groupOrderOpen && (
         <GroupOrderModal
+          key={groupOrderTargetId ?? "current"}
           batch={batch}
+          groupOrderId={groupOrderTargetId ?? undefined}
           initialProductId={groupOrderProductId ?? undefined}
-          initialCode={sharedGroupCode}
+          initialCode={groupOrderTargetId ? "" : sharedGroupCode}
           onCheckoutComplete={refreshData}
           onClose={() => {
             setGroupOrderOpen(false)
             setGroupOrderProductId(null)
+            setGroupOrderTargetId(null)
           }}
         />
       )}

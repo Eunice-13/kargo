@@ -1,10 +1,17 @@
-import type { Tab } from "@/types";
-import { requestAccountStatusSettings } from "@/state/navIntent";
 import { useNotifications } from "./NotificationsProvider";
 import NotificationItem from "./NotificationItem";
-export default function NotificationsPage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
-  const { notifications, unreadCount, loading, hasMore, error, busy, loadMore, markRead } =
-    useNotifications();
+export default function NotificationsPage() {
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    hasMore,
+    error,
+    busy,
+    loadMore,
+    markRead,
+    openNotification,
+  } = useNotifications();
   return (
     <section
       className="mx-auto w-full max-w-4xl p-4 sm:p-6"
@@ -41,11 +48,7 @@ export default function NotificationsPage({ onNavigate }: { onNavigate: (tab: Ta
             busy={busy || loading}
             onMarkRead={() => void markRead(n.id)}
             onOpen={() => {
-              void markRead(n.id).then((ok) => {
-                if (!ok) return;
-                if (n.intent === "account-status") requestAccountStatusSettings();
-                onNavigate(n.tab);
-              });
+              void openNotification(n);
             }}
           />
         ))}

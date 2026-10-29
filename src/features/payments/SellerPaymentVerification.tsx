@@ -9,6 +9,7 @@ import {
   SecondaryBtn,
   PaymentIcon,
   StatusBadge,
+  recordKeys,
 } from "@/components/shared"
 import { Pencil, Plus, Search, Trash2, Upload } from "lucide-react"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
@@ -407,6 +408,12 @@ export default function SellerPaymentVerification({
               return (
                 <tr
                   key={item.id}
+                  data-record-keys={recordKeys({
+                    paymentId: item.id,
+                    orderId: item.orderId,
+                    groupOrderId: item.groupOrderId,
+                    combinedGroupId: item.combinedDeliveryGroupId,
+                  })}
                   className="transition-colors hover:bg-gray-50"
                   style={{
                     borderTop: "1px solid #E5E7EB",

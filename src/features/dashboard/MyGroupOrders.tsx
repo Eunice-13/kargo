@@ -14,12 +14,17 @@ export function GroupOrderList({
   groups,
   onOpen,
   onPay,
+  initialExpandedId,
 }: {
   groups: LeaderGroupOrder[];
   onOpen: (group: LeaderGroupOrder) => void;
-  onPay?: () => void;
+  onPay?: (group: LeaderGroupOrder) => void;
+  // Card to show expanded on first render (a notification points at it).
+  initialExpandedId?: string | null;
 }) {
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(initialExpandedId ? [initialExpandedId] : []),
+  );
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);

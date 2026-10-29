@@ -1,5 +1,6 @@
 import {
   Check,
+  ChevronRight,
   Clock3,
   Package,
   ArrowUp,
@@ -9,7 +10,7 @@ import {
   Bell,
   type LucideIcon,
 } from "lucide-react";
-import type { NotificationItemData } from "./NotificationsProvider";
+import type { NotificationItemData } from "./types";
 const icons: Record<string, LucideIcon> = {
   check: Check,
   clock: Clock3,
@@ -52,7 +53,7 @@ export default function NotificationItem({
           type="button"
           onClick={onOpen}
           disabled={busy}
-          aria-label={`${n.text}${n.unread ? " (unread)" : " (read)"}, go to ${n.tab}`}
+          aria-label={`${n.text}${n.unread ? " (unread)" : " (read)"}, ${n.cue}`}
           className="block w-full text-left focus-visible:outline-2 focus-visible:outline-[var(--kargo-focus)]"
         >
           <span
@@ -60,7 +61,14 @@ export default function NotificationItem({
           >
             {n.text}
           </span>
-          <span className="mt-0.5 block text-[11px] text-gray-400">{n.time}</span>
+          <span className="mt-1 flex items-center justify-between gap-3 text-[11px]">
+            <span className="min-w-0 truncate text-gray-400">{n.time}</span>
+            {/* Where a tap goes. Always visible so users know before tapping. */}
+            <span className="notification-cue inline-flex shrink-0 items-center gap-0.5 font-semibold text-[var(--kargo-navy)]">
+              {n.cue}
+              <ChevronRight size={12} aria-hidden="true" />
+            </span>
+          </span>
         </button>
         {!compact && (
           <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-[var(--kargo-muted)]">

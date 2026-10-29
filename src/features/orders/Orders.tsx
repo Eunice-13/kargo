@@ -8,6 +8,8 @@ import {
   ContactModal,
   SecondaryBtn,
   SH,
+  recordKeys,
+  useRecordFocus,
 } from "@/components/shared"
 import {
   FulfillmentBoard,
@@ -27,6 +29,10 @@ export default function Orders({
   const board = useFulfillmentBoard(setFulfillment)
   const [contactOrder, setContact] = useState<OrderRow | null>(null)
   const [trackOrder, setTrackOrder] = useState<OrderRow | null>(null)
+  // The seller board starts with columns collapsed on small screens, so a
+  // deep-linked order asks the board to open its column.
+  const [focusOrderId, setFocusOrderId] = useState<string | undefined>()
+  useRecordFocus("Orders", (target) => setFocusOrderId(target.orderId))
 
   if (role === "Seller") {
     return (
@@ -40,6 +46,7 @@ export default function Orders({
           role="seller"
           board={board}
           expanded
+          focusOrderId={focusOrderId}
         />
         <FulfillmentLiveRegion text={board.announcement} />
       </div>
@@ -49,7 +56,11 @@ export default function Orders({
   return (
     <div className="p-6 space-y-5 orders-page orders-page--buyer">
       {orders.map((order) => (
-        <Card key={order.id} className="buyer-order-card">
+        <Card
+          key={order.id}
+          className="buyer-order-card"
+          recordKeys={recordKeys({ orderId: order.dbId })}
+        >
           <div className="flex items-start justify-between mb-4 buyer-order-card__head">
             <div>
               <div className="flex items-center gap-2 mb-1">

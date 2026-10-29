@@ -86,7 +86,9 @@ export default function GroupOrderModal({
   const syncGroup = async () => {
     if (!batch.dbId) return
     const current = groupOrderId
-      ? await kargoApi.loadGroupOrder(groupOrderId, true)
+      ? // Members open their own groups too; row-level security (not this
+        // client filter) decides who can read a group.
+        await kargoApi.loadGroupOrder(groupOrderId, false)
       : await kargoApi.loadMyGroupOrder(batch.dbId)
     if (current && current.batchId !== batch.dbId) throw new Error("This group no longer belongs to the selected batch.")
     // An invitation must not silently reopen a completed historical group.

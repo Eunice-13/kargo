@@ -177,7 +177,7 @@ export default function Header({
             )}
           </button>
         )}
-        <NotificationsMenu role={role} onNavigate={onNavigate} />
+        <NotificationsMenu onNavigate={onNavigate} />
         <UserMenu
           user={user}
           onSettings={onSettings}

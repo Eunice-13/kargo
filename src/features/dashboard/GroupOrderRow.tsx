@@ -40,7 +40,7 @@ export function GroupOrderDetails({
   group: LeaderGroupOrder;
   now: number;
   onOpen: () => void;
-  onPay?: () => void;
+  onPay?: (group: LeaderGroupOrder) => void;
 }) {
   const progress = groupProgress(group, now),
     members = group.members ?? [];
@@ -98,9 +98,11 @@ export function GroupOrderDetails({
         <button type="button" className="group-shortcut-ghost" onClick={onOpen}>
           View group details
         </button>
-        {["payment_pending", "payment_submitted", "payment_confirmed"].includes(group.status) &&
+        {/* Only the leader has a claim to open: the leader is the buyer. */}
+        {group.viewerRole !== "member" &&
+          ["payment_pending", "payment_submitted", "payment_confirmed"].includes(group.status) &&
           onPay && (
-            <button type="button" className="group-shortcut-button" onClick={onPay}>
+            <button type="button" className="group-shortcut-button" onClick={() => onPay(group)}>
               Open My Claims
             </button>
           )}
@@ -121,19 +123,29 @@ export default function GroupOrderRow({
   now: number;
   onToggle: () => void;
   onOpen: () => void;
-  onPay?: () => void;
+  onPay?: (group: LeaderGroupOrder) => void;
 }) {
   const id = useId(),
     progress = groupProgress(group, now);
   return (
-    <li className="group-shortcut-card">
+    <li className="group-shortcut-card" data-group-card={group.id} data-tone={progress.tone}>
       <div className="group-shortcut-summary" onClick={onToggle}>
         <span className="group-shortcut-icon" aria-hidden="true">
           <Users size={23} />
         </span>
         <div className="group-shortcut-name">
           <h3>{group.batchTitle ?? "Batch unavailable"}</h3>
-          <p>Seller: {group.sellerName ?? "Seller unavailable"}</p>
+          <p>
+            Seller: {group.sellerName ?? "Seller unavailable"}
+            {group.viewerRole === "member" && group.leaderName
+              ? ` · Led by ${group.leaderName}`
+              : ""}
+          </p>
+          {group.viewerRole && (
+            <span className={`group-shortcut-role is-${group.viewerRole}`}>
+              {group.viewerRole === "leader" ? "You lead this group" : "You joined this group"}
+            </span>
+          )}
         </div>
         <StatusChip group={group} now={now} />
         <div className="group-shortcut-mini">
@@ -151,9 +163,11 @@ export default function GroupOrderRow({
         <div className="group-shortcut-amount">
           {group.amount != null ? groupMoney(group.amount) : "Amount unavailable"}
           <small>
-            {group.amountIsSubtotal || group.status === "forming" || group.shippingPending
-              ? "Items subtotal"
-              : "Group total"}
+            {group.viewerRole === "member"
+              ? "Your items"
+              : group.amountIsSubtotal || group.status === "forming" || group.shippingPending
+                ? "Items subtotal"
+                : "Group total"}
           </small>
         </div>
         <div className="group-shortcut-actions">
@@ -163,7 +177,7 @@ export default function GroupOrderRow({
               className="group-shortcut-button is-primary"
               onClick={(event) => {
                 event.stopPropagation();
-                onPay();
+                onPay(group);
               }}
               title="Continue to My Claims to pay this group"
             >

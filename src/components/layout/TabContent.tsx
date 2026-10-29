@@ -53,7 +53,7 @@ export default function TabContent({
     Payments: <Payments {...shared} />,
     Orders: <Orders {...shared} />,
     Settings: <Settings {...shared} />,
-    Notifications: <NotificationsPage onNavigate={shared.setTab} />,
+    Notifications: <NotificationsPage />,
     Users: <AdminUsers />,
     Transactions: <AdminTransactions />,
     Security: <AdminSecurity />,

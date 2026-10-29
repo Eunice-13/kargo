@@ -15,6 +15,7 @@ import {
   StageChip,
   StageProgress,
   SummaryBlock,
+  recordKeys,
   safeTrackingUrl,
 } from "@/components/shared"
 
@@ -37,6 +38,7 @@ export default function FulfillmentBoard({
   board,
   expanded = false,
   loading = false,
+  focusOrderId,
   onExpand,
   onOpenProfile,
   onViewOrder,
@@ -46,6 +48,9 @@ export default function FulfillmentBoard({
   board: BoardController
   expanded?: boolean
   loading?: boolean
+  // A notification deep link: open the column holding this order (columns
+  // start collapsed on small screens, which hides the card).
+  focusOrderId?: string
   onExpand?: () => void
   onOpenProfile?: (order: FulfillmentOrder) => void
   onViewOrder?: (order: FulfillmentOrder) => void
@@ -77,6 +82,14 @@ export default function FulfillmentBoard({
   }, [role])
   const columns = role === "seller" ? SELLER_BOARD_ORDER : BUYER_COLUMNS
   const scopedOrders = fulfillment.filter((order) => order.perspective === role)
+
+  useEffect(() => {
+    if (!focusOrderId) return
+    const column = fulfillment.find(
+      (order) => order.id === focusOrderId && order.perspective === role,
+    )?.col
+    if (column) setCollapsed((current) => ({ ...current, [column]: false }))
+  }, [focusOrderId, fulfillment, role])
 
   if (loading) {
     return (
@@ -152,7 +165,11 @@ export default function FulfillmentBoard({
                   const isOpen = board.expandedId === order.id
                   const trackingUrl = safeTrackingUrl(order.trackingUrl)
                   return (
-                    <article className="fulfillment-board__card" key={order.id}>
+                    <article
+                      className="fulfillment-board__card"
+                      key={order.id}
+                      data-record-keys={recordKeys({ orderId: order.dbId ?? order.id })}
+                    >
                       <button
                         type="button"
                         className="fulfillment-board__card-trigger"

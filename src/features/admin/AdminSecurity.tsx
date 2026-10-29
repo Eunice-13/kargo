@@ -4,7 +4,7 @@ import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
 import { ADMIN_ACTION_LABELS } from "@/constants/admin";
 import { adminApi } from "@/services";
-import { consumeAdminIntent } from "@/state/navIntent";
+import { consumeAdminIntent, navIntent, subscribeNavIntent } from "@/state/navIntent";
 import type { AdminAuditRow, AdminTeamMember } from "./adminTypes";
 
 import { useAdminResource } from "./useAdminResource";
@@ -29,6 +29,18 @@ export default function AdminSecurity() {
   useEffect(() => {
     const intent = consumeAdminIntent();
     if (intent.tab === "Security" && intent.subtab === "Audit log") setSection("Audit log");
+  }, []);
+
+  // A notification can land on Security while this tab is already mounted. Only
+  // consume intents addressed to Security so an intent for another admin tab is
+  // left for that tab to pick up.
+  useEffect(() => {
+    const applyIntent = () => {
+      if (navIntent.adminTab !== "Security") return;
+      const intent = consumeAdminIntent();
+      if (intent.subtab === "Audit log") setSection("Audit log");
+    };
+    return subscribeNavIntent(applyIntent);
   }, []);
 
   return (

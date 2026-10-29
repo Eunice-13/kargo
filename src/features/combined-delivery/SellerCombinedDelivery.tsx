@@ -4,6 +4,7 @@ import { deliveryFailureMessage, unavailableDeliveryBackend } from "./availabili
 import { useCallback, useEffect, useRef, useState } from "react";
 import Modal from "@/components/shared/Modal";
 import Card from "@/components/shared/Card";
+import { recordKeys } from "@/components/shared/useRecordFocus";
 import PrimaryBtn from "@/components/shared/PrimaryBtn";
 import SecondaryBtn from "@/components/shared/SecondaryBtn";
 import {
@@ -328,6 +329,10 @@ export default function SellerCombinedDelivery({
       {requests.map((request) => (
         <Card
           key={request.id}
+          recordKeys={recordKeys({
+            combinedGroupId: request.id,
+            orderIds: request.members.map((member) => member.order_id),
+          })}
           className="flex min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="min-w-0">

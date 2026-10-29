@@ -27,3 +27,4 @@ export { default as StageProgress } from "./StageProgress";
 export { default as SummaryBlock } from "./SummaryBlock";
 export { default as EmptyState } from "./EmptyState";
 export { default as Skeleton, CardSkeleton, RowSkeleton } from "./Skeleton";
+export { default as useRecordFocus, recordKeys, revealRecord } from "./useRecordFocus";

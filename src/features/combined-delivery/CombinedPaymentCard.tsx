@@ -3,6 +3,7 @@ import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
 import Avatar from "@/components/shared/Avatar";
 import Card from "@/components/shared/Card";
 import Countdown from "@/components/shared/Countdown";
+import { recordKeys } from "@/components/shared/useRecordFocus";
 import PrimaryBtn from "@/components/shared/PrimaryBtn";
 import ProductThumb from "@/components/shared/ProductThumb";
 import { PaymentSubmitModal } from "@/features/payments";
@@ -68,7 +69,13 @@ export default function CombinedPaymentCard({
     .join(", ");
   return (
     <>
-      <article aria-label={`Combined delivery payment to ${seller}`}>
+      <article
+        aria-label={`Combined delivery payment to ${seller}`}
+        data-record-keys={recordKeys({
+          combinedGroupId: request.id,
+          orderIds: request.members.map((member) => member.order_id),
+        })}
+      >
         <Card className="pending-product-card">
           <ProductThumb
             name={first?.order?.batch_products?.name ?? "Combined delivery"}

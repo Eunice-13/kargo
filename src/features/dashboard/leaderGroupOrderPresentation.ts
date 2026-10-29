@@ -17,6 +17,17 @@ export function groupIsActive(group: LeaderGroupOrder, now = Date.now()) {
     ["waiting_for_seller", "payment_pending", "payment_submitted"].includes(group.status)
   );
 }
+// Groups that still need attention from the buyer: everything in progress, and
+// for the leader a confirmed group until it is delivered. Members cannot see
+// shipping, so a confirmed group moves to their past list.
+export function groupIsOngoing(group: LeaderGroupOrder, now = Date.now()) {
+  return (
+    groupIsActive(group, now) ||
+    (group.viewerRole !== "member" &&
+      group.status === "payment_confirmed" &&
+      group.fulfillmentStage !== "delivered")
+  );
+}
 export function sortLeaderGroups(groups: LeaderGroupOrder[], now = Date.now()) {
   return [...groups].sort(
     (a, b) =>

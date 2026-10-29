@@ -9,6 +9,8 @@ import {
   StatusBadge,
   Countdown,
   Modal,
+  useRecordFocus,
+  recordKeys,
 } from "@/components/shared"
 import { productImageUrl } from "@/components/shared/ProductThumb"
 import TransactionDetailModal from "./TransactionDetailModal"
@@ -30,6 +32,8 @@ export default function Payments({
   } | null>(null)
   const [searchName, setSearchName] = useState("")
   const [dateOrder, setDateOrder] = useState<"newest" | "oldest">("newest")
+  // A notification can open a payment that the search box is hiding.
+  useRecordFocus("Payments", () => setSearchName(""))
   const resolvedPayments = completedPayments(payHistory, claims)
   const filteredPayments = resolvedPayments
     .filter((payment) => {
@@ -153,6 +157,11 @@ export default function Payments({
                 {filteredPayments.map((p, i) => (
                     <tr
                       key={p.id}
+                      data-record-keys={recordKeys({
+                        paymentId: p.id,
+                        orderId: p.orderId,
+                        combinedGroupId: p.combinedDeliveryGroupId,
+                      })}
                       style={{
                         borderTop: "1px solid #F3F4F6",
                         background: i % 2 ? "#FAFAFA" : "#fff",

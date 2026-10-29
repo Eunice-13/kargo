@@ -7,7 +7,55 @@ export const groupMoney = (amount: number) =>
     currency: "PHP",
     maximumFractionDigits: 2,
   }).format(amount);
-export function groupProgress(group: LeaderGroupOrder, now = Date.now()) {
+type GroupProgress = {
+  step: number;
+  label: string;
+  tone: string;
+  title: string;
+  description: string;
+  payable: boolean;
+};
+
+// Copy and actions for a buyer who JOINED the group. The leader pays the whole
+// group and is the buyer on the resulting order, so members never pay, and they
+// cannot read that order, so they never see shipping progress.
+function memberProgress(group: LeaderGroupOrder, base: GroupProgress): GroupProgress {
+  const member = { ...base, payable: false };
+  if (group.status === "forming" && base.step === 1)
+    return {
+      ...member,
+      title: "Group is forming",
+      description: "You can change your items until the formation deadline.",
+    };
+  if (group.status === "payment_pending")
+    return {
+      ...member,
+      title: "Waiting for the leader to pay",
+      description: "Your group leader pays for the whole group. You will be notified once it is confirmed.",
+    };
+  if (group.status === "payment_submitted")
+    return {
+      ...member,
+      title: "Payment verification",
+      description: "The seller is reviewing the leader's payment proof.",
+    };
+  if (group.status === "payment_confirmed")
+    return {
+      ...member,
+      step: 3,
+      label: "Payment confirmed",
+      tone: "success",
+      title: "Payment confirmed",
+      description: "Your group leader receives the shipping updates for this order.",
+    };
+  return member;
+}
+
+export function groupProgress(group: LeaderGroupOrder, now = Date.now()): GroupProgress {
+  const base = leaderProgress(group, now);
+  return group.viewerRole === "member" ? memberProgress(group, base) : base;
+}
+function leaderProgress(group: LeaderGroupOrder, now = Date.now()): GroupProgress {
   if (
     group.status === "cancelled" ||
     group.status === "expired" ||

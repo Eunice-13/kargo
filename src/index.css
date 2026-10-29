@@ -6740,12 +6740,22 @@ textarea::placeholder {
   color: #929292 !important;
 }
 
+/* The active tab is one state, not two. The base rule above outranks the
+   generic `.kargo-tabbar button[aria-current]` rule, so the icon and label are
+   restated here: they take the same colour as the underline and keep it after
+   the pointer leaves. Hover below is scoped to inactive tabs so it cannot pull
+   the active icon off that colour. */
+.icon-tabbar > div:first-child > button[aria-current="page"] {
+  color: var(--kargo-coral) !important;
+  border-bottom-color: var(--kargo-coral) !important;
+}
+
 .seller-tabbar > div:first-child > button[data-seller-active="true"] {
   border-bottom-color: #2022b5 !important;
   color: #2022b5 !important;
 }
 
-.icon-tabbar > div:first-child > button:hover {
+.icon-tabbar > div:first-child > button:not([aria-current="page"]):hover {
   color: #2022b5 !important;
 }
 
@@ -7537,13 +7547,15 @@ textarea::placeholder {
 }
 
 .seller-orders-page .seller-orders-table th {
-  padding: 16px 18px;
+  padding: 16px 12px;
   font-size: 18px;
 }
 
+/* Header and cell padding stay equal so labels line up with their column. 12px
+   (down from 18px) gives the Actions column room for its buttons in one row. */
 .seller-orders-page .seller-orders-row td {
   height: auto;
-  padding: 11px 18px;
+  padding: 11px 12px;
 }
 
 .seller-orders-page .seller-orders-col-buyer {
@@ -7553,31 +7565,113 @@ textarea::placeholder {
   width: 10%;
 }
 .seller-orders-page .seller-orders-col-product {
-  width: 14%;
+  width: 15%;
 }
 .seller-orders-page .seller-orders-col-method {
-  width: 9%;
+  width: 10%;
 }
 .seller-orders-page .seller-orders-col-amount {
   width: 8%;
 }
 .seller-orders-page .seller-orders-col-paid {
-  width: 12%;
-}
-.seller-orders-page .seller-orders-col-deadline {
   width: 10%;
 }
+.seller-orders-page .seller-orders-col-deadline {
+  width: 14%;
+}
 .seller-orders-page .seller-orders-col-status {
-  width: 11%;
+  width: 10%;
 }
 .seller-orders-page .seller-orders-col-actions {
-  width: 15%;
+  width: 12%;
 }
 
+/* Product and Method hold free text. Row cells are nowrap by default, which let
+   a long product name run under the Method column. Wrap them inside their own
+   column instead. */
+.seller-orders-page .seller-orders-row td:nth-child(3),
+.seller-orders-page .seller-orders-row td:nth-child(4) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.seller-orders-page .seller-orders-row td:nth-child(3) > div > span {
+  min-width: 0;
+}
+
+/* The Deadline cell can hold a countdown, a paused notice, or the "Set shipping
+   fee" action. Row cells are nowrap by default, so without this the longer text
+   ran under the Status column. */
+.seller-orders-page .seller-orders-row td.seller-orders-deadline {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.seller-orders-deadline__fee {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+/* Every action in the Orders Received table (Set shipping fee, Review, Add/Edit
+   tracking, Contact Buyer) shares the app's secondary-button look: white, soft
+   gray border, 8px radius, semibold text. Contact Buyer used to be amber; it now
+   matches the rest so the row reads as one set of actions. These override the
+   older per-button colors above, which were declared !important. */
 .seller-orders-page .seller-orders-review,
 .seller-orders-page .seller-orders-contact {
-  min-height: 31px;
-  padding: 6px 10px;
+  min-height: 32px;
+  padding: 5px 11px;
+  border: 1px solid #d5dae3 !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+  color: var(--kargo-ink-soft) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.2;
+  text-align: center;
+  box-shadow: 0 1px 2px rgb(17 24 39 / 8%);
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+.seller-orders-page .seller-orders-review:hover,
+.seller-orders-page .seller-orders-contact:hover {
+  border-color: #aeb8c8 !important;
+  background: #f6f8fb !important;
+  box-shadow: 0 2px 6px rgb(17 24 39 / 10%);
+}
+.seller-orders-page .seller-orders-review:focus-visible,
+.seller-orders-page .seller-orders-contact:focus-visible {
+  outline: 3px solid var(--kargo-focus);
+  outline-offset: 2px;
+}
+.seller-orders-page .seller-orders-deadline__fee .seller-orders-review {
+  max-width: 100%;
+  text-align: left;
+}
+
+/* "Set shipping fee" is the one action that unblocks the order (the buyer's
+   payment timer stays paused until it is done), so it is the only filled button
+   in the row: the brand blue with white text, the usual look for a primary
+   action. The rest stay quiet white buttons. */
+.seller-orders-page .seller-orders-review.seller-orders-fee-action {
+  border-color: var(--seller-primary) !important;
+  background: var(--seller-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 1px 2px rgb(26 26 168 / 30%);
+}
+.seller-orders-page .seller-orders-review.seller-orders-fee-action:hover {
+  border-color: #12128a !important;
+  background: #12128a !important;
+  box-shadow: 0 3px 8px rgb(26 26 168 / 30%);
+}
+.seller-orders-page .seller-orders-row td.seller-orders-deadline {
+  padding-inline: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seller-orders-page .seller-orders-review,
+  .seller-orders-page .seller-orders-contact {
+    transition: none;
+  }
 }
 
 .seller-batches-add {
@@ -14746,14 +14840,18 @@ textarea::placeholder {
   overflow-x: hidden;
 }
 
+/* Actions sit side by side. Labels never break mid-button; if a narrow desktop
+   cannot fit them all, whole buttons drop to the next line instead. */
 .seller-orders-page .seller-orders-actions {
   width: 100%;
   flex-wrap: wrap;
+  gap: 6px;
 }
 
 .seller-orders-page .seller-orders-actions > button {
+  flex: 0 0 auto;
   max-width: 100%;
-  white-space: normal;
+  white-space: nowrap;
 }
 
 @media (max-width: 620px) {
@@ -15363,5 +15461,148 @@ textarea::placeholder {
 
   .kargo-footer--admin {
     padding-bottom: calc(84px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ΓöÇΓöÇΓöÇ Notification deep links ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+   A notification that opens a page scrolls to the exact record and marks it
+   for a moment. The ring and tint use the brand navy so the cue reads as part
+   of the product. It is a transient state, so it never relies on color alone:
+   the outline stays for the full duration and reduced-motion users get the
+   outline without the fade. */
+@keyframes kargo-record-focus {
+  0%,
+  35% {
+    background-color: color-mix(in srgb, var(--kargo-navy) 14%, #fff);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.record-focus {
+  position: relative;
+  border-radius: 10px;
+  outline: 2px solid var(--kargo-navy);
+  outline-offset: -2px;
+  animation: kargo-record-focus 2.6s ease-out 1;
+  scroll-margin-block: 96px;
+}
+
+tr.record-focus {
+  border-radius: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .record-focus {
+    animation: none;
+    background-color: color-mix(in srgb, var(--kargo-navy) 8%, #fff);
+  }
+}
+
+/* ΓöÇΓöÇΓöÇ Seller order actions: one "Review" button with a menu ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+   Review stays a single click. The caret beside it holds the other actions that
+   fit this order's stage (Contact Buyer, Add/Edit tracking), so the narrow
+   Actions column never has to fit several buttons. */
+.seller-orders-split {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+}
+.seller-orders-page .seller-orders-split__main {
+  border-radius: 8px 0 0 8px !important;
+}
+.seller-orders-page .seller-orders-split__main.is-alone {
+  border-radius: 8px !important;
+}
+.seller-orders-page .seller-orders-split__toggle {
+  display: inline-grid;
+  place-items: center;
+  margin-left: -1px;
+  padding: 5px 7px;
+  border-radius: 0 8px 8px 0 !important;
+}
+.seller-orders-page .seller-orders-split__toggle[aria-expanded="true"] {
+  background: #eef1f6 !important;
+  border-color: #aeb8c8 !important;
+}
+.seller-orders-page .seller-orders-split .seller-orders-review:hover,
+.seller-orders-page .seller-orders-split .seller-orders-review:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+.seller-orders-split__toggle svg {
+  transition: transform 140ms ease;
+}
+.seller-orders-split__toggle svg.is-open {
+  transform: rotate(180deg);
+}
+
+/* The menu is portaled to <body> and fixed to the viewport, so none of these
+   selectors depend on the table around it. */
+.seller-orders-menu {
+  position: fixed;
+  z-index: 70;
+  display: grid;
+  gap: 2px;
+  min-width: 172px;
+  padding: 4px;
+  border: 1px solid #d5dae3;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 10px 28px rgb(17 24 39 / 16%),
+    0 2px 6px rgb(17 24 39 / 8%);
+}
+.seller-orders-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--kargo-ink-soft);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.seller-orders-menu button svg {
+  flex-shrink: 0;
+  color: var(--kargo-navy);
+}
+.seller-orders-menu button:hover,
+.seller-orders-menu button:focus-visible {
+  background: #f1f4f9;
+  color: var(--kargo-ink);
+}
+.seller-orders-menu button:focus-visible {
+  outline: 2px solid var(--kargo-focus);
+  outline-offset: -2px;
+}
+
+@media (max-width: 767px) {
+  .seller-orders-page .seller-orders-split {
+    display: flex;
+    width: 100%;
+  }
+  .seller-orders-page .seller-orders-split__main {
+    flex: 1 1 auto;
+  }
+  .seller-orders-page .seller-orders-split .seller-orders-review {
+    min-height: 44px;
+  }
+  .seller-orders-menu button {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seller-orders-split__toggle svg {
+    transition: none;
   }
 }

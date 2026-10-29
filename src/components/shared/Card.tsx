@@ -4,13 +4,17 @@ export default function Card({
   children,
   className = "",
   style = {},
+  recordKeys,
 }: {
   children: React.ReactNode
   className?: string
   style?: React.CSSProperties
+  // Ids a notification deep link can find this card by (see useRecordFocus).
+  recordKeys?: string
 }) {
   return (
     <div
+      data-record-keys={recordKeys}
       style={{
         background: "#fff",
         border: "1px solid #E5E7EB",

@@ -3,7 +3,14 @@ import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combin
 
 import { useEffect, useRef, useState, type SetStateAction } from "react"
 
-import { List, LayoutGrid, AlertTriangle, Link2 } from "lucide-react"
+import {
+  List,
+  LayoutGrid,
+  AlertTriangle,
+  Link2,
+  MessageCircle,
+  Truck,
+} from "lucide-react"
 
 import type {
   ClaimRow,
@@ -31,6 +38,8 @@ import {
   ExtensionRequestModal,
   PaymentSuccessToast,
   LocationPinPicker,
+  recordKeys,
+  useRecordFocus,
   type LocationPinValue,
 } from "@/components/shared"
 
@@ -57,6 +66,10 @@ import {
 } from "./claimPaymentState"
 
 import { navIntent } from "@/state/navIntent"
+
+import { GroupOrdersLauncher } from "@/features/dashboard"
+
+import SellerOrderActions from "./SellerOrderActions"
 
 import SetShippingFeeModal from "./SetShippingFeeModal"
 import PendingPaymentHint from "./PendingPaymentHint"
@@ -111,6 +124,17 @@ function paidAt(claim: ClaimRow, payHistory: PayHistRow[]) {
 
       return timestamp > latest ? timestamp : latest
     }, 0)
+}
+
+// A delivery order is waiting on the seller to set (or re-set) the shipping
+// fee. Its payment timer is paused until they do.
+function needsShippingFee(claim: ClaimRow) {
+  return (
+    Boolean(claim.shippingApplies) &&
+    claim.status === "Pending" &&
+    (claim.shippingState === "waiting_for_seller" ||
+      claim.shippingState === "correction_requested")
+  )
 }
 
 function hasOrderDeadline(claim: ClaimRow) {
@@ -767,6 +791,14 @@ export default function MyClaims({
     }
   }
 
+  // A notification deep link scrolls to its record. If a filter or the
+  // five-row pending limit is hiding the row, clear them so it can show.
+  useRecordFocus("My Claims", () => {
+    setFilter("All")
+    setOrderFilter("All")
+    setShowAllPendingPayments(true)
+  })
+
   if (role === "Seller") {
     const paymentForOrder = (claim: ClaimRow) =>
       sellerPayments.find(
@@ -811,26 +843,20 @@ export default function MyClaims({
       return rightTime - leftTime
     }
 
+
     const ordFiltered =
       orderFilter === "All"
         ? [...claims].sort(orderReceivedSort)
         : claims
-
             .filter((claim) => statusForOrder(claim) === orderFilter)
-
             .sort(orderReceivedSort)
 
     const orderFilters: OrderReceivedFilter[] = [
       "All",
-
       "Pending",
-
       "Awaiting Verification",
-
       "Verified",
-
       "Expired",
-
       "Cancelled",
     ]
 
@@ -1035,6 +1061,10 @@ export default function MyClaims({
                   return (
                     <tr
                       key={c.id}
+                      data-record-keys={recordKeys({
+                        orderId: c.id,
+                        groupOrderId: c.groupOrderId,
+                      })}
                       className={
                         i % 2
                           ? "seller-orders-row seller-orders-row--alt"
@@ -1068,9 +1098,9 @@ export default function MyClaims({
                             {c.product}
                             {c.groupOrderId && (
                               <small className="seller-orders-group-meta">
-                                {c.groupMemberCount} members · Code {c.groupOrderCode}
+                                {c.groupMemberCount} members ┬╖ Code {c.groupOrderCode}
                                 {c.groupDiscountAmount
-                                  ? ` · Discount ₱${c.groupDiscountAmount.toLocaleString()}`
+                                  ? ` ┬╖ Discount Γé▒${c.groupDiscountAmount.toLocaleString()}`
                                   : ""}
                               </small>
                             )}
@@ -1078,14 +1108,14 @@ export default function MyClaims({
                         </div>
                       </td>
                       <td className="seller-orders-method">
-                        {submission?.method || "—"}
+                        {submission?.method || "ΓÇö"}
                       </td>
                       <td className="seller-orders-amount">
-                        ₱{c.amount.toLocaleString()}
+                        Γé▒{c.amount.toLocaleString()}
                       </td>
                       <td className="seller-orders-paid">
                         {isCashOnMeetup ? (
-                          <span className="seller-orders-dash">—</span>
+                          <span className="seller-orders-dash">ΓÇö</span>
                         ) : amountPaid > 0 ? (
                           <>
                             <span
@@ -1093,22 +1123,33 @@ export default function MyClaims({
                                 underpaid ? "seller-orders-paid--short" : ""
                               }
                             >
-                              ₱{amountPaid.toLocaleString()}
+                              Γé▒{amountPaid.toLocaleString()}
                             </span>
                             {underpaid && (
                               <small>
-                                Short ₱
+                                Short Γé▒
                                 {(c.amount - amountPaid).toLocaleString()}
                               </small>
                             )}
                           </>
                         ) : (
-                          <span className="seller-orders-dash">—</span>
+                          <span className="seller-orders-dash">ΓÇö</span>
                         )}
                       </td>
                       <td className="seller-orders-deadline">
                         {c.status === "Expired" ? (
                           <span className="seller-orders-dash">Expired</span>
+                        ) : needsShippingFee(c) ? (
+                          // The timer is paused until the fee is set, so the
+                          // action replaces the "Paused" text here.
+                          <div className="seller-orders-deadline__fee">
+                            <button
+                              className="seller-orders-review seller-orders-fee-action"
+                              onClick={() => setShippingTarget(c)}
+                            >
+                              Set shipping fee
+                            </button>
+                          </div>
                         ) : c.status === "Pending" && hasOrderDeadline(c) ? (
                           <Countdown
                             hours={c.hours}
@@ -1116,7 +1157,7 @@ export default function MyClaims({
                             paused={Boolean(c.deadlinePausedAt)}
                           />
                         ) : (
-                          <span className="seller-orders-dash">—</span>
+                          <span className="seller-orders-dash">ΓÇö</span>
                         )}
                       </td>
                       <td className="seller-orders-status-cell">
@@ -1139,72 +1180,41 @@ export default function MyClaims({
                       </td>
                       <td>
                         <div className="seller-orders-actions">
-                          {c.shippingApplies &&
-                            c.status === "Pending" &&
-                            (c.shippingState === "waiting_for_seller" ||
-                              c.shippingState === "correction_requested") && (
-                              <button
-                                className="seller-orders-review"
-                                onClick={() => setShippingTarget(c)}
-                              >
-                                Set shipping fee
-                              </button>
-                            )}
-                          {(c.fulfillmentStage === "shipped" ||
-                            c.trackingNumber) && (
-                            <button
-                              className="seller-orders-review"
-                              onClick={() => setTrackingTarget(c)}
-                            >
-                              {c.trackingNumber
-                                ? "Edit tracking"
-                                : "Add tracking"}
-                            </button>
-                          )}
-                          <button
-                            className="seller-orders-review"
-                            onClick={() =>
+                          <SellerOrderActions
+                            onReview={() =>
                               submission
                                 ? setPaymentReviewTarget(submission)
                                 : setOrderDetailTarget(c)
                             }
-                          >
-                            Review
-                          </button>
-                          {status === "Pending" && (
-                            <button
-                              className="seller-orders-contact"
-                              onClick={() => {
-                                const buyerName = c.buyer || c.seller
-
-                                if (c.buyerFb) {
-                                  // Real contact link on file — open it.
-
-                                  setFbToast(buyerName)
-
-                                  setTimeout(() => {
-                                    window.open(
-                                      c.buyerFb,
-
-                                      "_blank",
-
-                                      "noopener,noreferrer",
-                                    )
-
-                                    setFbToast(null)
-                                  }, 1200)
-                                } else {
-                                  // No contact link — open the buyer's profile instead
-
-                                  // of fabricating a Facebook URL.
-
-                                  openBuyerProfile(c)
-                                }
-                              }}
-                            >
-                              Contact Buyer
-                            </button>
-                          )}
+                            // Only what applies to this order's stage:
+                            // tracking once it is shipped (or has a number),
+                            // contacting the buyer while payment is pending.
+                            items={[
+                              ...(c.fulfillmentStage === "shipped" ||
+                              c.trackingNumber
+                                ? [
+                                    {
+                                      key: "tracking",
+                                      label: c.trackingNumber
+                                        ? "Edit tracking"
+                                        : "Add tracking",
+                                      icon: Truck,
+                                      onSelect: () => setTrackingTarget(c),
+                                    },
+                                  ]
+                                : []),
+                              ...(status === "Pending"
+                                ? [
+                                    {
+                                      key: "contact",
+                                      label: "Contact Buyer",
+                                      icon: MessageCircle,
+                                      onSelect: () => contactBuyer(c),
+                                    },
+                                  ]
+                                : []),
+                            ]}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -1757,7 +1767,20 @@ export default function MyClaims({
   return (
     <div className="p-6 buyer-claims-page mobile-data-page">
       <div className="mb-6">
-        <SH title="My Claims To Pay" />
+        <SH
+          title="My Claims To Pay"
+          action={
+            // Groups the buyer leads or joined: the buyer-side counterpart of
+            // the seller's Extension Requests button, on the same row as the
+            // heading, rightmost.
+            <GroupOrdersLauncher
+              buyerId={user.id}
+              batches={batches}
+              onUpdated={refreshData}
+              onBrowse={() => setTab("Batches")}
+            />
+          }
+        />
         <div className="claims-to-pay-table-card">
           <div className="claims-to-pay-table-header" role="row">
             <span role="columnheader">Product</span>
@@ -1811,7 +1834,14 @@ export default function MyClaims({
                             : undefined
 
                           return (
-                            <tr key={item.id}>
+                            <tr
+                              key={item.id}
+                              data-record-keys={recordKeys({
+                                orderId: item.id,
+                                groupOrderId: item.groupOrderId,
+                                combinedGroupId: deliveryRequest?.id,
+                              })}
+                            >
                               <td>
                                 <div className="claims-to-pay-product">
                                   <button
@@ -2134,7 +2164,10 @@ export default function MyClaims({
             style={{ gridTemplateColumns: "repeat(2,1fr)" }}
           >
             {filtered.map((c) => (
-              <Card key={c.id}>
+              <Card
+                key={c.id}
+                recordKeys={recordKeys({ orderId: c.id, groupOrderId: c.groupOrderId })}
+              >
                 <div className="claims-card__summary flex items-start gap-3">
                   <button
                     type="button"
@@ -2365,6 +2398,10 @@ export default function MyClaims({
                 {filtered.map((c, i) => (
                   <tr
                     key={c.id}
+                    data-record-keys={recordKeys({
+                      orderId: c.id,
+                      groupOrderId: c.groupOrderId,
+                    })}
                     style={{
                       borderTop: "1px solid #F3F4F6",
 

@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import type { Role, Tab } from "@/types"
+import type { Tab } from "@/types"
 import { CREAM } from "@/constants/theme"
 import { NotificationItem, useNotifications } from "@/features/notifications"
-import { requestAccountStatusSettings } from "@/state/navIntent"
 
 export default function NotificationsMenu({
   onNavigate,
 }: {
-  role?: Role
   onNavigate?: (tab: Tab) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -22,6 +20,7 @@ export default function NotificationsMenu({
     hasMore,
     loadMore,
     markRead,
+    openNotification,
   } = useNotifications()
 
   useEffect(() => {
@@ -116,11 +115,8 @@ export default function NotificationsMenu({
               compact
               busy={busy || loading}
               onOpen={() => {
-                void markRead(notification.id).then((ok) => {
-                  if (!ok) return
-                  setOpen(false)
-                  if (notification.intent === "account-status") requestAccountStatusSettings()
-                  onNavigate?.(notification.tab)
+                void openNotification(notification).then((opened) => {
+                  if (opened) setOpen(false)
                 })
               }}
             />

@@ -787,7 +787,17 @@ export default function App() {
           />
         )}
       {stage === "app" && (
-        <NotificationsProvider key={`${user.id ?? user.email}:${role}`} role={role}>
+        <NotificationsProvider
+          key={`${user.id ?? user.email}:${role}`}
+          role={role}
+          onNavigate={setTab}
+          onOpenAdminInvite={() => {
+            // A pending invitee still has the popup pending; once accepted the
+            // same notification should land on the Team page instead.
+            if (user.adminInvitePending) setInviteDismissedFor(null)
+            else setTab(user.adminEnabled ? "Security" : "Dashboard")
+          }}
+        >
         <div
           className={`kargo-original-app${role === "Admin" ? " admin-app" : ""}`}
           style={{
