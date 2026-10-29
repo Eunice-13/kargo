@@ -15606,3 +15606,19 @@ tr.record-focus {
     transition: none;
   }
 }
+
+/* ─── Seller Orders Received: Ongoing Orders above Other Orders ─────────────
+   Same table in both sections; the heading row mirrors the buyer's "My Claims
+   To Pay" (SH with a quiet count on the right). */
+.seller-orders-section {
+  margin-bottom: 28px;
+}
+.seller-orders-section:last-of-type {
+  margin-bottom: 0;
+}
+.seller-orders-section__count {
+  color: var(--kargo-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

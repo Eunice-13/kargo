@@ -69,7 +69,7 @@ import { navIntent } from "@/state/navIntent"
 
 import { GroupOrdersLauncher } from "@/features/dashboard"
 
-import SellerOrderActions from "./SellerOrderActions"
+import SellerOrderActions, { type SellerOrderMenuItem } from "./SellerOrderActions"
 
 import SetShippingFeeModal from "./SetShippingFeeModal"
 import PendingPaymentHint from "./PendingPaymentHint"
@@ -199,11 +199,11 @@ export default function MyClaims({
   const [contact, setContact] = useState<ClaimRow | null>(null)
 
   const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>(() => {
-    const requestedFilter = navIntent.orderFilter ?? "All"
-
+    // The dashboard can ask for "Pending". Those orders now sit in Ongoing
+    // Orders at the top of the page, which is always visible, so start on All.
     navIntent.orderFilter = null
 
-    return requestedFilter
+    return "All"
   })
 
   const [buyerProfile, setBuyerProfile] = useState<{
@@ -844,16 +844,75 @@ export default function MyClaims({
     }
 
 
-    const ordFiltered =
+    // What the row menu offers for this order's stage: tracking once it is
+    // shipped (or has a number), contacting the buyer while payment is pending.
+    const menuItemsFor = (claim: ClaimRow): SellerOrderMenuItem[] => [
+      ...(claim.fulfillmentStage === "shipped" || claim.trackingNumber
+        ? [
+            {
+              key: "tracking",
+              label: claim.trackingNumber ? "Edit tracking" : "Add tracking",
+              icon: Truck,
+              onSelect: () => setTrackingTarget(claim),
+            },
+          ]
+        : []),
+      ...(statusForOrder(claim) === "Pending"
+        ? [
+            {
+              key: "contact",
+              label: "Contact Buyer",
+              icon: MessageCircle,
+              onSelect: () => contactBuyer(claim),
+            },
+          ]
+        : []),
+    ]
+
+    // Ongoing orders are the ones with more to do than "Review": waiting on
+    // payment, or on their way with tracking. Delivered, completed, cancelled
+    // and expired orders have nothing left to track, so they stay in the list
+    // below. Like pendings on the buyer side, an ongoing order shows once, here.
+    const finishedStatuses = ["completed", "cancelled", "expired", "incomplete"]
+    const isOngoing = (claim: ClaimRow) =>
+      menuItemsFor(claim).length > 0 &&
+      claim.fulfillmentStage !== "delivered" &&
+      !finishedStatuses.includes(claim.orderStatus ?? "")
+
+    const ongoingOrders = claims.filter(isOngoing).sort(orderReceivedSort)
+    const otherOrders = claims.filter((claim) => !isOngoing(claim))
+
+    const ordFiltered = (
       orderFilter === "All"
-        ? [...claims].sort(orderReceivedSort)
-        : claims
-            .filter((claim) => statusForOrder(claim) === orderFilter)
-            .sort(orderReceivedSort)
+        ? otherOrders
+        : otherOrders.filter((claim) => statusForOrder(claim) === orderFilter)
+    ).sort(orderReceivedSort)
+
+    // The page renders one table per section, in this order. Ongoing Orders
+    // only appears when there is something in it.
+    const hasOngoing = ongoingOrders.length > 0
+    const tableSections = [
+      ...(hasOngoing
+        ? [
+            {
+              key: "ongoing" as const,
+              label: "Ongoing orders",
+              rows: ongoingOrders,
+              emptyText: "",
+            },
+          ]
+        : []),
+      {
+        key: "other" as const,
+        label: hasOngoing ? "Other orders" : "Orders received",
+        rows: ordFiltered,
+        emptyText: hasOngoing ? "No other orders." : "No orders found.",
+      },
+    ]
 
     const orderFilters: OrderReceivedFilter[] = [
       "All",
-      "Pending",
+      // No "Pending" chip: pending orders live in Ongoing Orders above.
       "Awaiting Verification",
       "Verified",
       "Expired",
@@ -904,6 +963,25 @@ export default function MyClaims({
           <p>Manage orders from your buyers</p>
         </header>
         <SellerCombinedDelivery key={user.id ?? user.email} sellerId={user.id} onRecovered={refreshData} />
+        {tableSections.map((section) => (
+          <section
+            key={section.key}
+            className="seller-orders-section"
+            aria-label={section.label}
+          >
+            {section.key === "ongoing" ? (
+              <SH
+                title="Ongoing Orders"
+                action={
+                  <span className="seller-orders-section__count">
+                    {section.rows.length}{" "}
+                    {section.rows.length === 1 ? "order" : "orders"}
+                  </span>
+                }
+              />
+            ) : (
+              <>
+                {hasOngoing && <SH title="Other Orders" />}
         <div
           className="seller-orders-filters"
           role="group"
@@ -940,6 +1018,8 @@ export default function MyClaims({
             </button>
           ))}
         </div>
+              </>
+            )}
         <div className="seller-orders-table-wrap">
           <div className="seller-orders-table-scroll">
             <table className="seller-orders-table">
@@ -980,7 +1060,7 @@ export default function MyClaims({
                 </tr>
               </thead>
               <tbody>
-                {ordFiltered.map((c, i) => {
+                {section.rows.map((c, i) => {
                   const submission = paymentForOrder(c)
 
                   const status = statusForOrder(c)
@@ -1098,9 +1178,9 @@ export default function MyClaims({
                             {c.product}
                             {c.groupOrderId && (
                               <small className="seller-orders-group-meta">
-                                {c.groupMemberCount} members ┬╖ Code {c.groupOrderCode}
+                                {c.groupMemberCount} members · Code {c.groupOrderCode}
                                 {c.groupDiscountAmount
-                                  ? ` ┬╖ Discount Γé▒${c.groupDiscountAmount.toLocaleString()}`
+                                  ? ` · Discount ₱${c.groupDiscountAmount.toLocaleString()}`
                                   : ""}
                               </small>
                             )}
@@ -1108,14 +1188,14 @@ export default function MyClaims({
                         </div>
                       </td>
                       <td className="seller-orders-method">
-                        {submission?.method || "ΓÇö"}
+                        {submission?.method || "—"}
                       </td>
                       <td className="seller-orders-amount">
-                        Γé▒{c.amount.toLocaleString()}
+                        ₱{c.amount.toLocaleString()}
                       </td>
                       <td className="seller-orders-paid">
                         {isCashOnMeetup ? (
-                          <span className="seller-orders-dash">ΓÇö</span>
+                          <span className="seller-orders-dash">—</span>
                         ) : amountPaid > 0 ? (
                           <>
                             <span
@@ -1123,17 +1203,17 @@ export default function MyClaims({
                                 underpaid ? "seller-orders-paid--short" : ""
                               }
                             >
-                              Γé▒{amountPaid.toLocaleString()}
+                              ₱{amountPaid.toLocaleString()}
                             </span>
                             {underpaid && (
                               <small>
-                                Short Γé▒
+                                Short ₱
                                 {(c.amount - amountPaid).toLocaleString()}
                               </small>
                             )}
                           </>
                         ) : (
-                          <span className="seller-orders-dash">ΓÇö</span>
+                          <span className="seller-orders-dash">—</span>
                         )}
                       </td>
                       <td className="seller-orders-deadline">
@@ -1157,7 +1237,7 @@ export default function MyClaims({
                             paused={Boolean(c.deadlinePausedAt)}
                           />
                         ) : (
-                          <span className="seller-orders-dash">ΓÇö</span>
+                          <span className="seller-orders-dash">—</span>
                         )}
                       </td>
                       <td className="seller-orders-status-cell">
@@ -1186,34 +1266,7 @@ export default function MyClaims({
                                 ? setPaymentReviewTarget(submission)
                                 : setOrderDetailTarget(c)
                             }
-                            // Only what applies to this order's stage:
-                            // tracking once it is shipped (or has a number),
-                            // contacting the buyer while payment is pending.
-                            items={[
-                              ...(c.fulfillmentStage === "shipped" ||
-                              c.trackingNumber
-                                ? [
-                                    {
-                                      key: "tracking",
-                                      label: c.trackingNumber
-                                        ? "Edit tracking"
-                                        : "Add tracking",
-                                      icon: Truck,
-                                      onSelect: () => setTrackingTarget(c),
-                                    },
-                                  ]
-                                : []),
-                              ...(status === "Pending"
-                                ? [
-                                    {
-                                      key: "contact",
-                                      label: "Contact Buyer",
-                                      icon: MessageCircle,
-                                      onSelect: () => contactBuyer(c),
-                                    },
-                                  ]
-                                : []),
-                            ]}
+                            items={menuItemsFor(c)}
                           />
                         </div>
                       </td>
@@ -1223,10 +1276,12 @@ export default function MyClaims({
               </tbody>
             </table>
           </div>
-          {ordFiltered.length === 0 && (
-            <div className="seller-orders-empty">No orders found.</div>
+          {section.rows.length === 0 && (
+            <div className="seller-orders-empty">{section.emptyText}</div>
           )}
         </div>
+          </section>
+        ))}
         {buyerProfile && (
           <BuyerProfileModal
             buyer={buyerProfile.name}
