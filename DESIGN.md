@@ -4,7 +4,7 @@
 **Operations cockpit, not marketplace noise.** KARGO should feel dependable and quick to parse: a cool, lightly tinted canvas; warm white surfaces for working areas; deep navy for structure; restrained coral for primary urgency and action; and aqua/green/amber/red only for meaningful status communication.
 
 ## Typography
-Use **Manrope** for headings, wayfinding, and high-value numeric readouts. Use **DM Sans** for body copy, labels, forms, and dense tables. Avoid default system stacks and avoid using a display face for long paragraphs.
+Use **Quicksand** as the single face for the entire product — headings, wayfinding, body copy, labels, forms, tables, and high-value numeric readouts — with **DM Sans** as the fallback while the webfont loads. The rounded geometric forms keep the operational surfaces warm without making them feel decorative. Avoid default system stacks and avoid mixing in display faces.
 
 ## Color roles
 | Role | Token | Use |

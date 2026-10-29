@@ -50,7 +50,7 @@ html {
 
 body {
   margin: 0;
-  font-family: "Josefin Sans", "DM Sans", sans-serif;
+  font-family: "Quicksand", "DM Sans", sans-serif;
   color: var(--kargo-ink);
   background: var(--kargo-canvas);
   -webkit-font-smoothing: antialiased;
@@ -2514,7 +2514,7 @@ select:focus-visible {
   border-radius: 999px;
 }
 
-/* Typography hierarchy: Manrope for wayfinding and numbers, DM Sans for reading. */
+/* Typography hierarchy: Quicksand is the single system face; DM Sans is the fallback. */
 h1,
 h2,
 h3,
@@ -2538,7 +2538,7 @@ h4,
 
 .kargo-brand-name {
   color: var(--kargo-navy) !important;
-  font-family: "Manrope", sans-serif !important;
+  font-family: "Quicksand", "DM Sans", sans-serif !important;
 }
 
 .kargo-search {
@@ -2846,7 +2846,7 @@ tr:last-child td {
 .kargo-card h2,
 main h2,
 main h3 {
-  font-family: "Manrope", sans-serif !important;
+  font-family: "Quicksand", "DM Sans", sans-serif !important;
   color: var(--kargo-ink) !important;
 }
 
@@ -2892,7 +2892,7 @@ main .rounded-full[style*="background"]:not([style*="width"]):not([style*="heigh
 main .text-xl,
 main [style*="fontSize: 26"],
 main [style*="fontSize:26"] {
-  font-family: "Manrope", sans-serif !important;
+  font-family: "Quicksand", "DM Sans", sans-serif !important;
   letter-spacing: -0.04em;
 }
 
@@ -15464,7 +15464,7 @@ textarea::placeholder {
   }
 }
 
-/* ΓöÇΓöÇΓöÇ Notification deep links ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─── Notification deep links ─────────────────────────────────────────────
    A notification that opens a page scrolls to the exact record and marks it
    for a moment. The ring and tint use the brand navy so the cue reads as part
    of the product. It is a transient state, so it never relies on color alone:
@@ -15500,7 +15500,7 @@ tr.record-focus {
   }
 }
 
-/* ΓöÇΓöÇΓöÇ Seller order actions: one "Review" button with a menu ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─── Seller order actions: one "Review" button with a menu ──────────────────
    Review stays a single click. The caret beside it holds the other actions that
    fit this order's stage (Contact Buyer, Add/Edit tracking), so the narrow
    Actions column never has to fit several buttons. */

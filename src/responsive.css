@@ -5115,8 +5115,26 @@
     text-align: right;
   }
 
+  /* Icon and label share the underline colour here too, so the active tab
+     reads as one state instead of a navy icon over a coral line. */
   .admin-tabbar > div:first-child > button[aria-current="page"] {
-    color: #18324a !important;
+    color: #d85b4d !important;
     border-bottom-color: #d85b4d !important;
   }
+}
+
+/* ─── System typeface ─────────────────────────────────────────────────────────
+   Quicksand is the single face for the whole product. Older screens still carry
+   inline font-family declarations (Josefin Sans, Manrope, DM Sans) and a few
+   `!important` heading rules from previous passes. Rather than editing every
+   component, this last rule pins the face for the app and for portals rendered
+   outside #root; the id-level specificity outranks those class-level rules.
+   Fallbacks stay in the stack so text is readable before Quicksand loads. */
+body,
+html,
+#root,
+#root *,
+body > :not(#root),
+body > :not(#root) * {
+  font-family: "Quicksand", "DM Sans", sans-serif !important;
 }
