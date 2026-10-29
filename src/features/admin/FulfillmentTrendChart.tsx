@@ -247,23 +247,6 @@ export default function FulfillmentTrendChart({
         Hover a day to see its breakdown. Use the stage chips above and “View orders” to open
         orders. Arrow keys and Enter work too.
       </p>
-      <details className="fulfillment-trend__data">
-        <summary>View accessible chart data</summary>
-        <ul>
-          {data.chart.map((b) => (
-            <li key={b.bucketStart}>
-              <strong>{analyticsDate(b.bucketStart, data.grouping)}</strong>
-              <div>
-                {series.map((s) => (
-                  <button key={s.key} type="button" onClick={() => onOpen(s.key, b.bucketStart)}>
-                    {s.label}: {b.counts[s.key]}
-                  </button>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </details>
     </div>
   );
 }

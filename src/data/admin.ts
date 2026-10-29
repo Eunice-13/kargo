@@ -409,7 +409,9 @@ export function demoListBatches(filters: AdminBatchFilters, limit: number, offse
     if (
       filters.moderation &&
       filters.moderation !== "all" &&
-      b.moderationStatus !== filters.moderation
+      (filters.moderation === "flagged_hidden"
+        ? !["flagged", "hidden"].includes(b.moderationStatus)
+        : b.moderationStatus !== filters.moderation)
     )
       return false;
     if (filters.category && filters.category !== "all" && b.category !== filters.category)

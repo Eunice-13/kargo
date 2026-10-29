@@ -9,30 +9,26 @@
   position: relative;
   min-width: 0;
   padding: 20px 22px;
-  border: 1px solid #e5e5e5;
+  border: 1px solid rgb(255 255 255 / 16%);
   border-radius: 14px;
-  background: #fff;
-  color: #151515;
+  background: linear-gradient(90deg, #2935b6, #3348ba);
+  color: #fff;
   text-align: left;
   cursor: pointer;
 }
-.admin-attention-metric--danger {
-  background: #f9d5d5;
-  border-color: #ff8585;
-  color: #992727;
+.admin-attention-metric:nth-child(2) {
+  background: linear-gradient(90deg, #3348ba, #3e5bbf);
 }
-.admin-attention-metric--warn {
-  background: #f9dda6;
-  border-color: #e99a16;
-  color: #784807;
+.admin-attention-metric:nth-child(3) {
+  background: linear-gradient(90deg, #3e5bbf, #4b6dc3);
+}
+.admin-attention-metric:nth-child(4) {
+  background: linear-gradient(90deg, #4b6dc3, #587fc6);
 }
 .admin-attention-metric > svg {
   position: absolute;
   right: 16px;
   top: 16px;
-}
-.admin-attention-metric--neutral > svg {
-  color: #8a8984;
 }
 .admin-attention-metric strong {
   display: block;
@@ -50,27 +46,31 @@
   line-height: 1.35;
   font-weight: 500;
 }
-.admin-attention-metric--neutral span {
-  color: #575653;
+.admin-attention-metric small {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
 }
 .admin-attention-metric:hover {
   filter: brightness(0.98);
 }
-.admin-attention-metric:focus-visible,
-.admin-orders-period-link:focus-visible {
+.admin-attention-metric:focus-visible {
   outline: 3px solid var(--kargo-indigo, #191ba9);
   outline-offset: 3px;
 }
-.admin-orders-period-link {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-  margin: 16px 0;
-  padding: 8px 0;
-  color: var(--kargo-ink);
-  font-size: 13px;
-  cursor: pointer;
+.admin-page--dashboard .fulfillment-analytics {
+  border-color: #dce4f3;
+  background: linear-gradient(180deg, #f5f8ff 0%, #fff 180px);
+}
+.admin-page--dashboard .fulfillment-analytics h2 {
+  color: #263976;
+}
+.admin-page--dashboard .fulfillment-analytics__periods button[aria-pressed="true"] {
+  background: #3348ba;
+  color: #fff;
+  box-shadow: 0 2px 5px rgb(41 53 182 / 15%);
 }
 .admin-page--dashboard .fulfillment-analytics__summary {
   max-width: none;
@@ -80,10 +80,10 @@
   padding: 20px 22px;
   border: 0;
   border-radius: 14px;
-  background: #fafafa;
+  background: #f0f4fc;
 }
 .admin-page--dashboard .fulfillment-analytics__summary strong {
-  color: #111;
+  color: #3348ba;
   font-size: 32px;
   font-weight: 750;
 }

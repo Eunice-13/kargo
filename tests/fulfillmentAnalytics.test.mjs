@@ -72,6 +72,7 @@ before(async () => {
   await db.exec(sqlFile("202611050001_no_cancel_after_payment.sql"));
   const original = (await db.query("select * from orders order by id")).rows;
   await db.exec(sqlFile("202611060001_fulfillment_analytics.sql"));
+  await db.exec(sqlFile("202611060003_analytics_expired.sql"));
   assert.deepEqual(
     (await db.query("select * from orders order by id")).rows,
     original,
@@ -282,4 +283,17 @@ test("validation and authorization protect all analytics and raw evidence", asyn
   await db.exec("select set_config('test.admin','yes',false)");
   assert.equal((await summary()).timezone, "Asia/Manila");
   await db.exec("reset role");
+});
+
+
+test("expiry transitions appear in totals and drill-down, incomplete does not", async () => {
+  const key = await makeOrder("payment_pending");
+  await db.query("update orders set status='expired' where id=$1", [key]);
+  await makeOrder("incomplete");
+  const s = (await result("select admin_fulfillment_analytics('all_time') as data")).data;
+  assert.equal(s.stageTotals.expired, 1);
+  assert.equal(s.stageTotals.incomplete, undefined);
+  const d = (await result("select admin_fulfillment_orders('all_time',null,null,'expired') as data")).data;
+  assert.equal(d.total, s.stageTotals.expired);
+  assert.equal(d.rows[0].order_id, key);
 });

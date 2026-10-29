@@ -93,40 +93,40 @@ export default function AdminDashboard({ setTab }: SharedState) {
           <div className="admin-attention-metrics">
             {[
               {
-                label: "Paid, not shipped 7d+",
+                label: "Paid orders missing tracking",
+                description: "Payment confirmed over 7 days ago; still awaiting tracking.",
                 value: data.stuckOrders,
-                tone: "danger",
-                go: () => goto({ tab: "Transactions", subtab: "Orders" }),
+                go: () =>
+                  goto({ tab: "Transactions", subtab: "Orders", filter: "paid_missing_tracking" }),
               },
               {
                 label: "Payments to review",
                 value: data.paymentsPending,
-                tone: "warn",
-                go: () => goto({ tab: "Transactions", subtab: "Payments" }),
+                go: () =>
+                  goto({ tab: "Transactions", subtab: "Payments", filter: "pending_review" }),
               },
               {
                 label: "Suspended",
                 value: data.suspended,
-                tone: "neutral",
                 go: () => goto({ tab: "Users", subtab: "Suspended" }),
               },
               {
                 label: "Flagged or hidden batches",
                 value: data.flaggedHidden,
-                tone: "neutral",
-                go: () => goto({ tab: "Batches", filter: "flagged" }),
+                go: () => goto({ tab: "Batches", filter: "flagged_hidden" }),
               },
             ].map((metric) => (
               <button
                 key={metric.label}
                 type="button"
-                className={`admin-attention-metric admin-attention-metric--${metric.tone}`}
+                className="admin-attention-metric"
                 onClick={metric.go}
-                aria-label={`Open ${metric.label}`}
+                aria-label={`Open ${metric.label}${metric.description ? `. ${metric.description}` : ""}`}
               >
                 <ArrowUpRight size={20} aria-hidden="true" />
                 <strong>{metric.value.toLocaleString()}</strong>
                 <span>{metric.label}</span>
+                {metric.description && <small>{metric.description}</small>}
               </button>
             ))}
           </div>
@@ -137,15 +137,6 @@ export default function AdminDashboard({ setTab }: SharedState) {
 
       {!loading && !error && data && (
         <>
-          <button
-            type="button"
-            className="admin-orders-period-link"
-            onClick={() => goto({ tab: "Transactions", subtab: "Orders" })}
-          >
-            Orders (30d): <strong>{data.orders30.toLocaleString()}</strong> · Payment confirmed{" "}
-            <ArrowUpRight size={14} aria-hidden="true" />
-          </button>
-
           {/* Order pipeline + recent activity + top sellers */}
           <div className="admin-grid">
             <PipelineChart

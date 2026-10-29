@@ -83,7 +83,7 @@ function fakeData(perBucketDelivered: number[]): FulfillmentAnalytics {
       in_transit: 0,
       delivered: 0,
       cancelled: 0,
-      incomplete: 0,
+      expired: 0,
     },
     chart: perBucketDelivered.map((d) => ({
       bucketStart: "2026-10-01T00:00:00+08:00",
@@ -95,7 +95,7 @@ function fakeData(perBucketDelivered: number[]): FulfillmentAnalytics {
         in_transit: 0,
         delivered: d,
         cancelled: 0,
-        incomplete: 0,
+        expired: 0,
       },
     })),
   };
