@@ -4,7 +4,6 @@ import {
   BadgeCheck,
   Check,
   ChevronRight,
-  CircleDollarSign,
   Package,
   ReceiptText,
   ShieldAlert,
@@ -13,11 +12,12 @@ import {
 } from "lucide-react";
 
 import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
-import { INDIGO } from "@/constants/theme";
 import { ADMIN_ACTION_LABELS } from "@/constants/admin";
 import { adminApi } from "@/services";
 import { requestAdminSection } from "@/state/navIntent";
 import type { SharedState } from "@/types";
+
+import AdminFulfillmentAnalytics from "./AdminFulfillmentAnalytics";
 
 import { useAdminResource } from "./useAdminResource";
 import { AdminPageHeader, AdminStatCard, AdminPanelHeader } from "./components";
@@ -25,50 +25,6 @@ import { AdminEmptyText } from "./components/AdminFacts";
 import { AdminErrorState } from "./components/AdminStates";
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
-
-const shortDay = (day?: string) => {
-  if (!day) return "";
-  const date = new Date(`${day}T00:00:00`);
-  if (!Number.isFinite(date.getTime())) return day;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-};
-
-const longDay = (day?: string) => {
-  if (!day) return "";
-  const date = new Date(`${day}T00:00:00`);
-  if (!Number.isFinite(date.getTime())) return day;
-  return date.toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-// Keep axis ticks short enough to sit beside a narrow plot.
-const compactPeso = (value: number) => {
-  if (value >= 1_000_000) {
-    const millions = value / 1_000_000;
-    return `₱${Number.isInteger(millions) ? millions : millions.toFixed(1)}M`;
-  }
-  if (value >= 1_000) {
-    const thousands = value / 1_000;
-    return `₱${Number.isInteger(thousands) ? thousands : thousands.toFixed(1)}k`;
-  }
-  return `₱${value.toLocaleString(undefined, {
-    maximumFractionDigits: value < 10 ? 1 : 0,
-  })}`;
-};
-
-// Round the top of the GMV scale so bars never touch the edge.
-const niceCeil = (value: number) => {
-  if (!Number.isFinite(value) || value <= 0) return 1;
-  const magnitude = 10 ** Math.floor(Math.log10(value));
-  const normalized = value / magnitude;
-  const step = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find(
-    (candidate) => normalized <= candidate,
-  );
-  return Math.round((step ?? 10) * magnitude);
-};
 
 const relativeTime = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
@@ -143,13 +99,9 @@ export default function AdminDashboard({ setTab }: SharedState) {
     setTab(opts.tab);
   };
 
-  const updated = new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const [analyticsRefresh, setAnalyticsRefresh] = useState(0);
 
   const pipeline = data?.pipeline ?? [];
-  const chart = data?.chart ?? [];
 
   return (
     <div className="p-6 admin-page admin-page--dashboard">
@@ -158,8 +110,7 @@ export default function AdminDashboard({ setTab }: SharedState) {
         subtitle="What needs attention across KARGO right now."
         actions={
           <>
-            <span style={{ fontSize: 12, color: "var(--kargo-muted)" }}>Updated {updated}</span>
-            <PrimaryBtn className="admin-action-primary" size="sm" onClick={refresh}>
+            <PrimaryBtn className="admin-action-primary" size="sm" onClick={() => { refresh(); setAnalyticsRefresh(n => n + 1); }}>
               Refresh
             </PrimaryBtn>
           </>
@@ -167,8 +118,8 @@ export default function AdminDashboard({ setTab }: SharedState) {
       />
 
       {loading && (
-        <div className="admin-stats">
-          {Array.from({ length: 5 }).map((_, i) => (
+        <div className="admin-stats admin-stats--operational">
+          {Array.from({ length: 4 }).map((_, i) => (
             <CardSkeleton key={i} />
           ))}
         </div>
@@ -181,15 +132,7 @@ export default function AdminDashboard({ setTab }: SharedState) {
       {!loading && !error && data && (
         <>
           {/* KPI row — seller/buyer dashboard card treatment. */}
-          <div className="admin-stats">
-            <AdminStatCard
-              icon={CircleDollarSign}
-              label="GMV (30d)"
-              value={peso(data.gmv30)}
-              sub="Approved payment proofs"
-              {...STAT_STYLES.green}
-              onClick={() => goto({ tab: "Transactions", subtab: "Payments" })}
-            />
+          <div className="admin-stats admin-stats--operational">
             <AdminStatCard
               icon={ReceiptText}
               label="Orders (30d)"
@@ -224,14 +167,14 @@ export default function AdminDashboard({ setTab }: SharedState) {
             />
           </div>
 
-          {/* Needs attention + performance trend */}
-          <div className="admin-grid admin-grid--wide">
-            <NeedsAttention data={data} goto={goto} />
-            <PerformanceChart
-              series={chart}
-              onViewOrders={() => goto({ tab: "Transactions", subtab: "Orders" })}
-            />
-          </div>
+        </>
+      )}
+
+      <AdminFulfillmentAnalytics refreshKey={analyticsRefresh} />
+
+      {!loading && !error && data && (
+        <>
+          <NeedsAttention data={data} goto={goto} />
 
           {/* Order pipeline + recent activity + top sellers */}
           <div className="admin-grid">
@@ -403,262 +346,6 @@ function NeedsAttention({
           );
         })}
       </ul>
-    </Card>
-  );
-}
-
-function PerformanceChart({
-  series,
-  onViewOrders,
-}: {
-  series: { day: string; gmv: number; orders?: number }[];
-  onViewOrders: () => void;
-}) {
-  const [hovered, setHovered] = useState<number | null>(null);
-  const [focused, setFocused] = useState<number | null>(null);
-
-  const totalGmv = series.reduce((sum, d) => sum + d.gmv, 0);
-  // Older deployed functions return only `gmv`. Show "—" instead of a false 0.
-  const hasOrderData = series.some((d) => typeof d.orders === "number");
-  const totalOrders = hasOrderData ? series.reduce((sum, d) => sum + (d.orders ?? 0), 0) : null;
-  const avgOrder = totalOrders != null && totalOrders > 0 ? totalGmv / totalOrders : null;
-
-  const peakIndex = series.reduce((best, d, i) => (d.gmv > (series[best]?.gmv ?? 0) ? i : best), 0);
-  const requestedIndex = hovered ?? focused;
-  const selectedIndex =
-    requestedIndex != null && series[requestedIndex] ? requestedIndex : peakIndex;
-  const isManual = requestedIndex != null && series[requestedIndex] != null;
-  const selected = series[selectedIndex];
-
-  const peakGmv = series.length > 0 ? Math.max(...series.map((d) => d.gmv)) : 0;
-  const maxGmv = niceCeil(peakGmv);
-  const maxOrders = Math.max(1, ...series.map((d) => d.orders ?? 0));
-  const nonZeroDays = series.filter((d) => d.gmv > 0).length;
-  const hasActivity = totalGmv > 0 || (totalOrders ?? 0) > 0;
-
-  const chartColumns = {
-    gridTemplateColumns: `repeat(${Math.max(series.length, 1)}, minmax(0, 1fr))`,
-  };
-
-  const tickStep = Math.max(1, Math.ceil(series.length / 7));
-  const tickIndices = new Set<number>();
-  for (let i = series.length - 1; i >= 0; i -= tickStep) tickIndices.add(i);
-  tickIndices.add(0);
-  if (series.length > 7) tickIndices.delete(1);
-  if (selectedIndex >= 0 && series[selectedIndex] && !tickIndices.has(selectedIndex)) {
-    tickIndices.delete(selectedIndex - 1);
-    tickIndices.delete(selectedIndex + 1);
-    tickIndices.add(selectedIndex);
-  }
-  const firstTick = tickIndices.size > 0 ? Math.min(...Array.from(tickIndices)) : 0;
-
-  return (
-    <Card className="admin-chart-card">
-      <div className="admin-chart-head">
-        <div>
-          <h2 className="admin-chart-title">Performance · last 14 days</h2>
-          <p className="admin-chart-sub">
-            {hasOrderData
-              ? "GMV and confirmed orders by day. Both count when payment is confirmed."
-              : "GMV by day. Payments count when confirmed."}
-          </p>
-        </div>
-        <button type="button" className="admin-chart-link" onClick={onViewOrders}>
-          View orders <ArrowUpRight size={13} aria-hidden="true" />
-        </button>
-      </div>
-
-      <div className="admin-chart-summary">
-        <div>
-          <span>14-day GMV</span>
-          <strong>{peso(totalGmv)}</strong>
-        </div>
-        <div>
-          <span>Confirmed orders</span>
-          <strong>{totalOrders == null ? "—" : totalOrders.toLocaleString()}</strong>
-        </div>
-        <div>
-          <span>Avg order value</span>
-          <strong>{avgOrder == null ? "—" : peso(avgOrder)}</strong>
-        </div>
-      </div>
-
-      {!hasActivity ? (
-        <div className="admin-chart-empty">
-          <span className="admin-chart-empty__icon" aria-hidden="true">
-            <CircleDollarSign size={18} />
-          </span>
-          <div>
-            <strong>No confirmed GMV in the last 14 days</strong>
-            <p>GMV appears when a seller confirms a payment.</p>
-          </div>
-        </div>
-      ) : selected ? (
-        <div className="admin-chart-shell">
-          <div className="admin-chart-readout">
-            <span className="admin-chart-readout__label">
-              {isManual ? "Selected day" : "Peak day"}
-            </span>
-            <strong className="admin-chart-readout__date">{longDay(selected.day)}</strong>
-            <span className="admin-chart-readout__sep" aria-hidden="true">
-              ·
-            </span>
-            <strong>{peso(selected.gmv)}</strong>
-            <span>GMV</span>
-            {hasOrderData ? (
-              <>
-                <span className="admin-chart-readout__sep" aria-hidden="true">
-                  ·
-                </span>
-                <strong>{(selected.orders ?? 0).toLocaleString()}</strong>
-                <span>{(selected.orders ?? 0) === 1 ? "order" : "orders"}</span>
-              </>
-            ) : (
-              <span className="admin-chart-readout__muted">Order count unavailable</span>
-            )}
-            <span className="admin-chart-readout__hint" aria-hidden="true">
-              Hover or focus a day
-            </span>
-          </div>
-
-          <div className="admin-chart-rows">
-            <div className="admin-chart-row">
-              <div className="admin-chart-row__head">
-                <span className="admin-chart-row__name">GMV</span>
-                <span className="admin-chart-row__meta">Peak {peso(peakGmv)}</span>
-              </div>
-              <div className="admin-chart-row__body">
-                <div className="admin-chart-yaxis" aria-hidden="true">
-                  <span style={{ bottom: "100%" }}>{compactPeso(maxGmv)}</span>
-                  <span style={{ bottom: "50%" }}>{compactPeso(maxGmv / 2)}</span>
-                  <span style={{ bottom: "0%" }}>₱0</span>
-                </div>
-                <div className="admin-chart-plot" style={chartColumns}>
-                  <span
-                    className="admin-chart-gridline"
-                    style={{ bottom: "50%" }}
-                    aria-hidden="true"
-                  />
-                  <span
-                    className="admin-chart-gridline"
-                    style={{ bottom: "100%" }}
-                    aria-hidden="true"
-                  />
-                  {series.map((d, i) => {
-                    const isActive = i === selectedIndex;
-                    const height = maxGmv > 0 ? (d.gmv / maxGmv) * 100 : 0;
-                    const orders = d.orders ?? 0;
-                    return (
-                      <button
-                        key={d.day}
-                        type="button"
-                        className={`admin-chart-col${isActive ? " is-active" : ""}`}
-                        aria-label={`${longDay(d.day)}: ${peso(d.gmv)} GMV${
-                          hasOrderData
-                            ? `, ${orders} ${orders === 1 ? "order" : "orders"}`
-                            : ", order count unavailable"
-                        }`}
-                        onClick={() => setFocused(i)}
-                        onMouseEnter={() => setHovered(i)}
-                        onMouseLeave={() => setHovered(null)}
-                        onFocus={() => setFocused(i)}
-                        onBlur={() => setFocused(null)}
-                      >
-                        {d.gmv > 0 ? (
-                          <span
-                            className="admin-chart-bar"
-                            style={{ height: `${height}%`, background: INDIGO }}
-                            aria-hidden="true"
-                          />
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {hasOrderData ? (
-              <div className="admin-chart-row admin-chart-row--orders">
-                <div className="admin-chart-row__head">
-                  <span className="admin-chart-row__name">Orders</span>
-                </div>
-                <div className="admin-chart-row__body">
-                  <div className="admin-chart-yaxis" aria-hidden="true">
-                    <span style={{ bottom: "100%" }}>{maxOrders}</span>
-                    <span style={{ bottom: "0%" }}>0</span>
-                  </div>
-                  <div className="admin-chart-plot admin-chart-plot--orders" style={chartColumns}>
-                    {series.map((d, i) => {
-                      const isActive = i === selectedIndex;
-                      const orders = d.orders ?? 0;
-                      const height = maxOrders > 0 ? (orders / maxOrders) * 100 : 0;
-                      return (
-                        <span
-                          key={d.day}
-                          className={`admin-chart-col${isActive ? " is-active" : ""}`}
-                          aria-hidden="true"
-                        >
-                          {orders > 0 ? (
-                            <span
-                              className="admin-chart-bar admin-chart-bar--orders"
-                              style={{ height: `${height}%` }}
-                            />
-                          ) : null}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="admin-chart-xaxis" style={chartColumns} aria-hidden="true">
-            {series.map((d, i) => {
-              const isActive = i === selectedIndex;
-              const isEnd = i === 0 || i === series.length - 1 || i === firstTick;
-              return (
-                <span
-                  key={d.day}
-                  className={[isActive ? "is-active" : "", isEnd ? "is-end" : ""]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  {tickIndices.has(i) ? shortDay(d.day) : ""}
-                </span>
-              );
-            })}
-          </div>
-
-          {nonZeroDays === 1 ? (
-            <p className="admin-chart-note">
-              Only one day has confirmed payments in this period, so the chart shows a single bar.
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* Accessible data-table alternative. */}
-      <table className="sr-only">
-        <caption>Confirmed GMV and orders by day, last 14 days</caption>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>GMV</th>
-            <th>Orders</th>
-          </tr>
-        </thead>
-        <tbody>
-          {series.map((d) => (
-            <tr key={d.day}>
-              <td>{d.day}</td>
-              <td>{peso(d.gmv)}</td>
-              <td>{d.orders == null ? "—" : d.orders}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </Card>
   );
 }
