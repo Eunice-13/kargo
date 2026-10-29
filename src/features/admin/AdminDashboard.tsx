@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  ArrowUpRight,
-  BadgeCheck,
-  Check,
-  ChevronRight,
-  Package,
-  ShieldAlert,
-  UserX,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
 import { ADMIN_ACTION_LABELS } from "@/constants/admin";
@@ -33,16 +25,6 @@ const relativeTime = (iso: string) => {
   const hrs = Math.round(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.round(hrs / 24)}d ago`;
-};
-
-type QueueItem = {
-  key: string;
-  icon: typeof Package;
-  title: string;
-  count: number;
-  tone: "danger" | "warn" | "info";
-  description: string;
-  go: () => void;
 };
 
 const PIPELINE_META: Record<string, { label: string; tone: string }> = {
@@ -129,10 +111,10 @@ export default function AdminDashboard({ setTab }: SharedState) {
                 go: () => goto({ tab: "Users", subtab: "Suspended" }),
               },
               {
-                label: "Active sellers",
-                value: data.activeSellers,
+                label: "Flagged or hidden batches",
+                value: data.flaggedHidden,
                 tone: "neutral",
-                go: () => goto({ tab: "Users", filter: "seller" }),
+                go: () => goto({ tab: "Batches", filter: "flagged" }),
               },
             ].map((metric) => (
               <button
@@ -163,7 +145,6 @@ export default function AdminDashboard({ setTab }: SharedState) {
             Orders (30d): <strong>{data.orders30.toLocaleString()}</strong> · Payment confirmed{" "}
             <ArrowUpRight size={14} aria-hidden="true" />
           </button>
-          <NeedsAttention data={data} goto={goto} />
 
           {/* Order pipeline + recent activity + top sellers */}
           <div className="admin-grid">
@@ -228,114 +209,6 @@ export default function AdminDashboard({ setTab }: SharedState) {
         </>
       )}
     </div>
-  );
-}
-
-const QUEUE_TONES: Record<QueueItem["tone"], { bg: string; fg: string }> = {
-  warn: { bg: "#FDF2E3", fg: "#B4690E" },
-  danger: { bg: "#FEECEC", fg: "#B42318" },
-  info: { bg: "#E0E7FF", fg: "#191BA9" },
-};
-
-function NeedsAttention({
-  data,
-  goto,
-}: {
-  data: {
-    paymentsPending: number;
-    stuckOrders: number;
-    flaggedHidden: number;
-    suspended: number;
-  };
-  goto: (opts: Parameters<typeof requestAdminSection>[0]) => void;
-}) {
-  const items: QueueItem[] = [
-    {
-      key: "payments",
-      icon: BadgeCheck,
-      title: "Payments awaiting review",
-      count: data.paymentsPending,
-      tone: "warn",
-      description: "Proofs submitted and not yet verified.",
-      go: () => goto({ tab: "Transactions", subtab: "Payments" }),
-    },
-    {
-      key: "stuck",
-      icon: Package,
-      title: "Paid, not shipped 7+ days",
-      count: data.stuckOrders,
-      tone: "danger",
-      description: "Confirmed orders without tracking.",
-      go: () => goto({ tab: "Transactions", subtab: "Orders" }),
-    },
-    {
-      key: "flagged",
-      icon: ShieldAlert,
-      title: "Flagged or hidden batches",
-      count: data.flaggedHidden,
-      tone: "info",
-      description: "Batches marked for moderation.",
-      go: () => goto({ tab: "Batches", filter: "flagged" }),
-    },
-    {
-      key: "suspended",
-      icon: UserX,
-      title: "Suspended accounts",
-      count: data.suspended,
-      tone: "info",
-      description: "Accounts currently locked out.",
-      go: () => goto({ tab: "Users", subtab: "Suspended" }),
-    },
-  ];
-
-  const openCount = items.filter((item) => item.count > 0).length;
-
-  return (
-    <Card className="admin-queue-card">
-      <AdminPanelHeader
-        title="Needs attention"
-        hint={
-          openCount === 0
-            ? "Everything is clear."
-            : `${openCount} queue${openCount === 1 ? "" : "s"} need a decision.`
-        }
-      />
-      <ul className="admin-queue">
-        {items.map((item) => {
-          const clear = item.count === 0;
-          const Icon = clear ? Check : item.icon;
-          const tone = QUEUE_TONES[item.tone];
-          return (
-            <li key={item.key}>
-              <button type="button" className="admin-queue-row" onClick={item.go}>
-                <span
-                  className="admin-queue-row__icon"
-                  style={{
-                    background: clear ? "#E6F6EF" : tone.bg,
-                    color: clear ? "#0B7A59" : tone.fg,
-                  }}
-                >
-                  <Icon size={16} aria-hidden="true" />
-                </span>
-                <span className="admin-queue-row__text">
-                  <span className="admin-queue-row__title">{item.title}</span>
-                  <span className="admin-queue-row__desc">
-                    {clear ? "All clear" : item.description}
-                  </span>
-                </span>
-                <span
-                  className={`admin-queue-row__count${clear ? " is-clear" : ""}`}
-                  style={clear ? undefined : { background: tone.bg, color: tone.fg }}
-                >
-                  {clear ? "0" : item.count}
-                </span>
-                <ChevronRight size={16} color="#6B7280" aria-hidden="true" />
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </Card>
   );
 }
 
