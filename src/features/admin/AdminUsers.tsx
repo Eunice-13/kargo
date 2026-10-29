@@ -31,12 +31,14 @@ export default function AdminUsers() {
   const [rows, setRows] = useState<AdminUserRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
 
-  // Honor a deep-link intent from the Dashboard (e.g. filter=seller, Suspended).
+  // Honor a deep-link intent from the Dashboard (e.g. filter=seller, Suspended,
+  // or a specific seller to open from the Top sellers card).
   useEffect(() => {
     const intent = consumeAdminIntent();
     if (intent.tab !== "Users") return;
     if (intent.filter === "seller") setRole("seller");
     if (intent.subtab === "Suspended") setStatus("suspended");
+    if (intent.targetId) setSelected(intent.targetId);
   }, []);
 
   const filters: AdminUserFilters = useMemo(
