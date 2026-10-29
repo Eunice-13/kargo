@@ -8,6 +8,7 @@ import { requestAdminSection } from "@/state/navIntent";
 import type { SharedState } from "@/types";
 
 import AdminFulfillmentAnalytics from "./AdminFulfillmentAnalytics";
+import AdminSectionBoundary from "./AdminSectionBoundary";
 import "./adminDashboardCards.css";
 
 import { useAdminResource } from "./useAdminResource";
@@ -94,7 +95,6 @@ export default function AdminDashboard({ setTab }: SharedState) {
             {[
               {
                 label: "Paid orders missing tracking",
-                description: "Payment confirmed over 7 days ago; still awaiting tracking.",
                 value: data.stuckOrders,
                 go: () =>
                   goto({ tab: "Transactions", subtab: "Orders", filter: "paid_missing_tracking" }),
@@ -121,19 +121,20 @@ export default function AdminDashboard({ setTab }: SharedState) {
                 type="button"
                 className="admin-attention-metric"
                 onClick={metric.go}
-                aria-label={`Open ${metric.label}${metric.description ? `. ${metric.description}` : ""}`}
+                aria-label={`Open ${metric.label}`}
               >
                 <ArrowUpRight size={20} aria-hidden="true" />
                 <strong>{metric.value.toLocaleString()}</strong>
                 <span>{metric.label}</span>
-                {metric.description && <small>{metric.description}</small>}
               </button>
             ))}
           </div>
         </>
       )}
 
-      <AdminFulfillmentAnalytics refreshKey={analyticsRefresh} />
+      <AdminSectionBoundary label="Order fulfillment analytics">
+        <AdminFulfillmentAnalytics refreshKey={analyticsRefresh} />
+      </AdminSectionBoundary>
 
       {!loading && !error && data && (
         <>

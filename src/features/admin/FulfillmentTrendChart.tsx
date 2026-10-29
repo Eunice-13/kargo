@@ -6,6 +6,7 @@ import type {
 import {
   ANALYTICS_STAGES,
   analyticsDate,
+  bucketCount,
   chartScale,
   tickIndices,
 } from "./fulfillmentAnalyticsModel";
@@ -47,9 +48,15 @@ export default function FulfillmentTrendChart({
   const n = data.chart.length;
   const x = (i: number) => (n < 2 ? (left + right) / 2 : left + ((right - left) * i) / (n - 1));
   const scale = chartScale(data, visible);
-  const y = (value: number) => bottom - (value / scale.max) * (bottom - top);
-  const index = Math.min(selected, Math.max(0, n - 1));
-  const bucket = data.chart[index];
+  // NaN-safe: a non-finite value (missing stage key, empty data) resolves to the
+  // baseline rather than producing NaN SVG coordinates. scale.max is always ≥ 4.
+  const y = (value: number) => {
+    const v = Number.isFinite(value) ? value : 0;
+    const max = scale.max > 0 ? scale.max : 1;
+    return bottom - (v / max) * (bottom - top);
+  };
+  const index = Math.min(Math.max(0, selected), Math.max(0, n - 1));
+  const bucket = n > 0 ? data.chart[index] : undefined;
   const selectAt = (clientX: number, svg: SVGSVGElement) => {
     if (!n) return 0;
     const bounds = svg.getBoundingClientRect();
@@ -82,7 +89,7 @@ export default function FulfillmentTrendChart({
         aria-valuenow={index}
         aria-valuetext={
           bucket
-            ? `${analyticsDate(bucket.bucketStart, data.grouping)}; ${series.map((s) => `${s.label}: ${bucket.counts[s.key]}`).join(", ")}`
+            ? `${analyticsDate(bucket.bucketStart, data.grouping)}; ${series.map((s) => `${s.label}: ${bucketCount(bucket.counts, s.key)}`).join(", ")}`
             : "No buckets"
         }
         onKeyDown={(event) => {
@@ -153,40 +160,43 @@ export default function FulfillmentTrendChart({
             </text>
           </g>
         ))}
-        {renderSeries.map((s) => {
-          const points = data.chart.map((b, i) => `${x(i)},${y(b.counts[s.key])}`).join(" ");
-          const isFocused = s.key === focused;
-          return (
-            <g key={s.key} aria-hidden="true" opacity={isFocused ? 1 : 0.28}>
-              {isFocused && n > 1 && (
-                <polygon
-                  points={`${x(0)},${bottom} ${points} ${x(n - 1)},${bottom}`}
-                  fill={s.color}
-                  opacity=".1"
+        {n > 0 &&
+          renderSeries.map((s) => {
+            const points = data.chart
+              .map((b, i) => `${x(i)},${y(bucketCount(b.counts, s.key))}`)
+              .join(" ");
+            const isFocused = s.key === focused;
+            return (
+              <g key={s.key} aria-hidden="true" opacity={isFocused ? 1 : 0.28}>
+                {isFocused && n > 1 && (
+                  <polygon
+                    points={`${x(0)},${bottom} ${points} ${x(n - 1)},${bottom}`}
+                    fill={s.color}
+                    opacity=".1"
+                  />
+                )}
+                <polyline
+                  points={points}
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth={isFocused ? 3 : 1.5}
+                  strokeDasharray={s.dash}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
                 />
-              )}
-              <polyline
-                points={points}
-                fill="none"
-                stroke={s.color}
-                strokeWidth={isFocused ? 3 : 1.5}
-                strokeDasharray={s.dash}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-              {active && bucket && (
-                <circle
-                  cx={x(index)}
-                  cy={y(bucket.counts[s.key])}
-                  r={isFocused ? 5 : 2.5}
-                  fill={s.color}
-                  stroke="var(--kargo-surface, #fff)"
-                  strokeWidth={isFocused ? 2 : 1.5}
-                />
-              )}
-            </g>
-          );
-        })}
+                {active && bucket && (
+                  <circle
+                    cx={x(index)}
+                    cy={y(bucketCount(bucket.counts, s.key))}
+                    r={isFocused ? 5 : 2.5}
+                    fill={s.color}
+                    stroke="var(--kargo-surface, #fff)"
+                    strokeWidth={isFocused ? 2 : 1.5}
+                  />
+                )}
+              </g>
+            );
+          })}
         {active && bucket && (
           <line
             x1={x(index)}
@@ -199,17 +209,19 @@ export default function FulfillmentTrendChart({
             aria-hidden="true"
           />
         )}
-        {tickIndices(n, width < 600 ? 4 : 8).map((i) => (
-          <text
-            key={i}
-            x={x(i)}
-            y={height - 10}
-            textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
-            aria-hidden="true"
-          >
-            {analyticsDate(data.chart[i].bucketStart, data.grouping)}
-          </text>
-        ))}
+        {tickIndices(n, width < 600 ? 4 : 8)
+          .filter((i) => Number.isInteger(i) && data.chart[i])
+          .map((i) => (
+            <text
+              key={`tick-${i}`}
+              x={x(i)}
+              y={height - 10}
+              textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
+              aria-hidden="true"
+            >
+              {analyticsDate(data.chart[i].bucketStart, data.grouping)}
+            </text>
+          ))}
       </svg>
       {!visible.length && (
         <p
@@ -237,15 +249,14 @@ export default function FulfillmentTrendChart({
               <li key={s.key}>
                 <span className="fulfillment-stage-dot" style={{ background: s.color }} />
                 <span className="fulfillment-trend__tooltip-label">{s.label}</span>
-                <strong>{bucket.counts[s.key].toLocaleString()}</strong>
+                <strong>{bucketCount(bucket.counts, s.key).toLocaleString()}</strong>
               </li>
             ))}
           </ul>
         </div>
       )}
       <p className="fulfillment-trend__hint">
-        Hover a day to see its breakdown. Use the stage chips above and “View orders” to open
-        orders. Arrow keys and Enter work too.
+        Hover a day for its breakdown. Arrow keys and Enter work too.
       </p>
     </div>
   );

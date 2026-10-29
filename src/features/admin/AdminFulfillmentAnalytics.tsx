@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { BarChart3, LineChart, RefreshCw } from "lucide-react";
 import { adminApi } from "@/services";
 import type {
   FulfillmentAnalyticsFilters,
@@ -10,10 +10,12 @@ import {
   ANALYTICS_STAGES,
   PERIODS,
   analyticsTimestamp,
+  bucketCount,
   customRangeError,
   manilaToday,
 } from "./fulfillmentAnalyticsModel";
 import FulfillmentTrendChart from "./FulfillmentTrendChart";
+import FulfillmentBreakdown from "./FulfillmentBreakdown";
 import FulfillmentOrdersDialog from "./FulfillmentOrdersDialog";
 import "./fulfillmentAnalytics.css";
 
@@ -132,6 +134,9 @@ function AnalyticsResults({
   // stay visible but dimmed in the back. Selecting a chip only changes which
   // line is highlighted — it never hides the others.
   const [focused, setFocused] = useState<Stage>("delivered");
+  // Two ways to view the same data: the time "trend" line chart, or a "breakdown"
+  // of each stage's share of orders in view.
+  const [view, setView] = useState<"trend" | "breakdown">("trend");
   const visible: Stage[] = ANALYTICS_STAGES.map((s) => s.key);
   const [point, setPoint] = useState<{ stage: Stage; bucket?: string } | null>(null);
   useEffect(() => {
@@ -177,7 +182,7 @@ function AnalyticsResults({
   const data = resource.data;
   if (!data) return null;
   const deliveryPercent = data.uniqueOrders
-    ? Math.round((data.stageTotals.delivered / data.uniqueOrders) * 100)
+    ? Math.round((bucketCount(data.stageTotals, "delivered") / data.uniqueOrders) * 100)
     : null;
   return (
     <>
@@ -226,17 +231,51 @@ function AnalyticsResults({
           >
             <span className="fulfillment-stage-dot" style={{ background: stage.color }} />
             <span>{stage.label}</span>
-            <strong>{data.stageTotals[stage.key].toLocaleString()}</strong>
+            <strong>{bucketCount(data.stageTotals, stage.key).toLocaleString()}</strong>
           </button>
         ))}
       </div>
       <div className="fulfillment-analytics__focus">
         <span className="fulfillment-analytics__focus-label">
-          Highlighting <strong>{ANALYTICS_STAGES.find((s) => s.key === focused)?.label}</strong>
+          {view === "trend" ? (
+            <>
+              Highlighting <strong>{ANALYTICS_STAGES.find((s) => s.key === focused)?.label}</strong>
+            </>
+          ) : (
+            "Share of orders in view"
+          )}
         </span>
-        <button type="button" onClick={() => setPoint({ stage: focused })}>
-          View orders →
-        </button>
+        <div className="fulfillment-analytics__focus-actions">
+          <div
+            className="fulfillment-analytics__view-toggle"
+            role="radiogroup"
+            aria-label="Analytics view"
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={view === "trend"}
+              aria-pressed={view === "trend"}
+              onClick={() => setView("trend")}
+            >
+              <LineChart size={15} aria-hidden="true" />
+              Trend
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={view === "breakdown"}
+              aria-pressed={view === "breakdown"}
+              onClick={() => setView("breakdown")}
+            >
+              <BarChart3 size={15} aria-hidden="true" />
+              Breakdown
+            </button>
+          </div>
+          <button type="button" onClick={() => setPoint({ stage: focused })}>
+            View orders →
+          </button>
+        </div>
       </div>
       {!data.totalEntries && (
         <p
@@ -246,17 +285,25 @@ function AnalyticsResults({
           No recorded stage entries in this range. Try another date range.
         </p>
       )}
-      <FulfillmentTrendChart
-        key={data.generatedAt}
-        data={data}
-        visible={visible}
-        focused={focused}
-        onFocusStage={setFocused}
-        onOpen={(stage, bucket) => setPoint({ stage, bucket })}
-      />
+      {view === "trend" ? (
+        <FulfillmentTrendChart
+          key={data.generatedAt}
+          data={data}
+          visible={visible}
+          focused={focused}
+          onFocusStage={setFocused}
+          onOpen={(stage, bucket) => setPoint({ stage, bucket })}
+        />
+      ) : (
+        <FulfillmentBreakdown
+          data={data}
+          focused={focused}
+          onFocusStage={setFocused}
+          onOpen={(stage) => setPoint({ stage })}
+        />
+      )}
       <p className="fulfillment-analytics__coverage">
-        Historical coverage is partial. Only evidenced stage entries are counted; missing history is
-        not treated as a known zero. Continuous recording began{" "}
+        Partial history — only recorded stage entries are counted. Recording began{" "}
         {analyticsTimestamp(data.captureStartedAt)}.
       </p>
       {point && (

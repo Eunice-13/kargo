@@ -257,6 +257,145 @@
   color: var(--fa-ink);
   font-weight: 650;
 }
+.fulfillment-analytics__focus-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Segmented Trend / Breakdown view toggle. */
+.fulfillment-analytics__view-toggle {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--fa-soft);
+  border: 1px solid var(--fa-border);
+  border-radius: 10px;
+}
+.fulfillment-analytics__focus .fulfillment-analytics__view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--fa-muted);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+.fulfillment-analytics__focus .fulfillment-analytics__view-toggle button:hover {
+  color: var(--fa-ink-soft);
+}
+.fulfillment-analytics__focus .fulfillment-analytics__view-toggle button[aria-pressed="true"] {
+  color: var(--fa-indigo);
+  background: var(--fa-surface);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+/* ─── Breakdown view ─────────────────────────────────────────────────────── */
+.fulfillment-breakdown {
+  margin-top: 10px;
+}
+.fulfillment-breakdown__stack {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.fulfillment-breakdown__segment {
+  min-width: 10px;
+  border-radius: 999px;
+}
+
+/* Desktop: vertical bars. */
+.fulfillment-breakdown__list {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  min-height: 220px;
+}
+.fulfillment-breakdown__list li {
+  min-width: 0;
+  height: 100%;
+}
+.fulfillment-breakdown__list button {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 10px;
+  transition: opacity 0.15s;
+}
+.fulfillment-breakdown__list li:not(.is-focused) button {
+  opacity: 0.55;
+}
+.fulfillment-breakdown__list button:hover {
+  opacity: 1;
+}
+.fulfillment-breakdown__bar-wrap {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  min-height: 150px;
+}
+.fulfillment-breakdown__bar {
+  position: relative;
+  width: 100%;
+  height: var(--fill, 0%);
+  min-height: 6px;
+  border-radius: 10px 10px 4px 4px;
+  transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fulfillment-breakdown__bar-count {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--fa-ink);
+  font-variant-numeric: tabular-nums;
+}
+.fulfillment-breakdown__meta {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 6px;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--fa-muted);
+}
+.fulfillment-breakdown__meta .fulfillment-stage-dot {
+  align-self: center;
+}
+.fulfillment-breakdown__label {
+  color: var(--fa-ink-soft);
+  font-weight: 600;
+}
+.fulfillment-breakdown__meta .fulfillment-breakdown__count {
+  display: none; /* count shown on top of the bar on desktop */
+}
+.fulfillment-breakdown__percent {
+  color: var(--fa-muted);
+}
 .fulfillment-analytics__focus select {
   min-width: 0;
   max-width: 100%;
@@ -785,6 +924,67 @@
   .fulfillment-trend__tooltip-rows li {
     font-size: 11px;
     min-height: 20px;
+  }
+
+  /* Breakdown becomes stacked progress rows on mobile. */
+  .fulfillment-breakdown__list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    min-height: 0;
+    margin-top: 16px;
+  }
+  .fulfillment-breakdown__list li,
+  .fulfillment-breakdown__list li:not(.is-focused) button {
+    height: auto;
+    opacity: 1;
+  }
+  .fulfillment-breakdown__list button {
+    flex-direction: column-reverse;
+    gap: 8px;
+    padding: 12px 14px;
+    border: 1px solid var(--fa-border);
+    border-radius: 12px;
+    background: var(--fa-soft);
+  }
+  .fulfillment-breakdown__list li.is-focused button {
+    border-color: color-mix(in srgb, var(--chip, #191ba9) 40%, var(--fa-border));
+  }
+  /* Turn the vertical bar into a horizontal progress track. */
+  .fulfillment-breakdown__bar-wrap {
+    min-height: 0;
+    width: 100%;
+    display: block;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--fa-border);
+    overflow: hidden;
+  }
+  .fulfillment-breakdown__bar {
+    height: 100%;
+    width: var(--fill, 0%);
+    min-height: 0;
+    border-radius: 999px;
+  }
+  .fulfillment-breakdown__bar-count {
+    display: none;
+  }
+  .fulfillment-breakdown__meta {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    font-size: 13px;
+    gap: 8px;
+  }
+  .fulfillment-breakdown__meta .fulfillment-breakdown__label {
+    font-size: 14px;
+    color: var(--fa-ink);
+  }
+  .fulfillment-breakdown__meta .fulfillment-breakdown__count {
+    display: inline;
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--fa-ink);
+    font-variant-numeric: tabular-nums;
   }
 
   /* Drill-down becomes a bottom sheet on mobile. */

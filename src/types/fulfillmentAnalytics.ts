@@ -5,7 +5,7 @@ export type FulfillmentAnalyticsStage =
   | "in_transit"
   | "delivered"
   | "cancelled"
-  | "expired";
+  | "incomplete";
 
 export type FulfillmentAnalyticsFilters = {
   period?: "today" | "last_7_days" | "last_30_days" | "all_time" | "custom";

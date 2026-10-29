@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  bucketCount,
   chartScale,
   customRangeError,
   tickIndices,
@@ -83,7 +84,7 @@ function fakeData(perBucketDelivered: number[]): FulfillmentAnalytics {
       in_transit: 0,
       delivered: 0,
       cancelled: 0,
-      expired: 0,
+      incomplete: 0,
     },
     chart: perBucketDelivered.map((d) => ({
       bucketStart: "2026-10-01T00:00:00+08:00",
@@ -95,7 +96,7 @@ function fakeData(perBucketDelivered: number[]): FulfillmentAnalytics {
         in_transit: 0,
         delivered: d,
         cancelled: 0,
-        expired: 0,
+        incomplete: 0,
       },
     })),
   };
@@ -116,4 +117,85 @@ test("chartScale never collapses to a zero axis when all counts are zero", () =>
   const scale = chartScale(fakeData([0, 0, 0]), ["delivered"]);
   assert.ok(scale.max >= 4, "empty data still yields a usable axis");
   assert.equal(scale.ticks[0], 0);
+});
+
+// ─── Root-cause regressions: RPC payload / stage-definition mismatch ──────────
+
+test("bucketCount returns 0 for a stage key the payload omits (no crash, no NaN)", () => {
+  // Simulates a deployed RPC whose counts object lacks a stage the frontend knows.
+  const counts = { delivered: 5 } as Record<string, number>;
+  assert.equal(bucketCount(counts as never, "delivered"), 5);
+  assert.equal(bucketCount(counts as never, "in_transit"), 0);
+  assert.equal(bucketCount(counts as never, "incomplete"), 0);
+});
+
+test("bucketCount coerces non-finite / undefined values to 0", () => {
+  assert.equal(bucketCount(undefined, "delivered"), 0);
+  assert.equal(bucketCount({ delivered: NaN } as never, "delivered"), 0);
+  assert.equal(bucketCount({ delivered: undefined } as never, "delivered"), 0);
+  assert.equal(bucketCount({} as never, "delivered"), 0);
+});
+
+test("chartScale never yields NaN even when buckets omit the requested stage", () => {
+  const data = {
+    chart: [
+      { bucketStart: "a", bucketEnd: "b", counts: { delivered: 3 } },
+      { bucketStart: "c", bucketEnd: "d", counts: {} }, // missing every key
+      { bucketStart: "e", bucketEnd: "f", counts: { delivered: 9 } },
+    ],
+  } as unknown as FulfillmentAnalytics;
+  const scale = chartScale(data, ["delivered", "shipped", "incomplete"]);
+  assert.ok(Number.isFinite(scale.max), "max must be finite");
+  assert.ok(scale.max >= 9, "max covers the real peak");
+  assert.ok(
+    scale.ticks.every((t) => Number.isFinite(t)),
+    "all ticks finite",
+  );
+});
+
+test("tickIndices never produces NaN or duplicate indices across sizes", () => {
+  for (let length = 0; length <= 40; length++) {
+    for (const limit of [1, 4, 8]) {
+      const ticks = tickIndices(length, limit);
+      assert.ok(
+        ticks.every((t) => Number.isInteger(t) && !Number.isNaN(t)),
+        `len=${length} limit=${limit}`,
+      );
+      assert.equal(
+        new Set(ticks).size,
+        ticks.length,
+        `no duplicate keys len=${length} limit=${limit}`,
+      );
+      assert.ok(
+        ticks.every((t) => t >= 0 && (length === 0 || t < length)),
+        `in range len=${length}`,
+      );
+    }
+  }
+});
+
+test("a y-coordinate helper built on chartScale stays finite for missing counts", () => {
+  // Mirrors the chart's y(): value/scale.max with NaN-safety.
+  const scale = chartScale(
+    {
+      chart: [{ bucketStart: "a", bucketEnd: "b", counts: { delivered: 4 } }],
+    } as unknown as FulfillmentAnalytics,
+    ["delivered", "shipped"],
+  );
+  const bottom = 263,
+    top = 20;
+  const y = (value: number) => {
+    const v = Number.isFinite(value) ? value : 0;
+    const max = scale.max > 0 ? scale.max : 1;
+    return bottom - (v / max) * (bottom - top);
+  };
+  for (const v of [
+    0,
+    4,
+    NaN,
+    undefined as unknown as number,
+    bucketCount({} as never, "shipped"),
+  ]) {
+    assert.ok(Number.isFinite(y(v)), `y(${v}) must be finite`);
+  }
 });
