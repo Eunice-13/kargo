@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BarChart3, LineChart, RefreshCw } from "lucide-react";
+import { BarChart3, ChevronDown, LineChart, RefreshCw } from "lucide-react";
 import { adminApi } from "@/services";
 import type {
   FulfillmentAnalyticsFilters,
@@ -27,6 +27,9 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
   const [validation, setValidation] = useState<string | null>(null);
   const [manual, setManual] = useState(0);
   const [loadedAt, setLoadedAt] = useState<string | null>(null);
+  // On mobile the date range collapses behind a summary toggle to save space.
+  const [periodsOpen, setPeriodsOpen] = useState(false);
+  const activePeriodLabel = PERIODS.find(([key]) => key === period)?.[1] ?? "Range";
   return (
     <section className="fulfillment-analytics" aria-labelledby="fulfillment-analytics-title">
       <header className="fulfillment-analytics__header">
@@ -39,25 +42,43 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
           </p>
         </div>
         <div className="fulfillment-analytics__controls">
-          <div
-            className="fulfillment-analytics__periods"
-            role="group"
-            aria-label="Analytics date range"
-          >
-            {PERIODS.map(([key, label]) => (
-              <button
-                type="button"
-                key={key}
-                aria-pressed={period === key}
-                onClick={() => {
-                  setPeriod(key);
-                  setValidation(null);
-                  if (key !== "custom") setFilters({ period: key });
-                }}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="fulfillment-analytics__period-field">
+            <button
+              type="button"
+              className="fulfillment-analytics__disclosure"
+              aria-expanded={periodsOpen}
+              aria-controls="fulfillment-period-options"
+              onClick={() => setPeriodsOpen((o) => !o)}
+            >
+              <span>
+                <span className="fulfillment-analytics__disclosure-label">Range</span>
+                {activePeriodLabel}
+              </span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </button>
+            <div
+              id="fulfillment-period-options"
+              className="fulfillment-analytics__periods"
+              role="group"
+              aria-label="Analytics date range"
+              data-open={periodsOpen}
+            >
+              {PERIODS.map(([key, label]) => (
+                <button
+                  type="button"
+                  key={key}
+                  aria-pressed={period === key}
+                  onClick={() => {
+                    setPeriod(key);
+                    setValidation(null);
+                    setPeriodsOpen(false);
+                    if (key !== "custom") setFilters({ period: key });
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
           <button
             type="button"
@@ -137,6 +158,8 @@ function AnalyticsResults({
   // Two ways to view the same data: the time "trend" line chart, or a "breakdown"
   // of each stage's share of orders in view.
   const [view, setView] = useState<"trend" | "breakdown">("trend");
+  // On mobile the stage chips collapse behind a summary toggle to save space.
+  const [stagesOpen, setStagesOpen] = useState(false);
   const visible: Stage[] = ANALYTICS_STAGES.map((s) => s.key);
   const [point, setPoint] = useState<{ stage: Stage; bucket?: string } | null>(null);
   useEffect(() => {
@@ -214,26 +237,50 @@ function AnalyticsResults({
               : "Monthly"}{" "}
         entries. An order can enter more than one stage.
       </p>
-      <div
-        className="fulfillment-analytics__stages"
-        role="radiogroup"
-        aria-label="Highlight a fulfillment stage"
-      >
-        {ANALYTICS_STAGES.map((stage) => (
-          <button
-            type="button"
-            key={stage.key}
-            role="radio"
-            aria-checked={focused === stage.key}
-            aria-pressed={focused === stage.key}
-            style={{ ["--chip" as string]: stage.color }}
-            onClick={() => setFocused(stage.key)}
-          >
-            <span className="fulfillment-stage-dot" style={{ background: stage.color }} />
-            <span>{stage.label}</span>
-            <strong>{bucketCount(data.stageTotals, stage.key).toLocaleString()}</strong>
-          </button>
-        ))}
+      <div className="fulfillment-analytics__stage-field">
+        <button
+          type="button"
+          className="fulfillment-analytics__disclosure"
+          aria-expanded={stagesOpen}
+          aria-controls="fulfillment-stage-options"
+          onClick={() => setStagesOpen((o) => !o)}
+        >
+          <span>
+            <span className="fulfillment-analytics__disclosure-label">Stage</span>
+            <span
+              className="fulfillment-stage-dot"
+              style={{ background: ANALYTICS_STAGES.find((s) => s.key === focused)?.color }}
+            />
+            {ANALYTICS_STAGES.find((s) => s.key === focused)?.label}
+          </span>
+          <ChevronDown size={16} aria-hidden="true" />
+        </button>
+        <div
+          id="fulfillment-stage-options"
+          className="fulfillment-analytics__stages"
+          role="radiogroup"
+          aria-label="Highlight a fulfillment stage"
+          data-open={stagesOpen}
+        >
+          {ANALYTICS_STAGES.map((stage) => (
+            <button
+              type="button"
+              key={stage.key}
+              role="radio"
+              aria-checked={focused === stage.key}
+              aria-pressed={focused === stage.key}
+              style={{ ["--chip" as string]: stage.color }}
+              onClick={() => {
+                setFocused(stage.key);
+                setStagesOpen(false);
+              }}
+            >
+              <span className="fulfillment-stage-dot" style={{ background: stage.color }} />
+              <span>{stage.label}</span>
+              <strong>{bucketCount(data.stageTotals, stage.key).toLocaleString()}</strong>
+            </button>
+          ))}
+        </div>
       </div>
       <div className="fulfillment-analytics__focus">
         <span className="fulfillment-analytics__focus-label">

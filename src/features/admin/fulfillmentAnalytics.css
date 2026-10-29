@@ -64,6 +64,13 @@
   max-width: 100%;
   min-width: 0;
 }
+.fulfillment-analytics__period-field {
+  display: contents;
+}
+/* The collapse toggles are mobile-only; desktop shows the full groups inline. */
+.fulfillment-analytics__disclosure {
+  display: none;
+}
 
 /* Segmented date filter */
 .fulfillment-analytics__periods {
@@ -857,47 +864,115 @@
   .fulfillment-analytics__header p {
     font-size: 11px;
   }
-  .fulfillment-analytics__periods {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2px;
+
+  /* ── Mobile: date range + stage collapse behind a summary toggle ── */
+  .fulfillment-analytics__period-field {
+    display: block;
+    position: relative;
     flex: 1;
+    min-width: 0;
+  }
+  .fulfillment-analytics__stage-field {
+    position: relative;
+  }
+  .fulfillment-analytics__disclosure {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid var(--fa-border);
+    border-radius: 11px;
+    background: var(--fa-surface);
+    color: var(--fa-ink);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .fulfillment-analytics__disclosure > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .fulfillment-analytics__disclosure-label {
+    color: var(--fa-muted);
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .fulfillment-analytics__disclosure[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+  .fulfillment-analytics__disclosure svg {
+    flex: 0 0 auto;
+    color: var(--fa-muted);
+    transition: transform 0.15s;
+  }
+
+  /* Collapsed by default; expands to a dropdown panel when data-open=true. */
+  .fulfillment-analytics__periods,
+  .fulfillment-analytics__stages {
+    display: none;
+    position: absolute;
+    z-index: 5;
+    left: 0;
+    right: 0;
+    margin-top: 6px;
+    padding: 6px;
+    background: var(--fa-surface);
+    border: 1px solid var(--fa-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px -12px rgba(16, 24, 40, 0.28);
+  }
+  .fulfillment-analytics__periods[data-open="true"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .fulfillment-analytics__stages[data-open="true"] {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
   .fulfillment-analytics__periods button {
-    padding: 8px 4px;
-    font-size: 11px;
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 8px;
   }
+  .fulfillment-analytics__stages button {
+    min-width: 0;
+    font-size: 12px;
+    padding: 9px 12px;
+    gap: 7px;
+    border-radius: 9px;
+  }
+  .fulfillment-analytics__stages button strong {
+    margin-left: auto;
+  }
+
+  /* ── Mobile: KPI figures sit side-by-side, not stacked full-width ── */
   .fulfillment-analytics__summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     margin-top: 20px;
   }
   .fulfillment-analytics__summary > div {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding: 12px 14px;
+    display: block;
+    padding: 10px 10px;
   }
   .fulfillment-analytics__summary strong {
-    font-size: clamp(22px, 7vw, 28px);
+    font-size: clamp(18px, 6vw, 24px);
   }
   .fulfillment-analytics__summary span {
-    margin-top: 0;
-    text-align: right;
-  }
-  .fulfillment-analytics__stages {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
-  }
-  .fulfillment-analytics__stages button {
-    min-width: 0;
-    font-size: 11px;
-    padding: 8px 10px;
-    gap: 6px;
-  }
-  .fulfillment-analytics__stages button strong {
-    margin-left: auto;
+    margin-top: 4px;
+    text-align: left;
+    font-size: 10.5px;
+    line-height: 1.3;
   }
   .fulfillment-analytics__focus {
     gap: 10px;
