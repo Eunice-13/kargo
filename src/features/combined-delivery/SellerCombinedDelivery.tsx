@@ -7,6 +7,8 @@ import Card from "@/components/shared/Card";
 import { recordKeys } from "@/components/shared/useRecordFocus";
 import PrimaryBtn from "@/components/shared/PrimaryBtn";
 import SecondaryBtn from "@/components/shared/SecondaryBtn";
+import PillTrigger from "@/components/shared/PillTrigger";
+import { Truck } from "lucide-react";
 import {
   loadSellerDeliveryRequests,
   reviewDeliveryRequest,
@@ -248,14 +250,24 @@ export function SellerDeliveryDialog({
   );
 }
 
+// The seller's combined delivery requests, behind a "Combined Delivery" pill in
+// the page heading (the same control as the buyer's "My Group Orders"). The
+// request cards live in a modal so the page itself stays about orders.
 export default function SellerCombinedDelivery({
   sellerId,
   onRecovered,
+  focusRequestId,
+  onFocusHandled,
 }: {
   sellerId: string | undefined;
   onRecovered?: () => Promise<void>;
+  // A notification points at one request: open the list so its card is on
+  // screen and can be highlighted.
+  focusRequestId?: string | null;
+  onFocusHandled?: () => void;
 }) {
   const [requests, setRequests] = useState<SellerDeliveryRequest[]>([]);
+  const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<SellerDeliveryRequest>();
   const [error, setError] = useState("");
   const [unavailable, setUnavailable] = useState(false);
@@ -300,65 +312,102 @@ export default function SellerCombinedDelivery({
       window.removeEventListener("focus", focus);
     };
   }, [reload]);
-  if (!sellerId || !supabase || (!loading && !error && !requests.length)) return null;
+  // A notification asks for a specific request: show the list.
+  useEffect(() => {
+    if (!focusRequestId) return;
+    setOpen(true);
+    void reload();
+    onFocusHandled?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusRequestId, reload]);
+  // Requests waiting on the seller (approve or reject, or set the shared fee)
+  // come first, and are what the pill counts.
+  const needsAction = (request: SellerDeliveryRequest) =>
+    ["pending_approval", "awaiting_shipping_fee"].includes(request.status);
+  const ordered = [...requests].sort(
+    (a, b) => Number(needsAction(b)) - Number(needsAction(a)),
+  );
+  const actionCount = requests.filter(needsAction).length;
+  const hasContent = requests.length > 0 || Boolean(error);
+  if (!sellerId || !supabase || (!hasContent && !open)) return null;
   return (
-    <section
-      aria-busy={loading}
-      aria-label="Combined delivery requests"
-      className="combined-delivery-requests mb-5 space-y-2"
-    >
-      <h2 className="text-sm font-semibold text-[var(--kargo-ink)]">Combined delivery requests</h2>
-      {refreshError && (
-        <p role="status" className="text-xs text-[var(--kargo-muted)]">
-          {refreshError}
-        </p>
-      )}
-      {loading && (
-        <p role="status" className="text-xs text-[var(--kargo-muted)]">
-          Loading requests…
-        </p>
-      )}
-      {error && (
-        <DeliveryAvailabilityNotice
-          error={error}
-          unavailable={unavailable}
+    <>
+      {hasContent && (
+        <PillTrigger
+          icon={Truck}
+          label="Combined Delivery"
+          count={actionCount}
           loading={loading}
-          onRetry={() => void reload()}
+          ariaLabel={`Combined delivery requests${actionCount ? `, ${actionCount} need your action` : ""}`}
+          onClick={() => {
+            setOpen(true);
+            void reload();
+          }}
         />
       )}
-      {requests.map((request) => (
-        <Card
-          key={request.id}
-          recordKeys={recordKeys({
-            combinedGroupId: request.id,
-            orderIds: request.members.map((member) => member.order_id),
-          })}
-          className="flex min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+      {open && !selected && (
+        <Modal
+          title="Combined delivery requests"
+          variant="detail"
+          width={640}
+          onClose={() => setOpen(false)}
         >
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">
-              {request.buyerName || "Buyer"} · {request.members.length} reservations
-            </p>
-            <p className="truncate text-xs text-[var(--kargo-muted)]">
-              {request.batchName} · {request.payment_method}
-            </p>
-            <p className="mt-1 text-xs">
-              {request.payment ? paymentLabels[request.payment.status] : labels[request.status]}
-            </p>
+          <div aria-busy={loading} className="combined-delivery-requests space-y-2">
+            {refreshError && (
+              <p role="status" className="text-xs text-[var(--kargo-muted)]">
+                {refreshError}
+              </p>
+            )}
+            {loading && !requests.length && (
+              <p role="status" className="text-xs text-[var(--kargo-muted)]">
+                Loading requests…
+              </p>
+            )}
+            {error && (
+              <DeliveryAvailabilityNotice
+                error={error}
+                unavailable={unavailable}
+                loading={loading}
+                onRetry={() => void reload()}
+              />
+            )}
+            {!loading && !error && !requests.length && (
+              <p className="text-sm text-[var(--kargo-muted)]">No combined delivery requests.</p>
+            )}
+            {ordered.map((request) => (
+              <Card
+                key={request.id}
+                recordKeys={recordKeys({
+                  combinedGroupId: request.id,
+                  orderIds: request.members.map((member) => member.order_id),
+                })}
+                className="flex min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">
+                    {request.buyerName || "Buyer"} · {request.members.length} reservations
+                  </p>
+                  <p className="truncate text-xs text-[var(--kargo-muted)]">
+                    {request.batchName} · {request.payment_method}
+                  </p>
+                  <p className="mt-1 text-xs">
+                    {request.payment ? paymentLabels[request.payment.status] : labels[request.status]}
+                  </p>
+                </div>
+                <SecondaryBtn
+                  disabled={loading || Boolean(error)}
+                  onClick={() => {
+                    setSelected(request);
+                    void reload();
+                  }}
+                >
+                  {needsAction(request) ? "Review request" : "View details"}
+                </SecondaryBtn>
+              </Card>
+            ))}
           </div>
-          <SecondaryBtn
-            disabled={loading || Boolean(error)}
-            onClick={() => {
-              setSelected(request);
-              void reload();
-            }}
-          >
-            {["pending_approval", "awaiting_shipping_fee"].includes(request.status)
-              ? "Review request"
-              : "View details"}
-          </SecondaryBtn>
-        </Card>
-      ))}
+        </Modal>
+      )}
       {selected && !error && (
         <SellerDeliveryDialog
           key={selected.id}
@@ -387,6 +436,6 @@ export default function SellerCombinedDelivery({
           }}
         />
       )}
-    </section>
+    </>
   );
 }

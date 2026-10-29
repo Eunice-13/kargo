@@ -2,6 +2,12 @@ import { productAvailability } from "./productAvailability"
 
 import { canManageBatch } from "./batchAccess"
 
+import {
+  batchClosedByDate,
+  batchOrdersClosed,
+  formatBatchEndDate,
+} from "./batchAvailability"
+
 import { useEffect, useState } from "react"
 
 import { Lock, ArrowLeft, ArrowRight, Plane, Check, Link2, ImageUp, Users, Tag, CalendarDays, Clock } from "lucide-react"
@@ -112,6 +118,13 @@ export default function BatchPage({
   const batch = batches.find((b) => b.id === batchProp.id) ?? batchProp
 
   const canEdit = canManageBatch(batch, user, role)
+
+  // Claims, waitlists, and group orders all close together when the batch is
+  // locked or past its end date, so the page never offers an action the server
+  // will refuse.
+  const ordersClosed = batchOrdersClosed(batch)
+
+  const closedByDate = batchClosedByDate(batch)
 
   const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({})
 
@@ -427,7 +440,7 @@ export default function BatchPage({
     if (
       role !== "Buyer" ||
       !currentProduct ||
-      !productAvailability(currentProduct, batch.locked).canWaitlist
+      !productAvailability(currentProduct, ordersClosed).canWaitlist
     ) {
       alert("This product is no longer available for waitlisting.")
 
@@ -530,7 +543,7 @@ export default function BatchPage({
     if (
       role !== "Buyer" ||
       !currentProduct ||
-      !productAvailability(currentProduct, b.locked).canClaim ||
+      !productAvailability(currentProduct, batchOrdersClosed(b)).canClaim ||
       claimQty > currentProduct.qty - currentProduct.claimed
     ) {
       alert("This product no longer has enough available claim slots.")
@@ -765,9 +778,14 @@ export default function BatchPage({
         </div>
         <div className="batch-gallery__side">
           <h1>{batch.title}</h1>
-          {batch.locked && role === "Buyer" && (
+          {ordersClosed && role === "Buyer" && (
             <span className="batch-gallery__status">
               <Lock size={14} aria-hidden="true" /> Not Accepting Orders
+              {closedByDate && (
+                <span className="batch-gallery__status-date">
+                  Closed {formatBatchEndDate(batch.endsOn)}
+                </span>
+              )}
             </span>
           )}
           <div className="batch-gallery__meta">
@@ -846,7 +864,7 @@ export default function BatchPage({
                 <Users size={15} aria-hidden="true" /> Selling & groups
               </button>
             )}
-            {role === "Buyer" && batch.groupOrdersEnabled && (
+            {role === "Buyer" && batch.groupOrdersEnabled && !ordersClosed && (
               <button
                 type="button"
                 className="batch-group-order-action"
@@ -940,7 +958,7 @@ export default function BatchPage({
 
               const left = p.qty - p.claimed
 
-              const availability = productAvailability(p, batch.locked)
+              const availability = productAvailability(p, ordersClosed)
 
               const soldOut = availability.claimsFull
 
@@ -1218,15 +1236,17 @@ export default function BatchPage({
                           </SecondaryBtn>
                         </div>
                       </div>
-                    ) : role !== "Buyer" ? null : batch.locked ||
+                    ) : role !== "Buyer" ? null : ordersClosed ||
                       p.locked ||
                       (availability.fullyLocked && !onWaitlist) ? (
                       <span style={{ fontSize: 11, color: "#9CA3AF" }}>
                         <>
                           <Lock size={13} aria-hidden="true" />{" "}
-                          {soldOut && waitlistFull
-                            ? "Locked · Waitlist full"
-                            : "Locked"}
+                          {closedByDate
+                            ? `Closed ${formatBatchEndDate(batch.endsOn)}`
+                            : soldOut && waitlistFull
+                              ? "Locked · Waitlist full"
+                              : "Locked"}
                         </>
                       </span>
                     ) : isClaimed ? (

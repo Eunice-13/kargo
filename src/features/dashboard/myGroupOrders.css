@@ -516,66 +516,6 @@
   overflow-wrap: anywhere;
 }
 
-/* ─── Buyer "My Group Orders" on My Claims ───────────────────────────────────
-   The trigger lives in the "My Claims To Pay" heading row, rightmost. It is a
-   pill with a filled navy icon disc, so it reads as an entry point to a place
-   (your groups) rather than another filter chip. The count is a numeral on a
-   soft navy tint; selection and status never rely on color alone. */
-.group-orders-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 5px 14px 5px 5px;
-  border: 1px solid color-mix(in srgb, var(--kargo-navy) 24%, var(--kargo-line));
-  border-radius: 999px;
-  background: var(--kargo-surface);
-  color: var(--kargo-navy);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--kargo-ink) 8%, transparent);
-  transition:
-    border-color 140ms ease,
-    background-color 140ms ease,
-    box-shadow 140ms ease;
-}
-.group-orders-trigger:hover {
-  border-color: var(--kargo-navy);
-  background: color-mix(in srgb, var(--kargo-navy) 5%, var(--kargo-surface));
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--kargo-navy) 16%, transparent);
-}
-.group-orders-trigger:focus-visible {
-  outline: 3px solid var(--kargo-focus);
-  outline-offset: 3px;
-}
-.group-orders-trigger__icon {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--kargo-navy);
-  color: var(--kargo-surface);
-}
-.group-orders-trigger__count {
-  display: inline-grid;
-  place-items: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 7px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--kargo-navy) 12%, var(--kargo-surface));
-  color: var(--kargo-navy);
-  font-size: 12px;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
 /* A text tag, so "leader" versus "member" never relies on color alone. */
 .group-shortcut-role {
   display: inline-block;
@@ -842,19 +782,7 @@
   }
 }
 
-/* In the heading row, a narrow screen keeps the icon and count and drops the
-   "My", so the title and the button never fight for the line. */
-@media (max-width: 420px) {
-  .group-orders-trigger {
-    gap: 8px;
-    padding-right: 10px;
-  }
-  .group-orders-trigger__my {
-    display: none;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .group-orders-trigger,
   .group-orders-modal .group-shortcut-card,
   .group-orders-modal__past-toggle,
   .group-orders-modal__past-toggle svg {

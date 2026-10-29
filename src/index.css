@@ -15648,3 +15648,189 @@ tr.record-focus {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+
+/* Orders Received heading: the title on the left, the Combined Delivery pill on
+   the right. Wraps under the title on a narrow screen. */
+.seller-orders-heading--with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+}
+
+/* Closed batches (seller lock or passed end date) read as inactive in both
+   POVs without disappearing: the photo desaturates, the title quiets, and the
+   card stops lifting on hover. The seller keeps the Re-open action on the
+   card, so the state is visible but reversible. */
+/* The gray has to be unmistakable: a mid-gray surface (not near-white), and a
+   photo that is desaturated AND darkened. Grayscale alone on a white card is
+   barely noticeable, which is what the first pass looked like. Text stays dark
+   enough to read, so "closed" never costs legibility. */
+.batch-card.is-closed {
+  border-color: #c3c9d2;
+  /* The card sets its own background inline, so this has to outrank it. */
+  background: #e1e4e9 !important;
+}
+
+.batch-card.is-closed img {
+  filter: grayscale(1) brightness(0.78) contrast(0.92);
+  opacity: 1;
+}
+
+/* Buyer Home cards: shown for context, never openable. The whole card is
+   grayscale (photo, avatar, chips, progress bar), pointer events are off so
+   nothing can be tapped or hovered, and the markup drops its button role. */
+.buyer-batch-card.is-closed {
+  background: #e1e4e9;
+  box-shadow: none;
+  filter: grayscale(1);
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+}
+
+.buyer-batch-card.is-closed .buyer-batch-card__image {
+  filter: brightness(0.78) contrast(0.92);
+  transform: none;
+}
+
+.buyer-batch-card.is-closed .buyer-batch-card__track {
+  background: #c3c9d2;
+}
+
+.buyer-batch-card.is-closed .buyer-batch-card__track span {
+  background: #7b8492 !important;
+}
+
+/* Secondary text goes to a dark gray that holds AA contrast on the gray card. */
+.buyer-batch-card.is-closed .buyer-batch-card__seller > span,
+.buyer-batch-card.is-closed .buyer-batch-card__date span,
+.buyer-batch-card.is-closed .buyer-batch-card__progress-label span,
+.buyer-batch-card.is-closed .buyer-batch-card__progress-label strong {
+  color: #4b5563 !important;
+}
+
+.buyer-podium__peek.is-closed {
+  filter: grayscale(1);
+  background: #e1e4e9;
+  cursor: default;
+  pointer-events: none;
+}
+
+.buyer-podium__peek.is-closed img {
+  filter: brightness(0.78) contrast(0.92);
+}
+
+/* Seller profile storefront cards. A closed card is gray for everyone; for a
+   buyer it is also inert (see StorefrontBatchCard). */
+.storefront-batch-card.is-closed {
+  background: #e1e4e9 !important;
+  border-color: #c3c9d2 !important;
+  box-shadow: none !important;
+  filter: grayscale(1);
+}
+
+.storefront-batch-card.is-closed img {
+  filter: brightness(0.78) contrast(0.92);
+}
+
+.storefront-batch-card.is-inert {
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Divider before the closed batches at the end of the storefront grid. */
+.storefront-closed-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--kargo-line);
+  color: #4b5563 !important;
+  font-size: 12px !important;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.storefront-closed-heading span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #d5d9df;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Batch closed" as a label, so the state is never carried by gray alone.
+   Large: a full-image banner on the seller's profile. Small: a chip on the
+   denser Home cards. */
+.closed-batch-banner {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px;
+  background: rgb(31 41 55 / 64%);
+  color: #fff;
+  text-align: center;
+}
+
+.closed-batch-banner strong {
+  /* min-content stacks the two words: BATCH over CLOSED, as large as the card
+     allows. */
+  width: min-content;
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.closed-batch-banner small {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  opacity: 0.92;
+}
+
+.closed-batch-chip {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* The closed date sits on its own line under the "Not Accepting Orders" chip. */
+.batch-gallery__status-date {
+  flex-basis: 100%;
+  margin-left: 20px;
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 600;
+}

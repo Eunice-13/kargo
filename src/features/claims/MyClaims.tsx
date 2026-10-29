@@ -198,6 +198,10 @@ export default function MyClaims({
 
   const [contact, setContact] = useState<ClaimRow | null>(null)
 
+  // A notification about a combined delivery request asks the seller's list to
+  // open, since its cards live in a modal.
+  const [combinedFocusId, setCombinedFocusId] = useState<string | null>(null)
+
   const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>(() => {
     // The dashboard can ask for "Pending". Those orders now sit in Ongoing
     // Orders at the top of the page, which is always visible, so start on All.
@@ -793,10 +797,11 @@ export default function MyClaims({
 
   // A notification deep link scrolls to its record. If a filter or the
   // five-row pending limit is hiding the row, clear them so it can show.
-  useRecordFocus("My Claims", () => {
+  useRecordFocus("My Claims", (target) => {
     setFilter("All")
     setOrderFilter("All")
     setShowAllPendingPayments(true)
+    if (target.combinedGroupId) setCombinedFocusId(target.combinedGroupId)
   })
 
   if (role === "Seller") {
@@ -958,11 +963,21 @@ export default function MyClaims({
             profile…
           </div>
         )}
-        <header className="seller-orders-heading">
-          <h1>Orders Received</h1>
-          <p>Manage orders from your buyers</p>
+        <header className="seller-orders-heading seller-orders-heading--with-action">
+          <div>
+            <h1>Orders Received</h1>
+            <p>Manage orders from your buyers</p>
+          </div>
+          {/* Combined delivery requests: a pill, rightmost, like the buyer's
+              My Group Orders. The list opens in a modal. */}
+          <SellerCombinedDelivery
+            key={user.id ?? user.email}
+            sellerId={user.id}
+            onRecovered={refreshData}
+            focusRequestId={combinedFocusId}
+            onFocusHandled={() => setCombinedFocusId(null)}
+          />
         </header>
-        <SellerCombinedDelivery key={user.id ?? user.email} sellerId={user.id} onRecovered={refreshData} />
         {tableSections.map((section) => (
           <section
             key={section.key}

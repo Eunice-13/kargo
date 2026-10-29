@@ -5,6 +5,15 @@ import {
 
 import { productAvailability } from "./productAvailability"
 
+import {
+  batchCardClosed,
+  batchClosedByDate,
+  batchOrdersClosed,
+  defaultReopenEndDate,
+  formatBatchEndDate,
+  todayInManila,
+} from "./batchAvailability"
+
 import { canManageBatch, canOpenBatch } from "./batchAccess"
 
 import { useEffect, useState } from "react"
@@ -62,6 +71,8 @@ import { toggleBatchLock } from "./toggleBatchLock"
 import { isSupabaseConfigured } from "@/lib/supabase"
 
 import { kargoApi } from "@/services"
+
+import { formatBatchDateRange } from "@/services/batchDates"
 
 
 export const COLS = 3
@@ -245,6 +256,13 @@ export default function Batches({
   // Confirmation targets for consequential seller actions (#16)
 
   const [lockConfirm, setLockConfirm] = useState<BatchType | null>(null)
+
+  // Re-opening a batch that closed on its end date needs a new end date: the
+  // sweep re-locks anything whose date has already passed, so unlocking alone
+  // would bounce back to closed within a minute.
+  const [reopenTarget, setReopenTarget] = useState<BatchType | null>(null)
+  const [reopenDate, setReopenDate] = useState(defaultReopenEndDate)
+  const [reopening, setReopening] = useState(false)
 
   // Seller-only state
 
@@ -482,7 +500,8 @@ export default function Batches({
       role !== "Buyer" ||
       !currentBatch ||
       !currentProduct ||
-      !productAvailability(currentProduct, currentBatch.locked).canClaim ||
+      !productAvailability(currentProduct, batchOrdersClosed(currentBatch))
+        .canClaim ||
       claimQty > currentProduct.qty - currentProduct.claimed
     ) {
       alert("This product no longer has enough available claim slots.")
@@ -665,6 +684,53 @@ export default function Batches({
 
   // every return branch so they work from the batch grid and the seller panels.
 
+  const submitReopen = async () => {
+    if (!reopenTarget) return
+
+    if (reopenDate < todayInManila()) {
+      alert("Choose today or a later date to re-open this batch.")
+
+      return
+    }
+
+    setReopening(true)
+
+    try {
+      if (isSupabaseConfigured && reopenTarget.dbId) {
+        await kargoApi.reopenBatch(reopenTarget.dbId, reopenDate)
+      }
+
+      setBatches((prev) =>
+        prev.map((batch) =>
+          batch.id === reopenTarget.id
+            ? {
+                ...batch,
+
+                live: true,
+
+                locked: false,
+
+                endsOn: reopenDate,
+
+                trips: formatBatchDateRange(
+                  batch.startsOn ?? reopenDate,
+                  reopenDate,
+                ),
+              }
+            : batch,
+        ),
+      )
+
+      setReopenTarget(null)
+    } catch (error) {
+      alert(
+        error instanceof Error ? error.message : "Unable to re-open this batch.",
+      )
+    } finally {
+      setReopening(false)
+    }
+  }
+
   const confirmModals = (
     <>
       {lockConfirm && (
@@ -699,6 +765,55 @@ export default function Batches({
               }}
             >
               {lockConfirm.locked ? "Unlock Batch" : "Lock Batch"}
+            </PrimaryBtn>
+          </div>
+        </Modal>
+      )}
+      {reopenTarget && (
+        <Modal
+          title="Re-open this batch?"
+          onClose={() => setReopenTarget(null)}
+          width={440}
+        >
+          <p style={{ fontSize: 13, color: "#374151", marginBottom: 14 }}>
+            <strong>{reopenTarget.title}</strong> stopped taking orders on{" "}
+            {formatBatchEndDate(reopenTarget.endsOn) || "its end date"}. Pick a
+            new end date and it reopens for claims and group orders until that
+            day ends.
+          </p>
+          <label
+            htmlFor="batch-reopen-date"
+            style={{
+              display: "block",
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#374151",
+              marginBottom: 6,
+            }}
+          >
+            New end date (Philippine time)
+          </label>
+          <input
+            id="batch-reopen-date"
+            type="date"
+            value={reopenDate}
+            min={todayInManila()}
+            onChange={(event) => setReopenDate(event.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: "1px solid #E5E7EB",
+              borderRadius: 8,
+              fontSize: 14,
+              marginBottom: 18,
+            }}
+          />
+          <div className="kargo-modal-actions">
+            <SecondaryBtn onClick={() => setReopenTarget(null)}>
+              Cancel
+            </SecondaryBtn>
+            <PrimaryBtn disabled={reopening} onClick={submitReopen}>
+              {reopening ? "Re-opening…" : "Re-open Batch"}
             </PrimaryBtn>
           </div>
         </Modal>
@@ -897,6 +1012,13 @@ export default function Batches({
                 {row.map((b, i) => {
                   const pct = Math.round((b.claimed / b.items) * 100)
 
+                  // Closed, or every item locked (nothing to claim): gray card.
+                  const closed = batchCardClosed(b)
+
+                  // Date-driven closure is what the seller can undo by choosing
+                  // a new end date; a manual lock still uses the lock toggle.
+                  const closedByDate = batchClosedByDate(b)
+
                   const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"]
 
                   return (
@@ -908,11 +1030,12 @@ export default function Batches({
                       }}
                     >
                       <div
+                        className={`batch-card${closed ? " is-closed" : ""}`}
                         style={{
-                          background: "#fff",
+                          background: closed ? "#F7F8F9" : "#fff",
 
                           border: `1px solid ${
-                            b.locked ? "#FCA5A5" : "#E5E7EB"
+                            b.locked ? "#FCA5A5" : closed ? "#DDE1E6" : "#E5E7EB"
                           }`,
 
                           borderRadius: 8,
@@ -996,10 +1119,22 @@ export default function Batches({
                             <button
                               type="button"
                               aria-label={
-                                b.locked ? "Unlock batch" : "Lock batch"
+                                closedByDate
+                                  ? "Re-open batch"
+                                  : b.locked
+                                    ? "Unlock batch"
+                                    : "Lock batch"
                               }
                               onClick={(e) => {
                                 e.stopPropagation()
+
+                                if (closedByDate) {
+                                  setReopenDate(defaultReopenEndDate())
+
+                                  setReopenTarget(b)
+
+                                  return
+                                }
 
                                 setLockConfirm(b)
                               }}
@@ -1039,9 +1174,21 @@ export default function Batches({
 
                                 boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
                               }}
-                              title={b.locked ? "Unlock batch" : "Lock batch"}
+                              title={
+                                closedByDate
+                                  ? "Re-open batch"
+                                  : b.locked
+                                    ? "Unlock batch"
+                                    : "Lock batch"
+                              }
                             >
-                              {b.locked ? (
+                              {closedByDate ? (
+                                <Unlock
+                                  size={14}
+                                  aria-hidden="true"
+                                  style={{ color: "#C1EAF2" }}
+                                />
+                              ) : b.locked ? (
                                 <Lock
                                   size={14}
                                   aria-hidden="true"
@@ -1061,8 +1208,13 @@ export default function Batches({
                                 />
                               )}
                             </button>
-                          ) : b.locked ? (
+                          ) : closed ? (
                             <span
+                              title={
+                                closedByDate
+                                  ? `Closed ${formatBatchEndDate(b.endsOn)}`
+                                  : "Closed by the seller"
+                              }
                               style={{
                                 position: "absolute",
 
@@ -1086,7 +1238,8 @@ export default function Batches({
                               }}
                             >
                               <>
-                                <Lock size={13} aria-hidden="true" /> LOCKED
+                                <Lock size={13} aria-hidden="true" />{" "}
+                                {closedByDate ? "CLOSED" : "LOCKED"}
                               </>
                             </span>
                           ) : (
@@ -1339,7 +1492,7 @@ export default function Batches({
                               }}
                             />
                           </div>
-                          {role === "Buyer" && b.locked ? (
+                          {role === "Buyer" && closed ? (
                             <div
                               style={{
                                 background: "#FEE2E2",
@@ -1360,6 +1513,19 @@ export default function Batches({
                               <>
                                 <Lock size={14} aria-hidden="true" /> Not
                                 Accepting Orders
+                                {closedByDate && (
+                                  <span
+                                    style={{
+                                      display: "block",
+                                      fontSize: 10,
+                                      fontWeight: 600,
+                                      marginTop: 2,
+                                      color: "#B91C1C",
+                                    }}
+                                  >
+                                    Closed {formatBatchEndDate(b.endsOn)}
+                                  </span>
+                                )}
                               </>
                             </div>
                           ) : (

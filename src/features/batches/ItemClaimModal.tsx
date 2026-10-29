@@ -1,6 +1,7 @@
 import SavedAddressSelector from "@/components/shared/SavedAddressSelector"
 import DeliveryAddressFields from "@/components/shared/DeliveryAddressFields"
 import { productAvailability } from "./productAvailability"
+import { batchOrdersClosed } from "./batchAvailability"
 
 import { useEffect, useState } from "react"
 
@@ -150,7 +151,7 @@ export default function ItemClaimModal({
     Boolean(selectedMethod) &&
     (!shippingApplies ||
       (hasLocation && !pin.isResolvingAddress && acceptedShipping)) &&
-    productAvailability(product, batch.locked).canClaim &&
+    productAvailability(product, batchOrdersClosed(batch)).canClaim &&
     qty <= left
 
   return (

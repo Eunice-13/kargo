@@ -1,5 +1,7 @@
 import { productAvailability } from "./productAvailability"
-import { useEffect, useState } from "react"
+import { batchCardClosed } from "./batchAvailability"
+import ClosedBatchBadge from "./ClosedBatchBadge"
+import { Fragment, useEffect, useState } from "react"
 import { MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react"
 import type { BatchType, Role, UserInfo } from "@/types"
 import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
@@ -340,16 +342,29 @@ export default function SellerShopPage({
                   alignItems: "start",
                 }}
               >
-                {gridBatches.map((b) => (
-                  <StorefrontBatchCard
-                    key={b.id}
-                    batch={b}
-                    canClaim={canClaim}
-                    canReact={canReact}
-                    onOpen={onBatchOpen}
-                    onToggleReaction={onToggleReaction}
-                    reactionPending={reactionPending?.has(b.id) ?? false}
-                  />
+                {gridBatches.map((b, index) => (
+                  <Fragment key={b.id}>
+                    {/* Closed batches are already sorted to the end; a divider
+                        says why they look different before the first one. */}
+                    {batchCardClosed(b) &&
+                      (index === 0 || !batchCardClosed(gridBatches[index - 1])) && (
+                        <h3 className="storefront-closed-heading">
+                          Closed batches
+                          <span>
+                            {gridBatches.filter((batch) => batchCardClosed(batch)).length}
+                          </span>
+                        </h3>
+                      )}
+                    <StorefrontBatchCard
+                      batch={b}
+                      canClaim={canClaim}
+                      canReact={canReact}
+                      blockClosed={role !== "Seller"}
+                      onOpen={onBatchOpen}
+                      onToggleReaction={onToggleReaction}
+                      reactionPending={reactionPending?.has(b.id) ?? false}
+                    />
+                  </Fragment>
                 ))}
               </div>
             )}
@@ -417,7 +432,7 @@ export default function SellerShopPage({
               <div className="grid grid-cols-2 gap-2">
                 {[
                   ["Completed", String(totalClaimed), "#0B7A59"],
-                  ["Active Batches", String(sellerBatches.filter((b) => b.live).length), INDIGO],
+                  ["Active Batches", String(sellerBatches.filter((b) => b.live && !batchCardClosed(b)).length), INDIGO],
                   ["Products", String(totalProducts), "#111827"],
                   ["Reactions", String(totalReactions), "#ef3559"],
                 ].map(([label, val, color]) => (
@@ -483,6 +498,7 @@ function StorefrontBatchCard({
   batch: b,
   canClaim,
   canReact,
+  blockClosed,
   onOpen,
   onToggleReaction,
   reactionPending,
@@ -490,6 +506,9 @@ function StorefrontBatchCard({
   batch: BatchType
   canClaim: boolean
   canReact: boolean
+  // Buyers cannot open (or favorite) a closed batch. The seller viewing their
+  // own storefront still can, to manage it.
+  blockClosed: boolean
   onOpen?: (batchId: number) => void
   onToggleReaction?: (batch: BatchType) => void
   reactionPending: boolean
@@ -497,41 +516,60 @@ function StorefrontBatchCard({
   const pct = b.items > 0 ? Math.round((b.claimed / b.items) * 100) : 0
   const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"]
   const barColor = pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO
-  const soldOut = b.claimed >= b.items
+  const closed = batchCardClosed(b)
+  const inert = closed && blockClosed
+  const soldOut = b.claimed >= b.items && !closed
   const reacted = Boolean(b.reactedByCurrentUser)
   const count = b.reactionCount ?? 0
   const open = () => onOpen?.(b.id)
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={`View ${b.title}`}
-      onClick={open}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          open()
-        }
-      }}
+      className={`storefront-batch-card${closed ? " is-closed" : ""}${inert ? " is-inert" : ""}`}
+      // An inert (closed, buyer-facing) card is not a button: no role, no tab
+      // stop, no click or key handler, and the CSS drops pointer events.
+      role={inert ? undefined : "button"}
+      tabIndex={inert ? undefined : 0}
+      aria-label={
+        inert ? `${b.title}, batch closed` : closed ? `View ${b.title}, batch closed` : `View ${b.title}`
+      }
+      onClick={inert ? undefined : open}
+      onKeyDown={
+        inert
+          ? undefined
+          : (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                open()
+              }
+            }
+      }
       style={{
         background: "#fff",
         border: "1px solid #E5E7EB",
         borderRadius: 8,
         overflow: "hidden",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-        cursor: "pointer",
+        cursor: inert ? "default" : "pointer",
         transition: "transform 0.15s, box-shadow 0.15s",
       }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLDivElement
-        el.style.transform = "translateY(-2px)"
-        el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)"
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLDivElement
-        el.style.transform = ""
-        el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"
-      }}
+      onMouseEnter={
+        inert
+          ? undefined
+          : (e) => {
+              const el = e.currentTarget as HTMLDivElement
+              el.style.transform = "translateY(-2px)"
+              el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)"
+            }
+      }
+      onMouseLeave={
+        inert
+          ? undefined
+          : (e) => {
+              const el = e.currentTarget as HTMLDivElement
+              el.style.transform = ""
+              el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"
+            }
+      }
     >
       <div
         style={{
@@ -566,7 +604,7 @@ function StorefrontBatchCard({
         >
           {b.category.toUpperCase()}
         </span>
-        {canReact ? (
+        {canReact && !inert ? (
           <button
             type="button"
             className={`seller-shop-batch__reaction${reacted ? " is-favorite" : ""}`}
@@ -602,6 +640,7 @@ function StorefrontBatchCard({
             <span>{count}</span>
           </span>
         )}
+        {closed && <ClosedBatchBadge size="large" endsOn={b.endsOn} />}
         {soldOut && (
           <span
             style={{
@@ -635,11 +674,11 @@ function StorefrontBatchCard({
         >
           {b.title}
         </h3>
-        <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: closed ? "#4B5563" : "#9CA3AF", marginBottom: 10 }}>
           {b.trips}
         </div>
         <div className="flex items-center justify-between" style={{ marginBottom: 6 }}>
-          <span style={{ fontSize: 11, color: "#6B7280" }}>
+          <span style={{ fontSize: 11, color: closed ? "#4B5563" : "#6B7280" }}>
             {b.claimed}/{b.items} claimed
           </span>
           <span style={{ fontSize: 11, fontWeight: 700, color: barColor }}>{pct}%</span>
@@ -655,7 +694,7 @@ function StorefrontBatchCard({
         >
           <div style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: 999 }} />
         </div>
-        {canClaim && b.products.some((p) => productAvailability(p, b.locked).canClaim) && (
+        {canClaim && b.products.some((p) => productAvailability(p, batchCardClosed(b)).canClaim) && (
           // Let buyers choose a product on the batch page instead of silently
           // selecting the first available item from the storefront.
           <div onClick={(e) => e.stopPropagation()}>

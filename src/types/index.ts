@@ -389,6 +389,12 @@ export interface BatchItem {
 
   trips: string
 
+  // Philippine calendar date the batch runs through (`YYYY-MM-DD`). Orders and
+  // group orders stop at the end of this day; see batchOrdersClosed().
+  endsOn?: string
+
+  startsOn?: string
+
   items: number
 
   claimed: number

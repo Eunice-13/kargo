@@ -1,4 +1,5 @@
 import { formationExpired, formatFormationDeadline } from "@/services/groupFormation"
+import { batchOrdersClosed, formatBatchEndDate } from "./batchAvailability"
 import { groupOrderErrorMessage, groupCommitmentMaximum, validGroupCommitmentQuantity } from "./groupOrderFeedback"
 import GroupMembershipNotice from "./GroupMembershipNotice"
 import { GroupMembershipConflict } from "@/services/groupMembership"
@@ -133,6 +134,10 @@ export default function GroupOrderModal({
   }, [checkoutOpen, batch.sellerId])
 
   const formationClosed = Boolean(group && formationExpired(group.status, group.formationDeadline, now))
+  // A batch past its end date can no longer start or join a group; the server
+  // rejects both with "This batch has already closed". Existing groups stay
+  // viewable so members can see the outcome.
+  const ordersClosed = batchOrdersClosed(batch)
   const activeMembers = group?.members.filter((member) => member.status === "active") ?? []
   const subtotal = useMemo(
     () =>
@@ -210,7 +215,13 @@ export default function GroupOrderModal({
                 <span>At least two separate KARGO accounts are required.</span>
               </div>
             </div>
-            {joining ? (
+            {ordersClosed ? (
+              <p className="group-order-status" role="status">
+                This batch closed
+                {batch.endsOn ? ` on ${formatBatchEndDate(batch.endsOn)}` : ""}. New
+                group orders can no longer be started or joined.
+              </p>
+            ) : joining ? (
               <div className="group-order-code-entry">
                 <input
                   value={code}

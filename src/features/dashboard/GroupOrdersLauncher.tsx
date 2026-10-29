@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, RefreshCw, Users } from "lucide-react";
 import type { BatchType } from "@/types";
 import type { LeaderGroupOrder } from "@/types/leaderGroupOrder";
-import { Modal, PrimaryBtn, revealRecord } from "@/components/shared";
+import { Modal, PillTrigger, PrimaryBtn, revealRecord } from "@/components/shared";
 import { GroupOrderModal } from "@/features/batches";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { loadMyGroupOrders } from "@/services/leaderGroupOrders";
@@ -138,29 +138,18 @@ export default function GroupOrdersLauncher({
 
   return (
     <>
-      <button
-        type="button"
-        className="group-orders-trigger"
-        aria-haspopup="dialog"
-        aria-label={`My Group Orders${ongoing.length ? `, ${ongoing.length} active` : ""}`}
+      <PillTrigger
+        icon={Users}
+        prefix="My "
+        label="Group Orders"
+        count={ongoing.length}
+        ariaLabel={`My Group Orders${ongoing.length ? `, ${ongoing.length} active` : ""}`}
         onClick={() => {
           revealedFor.current = null;
           setFocusId(null);
           setOpen(true);
         }}
-      >
-        <span className="group-orders-trigger__icon" aria-hidden="true">
-          <Users size={17} />
-        </span>
-        <span>
-          <span className="group-orders-trigger__my">My </span>Group Orders
-        </span>
-        {ongoing.length > 0 && (
-          <span className="group-orders-trigger__count" aria-hidden="true">
-            {ongoing.length}
-          </span>
-        )}
-      </button>
+      />
 
       {showList && (
         <Modal title="My Group Orders" variant="detail" width={720} onClose={closeAll}>

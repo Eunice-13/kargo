@@ -16,6 +16,9 @@ import {
   categoryImage,
 } from "@/constants/categories"
 import type { BatchType } from "@/types"
+import { batchCardClosed } from "./batchAvailability"
+import { sortClosedLast } from "./batchSort"
+import ClosedBatchBadge from "./ClosedBatchBadge"
 
 function useHorizontalCarousel(itemCount: number) {
   const trackRef = useRef<HTMLDivElement>(null)
@@ -167,6 +170,7 @@ function BatchCard({
   onOpen: () => void
 }) {
   const { percentage, color: progressColor } = batchProgress(batch)
+  const closed = batchCardClosed(batch)
   const rankClass =
     rank === undefined
       ? ""
@@ -175,20 +179,31 @@ function BatchCard({
         : " is-ranked"
 
   return (
+    // A closed batch is shown for context only. It is not a button: no role,
+    // no tab stop, no click or key handler, and the CSS drops pointer events,
+    // so a buyer cannot open it by tapping, clicking, or keyboard.
     <article
-      className={`buyer-batch-card${rankClass}`}
-      role="button"
-      tabIndex={0}
-      aria-label={`Open ${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${batch.seller}, ${batch.trips}, ${batch.claimed} of ${batch.items} claimed${
-        rank === undefined ? "" : `, ranked #${rank} by buyer favorites`
-      }`}
-      onClick={onOpen}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault()
-          onOpen()
-        }
-      }}
+      className={`buyer-batch-card${rankClass}${closed ? " is-closed" : ""}`}
+      role={closed ? undefined : "button"}
+      tabIndex={closed ? undefined : 0}
+      aria-label={
+        closed
+          ? `${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${batch.seller}, batch closed`
+          : `Open ${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${batch.seller}, ${batch.trips}, ${batch.claimed} of ${batch.items} claimed${
+              rank === undefined ? "" : `, ranked #${rank} by buyer favorites`
+            }`
+      }
+      onClick={closed ? undefined : onOpen}
+      onKeyDown={
+        closed
+          ? undefined
+          : (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault()
+                onOpen()
+              }
+            }
+      }
     >
       <div className="buyer-batch-card__image-wrap">
         <img
@@ -198,6 +213,7 @@ function BatchCard({
           className="buyer-batch-card__image"
         />
         <span className="buyer-batch-card__category">{normalizeBatchCategory(batch.category)}</span>
+        {closed && <ClosedBatchBadge size="small" endsOn={batch.endsOn} />}
         <button
           type="button"
           className={`buyer-batch-card__favorite${
@@ -209,7 +225,7 @@ function BatchCard({
               : `Add ${batch.title} to favorites`
           }
           aria-pressed={favorited}
-          disabled={reactionPending}
+          disabled={reactionPending || closed}
           onClick={(event) => {
             event.stopPropagation()
             onFavorite()
@@ -448,9 +464,17 @@ function PopularSection({
                 return (
                   <button
                     type="button"
-                    className={`buyer-podium__peek buyer-podium__peek--${side}-${depth}`}
+                    className={`buyer-podium__peek buyer-podium__peek--${side}-${depth}${
+                      batchCardClosed(batch) ? " is-closed" : ""
+                    }`}
                     key={batch.id}
-                    aria-label={`Open ${batch.title} by ${batch.seller}, ranked #${rank} by buyer favorites`}
+                    // A closed batch is shown but cannot be opened.
+                    disabled={batchCardClosed(batch)}
+                    aria-label={
+                      batchCardClosed(batch)
+                        ? `${batch.title} by ${batch.seller}, batch closed`
+                        : `Open ${batch.title} by ${batch.seller}, ranked #${rank} by buyer favorites`
+                    }
                     onClick={() => onOpenBatch(batch)}
                   >
                     <span className="buyer-podium__peek-photo">
@@ -694,20 +718,24 @@ export default function BuyerHome({
     [batches, category, date],
   )
 
+  // Closed batches stay visible for context but always trail the batches a
+  // buyer can still join, in both lists.
   const latest = useMemo(
     () =>
-      [...filtered].sort((a, b) => {
-        const createdDifference =
-          new Date(b.createdAt ?? 0).getTime() -
-          new Date(a.createdAt ?? 0).getTime()
-        return createdDifference || Number(b.id) - Number(a.id)
-      }),
+      sortClosedLast(
+        [...filtered].sort((a, b) => {
+          const createdDifference =
+            new Date(b.createdAt ?? 0).getTime() -
+            new Date(a.createdAt ?? 0).getTime()
+          return createdDifference || Number(b.id) - Number(a.id)
+        }),
+      ),
     [filtered],
   )
   const popular = useMemo(
     () =>
-      [...filtered]
-        .sort((a, b) => {
+      sortClosedLast(
+        [...filtered].sort((a, b) => {
           const reactionDifference =
             (b.reactionCount ?? 0) - (a.reactionCount ?? 0)
           if (reactionDifference !== 0) return reactionDifference
@@ -716,8 +744,8 @@ export default function BuyerHome({
             new Date(a.createdAt ?? 0).getTime()
           if (createdDifference !== 0) return createdDifference
           return Number(b.id) - Number(a.id)
-        })
-        .slice(0, 10),
+        }),
+      ).slice(0, 10),
     [filtered],
   )
   return (

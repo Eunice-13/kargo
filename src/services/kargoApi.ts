@@ -1,4 +1,5 @@
 import { batchFormationDeadline } from "./groupFormation"
+import { formatBatchDateRange } from "./batchDates"
 import { membershipError, resolveGroupMembership } from "./groupMembership"
 import { loadPaymentCompatibleRows } from "./paymentReadCompatibility"
 import { combinedDeliveryMutationError } from "./combinedDeliveryErrors"
@@ -482,30 +483,6 @@ export async function signOut() {
   if (error) throw error
 }
 
-function formatBatchDateRange(startsOn: string, endsOn: string) {
-  const start = new Date(`${startsOn}T00:00:00`)
-
-  const end = new Date(`${endsOn}T00:00:00`)
-
-  const startMonth = start.toLocaleDateString("en-US", { month: "short" })
-
-  const endMonth = end.toLocaleDateString("en-US", { month: "short" })
-
-  const startYear = start.getFullYear()
-
-  const endYear = end.getFullYear()
-
-  if (startMonth === endMonth && startYear === endYear) {
-    return `${startMonth} ${start.getDate()}–${end.getDate()}, ${endYear}`
-  }
-
-  if (startYear === endYear) {
-    return `${startMonth} ${start.getDate()}–${endMonth} ${end.getDate()}, ${endYear}`
-  }
-
-  return `${startMonth} ${start.getDate()}, ${startYear}–${endMonth} ${end.getDate()}, ${endYear}`
-}
-
 export async function setBatchReaction(batchId: string, reacted: boolean) {
   const client = requireSupabase()
 
@@ -740,6 +717,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       sellerFb: participantLinks.get(row.seller_id),
 
       trips: formatBatchDateRange(row.starts_on, row.ends_on),
+
+      endsOn: row.ends_on ?? undefined,
+
+      startsOn: row.starts_on ?? undefined,
 
       items: Number(row.batch_total_items ?? 0),
 
@@ -2524,6 +2505,21 @@ export async function setProductLock(productId: string, locked: boolean) {
   if (error) throw error
 }
 
+/**
+ * Re-opens a batch whose end date has passed. A new end date is required: the
+ * one-minute sweep re-locks any batch past its deadline, so flipping the status
+ * alone would close it again before the seller could do anything.
+ */
+export async function reopenBatch(batchId: string, endsOn: string) {
+  const { error } = await requireSupabase().rpc("reopen_batch", {
+    p_batch_id: batchId,
+
+    p_ends_on: endsOn,
+  })
+
+  if (error) throw error
+}
+
 export async function setProductWaitlistLimit(
   productId: string,
 
@@ -3431,6 +3427,8 @@ export const kargoApi = {
   uploadProfileAvatar,
 
   setBatchLock,
+
+  reopenBatch,
 
   setProductLock,
 
