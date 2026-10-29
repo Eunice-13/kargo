@@ -5,9 +5,7 @@ import {
   Check,
   ChevronRight,
   Package,
-  ReceiptText,
   ShieldAlert,
-  Store,
   UserX,
 } from "lucide-react";
 
@@ -18,9 +16,10 @@ import { requestAdminSection } from "@/state/navIntent";
 import type { SharedState } from "@/types";
 
 import AdminFulfillmentAnalytics from "./AdminFulfillmentAnalytics";
+import "./adminDashboardCards.css";
 
 import { useAdminResource } from "./useAdminResource";
-import { AdminPageHeader, AdminStatCard, AdminPanelHeader } from "./components";
+import { AdminPageHeader, AdminPanelHeader } from "./components";
 import { AdminEmptyText } from "./components/AdminFacts";
 import { AdminErrorState } from "./components/AdminStates";
 
@@ -45,35 +44,6 @@ type QueueItem = {
   description: string;
   go: () => void;
 };
-
-// Buyer/seller dashboard palette, applied to the admin KPIs.
-const STAT_STYLES = {
-  green: {
-    background: "linear-gradient(135deg, #E8F9F3 0%, #DDF7EC 55%, #CFF2E2 100%)",
-    accent: "#3FBF8F",
-    strip: "#75EEA3",
-  },
-  indigo: {
-    background: "linear-gradient(135deg, #E0E7FF 0%, #DEF3FA 100%)",
-    accent: "#191BA9",
-    strip: "#191BA9",
-  },
-  amber: {
-    background: "linear-gradient(135deg, #FFF8E8 0%, #FFF3D8 55%, #FFECC4 100%)",
-    accent: "#B4690E",
-    strip: "#FFE873",
-  },
-  red: {
-    background: "linear-gradient(135deg, #FFF0F2 0%, #FCE2E6 55%, #F8D4DA 100%)",
-    accent: "#B42318",
-    strip: "#E52B49",
-  },
-  gray: {
-    background: "linear-gradient(135deg, #FFFFFF 0%, #F5F7FB 55%, #E9EEF7 100%)",
-    accent: "#4B5563",
-    strip: "#C7CDDB",
-  },
-} as const;
 
 const PIPELINE_META: Record<string, { label: string; tone: string }> = {
   payment_pending: { label: "Awaiting payment", tone: "#B4690E" },
@@ -110,7 +80,14 @@ export default function AdminDashboard({ setTab }: SharedState) {
         subtitle="What needs attention across KARGO right now."
         actions={
           <>
-            <PrimaryBtn className="admin-action-primary" size="sm" onClick={() => { refresh(); setAnalyticsRefresh(n => n + 1); }}>
+            <PrimaryBtn
+              className="admin-action-primary"
+              size="sm"
+              onClick={() => {
+                refresh();
+                setAnalyticsRefresh((n) => n + 1);
+              }}
+            >
               Refresh
             </PrimaryBtn>
           </>
@@ -131,42 +108,46 @@ export default function AdminDashboard({ setTab }: SharedState) {
 
       {!loading && !error && data && (
         <>
-          {/* KPI row — seller/buyer dashboard card treatment. */}
-          <div className="admin-stats admin-stats--operational">
-            <AdminStatCard
-              icon={ReceiptText}
-              label="Orders (30d)"
-              value={data.orders30.toLocaleString()}
-              sub="Payment confirmed"
-              {...STAT_STYLES.indigo}
-              onClick={() => goto({ tab: "Transactions", subtab: "Orders" })}
-            />
-            <AdminStatCard
-              icon={Store}
-              label="Active sellers"
-              value={data.activeSellers.toLocaleString()}
-              sub="Can sell today"
-              {...STAT_STYLES.amber}
-              onClick={() => goto({ tab: "Users", filter: "seller" })}
-            />
-            <AdminStatCard
-              icon={BadgeCheck}
-              label="Payments to review"
-              value={data.paymentsPending.toLocaleString()}
-              sub="Proofs awaiting a seller"
-              {...STAT_STYLES.red}
-              onClick={() => goto({ tab: "Transactions", subtab: "Payments" })}
-            />
-            <AdminStatCard
-              icon={UserX}
-              label="Suspended"
-              value={data.suspended.toLocaleString()}
-              sub="Accounts locked out"
-              {...STAT_STYLES.gray}
-              onClick={() => goto({ tab: "Users", subtab: "Suspended" })}
-            />
+          <div className="admin-attention-metrics">
+            {[
+              {
+                label: "Paid, not shipped 7d+",
+                value: data.stuckOrders,
+                tone: "danger",
+                go: () => goto({ tab: "Transactions", subtab: "Orders" }),
+              },
+              {
+                label: "Payments to review",
+                value: data.paymentsPending,
+                tone: "warn",
+                go: () => goto({ tab: "Transactions", subtab: "Payments" }),
+              },
+              {
+                label: "Suspended",
+                value: data.suspended,
+                tone: "neutral",
+                go: () => goto({ tab: "Users", subtab: "Suspended" }),
+              },
+              {
+                label: "Active sellers",
+                value: data.activeSellers,
+                tone: "neutral",
+                go: () => goto({ tab: "Users", filter: "seller" }),
+              },
+            ].map((metric) => (
+              <button
+                key={metric.label}
+                type="button"
+                className={`admin-attention-metric admin-attention-metric--${metric.tone}`}
+                onClick={metric.go}
+                aria-label={`Open ${metric.label}`}
+              >
+                <ArrowUpRight size={20} aria-hidden="true" />
+                <strong>{metric.value.toLocaleString()}</strong>
+                <span>{metric.label}</span>
+              </button>
+            ))}
           </div>
-
         </>
       )}
 
@@ -174,6 +155,14 @@ export default function AdminDashboard({ setTab }: SharedState) {
 
       {!loading && !error && data && (
         <>
+          <button
+            type="button"
+            className="admin-orders-period-link"
+            onClick={() => goto({ tab: "Transactions", subtab: "Orders" })}
+          >
+            Orders (30d): <strong>{data.orders30.toLocaleString()}</strong> · Payment confirmed{" "}
+            <ArrowUpRight size={14} aria-hidden="true" />
+          </button>
           <NeedsAttention data={data} goto={goto} />
 
           {/* Order pipeline + recent activity + top sellers */}
