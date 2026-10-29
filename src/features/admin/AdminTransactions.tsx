@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Card, CardSkeleton, PrimaryBtn } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
@@ -41,9 +41,25 @@ function downloadCsv(filename: string, headers: string[], rows: (string | number
 
 export default function AdminTransactions() {
   const [section, setSection] = useState<Section>("Orders");
+  const [orderFilter, setOrderFilter] = useState<string | null>(null);
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const appliedNavigation = useRef(false);
 
   useEffect(() => {
+    // Strict Mode replays mount effects; the navigation intent is consumed only once.
+    if (appliedNavigation.current) return;
+    appliedNavigation.current = true;
     const intent = consumeAdminIntent();
+    setPaymentFilter(
+      intent.tab === "Transactions" && intent.filter === "pending_review"
+        ? "pending_review"
+        : "all",
+    );
+    setOrderFilter(
+      intent.tab === "Transactions" && intent.filter === "paid_missing_tracking"
+        ? "paid_missing_tracking"
+        : "all",
+    );
     if (intent.tab === "Transactions" && intent.subtab) {
       if (intent.subtab === "Payments") setSection("Payments");
       else if (intent.subtab === "Combined payments") setSection("Combined");
@@ -66,8 +82,10 @@ export default function AdminTransactions() {
         active={section}
         onChange={setSection}
       />
-      {section === "Orders" && <OrdersSection />}
-      {section === "Payments" && <PaymentsSection />}
+      {section === "Orders" && orderFilter !== null && (
+        <OrdersSection initialStatus={orderFilter} />
+      )}
+      {section === "Payments" && <PaymentsSection initialStatus={paymentFilter} />}
       {section === "Combined" && <CombinedSection />}
     </div>
   );
@@ -144,10 +162,10 @@ function ExportButton({ onClick }: { onClick: () => void }) {
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
 
-function OrdersSection() {
+function OrdersSection({ initialStatus }: { initialStatus: string }) {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [days, setDays] = useState("30");
+  const [status, setStatus] = useState(initialStatus);
+  const [days, setDays] = useState(initialStatus === "paid_missing_tracking" ? "0" : "30");
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminOrderRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -194,6 +212,7 @@ function OrdersSection() {
       >
         <AdminSelect value={status} onChange={setStatus} ariaLabel="Filter orders by status">
           <option value="all">All statuses</option>
+          <option value="paid_missing_tracking">No tracking · paid 7+ days</option>
           <option value="payment_pending">Payment pending</option>
           <option value="payment_submitted">Payment submitted</option>
           <option value="payment_confirmed">Payment confirmed</option>
@@ -211,6 +230,12 @@ function OrdersSection() {
         </AdminSelect>
         {rows.length > 0 && <ExportButton onClick={exportCsv} />}
       </AdminFilterBar>
+
+      {status === "paid_missing_tracking" && (
+        <p className="mb-4 text-sm text-[var(--kargo-muted)]">
+          Payment confirmed over 7 days ago, still confirmed or preparing, with no tracking number.
+        </p>
+      )}
 
       {loading && offset === 0 && (
         <div style={{ display: "grid", gap: 10 }}>
@@ -326,10 +351,10 @@ function OrdersSection() {
 
 // ─── Payments ──────────────────────────────────────────────────────────────
 
-function PaymentsSection() {
+function PaymentsSection({ initialStatus }: { initialStatus: string }) {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [days, setDays] = useState("30");
+  const [status, setStatus] = useState(initialStatus);
+  const [days, setDays] = useState(initialStatus === "pending_review" ? "0" : "30");
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminPaymentRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);

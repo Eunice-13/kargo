@@ -1,17 +1,11 @@
-import type React from "react"
-import { useState } from "react"
-import {
-  CreditCard,
-  Paperclip,
-  Check,
-  X,
-  ExternalLink,
-  Image as ImageIcon,
-} from "lucide-react"
-import { INDIGO, CREAM } from "@/constants/theme"
-import { Modal, Avatar } from "@/components/shared"
-import type { VerifyItem } from "./verifyTypes"
-import { kargoApi } from "@/services"
+import type React from "react";
+import { useState } from "react";
+import { CreditCard, Paperclip, Check, X, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { INDIGO, CREAM } from "@/constants/theme";
+import { Modal, Avatar, SecondaryBtn } from "@/components/shared";
+import type { VerifyItem } from "./verifyTypes";
+import { confirmPaymentCopy } from "./confirmPaymentWarning";
+import { kargoApi } from "@/services";
 
 export default function ReviewSubmissionModal({
   reviewTarget,
@@ -23,61 +17,59 @@ export default function ReviewSubmissionModal({
   onNotifyBuyer,
   onMarkPaid,
 }: {
-  reviewTarget: VerifyItem
-  setReviewTarget: (v: VerifyItem | null) => void
-  setVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>>
-  setRejectTarget: (v: VerifyItem | null) => void
-  setRejectReason: (v: string) => void
-  setRejectCustom: (v: string) => void
-  onNotifyBuyer: (item: VerifyItem) => void | Promise<void>
-  onMarkPaid: (item: VerifyItem) => void
+  reviewTarget: VerifyItem;
+  setReviewTarget: (v: VerifyItem | null) => void;
+  setVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>>;
+  setRejectTarget: (v: VerifyItem | null) => void;
+  setRejectReason: (v: string) => void;
+  setRejectCustom: (v: string) => void;
+  onNotifyBuyer: (item: VerifyItem) => void | Promise<void>;
+  onMarkPaid: (item: VerifyItem) => void;
 }) {
-  const [showReceipt, setShowReceipt] = useState(false)
-  const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
-  const [receiptLoading, setReceiptLoading] = useState(false)
-  const [receiptError, setReceiptError] = useState<string | null>(null)
-  const [notifying, setNotifying] = useState(false)
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+  const [notifying, setNotifying] = useState(false);
+  // Gate every "Confirm Payment"/"Mark Paid" action behind one confirmation
+  // popup. All seller payment types (individual, group, combined-delivery,
+  // partial) funnel through this component, so a single popup here covers them
+  // without duplicating one per type.
+  const [confirming, setConfirming] = useState(false);
 
   const openReceipt = async () => {
     if (!reviewTarget.receiptPath) {
-      setReceiptError("No receipt file was attached to this payment.")
-      return
+      setReceiptError("No receipt file was attached to this payment.");
+      return;
     }
-    setReceiptLoading(true)
-    setReceiptError(null)
+    setReceiptLoading(true);
+    setReceiptError(null);
     try {
-      setReceiptUrl(await kargoApi.paymentReceiptUrl(reviewTarget.receiptPath))
-      setShowReceipt(true)
+      setReceiptUrl(await kargoApi.paymentReceiptUrl(reviewTarget.receiptPath));
+      setShowReceipt(true);
     } catch (error) {
-      setReceiptError(
-        error instanceof Error ? error.message : "Unable to open the receipt.",
-      )
+      setReceiptError(error instanceof Error ? error.message : "Unable to open the receipt.");
     } finally {
-      setReceiptLoading(false)
+      setReceiptLoading(false);
     }
-  }
-  const amountPaid =
-    reviewTarget.amountPaid != null ? Number(reviewTarget.amountPaid) : null
-  const isShort = amountPaid != null && amountPaid < reviewTarget.amount
-  const buyerNotified = Boolean(reviewTarget.buyerNotified)
-  const isCashOnMeetup = reviewTarget.method === "Cash on Meetup"
+  };
+  const amountPaid = reviewTarget.amountPaid != null ? Number(reviewTarget.amountPaid) : null;
+  const isShort = amountPaid != null && amountPaid < reviewTarget.amount;
+  const buyerNotified = Boolean(reviewTarget.buyerNotified);
+  const isCashOnMeetup = reviewTarget.method === "Cash on Meetup";
   const notifyBuyer = async () => {
-    setNotifying(true)
+    setNotifying(true);
     try {
-      await onNotifyBuyer(reviewTarget)
+      await onNotifyBuyer(reviewTarget);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to notify the buyer.")
+      alert(error instanceof Error ? error.message : "Unable to notify the buyer.");
     } finally {
-      setNotifying(false)
+      setNotifying(false);
     }
-  }
+  };
   return (
     <>
-      <Modal
-        title="Payment Submission Details"
-        onClose={() => setReviewTarget(null)}
-        width={520}
-      >
+      <Modal title="Payment Submission Details" onClose={() => setReviewTarget(null)} width={520}>
         <div className="space-y-4">
           {/* Buyer + product header */}
           <div
@@ -144,28 +136,32 @@ export default function ReviewSubmissionModal({
                 BUYER SUBMISSION
               </span>
             </div>
-            {([
-              ["Reference ID", reviewTarget.ref],
-              ["Account Name", reviewTarget.acctName],
-              ["Date Submitted", reviewTarget.date],
-              ["Phone Number", reviewTarget.phone || "—"],
-              ...(reviewTarget.rejectionDeadline
-                ? [
-                    [
-                      "Resubmission Deadline",
-                      new Date(reviewTarget.rejectionDeadline).toLocaleString(),
-                    ] as [string, string],
-                  ]
-                : []),
-              ...(isCashOnMeetup
-                ? []
-                : [[
-                    "Amount Paid",
-                    reviewTarget.amountPaid
-                      ? `₱${Number(reviewTarget.amountPaid).toLocaleString()}`
-                      : "—",
-                  ] as [string, string]]),
-            ] as [string, string][]).map(([k, v], idx) => (
+            {(
+              [
+                ["Reference ID", reviewTarget.ref],
+                ["Account Name", reviewTarget.acctName],
+                ["Date Submitted", reviewTarget.date],
+                ["Phone Number", reviewTarget.phone || "—"],
+                ...(reviewTarget.rejectionDeadline
+                  ? [
+                      [
+                        "Resubmission Deadline",
+                        new Date(reviewTarget.rejectionDeadline).toLocaleString(),
+                      ] as [string, string],
+                    ]
+                  : []),
+                ...(isCashOnMeetup
+                  ? []
+                  : [
+                      [
+                        "Amount Paid",
+                        reviewTarget.amountPaid
+                          ? `₱${Number(reviewTarget.amountPaid).toLocaleString()}`
+                          : "—",
+                      ] as [string, string],
+                    ]),
+              ] as [string, string][]
+            ).map(([k, v], idx) => (
               <div key={k}>
                 {idx === 0 && (
                   <div
@@ -224,8 +220,7 @@ export default function ReviewSubmissionModal({
                       fontSize: 12,
                       fontWeight: 700,
                       color: "#111827",
-                      fontFamily:
-                        k === "Reference ID" ? "monospace" : "inherit",
+                      fontFamily: k === "Reference ID" ? "monospace" : "inherit",
                     }}
                   >
                     {v}
@@ -243,9 +238,7 @@ export default function ReviewSubmissionModal({
                 borderBottom: "1px solid #F3F4F6",
               }}
             >
-              <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>
-                Contact Link
-              </span>
+              <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>Contact Link</span>
               {reviewTarget.contact ? (
                 <a
                   href={reviewTarget.contact}
@@ -267,8 +260,7 @@ export default function ReviewSubmissionModal({
                     gap: 5,
                   }}
                 >
-                  <ExternalLink size={12} aria-hidden="true" /> Open Facebook
-                  profile
+                  <ExternalLink size={12} aria-hidden="true" /> Open Facebook profile
                 </a>
               ) : (
                 <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>
@@ -283,9 +275,7 @@ export default function ReviewSubmissionModal({
                 padding: "10px 14px",
               }}
             >
-              <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>
-                Receipt File
-              </span>
+              <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>Receipt File</span>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <button
                   type="button"
@@ -395,7 +385,7 @@ export default function ReviewSubmissionModal({
               border: "1px solid",
               cursor: "pointer",
               whiteSpace: "nowrap" as const,
-            }
+            };
             return (
               <div className="kargo-modal-actions">
                 <button
@@ -441,7 +431,7 @@ export default function ReviewSubmissionModal({
                           </button>
                         )}
                         <button
-                          onClick={() => onMarkPaid(reviewTarget)}
+                          onClick={() => setConfirming(true)}
                           style={{
                             ...btnBase,
                             background: INDIGO,
@@ -454,7 +444,7 @@ export default function ReviewSubmissionModal({
                       </>
                     )}
                     <button
-                      onClick={() => onMarkPaid(reviewTarget)}
+                      onClick={() => setConfirming(true)}
                       style={{
                         ...btnBase,
                         justifyContent: "center",
@@ -468,10 +458,10 @@ export default function ReviewSubmissionModal({
                     </button>
                     <button
                       onClick={() => {
-                        setRejectTarget(reviewTarget)
-                        setReviewTarget(null)
-                        setRejectReason("")
-                        setRejectCustom("")
+                        setRejectTarget(reviewTarget);
+                        setReviewTarget(null);
+                        setRejectReason("");
+                        setRejectCustom("");
                       }}
                       style={{
                         ...btnBase,
@@ -486,8 +476,9 @@ export default function ReviewSubmissionModal({
                     </button>
                   </>
                 )}
-                {reviewTarget.status === "Rejected" && reviewTarget.rejectionDeadline && (
-                  buyerNotified ? (
+                {reviewTarget.status === "Rejected" &&
+                  reviewTarget.rejectionDeadline &&
+                  (buyerNotified ? (
                     <span
                       style={{
                         ...btnBase,
@@ -513,13 +504,68 @@ export default function ReviewSubmissionModal({
                     >
                       {notifying ? "Notifying…" : "Notify Buyer to Resubmit"}
                     </button>
-                  )
-                )}
+                  ))}
               </div>
-            )
+            );
           })()}
         </div>
       </Modal>
+      {confirming &&
+        (() => {
+          const copy = confirmPaymentCopy(reviewTarget);
+          return (
+            <Modal
+              title={copy.title}
+              variant="confirm"
+              onClose={() => setConfirming(false)}
+              width={460}
+            >
+              <div className="space-y-4">
+                <p style={{ fontSize: 13, color: "#374151", margin: 0 }}>{copy.message}</p>
+                {copy.warning && (
+                  <div
+                    style={{
+                      background: copy.locksOrder ? "#FEF2F2" : "#FFF7ED",
+                      border: `1px solid ${copy.locksOrder ? "#FCA5A5" : "#FCD34D"}`,
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                      fontSize: 12,
+                      color: copy.locksOrder ? "#991B1B" : "#92400E",
+                    }}
+                    role="alert"
+                  >
+                    {copy.warning}
+                  </div>
+                )}
+                <div className="kargo-modal-actions">
+                  <SecondaryBtn onClick={() => setConfirming(false)}>Go Back</SecondaryBtn>
+                  <button
+                    onClick={() => {
+                      setConfirming(false);
+                      onMarkPaid(reviewTarget);
+                    }}
+                    style={{
+                      background: INDIGO,
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 7,
+                      padding: "8px 16px",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "'Josefin Sans',sans-serif",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Check size={14} aria-hidden="true" /> {copy.confirmLabel}
+                  </button>
+                </div>
+              </div>
+            </Modal>
+          );
+        })()}
       {showReceipt && receiptUrl && (
         <Modal
           title="Receipt Preview"
@@ -568,5 +614,5 @@ export default function ReviewSubmissionModal({
         </Modal>
       )}
     </>
-  )
+  );
 }

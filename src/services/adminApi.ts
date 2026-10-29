@@ -1,4 +1,10 @@
 import { requireSupabase } from "@/lib/supabase"
+import type {
+  FulfillmentAnalytics,
+  FulfillmentAnalyticsFilters,
+  FulfillmentAnalyticsOrders,
+  FulfillmentAnalyticsStage,
+} from "@/types/fulfillmentAnalytics"
 
 import type {
   AdminAuditFilters,
@@ -77,6 +83,42 @@ async function callAdmin<T>(fn: string, args: Record<string, unknown>): Promise<
 }
 
 export const adminApi = {
+  async fulfillmentAnalytics(
+    filters: FulfillmentAnalyticsFilters = {},
+  ): Promise<FulfillmentAnalytics> {
+    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode")
+    return callAdmin("admin_fulfillment_analytics", {
+      p_period: filters.period ?? "last_30_days",
+      p_start: filters.start ?? null,
+      p_end: filters.end ?? null,
+    })
+  },
+
+  async fulfillmentOrders(
+    filters: FulfillmentAnalyticsFilters,
+    point: {
+      stage: FulfillmentAnalyticsStage
+      bucket?: string
+      generatedAt: string
+      snapshot: string
+    },
+    limit = 25,
+    offset = 0,
+  ): Promise<FulfillmentAnalyticsOrders> {
+    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode")
+    return callAdmin("admin_fulfillment_orders", {
+      p_period: filters.period ?? "last_30_days",
+      p_start: filters.start ?? null,
+      p_end: filters.end ?? null,
+      p_stage: point.stage,
+      p_bucket: point.bucket ?? null,
+      p_as_of: point.generatedAt,
+      p_snapshot: point.snapshot,
+      p_limit: limit,
+      p_offset: offset,
+    })
+  },
+
   async dashboard(): Promise<AdminDashboardData> {
     if (demoMode) return demoAdminDashboard()
     return callAdmin<AdminDashboardData>("admin_dashboard", {})

@@ -1,0 +1,131 @@
+/* Dashboard card treatment only; analytics interactions own their own styles. */
+.admin-attention-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.admin-attention-metric {
+  position: relative;
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 14px;
+  background: linear-gradient(90deg, #2935b6, #3348ba);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.admin-attention-metric:nth-child(2) {
+  background: linear-gradient(90deg, #3348ba, #3e5bbf);
+}
+.admin-attention-metric:nth-child(3) {
+  background: linear-gradient(90deg, #3e5bbf, #4b6dc3);
+}
+.admin-attention-metric:nth-child(4) {
+  background: linear-gradient(90deg, #4b6dc3, #587fc6);
+}
+.admin-attention-metric > svg {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+}
+.admin-attention-metric strong {
+  display: block;
+  padding-right: 20px;
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.admin-attention-metric span {
+  display: block;
+  margin-top: 5px;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+.admin-attention-metric small {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.admin-attention-metric:hover {
+  filter: brightness(0.98);
+}
+.admin-attention-metric:focus-visible {
+  outline: 3px solid var(--kargo-indigo, #191ba9);
+  outline-offset: 3px;
+}
+.admin-page--dashboard .fulfillment-analytics {
+  border-color: #dce4f3;
+  background: linear-gradient(180deg, #f5f8ff 0%, #fff 180px);
+}
+.admin-page--dashboard .fulfillment-analytics h2 {
+  color: #263976;
+}
+.admin-page--dashboard .fulfillment-analytics__periods button[aria-pressed="true"] {
+  background: #3348ba;
+  color: #fff;
+  box-shadow: 0 2px 5px rgb(41 53 182 / 15%);
+}
+.admin-page--dashboard .fulfillment-analytics__summary {
+  max-width: none;
+  gap: 14px;
+}
+.admin-page--dashboard .fulfillment-analytics__summary > div {
+  padding: 20px 22px;
+  border: 0;
+  border-radius: 14px;
+  background: #f0f4fc;
+}
+.admin-page--dashboard .fulfillment-analytics__summary strong {
+  color: #3348ba;
+  font-size: 32px;
+  font-weight: 750;
+}
+.admin-page--dashboard .fulfillment-analytics__summary span {
+  color: #575653;
+  font-size: 16px;
+  text-transform: none;
+}
+.admin-page--dashboard .fulfillment-analytics__summary span::first-letter {
+  text-transform: uppercase;
+}
+@media (max-width: 1024px) {
+  .admin-attention-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .admin-attention-metrics {
+    gap: 10px;
+  }
+  .admin-attention-metric {
+    padding: 16px 14px;
+  }
+  .admin-attention-metric strong {
+    font-size: 28px;
+  }
+  .admin-attention-metric span {
+    font-size: 13px;
+  }
+  .admin-attention-metric > svg {
+    right: 10px;
+    top: 12px;
+    width: 16px;
+  }
+  .admin-page--dashboard .fulfillment-analytics__summary > div {
+    padding: 16px;
+    gap: 12px;
+  }
+  .admin-page--dashboard .fulfillment-analytics__summary strong {
+    font-size: 28px;
+  }
+  .admin-page--dashboard .fulfillment-analytics__summary span {
+    font-size: 14px;
+  }
+}

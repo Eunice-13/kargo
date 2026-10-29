@@ -7978,9 +7978,14 @@ textarea::placeholder {
 .admin-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  align-items: start;
+  /* Stretch so cards in the same row share one height instead of each sizing
+     to its own content (which made the pipeline/activity/sellers cards uneven). */
+  align-items: stretch;
   gap: 16px;
   margin-bottom: 20px;
+}
+.admin-grid > * {
+  min-width: 0;
 }
 
 .admin-grid--wide {
@@ -14927,6 +14932,16 @@ textarea::placeholder {
     box-shadow 140ms ease;
 }
 
+select.admin-filter-control {
+  appearance: none;
+  padding-right: 38px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235f6b7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-position: right 12px center !important;
+  background-repeat: no-repeat !important;
+  background-size: 16px !important;
+  cursor: pointer;
+}
+
 .admin-filter-search {
   flex: 1 1 260px;
   min-width: 0;
@@ -15207,6 +15222,19 @@ textarea::placeholder {
   font-family: "Josefin Sans", "DM Sans", sans-serif;
 }
 
+/* Admins have a console badge instead of the centered marketplace search. */
+@media (min-width: 1025px) {
+  .seller-shell-header.admin-shell-header {
+    grid-template-columns: max-content minmax(0, 1fr) auto;
+    column-gap: 16px !important;
+  }
+
+  .admin-shell-header .kargo-admin-console-chip {
+    align-self: center;
+    justify-self: start;
+  }
+}
+
 @media (min-width: 768px) {
   .seller-shell-header.admin-shell-header
     .kargo-header-actions
@@ -15318,9 +15346,7 @@ textarea::placeholder {
     padding: 0 !important;
   }
 
-  .seller-shell-header.admin-shell-header
-    .kargo-user-menu__trigger
-    .kargo-user-menu__avatar-wrap {
+  .seller-shell-header.admin-shell-header .kargo-user-menu__trigger .kargo-user-menu__avatar-wrap {
     display: inline-flex;
   }
 

@@ -27,7 +27,16 @@ export default function AdminOrderDetailModal({
   );
   const [confirming, setConfirming] = useState(false);
 
-  const canCancel = data && data.status !== "completed" && data.status !== "cancelled";
+  // Once payment is confirmed, no one — including admins — may cancel the order,
+  // regardless of fulfillment stage. paymentConfirmedAt is the stage-independent
+  // signal (set at confirmation, never cleared). Already-cancelled orders and
+  // terminal states remain non-cancellable too.
+  const paymentConfirmed =
+    data != null &&
+    (data.paymentConfirmedAt != null ||
+      ["payment_confirmed", "preparing", "completed"].includes(data.status));
+  const canCancel =
+    data != null && data.status !== "completed" && data.status !== "cancelled" && !paymentConfirmed;
   const statusTone = data ? toneForStatus(data.status) : "info";
 
   return (
@@ -116,9 +125,11 @@ export default function AdminOrderDetailModal({
                 </SecondaryBtn>
               ) : (
                 <p className="admin-footer-note">
-                  {data.status === "completed"
-                    ? "Completed orders cannot be cancelled."
-                    : "This order is already cancelled."}
+                  {data.status === "cancelled"
+                    ? "This order is already cancelled."
+                    : data.status === "completed"
+                      ? "Completed orders cannot be cancelled."
+                      : "Confirmed orders cannot be cancelled. Payment has already been verified."}
                 </p>
               )}
             </div>

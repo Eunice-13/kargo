@@ -31,7 +31,13 @@ export default function AdminBatches() {
 
   useEffect(() => {
     const intent = consumeAdminIntent();
-    if (intent.tab === "Batches" && intent.filter === "flagged") setModeration("flagged");
+    if (
+      intent.tab === "Batches" &&
+      intent.filter &&
+      ["flagged", "hidden", "flagged_hidden"].includes(intent.filter)
+    ) {
+      setModeration(intent.filter);
+    }
   }, []);
 
   const filters: AdminBatchFilters = useMemo(
@@ -77,6 +83,7 @@ export default function AdminBatches() {
         </AdminSelect>
         <AdminSelect value={moderation} onChange={setModeration} ariaLabel="Filter by moderation">
           <option value="all">All moderation</option>
+          <option value="flagged_hidden">Flagged or hidden</option>
           <option value="visible">Visible</option>
           <option value="flagged">Flagged</option>
           <option value="hidden">Hidden</option>

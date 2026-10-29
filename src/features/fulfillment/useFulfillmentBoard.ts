@@ -1,10 +1,14 @@
-import { useState, useEffect } from "react"
-import type React from "react"
-import type { FulfillmentOrder } from "@/types"
-import type { SellerColumn } from "@/constants/fulfillment"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { kargoApi } from "@/services"
-import type { TrackingDetailsInput } from "./TrackingDetailsModal"
+import { useState, useEffect, useRef } from "react";
+import type React from "react";
+import type { FulfillmentOrder } from "@/types";
+import type { SellerColumn } from "@/constants/fulfillment";
+import {
+  canAdvanceFulfillment,
+  FULFILLMENT_TRANSITION_MESSAGE,
+} from "@/constants/fulfillmentTransitions";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { kargoApi } from "@/services";
+import type { TrackingDetailsInput } from "./TrackingDetailsModal";
 
 // Shared board behaviour: which card is expanded, moving a card between
 // columns, screen-reader announcement, and keeping focus on the status select
@@ -12,48 +16,59 @@ import type { TrackingDetailsInput } from "./TrackingDetailsModal"
 export function useFulfillmentBoard(
   setFulfillment: React.Dispatch<React.SetStateAction<FulfillmentOrder[]>>,
 ) {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [announcement, setAnnouncement] = useState("")
-  const [refocusId, setRefocusId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [refocusId, setRefocusId] = useState<string | null>(null);
+  const moving = useRef(new Set<string>());
 
-  const toggle = (id: string) =>
-    setExpandedId((cur) => (cur === id ? null : id))
+  const toggle = (id: string) => setExpandedId((cur) => (cur === id ? null : id));
 
   const move = async (order: FulfillmentOrder, col: SellerColumn) => {
-    if (order.col === col) return
-    if (isSupabaseConfigured) {
-      const status = {
-        "Payment Confirmed": "payment_confirmed",
-        Preparing: "preparing",
-        Shipped: "shipped",
-        Delivered: "completed",
-        Cancelled: "cancelled",
-      }[col]
-      try {
-        await kargoApi.setFulfillmentStatus(order.id, status)
-      } catch (error) {
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Unable to update fulfillment status.",
-        )
-        return
-      }
+    if (order.col === col) return;
+    if (!canAdvanceFulfillment(order.col, col)) {
+      alert(FULFILLMENT_TRANSITION_MESSAGE);
+      return;
     }
-    setFulfillment((prev) =>
-      prev.map((o) => (o.id === order.id ? { ...o, col } : o)),
-    )
-    setExpandedId(order.id)
-    setAnnouncement(`Moved ${order.product} for ${order.buyer} to ${col}`)
-    setRefocusId(order.id)
-  }
+    if (moving.current.has(order.id)) return;
+    moving.current.add(order.id);
+    try {
+      if (isSupabaseConfigured) {
+        // Confirmed orders cannot be cancelled from the board, so "Cancelled"
+        // is intentionally absent here; canAdvanceFulfillment already blocks it.
+        const statusByColumn: Partial<Record<SellerColumn, string>> = {
+          "Payment Confirmed": "payment_confirmed",
+          Preparing: "preparing",
+          Shipped: "shipped",
+          Delivered: "completed",
+        };
+        const status = statusByColumn[col];
+        if (!status) {
+          alert(FULFILLMENT_TRANSITION_MESSAGE);
+          return;
+        }
+        try {
+          await kargoApi.setFulfillmentStatus(order.id, status);
+        } catch (error) {
+          alert(error instanceof Error ? error.message : "Unable to update fulfillment status.");
+          return;
+        }
+      }
+      setFulfillment((prev) =>
+        prev.map((o) =>
+          o.id === order.id && canAdvanceFulfillment(o.col, col) ? { ...o, col } : o,
+        ),
+      );
+      setExpandedId(order.id);
+      setAnnouncement(`Moved ${order.product} for ${order.buyer} to ${col}`);
+      setRefocusId(order.id);
+    } finally {
+      moving.current.delete(order.id);
+    }
+  };
 
-  const saveTracking = async (
-    order: FulfillmentOrder,
-    tracking: TrackingDetailsInput,
-  ) => {
+  const saveTracking = async (order: FulfillmentOrder, tracking: TrackingDetailsInput) => {
     if (isSupabaseConfigured) {
-      await kargoApi.setOrderTracking(order.id, tracking)
+      await kargoApi.setOrderTracking(order.id, tracking);
     }
     setFulfillment((current) =>
       current.map((item) =>
@@ -69,14 +84,14 @@ export function useFulfillmentBoard(
             }
           : item,
       ),
-    )
-  }
+    );
+  };
 
   useEffect(() => {
-    if (!refocusId) return
-    document.getElementById(`fulfillment-status-${refocusId}`)?.focus()
-    setRefocusId(null)
-  }, [refocusId])
+    if (!refocusId) return;
+    document.getElementById(`fulfillment-status-${refocusId}`)?.focus();
+    setRefocusId(null);
+  }, [refocusId]);
 
-  return { expandedId, toggle, move, saveTracking, announcement }
+  return { expandedId, toggle, move, saveTracking, announcement };
 }

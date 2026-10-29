@@ -1,35 +1,27 @@
-import { useState } from "react"
-import type { FulfillmentOrder } from "@/types"
-import { SELLER_COLUMNS, type SellerColumn } from "@/constants/fulfillment"
+import { useState } from "react";
+import type { FulfillmentOrder } from "@/types";
+import { SELLER_COLUMNS, type SellerColumn } from "@/constants/fulfillment";
 import {
-  Modal,
-  PrimaryBtn,
-  SecondaryBtn,
-  StageProgress,
-  SummaryBlock,
-} from "@/components/shared"
-import TrackingDetailsModal, {
-  type TrackingDetailsInput,
-} from "./TrackingDetailsModal"
+  canAdvanceFulfillment,
+  FULFILLMENT_TRANSITION_MESSAGE,
+} from "@/constants/fulfillmentTransitions";
+import { Modal, PrimaryBtn, SecondaryBtn, StageProgress, SummaryBlock } from "@/components/shared";
+import TrackingDetailsModal, { type TrackingDetailsInput } from "./TrackingDetailsModal";
 
 export default function FulfillmentDetails({
   order,
   onMove,
   onSaveTracking,
 }: {
-  order: FulfillmentOrder
-  onMove: (order: FulfillmentOrder, col: SellerColumn) => void
-  onSaveTracking: (
-    order: FulfillmentOrder,
-    tracking: TrackingDetailsInput,
-  ) => void | Promise<void>
+  order: FulfillmentOrder;
+  onMove: (order: FulfillmentOrder, col: SellerColumn) => void;
+  onSaveTracking: (order: FulfillmentOrder, tracking: TrackingDetailsInput) => void | Promise<void>;
 }) {
-  const [confirmCancel, setConfirmCancel] = useState(false)
-  const [confirmComplete, setConfirmComplete] = useState(false)
-  const [confirmShip, setConfirmShip] = useState(false)
-  const [showTracking, setShowTracking] = useState(false)
-  const [shipAfterTracking, setShipAfterTracking] = useState(false)
-  const selectId = `fulfillment-status-${order.id}`
+  const [confirmComplete, setConfirmComplete] = useState(false);
+  const [confirmShip, setConfirmShip] = useState(false);
+  const [showTracking, setShowTracking] = useState(false);
+  const [shipAfterTracking, setShipAfterTracking] = useState(false);
+  const selectId = `fulfillment-status-${order.id}`;
   return (
     <div
       style={{
@@ -42,10 +34,7 @@ export default function FulfillmentDetails({
       <SummaryBlock
         title={order.product}
         product={order.product}
-        details={[
-          `Buyer: ${order.buyer} · ×${order.qty}`,
-          `₱${order.amount.toLocaleString()}`,
-        ]}
+        details={[`Buyer: ${order.buyer} · ×${order.qty}`, `₱${order.amount.toLocaleString()}`]}
       />
       <StageProgress stages={SELLER_COLUMNS} current={order.col} compact />
       <label htmlFor={selectId} className="sr-only">
@@ -55,11 +44,16 @@ export default function FulfillmentDetails({
         id={selectId}
         value={order.col}
         onChange={(e) => {
-          const next = e.target.value as SellerColumn
-          if (next === "Cancelled") setConfirmCancel(true)
-          else if (next === "Delivered") setConfirmComplete(true)
-          else if (next === "Shipped") setConfirmShip(true)
-          else onMove(order, next)
+          const next = e.target.value as SellerColumn;
+          // Confirmed orders cannot be cancelled: "Cancelled" is never a valid
+          // forward transition, so it is rejected here like any backward move.
+          if (!canAdvanceFulfillment(order.col, next)) {
+            alert(FULFILLMENT_TRANSITION_MESSAGE);
+            return;
+          }
+          if (next === "Delivered") setConfirmComplete(true);
+          else if (next === "Shipped") setConfirmShip(true);
+          else onMove(order, next);
         }}
         style={{
           width: "100%",
@@ -73,7 +67,7 @@ export default function FulfillmentDetails({
         }}
       >
         {SELLER_COLUMNS.map((c) => (
-          <option key={c} value={c}>
+          <option key={c} value={c} disabled={!canAdvanceFulfillment(order.col, c)}>
             {c}
           </option>
         ))}
@@ -95,35 +89,8 @@ export default function FulfillmentDetails({
             cursor: "pointer",
           }}
         >
-          {order.trackingNumber
-            ? "Edit tracking details"
-            : "Add tracking details"}
+          {order.trackingNumber ? "Edit tracking details" : "Add tracking details"}
         </button>
-      )}
-      {confirmCancel && (
-        <Modal
-          title="Cancel this order?"
-          onClose={() => setConfirmCancel(false)}
-          width={420}
-        >
-          <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-            This ends {order.product} for {order.buyer}. You can restore its
-            status later if needed.
-          </p>
-          <div className="kargo-modal-actions">
-            <SecondaryBtn onClick={() => setConfirmCancel(false)}>
-              Keep order
-            </SecondaryBtn>
-            <PrimaryBtn
-              onClick={() => {
-                setConfirmCancel(false)
-                onMove(order, "Cancelled")
-              }}
-            >
-              Move to Cancelled
-            </PrimaryBtn>
-          </div>
-        </Modal>
       )}
       {confirmComplete && (
         <Modal
@@ -132,17 +99,15 @@ export default function FulfillmentDetails({
           width={420}
         >
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-            This finalizes {order.product} for {order.buyer} and counts it
-            toward your fulfilled total. You can change it later if needed.
+            This finalizes {order.product} for {order.buyer} and counts it toward your fulfilled
+            total. Delivered orders cannot be moved back.
           </p>
           <div className="kargo-modal-actions">
-            <SecondaryBtn onClick={() => setConfirmComplete(false)}>
-              Not yet
-            </SecondaryBtn>
+            <SecondaryBtn onClick={() => setConfirmComplete(false)}>Not yet</SecondaryBtn>
             <PrimaryBtn
               onClick={() => {
-                setConfirmComplete(false)
-                onMove(order, "Delivered")
+                setConfirmComplete(false);
+                onMove(order, "Delivered");
               }}
             >
               Mark delivered
@@ -151,24 +116,18 @@ export default function FulfillmentDetails({
         </Modal>
       )}
       {confirmShip && (
-        <Modal
-          title="Mark this as shipped?"
-          onClose={() => setConfirmShip(false)}
-          width={420}
-        >
+        <Modal title="Mark this as shipped?" onClose={() => setConfirmShip(false)} width={420}>
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
-            This emails {order.buyer} that {order.product} has shipped. Add
-            tracking details to continue.
+            This emails {order.buyer} that {order.product} has shipped. Add tracking details to
+            continue.
           </p>
           <div className="kargo-modal-actions">
-            <SecondaryBtn onClick={() => setConfirmShip(false)}>
-              Not yet
-            </SecondaryBtn>
+            <SecondaryBtn onClick={() => setConfirmShip(false)}>Not yet</SecondaryBtn>
             <PrimaryBtn
               onClick={() => {
-                setConfirmShip(false)
-                setShipAfterTracking(true)
-                setShowTracking(true)
+                setConfirmShip(false);
+                setShipAfterTracking(true);
+                setShowTracking(true);
               }}
             >
               Add tracking details
@@ -180,17 +139,17 @@ export default function FulfillmentDetails({
         <TrackingDetailsModal
           order={order}
           onClose={() => {
-            setShowTracking(false)
-            setShipAfterTracking(false)
+            setShowTracking(false);
+            setShipAfterTracking(false);
           }}
           onSave={async (tracking) => {
-            await onSaveTracking(order, tracking)
-            setShowTracking(false)
-            if (shipAfterTracking) onMove(order, "Shipped")
-            setShipAfterTracking(false)
+            await onSaveTracking(order, tracking);
+            setShowTracking(false);
+            if (shipAfterTracking) onMove(order, "Shipped");
+            setShipAfterTracking(false);
           }}
         />
       )}
     </div>
-  )
+  );
 }

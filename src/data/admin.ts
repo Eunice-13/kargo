@@ -409,7 +409,9 @@ export function demoListBatches(filters: AdminBatchFilters, limit: number, offse
     if (
       filters.moderation &&
       filters.moderation !== "all" &&
-      b.moderationStatus !== filters.moderation
+      (filters.moderation === "flagged_hidden"
+        ? !["flagged", "hidden"].includes(b.moderationStatus)
+        : b.moderationStatus !== filters.moderation)
     )
       return false;
     if (filters.category && filters.category !== "all" && b.category !== filters.category)
@@ -570,6 +572,9 @@ export function demoCancelOrder(orderId: string, _reason: string): { changed: bo
   const o = DEMO_ORDERS.find((x) => x.id === orderId);
   if (!o) throw new Error("Order not found");
   if (o.status === "completed") throw new Error("A completed order cannot be cancelled");
+  // Once payment is confirmed, the order can no longer be cancelled by anyone.
+  if (["payment_confirmed", "preparing", "completed"].includes(o.status))
+    throw new Error("A confirmed order cannot be cancelled");
   o.status = "cancelled";
   return { changed: true };
 }
