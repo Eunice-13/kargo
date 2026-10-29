@@ -6,6 +6,7 @@ import {
 import { productAvailability } from "./productAvailability"
 
 import {
+  batchAllItemsLocked,
   batchCardClosed,
   batchClosedByDate,
   batchOrdersClosed,
@@ -54,7 +55,9 @@ import {
   ExtensionRequestModal,
 } from "@/components/shared"
 
-import { sortSoldOutLast } from "./batchSort"
+import { isBatchSoldOut, sortSoldOutLast } from "./batchSort"
+
+import ClosedBatchBadge from "./ClosedBatchBadge"
 
 import FinancialSummaryModal from "./FinancialSummaryModal"
 
@@ -1115,99 +1118,62 @@ export default function Batches({
                               <span className="is-group">Group Order Available</span>
                             )}
                           </div>
+                          {/* Closed batches get the same big label buyers see,
+                              plus (for the seller) how to take orders again.
+                              The note is left out once nothing is left to sell. */}
+                          {closed && (
+                            <ClosedBatchBadge
+                              size="large"
+                              endsOn={b.endsOn}
+                              note={
+                                role !== "Seller" || isBatchSoldOut(b)
+                                  ? undefined
+                                  : closedByDate
+                                    ? "Re-open to accept orders again"
+                                    : b.locked
+                                      ? "Unlock to accept orders again"
+                                      : batchAllItemsLocked(b)
+                                        ? "Unlock an item to accept orders again"
+                                        : undefined
+                              }
+                            />
+                          )}
                           {role === "Seller" ? (
-                            <button
-                              type="button"
-                              aria-label={
-                                closedByDate
-                                  ? "Re-open batch"
-                                  : b.locked
-                                    ? "Unlock batch"
-                                    : "Lock batch"
-                              }
-                              onClick={(e) => {
-                                e.stopPropagation()
-
-                                if (closedByDate) {
-                                  setReopenDate(defaultReopenEndDate())
-
-                                  setReopenTarget(b)
-
-                                  return
-                                }
-
-                                setLockConfirm(b)
-                              }}
-                              style={{
-                                position: "absolute",
-
-                                top: 8,
-
-                                left: role === "Seller" ? undefined : 8,
-
-                                right: role === "Seller" ? 8 : undefined,
-
-                                background:
-                                  role === "Seller"
-                                    ? b.locked
-                                      ? "#C1EAF2"
-                                      : INDIGO
-                                    : "rgba(255,255,255,0.92)",
-
-                                border: "none",
-
-                                borderRadius: role === "Seller" ? "50%" : 6,
-
-                                width: 28,
-
-                                height: 28,
-
-                                display: "flex",
-
-                                alignItems: "center",
-
-                                justifyContent: "center",
-
-                                cursor: "pointer",
-
-                                fontSize: 15,
-
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-                              }}
-                              title={
-                                closedByDate
-                                  ? "Re-open batch"
-                                  : b.locked
-                                    ? "Unlock batch"
-                                    : "Lock batch"
-                              }
-                            >
-                              {closedByDate ? (
-                                <Unlock
-                                  size={14}
-                                  aria-hidden="true"
-                                  style={{ color: "#C1EAF2" }}
-                                />
-                              ) : b.locked ? (
-                                <Lock
-                                  size={14}
-                                  aria-hidden="true"
-                                  style={{
-                                    color:
-                                      role === "Seller" ? INDIGO : "#991B1B",
+                            // Open vs locked, in the bottom-right of the photo.
+                            // The icon states what the batch IS now (open
+                            // padlock = taking orders, closed padlock =
+                            // locked); the label says what tapping it does.
+                            (() => {
+                              const takingOrders = !closedByDate && !b.locked
+                              const label = closedByDate
+                                ? "Re-open batch"
+                                : b.locked
+                                  ? "Unlock batch to accept orders"
+                                  : "Lock batch to stop orders"
+                              return (
+                                <button
+                                  type="button"
+                                  className={`seller-batch-lock${takingOrders ? " is-open" : " is-locked"}`}
+                                  aria-label={label}
+                                  title={label}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (closedByDate) {
+                                      setReopenDate(defaultReopenEndDate())
+                                      setReopenTarget(b)
+                                      return
+                                    }
+                                    setLockConfirm(b)
                                   }}
-                                />
-                              ) : (
-                                <Unlock
-                                  size={14}
-                                  aria-hidden="true"
-                                  style={{
-                                    color:
-                                      role === "Seller" ? "#C1EAF2" : "#374151",
-                                  }}
-                                />
-                              )}
-                            </button>
+                                >
+                                  {takingOrders ? (
+                                    <Unlock size={16} aria-hidden="true" />
+                                  ) : (
+                                    <Lock size={16} aria-hidden="true" />
+                                  )}
+                                </button>
+                              )
+                            })()
                           ) : closed ? (
                             <span
                               title={

@@ -1,18 +1,24 @@
 import { Lock } from "lucide-react"
 import { batchEndDatePassed, formatBatchEndDate } from "./batchAvailability"
 
-// The "this batch is over" marker for a gray, inert batch card. It always says
-// so in words, so the state never depends on the gray alone.
+// The "this batch is over" marker for a gray batch card. It always says so in
+// words, so the state never depends on the gray alone.
 //
-//   large  a full-image banner for the seller's profile page, where closed
-//          batches sit at the end of the grid
+//   large  a full-image banner (seller profile page, and the seller's own
+//          Batches grid), with an optional smaller `note` under it
 //   small  a chip for the denser Home cards
+//
+// `note` is for the seller: how to take orders again ("Unlock to accept orders
+// again"). Buyers never get one, and neither does a sold-out batch, since there
+// is nothing left to accept.
 export default function ClosedBatchBadge({
   size,
   endsOn,
+  note,
 }: {
   size: "large" | "small"
   endsOn?: string
+  note?: string
 }) {
   if (size === "small") {
     return (
@@ -31,6 +37,7 @@ export default function ClosedBatchBadge({
       <Lock size={22} aria-hidden="true" />
       <strong>Batch closed</strong>
       {date && <small>Closed {date}</small>}
+      {note && <p className="closed-batch-banner__note">{note}</p>}
     </div>
   )
 }

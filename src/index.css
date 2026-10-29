@@ -7256,6 +7256,65 @@ textarea::placeholder {
   object-fit: cover;
 }
 
+/* Lock toggle on the seller's own batch cards: a white disc at the bottom-right
+   of the photo. White reads on any cover image and against the gray closed
+   card, where a tinted circle would wash out. The icon alone carries the
+   state, so a thin ring tints with it as a quiet second cue: cool for open
+   (taking orders), red for locked. */
+.seller-batch-lock {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--kargo-ink);
+  cursor: pointer;
+  box-shadow:
+    0 2px 6px rgb(17 24 39 / 28%),
+    0 0 0 1px rgb(17 24 39 / 6%);
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease;
+}
+.seller-batch-lock:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 5px 14px rgb(17 24 39 / 34%),
+    0 0 0 1px rgb(17 24 39 / 8%);
+}
+.seller-batch-lock:active {
+  transform: translateY(0) scale(0.94);
+}
+.seller-batch-lock:focus-visible {
+  outline: 3px solid var(--kargo-focus);
+  outline-offset: 2px;
+}
+.seller-batch-lock.is-open {
+  color: #0e7490;
+  box-shadow:
+    0 2px 6px rgb(17 24 39 / 28%),
+    inset 0 0 0 1.5px #0e7490;
+}
+.seller-batch-lock.is-locked {
+  color: #b91c1c;
+  box-shadow:
+    0 2px 6px rgb(17 24 39 / 28%),
+    inset 0 0 0 1.5px #b91c1c;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seller-batch-lock {
+    transition: none;
+  }
+}
+
 .seller-batch-body {
   display: flex;
   min-height: 130px;
@@ -15788,6 +15847,28 @@ tr.record-focus {
   background: rgb(31 41 55 / 64%);
   color: #fff;
   text-align: center;
+}
+
+/* On the seller's own cards the lock/unlock/re-open control and the CLOSED or
+   LOCKED chip sit on the photo. The banner passes clicks through and the
+   controls sit above its dark veil, so the note's action stays one tap away. */
+.closed-batch-banner {
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.seller-batch-image > button,
+.seller-batch-image > span {
+  z-index: 3;
+}
+
+.closed-batch-banner__note {
+  max-width: 19ch;
+  margin: 3px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  opacity: 0.95;
 }
 
 .closed-batch-banner strong {
