@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { UserMinus } from "lucide-react";
 
 import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
@@ -134,7 +135,7 @@ function TeamSection() {
               <tbody>
                 {data.rows.map((m) => (
                   <tr key={m.id} style={{ borderTop: "1px solid #F3F4F6" }}>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Name" style={{ padding: "10px 14px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <Avatar name={m.name} size={28} />
                         <span style={{ fontSize: 13, fontWeight: 700, color: "var(--kargo-ink)" }}>
@@ -142,13 +143,20 @@ function TeamSection() {
                         </span>
                       </div>
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
+                    <td
+                      data-label="Email"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
                       {m.email ?? "—"}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
+                    <td
+                      data-label="Granted by"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
                       {m.grantedBy ?? "—"}
                     </td>
                     <td
+                      data-label="Granted"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
@@ -162,20 +170,25 @@ function TeamSection() {
                         fmtDate(m.grantedAt)
                       )}
                     </td>
-                    <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                    <td data-label="Actions" style={{ padding: "10px 14px", textAlign: "right" }}>
                       <button
                         className="admin-danger-link"
                         type="button"
                         onClick={() => setRevoke(m)}
                         style={{
-                          background: "none",
-                          border: "none",
-                          color: "#B91C1C",
+                          background: "var(--admin-danger-background, none)",
+                          border: "var(--admin-danger-border, none)",
+                          color: "var(--admin-danger-color, #B91C1C)",
                           fontSize: 12,
                           fontWeight: 600,
                           cursor: "pointer",
                         }}
                       >
+                        <UserMinus
+                          className="admin-danger-link__icon"
+                          size={16}
+                          aria-hidden="true"
+                        />
                         {m.acceptedAt === null ? "Cancel invite" : "Revoke"}
                       </button>
                     </td>
@@ -199,6 +212,7 @@ function TeamSection() {
           confirmLabel={revoke.acceptedAt === null ? "Cancel invitation" : "Revoke access"}
           confirmWord={revoke.acceptedAt === null ? undefined : revoke.name}
           tone={revoke.acceptedAt === null ? "default" : "danger"}
+          action={revoke.acceptedAt === null ? undefined : "revokeAccess"}
           onConfirm={async (reason) => {
             await adminApi.revokeAdmin(revoke.id, reason);
             setRevoke(null);
@@ -326,6 +340,7 @@ function AuditSection() {
                     style={{ borderTop: "1px solid #F3F4F6", cursor: "pointer" }}
                   >
                     <td
+                      data-label="When"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
@@ -339,6 +354,7 @@ function AuditSection() {
                       })}
                     </td>
                     <td
+                      data-label="Actor"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12.5,
@@ -346,15 +362,24 @@ function AuditSection() {
                         color: "#374151",
                       }}
                     >
-                      {a.actorName}
+                      <span className="contents max-md:flex max-md:items-center max-md:gap-2">
+                        <span className="hidden max-md:inline-flex">
+                          <Avatar name={a.actorName} size={22} />
+                        </span>
+                        <span>{a.actorName || "—"}</span>
+                      </span>
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Action" style={{ padding: "10px 14px" }}>
                       <AdminBadge tone="info" label={ADMIN_ACTION_LABELS[a.action] ?? a.action} />
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
+                    <td
+                      data-label="Target"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
                       {a.targetLabel ?? a.targetType}
                     </td>
                     <td
+                      data-label="Reason"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,

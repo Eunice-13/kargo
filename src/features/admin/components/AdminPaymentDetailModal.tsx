@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 
-import { Modal, PrimaryBtn, SecondaryBtn, CardSkeleton } from "@/components/shared";
+import { Modal, CardSkeleton } from "@/components/shared";
 import { adminApi } from "@/services";
 import { toneForStatus } from "@/constants/admin";
 
 import { useAdminResource } from "../useAdminResource";
 import AdminBadge from "./AdminBadge";
+import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
 
@@ -56,10 +57,31 @@ export default function AdminPaymentDetailModal({
       <Modal
         title={`Payment · ${data?.orderNumber ?? ""}`}
         variant="detail"
+        showTitle={false}
         width={640}
-        className="admin-modal"
-        overlayClassName="admin-modal-overlay"
+        className="admin-modal admin-record-modal"
+        overlayClassName="admin-modal-overlay admin-record-modal-overlay"
         onClose={onClose}
+        footer={
+          !loading && data ? (
+            <div className="admin-modal-footer">
+              <AdminActionButton
+                action="verifyPayment"
+                disabled={alreadyVerified}
+                onClick={() => setPending("verified")}
+              >
+                Verify payment
+              </AdminActionButton>
+              <AdminActionButton
+                action="rejectPayment"
+                disabled={alreadyRejected}
+                onClick={() => setPending("rejected")}
+              >
+                Reject payment
+              </AdminActionButton>
+            </div>
+          ) : undefined
+        }
       >
         {loading && <CardSkeleton />}
         {!loading && error && (
@@ -72,7 +94,7 @@ export default function AdminPaymentDetailModal({
             <div className="admin-detail-hero">
               <div className="admin-detail-hero__identity">
                 <h2 className="admin-amount">{peso(data.amount)}</h2>
-                <p>{data.orderNumber ? `Order ${data.orderNumber}` : "Payment submission"}</p>
+                <p>{data.orderNumber ? `Payment · ${data.orderNumber}` : "Payment submission"}</p>
               </div>
               <div className="admin-detail-hero__badges">
                 <AdminBadge
@@ -138,22 +160,6 @@ export default function AdminPaymentDetailModal({
               notifies both parties.
             </p>
 
-            <div className="admin-modal-footer">
-              <PrimaryBtn
-                disabled={alreadyVerified}
-                onClick={() => setPending("verified")}
-                style={alreadyVerified ? undefined : { background: "#0B7A59" }}
-              >
-                Verify payment
-              </PrimaryBtn>
-              <SecondaryBtn
-                disabled={alreadyRejected}
-                style={{ borderColor: "#FECACA", background: "#FEF2F2", color: "#B91C1C" }}
-                onClick={() => setPending("rejected")}
-              >
-                Reject payment
-              </SecondaryBtn>
-            </div>
           </div>
         )}
       </Modal>
@@ -168,7 +174,8 @@ export default function AdminPaymentDetailModal({
           }
           confirmLabel={pending === "verified" ? "Verify" : "Reject"}
           confirmWord={data.referenceNumber ?? undefined}
-          tone={pending === "verified" ? "default" : "danger"}
+          tone={pending === "verified" ? "success" : "danger"}
+          action={pending === "verified" ? "verifyPayment" : "rejectPayment"}
           onConfirm={async (reason) => {
             await adminApi.reviewPayment(paymentId, pending, reason);
             setPending(null);

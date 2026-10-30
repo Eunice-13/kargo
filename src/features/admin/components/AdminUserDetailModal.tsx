@@ -1,11 +1,12 @@
 import { useState } from "react";
 
-import { Modal, PrimaryBtn, SecondaryBtn, Avatar, CardSkeleton } from "@/components/shared";
+import { Modal, Avatar, CardSkeleton } from "@/components/shared";
 import { adminApi } from "@/services";
 import { ADMIN_ACTION_LABELS } from "@/constants/admin";
 
 import { useAdminResource } from "../useAdminResource";
 import AdminBadge from "./AdminBadge";
+import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminEmptyText, AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
 
@@ -41,17 +42,52 @@ export default function AdminUserDetailModal({
 
   const roleTone = data?.isAdmin ? "admin" : data?.canSell ? "seller" : "buyer";
   const roleLabel = data?.isAdmin ? "Admin" : data?.canSell ? "Seller" : "Buyer";
-  const destructive = pending?.kind === "suspend" || pending?.kind === "revoke";
-
   return (
     <>
       <Modal
         title={data?.name ?? "Account"}
         variant="detail"
+        showTitle={false}
         width={720}
-        className="admin-modal"
-        overlayClassName="admin-modal-overlay"
+        className="admin-modal admin-record-modal"
+        overlayClassName="admin-modal-overlay admin-record-modal-overlay"
         onClose={onClose}
+        footer={
+          !loading && data && !data.isAdmin ? (
+            <div className="admin-modal-footer">
+              {data.accountStatus === "active" ? (
+                <AdminActionButton action="suspend" onClick={() => setPending({ kind: "suspend" })}>
+                  Suspend account
+                </AdminActionButton>
+              ) : (
+                <AdminActionButton
+                  action="restoreAccount"
+                  size="sm"
+                  onClick={() => setPending({ kind: "restore" })}
+                >
+                  Restore account
+                </AdminActionButton>
+              )}
+              {data.canSell ? (
+                <AdminActionButton
+                  action="revokeSeller"
+                  size="sm"
+                  onClick={() => setPending({ kind: "revoke" })}
+                >
+                  Revoke seller access
+                </AdminActionButton>
+              ) : (
+                <AdminActionButton
+                  action="grantSeller"
+                  size="sm"
+                  onClick={() => setPending({ kind: "grant" })}
+                >
+                  Grant seller access
+                </AdminActionButton>
+              )}
+            </div>
+          ) : undefined
+        }
       >
         {loading && (
           <div className="space-y-3">
@@ -145,31 +181,6 @@ export default function AdminUserDetailModal({
               )}
             </AdminModalSection>
 
-            {!data.isAdmin && (
-              <div className="admin-modal-footer">
-                {data.accountStatus === "active" ? (
-                  <SecondaryBtn
-                    style={{ borderColor: "#FECACA", background: "#FEF2F2", color: "#B91C1C" }}
-                    onClick={() => setPending({ kind: "suspend" })}
-                  >
-                    Suspend account
-                  </SecondaryBtn>
-                ) : (
-                  <PrimaryBtn size="sm" onClick={() => setPending({ kind: "restore" })}>
-                    Restore account
-                  </PrimaryBtn>
-                )}
-                {data.canSell ? (
-                  <SecondaryBtn size="sm" onClick={() => setPending({ kind: "revoke" })}>
-                    Revoke seller access
-                  </SecondaryBtn>
-                ) : (
-                  <SecondaryBtn size="sm" onClick={() => setPending({ kind: "grant" })}>
-                    Grant seller access
-                  </SecondaryBtn>
-                )}
-              </div>
-            )}
           </div>
         )}
       </Modal>
@@ -203,7 +214,15 @@ export default function AdminUserDetailModal({
                   ? "Grant access"
                   : "Revoke access"
           }
-          tone={destructive ? "danger" : "default"}
+          action={
+            pending.kind === "suspend"
+              ? "suspend"
+              : pending.kind === "restore"
+                ? "restoreAccount"
+                : pending.kind === "grant"
+                  ? "grantSeller"
+                  : "revokeSeller"
+          }
           // Suspend/revoke are the destructive ones — require typing the name.
           confirmWord={
             pending.kind === "suspend" || pending.kind === "revoke" ? data.name : undefined

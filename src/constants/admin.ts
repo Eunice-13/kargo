@@ -14,6 +14,7 @@ const SUCCESS = { bg: "#D4F5EA", fg: "#0B7A59", dot: "#3FBF8F" };
 const DANGER = { bg: "#FEE2E2", fg: "#991B1B", dot: "#EF4444" };
 const NEUTRAL = { bg: "#F3F4F6", fg: "#6B7280", dot: "#9CA3AF" };
 const INSUFFICIENT = { bg: "#FFF7ED", fg: "#92400E", dot: "#FCD34D" };
+const PRO = { bg: "#E8D3F7", fg: "#3730A3", dot: "#D9C7F7" };
 
 export const ADMIN_TONES: Record<string, AdminTone> = {
   // account status
@@ -28,6 +29,7 @@ export const ADMIN_TONES: Record<string, AdminTone> = {
   warn: PENDING,
   danger: DANGER,
   good: SUCCESS,
+  pro: PRO,
 };
 
 // Map a raw order_status / payment_status / batch_status to the matching tone,

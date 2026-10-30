@@ -1,11 +1,12 @@
 import { useState } from "react";
 
-import { Modal, SecondaryBtn, CardSkeleton } from "@/components/shared";
+import { Modal, CardSkeleton } from "@/components/shared";
 import { adminApi } from "@/services";
 import { toneForStatus } from "@/constants/admin";
 
 import { useAdminResource } from "../useAdminResource";
 import AdminBadge from "./AdminBadge";
+import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminEmptyText, AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
 
@@ -44,10 +45,30 @@ export default function AdminOrderDetailModal({
       <Modal
         title={data?.orderNumber ?? "Order"}
         variant="detail"
+        showTitle={false}
         width={640}
-        className="admin-modal"
-        overlayClassName="admin-modal-overlay"
+        className="admin-modal admin-record-modal"
+        overlayClassName="admin-modal-overlay admin-record-modal-overlay"
         onClose={onClose}
+        footer={
+          !loading && data ? (
+            <div className="admin-modal-footer">
+              {canCancel ? (
+                <AdminActionButton action="cancelOrder" onClick={() => setConfirming(true)}>
+                  Cancel order
+                </AdminActionButton>
+              ) : (
+                <p className="admin-footer-note">
+                  {data.status === "cancelled"
+                    ? "This order is already cancelled."
+                    : data.status === "completed"
+                      ? "Completed orders cannot be cancelled."
+                      : "Confirmed orders cannot be cancelled. Payment has already been verified."}
+                </p>
+              )}
+            </div>
+          ) : undefined
+        }
       >
         {loading && <CardSkeleton />}
         {!loading && error && (
@@ -61,7 +82,7 @@ export default function AdminOrderDetailModal({
               <div className="admin-detail-hero__identity">
                 <h2>{data.product}</h2>
                 <p>
-                  Qty {data.quantity} · {peso(data.amount)}
+                  {data.orderNumber} · Qty {data.quantity} · {peso(data.amount)}
                 </p>
               </div>
               <div className="admin-detail-hero__badges">
@@ -115,24 +136,6 @@ export default function AdminOrderDetailModal({
               )}
             </AdminModalSection>
 
-            <div className="admin-modal-footer">
-              {canCancel ? (
-                <SecondaryBtn
-                  style={{ borderColor: "#FECACA", background: "#FEF2F2", color: "#B91C1C" }}
-                  onClick={() => setConfirming(true)}
-                >
-                  Cancel order
-                </SecondaryBtn>
-              ) : (
-                <p className="admin-footer-note">
-                  {data.status === "cancelled"
-                    ? "This order is already cancelled."
-                    : data.status === "completed"
-                      ? "Completed orders cannot be cancelled."
-                      : "Confirmed orders cannot be cancelled. Payment has already been verified."}
-                </p>
-              )}
-            </div>
           </div>
         )}
       </Modal>
@@ -143,6 +146,7 @@ export default function AdminOrderDetailModal({
           consequence="This cancels the order and notifies both parties. Any money already sent is refunded outside KARGO. Orders in an active combined payment must be handled through the combined record."
           confirmLabel="Cancel order"
           confirmWord={data.orderNumber}
+          action="cancelOrder"
           onConfirm={async (reason) => {
             await adminApi.cancelOrder(orderId, reason);
             setConfirming(false);

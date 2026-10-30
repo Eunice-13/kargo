@@ -60,7 +60,7 @@
     box-sizing: border-box;
     border-top: 1px solid #e5e7eb;
     border-bottom: 0 !important;
-    background: #fff !important;
+    background: #f8f8f8 !important;
     box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
   }
 
@@ -182,7 +182,9 @@
   .admin-page .admin-filter-bar > button {
     min-width: 0;
   }
+}
 
+@media (max-width: 767px) {
   .admin-page [style*="overflowX"] {
     overflow: visible !important;
   }
@@ -205,94 +207,152 @@
   .admin-page table:not(.sr-only) tbody {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
 
   .admin-page table:not(.sr-only) tbody tr {
-    display: grid !important;
-    gap: 9px;
+    display: block !important;
+    width: 100%;
     min-width: 0;
-    padding: 12px;
+    padding: 14px;
+    overflow: hidden;
     border: 1px solid #e5e7eb !important;
     border-radius: 10px;
     background: #fff !important;
-    box-shadow: 0 2px 7px rgb(18 30 71 / 8%);
+    box-shadow: 0 3px 10px rgba(18, 30, 71, .1);
+  }
+
+  .admin-page table:not(.sr-only) tbody tr.admin-clickable-row {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 140ms ease;
+  }
+
+  .admin-page table:not(.sr-only) tbody tr.admin-clickable-row:active {
+    background: color-mix(in srgb, var(--kargo-navy) 8%, var(--kargo-surface)) !important;
+  }
+
+  .admin-page table:not(.sr-only) tbody tr.admin-clickable-row:focus-visible {
+    outline: 3px solid var(--kargo-focus);
+    outline-offset: 2px;
   }
 
   .admin-page table:not(.sr-only) tbody td {
     display: flex !important;
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
-    padding: 0 !important;
+    padding: 10px 0 !important;
     border: 0 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    background: inherit !important;
     overflow-wrap: anywhere;
     text-align: right;
     white-space: normal !important;
   }
 
-  .admin-page table:not(.sr-only) tbody td::before {
-    flex: 0 0 94px;
-    color: #748391;
-    content: "";
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .035em;
-    text-align: left;
-    text-transform: uppercase;
+  .admin-page table:not(.sr-only) tbody td:last-child {
+    border-bottom: 0 !important;
   }
 
-  .admin-users-table td:nth-child(1)::before { content: "Account"; }
-  .admin-users-table td:nth-child(2)::before { content: "Type"; }
-  .admin-users-table td:nth-child(3)::before { content: "Status"; }
-  .admin-users-table td:nth-child(4)::before { content: "Last sign-in"; }
-  .admin-users-table td:nth-child(5)::before { content: "Orders"; }
-  .admin-users-table td:nth-child(6)::before { content: "Spend / GMV"; }
-  .admin-users-table td:nth-child(7)::before { content: "Details"; }
+  .admin-page table:not(.sr-only) tbody td::before {
+    min-width: 92px;
+    flex: 0 0 auto;
+    color: #6b7280;
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+  }
 
-  .admin-batches-table td:nth-child(1)::before { content: "Batch"; }
-  .admin-batches-table td:nth-child(2)::before { content: "Seller"; }
-  .admin-batches-table td:nth-child(3)::before { content: "Category"; }
-  .admin-batches-table td:nth-child(4)::before { content: "Claimed"; }
-  .admin-batches-table td:nth-child(5)::before { content: "Status"; }
-  .admin-batches-table td:nth-child(6)::before { content: "Moderation"; }
-  .admin-batches-table td:nth-child(7)::before { content: "Details"; }
+  .admin-page table:not(.sr-only) tbody td > * {
+    min-width: 0;
+    max-width: calc(100% - 104px);
+    margin-left: auto;
+    overflow-wrap: anywhere;
+  }
 
-  .admin-orders-table td:nth-child(1)::before { content: "Order #"; }
-  .admin-orders-table td:nth-child(2)::before { content: "Product"; }
-  .admin-orders-table td:nth-child(3)::before { content: "Buyer"; }
-  .admin-orders-table td:nth-child(4)::before { content: "Seller"; }
-  .admin-orders-table td:nth-child(5)::before { content: "Amount"; }
-  .admin-orders-table td:nth-child(6)::before { content: "Status"; }
-  .admin-orders-table td:nth-child(7)::before { content: "Created"; }
+  .admin-page table:not(.sr-only) tbody td > :is(div, span) {
+    justify-content: flex-end;
+    text-align: right;
+  }
 
-  .admin-payments-table td:nth-child(1)::before { content: "Order #"; }
-  .admin-payments-table td:nth-child(2)::before { content: "Buyer"; }
-  .admin-payments-table td:nth-child(3)::before { content: "Seller"; }
-  .admin-payments-table td:nth-child(4)::before { content: "Method"; }
-  .admin-payments-table td:nth-child(5)::before { content: "Amount"; }
-  .admin-payments-table td:nth-child(6)::before { content: "Status"; }
-  .admin-payments-table td:nth-child(7)::before { content: "Submitted"; }
+  .admin-page table:not(.sr-only) tbody td[data-label=""]:not(.admin-card-detail-cell) {
+    display: none !important;
+  }
 
-  .admin-combined-table td:nth-child(1)::before { content: "Group"; }
-  .admin-combined-table td:nth-child(2)::before { content: "Buyer"; }
-  .admin-combined-table td:nth-child(3)::before { content: "Seller"; }
-  .admin-combined-table td:nth-child(4)::before { content: "Members"; }
-  .admin-combined-table td:nth-child(5)::before { content: "Shipping fee"; }
-  .admin-combined-table td:nth-child(6)::before { content: "Status"; }
+  .admin-page table:not(.sr-only) tbody tr.admin-clickable-row .admin-card-detail-cell {
+    display: flex !important;
+    min-height: 44px;
+    padding: 10px 0 !important;
+    border-bottom: 0 !important;
+    color: var(--kargo-navy) !important;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
 
-  .admin-team-table td:nth-child(1)::before { content: "Name"; }
-  .admin-team-table td:nth-child(2)::before { content: "Email"; }
-  .admin-team-table td:nth-child(3)::before { content: "Granted by"; }
-  .admin-team-table td:nth-child(4)::before { content: "Granted"; }
-  .admin-team-table td:nth-child(5)::before { content: "Access"; }
+  .admin-page table:not(.sr-only) tbody tr.admin-clickable-row .admin-card-detail-cell::before {
+    min-width: 0;
+    color: var(--kargo-navy);
+    content: "View details";
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
 
-  .admin-audit-table td:nth-child(1)::before { content: "When"; }
-  .admin-audit-table td:nth-child(2)::before { content: "Actor"; }
-  .admin-audit-table td:nth-child(3)::before { content: "Action"; }
-  .admin-audit-table td:nth-child(4)::before { content: "Target"; }
-  .admin-audit-table td:nth-child(5)::before { content: "Reason"; }
+  .admin-page .admin-team-table .admin-danger-link {
+    --admin-danger-background: var(--bg-danger);
+    --admin-danger-border: 1px solid var(--border-danger);
+    --admin-danger-color: var(--text-danger);
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 15px;
+    border-radius: 8px;
+    font-family: "Josefin Sans", "DM Sans", sans-serif;
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease,
+      color 140ms ease,
+      transform 120ms ease;
+  }
+
+  .admin-page .admin-team-table .admin-danger-link:hover {
+    --admin-danger-background: color-mix(in srgb, var(--bg-danger) 78%, var(--border-danger));
+  }
+
+  .admin-page .admin-team-table .admin-danger-link:active {
+    --admin-danger-background: color-mix(in srgb, var(--bg-danger) 64%, var(--border-danger));
+    transform: translateY(1px);
+  }
+
+  .admin-page .admin-team-table .admin-danger-link:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--border-danger) 32%, transparent);
+    outline-offset: 2px;
+  }
+
+  .admin-page .admin-team-table .admin-danger-link:disabled {
+    --admin-danger-background: var(--kargo-canvas);
+    --admin-danger-border: 1px solid var(--kargo-line);
+    --admin-danger-color: var(--kargo-muted);
+    cursor: not-allowed;
+    opacity: 0.72;
+    transform: none;
+  }
+
+  .admin-page .admin-team-table .admin-danger-link__icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+  }
 }
 
 .payment-history-controls {
@@ -1318,7 +1378,7 @@
     overflow-wrap: anywhere;
   }
 
-  .kargo-footer {
+  .kargo-footer:not(.kargo-footer--admin) {
     padding: 24px 16px calc(14px + env(safe-area-inset-bottom));
   }
 
@@ -1333,7 +1393,7 @@
   }
 
   .kargo-footer nav { gap: 7px; }
-  .kargo-footer a {
+  .kargo-footer:not(.kargo-footer--admin) a {
     min-height: 22px;
     font-size: 12px;
   }
@@ -1998,7 +2058,7 @@
     min-height: 44px;
   }
 
-  .kargo-footer {
+  .kargo-footer:not(.kargo-footer--admin) {
     padding: 22px 16px calc(14px + env(safe-area-inset-bottom));
     text-align: center;
   }
@@ -2014,7 +2074,7 @@
     align-items: center;
   }
 
-  .kargo-footer a {
+  .kargo-footer:not(.kargo-footer--admin) a {
     display: inline-flex;
     min-height: 44px;
     align-items: center;
@@ -2057,7 +2117,7 @@
     padding-bottom: env(safe-area-inset-bottom) !important;
     border-top: 1px solid #e5e7eb !important;
     border-bottom: 0 !important;
-    background: #fff !important;
+    background: #f8f8f8 !important;
     box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
   }
 
@@ -2135,7 +2195,7 @@
     width: 100% !important;
     height: calc(60px + env(safe-area-inset-bottom)) !important;
     padding-bottom: env(safe-area-inset-bottom) !important;
-    background: #fff !important;
+    background: #f8f8f8 !important;
     box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
   }
 
@@ -2360,7 +2420,7 @@
     margin-bottom: 0;
   }
 
-  .kargo-footer {
+  .kargo-footer:not(.kargo-footer--admin) {
     width: 100%;
     max-width: 100%;
     flex: 0 0 auto;
@@ -2424,7 +2484,7 @@
     gap: 12px;
   }
 
-  .kargo-footer a {
+  .kargo-footer:not(.kargo-footer--admin) a {
     min-height: 0 !important;
     padding: 2px 0;
     line-height: 1.35;
@@ -3149,7 +3209,7 @@
 }
 
 @media (max-width: 480px) {
-  .kargo-modal-overlay {
+  .kargo-modal-overlay:not(.admin-record-modal-overlay) {
     padding-right: max(16px, env(safe-area-inset-right)) !important;
     padding-left: max(16px, env(safe-area-inset-left)) !important;
   }
@@ -3184,7 +3244,7 @@
     margin-left: auto;
   }
 
-  .kargo-modal__body {
+  .kargo-modal:not(.admin-record-modal):not(.admin-confirm-modal) .kargo-modal__body {
     padding: 16px !important;
   }
 
@@ -3396,7 +3456,7 @@
     flex: 0 0 auto;
   }
 
-  .kargo-modal[data-variant="detail"] .kargo-modal__content dl > div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl > div {
     display: grid !important;
     grid-template-columns: minmax(82px, 0.8fr) minmax(0, 1.2fr) !important;
     align-items: start;
@@ -3405,12 +3465,12 @@
     padding: 10px 0;
   }
 
-  .kargo-modal[data-variant="detail"] .kargo-modal__content dl :is(dt, dd) {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl :is(dt, dd) {
     min-width: 0;
     margin: 0;
   }
 
-  .kargo-modal[data-variant="detail"] .kargo-modal__content dl dd {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl dd {
     text-align: right;
     overflow-wrap: anywhere;
   }
@@ -3475,7 +3535,7 @@
 }
 
 @media (max-width: 480px) {
-  .kargo-modal[data-variant="detail"] .kargo-modal__content dl > div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl > div {
     grid-template-columns: minmax(72px, 0.75fr) minmax(0, 1.25fr) !important;
   }
 }
@@ -3756,7 +3816,7 @@
 /* ===== Scoped mobile control repairs ===== */
 @media (max-width: 767px) {
   /* Bottom tab navigation: four equal columns with complete labels. */
-  .kargo-original-app {
+  .kargo-original-app:not(.admin-app) {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
   }
 
@@ -4616,7 +4676,7 @@
     width: 100% !important;
     height: calc(60px + env(safe-area-inset-bottom)) !important;
     padding-bottom: env(safe-area-inset-bottom) !important;
-    background: #fff !important;
+    background: #f8f8f8 !important;
     box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
   }
 
@@ -4633,6 +4693,7 @@
     height: 60px !important;
     min-height: 60px !important;
     flex: none !important;
+    border-bottom-width: 2px !important;
   }
 }
 
@@ -4749,31 +4810,13 @@
     white-space: nowrap;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-page-header__actions > button,
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-chart-link,
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-panel-link {
-    position: relative;
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page)
+    .admin-page-header__actions
+    > button {
     flex: 0 0 auto;
     width: auto;
-    min-height: 28px !important;
-    padding: 6px 12px !important;
-    border: 0;
-    border-radius: 999px !important;
-    background: #18324a !important;
-    color: #fff !important;
-    font-family: "DM Sans", sans-serif !important;
-    font-size: 12px !important;
-    line-height: 16px;
+    min-height: 40px !important;
     white-space: nowrap;
-  }
-
-  /* Keep compact pills' pointer targets at least 44px tall. */
-  .admin-page--dashboard .admin-page-header__actions > button::after,
-  .admin-page--dashboard .admin-chart-link::after,
-  .admin-page--dashboard .admin-panel-link::after {
-    position: absolute;
-    inset: -8px 0;
-    content: "";
   }
 
   .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-stats {
@@ -4782,12 +4825,10 @@
   }
 
   .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-stat {
-    display: flex;
-    min-height: 0;
-    aspect-ratio: 1 / 1;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 24px 12px 14px;
+    display: block;
+    min-height: 148px;
+    aspect-ratio: auto;
+    padding: 42px 20px 20px;
   }
 
   .admin-page--dashboard .admin-stat::before {
@@ -4795,61 +4836,42 @@
   }
 
   .admin-page--dashboard .admin-stat__icon {
-    top: 16px;
-    right: 14px;
+    top: 18px;
+    right: 18px;
     width: 20px;
     height: 20px;
   }
 
   .admin-page--dashboard .admin-stat strong {
-    margin-bottom: 0;
-    color: #17212b;
-    font-family: "Manrope", sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1.1;
+    margin-bottom: 8px;
+    color: #101010;
+    font-family: "Quicksand", "DM Sans", sans-serif;
+    font-size: clamp(23px, 2.1vw, 34px);
+    font-weight: 600;
+    line-height: 1.05;
   }
 
   .admin-page--dashboard .admin-stat > span {
-    margin-top: 9px;
-    color: #748391;
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1.4;
+    margin-top: 0;
+    color: #4b5563;
+    font-size: 13.5px;
+    font-weight: 600;
   }
 
   .admin-page--dashboard .admin-stat small {
-    margin-top: 7px;
-    font-size: 11px;
-    line-height: 1.25;
+    margin-top: 6px;
+    font-size: 12.5px;
   }
 
   .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-stat:last-child:nth-child(odd) {
-    display: grid;
+    display: block;
     width: 100% !important;
-    height: 88px;
-    min-height: 88px;
+    height: auto;
+    min-height: 148px;
     aspect-ratio: auto;
-    grid-column: 1 / -1;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-rows: repeat(2, auto);
-    align-content: center;
-    align-items: center;
-    gap: 2px 12px;
-    padding: 14px 44px 14px 14px;
+    grid-column: auto;
+    padding: 42px 20px 20px;
     justify-self: stretch;
-  }
-
-  .admin-page--dashboard .admin-stat:last-child:nth-child(odd) strong {
-    grid-column: 1;
-    grid-row: 1 / -1;
-    font-size: 24px;
-  }
-
-  .admin-page--dashboard .admin-stat:last-child:nth-child(odd) > span,
-  .admin-page--dashboard .admin-stat:last-child:nth-child(odd) small {
-    grid-column: 2;
-    margin: 0;
   }
 
   .admin-page--dashboard > .admin-grid {
@@ -4903,27 +4925,17 @@
 
   .admin-page--dashboard .admin-queue-row {
     min-height: 56px !important;
-    gap: 8px;
-    padding: 10px 0;
-    border: 0;
-    border-bottom: 1px solid #e4e9ee;
-    border-radius: 0;
-  }
-
-  .admin-page--dashboard .admin-queue > li:last-child .admin-queue-row {
-    border-bottom: 0;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid #eef0f4;
+    border-radius: 10px;
+    background: #fff;
   }
 
   .admin-page--dashboard .admin-queue-row__icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-  }
-
-  .admin-page--dashboard .admin-queue-row > svg {
-    width: 14px;
-    height: 14px;
-    flex: 0 0 14px;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
   }
 
   .admin-page--dashboard :is(
@@ -4939,11 +4951,11 @@
   }
 
   .admin-page--dashboard .admin-queue-row__title {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .admin-page--dashboard .admin-queue-row__desc {
-    color: #748391;
+    color: #5f6b7a;
     font-size: 11px;
   }
 
@@ -5073,11 +5085,11 @@
   }
 
   .admin-page--dashboard .admin-chart-row {
-    --admin-chart-plot-height: 72px;
+    --admin-chart-plot-height: 96px;
   }
 
   .admin-page--dashboard .admin-chart-row--orders {
-    --admin-chart-plot-height: 24px;
+    --admin-chart-plot-height: 30px;
   }
 
   .admin-page--dashboard .admin-chart-row__body {
@@ -5089,12 +5101,7 @@
   }
 
   .admin-page--dashboard .admin-chart-plot {
-    gap: 2px;
-  }
-
-  .admin-page--dashboard .admin-chart-bar {
-    width: 45%;
-    max-width: 8px;
+    gap: 4px;
   }
 
   .admin-page--dashboard .admin-chart-xaxis {
@@ -5115,11 +5122,10 @@
     text-align: right;
   }
 
-  /* Icon and label share the underline colour here too, so the active tab
-     reads as one state instead of a navy icon over a coral line. */
+  /* Keep the mobile admin tab state on the desktop admin palette. */
   .admin-tabbar > div:first-child > button[aria-current="page"] {
-    color: #d85b4d !important;
-    border-bottom-color: #d85b4d !important;
+    color: var(--kargo-navy) !important;
+    border-bottom-color: var(--kargo-navy) !important;
   }
 }
 

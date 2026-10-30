@@ -9,3 +9,5 @@ export { default as AdminAddAdminModal } from "./AdminAddAdminModal";
 export { default as AuditDetailModal } from "./AuditDetailModal";
 export { AdminFact, AdminFactGrid, AdminModalSection, AdminEmptyText } from "./AdminFacts";
 export { default as AdminPanelHeader } from "./AdminPanelHeader";
+export { adminActionTone, default as AdminActionButton } from "./AdminActionButton";
+export type { AdminActionKind, AdminActionTone } from "./AdminActionButton";

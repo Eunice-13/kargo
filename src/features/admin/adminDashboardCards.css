@@ -104,20 +104,6 @@
   .admin-attention-metrics {
     gap: 10px;
   }
-  .admin-attention-metric {
-    padding: 16px 14px;
-  }
-  .admin-attention-metric strong {
-    font-size: 28px;
-  }
-  .admin-attention-metric span {
-    font-size: 13px;
-  }
-  .admin-attention-metric > svg {
-    right: 10px;
-    top: 12px;
-    width: 16px;
-  }
   .admin-page--dashboard .fulfillment-analytics__summary > div {
     padding: 16px;
     gap: 12px;
