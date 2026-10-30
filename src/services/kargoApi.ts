@@ -37,6 +37,8 @@ type DbProfile = {
 
   display_name: string;
 
+  shop_name: string | null;
+
   bio: string | null;
 
   social_links: Record<string, string> | null;
@@ -198,7 +200,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     .from("user_profiles")
 
     .select(
-      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,account_status,account_status_reason,notification_preferences,created_at",
+      "id,display_name,shop_name,bio,social_links,social_visibility,avatar_path,can_sell,account_status,account_status_reason,notification_preferences,created_at",
     )
 
     .eq("id", id)
@@ -237,6 +239,8 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     id,
 
     name: profile.display_name,
+
+    shopName: profile.shop_name ?? undefined,
 
     email,
 

@@ -13,6 +13,9 @@ export type UserInfo = {
 
   name: string;
 
+  // Seller's shop/store name (read-only in Settings; set at signup).
+  shopName?: string;
+
   email: string;
 
   role: Role;
