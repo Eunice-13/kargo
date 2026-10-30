@@ -2153,7 +2153,7 @@ export default function MyClaims({
                   fontSize: 10,
                 }}
               >
-                {claims.filter((c) => c.status === f).length}
+                {claimsForList.filter((c) => c.status === f).length}
               </span>
             )}
           </button>

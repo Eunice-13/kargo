@@ -12,6 +12,7 @@ import {
   Plane,
   ClipboardList,
   Maximize2,
+  Truck,
   X,
   FileText,
 } from "lucide-react"
@@ -1308,10 +1309,31 @@ export default function Dashboard({
       <section className="buyer-fulfillment-section">
         <div className="seller-section-heading seller-board-heading">
           <h2>Fulfillment Board</h2>
-          <button type="button" onClick={() => setBoardExpanded(true)}>
-            <Maximize2 size={14} aria-hidden="true" />
-            Expand
-          </button>
+          <div className="seller-board-heading__actions">
+            <button
+              type="button"
+              className="bdash-track-order"
+              onClick={() => {
+                // Jump straight to a shipment in progress. "In delivery" is the
+                // shipped/in_transit stage; open its tracking view if one
+                // exists, otherwise fall back to the full Orders tab.
+                const inDelivery = orders.find(
+                  (order) =>
+                    order.fulfillmentStage === "shipped" ||
+                    order.fulfillmentStage === "in_transit",
+                )
+                if (inDelivery) setBuyerOrderDetailsId(inDelivery.dbId || inDelivery.id)
+                else setTab("Orders")
+              }}
+            >
+              <Truck size={14} aria-hidden="true" />
+              Track order
+            </button>
+            <button type="button" onClick={() => setBoardExpanded(true)}>
+              <Maximize2 size={14} aria-hidden="true" />
+              Expand
+            </button>
+          </div>
         </div>
         <FulfillmentBoard
           fulfillment={fulfillment}
