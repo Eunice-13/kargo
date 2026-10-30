@@ -163,10 +163,11 @@ export default function AdminUsers() {
                   <tr
                     key={u.id}
                     onClick={() => setSelected(u.id)}
+                    tabIndex={0}
                     style={{ borderTop: "1px solid #F3F4F6", cursor: "pointer" }}
-                    className="admin-users-row"
+                    className="admin-users-row admin-clickable-row"
                   >
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Account" style={{ padding: "10px 14px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                         <Avatar name={u.name} size={30} />
                         <div style={{ minWidth: 0 }}>
@@ -185,16 +186,17 @@ export default function AdminUsers() {
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Type" style={{ padding: "10px 14px" }}>
                       <AdminBadge tone={roleOf(u)} label={roleLabel(u)} />
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Status" style={{ padding: "10px 14px" }}>
                       <AdminBadge
                         tone={u.accountStatus}
                         label={u.accountStatus === "active" ? "Active" : "Suspended"}
                       />
                     </td>
                     <td
+                      data-label="Last sign-in"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
@@ -204,10 +206,14 @@ export default function AdminUsers() {
                     >
                       {fmtDate(u.createdAt)}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 13, color: "#374151" }}>
+                    <td
+                      data-label="Orders"
+                      style={{ padding: "10px 14px", fontSize: 13, color: "#374151" }}
+                    >
                       {u.orders}
                     </td>
                     <td
+                      data-label="Spend / GMV 30d"
                       style={{
                         padding: "10px 14px",
                         fontSize: 13,
@@ -217,7 +223,13 @@ export default function AdminUsers() {
                     >
                       {u.gmv30 > 0 ? peso(u.gmv30) : "—"}
                     </td>
-                    <td style={{ padding: "10px 14px", color: "var(--kargo-muted)" }}>›</td>
+                    <td
+                      className="admin-card-detail-cell"
+                      data-label=""
+                      style={{ padding: "10px 14px", color: "var(--kargo-muted)" }}
+                    >
+                      ›
+                    </td>
                   </tr>
                 ))}
               </tbody>

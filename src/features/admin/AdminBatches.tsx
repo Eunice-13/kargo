@@ -143,9 +143,11 @@ export default function AdminBatches() {
                   <tr
                     key={b.id}
                     onClick={() => setSelected(b.id)}
+                    tabIndex={0}
                     style={{ borderTop: "1px solid #F3F4F6", cursor: "pointer" }}
+                    className="admin-clickable-row"
                   >
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Batch" style={{ padding: "10px 14px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                         <BatchMedia
                           src={b.coverPath ?? undefined}
@@ -165,7 +167,7 @@ export default function AdminBatches() {
                         </span>
                       </div>
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Seller" style={{ padding: "10px 14px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <Avatar name={b.sellerName} size={24} />
                         <span style={{ fontSize: 12, color: "var(--kargo-muted)" }}>
@@ -173,19 +175,31 @@ export default function AdminBatches() {
                         </span>
                       </div>
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
+                    <td
+                      data-label="Category"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
                       {b.category}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 13, color: "#374151" }}>
+                    <td
+                      data-label="Claimed"
+                      style={{ padding: "10px 14px", fontSize: 13, color: "#374151" }}
+                    >
                       {b.claimedQty}/{b.totalQty}
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Status" style={{ padding: "10px 14px" }}>
                       <AdminBadge tone={toneForStatus(b.status)} label={b.status} />
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Moderation" style={{ padding: "10px 14px" }}>
                       <AdminBadge tone={MOD_TONE[b.moderationStatus]} label={b.moderationStatus} />
                     </td>
-                    <td style={{ padding: "10px 14px", color: "var(--kargo-muted)" }}>›</td>
+                    <td
+                      className="admin-card-detail-cell"
+                      data-label=""
+                      style={{ padding: "10px 14px", color: "var(--kargo-muted)" }}
+                    >
+                      ›
+                    </td>
                   </tr>
                 ))}
               </tbody>

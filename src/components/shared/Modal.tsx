@@ -98,6 +98,7 @@ export default function Modal({
   title,
   onClose,
   children,
+  footer,
   width = 480,
   topOffset = HEADER_HEIGHT,
   variant,
@@ -108,6 +109,7 @@ export default function Modal({
   title: string
   onClose: () => void
   children: React.ReactNode
+  footer?: React.ReactNode
   width?: number
   topOffset?: number
   variant?: ModalVariant
@@ -236,6 +238,7 @@ export default function Modal({
         <div className="kargo-modal__body">
           <div className="kargo-modal__content">{children}</div>
         </div>
+        {footer}
       </div>
     </div>,
     document.body,

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Lock } from "lucide-react";
 
-import { Modal, PrimaryBtn, SecondaryBtn, CardSkeleton, BatchMedia } from "@/components/shared";
+import { Modal, CardSkeleton, BatchMedia } from "@/components/shared";
 import { toneForStatus } from "@/constants/admin";
 import { adminApi } from "@/services";
 import type { BatchModerationAction } from "../adminTypes";
 
 import { useAdminResource } from "../useAdminResource";
 import AdminBadge from "./AdminBadge";
+import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
 
@@ -52,17 +53,49 @@ export default function AdminBatchDetailModal({
   const needsReason = (a: BatchModerationAction) =>
     a === "flag" || a === "hide" || a === "restore" || a === "close";
 
-  const destructive = pending === "hide" || pending === "close";
-
   return (
     <>
       <Modal
         title={data?.title ?? "Batch"}
         variant="detail"
         width={680}
-        className="admin-modal"
-        overlayClassName="admin-modal-overlay"
+        className="admin-modal admin-record-modal"
+        overlayClassName="admin-modal-overlay admin-record-modal-overlay"
         onClose={onClose}
+        footer={
+          !loading && data ? (
+            <div className="admin-modal-footer admin-modal-footer--wrap">
+              {data.status === "locked" ? (
+                <AdminActionButton action="unlock" size="sm" onClick={() => setPending("unlock")}>
+                  Unlock
+                </AdminActionButton>
+              ) : (
+                <AdminActionButton action="lock" size="sm" onClick={() => setPending("lock")}>
+                  Lock
+                </AdminActionButton>
+              )}
+              {data.moderationStatus !== "flagged" && data.moderationStatus !== "hidden" && (
+                <AdminActionButton action="flag" size="sm" onClick={() => setPending("flag")}>
+                  Flag for review
+                </AdminActionButton>
+              )}
+              {data.moderationStatus === "hidden" ? (
+                <AdminActionButton action="show" size="sm" onClick={() => setPending("restore")}>
+                  Restore to catalog
+                </AdminActionButton>
+              ) : (
+                <AdminActionButton action="hide" size="sm" onClick={() => setPending("hide")}>
+                  Hide from catalog
+                </AdminActionButton>
+              )}
+              {data.status !== "closed" && (
+                <AdminActionButton action="closeBatch" size="sm" onClick={() => setPending("close")}>
+                  Close batch
+                </AdminActionButton>
+              )}
+            </div>
+          ) : undefined
+        }
       >
         {loading && <CardSkeleton />}
         {!loading && error && (
@@ -127,7 +160,7 @@ export default function AdminBatchDetailModal({
                   <tbody>
                     {data.products.map((p) => (
                       <tr key={p.name}>
-                        <td className="admin-mini-table__name">
+                        <td className="admin-mini-table__name" data-label="Name">
                           {p.name}
                           {p.isLocked && (
                             <Lock
@@ -137,12 +170,12 @@ export default function AdminBatchDetailModal({
                             />
                           )}
                         </td>
-                        <td>{peso(p.sellingPrice)}</td>
-                        <td>
+                        <td data-label="Price">{peso(p.sellingPrice)}</td>
+                        <td data-label="Claimed">
                           {p.claimed}
                           {p.waitlist > 0 ? ` (+${p.waitlist} waitlist)` : ""}
                         </td>
-                        <td>{p.quantityTotal}</td>
+                        <td data-label="Total">{p.quantityTotal}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -150,40 +183,6 @@ export default function AdminBatchDetailModal({
               </div>
             </AdminModalSection>
 
-            <div className="admin-modal-footer admin-modal-footer--wrap">
-              {data.status === "locked" ? (
-                <SecondaryBtn size="sm" onClick={() => setPending("unlock")}>
-                  Unlock
-                </SecondaryBtn>
-              ) : (
-                <SecondaryBtn size="sm" onClick={() => setPending("lock")}>
-                  Lock
-                </SecondaryBtn>
-              )}
-              {data.moderationStatus !== "flagged" && data.moderationStatus !== "hidden" && (
-                <SecondaryBtn size="sm" onClick={() => setPending("flag")}>
-                  Flag for review
-                </SecondaryBtn>
-              )}
-              {data.moderationStatus === "hidden" ? (
-                <PrimaryBtn size="sm" onClick={() => setPending("restore")}>
-                  Restore to catalog
-                </PrimaryBtn>
-              ) : (
-                <SecondaryBtn
-                  size="sm"
-                  style={{ borderColor: "#FECACA", background: "#FEF2F2", color: "#B91C1C" }}
-                  onClick={() => setPending("hide")}
-                >
-                  Hide from catalog
-                </SecondaryBtn>
-              )}
-              {data.status !== "closed" && (
-                <SecondaryBtn size="sm" onClick={() => setPending("close")}>
-                  Close batch
-                </SecondaryBtn>
-              )}
-            </div>
           </div>
         )}
       </Modal>
@@ -194,7 +193,13 @@ export default function AdminBatchDetailModal({
           consequence={consequenceFor(pending)}
           confirmLabel={pending[0].toUpperCase() + pending.slice(1)}
           minReason={needsReason(pending) ? 8 : 0}
-          tone={destructive ? "danger" : "default"}
+          action={
+            pending === "restore"
+              ? "show"
+              : pending === "close"
+                ? "closeBatch"
+                : pending
+          }
           onConfirm={async (reason) => {
             await adminApi.moderateBatch(batchId, pending, reason);
             setPending(null);
