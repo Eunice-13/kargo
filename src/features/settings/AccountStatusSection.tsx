@@ -30,8 +30,26 @@ export default function AccountStatusSection({ user }: { user: UserInfo }) {
     setError("");
     try {
       setData(await kargoApi.loadMyAccountStatus());
-    } catch {
-      setError("We couldn't load your account history. Please try again.");
+    } catch (cause) {
+      // Supabase/PostgREST rejects with a plain object ({ message, code,
+      // details, hint }), not an Error — so read those fields rather than
+      // String()-ing it into "[object Object]". Falls back to friendly copy.
+      const err = cause as
+        | { message?: string; code?: string; details?: string; hint?: string }
+        | null
+        | undefined;
+      const detail =
+        err?.message ||
+        err?.details ||
+        err?.hint ||
+        (cause instanceof Error ? cause.message : "");
+      const code = err?.code ? ` (${err.code})` : "";
+      console.error("loadMyAccountStatus failed:", cause);
+      setError(
+        detail
+          ? `We couldn't load your account history: ${detail}${code}`
+          : "We couldn't load your account history. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
