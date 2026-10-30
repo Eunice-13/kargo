@@ -1423,7 +1423,13 @@ async function loadBuyerWaitlist(
     peers = peerRows ?? [];
   }
 
-  return rows.map((row) => {
+  // Drop orphaned waitlist entries: if the batch_product row no longer
+  // resolves, the product (and its batch) was deleted, so there is nothing for
+  // the buyer to wait on or open. Prune them here instead of surfacing a dead
+  // entry with no batch, product name, or position.
+  const liveRows = rows.filter((row) => Boolean(row.batch_products?.[0]));
+
+  return liveRows.map((row) => {
     const product = row.batch_products?.[0];
 
     const batch = product ? batchMap.get(product.batch_id) : undefined;
