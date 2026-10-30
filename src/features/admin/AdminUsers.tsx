@@ -136,6 +136,7 @@ export default function AdminUsers() {
                   {[
                     "Account",
                     "Type",
+                    "Shop name",
                     "Status",
                     "Last sign-in",
                     "Orders",
@@ -189,6 +190,19 @@ export default function AdminUsers() {
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       <AdminBadge tone={roleOf(u)} label={roleLabel(u)} />
+                    </td>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: u.shopName ? "var(--kargo-ink)" : "var(--kargo-muted)",
+                        maxWidth: 200,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {u.canSell ? (u.shopName ?? "—") : "—"}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       <AdminBadge
