@@ -1,60 +1,60 @@
-import type React from "react"
+import type React from "react";
 
-import type { FulfillmentColumn } from "@/constants/fulfillment"
+import type { FulfillmentColumn } from "@/constants/fulfillment";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type AppStage = "login" | "signup" | "app"
+export type AppStage = "login" | "signup" | "app";
 
-export type EntityId = string | number
+export type EntityId = string | number;
 
 export type UserInfo = {
-  id?: string
+  id?: string;
 
-  name: string
+  name: string;
 
-  email: string
+  email: string;
 
-  role: Role
+  role: Role;
 
-  bio?: string
+  bio?: string;
 
-  fb?: string
+  fb?: string;
 
-  avatarUrl?: string
+  avatarUrl?: string;
 
-  socialLinks?: Record<string, string>
+  socialLinks?: Record<string, string>;
 
-  socialVisibility?: Record<string, boolean>
+  socialVisibility?: Record<string, boolean>;
 
-  sellerEnabled?: boolean
+  sellerEnabled?: boolean;
 
   // Governance capability: an accepted, non-revoked row in admin_members. Mapped
   // from a second query in profileFor; binary (there is exactly one admin role).
-  adminEnabled?: boolean
+  adminEnabled?: boolean;
 
   // An admin invitation is waiting for this account's answer. Until it is
   // accepted, is_admin() is false and AdminInviteModal is shown on sign-in.
-  adminInvitePending?: boolean
+  adminInvitePending?: boolean;
 
   // Mirrors user_profiles.account_status. A suspended account sees the
   // AccountSuspended screen instead of the app shell, for every role.
-  accountStatus?: "active" | "suspended"
+  accountStatus?: "active" | "suspended";
 
-  accountStatusReason?: string
+  accountStatusReason?: string;
 
   // Email/notification opt-outs, keyed by NOTIF_DEFAULTS keys (e.g. "waitlist",
 
   // "claims"). Missing key = opted in. Persisted to profiles.notification_preferences.
 
-  notificationPreferences?: Record<string, boolean>
+  notificationPreferences?: Record<string, boolean>;
 
   // profiles.created_at. Formatted for display by `memberSince()`; a profile
 
   // with no value shows no "Member since" text rather than an invented date.
 
-  memberSince?: string
-}
+  memberSince?: string;
+};
 
 export type Tab =
   | "Dashboard"
@@ -66,344 +66,369 @@ export type Tab =
   | "Notifications"
   | "Users"
   | "Transactions"
-  | "Security"
+  | "Security";
 
 // The five admin top-level tabs (a subset of Tab, for role-aware helpers).
-export type AdminTab = "Dashboard" | "Users" | "Batches" | "Transactions" | "Security"
+export type AdminTab = "Dashboard" | "Users" | "Batches" | "Transactions" | "Security";
 
-export type Role = "Buyer" | "Seller" | "Admin"
+export type Role = "Buyer" | "Seller" | "Admin";
 
-export type ClaimStatus = "Pending" | "Awaiting Verification" | "Paid and Reserved" | "Expired" | "Cancelled" | "Insufficient Payment"
+export type ClaimStatus =
+  | "Pending"
+  | "Awaiting Verification"
+  | "Paid and Reserved"
+  | "Expired"
+  | "Cancelled"
+  | "Insufficient Payment";
 
-export type ShippingState = "waiting_for_seller" | "fee_set" | "correction_requested" | "declined"
+export type ShippingState = "waiting_for_seller" | "fee_set" | "correction_requested" | "declined";
 
-export type CourierCompany = "Lalamove" | "J&T Express" | "LBC" | "Grab Express" | "2GO" | "Ninja Van" | "Others"
+export type CourierCompany =
+  | "Lalamove"
+  | "J&T Express"
+  | "LBC"
+  | "Grab Express"
+  | "2GO"
+  | "Ninja Van"
+  | "Others";
 
-export type SellingUnit = "piece" | "box"
+export type SellingUnit = "piece" | "box";
 
-export type GroupDiscountType = "percentage" | "fixed"
+export type GroupDiscountType = "percentage" | "fixed";
 
 export type ClaimReservationInput = {
-  quantity: number
+  quantity: number;
 
-  paymentMethod: string
+  paymentMethod: string;
 
-  pinLat?: number
+  pinLat?: number;
 
-  pinLng?: number
+  pinLng?: number;
 
-  pinUrl?: string
+  pinUrl?: string;
 
-  pinAddress?: string
+  pinAddress?: string;
 
-  acceptShipping: boolean
-}
+  acceptShipping: boolean;
+};
 
-export type PaymentHistoryStatus = ClaimStatus | "Rejected" | "Pending Payment"
+export type PaymentHistoryStatus = ClaimStatus | "Rejected" | "Pending Payment";
 
-export type SettingsSection = "My Addresses" | "Profile" | "Account status" | "Linked Accounts" | "Notifications" | "Security"
+export type SettingsSection =
+  | "My Addresses"
+  | "Profile"
+  | "Account status"
+  | "Linked Accounts"
+  | "Notifications"
+  | "Security";
 
 export type ClaimRow = {
-  id: EntityId
+  id: EntityId;
 
-  createdAt?: string
+  createdAt?: string;
 
-  productId?: string
+  productId?: string;
 
-  groupOrderId?: string
+  groupOrderId?: string;
 
-  groupOrderCode?: string
+  groupOrderCode?: string;
 
-  groupItemCount?: number
+  groupItemCount?: number;
 
-  groupMemberCount?: number
+  groupMemberCount?: number;
 
-  groupRegularSubtotal?: number
+  groupRegularSubtotal?: number;
 
-  groupDiscountAmount?: number
+  groupDiscountAmount?: number;
 
-  product: string
+  product: string;
 
-  batch: string
+  batch: string;
 
-  seller: string
+  seller: string;
+
+  // Seller's shop/store name for buyer-facing display, when they set one.
+  sellerShopName?: string;
 
   // Seller's user id — used to load the methods THIS seller accepts when paying.
 
-  sellerId?: string
+  sellerId?: string;
 
-  qty: number
+  qty: number;
 
-  amount: number
+  amount: number;
 
-  status: ClaimStatus
+  status: ClaimStatus;
 
-  hours: number
+  hours: number;
 
-  expiresAt?: string
+  expiresAt?: string;
 
-  extensionStatus?: "none" | "pending" | "approved" | "denied"
+  extensionStatus?: "none" | "pending" | "approved" | "denied";
 
-  extensionRequestedHours?: number
+  extensionRequestedHours?: number;
 
-  extensionDecidedAt?: string
+  extensionDecidedAt?: string;
 
-  extensionRequested?: boolean
+  extensionRequested?: boolean;
 
   // Who placed the order (seller's "Orders Received" view). Falls back to
 
   // `seller` for legacy rows. `buyerFb` is their contact/Facebook link.
 
-  buyer?: string
+  buyer?: string;
 
-  buyerFb?: string
+  buyerFb?: string;
 
   // All public social links for the buyer. `buyerFb` remains as the preferred
   // single-link fallback for older rows and direct-contact actions.
-  buyerSocialLinks?: Record<string, string>
+  buyerSocialLinks?: Record<string, string>;
 
   // Seller's contact/Facebook link (buyer's "My Claims" view).
 
-  sellerFb?: string
+  sellerFb?: string;
 
-  sellerSocialLinks?: Record<string, string>
+  sellerSocialLinks?: Record<string, string>;
 
   // Raw database status used for accurate buyer-history counters.
-  orderStatus?: string
+  orderStatus?: string;
 
-  reservedPaymentMethod?: string
+  reservedPaymentMethod?: string;
 
-  shippingApplies?: boolean
+  shippingApplies?: boolean;
 
-  shippingState?: ShippingState
+  shippingState?: ShippingState;
 
-  shippingFee?: number
+  shippingFee?: number;
 
-  deadlinePausedAt?: string
+  deadlinePausedAt?: string;
 
-  deliveryPinLat?: number
+  deliveryPinLat?: number;
 
-  deliveryPinLng?: number
+  deliveryPinLng?: number;
 
-  deliveryPinUrl?: string
+  deliveryPinUrl?: string;
 
-  deliveryPinAddress?: string
+  deliveryPinAddress?: string;
 
-  courierCompany?: string
+  courierCompany?: string;
 
-  riderName?: string
+  riderName?: string;
 
-  riderContact?: string
+  riderContact?: string;
 
-  trackingNumber?: string
+  trackingNumber?: string;
 
-  eta?: string
+  eta?: string;
 
-  trackingUrl?: string
+  trackingUrl?: string;
 
-  fulfillmentStage?: string
+  fulfillmentStage?: string;
 
-  declineReason?: string
-}
+  declineReason?: string;
+};
 
 export type ToPayRow = {
-  id: EntityId
+  id: EntityId;
 
-  createdAt?: string
+  createdAt?: string;
 
-  orderId?: string
+  orderId?: string;
 
-  groupOrderId?: string
+  groupOrderId?: string;
 
-  product: string
+  product: string;
 
-  seller: string
+  seller: string;
 
-  sellerId?: string
+  sellerId?: string;
 
-  qty?: number
+  qty?: number;
 
-  amount: number
+  amount: number;
 
-  hours: number
+  hours: number;
 
-  expiresAt?: string
+  expiresAt?: string;
 
-  reservedPaymentMethod?: string
+  reservedPaymentMethod?: string;
 
-  shippingApplies?: boolean
+  shippingApplies?: boolean;
 
-  shippingState?: ShippingState
+  shippingState?: ShippingState;
 
-  shippingFee?: number
+  shippingFee?: number;
 
-  deadlinePausedAt?: string
-}
+  deadlinePausedAt?: string;
+};
 
 export type PayHistRow = {
-  id: EntityId
-  combinedDeliveryGroupId?: string
-  reservationIds?: string[]
+  id: EntityId;
+  combinedDeliveryGroupId?: string;
+  reservationIds?: string[];
 
-  orderId?: string
+  orderId?: string;
 
-  seller?: string
+  seller?: string;
 
-  sellerShopName?: string
+  sellerShopName?: string;
 
-  submittedAt?: string
+  submittedAt?: string;
 
-  product: string
+  product: string;
 
-  imageUrl?: string
+  imageUrl?: string;
 
-  batch: string
+  batch: string;
 
-  method: string
+  method: string;
 
-  amount: number
+  amount: number;
 
-  date: string
+  date: string;
 
-  status: PaymentHistoryStatus
+  status: PaymentHistoryStatus;
 
-  referenceNumber?: string
+  referenceNumber?: string;
 
-  receiptPath?: string
+  receiptPath?: string;
 
-  payerAccountName?: string
+  payerAccountName?: string;
 
-  payerPhone?: string
+  payerPhone?: string;
 
-  buyerContactUrl?: string
+  buyerContactUrl?: string;
 
-  rejectionReason?: string
+  rejectionReason?: string;
 
-  rejectionDeadline?: string
-}
+  rejectionDeadline?: string;
+};
 
 export type OrderRow = {
-  id: string
+  id: string;
 
-  dbId?: string
+  dbId?: string;
 
-  product: string
+  product: string;
 
-  batch: string
+  batch: string;
 
-  seller: string
+  seller: string;
 
-  sellerFb?: string
+  sellerFb?: string;
 
-  amount: number
+  amount: number;
 
-  step: number
+  step: number;
 
-  qty?: number
+  qty?: number;
 
-  fulfillmentStage?: string
+  fulfillmentStage?: string;
 
-  courierCompany?: string
+  courierCompany?: string;
 
-  riderName?: string
+  riderName?: string;
 
-  riderContact?: string
+  riderContact?: string;
 
-  trackingNumber?: string
+  trackingNumber?: string;
 
-  eta?: string
+  eta?: string;
 
-  trackingUrl?: string
+  trackingUrl?: string;
 
-  deliveryPinLat?: number
+  deliveryPinLat?: number;
 
-  deliveryPinLng?: number
+  deliveryPinLng?: number;
 
-  deliveryPinUrl?: string
+  deliveryPinUrl?: string;
 
-  deliveryPinAddress?: string
-}
+  deliveryPinAddress?: string;
+};
 
 // ─── Batch data models ────────────────────────────────────────────────────────
 
 export interface BatchStoredProduct {
-  id?: number
+  id?: number;
 
-  dbId?: string
+  dbId?: string;
 
-  name: string
+  name: string;
 
-  imageUrl?: string
+  imageUrl?: string;
 
-  sellingUnit?: SellingUnit
+  sellingUnit?: SellingUnit;
 
-  piecesPerBox?: number
+  piecesPerBox?: number;
 
-  price: number
+  price: number;
 
-  basePrice?: number
+  basePrice?: number;
 
-  markup?: number
+  markup?: number;
 
-  qty: number
+  qty: number;
 
-  claimed: number
+  claimed: number;
 
-  waitlist: number
+  waitlist: number;
 
-  locked: boolean
+  locked: boolean;
 
   // Optional cap on how many units a single buyer may claim for this item.
 
   // Undefined/0 means no per-user limit.
 
-  limitPerUser?: number
+  limitPerUser?: number;
 
   // Optional maximum number of buyers who may wait for this product.
 
-  waitlistLimit?: number
+  waitlistLimit?: number;
 }
 
 export interface BatchItem {
-  id: number
+  id: number;
 
-  dbId?: string
+  dbId?: string;
 
-  createdAt?: string
+  createdAt?: string;
 
-  reactionCount?: number
+  reactionCount?: number;
 
-  reactedByCurrentUser?: boolean
+  reactedByCurrentUser?: boolean;
 
-  live: boolean
+  live: boolean;
 
-  locked: boolean
+  locked: boolean;
 
-  title: string
+  title: string;
 
-  seller: string
+  seller: string;
 
-  sellerId?: string
+  // Seller's shop/store name for buyer-facing display, when they set one.
+  sellerShopName?: string;
 
-  sellerFb?: string
+  sellerId?: string;
 
-  trips: string
+  sellerFb?: string;
+
+  trips: string;
 
   // Philippine calendar date the batch runs through (`YYYY-MM-DD`). Orders and
   // group orders stop at the end of this day; see batchOrdersClosed().
-  endsOn?: string
+  endsOn?: string;
 
-  startsOn?: string
+  startsOn?: string;
 
-  items: number
+  items: number;
 
-  claimed: number
+  claimed: number;
 
-  category: string
+  category: string;
 
-  reserveHours: number
+  reserveHours: number;
 
-  notes?: string
+  notes?: string;
 
   // Optional seller-set cover photo. A single image field used identically by
 
@@ -411,66 +436,73 @@ export interface BatchItem {
 
   // fall back to the category gradient + CategoryIcon.
 
-  coverImage?: string
+  coverImage?: string;
 
   // Additional seller-uploaded images for the batch gallery.
-  galleryImages?: string[]
+  galleryImages?: string[];
 
-  groupOrdersEnabled?: boolean
+  groupOrdersEnabled?: boolean;
 
-  groupDiscountType?: GroupDiscountType
+  groupDiscountType?: GroupDiscountType;
 
-  groupDiscountValue?: number
+  groupDiscountValue?: number;
 
-  groupDiscountMinSubtotal?: number
+  groupDiscountMinSubtotal?: number;
 
   // Admin moderation state, surfaced to the owning seller so a hidden/flagged
   // batch shows a notice in their Batches tab. Buyers never see hidden batches.
-  moderationStatus?: "visible" | "flagged" | "hidden"
+  moderationStatus?: "visible" | "flagged" | "hidden";
 
-  moderationReason?: string
+  moderationReason?: string;
 
-  products: BatchStoredProduct[]
+  products: BatchStoredProduct[];
 }
 
-export type BatchType = BatchItem
+export type BatchType = BatchItem;
 
 export type GroupOrderMember = {
-  userId: string
-  name: string
-  role: "leader" | "member"
-  status: "active" | "left" | "removed"
-}
+  userId: string;
+  name: string;
+  role: "leader" | "member";
+  status: "active" | "left" | "removed";
+};
 
 export type GroupOrderCommitment = {
-  userId: string
-  memberName: string
-  productId: string
-  productName: string
-  quantity: number
-  unitPrice: number
-}
+  userId: string;
+  memberName: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+};
 
 export type GroupOrder = {
-  id: string
-  batchId: string
-  leaderId: string
-  leaderName: string
-  referralCode: string
-  status: "forming" | "waiting_for_seller" | "payment_pending" | "payment_submitted" | "payment_confirmed" | "cancelled" | "expired"
-  formationDeadline: string
-  regularSubtotal: number
-  discountAmount: number
-  finalSubtotal: number
-  shippingFee?: number
-  shippingState?: ShippingState | "declined"
-  paymentDeadline?: string
-  reservedPaymentMethod?: string
-  isLeader: boolean
-  currentUserId: string
-  members: GroupOrderMember[]
-  commitments: GroupOrderCommitment[]
-}
+  id: string;
+  batchId: string;
+  leaderId: string;
+  leaderName: string;
+  referralCode: string;
+  status:
+    | "forming"
+    | "waiting_for_seller"
+    | "payment_pending"
+    | "payment_submitted"
+    | "payment_confirmed"
+    | "cancelled"
+    | "expired";
+  formationDeadline: string;
+  regularSubtotal: number;
+  discountAmount: number;
+  finalSubtotal: number;
+  shippingFee?: number;
+  shippingState?: ShippingState | "declined";
+  paymentDeadline?: string;
+  reservedPaymentMethod?: string;
+  isLeader: boolean;
+  currentUserId: string;
+  members: GroupOrderMember[];
+  commitments: GroupOrderCommitment[];
+};
 
 // ─── Per-batch expenses (seller-only bookkeeping) ─────────────────────────────
 
@@ -478,81 +510,81 @@ export type GroupOrder = {
 
 // entered: a single manual number, or an itemized list that auto-sums.
 
-export type ExpenseMode = "single" | "itemized"
+export type ExpenseMode = "single" | "itemized";
 
 export type ExpenseItem = {
-  id: string
+  id: string;
 
-  label: string
+  label: string;
 
-  amount: number
+  amount: number;
 
-  category?: string
+  category?: string;
 
-  date?: string
-}
+  date?: string;
+};
 
 export type BatchExpenses = {
-  batchDbId?: string
+  batchDbId?: string;
 
-  mode: ExpenseMode
+  mode: ExpenseMode;
 
-  total: number
+  total: number;
 
-  items: ExpenseItem[]
-}
+  items: ExpenseItem[];
+};
 
 // ─── Fulfillment data model ───────────────────────────────────────────────────
 
 export type FulfillmentOrder = {
-  id: string
+  id: string;
 
-  dbId?: string
+  dbId?: string;
 
-  col: FulfillmentColumn
+  col: FulfillmentColumn;
 
-  perspective: "seller" | "buyer"
+  perspective: "seller" | "buyer";
 
-  buyer: string
+  buyer: string;
 
-  buyerFb?: string
+  buyerFb?: string;
 
-  buyerSocialLinks?: Record<string, string>
+  buyerSocialLinks?: Record<string, string>;
 
-  seller?: string
+  seller?: string;
 
-  sellerFb?: string
+  sellerFb?: string;
 
-  sellerSocialLinks?: Record<string, string>
+  sellerSocialLinks?: Record<string, string>;
 
-  product: string
+  product: string;
 
-  qty: number
+  qty: number;
 
-  amount: number
+  amount: number;
 
-  fulfillmentStage?: string
+  fulfillmentStage?: string;
 
-  courierCompany?: string
+  courierCompany?: string;
 
-  riderName?: string
+  riderName?: string;
 
-  riderContact?: string
+  riderContact?: string;
 
-  trackingNumber?: string
+  trackingNumber?: string;
 
-  eta?: string
+  eta?: string;
 
-  trackingUrl?: string
+  trackingUrl?: string;
 
-  deliveryPinLat?: number
+  deliveryPinLat?: number;
 
-  deliveryPinLng?: number
+  deliveryPinLng?: number;
 
-  deliveryPinUrl?: string
+  deliveryPinUrl?: string;
 
-  deliveryPinAddress?: string
-}
+  deliveryPinAddress?: string;
+};
 
 // Buyer's place in a sold-out product queue. Dashboard and BatchPage share
 
@@ -560,108 +592,108 @@ export type FulfillmentOrder = {
 
 // snapshot a stale entry.
 
-export type WaitlistStatus = "waiting" | "converted" | "cancelled"
+export type WaitlistStatus = "waiting" | "converted" | "cancelled";
 
 export type WaitlistEntry = {
-  id: string
+  id: string;
 
-  productId?: string
+  productId?: string;
 
-  product: string
+  product: string;
 
-  batchId: number
+  batchId: number;
 
-  batch: string
+  batch: string;
 
-  seller: string
+  seller: string;
 
-  trips: string
+  trips: string;
 
-  position: number
+  position: number;
 
-  queueSize: number
+  queueSize: number;
 
-  amount: number
+  amount: number;
 
   // Quantity the buyer wants automatically claimed when stock becomes available.
 
-  desiredQuantity: number
+  desiredQuantity: number;
 
-  status: WaitlistStatus
-}
+  status: WaitlistStatus;
+};
 
 // Seller-facing view of who is waiting for one of their products, in join
 
 // order. Buyers only ever see their own position (WaitlistEntry above).
 
 export type SellerWaitlistEntry = {
-  buyer: string
+  buyer: string;
 
-  buyerFb?: string
+  buyerFb?: string;
 
-  position: number
+  position: number;
 
-  joinedAt: string
+  joinedAt: string;
 
-  desiredQuantity: number
-}
+  desiredQuantity: number;
+};
 
 export type SellerWaitlistGroup = {
-  productId: string
+  productId: string;
 
-  product: string
+  product: string;
 
-  batch: string
+  batch: string;
 
-  queue: SellerWaitlistEntry[]
-}
+  queue: SellerWaitlistEntry[];
+};
 
 // ─── Shared types for cross-tab props ─────────────────────────────────────────
 
 export type SharedState = {
-  claims: ClaimRow[]
+  claims: ClaimRow[];
 
-  setClaims: React.Dispatch<React.SetStateAction<ClaimRow[]>>
+  setClaims: React.Dispatch<React.SetStateAction<ClaimRow[]>>;
 
-  toPay: ToPayRow[]
+  toPay: ToPayRow[];
 
-  setToPay: React.Dispatch<React.SetStateAction<ToPayRow[]>>
+  setToPay: React.Dispatch<React.SetStateAction<ToPayRow[]>>;
 
-  payHistory: PayHistRow[]
+  payHistory: PayHistRow[];
 
-  setPayHistory: React.Dispatch<React.SetStateAction<PayHistRow[]>>
+  setPayHistory: React.Dispatch<React.SetStateAction<PayHistRow[]>>;
 
-  orders: OrderRow[]
+  orders: OrderRow[];
 
-  setOrders: React.Dispatch<React.SetStateAction<OrderRow[]>>
+  setOrders: React.Dispatch<React.SetStateAction<OrderRow[]>>;
 
-  batches: BatchType[]
+  batches: BatchType[];
 
-  setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
+  setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>;
 
-  fulfillment: FulfillmentOrder[]
+  fulfillment: FulfillmentOrder[];
 
-  setFulfillment: React.Dispatch<React.SetStateAction<FulfillmentOrder[]>>
+  setFulfillment: React.Dispatch<React.SetStateAction<FulfillmentOrder[]>>;
 
-  waitlist: WaitlistEntry[]
+  waitlist: WaitlistEntry[];
 
-  setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>
+  setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>;
 
-  sellerWaitlist: SellerWaitlistGroup[]
+  sellerWaitlist: SellerWaitlistGroup[];
 
-  setSellerWaitlist: React.Dispatch<React.SetStateAction<SellerWaitlistGroup[]>>
+  setSellerWaitlist: React.Dispatch<React.SetStateAction<SellerWaitlistGroup[]>>;
 
-  user: UserInfo
+  user: UserInfo;
 
-  setUser: React.Dispatch<React.SetStateAction<UserInfo>>
+  setUser: React.Dispatch<React.SetStateAction<UserInfo>>;
 
-  setTab: (t: Tab) => void
+  setTab: (t: Tab) => void;
 
-  role: Role
+  role: Role;
 
   // Re-pull all app data from the backend (no-op in demo mode). Used after
 
   // server-side cascades like automatically converting a waitlist entry.
 
-  refreshData: () => Promise<void>
-}
+  refreshData: () => Promise<void>;
+};

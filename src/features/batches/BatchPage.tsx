@@ -1,16 +1,25 @@
-import { productAvailability } from "./productAvailability"
+import { productAvailability } from "./productAvailability";
 
-import { canManageBatch } from "./batchAccess"
+import { canManageBatch } from "./batchAccess";
+import { sellerLabel } from "./sellerLabel";
+
+import { batchClosedByDate, batchOrdersClosed, formatBatchEndDate } from "./batchAvailability";
+
+import { useEffect, useState } from "react";
 
 import {
-  batchClosedByDate,
-  batchOrdersClosed,
-  formatBatchEndDate,
-} from "./batchAvailability"
-
-import { useEffect, useState } from "react"
-
-import { Lock, ArrowLeft, ArrowRight, Plane, Check, Link2, ImageUp, Users, Tag, CalendarDays, Clock } from "lucide-react"
+  Lock,
+  ArrowLeft,
+  ArrowRight,
+  Plane,
+  Check,
+  Link2,
+  ImageUp,
+  Users,
+  Tag,
+  CalendarDays,
+  Clock,
+} from "lucide-react";
 
 import type {
   ClaimRow,
@@ -20,15 +29,9 @@ import type {
   UserInfo,
   WaitlistEntry,
   ClaimReservationInput,
-} from "@/types"
-import { batchImage } from "@/constants/categories"
-import {
-  INDIGO,
-  CYAN_L,
-  GREEN,
-  AMBER,
-  batchCoverSrc,
-} from "@/constants/theme"
+} from "@/types";
+import { batchImage } from "@/constants/categories";
+import { INDIGO, CYAN_L, GREEN, AMBER, batchCoverSrc } from "@/constants/theme";
 
 import {
   Card,
@@ -41,22 +44,22 @@ import {
   ContactModal,
   ShareButton,
   Modal,
-} from "@/components/shared"
-import { productImageUrl } from "@/components/shared/ProductThumb"
+} from "@/components/shared";
+import { productImageUrl } from "@/components/shared/ProductThumb";
 
-import ItemClaimModal from "./ItemClaimModal"
+import ItemClaimModal from "./ItemClaimModal";
 
-import JoinWaitlistModal from "./JoinWaitlistModal"
-import GroupOrderModal, { GroupOrderChoiceModal } from "./GroupOrderModal"
-import BatchGroupSettingsModal from "./BatchGroupSettingsModal"
+import JoinWaitlistModal from "./JoinWaitlistModal";
+import GroupOrderModal, { GroupOrderChoiceModal } from "./GroupOrderModal";
+import BatchGroupSettingsModal from "./BatchGroupSettingsModal";
 
-import { toggleBatchLock } from "./toggleBatchLock"
+import { toggleBatchLock } from "./toggleBatchLock";
 
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { isSupabaseConfigured } from "@/lib/supabase";
 
-import { navIntent, subscribeNavIntent } from "@/state/navIntent"
+import { navIntent, subscribeNavIntent } from "@/state/navIntent";
 
-import { kargoApi } from "@/services"
+import { kargoApi } from "@/services";
 
 export default function BatchPage({
   batch: batchProp,
@@ -87,128 +90,120 @@ export default function BatchPage({
 
   refreshData,
 }: {
-  batch: BatchType
+  batch: BatchType;
 
-  role: Role
+  role: Role;
 
-  user: UserInfo
+  user: UserInfo;
 
-  batches: BatchType[]
+  batches: BatchType[];
 
-  claims: ClaimRow[]
+  claims: ClaimRow[];
 
-  setClaims: React.Dispatch<React.SetStateAction<ClaimRow[]>>
+  setClaims: React.Dispatch<React.SetStateAction<ClaimRow[]>>;
 
-  toPay: ToPayRow[]
+  toPay: ToPayRow[];
 
-  setToPay: React.Dispatch<React.SetStateAction<ToPayRow[]>>
+  setToPay: React.Dispatch<React.SetStateAction<ToPayRow[]>>;
 
-  onBack: () => void
-  backLabel?: string
-  onSellerClick: (name: string) => void
+  onBack: () => void;
+  backLabel?: string;
+  onSellerClick: (name: string) => void;
 
-  setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>
+  setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>;
 
-  waitlist: WaitlistEntry[]
+  waitlist: WaitlistEntry[];
 
-  setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>
+  setWaitlist: React.Dispatch<React.SetStateAction<WaitlistEntry[]>>;
 
-  refreshData: () => Promise<void>
+  refreshData: () => Promise<void>;
 }) {
-  const batch = batches.find((b) => b.id === batchProp.id) ?? batchProp
+  const batch = batches.find((b) => b.id === batchProp.id) ?? batchProp;
 
-  const canEdit = canManageBatch(batch, user, role)
+  const canEdit = canManageBatch(batch, user, role);
 
   // Claims, waitlists, and group orders all close together when the batch is
   // locked or past its end date, so the page never offers an action the server
   // will refuse.
-  const ordersClosed = batchOrdersClosed(batch)
+  const ordersClosed = batchOrdersClosed(batch);
 
-  const closedByDate = batchClosedByDate(batch)
+  const closedByDate = batchClosedByDate(batch);
 
-  const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({})
+  const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({});
 
   const [claimTarget, setClaimTarget] = useState<{
-    p: typeof batch.products[0]
+    p: (typeof batch.products)[0];
 
-    key: string
-  } | null>(null)
+    key: string;
+  } | null>(null);
 
   const [purchaseModeTarget, setPurchaseModeTarget] = useState<{
-    p: typeof batch.products[0]
-    key: string
-  } | null>(null)
+    p: (typeof batch.products)[0];
+    key: string;
+  } | null>(null);
 
   const sharedGroupCode =
     typeof window === "undefined"
       ? ""
-      : new URLSearchParams(window.location.search).get("group") ?? ""
+      : (new URLSearchParams(window.location.search).get("group") ?? "");
 
-  const [groupOrderProductId, setGroupOrderProductId] = useState<string | null>(null)
+  const [groupOrderProductId, setGroupOrderProductId] = useState<string | null>(null);
 
   // A notification can open this batch straight onto one of its group orders.
   // Read it once on mount, and again if the batch is already on screen.
   const [groupOrderTargetId, setGroupOrderTargetId] = useState<string | null>(() => {
     const requested =
-      role === "Buyer" && batch.groupOrdersEnabled ? navIntent.batchGroupOrderId : null
-    if (requested) navIntent.batchGroupOrderId = null
-    return requested
-  })
+      role === "Buyer" && batch.groupOrdersEnabled ? navIntent.batchGroupOrderId : null;
+    if (requested) navIntent.batchGroupOrderId = null;
+    return requested;
+  });
 
   const [groupOrderOpen, setGroupOrderOpen] = useState(
     role === "Buyer" &&
       batch.groupOrdersEnabled &&
       (Boolean(sharedGroupCode) || Boolean(groupOrderTargetId)),
-  )
+  );
 
   useEffect(() => {
-    if (role !== "Buyer" || !batch.groupOrdersEnabled) return
+    if (role !== "Buyer" || !batch.groupOrdersEnabled) return;
     const openRequestedGroup = () => {
-      const requested = navIntent.batchGroupOrderId
-      if (!requested) return
-      navIntent.batchGroupOrderId = null
-      setGroupOrderTargetId(requested)
-      setGroupOrderOpen(true)
-    }
-    return subscribeNavIntent(openRequestedGroup)
-  }, [role, batch.groupOrdersEnabled])
+      const requested = navIntent.batchGroupOrderId;
+      if (!requested) return;
+      navIntent.batchGroupOrderId = null;
+      setGroupOrderTargetId(requested);
+      setGroupOrderOpen(true);
+    };
+    return subscribeNavIntent(openRequestedGroup);
+  }, [role, batch.groupOrdersEnabled]);
 
-  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false)
+  const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
 
   const [waitlistTarget, setWaitlistTarget] = useState<{
-    p: typeof batch.products[0]
+    p: (typeof batch.products)[0];
 
-    pIdx: number
-  } | null>(null)
+    pIdx: number;
+  } | null>(null);
 
-  const [contact, setContact] = useState(false)
+  const [contact, setContact] = useState(false);
 
-  const [waitlistLimitDrafts, setWaitlistLimitDrafts] =
-    useState<Record<string, string>>({})
+  const [waitlistLimitDrafts, setWaitlistLimitDrafts] = useState<Record<string, string>>({});
 
-  const [savingWaitlistLimit, setSavingWaitlistLimit] = useState<string | null>(
-    null,
-  )
+  const [savingWaitlistLimit, setSavingWaitlistLimit] = useState<string | null>(null);
 
-  const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null);
 
-  const [photoPreview, setPhotoPreview] =
-    useState<(typeof batch.products)[number] | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<(typeof batch.products)[number] | null>(null);
 
-  const [galleryZoomOpen, setGalleryZoomOpen] = useState(false)
+  const [galleryZoomOpen, setGalleryZoomOpen] = useState(false);
 
   // Per-batch photo overrides keyed by batch title. The PLM thrift batch is a
   // live DB record whose stored images don't match its ukay-ukay listing, so
   // its first two gallery photos are swapped for curated thrift shots at render
   // time (purely visual; the database is left untouched).
-  const BATCH_PHOTO_OVERRIDES: Record<
-    string,
-    { imageUrl: string; name: string }[]
-  > = {
+  const BATCH_PHOTO_OVERRIDES: Record<string, { imageUrl: string; name: string }[]> = {
     "PLM - October 2026": [
       {
-        imageUrl:
-          "https://filebroker-cdn.lazada.com.ph/kf/Se45419c8921b45289b11e40d6b67fa415.jpg",
+        imageUrl: "https://filebroker-cdn.lazada.com.ph/kf/Se45419c8921b45289b11e40d6b67fa415.jpg",
         name: "Floral Wide-Leg Jeans",
       },
       {
@@ -217,16 +212,15 @@ export default function BatchPage({
         name: "Assorted Thrifted Denim",
       },
     ],
-  }
-  const photoOverrides = BATCH_PHOTO_OVERRIDES[batch.title.trim()] ?? []
+  };
+  const photoOverrides = BATCH_PHOTO_OVERRIDES[batch.title.trim()] ?? [];
 
   // Display-only category correction for the PLM thrift batch (its DB record
   // still reads "Food"). Visual only — does not touch the stored category.
   const BATCH_CATEGORY_OVERRIDES: Record<string, string> = {
     "PLM - October 2026": "Apparel",
-  }
-  const displayCategory =
-    BATCH_CATEGORY_OVERRIDES[batch.title.trim()] ?? batch.category
+  };
+  const displayCategory = BATCH_CATEGORY_OVERRIDES[batch.title.trim()] ?? batch.category;
 
   const baseGalleryItems = [
     ...(batch.galleryImages ?? []).map((imageUrl, index) => ({
@@ -241,7 +235,7 @@ export default function BatchPage({
         imageUrl: product.imageUrl!,
         name: product.name,
       })),
-  ]
+  ];
   // Exchange the first N photos for the override images and their captions,
   // keeping each item's key so selection stays stable.
   const uploadedGalleryItems = baseGalleryItems.map((item, index) =>
@@ -252,7 +246,7 @@ export default function BatchPage({
           name: photoOverrides[index].name,
         }
       : item,
-  )
+  );
   const galleryItems = uploadedGalleryItems.length
     ? uploadedGalleryItems
     : [
@@ -266,46 +260,43 @@ export default function BatchPage({
           imageUrl: batchImage(batch.category, `${batch.id}-sample-${index}`),
           name: `Sample batch photo ${index}`,
         })),
-      ]
-  const [selectedProductIndex, setSelectedProductIndex] = useState(0)
-  const selectedGalleryItem =
-    galleryItems[selectedProductIndex] ?? galleryItems[0]
+      ];
+  const [selectedProductIndex, setSelectedProductIndex] = useState(0);
+  const selectedGalleryItem = galleryItems[selectedProductIndex] ?? galleryItems[0];
 
   const changeCoverPhoto = async (file?: File) => {
-    if (!file || !canEdit) return
-    setUploadingPhoto("cover")
+    if (!file || !canEdit) return;
+    setUploadingPhoto("cover");
     try {
       const imageUrl = isSupabaseConfigured
         ? batch.dbId
           ? await kargoApi.updateBatchCover(batch.dbId, file)
           : (() => {
-              throw new Error("This batch is missing its database identifier.")
+              throw new Error("This batch is missing its database identifier.");
             })()
-        : URL.createObjectURL(file)
+        : URL.createObjectURL(file);
 
       setBatches((current) =>
-        current.map((item) =>
-          item.id === batch.id ? { ...item, coverImage: imageUrl } : item,
-        ),
-      )
+        current.map((item) => (item.id === batch.id ? { ...item, coverImage: imageUrl } : item)),
+      );
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to update photo.")
+      alert(error instanceof Error ? error.message : "Unable to update photo.");
     } finally {
-      setUploadingPhoto(null)
+      setUploadingPhoto(null);
     }
-  }
+  };
 
   const addBatchPhotos = async (files: File[]) => {
-    if (!files.length || !canEdit) return
-    setUploadingPhoto("gallery")
+    if (!files.length || !canEdit) return;
+    setUploadingPhoto("gallery");
     try {
       const imageUrls = isSupabaseConfigured
         ? batch.dbId
           ? await kargoApi.addBatchGalleryImages(batch.dbId, files)
           : (() => {
-              throw new Error("This batch is missing its database identifier.")
+              throw new Error("This batch is missing its database identifier.");
             })()
-        : files.map((file) => URL.createObjectURL(file))
+        : files.map((file) => URL.createObjectURL(file));
 
       setBatches((current) =>
         current.map((item) =>
@@ -313,30 +304,30 @@ export default function BatchPage({
             ? { ...item, galleryImages: [...(item.galleryImages ?? []), ...imageUrls] }
             : item,
         ),
-      )
+      );
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to add batch photos.")
+      alert(error instanceof Error ? error.message : "Unable to add batch photos.");
     } finally {
-      setUploadingPhoto(null)
+      setUploadingPhoto(null);
     }
-  }
+  };
 
   const changeProductPhoto = async (
-    product: typeof batch.products[0],
+    product: (typeof batch.products)[0],
     productIndex: number,
     file?: File,
   ) => {
-    if (!file || !canEdit) return
-    const key = product.dbId ?? `${batch.id}-${productIndex}`
-    setUploadingPhoto(key)
+    if (!file || !canEdit) return;
+    const key = product.dbId ?? `${batch.id}-${productIndex}`;
+    setUploadingPhoto(key);
     try {
       const imageUrl = isSupabaseConfigured
         ? batch.dbId && product.dbId
           ? await kargoApi.updateProductImage(batch.dbId, product.dbId, file)
           : (() => {
-              throw new Error("This item is missing its database identifier.")
+              throw new Error("This item is missing its database identifier.");
             })()
-        : URL.createObjectURL(file)
+        : URL.createObjectURL(file);
 
       setBatches((current) =>
         current.map((item) =>
@@ -345,53 +336,50 @@ export default function BatchPage({
             : {
                 ...item,
                 products: item.products.map((candidate, index) =>
-                  index === productIndex
-                    ? { ...candidate, imageUrl }
-                    : candidate,
+                  index === productIndex ? { ...candidate, imageUrl } : candidate,
                 ),
               },
         ),
-      )
+      );
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to update photo.")
+      alert(error instanceof Error ? error.message : "Unable to update photo.");
     } finally {
-      setUploadingPhoto(null)
+      setUploadingPhoto(null);
     }
-  }
+  };
 
-  const pct = Math.round((batch.claimed / batch.items) * 100)
+  const pct = Math.round((batch.claimed / batch.items) * 100);
 
-  const reserveHrs = batch.reserveHours || 48
+  const reserveHrs = batch.reserveHours || 48;
 
   const saveWaitlistLimit = async (
-    product: typeof batch.products[0],
+    product: (typeof batch.products)[0],
 
     productIndex: number,
   ) => {
-    if (!canEdit) return
+    if (!canEdit) return;
 
-    const key = product.dbId ?? `${batch.id}-${productIndex}`
+    const key = product.dbId ?? `${batch.id}-${productIndex}`;
 
-    const raw = waitlistLimitDrafts[key] ?? String(product.waitlistLimit ?? "")
+    const raw = waitlistLimitDrafts[key] ?? String(product.waitlistLimit ?? "");
 
-    const parsed = Number(raw)
+    const parsed = Number(raw);
 
     if (raw.trim() !== "" && (!Number.isInteger(parsed) || parsed < 0)) {
-      alert("Waitlist slots must be a whole number of 0 or more.")
+      alert("Waitlist slots must be a whole number of 0 or more.");
 
-      return
+      return;
     }
 
-    const limit = raw.trim() === "" ? undefined : parsed
+    const limit = raw.trim() === "" ? undefined : parsed;
 
-    setSavingWaitlistLimit(key)
+    setSavingWaitlistLimit(key);
 
     try {
       if (isSupabaseConfigured) {
-        if (!product.dbId)
-          throw new Error("This product is missing its database identifier.")
+        if (!product.dbId) throw new Error("This product is missing its database identifier.");
 
-        await kargoApi.setProductWaitlistLimit(product.dbId, limit)
+        await kargoApi.setProductWaitlistLimit(product.dbId, limit);
       }
 
       setBatches((current) =>
@@ -402,62 +390,54 @@ export default function BatchPage({
                 ...item,
 
                 products: item.products.map((candidate, index) =>
-                  index === productIndex
-                    ? { ...candidate, waitlistLimit: limit }
-                    : candidate,
+                  index === productIndex ? { ...candidate, waitlistLimit: limit } : candidate,
                 ),
               },
         ),
-      )
+      );
 
       setWaitlistLimitDrafts((current) => ({
         ...current,
 
         [key]: limit !== undefined ? String(limit) : "",
-      }))
+      }));
     } catch (error) {
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Unable to save waitlist limit.",
-      )
+      alert(error instanceof Error ? error.message : "Unable to save waitlist limit.");
     } finally {
-      setSavingWaitlistLimit(null)
+      setSavingWaitlistLimit(null);
     }
-  }
+  };
 
   // Join a waitlist with the buyer's chosen quantity (from JoinWaitlistModal).
 
   const handleJoinWaitlist = async (
-    p: typeof batch.products[0],
+    p: (typeof batch.products)[0],
 
     pIdx: number,
 
     qty: number,
   ) => {
-    const currentProduct = batch.products[pIdx]
+    const currentProduct = batch.products[pIdx];
 
     if (
       role !== "Buyer" ||
       !currentProduct ||
       !productAvailability(currentProduct, ordersClosed).canWaitlist
     ) {
-      alert("This product is no longer available for waitlisting.")
+      alert("This product is no longer available for waitlisting.");
 
-      return
+      return;
     }
 
     if (isSupabaseConfigured) {
-      if (!p.dbId) return
+      if (!p.dbId) return;
 
       try {
-        await kargoApi.joinWaitlist(p.dbId, qty)
+        await kargoApi.joinWaitlist(p.dbId, qty);
       } catch (error) {
-        alert(
-          error instanceof Error ? error.message : "Unable to join waitlist.",
-        )
+        alert(error instanceof Error ? error.message : "Unable to join waitlist.");
 
-        return
+        return;
       }
     }
 
@@ -465,14 +445,13 @@ export default function BatchPage({
       if (
         prev.some(
           (e) =>
-            (p.dbId && e.productId === p.dbId) ||
-            (e.batchId === batch.id && e.product === p.name),
+            (p.dbId && e.productId === p.dbId) || (e.batchId === batch.id && e.product === p.name),
         )
       ) {
-        return prev
+        return prev;
       }
 
-      const nextPos = p.waitlist + 1
+      const nextPos = p.waitlist + 1;
 
       return [
         ...prev.map((e) =>
@@ -506,8 +485,8 @@ export default function BatchPage({
 
           status: "waiting",
         },
-      ]
-    })
+      ];
+    });
 
     setBatches((prev) =>
       prev.map((b) =>
@@ -521,24 +500,24 @@ export default function BatchPage({
               ),
             },
       ),
-    )
-  }
+    );
+  };
 
   const handleClaim = async (
     key: string,
 
     b: BatchType,
 
-    product: typeof batch.products[0],
+    product: (typeof batch.products)[0],
 
     reservation: ClaimReservationInput,
   ) => {
-    const qty = reservation.quantity
-    const claimQty = Math.max(1, Math.floor(qty))
+    const qty = reservation.quantity;
+    const claimQty = Math.max(1, Math.floor(qty));
 
     const currentProduct = b.products.find((p) =>
       product.dbId ? p.dbId === product.dbId : p.name === product.name,
-    )
+    );
 
     if (
       role !== "Buyer" ||
@@ -546,37 +525,33 @@ export default function BatchPage({
       !productAvailability(currentProduct, batchOrdersClosed(b)).canClaim ||
       claimQty > currentProduct.qty - currentProduct.claimed
     ) {
-      alert("This product no longer has enough available claim slots.")
+      alert("This product no longer has enough available claim slots.");
 
-      return false
+      return false;
     }
 
     if (isSupabaseConfigured) {
       if (!product.dbId) {
-        alert("This product is missing its database identifier.")
+        alert("This product is missing its database identifier.");
 
-        return false
+        return false;
       }
 
       try {
-        await kargoApi.claimProduct(product.dbId, reservation)
-        await refreshData()
+        await kargoApi.claimProduct(product.dbId, reservation);
+        await refreshData();
 
-        setClaimedKeys((current) => ({ ...current, [key]: true }))
+        setClaimedKeys((current) => ({ ...current, [key]: true }));
 
-        return true
+        return true;
       } catch (error) {
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Unable to claim this product.",
-        )
+        alert(error instanceof Error ? error.message : "Unable to claim this product.");
 
-        return false
+        return false;
       }
     }
 
-    setClaimedKeys((c) => ({ ...c, [key]: true }))
+    setClaimedKeys((c) => ({ ...c, [key]: true }));
 
     // Keep the batch/product claim counts accurate immediately (2.3) instead of
 
@@ -592,22 +567,19 @@ export default function BatchPage({
               claimed: bt.claimed + claimQty,
 
               products: bt.products.map((prod) =>
-                (product.dbId && prod.dbId === product.dbId) ||
-                prod.name === product.name
+                (product.dbId && prod.dbId === product.dbId) || prod.name === product.name
                   ? { ...prod, claimed: prod.claimed + claimQty }
                   : prod,
               ),
             },
       ),
-    )
+    );
 
-    const claimId = Date.now()
+    const claimId = Date.now();
 
-    const createdAt = new Date().toISOString()
-    const expiresAt = new Date(
-      Date.now() + reserveHrs * 3_600_000,
-    ).toISOString()
-    const shippingApplies = reservation.paymentMethod !== "Cash on Meetup"
+    const createdAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + reserveHrs * 3_600_000).toISOString();
+    const shippingApplies = reservation.paymentMethod !== "Cash on Meetup";
     setClaims((prev) => [
       {
         id: claimId,
@@ -642,7 +614,7 @@ export default function BatchPage({
       },
 
       ...prev,
-    ])
+    ]);
 
     if (!toPay.some((t) => t.product === product.name))
       setToPay((prev) => [
@@ -673,10 +645,10 @@ export default function BatchPage({
         },
 
         ...prev,
-      ])
+      ]);
 
-    return true
-  }
+    return true;
+  };
 
   return (
     <div className="p-6 fi batch-page">
@@ -720,11 +692,7 @@ export default function BatchPage({
         >
           <ArrowLeft size={14} aria-hidden="true" /> {backLabel}
         </button>
-        <ShareButton
-          batchId={batch.id}
-          title={batch.title}
-          label="Share batch"
-        />
+        <ShareButton batchId={batch.id} title={batch.title} label="Share batch" />
       </div>
 
       <section className="batch-gallery" aria-label={`${batch.title} photos`}>
@@ -737,7 +705,9 @@ export default function BatchPage({
               onClick={() => setGalleryZoomOpen(true)}
             >
               <img
-                src={selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)}
+                src={
+                  selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)
+                }
                 alt={selectedGalleryItem?.name ?? `${batch.title} cover`}
               />
             </button>
@@ -754,8 +724,8 @@ export default function BatchPage({
                 className="batch-gallery__arrow batch-gallery__arrow--previous"
                 aria-label="Previous item photo"
                 onClick={() =>
-                  setSelectedProductIndex((index) =>
-                    (index - 1 + galleryItems.length) % galleryItems.length,
+                  setSelectedProductIndex(
+                    (index) => (index - 1 + galleryItems.length) % galleryItems.length,
                   )
                 }
               >
@@ -766,9 +736,7 @@ export default function BatchPage({
                 className="batch-gallery__arrow batch-gallery__arrow--next"
                 aria-label="Next item photo"
                 onClick={() =>
-                  setSelectedProductIndex((index) =>
-                    (index + 1) % galleryItems.length,
-                  )
+                  setSelectedProductIndex((index) => (index + 1) % galleryItems.length)
                 }
               >
                 <ArrowRight size={22} aria-hidden="true" />
@@ -837,8 +805,8 @@ export default function BatchPage({
                   multiple
                   disabled={uploadingPhoto !== null}
                   onChange={(event) => {
-                    void addBatchPhotos(Array.from(event.target.files ?? []))
-                    event.currentTarget.value = ""
+                    void addBatchPhotos(Array.from(event.target.files ?? []));
+                    event.currentTarget.value = "";
                   }}
                 />
               </label>
@@ -869,8 +837,8 @@ export default function BatchPage({
                 type="button"
                 className="batch-group-order-action"
                 onClick={() => {
-                  setGroupOrderProductId(null)
-                  setGroupOrderOpen(true)
+                  setGroupOrderProductId(null);
+                  setGroupOrderOpen(true);
                 }}
               >
                 <Users size={15} aria-hidden="true" /> Group Order
@@ -940,45 +908,40 @@ export default function BatchPage({
             title="Items in this Batch"
             action={
               role === "Buyer" ? (
-                <SecondaryBtn onClick={() => setContact(true)}>
-                  Contact Seller
-                </SecondaryBtn>
+                <SecondaryBtn onClick={() => setContact(true)}>Contact Seller</SecondaryBtn>
               ) : undefined
             }
           />
           <div className="space-y-3">
             {batch.products.map((p, pIdx) => {
-              const pKey = `${batch.id}-${pIdx}`
+              const pKey = `${batch.id}-${pIdx}`;
 
-              const isClaimed = claimedKeys[pKey]
+              const isClaimed = claimedKeys[pKey];
 
               // p.claimed is bumped by the claimed quantity on confirm, so it is
 
               // already authoritative — no extra manual offset needed.
 
-              const left = p.qty - p.claimed
+              const left = p.qty - p.claimed;
 
-              const availability = productAvailability(p, ordersClosed)
+              const availability = productAvailability(p, ordersClosed);
 
-              const soldOut = availability.claimsFull
+              const soldOut = availability.claimsFull;
 
               const waitEntry = waitlist.find(
                 (e) =>
                   (p.dbId && e.productId === p.dbId) ||
                   (e.batchId === batch.id && e.product === p.name),
-              )
+              );
 
-              const onWaitlist = Boolean(waitEntry)
+              const onWaitlist = Boolean(waitEntry);
 
-              const waitlistFull = availability.waitlistFull
+              const waitlistFull = availability.waitlistFull;
 
-              const waitlistLimitKey = p.dbId ?? `${batch.id}-${pIdx}`
+              const waitlistLimitKey = p.dbId ?? `${batch.id}-${pIdx}`;
 
               return (
-                <Card
-                  key={pIdx}
-                  style={{ display: "flex", alignItems: "center", gap: 14 }}
-                >
+                <Card key={pIdx} style={{ display: "flex", alignItems: "center", gap: 14 }}>
                   <div className="batch-product-photo-control">
                     <button
                       type="button"
@@ -991,22 +954,12 @@ export default function BatchPage({
                     {canEdit && (
                       <label>
                         <ImageUp size={12} aria-hidden="true" />
-                        <span>
-                          {uploadingPhoto === waitlistLimitKey
-                            ? "Uploading…"
-                            : "Photo"}
-                        </span>
+                        <span>{uploadingPhoto === waitlistLimitKey ? "Uploading…" : "Photo"}</span>
                         <input
                           type="file"
                           accept="image/jpeg,image/png,image/webp,image/gif"
                           disabled={uploadingPhoto !== null}
-                          onChange={(event) =>
-                            changeProductPhoto(
-                              p,
-                              pIdx,
-                              event.target.files?.[0],
-                            )
-                          }
+                          onChange={(event) => changeProductPhoto(p, pIdx, event.target.files?.[0])}
                         />
                       </label>
                     )}
@@ -1025,9 +978,7 @@ export default function BatchPage({
                     >
                       {p.name}
                     </div>
-                    <div
-                      style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}
-                    >
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
                       {p.sellingUnit === "box"
                         ? `₱${p.price.toLocaleString()} / box · ${p.piecesPerBox ?? 1} pieces · `
                         : `₱${p.price.toLocaleString()} / piece · `}
@@ -1170,15 +1121,12 @@ export default function BatchPage({
                                 ? "Allocating stock to waitlist"
                                 : "Claims open"}
                         </span>
-                        <span style={{ fontSize: 10, color: "#6B7280" }}>
-                          Manual availability
-                        </span>
+                        <span style={{ fontSize: 10, color: "#6B7280" }}>Manual availability</span>
                         <Toggle
                           on={!p.locked}
                           label={`${p.locked ? "Unlock" : "Lock"} ${p.name}`}
                           onChange={() => {
-                            if (canEdit)
-                              toggleBatchLock(setBatches, batch.id, pIdx)
+                            if (canEdit) toggleBatchLock(setBatches, batch.id, pIdx);
                           }}
                         />
                         <div
@@ -1205,9 +1153,7 @@ export default function BatchPage({
                             inputMode="numeric"
                             value={
                               waitlistLimitDrafts[waitlistLimitKey] ??
-                              (p.waitlistLimit !== undefined
-                                ? String(p.waitlistLimit)
-                                : "")
+                              (p.waitlistLimit !== undefined ? String(p.waitlistLimit) : "")
                             }
                             onChange={(event) =>
                               setWaitlistLimitDrafts((current) => ({
@@ -1230,9 +1176,7 @@ export default function BatchPage({
                             disabled={savingWaitlistLimit === waitlistLimitKey}
                             onClick={() => saveWaitlistLimit(p, pIdx)}
                           >
-                            {savingWaitlistLimit === waitlistLimitKey
-                              ? "Saving…"
-                              : "Save"}
+                            {savingWaitlistLimit === waitlistLimitKey ? "Saving…" : "Save"}
                           </SecondaryBtn>
                         </div>
                       </div>
@@ -1270,9 +1214,7 @@ export default function BatchPage({
                           fontWeight: 600,
                         }}
                       >
-                        {onWaitlist
-                          ? "On Waitlist"
-                          : "Reserved for waitlisted buyers"}
+                        {onWaitlist ? "On Waitlist" : "Reserved for waitlisted buyers"}
                       </span>
                     ) : soldOut ? (
                       onWaitlist ? (
@@ -1298,10 +1240,7 @@ export default function BatchPage({
                           Waitlist Full
                         </span>
                       ) : (
-                        <PrimaryBtn
-                          size="sm"
-                          onClick={() => setWaitlistTarget({ p, pIdx })}
-                        >
+                        <PrimaryBtn size="sm" onClick={() => setWaitlistTarget({ p, pIdx })}>
                           Join Waitlist
                         </PrimaryBtn>
                       )
@@ -1310,9 +1249,9 @@ export default function BatchPage({
                         size="sm"
                         onClick={() => {
                           if (batch.groupOrdersEnabled) {
-                            setPurchaseModeTarget({ p, key: pKey })
+                            setPurchaseModeTarget({ p, key: pKey });
                           } else {
-                            setClaimTarget({ p, key: pKey })
+                            setClaimTarget({ p, key: pKey });
                           }
                         }}
                         style={{
@@ -1326,7 +1265,7 @@ export default function BatchPage({
                     )}
                   </div>
                 </Card>
-              )
+              );
             })}
           </div>
         </div>
@@ -1362,16 +1301,16 @@ export default function BatchPage({
               onClick={() => onSellerClick(batch.seller)}
               role="button"
               tabIndex={0}
-              aria-label={`View ${batch.seller}'s shop`}
+              aria-label={`View ${sellerLabel(batch)}'s shop`}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault()
+                  e.preventDefault();
 
-                  onSellerClick(batch.seller)
+                  onSellerClick(batch.seller);
                 }
               }}
             >
-              <Avatar name={batch.seller} size={40} />
+              <Avatar name={sellerLabel(batch)} size={40} />
               <div>
                 <div
                   style={{
@@ -1390,7 +1329,7 @@ export default function BatchPage({
                     gap: 6,
                   }}
                 >
-                  {batch.seller}
+                  {sellerLabel(batch)}
                 </div>
                 <div
                   style={{
@@ -1427,9 +1366,7 @@ export default function BatchPage({
                 style={{ color: INDIGO, flexShrink: 0, marginTop: 1 }}
               />
               <div>
-                <div
-                  style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}
-                >
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>
                   Linked Facebook account
                 </div>
                 <div style={{ fontSize: 11, color: INDIGO }}>
@@ -1526,11 +1463,7 @@ export default function BatchPage({
                 }}
               >
                 <span style={{ fontSize: 12, color: "#9CA3AF" }}>{k}</span>
-                <span
-                  style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}
-                >
-                  {v}
-                </span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{v}</span>
               </div>
             ))}
           </Card>
@@ -1576,9 +1509,7 @@ export default function BatchPage({
           batch={batch}
           product={
             batch.products.find((p) =>
-              claimTarget.p.dbId
-                ? p.dbId === claimTarget.p.dbId
-                : p.name === claimTarget.p.name,
+              claimTarget.p.dbId ? p.dbId === claimTarget.p.dbId : p.name === claimTarget.p.name,
             ) ?? claimTarget.p
           }
           onConfirm={async (reservation) => {
@@ -1590,9 +1521,9 @@ export default function BatchPage({
               claimTarget.p,
 
               reservation,
-            )
+            );
 
-            if (claimed) setClaimTarget(null)
+            if (claimed) setClaimTarget(null);
           }}
           onClose={() => setClaimTarget(null)}
         />
@@ -1600,13 +1531,13 @@ export default function BatchPage({
       {purchaseModeTarget && (
         <GroupOrderChoiceModal
           onSolo={() => {
-            setClaimTarget(purchaseModeTarget)
-            setPurchaseModeTarget(null)
+            setClaimTarget(purchaseModeTarget);
+            setPurchaseModeTarget(null);
           }}
           onGroup={() => {
-            setGroupOrderProductId(purchaseModeTarget.p.dbId ?? null)
-            setPurchaseModeTarget(null)
-            setGroupOrderOpen(true)
+            setGroupOrderProductId(purchaseModeTarget.p.dbId ?? null);
+            setPurchaseModeTarget(null);
+            setGroupOrderOpen(true);
           }}
           onClose={() => setPurchaseModeTarget(null)}
         />
@@ -1620,9 +1551,9 @@ export default function BatchPage({
           initialCode={groupOrderTargetId ? "" : sharedGroupCode}
           onCheckoutComplete={refreshData}
           onClose={() => {
-            setGroupOrderOpen(false)
-            setGroupOrderProductId(null)
-            setGroupOrderTargetId(null)
+            setGroupOrderOpen(false);
+            setGroupOrderProductId(null);
+            setGroupOrderTargetId(null);
           }}
         />
       )}
@@ -1645,21 +1576,21 @@ export default function BatchPage({
           price={waitlistTarget.p.price}
           limitPerUser={waitlistTarget.p.limitPerUser}
           onConfirm={(qty) => {
-            handleJoinWaitlist(waitlistTarget.p, waitlistTarget.pIdx, qty)
+            handleJoinWaitlist(waitlistTarget.p, waitlistTarget.pIdx, qty);
 
-            setWaitlistTarget(null)
+            setWaitlistTarget(null);
           }}
           onClose={() => setWaitlistTarget(null)}
         />
       )}
       {contact && (
         <ContactModal
-          name={batch.seller}
+          name={sellerLabel(batch)}
           context={batch.title}
           contactUrl={batch.sellerFb}
           onClose={() => setContact(false)}
         />
       )}
     </div>
-  )
+  );
 }

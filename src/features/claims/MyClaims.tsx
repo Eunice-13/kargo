@@ -1,16 +1,9 @@
-import { OrderDetailsModal } from "@/features/orders"
-import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combined-delivery"
+import { OrderDetailsModal } from "@/features/orders";
+import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combined-delivery";
 
-import { useEffect, useRef, useState, type SetStateAction } from "react"
+import { useEffect, useRef, useState, type SetStateAction } from "react";
 
-import {
-  List,
-  LayoutGrid,
-  AlertTriangle,
-  Link2,
-  MessageCircle,
-  Truck,
-} from "lucide-react"
+import { List, LayoutGrid, AlertTriangle, Link2, MessageCircle, Truck } from "lucide-react";
 
 import type {
   ClaimRow,
@@ -19,10 +12,11 @@ import type {
   ClaimStatus,
   FulfillmentOrder,
   SharedState,
-} from "@/types"
+} from "@/types";
 
-import { INDIGO, CREAM, TODAY } from "@/constants/theme"
-import { productImageUrl } from "@/components/shared/ProductThumb"
+import { INDIGO, CREAM, TODAY } from "@/constants/theme";
+import { productImageUrl } from "@/components/shared/ProductThumb";
+import { sellerLabel } from "@/features/batches/sellerLabel";
 
 import {
   Modal,
@@ -41,7 +35,7 @@ import {
   recordKeys,
   useRecordFocus,
   type LocationPinValue,
-} from "@/components/shared"
+} from "@/components/shared";
 
 import {
   BatchCheckoutModal,
@@ -51,44 +45,41 @@ import {
   ReviewSubmissionModal,
   type VerifyItem,
   type PaymentSubmissionDetails,
-} from "@/features/payments"
+} from "@/features/payments";
 
-import { isSupabaseConfigured, supabase } from "@/lib/supabase"
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
-import { kargoApi } from "@/services"
+import { kargoApi } from "@/services";
 
-import { claimIsPayable } from "./claimExpiry"
+import { claimIsPayable } from "./claimExpiry";
 
 import {
   reconcileRejectedClaim,
   sellerOrderReceivedStatus,
   type SellerOrderReceivedStatus,
-} from "./claimPaymentState"
+} from "./claimPaymentState";
 
-import { navIntent } from "@/state/navIntent"
+import { navIntent } from "@/state/navIntent";
 
-import { GroupOrdersLauncher } from "@/features/dashboard"
+import { GroupOrdersLauncher } from "@/features/dashboard";
 
-import SellerOrderActions, { type SellerOrderMenuItem } from "./SellerOrderActions"
+import SellerOrderActions, { type SellerOrderMenuItem } from "./SellerOrderActions";
 
-import SetShippingFeeModal from "./SetShippingFeeModal"
-import PendingPaymentHint from "./PendingPaymentHint"
+import SetShippingFeeModal from "./SetShippingFeeModal";
+import PendingPaymentHint from "./PendingPaymentHint";
 
-import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal"
+import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal";
 
-import DeclineDeliveryOrderModal from "./DeclineDeliveryOrderModal"
+import DeclineDeliveryOrderModal from "./DeclineDeliveryOrderModal";
 
-import {
-  TrackingDetailsModal,
-  type TrackingDetailsInput,
-} from "@/features/fulfillment"
+import { TrackingDetailsModal, type TrackingDetailsInput } from "@/features/fulfillment";
 
-type OrderReceivedFilter = SellerOrderReceivedStatus | "All"
+type OrderReceivedFilter = SellerOrderReceivedStatus | "All";
 
 function paymentMatchesClaim(payment: PayHistRow, claim: ClaimRow) {
   return payment.orderId
     ? String(payment.orderId) === String(claim.id)
-    : payment.product === claim.product && payment.batch === claim.batch
+    : payment.product === claim.product && payment.batch === claim.batch;
 }
 
 function newestFirst<T extends { id: string | number; createdAt?: string }>(
@@ -96,19 +87,15 @@ function newestFirst<T extends { id: string | number; createdAt?: string }>(
 
   right: T,
 ) {
-  const leftTime = left.createdAt
-    ? new Date(left.createdAt).getTime()
-    : Number(left.id) || 0
+  const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : Number(left.id) || 0;
 
-  const rightTime = right.createdAt
-    ? new Date(right.createdAt).getTime()
-    : Number(right.id) || 0
+  const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : Number(right.id) || 0;
 
-  return rightTime - leftTime
+  return rightTime - leftTime;
 }
 
 function paidAt(claim: ClaimRow, payHistory: PayHistRow[]) {
-  if (claim.status !== "Paid and Reserved") return undefined
+  if (claim.status !== "Paid and Reserved") return undefined;
 
   return payHistory
 
@@ -120,10 +107,10 @@ function paidAt(claim: ClaimRow, payHistory: PayHistRow[]) {
     )
 
     .reduce((latest, payment) => {
-      const timestamp = new Date(payment.submittedAt as string).getTime()
+      const timestamp = new Date(payment.submittedAt as string).getTime();
 
-      return timestamp > latest ? timestamp : latest
-    }, 0)
+      return timestamp > latest ? timestamp : latest;
+    }, 0);
 }
 
 // A delivery order is waiting on the seller to set (or re-set) the shipping
@@ -132,15 +119,14 @@ function needsShippingFee(claim: ClaimRow) {
   return (
     Boolean(claim.shippingApplies) &&
     claim.status === "Pending" &&
-    (claim.shippingState === "waiting_for_seller" ||
-      claim.shippingState === "correction_requested")
-  )
+    (claim.shippingState === "waiting_for_seller" || claim.shippingState === "correction_requested")
+  );
 }
 
 function hasOrderDeadline(claim: ClaimRow) {
-  if (claim.deadlinePausedAt) return true
-  if (claim.expiresAt && Number.isFinite(new Date(claim.expiresAt).getTime())) return true
-  return Number.isFinite(claim.hours) && claim.hours > 0
+  if (claim.deadlinePausedAt) return true;
+  if (claim.expiresAt && Number.isFinite(new Date(claim.expiresAt).getTime())) return true;
+  return Number.isFinite(claim.hours) && claim.hours > 0;
 }
 
 export default function MyClaims({
@@ -174,52 +160,50 @@ export default function MyClaims({
 
   refreshData,
 }: SharedState) {
-  const [showBatchCheckout, setShowBatchCheckout] = useState(
-    navIntent.openBatchCheckout,
-  )
+  const [showBatchCheckout, setShowBatchCheckout] = useState(navIntent.openBatchCheckout);
 
   useEffect(() => {
-    navIntent.openBatchCheckout = false
-  }, [])
+    navIntent.openBatchCheckout = false;
+  }, []);
 
-  const [filter, setFilter] = useState<ClaimStatus | "All">("All")
+  const [filter, setFilter] = useState<ClaimStatus | "All">("All");
 
-  const [payTarget, setPayTarget] = useState<ClaimRow | null>(null)
+  const [payTarget, setPayTarget] = useState<ClaimRow | null>(null);
 
-  const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null);
 
-  const [cancelling, setCancelling] = useState(false)
+  const [cancelling, setCancelling] = useState(false);
 
-  const [viewOrder, setViewOrder] = useState<OrderRow | null>(null)
+  const [viewOrder, setViewOrder] = useState<OrderRow | null>(null);
 
-  const [itemPreview, setItemPreview] = useState<ClaimRow | null>(null)
+  const [itemPreview, setItemPreview] = useState<ClaimRow | null>(null);
 
-  const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
+  const [extTarget, setExtTarget] = useState<ClaimRow | null>(null);
 
-  const [contact, setContact] = useState<ClaimRow | null>(null)
+  const [contact, setContact] = useState<ClaimRow | null>(null);
 
   // A notification about a combined delivery request asks the seller's list to
   // open, since its cards live in a modal.
-  const [combinedFocusId, setCombinedFocusId] = useState<string | null>(null)
+  const [combinedFocusId, setCombinedFocusId] = useState<string | null>(null);
 
   const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>(() => {
     // The dashboard can ask for "Pending". Those orders now sit in Ongoing
     // Orders at the top of the page, which is always visible, so start on All.
-    navIntent.orderFilter = null
+    navIntent.orderFilter = null;
 
-    return "All"
-  })
+    return "All";
+  });
 
   const [buyerProfile, setBuyerProfile] = useState<{
-    name: string
-    contactUrl?: string
-    socialLinks?: Record<string, string>
-    orderCounts: { completed: number; cancelled: number; incomplete: number }
-  } | null>(null)
+    name: string;
+    contactUrl?: string;
+    socialLinks?: Record<string, string>;
+    orderCounts: { completed: number; cancelled: number; incomplete: number };
+  } | null>(null);
 
   const openBuyerProfile = (claim: ClaimRow) => {
-    const buyerName = claim.buyer || "Buyer"
-    const buyerOrders = claims.filter((item) => item.buyer === buyerName)
+    const buyerName = claim.buyer || "Buyer";
+    const buyerOrders = claims.filter((item) => item.buyer === buyerName);
 
     setBuyerProfile({
       name: buyerName,
@@ -227,14 +211,11 @@ export default function MyClaims({
       socialLinks: claim.buyerSocialLinks,
       orderCounts: {
         completed: buyerOrders.filter(
-          (item) =>
-            item.orderStatus === "completed" ||
-            item.fulfillmentStage === "delivered",
+          (item) => item.orderStatus === "completed" || item.fulfillmentStage === "delivered",
         ).length,
         cancelled: buyerOrders.filter(
           (item) =>
-            item.orderStatus === "cancelled" ||
-            (!item.orderStatus && item.status === "Cancelled"),
+            item.orderStatus === "cancelled" || (!item.orderStatus && item.status === "Cancelled"),
         ).length,
         incomplete: buyerOrders.filter(
           (item) =>
@@ -242,102 +223,93 @@ export default function MyClaims({
             (!item.orderStatus && item.status === "Expired"),
         ).length,
       },
-    })
-  }
+    });
+  };
 
-  const [orderDetailTarget, setOrderDetailTarget] = useState<ClaimRow | null>(
-    null,
-  )
+  const [orderDetailTarget, setOrderDetailTarget] = useState<ClaimRow | null>(null);
 
-  const [sellerPayments, setSellerPayments] = useState<VerifyItem[]>([])
+  const [sellerPayments, setSellerPayments] = useState<VerifyItem[]>([]);
 
-  const [paymentReviewTarget, setPaymentReviewTarget] =
-    useState<VerifyItem | null>(null)
+  const [paymentReviewTarget, setPaymentReviewTarget] = useState<VerifyItem | null>(null);
 
-  const [paymentRejectTarget, setPaymentRejectTarget] =
-    useState<VerifyItem | null>(null)
+  const [paymentRejectTarget, setPaymentRejectTarget] = useState<VerifyItem | null>(null);
 
-  const [paymentRejectReason, setPaymentRejectReason] = useState("")
+  const [paymentRejectReason, setPaymentRejectReason] = useState("");
 
-  const [paymentRejectCustom, setPaymentRejectCustom] = useState("")
+  const [paymentRejectCustom, setPaymentRejectCustom] = useState("");
 
-  const [insufficientTarget, setInsufficientTarget] =
-    useState<VerifyItem | null>(null)
+  const [insufficientTarget, setInsufficientTarget] = useState<VerifyItem | null>(null);
 
-  const [insufficientAmount, setInsufficientAmount] = useState("")
+  const [insufficientAmount, setInsufficientAmount] = useState("");
 
-  const [viewMode, setViewMode] = useState<"table" | "card">("table")
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
 
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(false);
 
-  const [showAllPendingPayments, setShowAllPendingPayments] = useState(false)
+  const [showAllPendingPayments, setShowAllPendingPayments] = useState(false);
 
-  const [shippingTarget, setShippingTarget] = useState<ClaimRow | null>(null)
+  const [shippingTarget, setShippingTarget] = useState<ClaimRow | null>(null);
 
-  const [correctionTarget, setCorrectionTarget] = useState<ClaimRow | null>(
-    null,
-  )
+  const [correctionTarget, setCorrectionTarget] = useState<ClaimRow | null>(null);
 
-  const [declineTarget, setDeclineTarget] = useState<ClaimRow | null>(null)
+  const [declineTarget, setDeclineTarget] = useState<ClaimRow | null>(null);
 
-  const [trackingTarget, setTrackingTarget] = useState<ClaimRow | null>(null)
+  const [trackingTarget, setTrackingTarget] = useState<ClaimRow | null>(null);
 
-  const [pinTarget, setPinTarget] = useState<ClaimRow | null>(null)
+  const [pinTarget, setPinTarget] = useState<ClaimRow | null>(null);
 
-  const [pinDraft, setPinDraft] = useState<LocationPinValue>({})
+  const [pinDraft, setPinDraft] = useState<LocationPinValue>({});
 
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 620px)")
+    const query = window.matchMedia("(max-width: 620px)");
 
-    const sync = () => setIsMobile(query.matches)
+    const sync = () => setIsMobile(query.matches);
 
-    sync()
+    sync();
 
-    query.addEventListener("change", sync)
+    query.addEventListener("change", sync);
 
-    return () => query.removeEventListener("change", sync)
-  }, [])
+    return () => query.removeEventListener("change", sync);
+  }, []);
 
-  const [paymentSuccess, setPaymentSuccess] = useState(false)
-
-  useEffect(() => {
-    if (!paymentSuccess) return
-
-    const timer = window.setTimeout(() => setPaymentSuccess(false), 6000)
-
-    return () => window.clearTimeout(timer)
-  }, [paymentSuccess])
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   useEffect(() => {
-    if (!payTarget) return
+    if (!paymentSuccess) return;
 
-    const current = claims.find((claim) => claim.id === payTarget.id)
+    const timer = window.setTimeout(() => setPaymentSuccess(false), 6000);
 
-    const effective = current
-      ? reconcileRejectedClaim(current, payHistory)
-      : undefined
+    return () => window.clearTimeout(timer);
+  }, [paymentSuccess]);
 
-    if (!effective || !claimIsPayable(effective)) setPayTarget(null)
-  }, [claims, payHistory, payTarget])
+  useEffect(() => {
+    if (!payTarget) return;
+
+    const current = claims.find((claim) => claim.id === payTarget.id);
+
+    const effective = current ? reconcileRejectedClaim(current, payHistory) : undefined;
+
+    if (!effective || !claimIsPayable(effective)) setPayTarget(null);
+  }, [claims, payHistory, payTarget]);
 
   useEffect(() => {
     setClaims((current) => {
-      let changed = false
+      let changed = false;
 
       const next = current.map((claim) => {
-        const reconciled = reconcileRejectedClaim(claim, payHistory)
+        const reconciled = reconcileRejectedClaim(claim, payHistory);
 
-        if (reconciled !== claim) changed = true
+        if (reconciled !== claim) changed = true;
 
-        return reconciled
-      })
+        return reconciled;
+      });
 
-      return changed ? next : current
-    })
-  }, [payHistory, setClaims])
+      return changed ? next : current;
+    });
+  }, [payHistory, setClaims]);
 
   useEffect(() => {
-    if (role !== "Seller") return
+    if (role !== "Seller") return;
 
     kargoApi
 
@@ -346,13 +318,9 @@ export default function MyClaims({
       .then(setSellerPayments)
 
       .catch((error) =>
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Unable to load payment submissions.",
-        ),
-      )
-  }, [role])
+        alert(error instanceof Error ? error.message : "Unable to load payment submissions."),
+      );
+  }, [role]);
 
   // New buyer submissions — including resubmissions after a rejection —
 
@@ -361,8 +329,7 @@ export default function MyClaims({
   // exactly like the first one.
 
   useEffect(() => {
-    if (!isSupabaseConfigured || role !== "Seller" || !supabase || !user.id)
-      return
+    if (!isSupabaseConfigured || role !== "Seller" || !supabase || !user.id) return;
 
     const channel = supabase
 
@@ -380,16 +347,16 @@ export default function MyClaims({
 
             .then(setSellerPayments)
 
-            .catch(() => {})
+            .catch(() => {});
         },
       )
 
-      .subscribe()
+      .subscribe();
 
     return () => {
-      if (channel && supabase) void supabase.removeChannel(channel)
-    }
-  }, [role, user.id, isSupabaseConfigured, supabase])
+      if (channel && supabase) void supabase.removeChannel(channel);
+    };
+  }, [role, user.id, isSupabaseConfigured, supabase]);
 
   // Buyers live-sync when the seller acts on a payment: rejection flips the
 
@@ -400,16 +367,15 @@ export default function MyClaims({
   // refresh covers rejections that landed while another tab was open.
 
   useEffect(() => {
-    if (!isSupabaseConfigured || role !== "Buyer" || !supabase || !user.id)
-      return
+    if (!isSupabaseConfigured || role !== "Buyer" || !supabase || !user.id) return;
 
-    const refresh = () => void refreshData().catch(() => {})
+    const refresh = () => void refreshData().catch(() => {});
 
     const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") refresh()
-    }
+      if (document.visibilityState === "visible") refresh();
+    };
 
-    refresh()
+    refresh();
 
     const channel = supabase
 
@@ -429,28 +395,28 @@ export default function MyClaims({
         refresh,
       )
 
-      .subscribe()
+      .subscribe();
 
-    window.addEventListener("focus", refresh)
+    window.addEventListener("focus", refresh);
 
-    document.addEventListener("visibilitychange", refreshWhenVisible)
+    document.addEventListener("visibilitychange", refreshWhenVisible);
 
-    const fallbackTimer = window.setInterval(refreshWhenVisible, 15_000)
+    const fallbackTimer = window.setInterval(refreshWhenVisible, 15_000);
 
     return () => {
-      window.removeEventListener("focus", refresh)
+      window.removeEventListener("focus", refresh);
 
-      document.removeEventListener("visibilitychange", refreshWhenVisible)
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
 
-      window.clearInterval(fallbackTimer)
+      window.clearInterval(fallbackTimer);
 
-      if (channel && supabase) void supabase.removeChannel(channel)
-    }
-  }, [refreshData, role, user.id, isSupabaseConfigured, supabase])
+      if (channel && supabase) void supabase.removeChannel(channel);
+    };
+  }, [refreshData, role, user.id, isSupabaseConfigured, supabase]);
 
-  const sellerPaymentsRef = useRef<VerifyItem[]>(sellerPayments)
+  const sellerPaymentsRef = useRef<VerifyItem[]>(sellerPayments);
 
-  sellerPaymentsRef.current = sellerPayments
+  sellerPaymentsRef.current = sellerPayments;
 
   const updateSellerPayments = (action: SetStateAction<VerifyItem[]>) => {
     // Diff against the current list OUTSIDE the state updater: the updater
@@ -459,47 +425,48 @@ export default function MyClaims({
 
     // RPC must never fire from inside it.
 
-    const previous = sellerPaymentsRef.current
+    const previous = sellerPaymentsRef.current;
 
-    const next = typeof action === "function" ? action(previous) : action
+    const next = typeof action === "function" ? action(previous) : action;
 
     if (isSupabaseConfigured) {
       for (const item of next) {
-        const before = previous.find((candidate) => candidate.id === item.id)
+        const before = previous.find((candidate) => candidate.id === item.id);
 
-        if (!before || before.status === item.status) continue
+        if (!before || before.status === item.status) continue;
 
-        if (item.status !== "Verified" && item.status !== "Rejected") continue
+        if (item.status !== "Verified" && item.status !== "Rejected") continue;
 
         const deadlineHours = item.rejectionDeadline
           ? Math.max(
               0,
 
-              (new Date(item.rejectionDeadline).getTime() - Date.now()) /
-                3_600_000,
+              (new Date(item.rejectionDeadline).getTime() - Date.now()) / 3_600_000,
             )
-          : undefined
+          : undefined;
 
-        void (item.groupOrderId
-          ? kargoApi.reviewGroupPayment(
-              String(item.id),
-              item.status === "Verified" ? "verified" : "rejected",
-              item.rejectReason,
-              deadlineHours,
-            )
-          : kargoApi.reviewPayment(
-            String(item.id),
+        void (
+          item.groupOrderId
+            ? kargoApi.reviewGroupPayment(
+                String(item.id),
+                item.status === "Verified" ? "verified" : "rejected",
+                item.rejectReason,
+                deadlineHours,
+              )
+            : kargoApi.reviewPayment(
+                String(item.id),
 
-            item.status === "Verified" ? "verified" : "rejected",
+                item.status === "Verified" ? "verified" : "rejected",
 
-            item.rejectReason,
+                item.rejectReason,
 
-            deadlineHours,
-          ))
+                deadlineHours,
+              )
+        )
 
           .then(
             () => {
-              void refreshData().catch(() => {})
+              void refreshData().catch(() => {});
 
               kargoApi
 
@@ -507,32 +474,26 @@ export default function MyClaims({
 
                 .then(setSellerPayments)
 
-                .catch(() => {})
+                .catch(() => {});
             },
 
             (error) => {
-              alert(
-                error instanceof Error
-                  ? error.message
-                  : "Unable to review payment.",
-              )
+              alert(error instanceof Error ? error.message : "Unable to review payment.");
 
               // Roll back the optimistic update so the list matches the server.
 
               setSellerPayments((current) =>
-                current.map((candidate) =>
-                  candidate.id === item.id ? before : candidate,
-                ),
-              )
+                current.map((candidate) => (candidate.id === item.id ? before : candidate)),
+              );
             },
-          )
+          );
       }
     }
 
-    sellerPaymentsRef.current = next
+    sellerPaymentsRef.current = next;
 
-    setSellerPayments(next)
-  }
+    setSellerPayments(next);
+  };
 
   const filters: (ClaimStatus | "All")[] = [
     "All",
@@ -544,7 +505,7 @@ export default function MyClaims({
     "Expired",
 
     "Cancelled",
-  ]
+  ];
 
   // Payable claims (fresh "Pending" or "Insufficient Payment") are highlighted
 
@@ -552,56 +513,51 @@ export default function MyClaims({
 
   // My Claims list below.
 
-  const reconciledClaims = claims.map((claim) =>
-    reconcileRejectedClaim(claim, payHistory),
-  )
+  const reconciledClaims = claims.map((claim) => reconcileRejectedClaim(claim, payHistory));
 
   const belongsToPendingPayments = (claim: ClaimRow) =>
     claimIsPayable(claim) ||
     claim.shippingState === "waiting_for_seller" ||
-    claim.shippingState === "correction_requested"
+    claim.shippingState === "correction_requested";
 
   const claimsToPay = reconciledClaims
 
     .filter(belongsToPendingPayments)
 
     .sort((left, right) => {
-      const leftPaused = Boolean(left.deadlinePausedAt)
-      const rightPaused = Boolean(right.deadlinePausedAt)
-      if (leftPaused !== rightPaused) return leftPaused ? 1 : -1
+      const leftPaused = Boolean(left.deadlinePausedAt);
+      const rightPaused = Boolean(right.deadlinePausedAt);
+      if (leftPaused !== rightPaused) return leftPaused ? 1 : -1;
 
       const deadlineTime = (claim: ClaimRow) => {
-        const parsedDeadline = claim.expiresAt
-          ? new Date(claim.expiresAt).getTime()
-          : NaN
+        const parsedDeadline = claim.expiresAt ? new Date(claim.expiresAt).getTime() : NaN;
         return Number.isFinite(parsedDeadline)
           ? parsedDeadline
-          : Date.now() + Math.max(0, claim.hours) * 3_600_000
-      }
+          : Date.now() + Math.max(0, claim.hours) * 3_600_000;
+      };
 
-      return deadlineTime(left) - deadlineTime(right) || newestFirst(left, right)
-    })
+      return deadlineTime(left) - deadlineTime(right) || newestFirst(left, right);
+    });
 
-  const pendingPaymentLimit = isMobile ? 3 : 5
+  const pendingPaymentLimit = isMobile ? 3 : 5;
   const visiblePendingPayments = showAllPendingPayments
     ? claimsToPay
-    : claimsToPay.slice(0, pendingPaymentLimit)
+    : claimsToPay.slice(0, pendingPaymentLimit);
 
-  const payableClaims = claimsToPay.filter(claimIsPayable)
-  const totalDue = payableClaims.reduce((sum, item) => sum + item.amount, 0)
+  const payableClaims = claimsToPay.filter(claimIsPayable);
+  const totalDue = payableClaims.reduce((sum, item) => sum + item.amount, 0);
 
   const itemPreviewBatch = itemPreview
     ? batches.find(
         (candidate) =>
-          candidate.title === itemPreview.batch &&
-          candidate.seller === itemPreview.seller,
+          candidate.title === itemPreview.batch && candidate.seller === itemPreview.seller,
       )
-    : undefined
+    : undefined;
   const itemPreviewProduct = itemPreviewBatch?.products.find((product) =>
     itemPreview?.productId
       ? product.dbId === itemPreview.productId
       : product.name === itemPreview?.product,
-  )
+  );
 
   // Payable claims (fresh "Pending" / "Insufficient Payment") live ONLY in the
   // upper "My Claims To Pay" table. Exclude them here so the lower "My Claims"
@@ -616,57 +572,50 @@ export default function MyClaims({
 
       // themselves) so the buyer always sees where their payment stands.
 
-      const leftAwaiting = left.status === "Awaiting Verification"
+      const leftAwaiting = left.status === "Awaiting Verification";
 
-      const rightAwaiting = right.status === "Awaiting Verification"
+      const rightAwaiting = right.status === "Awaiting Verification";
 
-      if (leftAwaiting && !rightAwaiting) return -1
+      if (leftAwaiting && !rightAwaiting) return -1;
 
-      if (rightAwaiting && !leftAwaiting) return 1
+      if (rightAwaiting && !leftAwaiting) return 1;
 
-      const leftPaidAt = paidAt(left, payHistory)
+      const leftPaidAt = paidAt(left, payHistory);
 
-      const rightPaidAt = paidAt(right, payHistory)
+      const rightPaidAt = paidAt(right, payHistory);
 
       const leftTime =
-        leftPaidAt ||
-        (left.createdAt
-          ? new Date(left.createdAt).getTime()
-          : Number(left.id) || 0)
+        leftPaidAt || (left.createdAt ? new Date(left.createdAt).getTime() : Number(left.id) || 0);
 
       const rightTime =
         rightPaidAt ||
-        (right.createdAt
-          ? new Date(right.createdAt).getTime()
-          : Number(right.id) || 0)
+        (right.createdAt ? new Date(right.createdAt).getTime() : Number(right.id) || 0);
 
-      return rightTime - leftTime
-    })
+      return rightTime - leftTime;
+    });
 
   const filtered =
-    filter === "All"
-      ? claimsForList
-      : claimsForList.filter((c) => c.status === filter)
+    filter === "All" ? claimsForList : claimsForList.filter((c) => c.status === filter);
 
-  const [fbToast, setFbToast] = useState<string | null>(null)
+  const [fbToast, setFbToast] = useState<string | null>(null);
 
   const contactBuyer = (claim: ClaimRow) => {
-    const buyerName = claim.buyer || claim.seller
+    const buyerName = claim.buyer || claim.seller;
 
     if (claim.buyerFb) {
-      setFbToast(buyerName)
+      setFbToast(buyerName);
 
       window.setTimeout(() => {
-        window.open(claim.buyerFb, "_blank", "noopener,noreferrer")
+        window.open(claim.buyerFb, "_blank", "noopener,noreferrer");
 
-        setFbToast(null)
-      }, 1200)
+        setFbToast(null);
+      }, 1200);
 
-      return
+      return;
     }
 
-    openBuyerProfile(claim)
-  }
+    openBuyerProfile(claim);
+  };
 
   const asFulfillmentOrder = (claim: ClaimRow): FulfillmentOrder => ({
     id: String(claim.id),
@@ -705,62 +654,59 @@ export default function MyClaims({
     deliveryPinUrl: claim.deliveryPinUrl,
 
     deliveryPinAddress: claim.deliveryPinAddress,
-  })
+  });
 
   const handleCancelClaim = async () => {
-    if (!cancelTarget || cancelling) return
+    if (!cancelTarget || cancelling) return;
 
-    const currentClaim = claims.find((claim) => claim.id === cancelTarget.id)
+    const currentClaim = claims.find((claim) => claim.id === cancelTarget.id);
 
     if (!currentClaim || currentClaim.status !== "Pending") {
-      setCancelTarget(null)
+      setCancelTarget(null);
 
-      if (isSupabaseConfigured) await refreshData()
+      if (isSupabaseConfigured) await refreshData();
 
-      alert("This claim is no longer pending and cannot be cancelled.")
+      alert("This claim is no longer pending and cannot be cancelled.");
 
-      return
+      return;
     }
 
     if (currentClaim.groupOrderId) {
-      alert("This item belongs to a Group Order and cannot be cancelled individually.")
-      setCancelTarget(null)
-      return
+      alert("This item belongs to a Group Order and cannot be cancelled individually.");
+      setCancelTarget(null);
+      return;
     }
 
-    setCancelling(true)
+    setCancelling(true);
 
     try {
       if (isSupabaseConfigured) {
-        await kargoApi.cancelOrder(String(currentClaim.id))
+        await kargoApi.cancelOrder(String(currentClaim.id));
 
-        await refreshData()
+        await refreshData();
       } else {
         setClaims((previous) =>
           previous.map((claim) =>
-            claim.id === currentClaim.id
-              ? { ...claim, status: "Cancelled" as ClaimStatus }
-              : claim,
+            claim.id === currentClaim.id ? { ...claim, status: "Cancelled" as ClaimStatus } : claim,
           ),
-        )
+        );
 
         setToPay((previous) =>
           previous.filter((payment) => {
-            const sameOrder =
-              String(payment.orderId ?? payment.id) === String(currentClaim.id)
+            const sameOrder = String(payment.orderId ?? payment.id) === String(currentClaim.id);
 
             const sameLegacyClaim =
               !payment.orderId &&
               payment.product === currentClaim.product &&
-              payment.seller === currentClaim.seller
+              payment.seller === currentClaim.seller;
 
-            return !sameOrder && !sameLegacyClaim
+            return !sameOrder && !sameLegacyClaim;
           }),
-        )
+        );
 
         setBatches((previous) =>
           previous.map((batch) => {
-            if (batch.title !== currentClaim.batch) return batch
+            if (batch.title !== currentClaim.batch) return batch;
 
             return {
               ...batch,
@@ -770,7 +716,7 @@ export default function MyClaims({
               products: batch.products.map((product) => {
                 const matchesProduct = currentClaim.productId
                   ? product.dbId === currentClaim.productId
-                  : product.name === currentClaim.product
+                  : product.name === currentClaim.product;
 
                 return matchesProduct
                   ? {
@@ -778,76 +724,69 @@ export default function MyClaims({
 
                       claimed: Math.max(0, product.claimed - currentClaim.qty),
                     }
-                  : product
+                  : product;
               }),
-            }
+            };
           }),
-        )
+        );
       }
 
-      setCancelTarget(null)
+      setCancelTarget(null);
     } catch (error) {
-      await refreshData()
+      await refreshData();
 
-      alert(error instanceof Error ? error.message : "Unable to cancel claim.")
+      alert(error instanceof Error ? error.message : "Unable to cancel claim.");
     } finally {
-      setCancelling(false)
+      setCancelling(false);
     }
-  }
+  };
 
   // A notification deep link scrolls to its record. If a filter or the
   // five-row pending limit is hiding the row, clear them so it can show.
   useRecordFocus("My Claims", (target) => {
-    setFilter("All")
-    setOrderFilter("All")
-    setShowAllPendingPayments(true)
-    if (target.combinedGroupId) setCombinedFocusId(target.combinedGroupId)
-  })
+    setFilter("All");
+    setOrderFilter("All");
+    setShowAllPendingPayments(true);
+    if (target.combinedGroupId) setCombinedFocusId(target.combinedGroupId);
+  });
 
   if (role === "Seller") {
     const paymentForOrder = (claim: ClaimRow) =>
-      sellerPayments.find(
-        (payment) => String(payment.orderId) === String(claim.id),
-      )
+      sellerPayments.find((payment) => String(payment.orderId) === String(claim.id));
 
     const statusForOrder = (claim: ClaimRow): SellerOrderReceivedStatus => {
-      const payment = paymentForOrder(claim)
+      const payment = paymentForOrder(claim);
 
-      return sellerOrderReceivedStatus(claim.status, payment?.status)
-    }
+      return sellerOrderReceivedStatus(claim.status, payment?.status);
+    };
 
     const orderReceivedSort = (left: ClaimRow, right: ClaimRow) => {
-      const leftStatus = statusForOrder(left)
+      const leftStatus = statusForOrder(left);
 
-      const rightStatus = statusForOrder(right)
+      const rightStatus = statusForOrder(right);
 
-      if (leftStatus === "Pending" && rightStatus !== "Pending") return -1
+      if (leftStatus === "Pending" && rightStatus !== "Pending") return -1;
 
-      if (rightStatus === "Pending" && leftStatus !== "Pending") return 1
+      if (rightStatus === "Pending" && leftStatus !== "Pending") return 1;
 
       const leftPaymentTime = paymentForOrder(left)?.submittedAt
         ? new Date(paymentForOrder(left)!.submittedAt!).getTime()
-        : 0
+        : 0;
 
       const rightPaymentTime = paymentForOrder(right)?.submittedAt
         ? new Date(paymentForOrder(right)!.submittedAt!).getTime()
-        : 0
+        : 0;
 
       const leftTime =
         leftPaymentTime ||
-        (left.createdAt
-          ? new Date(left.createdAt).getTime()
-          : Number(left.id) || 0)
+        (left.createdAt ? new Date(left.createdAt).getTime() : Number(left.id) || 0);
 
       const rightTime =
         rightPaymentTime ||
-        (right.createdAt
-          ? new Date(right.createdAt).getTime()
-          : Number(right.id) || 0)
+        (right.createdAt ? new Date(right.createdAt).getTime() : Number(right.id) || 0);
 
-      return rightTime - leftTime
-    }
-
+      return rightTime - leftTime;
+    };
 
     // What the row menu offers for this order's stage: tracking once it is
     // shipped (or has a number), contacting the buyer while payment is pending.
@@ -872,30 +811,30 @@ export default function MyClaims({
             },
           ]
         : []),
-    ]
+    ];
 
     // Ongoing orders are the ones with more to do than "Review": waiting on
     // payment, or on their way with tracking. Delivered, completed, cancelled
     // and expired orders have nothing left to track, so they stay in the list
     // below. Like pendings on the buyer side, an ongoing order shows once, here.
-    const finishedStatuses = ["completed", "cancelled", "expired", "incomplete"]
+    const finishedStatuses = ["completed", "cancelled", "expired", "incomplete"];
     const isOngoing = (claim: ClaimRow) =>
       menuItemsFor(claim).length > 0 &&
       claim.fulfillmentStage !== "delivered" &&
-      !finishedStatuses.includes(claim.orderStatus ?? "")
+      !finishedStatuses.includes(claim.orderStatus ?? "");
 
-    const ongoingOrders = claims.filter(isOngoing).sort(orderReceivedSort)
-    const otherOrders = claims.filter((claim) => !isOngoing(claim))
+    const ongoingOrders = claims.filter(isOngoing).sort(orderReceivedSort);
+    const otherOrders = claims.filter((claim) => !isOngoing(claim));
 
     const ordFiltered = (
       orderFilter === "All"
         ? otherOrders
         : otherOrders.filter((claim) => statusForOrder(claim) === orderFilter)
-    ).sort(orderReceivedSort)
+    ).sort(orderReceivedSort);
 
     // The page renders one table per section, in this order. Ongoing Orders
     // only appears when there is something in it.
-    const hasOngoing = ongoingOrders.length > 0
+    const hasOngoing = ongoingOrders.length > 0;
     const tableSections = [
       ...(hasOngoing
         ? [
@@ -913,7 +852,7 @@ export default function MyClaims({
         rows: ordFiltered,
         emptyText: hasOngoing ? "No other orders." : "No orders found.",
       },
-    ]
+    ];
 
     const orderFilters: OrderReceivedFilter[] = [
       "All",
@@ -922,7 +861,7 @@ export default function MyClaims({
       "Verified",
       "Expired",
       "Cancelled",
-    ]
+    ];
 
     return (
       <div className="seller-orders-page mobile-data-page">
@@ -959,8 +898,7 @@ export default function MyClaims({
               gap: 8,
             }}
           >
-            <Link2 size={15} aria-hidden="true" /> Opening {fbToast}'s Facebook
-            profile…
+            <Link2 size={15} aria-hidden="true" /> Opening {fbToast}'s Facebook profile…
           </div>
         )}
         <header className="seller-orders-heading seller-orders-heading--with-action">
@@ -979,322 +917,305 @@ export default function MyClaims({
           />
         </header>
         {tableSections.map((section) => (
-          <section
-            key={section.key}
-            className="seller-orders-section"
-            aria-label={section.label}
-          >
+          <section key={section.key} className="seller-orders-section" aria-label={section.label}>
             {section.key === "ongoing" ? (
               <SH
                 title="Ongoing Orders"
                 action={
                   <span className="seller-orders-section__count">
-                    {section.rows.length}{" "}
-                    {section.rows.length === 1 ? "order" : "orders"}
+                    {section.rows.length} {section.rows.length === 1 ? "order" : "orders"}
                   </span>
                 }
               />
             ) : (
               <>
                 {hasOngoing && <SH title="Other Orders" />}
-        <div
-          className="seller-orders-filters"
-          role="group"
-          aria-label="Filter orders by status"
-        >
-          {orderFilters.map((f) => (
-            <button
-              key={f}
-              onClick={() => setOrderFilter(f)}
-              aria-pressed={orderFilter === f}
-              style={{
-                background: orderFilter === f ? INDIGO : "#fff",
+                <div
+                  className="seller-orders-filters"
+                  role="group"
+                  aria-label="Filter orders by status"
+                >
+                  {orderFilters.map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setOrderFilter(f)}
+                      aria-pressed={orderFilter === f}
+                      style={{
+                        background: orderFilter === f ? INDIGO : "#fff",
 
-                color: orderFilter === f ? "#fff" : "#6B7280",
+                        color: orderFilter === f ? "#fff" : "#6B7280",
 
-                border: `1px solid ${orderFilter === f ? INDIGO : "#E5E7EB"}`,
+                        border: `1px solid ${orderFilter === f ? INDIGO : "#E5E7EB"}`,
 
-                borderRadius: 999,
+                        borderRadius: 999,
 
-                fontSize: 12,
+                        fontSize: 12,
 
-                fontWeight: 600,
+                        fontWeight: 600,
 
-                padding: "5px 14px",
+                        padding: "5px 14px",
 
-                transition: "all 0.15s",
+                        transition: "all 0.15s",
 
-                fontFamily: "'Quicksand',sans-serif",
+                        fontFamily: "'Quicksand',sans-serif",
 
-                cursor: "pointer",
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+                        cursor: "pointer",
+                      }}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
               </>
             )}
-        <div className="seller-orders-table-wrap">
-          <div className="seller-orders-table-scroll">
-            <table className="seller-orders-table">
-              <colgroup>
-                <col className="seller-orders-col-buyer" />
-                <col className="seller-orders-col-ordered" />
-                <col className="seller-orders-col-product" />
-                <col className="seller-orders-col-method" />
-                <col className="seller-orders-col-amount" />
-                <col className="seller-orders-col-paid" />
-                <col className="seller-orders-col-deadline" />
-                <col className="seller-orders-col-status" />
-                <col className="seller-orders-col-actions" />
-              </colgroup>
-              <thead>
-                <tr>
-                  {[
-                    "BUYER",
+            <div className="seller-orders-table-wrap">
+              <div className="seller-orders-table-scroll">
+                <table className="seller-orders-table">
+                  <colgroup>
+                    <col className="seller-orders-col-buyer" />
+                    <col className="seller-orders-col-ordered" />
+                    <col className="seller-orders-col-product" />
+                    <col className="seller-orders-col-method" />
+                    <col className="seller-orders-col-amount" />
+                    <col className="seller-orders-col-paid" />
+                    <col className="seller-orders-col-deadline" />
+                    <col className="seller-orders-col-status" />
+                    <col className="seller-orders-col-actions" />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      {[
+                        "BUYER",
 
-                    "ORDER DATE",
+                        "ORDER DATE",
 
-                    "PRODUCT",
+                        "PRODUCT",
 
-                    "METHOD",
+                        "METHOD",
 
-                    "AMOUNT",
+                        "AMOUNT",
 
-                    "AMOUNT PAID",
+                        "AMOUNT PAID",
 
-                    "DEADLINE",
+                        "DEADLINE",
 
-                    "STATUS",
+                        "STATUS",
 
-                    "ACTIONS",
-                  ].map((h) => (
-                    <th key={h}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {section.rows.map((c, i) => {
-                  const submission = paymentForOrder(c)
-
-                  const status = statusForOrder(c)
-
-                  const amountPaid =
-                    submission?.amountPaid && submission.status !== "Rejected"
-                      ? Number(submission.amountPaid)
-                      : status === "Verified"
-                        ? c.amount
-                        : 0
-
-                  const underpaid = amountPaid > 0 && amountPaid < c.amount
-
-                  const isCashOnMeetup = submission?.method === "Cash on Meetup"
-
-                  const statusStyles: Record<SellerOrderReceivedStatus, {
-                    background: string
-
-                    color: string
-
-                    dot: string
-
-                    borderColor: string
-                  }> = {
-                    Pending: {
-                      background: "#fff5cc",
-
-                      color: "#c98f00",
-
-                      dot: "#f0b400",
-
-                      borderColor: "#f0b400",
-                    },
-
-                    "Awaiting Verification": {
-                      background: "#e0e7ff",
-
-                      color: "#3730a3",
-
-                      dot: "#6366f1",
-
-                      borderColor: "#6366f1",
-                    },
-
-                    Verified: {
-                      background: "#c8f5e4",
-
-                      color: "#0a8f6a",
-
-                      dot: "#2cc9a0",
-
-                      borderColor: "#2cc9a0",
-                    },
-
-                    Expired: {
-                      background: "#ffe4e8",
-
-                      color: "#d9273f",
-
-                      dot: "#d9273f",
-
-                      borderColor: "#d9273f",
-                    },
-
-                    Cancelled: {
-                      background: "#ccc",
-
-                      color: "#555",
-
-                      dot: "#777",
-
-                      borderColor: "#777",
-                    },
-                  }
-
-                  const badge = statusStyles[status]
-
-                  return (
-                    <tr
-                      key={c.id}
-                      data-record-keys={recordKeys({
-                        orderId: c.id,
-                        groupOrderId: c.groupOrderId,
-                      })}
-                      className={
-                        i % 2
-                          ? "seller-orders-row seller-orders-row--alt"
-                          : "seller-orders-row"
-                      }
-                    >
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <Avatar name={c.buyer || c.seller} size={22} />
-                          <button
-                            onClick={() => openBuyerProfile(c)}
-                            className="seller-orders-buyer"
-                          >
-                            {c.buyer || c.seller}
-                          </button>
-                        </div>
-                      </td>
-                      <td className="seller-orders-ordered">
-                        {c.createdAt && Number.isFinite(new Date(c.createdAt).getTime())
-                          ? new Date(c.createdAt).toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
-                          : "-"}
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <ProductThumb name={c.product} />
-                          <span>
-                            {c.product}
-                            {c.groupOrderId && (
-                              <small className="seller-orders-group-meta">
-                                {c.groupMemberCount} members · Code {c.groupOrderCode}
-                                {c.groupDiscountAmount
-                                  ? ` · Discount ₱${c.groupDiscountAmount.toLocaleString()}`
-                                  : ""}
-                              </small>
-                            )}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="seller-orders-method">
-                        {submission?.method || "—"}
-                      </td>
-                      <td className="seller-orders-amount">
-                        ₱{c.amount.toLocaleString()}
-                      </td>
-                      <td className="seller-orders-paid">
-                        {isCashOnMeetup ? (
-                          <span className="seller-orders-dash">—</span>
-                        ) : amountPaid > 0 ? (
-                          <>
-                            <span
-                              className={
-                                underpaid ? "seller-orders-paid--short" : ""
-                              }
-                            >
-                              ₱{amountPaid.toLocaleString()}
-                            </span>
-                            {underpaid && (
-                              <small>
-                                Short ₱
-                                {(c.amount - amountPaid).toLocaleString()}
-                              </small>
-                            )}
-                          </>
-                        ) : (
-                          <span className="seller-orders-dash">—</span>
-                        )}
-                      </td>
-                      <td className="seller-orders-deadline">
-                        {c.status === "Expired" ? (
-                          <span className="seller-orders-dash">Expired</span>
-                        ) : needsShippingFee(c) ? (
-                          // The timer is paused until the fee is set, so the
-                          // action replaces the "Paused" text here.
-                          <div className="seller-orders-deadline__fee">
-                            <button
-                              className="seller-orders-review seller-orders-fee-action"
-                              onClick={() => setShippingTarget(c)}
-                            >
-                              Set shipping fee
-                            </button>
-                          </div>
-                        ) : c.status === "Pending" && hasOrderDeadline(c) ? (
-                          <Countdown
-                            hours={c.hours}
-                            expiresAt={c.expiresAt}
-                            paused={Boolean(c.deadlinePausedAt)}
-                          />
-                        ) : (
-                          <span className="seller-orders-dash">—</span>
-                        )}
-                      </td>
-                      <td className="seller-orders-status-cell">
-                        <span
-                          className="seller-orders-status"
-                          style={{
-                            background: badge.background,
-
-                            color: badge.color,
-
-                            borderColor: badge.borderColor,
-                          }}
-                        >
-                          <span style={{ background: badge.dot }} />
-                          {status}
-                        </span>
-                        {status === "Pending" && underpaid && (
-                          <small>Awaiting balance</small>
-                        )}
-                      </td>
-                      <td>
-                        <div className="seller-orders-actions">
-                          <SellerOrderActions
-                            onReview={() =>
-                              submission
-                                ? setPaymentReviewTarget(submission)
-                                : setOrderDetailTarget(c)
-                            }
-                            items={menuItemsFor(c)}
-                          />
-                        </div>
-                      </td>
+                        "ACTIONS",
+                      ].map((h) => (
+                        <th key={h}>{h}</th>
+                      ))}
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-          {section.rows.length === 0 && (
-            <div className="seller-orders-empty">{section.emptyText}</div>
-          )}
-        </div>
+                  </thead>
+                  <tbody>
+                    {section.rows.map((c, i) => {
+                      const submission = paymentForOrder(c);
+
+                      const status = statusForOrder(c);
+
+                      const amountPaid =
+                        submission?.amountPaid && submission.status !== "Rejected"
+                          ? Number(submission.amountPaid)
+                          : status === "Verified"
+                            ? c.amount
+                            : 0;
+
+                      const underpaid = amountPaid > 0 && amountPaid < c.amount;
+
+                      const isCashOnMeetup = submission?.method === "Cash on Meetup";
+
+                      const statusStyles: Record<
+                        SellerOrderReceivedStatus,
+                        {
+                          background: string;
+
+                          color: string;
+
+                          dot: string;
+
+                          borderColor: string;
+                        }
+                      > = {
+                        Pending: {
+                          background: "#fff5cc",
+
+                          color: "#c98f00",
+
+                          dot: "#f0b400",
+
+                          borderColor: "#f0b400",
+                        },
+
+                        "Awaiting Verification": {
+                          background: "#e0e7ff",
+
+                          color: "#3730a3",
+
+                          dot: "#6366f1",
+
+                          borderColor: "#6366f1",
+                        },
+
+                        Verified: {
+                          background: "#c8f5e4",
+
+                          color: "#0a8f6a",
+
+                          dot: "#2cc9a0",
+
+                          borderColor: "#2cc9a0",
+                        },
+
+                        Expired: {
+                          background: "#ffe4e8",
+
+                          color: "#d9273f",
+
+                          dot: "#d9273f",
+
+                          borderColor: "#d9273f",
+                        },
+
+                        Cancelled: {
+                          background: "#ccc",
+
+                          color: "#555",
+
+                          dot: "#777",
+
+                          borderColor: "#777",
+                        },
+                      };
+
+                      const badge = statusStyles[status];
+
+                      return (
+                        <tr
+                          key={c.id}
+                          data-record-keys={recordKeys({
+                            orderId: c.id,
+                            groupOrderId: c.groupOrderId,
+                          })}
+                          className={
+                            i % 2 ? "seller-orders-row seller-orders-row--alt" : "seller-orders-row"
+                          }
+                        >
+                          <td>
+                            <div className="flex items-center gap-2">
+                              <Avatar name={c.buyer || c.seller} size={22} />
+                              <button
+                                onClick={() => openBuyerProfile(c)}
+                                className="seller-orders-buyer"
+                              >
+                                {c.buyer || c.seller}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="seller-orders-ordered">
+                            {c.createdAt && Number.isFinite(new Date(c.createdAt).getTime())
+                              ? new Date(c.createdAt).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
+                              : "-"}
+                          </td>
+                          <td>
+                            <div className="flex items-center gap-2">
+                              <ProductThumb name={c.product} />
+                              <span>
+                                {c.product}
+                                {c.groupOrderId && (
+                                  <small className="seller-orders-group-meta">
+                                    {c.groupMemberCount} members · Code {c.groupOrderCode}
+                                    {c.groupDiscountAmount
+                                      ? ` · Discount ₱${c.groupDiscountAmount.toLocaleString()}`
+                                      : ""}
+                                  </small>
+                                )}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="seller-orders-method">{submission?.method || "—"}</td>
+                          <td className="seller-orders-amount">₱{c.amount.toLocaleString()}</td>
+                          <td className="seller-orders-paid">
+                            {isCashOnMeetup ? (
+                              <span className="seller-orders-dash">—</span>
+                            ) : amountPaid > 0 ? (
+                              <>
+                                <span className={underpaid ? "seller-orders-paid--short" : ""}>
+                                  ₱{amountPaid.toLocaleString()}
+                                </span>
+                                {underpaid && (
+                                  <small>Short ₱{(c.amount - amountPaid).toLocaleString()}</small>
+                                )}
+                              </>
+                            ) : (
+                              <span className="seller-orders-dash">—</span>
+                            )}
+                          </td>
+                          <td className="seller-orders-deadline">
+                            {c.status === "Expired" ? (
+                              <span className="seller-orders-dash">Expired</span>
+                            ) : needsShippingFee(c) ? (
+                              // The timer is paused until the fee is set, so the
+                              // action replaces the "Paused" text here.
+                              <div className="seller-orders-deadline__fee">
+                                <button
+                                  className="seller-orders-review seller-orders-fee-action"
+                                  onClick={() => setShippingTarget(c)}
+                                >
+                                  Set shipping fee
+                                </button>
+                              </div>
+                            ) : c.status === "Pending" && hasOrderDeadline(c) ? (
+                              <Countdown
+                                hours={c.hours}
+                                expiresAt={c.expiresAt}
+                                paused={Boolean(c.deadlinePausedAt)}
+                              />
+                            ) : (
+                              <span className="seller-orders-dash">—</span>
+                            )}
+                          </td>
+                          <td className="seller-orders-status-cell">
+                            <span
+                              className="seller-orders-status"
+                              style={{
+                                background: badge.background,
+
+                                color: badge.color,
+
+                                borderColor: badge.borderColor,
+                              }}
+                            >
+                              <span style={{ background: badge.dot }} />
+                              {status}
+                            </span>
+                            {status === "Pending" && underpaid && <small>Awaiting balance</small>}
+                          </td>
+                          <td>
+                            <div className="seller-orders-actions">
+                              <SellerOrderActions
+                                onReview={() =>
+                                  submission
+                                    ? setPaymentReviewTarget(submission)
+                                    : setOrderDetailTarget(c)
+                                }
+                                items={menuItemsFor(c)}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {section.rows.length === 0 && (
+                <div className="seller-orders-empty">{section.emptyText}</div>
+              )}
+            </div>
           </section>
         ))}
         {buyerProfile && (
@@ -1307,11 +1228,7 @@ export default function MyClaims({
           />
         )}
         {orderDetailTarget && (
-          <Modal
-            title="Order details"
-            onClose={() => setOrderDetailTarget(null)}
-            width={420}
-          >
+          <Modal title="Order details" onClose={() => setOrderDetailTarget(null)} width={420}>
             <div className="seller-order-details">
               <strong>{orderDetailTarget.product}</strong>
               <span>{orderDetailTarget.batch}</span>
@@ -1335,8 +1252,7 @@ export default function MyClaims({
                 <div>
                   <dt>Deadline</dt>
                   <dd>
-                    {orderDetailTarget.status === "Pending" &&
-                    orderDetailTarget.hours > 0
+                    {orderDetailTarget.status === "Pending" && orderDetailTarget.hours > 0
                       ? `${orderDetailTarget.hours}h`
                       : "—"}
                   </dd>
@@ -1344,9 +1260,7 @@ export default function MyClaims({
               </dl>
             </div>
             <div className="kargo-modal-actions">
-              <SecondaryBtn onClick={() => setOrderDetailTarget(null)}>
-                Close
-              </SecondaryBtn>
+              <SecondaryBtn onClick={() => setOrderDetailTarget(null)}>Close</SecondaryBtn>
             </div>
           </Modal>
         )}
@@ -1361,31 +1275,27 @@ export default function MyClaims({
             onNotifyBuyer={async (item) => {
               if (item.status === "Rejected") {
                 if (isSupabaseConfigured) {
-                  await kargoApi.notifyPaymentResubmission(String(item.id))
+                  await kargoApi.notifyPaymentResubmission(String(item.id));
                 }
 
                 setSellerPayments((items) =>
                   items.map((candidate) =>
-                    candidate.id === item.id
-                      ? { ...candidate, buyerNotified: true }
-                      : candidate,
+                    candidate.id === item.id ? { ...candidate, buyerNotified: true } : candidate,
                   ),
-                )
+                );
 
                 setPaymentReviewTarget((current) =>
-                  current?.id === item.id
-                    ? { ...current, buyerNotified: true }
-                    : current,
-                )
+                  current?.id === item.id ? { ...current, buyerNotified: true } : current,
+                );
 
-                return
+                return;
               }
 
-              setInsufficientTarget(item)
+              setInsufficientTarget(item);
 
-              setInsufficientAmount(item.amountPaid || "")
+              setInsufficientAmount(item.amountPaid || "");
 
-              setPaymentReviewTarget(null)
+              setPaymentReviewTarget(null);
             }}
             onMarkPaid={(item) => {
               updateSellerPayments((items) =>
@@ -1394,9 +1304,9 @@ export default function MyClaims({
                     ? { ...candidate, status: "Verified" as const }
                     : candidate,
                 ),
-              )
+              );
 
-              setPaymentReviewTarget(null)
+              setPaymentReviewTarget(null);
             }}
           />
         )}
@@ -1438,32 +1348,26 @@ export default function MyClaims({
             claim={shippingTarget}
             onClose={() => setShippingTarget(null)}
             onRequestCorrection={() => {
-              setCorrectionTarget(shippingTarget)
+              setCorrectionTarget(shippingTarget);
 
-              setShippingTarget(null)
+              setShippingTarget(null);
             }}
             onDecline={() => {
-              setDeclineTarget(shippingTarget)
+              setDeclineTarget(shippingTarget);
 
-              setShippingTarget(null)
+              setShippingTarget(null);
             }}
             onSave={async (fee) => {
               if (isSupabaseConfigured) {
                 if (shippingTarget.groupOrderId) {
-                  await kargoApi.setGroupOrderShippingFee(
-                    shippingTarget.groupOrderId,
-                    fee,
-                  )
+                  await kargoApi.setGroupOrderShippingFee(shippingTarget.groupOrderId, fee);
                 } else {
-                  await kargoApi.setOrderShippingFee(
-                    String(shippingTarget.id),
-                    fee,
-                  )
+                  await kargoApi.setOrderShippingFee(String(shippingTarget.id), fee);
                 }
 
-                await refreshData()
+                await refreshData();
               } else {
-                const previousFee = shippingTarget.shippingFee ?? 0
+                const previousFee = shippingTarget.shippingFee ?? 0;
 
                 const update = {
                   shippingFee: fee,
@@ -1477,27 +1381,24 @@ export default function MyClaims({
                   ).toISOString(),
 
                   amount: shippingTarget.amount - previousFee + fee,
-                }
+                };
 
                 setClaims((current) =>
                   current.map((claim) =>
-                    claim.id === shippingTarget.id
-                      ? { ...claim, ...update }
-                      : claim,
+                    claim.id === shippingTarget.id ? { ...claim, ...update } : claim,
                   ),
-                )
+                );
 
                 setToPay((current) =>
                   current.map((payment) =>
-                    String(payment.orderId ?? payment.id) ===
-                    String(shippingTarget.id)
+                    String(payment.orderId ?? payment.id) === String(shippingTarget.id)
                       ? { ...payment, ...update }
                       : payment,
                   ),
-                )
+                );
               }
 
-              setShippingTarget(null)
+              setShippingTarget(null);
             }}
           />
         )}
@@ -1508,16 +1409,12 @@ export default function MyClaims({
             onConfirm={async () => {
               if (isSupabaseConfigured) {
                 if (correctionTarget.groupOrderId) {
-                  await kargoApi.requestGroupLocationCorrection(
-                    correctionTarget.groupOrderId,
-                  )
+                  await kargoApi.requestGroupLocationCorrection(correctionTarget.groupOrderId);
                 } else {
-                  await kargoApi.requestLocationCorrection(
-                    String(correctionTarget.id),
-                  )
+                  await kargoApi.requestLocationCorrection(String(correctionTarget.id));
                 }
 
-                await refreshData()
+                await refreshData();
               } else {
                 setClaims((current) =>
                   current.map((claim) =>
@@ -1527,15 +1424,14 @@ export default function MyClaims({
 
                           shippingState: "correction_requested",
 
-                          deadlinePausedAt:
-                            claim.deadlinePausedAt ?? new Date().toISOString(),
+                          deadlinePausedAt: claim.deadlinePausedAt ?? new Date().toISOString(),
                         }
                       : claim,
                   ),
-                )
+                );
               }
 
-              setCorrectionTarget(null)
+              setCorrectionTarget(null);
             }}
           />
         )}
@@ -1547,18 +1443,12 @@ export default function MyClaims({
             onConfirm={async (reason) => {
               if (isSupabaseConfigured) {
                 if (declineTarget.groupOrderId) {
-                  await kargoApi.declineGroupDeliveryOrder(
-                    declineTarget.groupOrderId,
-                    reason,
-                  )
+                  await kargoApi.declineGroupDeliveryOrder(declineTarget.groupOrderId, reason);
                 } else {
-                  await kargoApi.declineDeliveryOrder(
-                    String(declineTarget.id),
-                    reason,
-                  )
+                  await kargoApi.declineDeliveryOrder(String(declineTarget.id), reason);
                 }
 
-                await refreshData()
+                await refreshData();
               } else {
                 setClaims((current) =>
                   current.map((claim) =>
@@ -1576,15 +1466,13 @@ export default function MyClaims({
                         }
                       : claim,
                   ),
-                )
+                );
 
                 setToPay((current) =>
                   current.filter(
-                    (payment) =>
-                      String(payment.orderId ?? payment.id) !==
-                      String(declineTarget.id),
+                    (payment) => String(payment.orderId ?? payment.id) !== String(declineTarget.id),
                   ),
-                )
+                );
 
                 setBatches((current) =>
                   current.map((batch) =>
@@ -1602,7 +1490,7 @@ export default function MyClaims({
                           products: batch.products.map((product) => {
                             const matches = declineTarget.productId
                               ? product.dbId === declineTarget.productId
-                              : product.name === declineTarget.product
+                              : product.name === declineTarget.product;
 
                             return matches
                               ? {
@@ -1614,14 +1502,14 @@ export default function MyClaims({
                                     product.claimed - declineTarget.qty,
                                   ),
                                 }
-                              : product
+                              : product;
                           }),
                         },
                   ),
-                )
+                );
               }
 
-              setDeclineTarget(null)
+              setDeclineTarget(null);
             }}
           />
         )}
@@ -1635,9 +1523,9 @@ export default function MyClaims({
                   String(trackingTarget.id),
 
                   details,
-                )
+                );
 
-                await refreshData()
+                await refreshData();
               } else {
                 const update = {
                   fulfillmentStage: "shipped",
@@ -1653,15 +1541,13 @@ export default function MyClaims({
                   eta: details.eta,
 
                   trackingUrl: details.trackingUrl,
-                }
+                };
 
                 setClaims((current) =>
                   current.map((claim) =>
-                    claim.id === trackingTarget.id
-                      ? { ...claim, ...update }
-                      : claim,
+                    claim.id === trackingTarget.id ? { ...claim, ...update } : claim,
                   ),
-                )
+                );
 
                 setFulfillment((current) =>
                   current.map((order) =>
@@ -1669,15 +1555,15 @@ export default function MyClaims({
                       ? { ...order, ...update, col: "Shipped" }
                       : order,
                   ),
-                )
+                );
               }
 
-              setTrackingTarget(null)
+              setTrackingTarget(null);
             }}
           />
         )}
       </div>
-    )
+    );
   }
 
   const handlePay = async (
@@ -1691,20 +1577,19 @@ export default function MyClaims({
 
     details: PaymentSubmissionDetails,
   ) => {
-    const currentClaim = claims.find((claim) => claim.id === target.id)
+    const currentClaim = claims.find((claim) => claim.id === target.id);
 
     if (!currentClaim || !claimIsPayable(currentClaim)) {
-      setPayTarget(null)
+      setPayTarget(null);
 
-      alert("This claim has expired and can no longer be paid.")
+      alert("This claim has expired and can no longer be paid.");
 
-      return
+      return;
     }
 
     if (isSupabaseConfigured) {
       try {
         const paymentInput = {
-
           method,
 
           amount: details.amountPaid,
@@ -1718,22 +1603,21 @@ export default function MyClaims({
           payerPhone: details.payerPhone,
 
           buyerContactUrl: details.buyerContactUrl,
-        }
+        };
 
         if (target.groupOrderId) {
           await kargoApi.submitGroupPayment({
             ...paymentInput,
             groupOrderId: target.groupOrderId,
-          })
+          });
         } else {
           await kargoApi.submitPayment({
             ...paymentInput,
             orderId: String(target.id),
-          })
+          });
         }
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Unable to submit payment."
+        const message = error instanceof Error ? error.message : "Unable to submit payment.";
 
         // Re-sync the client snapshot on ANY failure so a stale `claims`
 
@@ -1743,30 +1627,30 @@ export default function MyClaims({
 
         // which is what made proof-of-payment fail "every other time".
 
-        await refreshData()
+        await refreshData();
 
         // Close the modal so the reused stale `payTarget` can't be resubmitted.
 
-        setPayTarget(null)
+        setPayTarget(null);
 
         if (message === "Order is not payable") {
           alert(
             "This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.",
-          )
+          );
         } else {
-          alert(message)
+          alert(message);
         }
 
-        return
+        return;
       }
 
-      await refreshData()
+      await refreshData();
 
-      setPayTarget(null)
+      setPayTarget(null);
 
-      setPaymentSuccess(true)
+      setPaymentSuccess(true);
 
-      return true
+      return true;
     }
 
     const newHist: PayHistRow = {
@@ -1795,21 +1679,18 @@ export default function MyClaims({
       payerPhone: details.payerPhone,
 
       buyerContactUrl: details.buyerContactUrl,
-    }
+    };
 
-    setPayHistory((h) => [newHist, ...h])
+    setPayHistory((h) => [newHist, ...h]);
 
     if (!isSupabaseConfigured)
       setClaims((prev) =>
         prev.map((c) =>
-          c.id === target.id
-            ? { ...c, status: "Paid and Reserved" as ClaimStatus }
-            : c,
+          c.id === target.id ? { ...c, status: "Paid and Reserved" as ClaimStatus } : c,
         ),
-      )
+      );
 
-    if (!isSupabaseConfigured)
-      setToPay((prev) => prev.filter((t) => t.product !== target.product))
+    if (!isSupabaseConfigured) setToPay((prev) => prev.filter((t) => t.product !== target.product));
 
     const newOrder: OrderRow = {
       id: `ORD-2026-${String(orders.length + 60).padStart(4, "0")}`,
@@ -1823,16 +1704,16 @@ export default function MyClaims({
       amount: target.amount,
 
       step: 3,
-    }
+    };
 
-    if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev])
+    if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev]);
 
-    setPayTarget(null)
+    setPayTarget(null);
 
-    setPaymentSuccess(true)
+    setPaymentSuccess(true);
 
-    return true
-  }
+    return true;
+  };
 
   return (
     <div className="p-6 buyer-claims-page mobile-data-page">
@@ -1868,12 +1749,12 @@ export default function MyClaims({
               imageForOrder={(id) => {
                 const productId = reconciledClaims.find(
                   (claim) => String(claim.id) === id,
-                )?.productId
+                )?.productId;
                 return productId
                   ? batches
                       .flatMap((batch) => batch.products)
                       .find((product) => product.dbId === productId)?.imageUrl
-                  : undefined
+                  : undefined;
               }}
             >
               {({ requestForOrder, openRequest, combinedPaymentOrder }) => (
@@ -1890,18 +1771,14 @@ export default function MyClaims({
                     </thead>
                     <tbody>
                       {visiblePendingPayments
-                        .filter(
-                          (item) => !combinedPaymentOrder(String(item.id)),
-                        )
+                        .filter((item) => !combinedPaymentOrder(String(item.id)))
                         .map((item) => {
-                          const deliveryRequest = requestForOrder(String(item.id))
+                          const deliveryRequest = requestForOrder(String(item.id));
                           const imageUrl = item.productId
                             ? batches
                                 .flatMap((batch) => batch.products)
-                                .find(
-                                  (product) => product.dbId === item.productId,
-                                )?.imageUrl
-                            : undefined
+                                .find((product) => product.dbId === item.productId)?.imageUrl
+                            : undefined;
 
                           return (
                             <tr
@@ -1920,23 +1797,17 @@ export default function MyClaims({
                                     aria-label={`Enlarge photo of ${item.product}`}
                                     onClick={() => setItemPreview(item)}
                                   >
-                                    <ProductThumb
-                                      name={item.product}
-                                      imageUrl={imageUrl}
-                                    />
+                                    <ProductThumb name={item.product} imageUrl={imageUrl} />
                                   </button>
                                   <div className="claims-to-pay-product__copy">
                                     <div className="claims-to-pay-product__name">
                                       {item.product}
                                       {item.qty > 1 && (
-                                        <span className="claims-to-pay-quantity">
-                                          ×{item.qty}
-                                        </span>
+                                        <span className="claims-to-pay-quantity">×{item.qty}</span>
                                       )}
                                     </div>
                                     <div className="claims-to-pay-product__links">
-                                      {item.shippingState ===
-                                        "correction_requested" && (
+                                      {item.shippingState === "correction_requested" && (
                                         <button
                                           type="button"
                                           onClick={() => {
@@ -1945,21 +1816,18 @@ export default function MyClaims({
                                               lng: item.deliveryPinLng,
                                               url: item.deliveryPinUrl,
                                               address: item.deliveryPinAddress,
-                                            })
-                                            setPinTarget(item)
+                                            });
+                                            setPinTarget(item);
                                           }}
                                         >
                                           Update location
                                         </button>
                                       )}
-                                      {item.shippingState !==
-                                        "correction_requested" &&
+                                      {item.shippingState !== "correction_requested" &&
                                         deliveryRequest && (
                                           <button
                                             type="button"
-                                            onClick={() =>
-                                              openRequest(deliveryRequest)
-                                            }
+                                            onClick={() => openRequest(deliveryRequest)}
                                           >
                                             View request
                                           </button>
@@ -1980,19 +1848,17 @@ export default function MyClaims({
                               </td>
                               <td>
                                 <div className="claims-to-pay-seller">
-                                  <Avatar name={item.seller} size={22} />
-                                  <span>{item.seller}</span>
+                                  <Avatar name={sellerLabel(item)} size={22} />
+                                  <span>{sellerLabel(item)}</span>
                                 </div>
                               </td>
                               <td>
                                 <div className="claims-to-pay-deadline">
-                                  {item.shippingState ===
-                                  "waiting_for_seller" ? (
+                                  {item.shippingState === "waiting_for_seller" ? (
                                     <span className="claims-to-pay-deadline--paused">
                                       Waiting for seller
                                     </span>
-                                  ) : item.shippingState ===
-                                    "correction_requested" ? (
+                                  ) : item.shippingState === "correction_requested" ? (
                                     <span className="claims-to-pay-deadline--paused">
                                       Location update required
                                     </span>
@@ -2016,18 +1882,13 @@ export default function MyClaims({
                               <td>
                                 <div className="claims-to-pay-amount">
                                   ₱{item.amount.toLocaleString()}
-                                  {deliveryRequest?.status ===
-                                  "shipping_fee_set" ? (
-                                    <span>
-                                      Item subtotal · shared fee in request
-                                    </span>
-                                  ) : item.shippingState ===
-                                    "waiting_for_seller" ? (
+                                  {deliveryRequest?.status === "shipping_fee_set" ? (
+                                    <span>Item subtotal · shared fee in request</span>
+                                  ) : item.shippingState === "waiting_for_seller" ? (
                                     <span>Shipping fee pending</span>
                                   ) : item.shippingFee !== undefined ? (
                                     <span>
-                                      Includes ₱
-                                      {item.shippingFee.toLocaleString()} shipping
+                                      Includes ₱{item.shippingFee.toLocaleString()} shipping
                                     </span>
                                   ) : null}
                                 </div>
@@ -2035,20 +1896,13 @@ export default function MyClaims({
                               <td>
                                 <div className="claims-to-pay-actions">
                                   <PendingPaymentHint
-                                    waiting={
-                                      item.shippingState === "waiting_for_seller"
-                                    }
-                                    sharedFeeSet={
-                                      deliveryRequest?.status ===
-                                      "shipping_fee_set"
-                                    }
+                                    waiting={item.shippingState === "waiting_for_seller"}
+                                    sharedFeeSet={deliveryRequest?.status === "shipping_fee_set"}
                                   >
                                     <PrimaryBtn
                                       size="sm"
                                       disabled={!claimIsPayable(item)}
-                                      onClick={() =>
-                                        claimIsPayable(item) && setPayTarget(item)
-                                      }
+                                      onClick={() => claimIsPayable(item) && setPayTarget(item)}
                                     >
                                       Pay Now
                                     </PrimaryBtn>
@@ -2056,17 +1910,14 @@ export default function MyClaims({
                                   {claimIsPayable(item) &&
                                     !item.extensionRequested &&
                                     item.extensionStatus !== "pending" && (
-                                      <SecondaryBtn
-                                        size="sm"
-                                        onClick={() => setExtTarget(item)}
-                                      >
+                                      <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
                                         Request Extension
                                       </SecondaryBtn>
                                     )}
                                 </div>
                               </td>
                             </tr>
-                          )
+                          );
                         })}
                       {claimsToPay.length === 0 && (
                         <tr className="claims-to-pay-empty-row">
@@ -2079,9 +1930,7 @@ export default function MyClaims({
                     <button
                       type="button"
                       className="claims-to-pay-toggle"
-                      onClick={() =>
-                        setShowAllPendingPayments((showing) => !showing)
-                      }
+                      onClick={() => setShowAllPendingPayments((showing) => !showing)}
                       aria-expanded={showAllPendingPayments}
                     >
                       {showAllPendingPayments
@@ -2143,8 +1992,7 @@ export default function MyClaims({
                 style={{
                   marginLeft: 6,
 
-                  background:
-                    filter === f ? "rgba(255,255,255,0.25)" : "#F3F4F6",
+                  background: filter === f ? "rgba(255,255,255,0.25)" : "#F3F4F6",
 
                   borderRadius: 999,
 
@@ -2194,9 +2042,7 @@ export default function MyClaims({
                 cursor: "pointer",
               }}
             >
-              <span
-                style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
-              >
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 {m === "table" ? (
                   <>
                     <List size={13} aria-hidden="true" /> Table
@@ -2267,16 +2113,12 @@ export default function MyClaims({
                         {c.product}
                       </button>
                     </div>
-                    <div
-                      style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}
-                    >
-                      {c.batch}
-                    </div>
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>{c.batch}</div>
                     <div
                       className="claims-card__seller"
                       style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
                     >
-                      Seller: {c.seller}
+                      Seller: {sellerLabel(c)}
                     </div>
                   </div>
                   <div className="claims-card__status">
@@ -2345,10 +2187,7 @@ export default function MyClaims({
                   </span>
                   <div style={{ display: "flex", gap: 6 }}>
                     {claimIsPayable(c) && (
-                      <PrimaryBtn
-                        size="sm"
-                        onClick={() => claimIsPayable(c) && setPayTarget(c)}
-                      >
+                      <PrimaryBtn size="sm" onClick={() => claimIsPayable(c) && setPayTarget(c)}>
                         Pay Now
                       </PrimaryBtn>
                     )}
@@ -2391,9 +2230,7 @@ export default function MyClaims({
                           ) || {
                             id: String(c.id),
 
-                            dbId: isSupabaseConfigured
-                              ? String(c.id)
-                              : undefined,
+                            dbId: isSupabaseConfigured ? String(c.id) : undefined,
 
                             product: c.product,
 
@@ -2406,9 +2243,9 @@ export default function MyClaims({
                             step: 3,
 
                             rated: false,
-                          }
+                          };
 
-                          setViewOrder(o)
+                          setViewOrder(o);
                         }}
                       >
                         View Order
@@ -2511,10 +2348,8 @@ export default function MyClaims({
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       <div className="flex items-center gap-1.5">
-                        <Avatar name={c.seller} size={20} />
-                        <span style={{ fontSize: 12, color: "#374151" }}>
-                          {c.seller}
-                        </span>
+                        <Avatar name={sellerLabel(c)} size={20} />
+                        <span style={{ fontSize: 12, color: "#374151" }}>{sellerLabel(c)}</span>
                       </div>
                     </td>
                     <td
@@ -2589,10 +2424,7 @@ export default function MyClaims({
                               Requested
                             </span>
                           ) : (
-                            <SecondaryBtn
-                              size="sm"
-                              onClick={() => setExtTarget(c)}
-                            >
+                            <SecondaryBtn size="sm" onClick={() => setExtTarget(c)}>
                               Request Extension
                             </SecondaryBtn>
                           ))}
@@ -2611,9 +2443,7 @@ export default function MyClaims({
                               ) || {
                                 id: String(c.id),
 
-                                dbId: isSupabaseConfigured
-                                  ? String(c.id)
-                                  : undefined,
+                                dbId: isSupabaseConfigured ? String(c.id) : undefined,
 
                                 product: c.product,
 
@@ -2626,9 +2456,9 @@ export default function MyClaims({
                                 step: 3,
 
                                 rated: false,
-                              }
+                              };
 
-                              setViewOrder(o)
+                              setViewOrder(o);
                             }}
                           >
                             View Order
@@ -2667,13 +2497,12 @@ export default function MyClaims({
           contactPrefill={user.fb || ""}
           onSubmit={async (item, method, refNo, receipt, details) => {
             const claim = claimsToPay.find(
-              (candidate) =>
-                candidate.id === item.id && claimIsPayable(candidate),
-            )
+              (candidate) => candidate.id === item.id && claimIsPayable(candidate),
+            );
 
-            if (!claim) return false
+            if (!claim) return false;
 
-            return handlePay(claim, method, refNo, receipt, details)
+            return handlePay(claim, method, refNo, receipt, details);
           }}
           onClose={() => setShowBatchCheckout(false)}
         />
@@ -2711,8 +2540,7 @@ export default function MyClaims({
             batches
               .find(
                 (candidate) =>
-                  candidate.title === payTarget.batch &&
-                  candidate.seller === payTarget.seller,
+                  candidate.title === payTarget.batch && candidate.seller === payTarget.seller,
               )
               ?.products.find((product) =>
                 payTarget.productId
@@ -2738,21 +2566,19 @@ export default function MyClaims({
           <div className="buyer-claim-item-preview">
             <div className="buyer-claim-item-preview__photo">
               <img
-                src={
-                  itemPreviewProduct?.imageUrl ??
-                  productImageUrl(itemPreview.product, 900)
-                }
+                src={itemPreviewProduct?.imageUrl ?? productImageUrl(itemPreview.product, 900)}
                 alt={itemPreview.product}
               />
             </div>
             <div className="buyer-claim-item-preview__details">
               <h2>{itemPreview.product}</h2>
               <p>Batch: {itemPreview.batch}</p>
-              <p>Seller: {itemPreview.seller}</p>
+              <p>Seller: {sellerLabel(itemPreview)}</p>
               {itemPreviewProduct && (
                 <>
                   <strong>
-                    ₱{itemPreviewProduct.price.toLocaleString()} / {itemPreviewProduct.sellingUnit ?? "piece"}
+                    ₱{itemPreviewProduct.price.toLocaleString()} /{" "}
+                    {itemPreviewProduct.sellingUnit ?? "piece"}
                   </strong>
                   {itemPreviewProduct.sellingUnit === "box" && (
                     <p>{itemPreviewProduct.piecesPerBox ?? 1} pieces per box</p>
@@ -2780,16 +2606,17 @@ export default function MyClaims({
           width={420}
         >
           <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
-            {cancelTarget.groupOrderId ? "This item belongs to a Group Order and cannot be cancelled individually." : <>
-            Cancel your claim for <strong>{cancelTarget.product}</strong>? This
-            cannot be undone, and the quantity will become available to other buyers.
-            </>}
+            {cancelTarget.groupOrderId ? (
+              "This item belongs to a Group Order and cannot be cancelled individually."
+            ) : (
+              <>
+                Cancel your claim for <strong>{cancelTarget.product}</strong>? This cannot be
+                undone, and the quantity will become available to other buyers.
+              </>
+            )}
           </p>
           <div className="kargo-modal-actions">
-            <SecondaryBtn
-              onClick={() => setCancelTarget(null)}
-              disabled={cancelling}
-            >
+            <SecondaryBtn onClick={() => setCancelTarget(null)} disabled={cancelling}>
               {cancelTarget.groupOrderId ? "Close" : "Keep Claim"}
             </SecondaryBtn>
             <PrimaryBtn
@@ -2815,68 +2642,55 @@ export default function MyClaims({
                   hours,
 
                   reason,
-                )
+                );
               } catch (error) {
-                alert(
-                  error instanceof Error
-                    ? error.message
-                    : "Unable to request extension.",
-                )
+                alert(error instanceof Error ? error.message : "Unable to request extension.");
 
-                return
+                return;
               }
             }
 
             setClaims((prev) =>
               prev.map((c) =>
                 c.id === extTarget.id
-                  ? { ...c, extensionRequested: true, extensionStatus: "pending", extensionRequestedHours: hours }
+                  ? {
+                      ...c,
+                      extensionRequested: true,
+                      extensionStatus: "pending",
+                      extensionRequestedHours: hours,
+                    }
                   : c,
               ),
-            )
+            );
 
-            setExtTarget(null)
+            setExtTarget(null);
           }}
           onClose={() => setExtTarget(null)}
         />
       )}
       {pinTarget && (
-        <Modal
-          title="Update delivery location"
-          onClose={() => setPinTarget(null)}
-          width={560}
-        >
+        <Modal title="Update delivery location" onClose={() => setPinTarget(null)} width={560}>
           <div className="space-y-4">
             <p className="text-sm leading-6 text-gray-600">
-              Move the pin or paste a corrected Google Maps link. Your payment
-              timer stays paused until the seller confirms the location and sets
-              the shipping fee.
+              Move the pin or paste a corrected Google Maps link. Your payment timer stays paused
+              until the seller confirms the location and sets the shipping fee.
             </p>
             <LocationPinPicker value={pinDraft} onChange={setPinDraft} />
             <div className="flex justify-end gap-3 max-[480px]:flex-col-reverse">
-              <SecondaryBtn onClick={() => setPinTarget(null)}>
-                Cancel
-              </SecondaryBtn>
+              <SecondaryBtn onClick={() => setPinTarget(null)}>Cancel</SecondaryBtn>
               <PrimaryBtn
                 disabled={
-                  !pinDraft.url &&
-                  (pinDraft.lat === undefined || pinDraft.lng === undefined)
+                  !pinDraft.url && (pinDraft.lat === undefined || pinDraft.lng === undefined)
                 }
                 onClick={async () => {
                   if (isSupabaseConfigured) {
                     if (pinTarget.groupOrderId) {
-                      await kargoApi.updateGroupDeliveryPin(
-                        pinTarget.groupOrderId,
-                        pinDraft,
-                      )
+                      await kargoApi.updateGroupDeliveryPin(pinTarget.groupOrderId, pinDraft);
                     } else {
-                      await kargoApi.updateOrderDeliveryPin(
-                        String(pinTarget.id),
-                        pinDraft,
-                      )
+                      await kargoApi.updateOrderDeliveryPin(String(pinTarget.id), pinDraft);
                     }
 
-                    await refreshData()
+                    await refreshData();
                   } else {
                     const update = {
                       deliveryPinLat: pinDraft.lat,
@@ -2888,27 +2702,24 @@ export default function MyClaims({
                       deliveryPinAddress: pinDraft.address,
 
                       shippingState: "waiting_for_seller" as const,
-                    }
+                    };
 
                     setClaims((current) =>
                       current.map((claim) =>
-                        claim.id === pinTarget.id
-                          ? { ...claim, ...update }
-                          : claim,
+                        claim.id === pinTarget.id ? { ...claim, ...update } : claim,
                       ),
-                    )
+                    );
 
                     setToPay((current) =>
                       current.map((payment) =>
-                        String(payment.orderId ?? payment.id) ===
-                        String(pinTarget.id)
+                        String(payment.orderId ?? payment.id) === String(pinTarget.id)
                           ? { ...payment, ...update }
                           : payment,
                       ),
-                    )
+                    );
                   }
 
-                  setPinTarget(null)
+                  setPinTarget(null);
                 }}
               >
                 Save corrected location
@@ -2917,9 +2728,7 @@ export default function MyClaims({
           </div>
         </Modal>
       )}
-      {paymentSuccess && (
-        <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />
-      )}
+      {paymentSuccess && <PaymentSuccessToast onClose={() => setPaymentSuccess(false)} />}
     </div>
-  )
+  );
 }

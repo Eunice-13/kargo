@@ -18,6 +18,7 @@ import {
 import type { BatchType } from "@/types";
 import { batchCardClosed } from "./batchAvailability";
 import { sortClosedLast } from "./batchSort";
+import { sellerLabel } from "./sellerLabel";
 import ClosedBatchBadge from "./ClosedBatchBadge";
 
 /**
@@ -192,8 +193,8 @@ function BatchCard({
       tabIndex={closed ? undefined : 0}
       aria-label={
         closed
-          ? `${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${batch.seller}, batch closed`
-          : `Open ${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${batch.seller}, ${batch.trips}, ${batch.claimed} of ${batch.items} claimed${
+          ? `${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${sellerLabel(batch)}, batch closed`
+          : `Open ${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${sellerLabel(batch)}, ${batch.trips}, ${batch.claimed} of ${batch.items} claimed${
               rank === undefined ? "" : `, ranked #${rank} by buyer favorites`
             }`
       }
@@ -244,8 +245,8 @@ function BatchCard({
       <div className="buyer-batch-card__body">
         <h3>{batch.title}</h3>
         <div className="buyer-batch-card__seller">
-          <Avatar name={batch.seller} size={21} />
-          <span>{batch.seller}</span>
+          <Avatar name={sellerLabel(batch)} size={21} />
+          <span>{sellerLabel(batch)}</span>
         </div>
         <div className="buyer-batch-card__date">
           <CalendarDays size={12} aria-hidden="true" />
@@ -457,8 +458,8 @@ function PopularSection({
                     disabled={batchCardClosed(batch)}
                     aria-label={
                       batchCardClosed(batch)
-                        ? `${batch.title} by ${batch.seller}, batch closed`
-                        : `Open ${batch.title} by ${batch.seller}, ranked #${rank} by buyer favorites`
+                        ? `${batch.title} by ${sellerLabel(batch)}, batch closed`
+                        : `Open ${batch.title} by ${sellerLabel(batch)}, ranked #${rank} by buyer favorites`
                     }
                     onClick={() => onOpenBatch(batch)}
                   >
@@ -474,7 +475,7 @@ function PopularSection({
                     </span>
                     <span className="buyer-podium__peek-body" aria-hidden="true">
                       <span className="buyer-podium__peek-title">{batch.title}</span>
-                      <span className="buyer-podium__peek-seller">{batch.seller}</span>
+                      <span className="buyer-podium__peek-seller">{sellerLabel(batch)}</span>
                       <span className="buyer-podium__peek-date">{batch.trips}</span>
                       <span className="buyer-podium__peek-progress">
                         <span>
@@ -527,7 +528,7 @@ function PopularSection({
                             }`}
                             role="button"
                             tabIndex={0}
-                            aria-label={`Open ${batch.title} by ${batch.seller}, ranked #${rank} by buyer favorites, ${batch.claimed} of ${batch.items} claimed`}
+                            aria-label={`Open ${batch.title} by ${sellerLabel(batch)}, ranked #${rank} by buyer favorites, ${batch.claimed} of ${batch.items} claimed`}
                             onClick={() => {
                               setShowTopTen(false);
                               onOpenBatch(batch);
@@ -555,7 +556,7 @@ function PopularSection({
                             <span className="buyer-toplist__body">
                               <span className="buyer-toplist__title">{batch.title}</span>
                               <span className="buyer-toplist__meta">
-                                {batch.seller} · {normalizeBatchCategory(batch.category)} ·{" "}
+                                {sellerLabel(batch)} · {normalizeBatchCategory(batch.category)} ·{" "}
                                 {batch.claimed}/{batch.items} claimed
                               </span>
                               <span className="buyer-toplist__bar" aria-hidden="true">
