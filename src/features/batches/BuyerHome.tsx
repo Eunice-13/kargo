@@ -387,9 +387,12 @@ function PopularSection({
   // behind the podium, but only in pairs: one card per side at a time, so a
   // filtered list never leaves the deck stacked on a single edge.
   const podium = batches.slice(0, 3);
+  // Ranks 4-7 fan out behind the podium, alternating sides. We show every
+  // available extra (up to 4) — including a lone odd one — so the podium count
+  // always matches the "See the top N" list instead of silently dropping a
+  // single unpaired batch.
   const extraCount = Math.min(4, batches.length - podium.length);
-  const pairedCount = extraCount - (extraCount % 2);
-  const peeks = batches.slice(3, 3 + pairedCount).map((batch, index) => ({
+  const peeks = batches.slice(3, 3 + extraCount).map((batch, index) => ({
     batch,
     rank: index + 4,
     side: index % 2 === 0 ? "left" : "right",
@@ -418,7 +421,9 @@ function PopularSection({
       </div>
 
       {batches.length === 0 ? (
-        <div className="buyer-home-empty">No batches match these filters.</div>
+        <div className="buyer-home-empty">
+          No favorited batches here yet. Tap the heart on a batch to show interest.
+        </div>
       ) : (
         <>
           <div className="buyer-podium">
@@ -673,18 +678,26 @@ export default function BuyerHome({
       ),
     [filtered],
   );
+  // "Popular" means ranked strictly by buyer favorites, so only batches with at
+  // least one reaction qualify and the heart count alone decides the order.
+  // Note: this list is deliberately NOT run through sortClosedLast — a closed
+  // batch with more hearts still outranks an open one with fewer, because the
+  // section is "ranked by favorites", not "what you can still join". The card
+  // itself still shows closed batches as gray/disabled. Ties break by newest,
+  // then id, for a stable order.
   const popular = useMemo(
     () =>
-      sortClosedLast(
-        [...filtered].sort((a, b) => {
+      filtered
+        .filter((batch) => (batch.reactionCount ?? 0) > 0)
+        .sort((a, b) => {
           const reactionDifference = (b.reactionCount ?? 0) - (a.reactionCount ?? 0);
           if (reactionDifference !== 0) return reactionDifference;
           const createdDifference =
             new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
           if (createdDifference !== 0) return createdDifference;
           return Number(b.id) - Number(a.id);
-        }),
-      ).slice(0, 10),
+        })
+        .slice(0, 10),
     [filtered],
   );
   return (
