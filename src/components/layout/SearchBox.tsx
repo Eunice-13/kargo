@@ -125,12 +125,7 @@ export default function SearchBox({
           }}
           className="placeholder:text-gray-400"
         />
-        <button
-          type="button"
-          className="kargo-search-submit"
-          aria-label="Search"
-          onClick={submitSearch}
-        >
+        <span className="kargo-search-submit" aria-hidden="true">
           <svg
             width="16"
             height="16"
@@ -152,7 +147,7 @@ export default function SearchBox({
               strokeLinecap="round"
             />
           </svg>
-        </button>
+        </span>
       </form>
       {searchOpen && searchQ && (
         <div

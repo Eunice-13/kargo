@@ -6687,10 +6687,13 @@ textarea::placeholder {
   flex: 0 0 34px;
   place-items: center;
   border: 0;
-  border-radius: 50%;
-  background: #74f1df;
-  color: #2026b3;
-  cursor: pointer;
+  /* Decorative only: just the magnifying-glass glyph — no circular pill behind
+     it — tinted with the same token as the active tab icon. */
+  border-radius: 0;
+  background: transparent;
+  color: var(--kargo-coral);
+  cursor: default;
+  pointer-events: none;
 }
 
 .seller-shell-header > div:last-child {
