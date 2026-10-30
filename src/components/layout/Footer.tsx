@@ -35,14 +35,15 @@ export default function Footer({ role }: { role?: Role }) {
       <footer
         className="kargo-footer kargo-footer--admin"
         style={{
-          padding: "18px 24px",
+          padding: "var(--admin-footer-padding, 18px 24px)",
           borderTop: "1px solid var(--kargo-line)",
           background: "var(--kargo-surface)",
           color: "var(--kargo-muted)",
           fontSize: 12,
           display: "flex",
           flexWrap: "wrap",
-          gap: 8,
+          columnGap: "var(--admin-footer-column-gap, 8px)",
+          rowGap: "var(--admin-footer-row-gap, 8px)",
           alignItems: "center",
           justifyContent: "space-between",
         }}

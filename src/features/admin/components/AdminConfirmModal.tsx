@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Check, ShieldAlert } from "lucide-react";
 
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared";
+import { Modal } from "@/components/shared";
+import AdminActionButton, {
+  adminActionTone,
+  type AdminActionKind,
+  type AdminActionTone,
+} from "./AdminActionButton";
 
 // Destructive-action confirmation: consequence copy, a required reason, and an
 // optional typed confirmation (for suspend/revoke/cancel/override). `tone`
@@ -13,6 +18,7 @@ export default function AdminConfirmModal({
   confirmWord,
   minReason = 8,
   tone = "danger",
+  action,
   onConfirm,
   onClose,
 }: {
@@ -22,7 +28,8 @@ export default function AdminConfirmModal({
   // When set, the admin must type this exactly (e.g. the target's name).
   confirmWord?: string;
   minReason?: number;
-  tone?: "danger" | "default";
+  tone?: AdminActionTone | "default";
+  action?: AdminActionKind;
   onConfirm: (reason: string) => Promise<void>;
   onClose: () => void;
 }) {
@@ -31,7 +38,12 @@ export default function AdminConfirmModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const destructive = tone === "danger";
+  const resolvedTone = action
+    ? adminActionTone(action)
+    : tone === "default"
+      ? "neutral"
+      : tone;
+  const destructive = resolvedTone === "danger";
   const reasonLength = reason.trim().length;
   const reasonOk = reasonLength >= minReason;
   const typedOk = !confirmWord || typed.trim() === confirmWord.trim();
@@ -43,9 +55,40 @@ export default function AdminConfirmModal({
       title={title}
       variant={destructive ? "danger" : "confirm"}
       width={492}
-      className="admin-modal"
-      overlayClassName="admin-modal-overlay"
+      className="admin-modal admin-confirm-modal"
+      overlayClassName="admin-modal-overlay admin-record-modal-overlay"
       onClose={onClose}
+      footer={
+        <div className="admin-modal-footer">
+          <AdminActionButton action="dismiss" onClick={onClose} disabled={saving}>
+            Cancel
+          </AdminActionButton>
+          <AdminActionButton
+            action={action}
+            tone={resolvedTone}
+            disabled={!valid || saving}
+            loading={saving}
+            onClick={async () => {
+              setSaving(true);
+              setError(null);
+              try {
+                await onConfirm(reason.trim());
+                onClose();
+              } catch (err) {
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : "Could not complete the action. Please try again.",
+                );
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            {confirmLabel}
+          </AdminActionButton>
+        </div>
+      }
     >
       <div className="admin-confirm">
         <div className={`admin-callout admin-callout--${destructive ? "danger" : "info"}`}>
@@ -116,35 +159,6 @@ export default function AdminConfirmModal({
             {error}
           </p>
         )}
-      </div>
-
-      <div className="admin-modal-footer">
-        <SecondaryBtn onClick={onClose} disabled={saving}>
-          Cancel
-        </SecondaryBtn>
-        <PrimaryBtn
-          disabled={!valid || saving}
-          loading={saving}
-          style={destructive ? { background: "#B42318" } : undefined}
-          onClick={async () => {
-            setSaving(true);
-            setError(null);
-            try {
-              await onConfirm(reason.trim());
-              onClose();
-            } catch (err) {
-              setError(
-                err instanceof Error
-                  ? err.message
-                  : "Could not complete the action. Please try again.",
-              );
-            } finally {
-              setSaving(false);
-            }
-          }}
-        >
-          {confirmLabel}
-        </PrimaryBtn>
       </div>
     </Modal>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { Card, CardSkeleton, PrimaryBtn } from "@/components/shared";
+import { Avatar, Card, CardSkeleton, PrimaryBtn, ProductThumb } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
 import { adminApi } from "@/services";
 import { consumeAdminIntent } from "@/state/navIntent";
@@ -273,9 +273,12 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
                   <tr
                     key={o.id}
                     onClick={() => setSelected(o.id)}
+                    tabIndex={0}
                     style={{ borderTop: "1px solid #F3F4F6", cursor: "pointer" }}
+                    className="admin-clickable-row"
                   >
                     <td
+                      data-label="Order #"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
@@ -285,16 +288,41 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
                     >
                       {o.orderNumber}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12.5, color: "#374151" }}>
-                      {o.product}
-                    </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
-                      {o.buyer}
-                    </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
-                      {o.seller}
+                    <td
+                      data-label="Product"
+                      style={{ padding: "10px 14px", fontSize: 12.5, color: "#374151" }}
+                    >
+                      <span className="contents max-md:flex max-md:items-center max-md:gap-2">
+                        <span className="hidden max-md:inline-flex">
+                          <ProductThumb name={o.product} />
+                        </span>
+                        <span>{o.product}</span>
+                      </span>
                     </td>
                     <td
+                      data-label="Buyer"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
+                      <span className="contents max-md:flex max-md:items-center max-md:gap-2">
+                        <span className="hidden max-md:inline-flex">
+                          <Avatar name={o.buyer} size={22} />
+                        </span>
+                        <span>{o.buyer || "—"}</span>
+                      </span>
+                    </td>
+                    <td
+                      data-label="Seller"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
+                      <span className="contents max-md:flex max-md:items-center max-md:gap-2">
+                        <span className="hidden max-md:inline-flex">
+                          <Avatar name={o.seller} size={22} />
+                        </span>
+                        <span>{o.seller || "—"}</span>
+                      </span>
+                    </td>
+                    <td
+                      data-label="Amount"
                       style={{
                         padding: "10px 14px",
                         fontSize: 13,
@@ -304,13 +332,14 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
                     >
                       {peso(o.amount)}
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Status" style={{ padding: "10px 14px" }}>
                       <AdminBadge
                         tone={toneForStatus(o.status)}
                         label={o.status.replace(/_/g, " ")}
                       />
                     </td>
                     <td
+                      data-label="Created"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
@@ -319,6 +348,13 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
                       }}
                     >
                       {fmtDate(o.createdAt)}
+                    </td>
+                    <td
+                      className="admin-card-detail-cell"
+                      data-label=""
+                      style={{ display: "none" }}
+                    >
+                      {"\u203A"}
                     </td>
                   </tr>
                 ))}
@@ -458,9 +494,12 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
                   <tr
                     key={p.id}
                     onClick={() => setSelected(p.id)}
+                    tabIndex={0}
                     style={{ borderTop: "1px solid #F3F4F6", cursor: "pointer" }}
+                    className="admin-clickable-row"
                   >
                     <td
+                      data-label="Order #"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
@@ -470,16 +509,36 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
                     >
                       {p.orderNumber}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
-                      {p.buyer}
+                    <td
+                      data-label="Buyer"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
+                      <span className="contents max-md:flex max-md:items-center max-md:gap-2">
+                        <span className="hidden max-md:inline-flex">
+                          <Avatar name={p.buyer} size={22} />
+                        </span>
+                        <span>{p.buyer || "—"}</span>
+                      </span>
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
-                      {p.seller}
+                    <td
+                      data-label="Seller"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
+                      <span className="contents max-md:flex max-md:items-center max-md:gap-2">
+                        <span className="hidden max-md:inline-flex">
+                          <Avatar name={p.seller} size={22} />
+                        </span>
+                        <span>{p.seller || "—"}</span>
+                      </span>
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12.5, color: "#374151" }}>
+                    <td
+                      data-label="Method"
+                      style={{ padding: "10px 14px", fontSize: 12.5, color: "#374151" }}
+                    >
                       {p.method}
                     </td>
                     <td
+                      data-label="Amount"
                       style={{
                         padding: "10px 14px",
                         fontSize: 13,
@@ -490,6 +549,7 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
                       {peso(p.amount)}
                     </td>
                     <td
+                      data-label="Status"
                       style={{
                         padding: "10px 14px",
                         display: "flex",
@@ -504,6 +564,7 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
                       {over24(p) && <AdminBadge tone="warn" label="24h+" />}
                     </td>
                     <td
+                      data-label="Submitted"
                       style={{
                         padding: "10px 14px",
                         fontSize: 12,
@@ -512,6 +573,13 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
                       }}
                     >
                       {fmtDate(p.submittedAt)}
+                    </td>
+                    <td
+                      className="admin-card-detail-cell"
+                      data-label=""
+                      style={{ display: "none" }}
+                    >
+                      {"\u203A"}
                     </td>
                   </tr>
                 ))}
@@ -616,6 +684,7 @@ function CombinedSection() {
                 {rows.map((c) => (
                   <tr key={c.id} style={{ borderTop: "1px solid #F3F4F6" }}>
                     <td
+                      data-label="Group"
                       style={{
                         padding: "10px 14px",
                         fontSize: 11,
@@ -625,19 +694,41 @@ function CombinedSection() {
                     >
                       {c.id.slice(0, 8)}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
-                      {c.buyer}
+                    <td
+                      data-label="Buyer"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
+                      <span className="contents max-md:flex max-md:items-center max-md:gap-2">
+                        <span className="hidden max-md:inline-flex">
+                          <Avatar name={c.buyer} size={22} />
+                        </span>
+                        <span>{c.buyer || "—"}</span>
+                      </span>
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}>
-                      {c.seller}
+                    <td
+                      data-label="Seller"
+                      style={{ padding: "10px 14px", fontSize: 12, color: "var(--kargo-muted)" }}
+                    >
+                      <span className="contents max-md:flex max-md:items-center max-md:gap-2">
+                        <span className="hidden max-md:inline-flex">
+                          <Avatar name={c.seller} size={22} />
+                        </span>
+                        <span>{c.seller || "—"}</span>
+                      </span>
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 13, color: "#374151" }}>
+                    <td
+                      data-label="Members"
+                      style={{ padding: "10px 14px", fontSize: 13, color: "#374151" }}
+                    >
                       {c.memberCount}
                     </td>
-                    <td style={{ padding: "10px 14px", fontSize: 13, color: "var(--kargo-ink)" }}>
+                    <td
+                      data-label="Shipping fee"
+                      style={{ padding: "10px 14px", fontSize: 13, color: "var(--kargo-ink)" }}
+                    >
                       {c.shippingFee != null ? peso(c.shippingFee) : "—"}
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td data-label="Status" style={{ padding: "10px 14px" }}>
                       <AdminBadge
                         tone={toneForStatus(c.status)}
                         label={c.status.replace(/_/g, " ")}
