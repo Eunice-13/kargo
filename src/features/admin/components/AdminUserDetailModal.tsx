@@ -47,6 +47,7 @@ export default function AdminUserDetailModal({
       <Modal
         title={data?.name ?? "Account"}
         variant="detail"
+        showTitle={false}
         width={720}
         className="admin-modal admin-record-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"

@@ -102,6 +102,7 @@ export default function Modal({
   width = 480,
   topOffset = HEADER_HEIGHT,
   variant,
+  showTitle = true,
   showTitleIcon = true,
   className = "",
   overlayClassName = "",
@@ -113,6 +114,7 @@ export default function Modal({
   width?: number
   topOffset?: number
   variant?: ModalVariant
+  showTitle?: boolean
   showTitleIcon?: boolean
   className?: string
   overlayClassName?: string
@@ -211,21 +213,29 @@ export default function Modal({
           maxHeight: `calc(100dvh - ${topOffset + 32}px)`,
         }}
       >
-        <header className="kargo-modal__header">
-          <div className="kargo-modal__title-group">
-            {title && showTitleIcon && (
-              <span className="kargo-modal__title-icon" aria-hidden="true">
-                <VariantIcon size={18} />
-              </span>
-            )}
-            {title ? (
-              <h3 id={titleId}>{title}</h3>
-            ) : (
-              <span id={titleId} className="sr-only">
-                Dialog
-              </span>
-            )}
-          </div>
+        <header
+          className={`kargo-modal__header${showTitle ? "" : " kargo-modal__header--title-hidden"}`}
+        >
+          {showTitle ? (
+            <div className="kargo-modal__title-group">
+              {title && showTitleIcon && (
+                <span className="kargo-modal__title-icon" aria-hidden="true">
+                  <VariantIcon size={18} />
+                </span>
+              )}
+              {title ? (
+                <h3 id={titleId}>{title}</h3>
+              ) : (
+                <span id={titleId} className="sr-only">
+                  Dialog
+                </span>
+              )}
+            </div>
+          ) : (
+            <span id={titleId} className="sr-only">
+              {title || "Dialog"}
+            </span>
+          )}
           <button
             type="button"
             className="kargo-modal__close"

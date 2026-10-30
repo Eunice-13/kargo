@@ -57,6 +57,7 @@ export default function AdminPaymentDetailModal({
       <Modal
         title={`Payment · ${data?.orderNumber ?? ""}`}
         variant="detail"
+        showTitle={false}
         width={640}
         className="admin-modal admin-record-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"
@@ -93,7 +94,7 @@ export default function AdminPaymentDetailModal({
             <div className="admin-detail-hero">
               <div className="admin-detail-hero__identity">
                 <h2 className="admin-amount">{peso(data.amount)}</h2>
-                <p>{data.orderNumber ? `Order ${data.orderNumber}` : "Payment submission"}</p>
+                <p>{data.orderNumber ? `Payment · ${data.orderNumber}` : "Payment submission"}</p>
               </div>
               <div className="admin-detail-hero__badges">
                 <AdminBadge

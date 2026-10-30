@@ -58,6 +58,7 @@ export default function AdminBatchDetailModal({
       <Modal
         title={data?.title ?? "Batch"}
         variant="detail"
+        showTitle={false}
         width={680}
         className="admin-modal admin-record-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"

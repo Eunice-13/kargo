@@ -12980,6 +12980,12 @@ textarea::placeholder {
   content: "";
 }
 
+.admin-record-modal > .kargo-modal__header--title-hidden {
+  min-height: 50px;
+  justify-content: flex-end;
+  padding: 6px 12px !important;
+}
+
 .kargo-modal__header h3 {
   max-width: 34ch;
   font-size: 18px !important;

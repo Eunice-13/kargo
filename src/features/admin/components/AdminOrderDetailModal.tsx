@@ -45,6 +45,7 @@ export default function AdminOrderDetailModal({
       <Modal
         title={data?.orderNumber ?? "Order"}
         variant="detail"
+        showTitle={false}
         width={640}
         className="admin-modal admin-record-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"
@@ -81,7 +82,7 @@ export default function AdminOrderDetailModal({
               <div className="admin-detail-hero__identity">
                 <h2>{data.product}</h2>
                 <p>
-                  Qty {data.quantity} · {peso(data.amount)}
+                  {data.orderNumber} · Qty {data.quantity} · {peso(data.amount)}
                 </p>
               </div>
               <div className="admin-detail-hero__badges">
