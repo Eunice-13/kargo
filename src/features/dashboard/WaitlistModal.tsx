@@ -1,8 +1,8 @@
-import { Clock3 } from "lucide-react"
-import type { WaitlistEntry } from "@/types"
-import { INDIGO, CYAN_L } from "@/constants/theme"
-import { Modal, ProductThumb, SecondaryBtn } from "@/components/shared"
-import { sortWaitlistUpcoming } from "@/data/waitlist"
+import { Clock3 } from "lucide-react";
+import type { WaitlistEntry } from "@/types";
+import { INDIGO, CYAN_L } from "@/constants/theme";
+import { Modal, ProductThumb, SecondaryBtn } from "@/components/shared";
+import { sortWaitlistUpcoming } from "@/data/waitlist";
 
 export default function WaitlistModal({
   entries,
@@ -10,23 +10,27 @@ export default function WaitlistModal({
   onSelect,
   onClose,
   onViewBatch,
+  batchExists,
 }: {
-  entries: WaitlistEntry[]
-  activeId: string | null
-  onSelect: (id: string) => void
-  onClose: () => void
-  onViewBatch: (batchId: number) => void
+  entries: WaitlistEntry[];
+  activeId: string | null;
+  onSelect: (id: string) => void;
+  onClose: () => void;
+  onViewBatch: (batchId: number) => void;
+  // Whether the waitlisted batch still exists. A deleted/closed-and-removed
+  // batch can't be opened, so we hide "View batch" and say so instead of
+  // navigating to a blank page.
+  batchExists: (batchId: number) => boolean;
 }) {
-  const sorted = sortWaitlistUpcoming(entries)
-  const active =
-    sorted.find((e) => e.id === activeId) ?? sorted[0] ?? null
+  const sorted = sortWaitlistUpcoming(entries);
+  const active = sorted.find((e) => e.id === activeId) ?? sorted[0] ?? null;
 
   return (
     <Modal title="Your Waitlist" onClose={onClose} width={520}>
       {sorted.length === 0 ? (
         <div style={{ fontSize: 13, color: "#6B7280" }}>
-          You are not on any product waitlists yet. Join a sold-out item from a
-          batch to see it here.
+          You are not on any product waitlists yet. Join a sold-out item from a batch to see it
+          here.
         </div>
       ) : (
         <div className="space-y-4">
@@ -84,12 +88,29 @@ export default function WaitlistModal({
                   </div>
                 </div>
               </div>
-              <SecondaryBtn
-                onClick={() => onViewBatch(active.batchId)}
-                style={{ marginTop: 10, width: "100%", justifyContent: "center" }}
-              >
-                View batch
-              </SecondaryBtn>
+              {batchExists(active.batchId) ? (
+                <SecondaryBtn
+                  onClick={() => onViewBatch(active.batchId)}
+                  style={{ marginTop: 10, width: "100%", justifyContent: "center" }}
+                >
+                  View batch
+                </SecondaryBtn>
+              ) : (
+                <div
+                  style={{
+                    marginTop: 10,
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "#FEF2F2",
+                    border: "1px solid #FAD4D4",
+                    fontSize: 12,
+                    color: "#8A2C2C",
+                    textAlign: "center" as const,
+                  }}
+                >
+                  This batch is no longer available.
+                </div>
+              )}
             </div>
           )}
           <div style={{ fontSize: 12, fontWeight: 600, color: "#6B7280" }}>
@@ -97,7 +118,7 @@ export default function WaitlistModal({
           </div>
           <div className="space-y-2">
             {sorted.map((entry) => {
-              const isActive = active?.id === entry.id
+              const isActive = active?.id === entry.id;
               return (
                 <button
                   key={entry.id}
@@ -134,6 +155,12 @@ export default function WaitlistModal({
                     </div>
                     <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>
                       {entry.seller} · {entry.trips}
+                      {!batchExists(entry.batchId) && (
+                        <span style={{ color: "#B91C1C", fontWeight: 600 }}>
+                          {" "}
+                          · No longer available
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div
@@ -147,11 +174,11 @@ export default function WaitlistModal({
                     #{entry.position}
                   </div>
                 </button>
-              )
+              );
             })}
           </div>
         </div>
       )}
     </Modal>
-  )
+  );
 }
