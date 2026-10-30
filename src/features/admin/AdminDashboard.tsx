@@ -183,28 +183,28 @@ export default function AdminDashboard({ setTab }: SharedState) {
                 <AdminEmptyText>No seller sales in the last 30 days.</AdminEmptyText>
               ) : (
                 <ul className="admin-seller-list">
-                  {[...data.topSellers]
-                    .sort((a, b) => b.orders - a.orders)
-                    .map((s, index) => (
-                      <li key={s.id} className="admin-seller-row">
-                        <button
-                          type="button"
-                          className="admin-seller-row__open"
-                          onClick={() => goto({ tab: "Users", filter: "seller", targetId: s.id })}
-                          aria-label={`Open ${s.shop} — ${s.orders} orders`}
-                        >
-                          <span className="admin-seller-row__rank" aria-hidden="true">
-                            {index + 1}
-                          </span>
-                          <Avatar name={s.shop} size={28} />
-                          <span className="admin-seller-row__shop">{s.shop}</span>
-                          <strong className="admin-seller-row__orders">
-                            {s.orders.toLocaleString()} {s.orders === 1 ? "order" : "orders"}
-                          </strong>
-                          <span className="admin-seller-row__gmv">{peso(s.gmv)}</span>
-                        </button>
-                      </li>
-                    ))}
+                  {/* The RPC already returns sellers ranked by 30-day confirmed
+                      order count (GMV breaks ties), so trust that order. */}
+                  {data.topSellers.map((s, index) => (
+                    <li key={s.id} className="admin-seller-row">
+                      <button
+                        type="button"
+                        className="admin-seller-row__open"
+                        onClick={() => goto({ tab: "Users", filter: "seller", targetId: s.id })}
+                        aria-label={`Open ${s.shop} — ${s.orders} orders`}
+                      >
+                        <span className="admin-seller-row__rank" aria-hidden="true">
+                          {index + 1}
+                        </span>
+                        <Avatar name={s.shop} size={28} />
+                        <span className="admin-seller-row__shop">{s.shop}</span>
+                        <strong className="admin-seller-row__orders">
+                          {s.orders.toLocaleString()} {s.orders === 1 ? "order" : "orders"}
+                        </strong>
+                        <span className="admin-seller-row__gmv">{peso(s.gmv)}</span>
+                      </button>
+                    </li>
+                  ))}
                 </ul>
               )}
             </Card>
