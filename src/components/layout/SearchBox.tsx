@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Package, ShoppingBasket, UserRound } from "lucide-react"
 
@@ -25,6 +25,17 @@ export default function SearchBox({
 }) {
   const [searchQ, setSearchQ] = useState("")
   const [searchOpen, setSearchOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  // Close the results dropdown on any pointer press outside the search bar. It
+  // reopens only when the input is focused/typed in again.
+  useEffect(() => {
+    const dismiss = (event: PointerEvent) => {
+      if (!wrapRef.current?.contains(event.target as Node)) setSearchOpen(false)
+    }
+    document.addEventListener("pointerdown", dismiss)
+    return () => document.removeEventListener("pointerdown", dismiss)
+  }, [])
 
   const openBatch = (batchId: number) => {
     setSearchOpen(false)
@@ -81,6 +92,7 @@ export default function SearchBox({
 
   return (
     <div
+      ref={wrapRef}
       className="kargo-search-wrap flex-1 max-w-lg mx-auto"
       style={{ position: "relative" }}
     >
@@ -110,6 +122,9 @@ export default function SearchBox({
             window.requestAnimationFrame(() => {
               if (input.scrollWidth <= input.clientWidth) input.scrollLeft = 0
             })
+          }}
+          onFocus={() => {
+            if (searchQ.trim().length > 0) setSearchOpen(true)
           }}
           placeholder="Search batches or items"
           style={{
