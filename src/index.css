@@ -6697,12 +6697,19 @@ textarea::placeholder {
   margin-left: clamp(8px, 2vw, 30px);
 }
 
-.seller-shell-header > div:last-child > div:first-child > button {
+/* The bell is styled by identity, not DOM position. The old
+   `> div:last-child > div:first-child > button` selector only matched when the
+   bell was the first child of the actions row, so the buyer header — which has
+   a (desktop-hidden) mobile-search toggle sitting before the bell — missed the
+   rule and kept its boxed look. Targeting the trigger class makes the buyer and
+   seller bells identical: the white, box-free bell on the gradient header. The
+   admin header keeps its own treatment via `.admin-shell-header`. */
+.seller-shell-header:not(.admin-shell-header) .kargo-notification-trigger {
   border: 0 !important;
   background: transparent !important;
 }
 
-.seller-shell-header > div:last-child > div:first-child > button svg path {
+.seller-shell-header:not(.admin-shell-header) .kargo-notification-trigger svg path {
   fill: #fff;
 }
 
