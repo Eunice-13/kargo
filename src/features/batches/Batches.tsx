@@ -1,9 +1,6 @@
-import {
-  BATCH_CATEGORIES,
-  normalizeBatchCategory,
-} from "@/constants/categories"
+import { BATCH_CATEGORIES, normalizeBatchCategory } from "@/constants/categories";
 
-import { productAvailability } from "./productAvailability"
+import { productAvailability } from "./productAvailability";
 
 import {
   batchAllItemsLocked,
@@ -13,11 +10,11 @@ import {
   defaultReopenEndDate,
   formatBatchEndDate,
   todayInManila,
-} from "./batchAvailability"
+} from "./batchAvailability";
 
-import { canManageBatch, canOpenBatch } from "./batchAccess"
+import { canManageBatch, canOpenBatch } from "./batchAccess";
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 import {
   BarChart3,
@@ -28,20 +25,14 @@ import {
   ArrowLeft,
   ChevronDown,
   Plus,
-} from "lucide-react"
+} from "lucide-react";
 
-import type {
-  ClaimRow,
-  BatchType,
-  SharedState,
-  EntityId,
-  ClaimReservationInput,
-} from "@/types"
-import { INDIGO, CORAL, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
+import type { ClaimRow, BatchType, SharedState, EntityId, ClaimReservationInput } from "@/types";
+import { INDIGO, CORAL, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme";
 
-import { navIntent, subscribeNavIntent } from "@/state/navIntent"
+import { navIntent, subscribeNavIntent } from "@/state/navIntent";
 
-import { useScrollToTopOnRouteChange } from "@/state/routeScroll"
+import { useScrollToTopOnRouteChange } from "@/state/routeScroll";
 
 import {
   Modal,
@@ -53,32 +44,31 @@ import {
   Toggle,
   ShareButton,
   ExtensionRequestModal,
-} from "@/components/shared"
+} from "@/components/shared";
 
-import { isBatchSoldOut, sortSoldOutLast } from "./batchSort"
+import { isBatchSoldOut, sortSoldOutLast } from "./batchSort";
 
-import ClosedBatchBadge from "./ClosedBatchBadge"
+import ClosedBatchBadge from "./ClosedBatchBadge";
 
-import FinancialSummaryModal from "./FinancialSummaryModal"
+import FinancialSummaryModal from "./FinancialSummaryModal";
 
-import SellerDirectoryPage from "./SellerDirectoryPage"
+import SellerDirectoryPage from "./SellerDirectoryPage";
 
-import SellerShopPage from "./SellerShopPage"
+import SellerShopPage from "./SellerShopPage";
 
-import BatchPage from "./BatchPage"
+import BatchPage from "./BatchPage";
 
-import BuyerHome from "./BuyerHome"
+import BuyerHome, { type BuyerHomeAvailability } from "./BuyerHome";
 
-import { toggleBatchLock } from "./toggleBatchLock"
+import { toggleBatchLock } from "./toggleBatchLock";
 
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { isSupabaseConfigured } from "@/lib/supabase";
 
-import { kargoApi } from "@/services"
+import { kargoApi } from "@/services";
 
-import { formatBatchDateRange } from "@/services/batchDates"
+import { formatBatchDateRange } from "@/services/batchDates";
 
-
-export const COLS = 3
+export const COLS = 3;
 
 export default function Batches({
   batches,
@@ -107,39 +97,37 @@ export default function Batches({
 
   onNewBatch,
 }: SharedState & { onNewBatch: () => void }) {
-  const [batchPage, setBatchPage] = useState<BatchType | null>(null)
+  const [batchPage, setBatchPage] = useState<BatchType | null>(null);
 
-  const [waitlisted, setWaitlisted] = useState<Record<string, boolean>>({})
+  const [waitlisted, setWaitlisted] = useState<Record<string, boolean>>({});
 
-  const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({})
+  const [claimedKeys, setClaimedKeys] = useState<Record<string, boolean>>({});
 
-  const [catFilter, setCatFilter] = useState("All")
+  const [catFilter, setCatFilter] = useState("All");
 
-  const [dateFilter, setDateFilter] = useState("All")
+  const [dateFilter, setDateFilter] = useState("All");
 
-  const [reactingBatchIds, setReactingBatchIds] = useState<Set<number>>(
-    () => new Set(),
-  )
+  // The buyer home grid filters by join-window intent (open / closing soon /
+  // recently added) rather than the calendar month a batch was posted in.
+  const [homeAvailability, setHomeAvailability] = useState<BuyerHomeAvailability>("all");
 
-  const [sellerDir, setSellerDir] = useState(false)
-  const [batchReturnSeller, setBatchReturnSeller] = useState<string | null>(
-    null,
-  )
-  const [shopReturnBatch, setShopReturnBatch] = useState<BatchType | null>(null)
+  const [reactingBatchIds, setReactingBatchIds] = useState<Set<number>>(() => new Set());
+
+  const [sellerDir, setSellerDir] = useState(false);
+  const [batchReturnSeller, setBatchReturnSeller] = useState<string | null>(null);
+  const [shopReturnBatch, setShopReturnBatch] = useState<BatchType | null>(null);
   // Request Extension moved to the top of the Batches tab (3.7). A picker of
 
   // the buyer's extendable claims → the shared ExtensionRequestModal.
 
-  const [showExtPicker, setShowExtPicker] = useState(false)
+  const [showExtPicker, setShowExtPicker] = useState(false);
 
-  const [extTarget, setExtTarget] = useState<ClaimRow | null>(null)
+  const [extTarget, setExtTarget] = useState<ClaimRow | null>(null);
 
-  const extendableClaims = claims.filter(
-    (c) => c.status === "Pending" && !c.extensionRequested,
-  )
+  const extendableClaims = claims.filter((c) => c.status === "Pending" && !c.extensionRequested);
 
   const submitExtension = async (hours: number, reason: string) => {
-    if (!extTarget) return
+    if (!extTarget) return;
 
     if (isSupabaseConfigured) {
       try {
@@ -149,50 +137,46 @@ export default function Batches({
           hours,
 
           reason,
-        )
+        );
       } catch (error) {
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Unable to request extension.",
-        )
+        alert(error instanceof Error ? error.message : "Unable to request extension.");
 
-        return
+        return;
       }
     }
 
     setClaims((prev) =>
       prev.map((c) =>
         c.id === extTarget.id
-          ? { ...c, extensionRequested: true, extensionStatus: "pending", extensionRequestedHours: hours }
+          ? {
+              ...c,
+              extensionRequested: true,
+              extensionStatus: "pending",
+              extensionRequestedHours: hours,
+            }
           : c,
       ),
-    )
+    );
 
-    setExtTarget(null)
-  }
+    setExtTarget(null);
+  };
 
   const [shopPage, setShopPage] = useState<string | null>(() => {
-    const n = navIntent.sellerName
+    const n = navIntent.sellerName;
 
-    navIntent.sellerName = null
+    navIntent.sellerName = null;
 
-    return n
-  })
+    return n;
+  });
 
-  const [contact, setContact] = useState<BatchType | null>(null)
+  const [contact, setContact] = useState<BatchType | null>(null);
 
   // The Batches tab renders several pages of its own (Home, a batch, a seller
   // shop, the seller directory). Report which one is on screen so the shared
   // scroll policy in state/routeScroll.ts starts each of them at the top.
   useScrollToTopOnRouteChange(
-    [
-      "Batches",
-      sellerDir ? "directory" : "",
-      shopPage ?? "",
-      batchPage?.id ?? "",
-    ].join(":"),
-  )
+    ["Batches", sellerDir ? "directory" : "", shopPage ?? "", batchPage?.id ?? ""].join(":"),
+  );
 
   useEffect(() => {
     const applyNavigationIntent = () => {
@@ -202,88 +186,88 @@ export default function Batches({
           navIntent.batchDbId !== null
             ? batch.dbId === navIntent.batchDbId
             : batch.id === navIntent.batchId,
-        )
+        );
 
         if (requestedBatch) {
-          navIntent.batchId = null
-          navIntent.batchDbId = null
-          setBatchReturnSeller(null)
-          setShopReturnBatch(null)
-          setShopPage(null)
+          navIntent.batchId = null;
+          navIntent.batchDbId = null;
+          setBatchReturnSeller(null);
+          setShopReturnBatch(null);
+          setShopPage(null);
           if (canOpenBatch(requestedBatch, user, role)) {
-            setBatchPage(requestedBatch)
+            setBatchPage(requestedBatch);
           } else {
-            setBatchPage(null)
+            setBatchPage(null);
 
             // A batch the user cannot open must not leave its group modal
             // request behind for the next batch they visit.
-            navIntent.batchGroupOrderId = null
+            navIntent.batchGroupOrderId = null;
 
-            setTab("Dashboard")
+            setTab("Dashboard");
           }
         }
       }
 
       if (navIntent.sellerName !== null) {
-        const requestedSeller = navIntent.sellerName
+        const requestedSeller = navIntent.sellerName;
 
-        navIntent.sellerName = null
-        setBatchReturnSeller(null)
-        setShopReturnBatch(null)
-        setBatchPage(null)
-        setSellerDir(false)
+        navIntent.sellerName = null;
+        setBatchReturnSeller(null);
+        setShopReturnBatch(null);
+        setBatchPage(null);
+        setSellerDir(false);
 
-        setShopPage(requestedSeller)
+        setShopPage(requestedSeller);
       }
-    }
+    };
 
     // Login can mount this tab before the catalog arrives. Keep the intent
 
     // pending and retry when batches load, as well as on navigation events.
 
-    applyNavigationIntent()
+    applyNavigationIntent();
 
-    return subscribeNavIntent(applyNavigationIntent)
-  }, [batches, user, role, setTab])
+    return subscribeNavIntent(applyNavigationIntent);
+  }, [batches, user, role, setTab]);
 
   useEffect(() => {
     if (batchPage && !canOpenBatch(batchPage, user, role)) {
-      setBatchPage(null)
+      setBatchPage(null);
 
-      setTab("Dashboard")
+      setTab("Dashboard");
     }
-  }, [batchPage, user, role, setTab])
+  }, [batchPage, user, role, setTab]);
 
-  const [financialBatch, setFinancialBatch] = useState<BatchType | null>(null)
+  const [financialBatch, setFinancialBatch] = useState<BatchType | null>(null);
 
   // Confirmation targets for consequential seller actions (#16)
 
-  const [lockConfirm, setLockConfirm] = useState<BatchType | null>(null)
+  const [lockConfirm, setLockConfirm] = useState<BatchType | null>(null);
 
   // Re-opening a batch that closed on its end date needs a new end date: the
   // sweep re-locks anything whose date has already passed, so unlocking alone
   // would bounce back to closed within a minute.
-  const [reopenTarget, setReopenTarget] = useState<BatchType | null>(null)
-  const [reopenDate, setReopenDate] = useState(defaultReopenEndDate)
-  const [reopening, setReopening] = useState(false)
+  const [reopenTarget, setReopenTarget] = useState<BatchType | null>(null);
+  const [reopenDate, setReopenDate] = useState(defaultReopenEndDate);
+  const [reopening, setReopening] = useState(false);
 
   // Seller-only state
 
   type ExtReq = {
-    id: EntityId
+    id: EntityId;
 
-    buyer: string
+    buyer: string;
 
-    product: string
+    product: string;
 
-    batch: string
+    batch: string;
 
-    requestedAt: string
+    requestedAt: string;
 
-    reason?: string
+    reason?: string;
 
-    status: "pending" | "approved" | "denied"
-  }
+    status: "pending" | "approved" | "denied";
+  };
 
   const [extensionRequests, setExtensionRequests] = useState<ExtReq[]>(
     isSupabaseConfigured
@@ -317,65 +301,60 @@ export default function Batches({
             status: "pending",
           },
         ],
-  )
+  );
 
   // Seller request pop-ups (moved from inline bottom cards to top-of-tab buttons).
 
   const [showExtReqModal, setShowExtReqModal] = useState(() => {
-    const requested = navIntent.openExtensionRequests
+    const requested = navIntent.openExtensionRequests;
 
-    navIntent.openExtensionRequests = false
+    navIntent.openExtensionRequests = false;
 
-    return requested
-  })
+    return requested;
+  });
 
   // Notifications deep-link here while Batches may already be mounted, so react
   // to the intent instead of only reading it on mount.
   useEffect(() => {
     const openRequested = () => {
-      if (!navIntent.openExtensionRequests) return
+      if (!navIntent.openExtensionRequests) return;
 
-      navIntent.openExtensionRequests = false
+      navIntent.openExtensionRequests = false;
 
-      setShowExtReqModal(true)
-    }
+      setShowExtReqModal(true);
+    };
 
-    openRequested()
+    openRequested();
 
-    return subscribeNavIntent(openRequested)
-  }, [])
+    return subscribeNavIntent(openRequested);
+  }, []);
 
   // Confirmation target for extension approve/deny (#16)
 
   const [extConfirm, setExtConfirm] = useState<{
-    req: ExtReq
+    req: ExtReq;
 
-    action: "approved" | "denied"
-  } | null>(null)
+    action: "approved" | "denied";
+  } | null>(null);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || role !== "Seller") return
+    if (!isSupabaseConfigured || role !== "Seller") return;
 
     kargoApi
 
       .loadSellerExtensionRequests()
 
       .then((data) => {
-        setExtensionRequests(data.extensions)
+        setExtensionRequests(data.extensions);
       })
 
       .catch((error) =>
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Unable to load extension requests.",
-        ),
-      )
-  }, [role])
+        alert(error instanceof Error ? error.message : "Unable to load extension requests."),
+      );
+  }, [role]);
 
   const filtered = batches.filter((b) => {
-    if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter)
-      return false
+    if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter) return false;
 
     if (dateFilter !== "All") {
       const mm: Record<string, string> = {
@@ -390,26 +369,26 @@ export default function Batches({
         "Sep 2026": "Sep",
 
         "Oct 2026": "Oct",
-      }
+      };
 
-      if (!b.trips.includes(mm[dateFilter] || "")) return false
+      if (!b.trips.includes(mm[dateFilter] || "")) return false;
     }
 
-    return true
-  })
+    return true;
+  });
 
   const handleToggleReaction = async (batch: BatchType) => {
-    if (reactingBatchIds.has(batch.id)) return
+    if (reactingBatchIds.has(batch.id)) return;
 
-    const wasReacted = Boolean(batch.reactedByCurrentUser)
+    const wasReacted = Boolean(batch.reactedByCurrentUser);
 
-    const previousCount = batch.reactionCount ?? 0
+    const previousCount = batch.reactionCount ?? 0;
 
-    const nextReacted = !wasReacted
+    const nextReacted = !wasReacted;
 
-    const nextCount = Math.max(0, previousCount + (nextReacted ? 1 : -1))
+    const nextCount = Math.max(0, previousCount + (nextReacted ? 1 : -1));
 
-    setReactingBatchIds((current) => new Set(current).add(batch.id))
+    setReactingBatchIds((current) => new Set(current).add(batch.id));
 
     setBatches((current) =>
       current.map((item) =>
@@ -423,18 +402,17 @@ export default function Batches({
             }
           : item,
       ),
-    )
+    );
 
     try {
       if (isSupabaseConfigured) {
-        if (!batch.dbId)
-          throw new Error("This batch is missing its database identifier.")
+        if (!batch.dbId) throw new Error("This batch is missing its database identifier.");
 
         const confirmed = await kargoApi.setBatchReaction(
           batch.dbId,
 
           nextReacted,
-        )
+        );
 
         setBatches((current) =>
           current.map((item) =>
@@ -448,7 +426,7 @@ export default function Batches({
                 }
               : item,
           ),
-        )
+        );
       }
     } catch (error) {
       setBatches((current) =>
@@ -463,81 +441,72 @@ export default function Batches({
               }
             : item,
         ),
-      )
+      );
 
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Unable to update this reaction.",
-      )
+      alert(error instanceof Error ? error.message : "Unable to update this reaction.");
     } finally {
       setReactingBatchIds((current) => {
-        const next = new Set(current)
+        const next = new Set(current);
 
-        next.delete(batch.id)
+        next.delete(batch.id);
 
-        return next
-      })
+        return next;
+      });
     }
-  }
+  };
 
   const handleClaim = async (
     key: string,
 
     batch: BatchType,
 
-    product: typeof batch.products[0],
+    product: (typeof batch.products)[0],
 
     reservation: ClaimReservationInput,
   ) => {
-    const qty = reservation.quantity
-    const claimQty = Math.max(1, Math.floor(qty))
+    const qty = reservation.quantity;
+    const claimQty = Math.max(1, Math.floor(qty));
 
-    const currentBatch = batches.find((item) => item.id === batch.id)
+    const currentBatch = batches.find((item) => item.id === batch.id);
 
     const currentProduct = currentBatch?.products.find((item) =>
       product.dbId ? item.dbId === product.dbId : item.name === product.name,
-    )
+    );
 
     if (
       role !== "Buyer" ||
       !currentBatch ||
       !currentProduct ||
-      !productAvailability(currentProduct, batchOrdersClosed(currentBatch))
-        .canClaim ||
+      !productAvailability(currentProduct, batchOrdersClosed(currentBatch)).canClaim ||
       claimQty > currentProduct.qty - currentProduct.claimed
     ) {
-      alert("This product no longer has enough available claim slots.")
+      alert("This product no longer has enough available claim slots.");
 
-      return false
+      return false;
     }
 
     if (isSupabaseConfigured) {
       if (!product.dbId) {
-        alert("This product is missing its database identifier.")
+        alert("This product is missing its database identifier.");
 
-        return false
+        return false;
       }
 
       try {
-        await kargoApi.claimProduct(product.dbId, reservation)
-        await refreshData()
+        await kargoApi.claimProduct(product.dbId, reservation);
+        await refreshData();
 
-        setClaimedKeys((current) => ({ ...current, [key]: true }))
+        setClaimedKeys((current) => ({ ...current, [key]: true }));
 
-        return true
+        return true;
       } catch (error) {
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Unable to claim this product.",
-        )
+        alert(error instanceof Error ? error.message : "Unable to claim this product.");
 
-        return false
+        return false;
       }
     }
 
-    setClaimedKeys((c) => ({ ...c, [key]: true }))
+    setClaimedKeys((c) => ({ ...c, [key]: true }));
 
     // Keep batch/product claim counts accurate immediately (2.3).
 
@@ -551,26 +520,21 @@ export default function Batches({
               claimed: bt.claimed + claimQty,
 
               products: bt.products.map((prod) =>
-                (product.dbId && prod.dbId === product.dbId) ||
-                prod.name === product.name
+                (product.dbId && prod.dbId === product.dbId) || prod.name === product.name
                   ? { ...prod, claimed: prod.claimed + claimQty }
                   : prod,
               ),
             },
       ),
-    )
+    );
 
-    const reserveHrs = batch.reserveHours || 48
+    const reserveHrs = batch.reserveHours || 48;
 
-    const claimId = Date.now()
+    const claimId = Date.now();
 
-    const expiresAt = new Date(
-      Date.now() + reserveHrs * 3_600_000,
-    ).toISOString()
-    const shippingApplies = reservation.paymentMethod !== "Cash on Meetup"
-    const deadlinePausedAt = shippingApplies
-      ? new Date().toISOString()
-      : undefined
+    const expiresAt = new Date(Date.now() + reserveHrs * 3_600_000).toISOString();
+    const shippingApplies = reservation.paymentMethod !== "Cash on Meetup";
+    const deadlinePausedAt = shippingApplies ? new Date().toISOString() : undefined;
     const newClaim: ClaimRow = {
       id: claimId,
 
@@ -601,11 +565,11 @@ export default function Batches({
       deliveryPinLng: reservation.pinLng,
       deliveryPinUrl: reservation.pinUrl,
       deliveryPinAddress: reservation.pinAddress,
-    }
+    };
 
-    setClaims((prev) => [newClaim, ...prev])
+    setClaims((prev) => [newClaim, ...prev]);
 
-    const alreadyInToPay = toPay.some((t) => t.product === product.name)
+    const alreadyInToPay = toPay.some((t) => t.product === product.name);
 
     if (!alreadyInToPay) {
       setToPay((prev) => [
@@ -636,71 +600,69 @@ export default function Batches({
         },
 
         ...prev,
-      ])
+      ]);
     }
 
-    return true
-  }
+    return true;
+  };
 
   const openSellerShop = (name: string) => {
-    setShopReturnBatch(batchPage)
-    setBatchReturnSeller(null)
-    setBatchPage(null)
-    setSellerDir(false)
-    setShopPage(name)
-  }
+    setShopReturnBatch(batchPage);
+    setBatchReturnSeller(null);
+    setBatchPage(null);
+    setSellerDir(false);
+    setShopPage(name);
+  };
 
   const openBatchFromList = (batch: BatchType) => {
-    setBatchReturnSeller(null)
-    setShopReturnBatch(null)
-    setShopPage(null)
-    setBatchPage(batch)
-  }
+    setBatchReturnSeller(null);
+    setShopReturnBatch(null);
+    setShopPage(null);
+    setBatchPage(batch);
+  };
 
   const openBatchFromShop = (batch: BatchType, seller: string) => {
-    setShopReturnBatch(null)
-    setBatchReturnSeller(seller)
-    setShopPage(null)
-    setBatchPage(batch)
-  }
+    setShopReturnBatch(null);
+    setBatchReturnSeller(seller);
+    setShopPage(null);
+    setBatchPage(batch);
+  };
 
   const handleShopBack = () => {
-    const previousBatch = shopReturnBatch
-    setShopPage(null)
-    setShopReturnBatch(null)
+    const previousBatch = shopReturnBatch;
+    setShopPage(null);
+    setShopReturnBatch(null);
     if (previousBatch) {
-      const currentBatch = batches.find(
-        (batch) => batch.id === previousBatch.id,
-      )
-      setBatchPage(currentBatch ?? previousBatch)
+      const currentBatch = batches.find((batch) => batch.id === previousBatch.id);
+      setBatchPage(currentBatch ?? previousBatch);
     }
-  }
+  };
 
   const handleBatchBack = () => {
-    const previousSeller = batchReturnSeller
-    setBatchPage(null)
-    setBatchReturnSeller(null)
-    if (previousSeller) setShopPage(previousSeller)
-  }
+    const previousSeller = batchReturnSeller;
+    setBatchPage(null);
+    setBatchReturnSeller(null);
+    if (previousSeller) setShopPage(previousSeller);
+  };
 
   // Confirmation modals for consequential seller actions (#16). Rendered in
 
   // every return branch so they work from the batch grid and the seller panels.
 
   const submitReopen = async () => {
-    if (!reopenTarget) return
+    if (!reopenTarget) return;
 
     if (reopenDate < todayInManila()) {
-      alert("Choose today or a later date to re-open this batch.")
+      alert("Choose today or a later date to re-open this batch.");
 
-      return
+      return;
     }
 
-    setReopening(true)
+    setReopening(true);
 
     try {
       if (isSupabaseConfigured && reopenTarget.dbId) {
-        await kargoApi.reopenBatch(reopenTarget.dbId, reopenDate)
+        await kargoApi.reopenBatch(reopenTarget.dbId, reopenDate);
       }
 
       setBatches((prev) =>
@@ -715,24 +677,19 @@ export default function Batches({
 
                 endsOn: reopenDate,
 
-                trips: formatBatchDateRange(
-                  batch.startsOn ?? reopenDate,
-                  reopenDate,
-                ),
+                trips: formatBatchDateRange(batch.startsOn ?? reopenDate, reopenDate),
               }
             : batch,
         ),
-      )
+      );
 
-      setReopenTarget(null)
+      setReopenTarget(null);
     } catch (error) {
-      alert(
-        error instanceof Error ? error.message : "Unable to re-open this batch.",
-      )
+      alert(error instanceof Error ? error.message : "Unable to re-open this batch.");
     } finally {
-      setReopening(false)
+      setReopening(false);
     }
-  }
+  };
 
   const confirmModals = (
     <>
@@ -745,26 +702,23 @@ export default function Batches({
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
             {lockConfirm.locked ? (
               <>
-                Unlocking <strong>{lockConfirm.title}</strong> reopens it so
-                buyers can claim items again.
+                Unlocking <strong>{lockConfirm.title}</strong> reopens it so buyers can claim items
+                again.
               </>
             ) : (
               <>
-                Locking <strong>{lockConfirm.title}</strong> pauses new orders —
-                buyers won't be able to claim items until you unlock it.
-                Existing claims are not affected.
+                Locking <strong>{lockConfirm.title}</strong> pauses new orders — buyers won't be
+                able to claim items until you unlock it. Existing claims are not affected.
               </>
             )}
           </p>
           <div className="kargo-modal-actions">
-            <SecondaryBtn onClick={() => setLockConfirm(null)}>
-              Cancel
-            </SecondaryBtn>
+            <SecondaryBtn onClick={() => setLockConfirm(null)}>Cancel</SecondaryBtn>
             <PrimaryBtn
               onClick={() => {
-                toggleBatchLock(setBatches, lockConfirm.id)
+                toggleBatchLock(setBatches, lockConfirm.id);
 
-                setLockConfirm(null)
+                setLockConfirm(null);
               }}
             >
               {lockConfirm.locked ? "Unlock Batch" : "Lock Batch"}
@@ -773,16 +727,11 @@ export default function Batches({
         </Modal>
       )}
       {reopenTarget && (
-        <Modal
-          title="Re-open this batch?"
-          onClose={() => setReopenTarget(null)}
-          width={440}
-        >
+        <Modal title="Re-open this batch?" onClose={() => setReopenTarget(null)} width={440}>
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 14 }}>
             <strong>{reopenTarget.title}</strong> stopped taking orders on{" "}
-            {formatBatchEndDate(reopenTarget.endsOn) || "its end date"}. Pick a
-            new end date and it reopens for claims and group orders until that
-            day ends.
+            {formatBatchEndDate(reopenTarget.endsOn) || "its end date"}. Pick a new end date and it
+            reopens for claims and group orders until that day ends.
           </p>
           <label
             htmlFor="batch-reopen-date"
@@ -812,9 +761,7 @@ export default function Batches({
             }}
           />
           <div className="kargo-modal-actions">
-            <SecondaryBtn onClick={() => setReopenTarget(null)}>
-              Cancel
-            </SecondaryBtn>
+            <SecondaryBtn onClick={() => setReopenTarget(null)}>Cancel</SecondaryBtn>
             <PrimaryBtn disabled={reopening} onClick={submitReopen}>
               {reopening ? "Re-opening…" : "Re-open Batch"}
             </PrimaryBtn>
@@ -830,23 +777,18 @@ export default function Batches({
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
             {extConfirm.action === "approved" ? (
               <>
-                Approving gives <strong>{extConfirm.req.buyer}</strong> more
-                time to pay for <strong>{extConfirm.req.product}</strong>. The
-                buyer will be notified.
+                Approving gives <strong>{extConfirm.req.buyer}</strong> more time to pay for{" "}
+                <strong>{extConfirm.req.product}</strong>. The buyer will be notified.
               </>
             ) : (
               <>
-                Denying keeps the original deadline for{" "}
-                <strong>{extConfirm.req.buyer}</strong>'s claim on{" "}
-                <strong>{extConfirm.req.product}</strong>. The buyer will be
-                notified.
+                Denying keeps the original deadline for <strong>{extConfirm.req.buyer}</strong>'s
+                claim on <strong>{extConfirm.req.product}</strong>. The buyer will be notified.
               </>
             )}
           </p>
           <div className="kargo-modal-actions">
-            <SecondaryBtn onClick={() => setExtConfirm(null)}>
-              Cancel
-            </SecondaryBtn>
+            <SecondaryBtn onClick={() => setExtConfirm(null)}>Cancel</SecondaryBtn>
             <PrimaryBtn
               onClick={async () => {
                 if (isSupabaseConfigured) {
@@ -855,27 +797,21 @@ export default function Batches({
                       String(extConfirm.req.id),
 
                       extConfirm.action === "approved",
-                    )
+                    );
                   } catch (error) {
-                    alert(
-                      error instanceof Error
-                        ? error.message
-                        : "Unable to decide extension.",
-                    )
+                    alert(error instanceof Error ? error.message : "Unable to decide extension.");
 
-                    return
+                    return;
                   }
                 }
 
                 setExtensionRequests((p) =>
                   p.map((r) =>
-                    r.id === extConfirm.req.id
-                      ? { ...r, status: extConfirm.action }
-                      : r,
+                    r.id === extConfirm.req.id ? { ...r, status: extConfirm.action } : r,
                   ),
-                )
+                );
 
-                setExtConfirm(null)
+                setExtConfirm(null);
               }}
             >
               {extConfirm.action === "approved" ? "Approve" : "Deny"}
@@ -884,7 +820,7 @@ export default function Batches({
         </Modal>
       )}
     </>
-  )
+  );
 
   if (shopPage)
     return (
@@ -944,22 +880,20 @@ export default function Batches({
             onToggleReaction={handleToggleReaction}
             reactionPending={reactingBatchIds}
             onBatchOpen={(batchId) => {
-              const requestedBatch = batches.find(
-                (batch) => batch.id === batchId,
-              )
+              const requestedBatch = batches.find((batch) => batch.id === batchId);
 
-              if (!requestedBatch) return
+              if (!requestedBatch) return;
 
-              openBatchFromShop(requestedBatch, shopPage)
+              openBatchFromShop(requestedBatch, shopPage);
             }}
             role={role}
             profileData={shopPage === user.name ? user : undefined}
           />
         </div>
       </div>
-    )
+    );
 
-  if (batchPage && !canOpenBatch(batchPage, user, role)) return null
+  if (batchPage && !canOpenBatch(batchPage, user, role)) return null;
 
   if (batchPage)
     return (
@@ -982,19 +916,19 @@ export default function Batches({
           refreshData={refreshData}
         />
       </>
-    )
+    );
 
   const BatchGrid = ({ batchList }: { batchList: BatchType[] }) => {
     // Sold-out batches sink to the bottom (3.3).
 
-    const ordered = sortSoldOutLast(batchList)
+    const ordered = sortSoldOutLast(batchList);
 
-    const gridColumns = role === "Seller" ? 6 : COLS
+    const gridColumns = role === "Seller" ? 6 : COLS;
 
-    const gridRows: BatchType[][] = []
+    const gridRows: BatchType[][] = [];
 
     for (let i = 0; i < ordered.length; i += gridColumns)
-      gridRows.push(ordered.slice(i, i + gridColumns))
+      gridRows.push(ordered.slice(i, i + gridColumns));
 
     return (
       <div className="space-y-0">
@@ -1002,27 +936,24 @@ export default function Batches({
           return (
             <div key={rowIdx}>
               <div
-                className={`grid gap-5 ${
-                  role === "Seller" ? "seller-batches-grid" : ""
-                }`}
+                className={`grid gap-5 ${role === "Seller" ? "seller-batches-grid" : ""}`}
                 style={{
-                  gridTemplateColumns:
-                    role === "Seller" ? undefined : "repeat(3,1fr)",
+                  gridTemplateColumns: role === "Seller" ? undefined : "repeat(3,1fr)",
 
                   marginBottom: 20,
                 }}
               >
                 {row.map((b, i) => {
-                  const pct = Math.round((b.claimed / b.items) * 100)
+                  const pct = Math.round((b.claimed / b.items) * 100);
 
                   // Closed, or every item locked (nothing to claim): gray card.
-                  const closed = batchCardClosed(b)
+                  const closed = batchCardClosed(b);
 
                   // Date-driven closure is what the seller can undo by choosing
                   // a new end date; a manual lock still uses the lock toggle.
-                  const closedByDate = batchClosedByDate(b)
+                  const closedByDate = batchClosedByDate(b);
 
-                  const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"]
+                  const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"];
 
                   return (
                     <div
@@ -1052,31 +983,28 @@ export default function Batches({
                           transition: "transform 0.15s,box-shadow 0.15s",
                         }}
                         onMouseEnter={(e) => {
-                          const el = e.currentTarget as HTMLDivElement
+                          const el = e.currentTarget as HTMLDivElement;
 
-                          el.style.transform = "translateY(-2px)"
+                          el.style.transform = "translateY(-2px)";
 
-                          el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)"
+                          el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)";
                         }}
                         onMouseLeave={(e) => {
-                          const el = e.currentTarget as HTMLDivElement
+                          const el = e.currentTarget as HTMLDivElement;
 
-                          el.style.transform = ""
+                          el.style.transform = "";
 
                           el.style.boxShadow = b.locked
                             ? "0 0 0 1px #FCA5A5,0 1px 3px rgba(0,0,0,0.06)"
-                            : "0 1px 3px rgba(0,0,0,0.06)"
+                            : "0 1px 3px rgba(0,0,0,0.06)";
                         }}
                       >
                         <div
-                          className={
-                            role === "Seller" ? "seller-batch-image" : undefined
-                          }
+                          className={role === "Seller" ? "seller-batch-image" : undefined}
                           style={{
                             height: role === "Seller" ? undefined : 120,
 
-                            aspectRatio:
-                              role === "Seller" ? "1 / 1" : undefined,
+                            aspectRatio: role === "Seller" ? "1 / 1" : undefined,
 
                             background: grad,
 
@@ -1144,12 +1072,12 @@ export default function Batches({
                             // padlock = taking orders, closed padlock =
                             // locked); the label says what tapping it does.
                             (() => {
-                              const takingOrders = !closedByDate && !b.locked
+                              const takingOrders = !closedByDate && !b.locked;
                               const label = closedByDate
                                 ? "Re-open batch"
                                 : b.locked
                                   ? "Unlock batch to accept orders"
-                                  : "Lock batch to stop orders"
+                                  : "Lock batch to stop orders";
                               return (
                                 <button
                                   type="button"
@@ -1157,13 +1085,13 @@ export default function Batches({
                                   aria-label={label}
                                   title={label}
                                   onClick={(e) => {
-                                    e.stopPropagation()
+                                    e.stopPropagation();
                                     if (closedByDate) {
-                                      setReopenDate(defaultReopenEndDate())
-                                      setReopenTarget(b)
-                                      return
+                                      setReopenDate(defaultReopenEndDate());
+                                      setReopenTarget(b);
+                                      return;
                                     }
-                                    setLockConfirm(b)
+                                    setLockConfirm(b);
                                   }}
                                 >
                                   {takingOrders ? (
@@ -1172,7 +1100,7 @@ export default function Batches({
                                     <Lock size={16} aria-hidden="true" />
                                   )}
                                 </button>
-                              )
+                              );
                             })()
                           ) : closed ? (
                             <span
@@ -1318,20 +1246,13 @@ export default function Batches({
                           )}
                         </div>
                         <div
-                          className={
-                            role === "Seller" ? "seller-batch-body" : undefined
-                          }
+                          className={role === "Seller" ? "seller-batch-body" : undefined}
                           style={{
-                            padding:
-                              role === "Seller" ? "9px 10px 10px" : "14px 16px",
+                            padding: role === "Seller" ? "9px 10px 10px" : "14px 16px",
                           }}
                         >
                           <h3
-                            className={
-                              role === "Seller"
-                                ? "seller-batch-title"
-                                : undefined
-                            }
+                            className={role === "Seller" ? "seller-batch-title" : undefined}
                             style={{
                               fontFamily: "'Plus Jakarta Sans',sans-serif",
 
@@ -1355,13 +1276,8 @@ export default function Batches({
                                   padding: "6px 9px",
                                   borderRadius: 8,
                                   background:
-                                    b.moderationStatus === "hidden"
-                                      ? "#FEECEC"
-                                      : "#FDF2E3",
-                                  color:
-                                    b.moderationStatus === "hidden"
-                                      ? "#B42318"
-                                      : "#B4690E",
+                                    b.moderationStatus === "hidden" ? "#FEECEC" : "#FDF2E3",
+                                  color: b.moderationStatus === "hidden" ? "#B42318" : "#B4690E",
                                   fontSize: 10.5,
                                   fontWeight: 600,
                                   lineHeight: 1.35,
@@ -1379,21 +1295,11 @@ export default function Batches({
                             }`}
                           >
                             <Avatar name={b.seller} size={18} />
-                            <span style={{ fontSize: 11.5, color: "#6B7280" }}>
-                              {b.seller}
-                            </span>
+                            <span style={{ fontSize: 11.5, color: "#6B7280" }}>{b.seller}</span>
                             {role === "Buyer" && (
                               <>
-                                <span
-                                  style={{ fontSize: 11, color: "#D1D5DB" }}
-                                >
-                                  ·
-                                </span>
-                                <span
-                                  style={{ fontSize: 11, color: "#9CA3AF" }}
-                                >
-                                  {b.trips}
-                                </span>
+                                <span style={{ fontSize: 11, color: "#D1D5DB" }}>·</span>
+                                <span style={{ fontSize: 11, color: "#9CA3AF" }}>{b.trips}</span>
                               </>
                             )}
                           </div>
@@ -1453,8 +1359,7 @@ export default function Batches({
 
                                 borderRadius: 999,
 
-                                transition:
-                                  "width 0.6s cubic-bezier(.22,1,.36,1)",
+                                transition: "width 0.6s cubic-bezier(.22,1,.36,1)",
                               }}
                             />
                           </div>
@@ -1477,8 +1382,7 @@ export default function Batches({
                               }}
                             >
                               <>
-                                <Lock size={14} aria-hidden="true" /> Not
-                                Accepting Orders
+                                <Lock size={14} aria-hidden="true" /> Not Accepting Orders
                                 {closedByDate && (
                                   <span
                                     style={{
@@ -1496,11 +1400,7 @@ export default function Batches({
                             </div>
                           ) : (
                             <div
-                              className={
-                                role === "Seller"
-                                  ? "seller-batch-actions"
-                                  : "flex"
-                              }
+                              className={role === "Seller" ? "seller-batch-actions" : "flex"}
                               style={{ display: "flex", gap: 6 }}
                             >
                               <PrimaryBtn
@@ -1523,9 +1423,7 @@ export default function Batches({
                                     gap: 4,
                                   }}
                                 >
-                                  {role === "Seller"
-                                    ? "View Item"
-                                    : "View Items"}{" "}
+                                  {role === "Seller" ? "View Item" : "View Items"}{" "}
                                   <ArrowRight size={13} aria-hidden="true" />
                                 </span>
                               </PrimaryBtn>
@@ -1534,33 +1432,29 @@ export default function Batches({
                                   size="sm"
                                   ariaLabel="View batch financial summary"
                                   onClick={(event) => {
-                                    event.stopPropagation()
+                                    event.stopPropagation();
 
-                                    setFinancialBatch(b)
+                                    setFinancialBatch(b);
                                   }}
                                 >
                                   <BarChart3 size={15} aria-hidden="true" />
                                 </SecondaryBtn>
                               )}
-                              <ShareButton
-                                batchId={b.id}
-                                title={b.title}
-                                compact
-                              />
+                              <ShareButton batchId={b.id} title={b.title} compact />
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
                 {row.length < gridColumns &&
-                  Array.from({ length: gridColumns - row.length }).map(
-                    (_, i) => <div key={`ph-${i}`} />,
-                  )}
+                  Array.from({ length: gridColumns - row.length }).map((_, i) => (
+                    <div key={`ph-${i}`} />
+                  ))}
               </div>
             </div>
-          )
+          );
         })}
         {batchList.length === 0 && (
           <div
@@ -1578,12 +1472,12 @@ export default function Batches({
           </div>
         )}
       </div>
-    )
-  }
+    );
+  };
 
   const pendingExtCount = extensionRequests.filter(
     (request) => request.status === "pending",
-  ).length
+  ).length;
 
   const FilterBar = () => (
     <div
@@ -1612,16 +1506,12 @@ export default function Batches({
       >
         Filter:
       </span>
-      <div
-        className={role === "Seller" ? "seller-batch-select-wrap" : undefined}
-      >
+      <div className={role === "Seller" ? "seller-batch-select-wrap" : undefined}>
         <select
-          className={
-            role === "Seller" ? "seller-batch-filter-select" : undefined
-          }
+          className={role === "Seller" ? "seller-batch-filter-select" : undefined}
           value={catFilter}
           onChange={(e) => {
-            setCatFilter(e.target.value)
+            setCatFilter(e.target.value);
           }}
           style={{
             fontSize: 12,
@@ -1653,16 +1543,12 @@ export default function Batches({
           </span>
         )}
       </div>
-      <div
-        className={role === "Seller" ? "seller-batch-select-wrap" : undefined}
-      >
+      <div className={role === "Seller" ? "seller-batch-select-wrap" : undefined}>
         <select
-          className={
-            role === "Seller" ? "seller-batch-filter-select" : undefined
-          }
+          className={role === "Seller" ? "seller-batch-filter-select" : undefined}
           value={dateFilter}
           onChange={(e) => {
-            setDateFilter(e.target.value)
+            setDateFilter(e.target.value);
           }}
           style={{
             fontSize: 12,
@@ -1723,9 +1609,7 @@ export default function Batches({
       )}
       {role === "Buyer" && (
         <SecondaryBtn onClick={() => setSellerDir(true)}>
-          <span
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-          >
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
             <Search size={13} aria-hidden="true" /> Browse Sellers
           </span>
         </SecondaryBtn>
@@ -1736,7 +1620,7 @@ export default function Batches({
         </span>
       )}
     </div>
-  )
+  );
 
   // Full-page seller directory
 
@@ -1747,11 +1631,11 @@ export default function Batches({
           batches={batches}
           onBack={() => setSellerDir(false)}
           onBatchOpen={(batchId) => {
-            const requestedBatch = batches.find((batch) => batch.id === batchId)
+            const requestedBatch = batches.find((batch) => batch.id === batchId);
 
-            if (!requestedBatch) return
+            if (!requestedBatch) return;
 
-            openBatchFromShop(requestedBatch, requestedBatch.seller)
+            openBatchFromShop(requestedBatch, requestedBatch.seller);
           }}
           onToggleReaction={handleToggleReaction}
           reactionPending={reactingBatchIds}
@@ -1759,18 +1643,14 @@ export default function Batches({
           user={user}
         />
       </>
-    )
+    );
   }
 
   if (role === "Seller") {
-    const myBatches = batches.filter((b) => canManageBatch(b, user, role))
+    const myBatches = batches.filter((b) => canManageBatch(b, user, role));
 
     const myFiltered = myBatches.filter((b) => {
-      if (
-        catFilter !== "All" &&
-        normalizeBatchCategory(b.category) !== catFilter
-      )
-        return false
+      if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter) return false;
 
       if (dateFilter !== "All") {
         const mm: Record<string, string> = {
@@ -1785,13 +1665,13 @@ export default function Batches({
           "Sep 2026": "Sep",
 
           "Oct 2026": "Oct",
-        }
+        };
 
-        if (!b.trips.includes(mm[dateFilter] || "")) return false
+        if (!b.trips.includes(mm[dateFilter] || "")) return false;
       }
 
-      return true
-    })
+      return true;
+    });
 
     return (
       <div className="seller-batches-page">
@@ -1800,11 +1680,7 @@ export default function Batches({
             <h1>My Batches</h1>
             <p>Manage your pasabuy batches. Toggle lock to pause new orders.</p>
           </div>
-          <button
-            type="button"
-            className="seller-batches-add"
-            onClick={onNewBatch}
-          >
+          <button type="button" className="seller-batches-add" onClick={onNewBatch}>
             <Plus size={14} aria-hidden="true" /> Add batch
           </button>
         </header>
@@ -1820,11 +1696,7 @@ export default function Batches({
         )}
         {/* Seller request pop-ups (opened from the header buttons above) */}
         {showExtReqModal && (
-          <Modal
-            title="Extension Requests"
-            onClose={() => setShowExtReqModal(false)}
-            width={480}
-          >
+          <Modal title="Extension Requests" onClose={() => setShowExtReqModal(false)} width={480}>
             {extensionRequests.length === 0 ? (
               <div
                 style={{
@@ -1898,16 +1770,12 @@ export default function Batches({
                         <div className="flex gap-2">
                           <PrimaryBtn
                             size="sm"
-                            onClick={() =>
-                              setExtConfirm({ req, action: "approved" })
-                            }
+                            onClick={() => setExtConfirm({ req, action: "approved" })}
                           >
                             Approve
                           </PrimaryBtn>
                           <button
-                            onClick={() =>
-                              setExtConfirm({ req, action: "denied" })
-                            }
+                            onClick={() => setExtConfirm({ req, action: "denied" })}
                             style={{
                               fontSize: 12,
 
@@ -1932,11 +1800,9 @@ export default function Batches({
                       ) : (
                         <span
                           style={{
-                            background:
-                              req.status === "approved" ? "#D4F5EA" : "#FEE2E2",
+                            background: req.status === "approved" ? "#D4F5EA" : "#FEE2E2",
 
-                            color:
-                              req.status === "approved" ? "#0B7A59" : "#991B1B",
+                            color: req.status === "approved" ? "#0B7A59" : "#991B1B",
 
                             fontSize: 11,
 
@@ -1958,14 +1824,11 @@ export default function Batches({
           </Modal>
         )}
         {financialBatch && (
-          <FinancialSummaryModal
-            batch={financialBatch}
-            onClose={() => setFinancialBatch(null)}
-          />
+          <FinancialSummaryModal batch={financialBatch} onClose={() => setFinancialBatch(null)} />
         )}
         {confirmModals}
       </div>
-    )
+    );
   }
 
   return (
@@ -1992,9 +1855,7 @@ export default function Batches({
           marginBottom: 12,
         }}
       >
-        <div style={{ fontSize: 12.5, color: "#374151" }}>
-          Need more time to pay for a claim?
-        </div>
+        <div style={{ fontSize: 12.5, color: "#374151" }}>Need more time to pay for a claim?</div>
         <SecondaryBtn
           size="sm"
           onClick={() => setShowExtPicker(true)}
@@ -2006,19 +1867,15 @@ export default function Batches({
       <BuyerHome
         batches={batches}
         category={catFilter}
-        date={dateFilter}
+        availability={homeAvailability}
         onCategoryChange={setCatFilter}
-        onDateChange={setDateFilter}
+        onAvailabilityChange={setHomeAvailability}
         onOpenBatch={openBatchFromList}
         onToggleReaction={handleToggleReaction}
         reactionPending={reactingBatchIds}
       />
       {showExtPicker && (
-        <Modal
-          title="Request an extension"
-          onClose={() => setShowExtPicker(false)}
-          width={440}
-        >
+        <Modal title="Request an extension" onClose={() => setShowExtPicker(false)} width={440}>
           <div className="space-y-2">
             <p style={{ fontSize: 12.5, color: "#6B7280", marginBottom: 6 }}>
               Choose which claim you'd like more time to pay for.
@@ -2028,9 +1885,9 @@ export default function Batches({
                 key={c.id}
                 type="button"
                 onClick={() => {
-                  setExtTarget(c)
+                  setExtTarget(c);
 
-                  setShowExtPicker(false)
+                  setShowExtPicker(false);
                 }}
                 style={{
                   width: "100%",
@@ -2048,11 +1905,7 @@ export default function Batches({
                   cursor: "pointer",
                 }}
               >
-                <div
-                  style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}
-                >
-                  {c.product}
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.product}</div>
                 <div style={{ fontSize: 11, color: "#9CA3AF" }}>
                   {c.seller} · ₱{c.amount.toLocaleString()}
                 </div>
@@ -2069,12 +1922,9 @@ export default function Batches({
         />
       )}
       {financialBatch && (
-        <FinancialSummaryModal
-          batch={financialBatch}
-          onClose={() => setFinancialBatch(null)}
-        />
+        <FinancialSummaryModal batch={financialBatch} onClose={() => setFinancialBatch(null)} />
       )}
       {confirmModals}
     </div>
-  )
+  );
 }
