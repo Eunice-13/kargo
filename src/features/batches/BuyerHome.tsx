@@ -16,7 +16,7 @@ import {
   categoryImage,
 } from "@/constants/categories";
 import type { BatchType } from "@/types";
-import { batchCardClosed, batchOrderDeadline } from "./batchAvailability";
+import { batchCardClosed } from "./batchAvailability";
 import { sortClosedLast } from "./batchSort";
 import ClosedBatchBadge from "./ClosedBatchBadge";
 
@@ -27,11 +27,13 @@ import ClosedBatchBadge from "./ClosedBatchBadge";
  */
 export type BuyerHomeAvailability = "all" | "open" | "closing" | "recent";
 
-/** A batch is "closing soon" when it is still open and its deadline is within
- * this many days. Mirrors the urgency window used across the buyer UI. */
-const CLOSING_SOON_DAYS = 3;
-/** "Recently added" means posted within this many days. */
-const RECENTLY_ADDED_DAYS = 7;
+/** Year-month key ("2026-10") used to group batches by calendar month. */
+function monthKey(value?: string): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
 
 function useHorizontalCarousel(itemCount: number) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -636,23 +638,22 @@ export default function BuyerHome({
 
   const filtered = useMemo(() => {
     const now = Date.now();
-    const closingBefore = now + CLOSING_SOON_DAYS * 86_400_000;
-    const recentAfter = now - RECENTLY_ADDED_DAYS * 86_400_000;
+    // Both time filters are keyed to the current calendar month: "closing soon"
+    // means the batch ends this month, "recently added" means it was posted
+    // this month.
+    const thisMonth = monthKey(new Date(now).toISOString());
     return batches.filter((batch) => {
       if (category !== "All" && normalizeBatchCategory(batch.category) !== category) return false;
 
       switch (availability) {
         case "open":
           return !batchCardClosed(batch, now);
-        case "closing": {
-          if (batchCardClosed(batch, now)) return false;
-          const deadline = batchOrderDeadline(batch.endsOn);
-          return deadline !== null && deadline <= closingBefore;
-        }
-        case "recent": {
-          const created = batch.createdAt ? new Date(batch.createdAt).getTime() : NaN;
-          return Number.isFinite(created) && created >= recentAfter;
-        }
+        case "closing":
+          // Still joinable and its end date lands in the current month.
+          return !batchCardClosed(batch, now) && monthKey(batch.endsOn) === thisMonth;
+        case "recent":
+          // Posted during the current month.
+          return monthKey(batch.createdAt) === thisMonth;
         default:
           return true;
       }
