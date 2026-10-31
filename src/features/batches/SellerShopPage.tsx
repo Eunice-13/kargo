@@ -1,14 +1,14 @@
-import { productAvailability } from "./productAvailability"
-import { batchCardClosed } from "./batchAvailability"
-import ClosedBatchBadge from "./ClosedBatchBadge"
-import { Fragment, useEffect, useState } from "react"
-import { MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react"
-import type { BatchType, Role, UserInfo } from "@/types"
-import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme"
-import { Card, Avatar, PrimaryBtn, ContactModal, PaymentIcon } from "@/components/shared"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { kargoApi, type SellerReceiveMethod } from "@/services"
-import { sortSoldOutLast } from "./batchSort"
+import { productAvailability } from "./productAvailability";
+import { batchCardClosed } from "./batchAvailability";
+import ClosedBatchBadge from "./ClosedBatchBadge";
+import { Fragment, useEffect, useState } from "react";
+import { MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react";
+import type { BatchType, Role, UserInfo } from "@/types";
+import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme";
+import { Card, Avatar, PrimaryBtn, ContactModal, PaymentIcon } from "@/components/shared";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { kargoApi, type SellerReceiveMethod } from "@/services";
+import { sortSoldOutLast } from "./batchSort";
 
 // Dedicated seller storefront page (replaces the old popup modal). Laid out like
 // a Shopee shop: a gradient header with avatar/name/online + Follow/Chat and a
@@ -24,69 +24,69 @@ export default function SellerShopPage({
   role,
   profileData,
 }: {
-  seller: string
-  batches: BatchType[]
+  seller: string;
+  batches: BatchType[];
   // Opens the batch detail page (buyer taps a batch card on the storefront).
-  onBatchOpen?: (batchId: number) => void
-  onToggleReaction?: (batch: BatchType) => void
-  reactionPending?: Set<number>
-  role?: Role
-  profileData?: UserInfo
+  onBatchOpen?: (batchId: number) => void;
+  onToggleReaction?: (batch: BatchType) => void;
+  reactionPending?: Set<number>;
+  role?: Role;
+  profileData?: UserInfo;
 }) {
-  const canClaim = role === "Buyer" && Boolean(onBatchOpen)
-  const canReact = role !== "Seller" && Boolean(onToggleReaction)
-  const sellerBatches = batches.filter((b) => b.seller === seller)
-  const sellerId =
-    sellerBatches.find((batch) => batch.sellerId)?.sellerId ?? profileData?.id
-  const [paymentMethods, setPaymentMethods] = useState<SellerReceiveMethod[]>([])
-  const [methodsLoading, setMethodsLoading] = useState(false)
+  const canClaim = role === "Buyer" && Boolean(onBatchOpen);
+  const canReact = role !== "Seller" && Boolean(onToggleReaction);
+  const sellerBatches = batches.filter((b) => b.seller === seller);
+  const sellerId = sellerBatches.find((batch) => batch.sellerId)?.sellerId ?? profileData?.id;
+  // Shop name for the header, when the seller set one; `seller` stays the
+  // identity used to match this shop's batches.
+  const sellerDisplay =
+    sellerBatches.find((batch) => batch.sellerShopName?.trim())?.sellerShopName?.trim() || seller;
+  const [paymentMethods, setPaymentMethods] = useState<SellerReceiveMethod[]>([]);
+  const [methodsLoading, setMethodsLoading] = useState(false);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !sellerId) return
-    let active = true
-    setMethodsLoading(true)
+    if (!isSupabaseConfigured || !sellerId) return;
+    let active = true;
+    setMethodsLoading(true);
     kargoApi
       .loadSellerReceiveMethods(String(sellerId))
       .then((methods) => {
-        if (active) setPaymentMethods(methods)
+        if (active) setPaymentMethods(methods);
       })
       .catch(() => {
-        if (active) setPaymentMethods([])
+        if (active) setPaymentMethods([]);
       })
       .finally(() => {
-        if (active) setMethodsLoading(false)
-      })
+        if (active) setMethodsLoading(false);
+      });
     return () => {
-      active = false
-    }
-  }, [sellerId])
+      active = false;
+    };
+  }, [sellerId]);
 
   // ── Stats (row under the header) ────────────────────────────────────────────
-  const totalProducts = sellerBatches.reduce((s, b) => s + b.products.length, 0)
-  const totalClaimed = sellerBatches.reduce((s, b) => s + b.claimed, 0)
-  const totalAvail = sellerBatches.reduce((s, b) => s + b.items, 0)
-  const claimRate = totalAvail > 0 ? Math.round((totalClaimed / totalAvail) * 100) : 0
-  const totalReactions = sellerBatches.reduce(
-    (sum, batch) => sum + (batch.reactionCount ?? 0),
-    0,
-  )
+  const totalProducts = sellerBatches.reduce((s, b) => s + b.products.length, 0);
+  const totalClaimed = sellerBatches.reduce((s, b) => s + b.claimed, 0);
+  const totalAvail = sellerBatches.reduce((s, b) => s + b.items, 0);
+  const claimRate = totalAvail > 0 ? Math.round((totalClaimed / totalAvail) * 100) : 0;
+  const totalReactions = sellerBatches.reduce((sum, batch) => sum + (batch.reactionCount ?? 0), 0);
 
   // ── Contact (reuses the shared ContactModal) ───────────────────────────────
-  const [showChat, setShowChat] = useState(false)
+  const [showChat, setShowChat] = useState(false);
   const contactUrl = profileData?.socialLinks
     ? Object.entries(profileData.socialLinks).find(
         ([label]) => profileData.socialVisibility?.[label] !== false,
       )?.[1]
-    : undefined
+    : undefined;
 
   // ── Tab / category nav ──────────────────────────────────────────────────────
-  const categories = Array.from(new Set(sellerBatches.map((b) => b.category)))
-  const TABS = ["All Batches", ...categories] as const
-  const [tab, setTab] = useState<string>("All Batches")
-  const [sortBy, setSortBy] = useState("Newest")
+  const categories = Array.from(new Set(sellerBatches.map((b) => b.category)));
+  const TABS = ["All Batches", ...categories] as const;
+  const [tab, setTab] = useState<string>("All Batches");
+  const [sortBy, setSortBy] = useState("Newest");
 
   // Which batches the current tab shows.
-  const catFilter = tab === "All Batches" ? "All" : tab
+  const catFilter = tab === "All Batches" ? "All" : tab;
   const visibleBatches = sortSoldOutLast(
     sellerBatches
       .filter((b) => catFilter === "All" || b.category === catFilter)
@@ -97,14 +97,14 @@ export default function SellerShopPage({
             ? a.id - b_.id
             : b_.id - a.id,
       ),
-  )
-  const gridBatches = visibleBatches
+  );
+  const gridBatches = visibleBatches;
 
   const stats: { icon: typeof Package; label: string; value: string; accent?: boolean }[] = [
     { icon: Package, label: "Products", value: String(totalProducts) },
     { icon: Clock3, label: "Claim Rate", value: `${claimRate}%` },
     { icon: CalendarDays, label: "Batches", value: String(sellerBatches.length) },
-  ]
+  ];
 
   return (
     <div className="space-y-5 seller-shop-page">
@@ -131,7 +131,7 @@ export default function SellerShopPage({
               flexShrink: 0,
             }}
           >
-            <Avatar name={seller} size={72} imageUrl={profileData?.avatarUrl} />
+            <Avatar name={sellerDisplay} size={72} imageUrl={profileData?.avatarUrl} />
           </span>
           <div style={{ flex: 1, minWidth: 200 }}>
             <div
@@ -145,7 +145,7 @@ export default function SellerShopPage({
                 gap: 8,
               }}
             >
-              {seller}
+              {sellerDisplay}
             </div>
             <div
               style={{
@@ -254,7 +254,7 @@ export default function SellerShopPage({
         }}
       >
         {TABS.map((t) => {
-          const active = tab === t
+          const active = tab === t;
           return (
             <button
               key={t}
@@ -278,217 +278,212 @@ export default function SellerShopPage({
             >
               {t}
             </button>
-          )
+          );
         })}
       </div>
 
       {/* ── Tab body ───────────────────────────────────────────────────────── */}
       <div
-          className="grid gap-5 seller-shop-layout"
-          style={{ gridTemplateColumns: "1fr 300px", alignItems: "start" }}
-        >
-          {/* Left — batches */}
-          <div>
+        className="grid gap-5 seller-shop-layout"
+        style={{ gridTemplateColumns: "1fr 300px", alignItems: "start" }}
+      >
+        {/* Left — batches */}
+        <div>
+          <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
             <div
-              className="flex items-center justify-between"
-              style={{ marginBottom: 14 }}
+              style={{
+                fontFamily: "'Josefin Sans',sans-serif",
+                fontSize: 15,
+                fontWeight: 700,
+                color: "#111827",
+              }}
             >
-              <div
-                style={{
-                  fontFamily: "'Josefin Sans',sans-serif",
-                  fontSize: 15,
-                  fontWeight: 700,
-                  color: "#111827",
-                }}
-              >
-                {`${visibleBatches.length} batch${visibleBatches.length !== 1 ? "es" : ""}`}
-              </div>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                style={{
-                  fontSize: 12,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 6,
-                  padding: "6px 10px",
-                  background: "#fff",
-                  outline: "none",
-                  color: "#374151",
-                }}
-              >
-                {["Newest", "Most Claimed", "Ending Soonest"].map((o) => (
-                  <option key={o}>{o}</option>
-                ))}
-              </select>
+              {`${visibleBatches.length} batch${visibleBatches.length !== 1 ? "es" : ""}`}
             </div>
-
-            {gridBatches.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  color: "#9CA3AF",
-                  fontSize: 13,
-                  padding: "40px 0",
-                }}
-              >
-                No batches in this category yet.
-              </div>
-            ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
-                  gap: 16,
-                  alignItems: "start",
-                }}
-              >
-                {gridBatches.map((b, index) => (
-                  <Fragment key={b.id}>
-                    {/* Closed batches are already sorted to the end; a divider
-                        says why they look different before the first one. */}
-                    {batchCardClosed(b) &&
-                      (index === 0 || !batchCardClosed(gridBatches[index - 1])) && (
-                        <h3 className="storefront-closed-heading">
-                          Closed batches
-                          <span>
-                            {gridBatches.filter((batch) => batchCardClosed(batch)).length}
-                          </span>
-                        </h3>
-                      )}
-                    <StorefrontBatchCard
-                      batch={b}
-                      canClaim={canClaim}
-                      canReact={canReact}
-                      blockClosed={role !== "Seller"}
-                      onOpen={onBatchOpen}
-                      onToggleReaction={onToggleReaction}
-                      reactionPending={reactionPending?.has(b.id) ?? false}
-                    />
-                  </Fragment>
-                ))}
-              </div>
-            )}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                fontSize: 12,
+                border: "1px solid #E5E7EB",
+                borderRadius: 6,
+                padding: "6px 10px",
+                background: "#fff",
+                outline: "none",
+                color: "#374151",
+              }}
+            >
+              {["Newest", "Most Claimed", "Ending Soonest"].map((o) => (
+                <option key={o}>{o}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Right — trust panel (kept from the old shop page) */}
-          <div className="space-y-4">
-            <Card>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#374151",
-                  letterSpacing: 0.5,
-                  marginBottom: 10,
-                }}
-              >
-                ACCEPTED PAYMENT METHODS
-              </div>
-              {methodsLoading ? (
-                <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                  Loading payment methods…
-                </div>
-              ) : paymentMethods.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {paymentMethods.map((method) => (
-                    <div
-                      key={`${method.methodType}-${method.accountNumber ?? "cash"}`}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        border: "1px solid #E5E7EB",
-                        borderRadius: 8,
-                        background: "#F9FAFB",
-                        color: "#374151",
-                        padding: "7px 9px",
-                        fontSize: 11,
-                        fontWeight: 700,
-                      }}
-                    >
-                      <PaymentIcon method={method.methodType} size={16} />
-                      {method.methodType}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5 }}>
-                  This seller has not listed an accepted payment method yet.
-                </div>
-              )}
-            </Card>
-            <Card>
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#374151",
-                  letterSpacing: 0.5,
-                  marginBottom: 10,
-                }}
-              >
-                TRACK RECORD
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  ["Completed", String(totalClaimed), "#0B7A59"],
-                  ["Active Batches", String(sellerBatches.filter((b) => b.live && !batchCardClosed(b)).length), INDIGO],
-                  ["Products", String(totalProducts), "#111827"],
-                  ["Reactions", String(totalReactions), "#ef3559"],
-                ].map(([label, val, color]) => (
+          {gridBatches.length === 0 ? (
+            <div
+              style={{
+                textAlign: "center",
+                color: "#9CA3AF",
+                fontSize: 13,
+                padding: "40px 0",
+              }}
+            >
+              No batches in this category yet.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))",
+                gap: 16,
+                alignItems: "start",
+              }}
+            >
+              {gridBatches.map((b, index) => (
+                <Fragment key={b.id}>
+                  {/* Closed batches are already sorted to the end; a divider
+                        says why they look different before the first one. */}
+                  {batchCardClosed(b) &&
+                    (index === 0 || !batchCardClosed(gridBatches[index - 1])) && (
+                      <h3 className="storefront-closed-heading">
+                        Closed batches
+                        <span>{gridBatches.filter((batch) => batchCardClosed(batch)).length}</span>
+                      </h3>
+                    )}
+                  <StorefrontBatchCard
+                    batch={b}
+                    canClaim={canClaim}
+                    canReact={canReact}
+                    blockClosed={role !== "Seller"}
+                    onOpen={onBatchOpen}
+                    onToggleReaction={onToggleReaction}
+                    reactionPending={reactionPending?.has(b.id) ?? false}
+                  />
+                </Fragment>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right — trust panel (kept from the old shop page) */}
+        <div className="space-y-4">
+          <Card>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#374151",
+                letterSpacing: 0.5,
+                marginBottom: 10,
+              }}
+            >
+              ACCEPTED PAYMENT METHODS
+            </div>
+            {methodsLoading ? (
+              <div style={{ fontSize: 11, color: "#9CA3AF" }}>Loading payment methods…</div>
+            ) : paymentMethods.length > 0 ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {paymentMethods.map((method) => (
                   <div
-                    key={label}
+                    key={`${method.methodType}-${method.accountNumber ?? "cash"}`}
                     style={{
-                      background: "#F9FAFB",
-                      borderRadius: 8,
-                      padding: "8px 10px",
-                      textAlign: "center",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
                       border: "1px solid #E5E7EB",
+                      borderRadius: 8,
+                      background: "#F9FAFB",
+                      color: "#374151",
+                      padding: "7px 9px",
+                      fontSize: 11,
+                      fontWeight: 700,
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 800,
-                        color,
-                        fontFamily: "'Josefin Sans',sans-serif",
-                      }}
-                    >
-                      {val}
-                    </div>
-                    <div style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 500 }}>
-                      {label}
-                    </div>
+                    <PaymentIcon method={method.methodType} size={16} />
+                    {method.methodType}
                   </div>
                 ))}
               </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "#374151",
-                  background: "#EEF0FF",
-                  borderRadius: 8,
-                  padding: "8px 12px",
-                  marginTop: 10,
-                  lineHeight: 1.5,
-                }}
-              >
-                These numbers come from recorded transactions.
+            ) : (
+              <div style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5 }}>
+                This seller has not listed an accepted payment method yet.
               </div>
-            </Card>
-          </div>
+            )}
+          </Card>
+          <Card>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#374151",
+                letterSpacing: 0.5,
+                marginBottom: 10,
+              }}
+            >
+              TRACK RECORD
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                ["Completed", String(totalClaimed), "#0B7A59"],
+                [
+                  "Active Batches",
+                  String(sellerBatches.filter((b) => b.live && !batchCardClosed(b)).length),
+                  INDIGO,
+                ],
+                ["Products", String(totalProducts), "#111827"],
+                ["Reactions", String(totalReactions), "#ef3559"],
+              ].map(([label, val, color]) => (
+                <div
+                  key={label}
+                  style={{
+                    background: "#F9FAFB",
+                    borderRadius: 8,
+                    padding: "8px 10px",
+                    textAlign: "center",
+                    border: "1px solid #E5E7EB",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 800,
+                      color,
+                      fontFamily: "'Josefin Sans',sans-serif",
+                    }}
+                  >
+                    {val}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 500 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#374151",
+                background: "#EEF0FF",
+                borderRadius: 8,
+                padding: "8px 12px",
+                marginTop: 10,
+                lineHeight: 1.5,
+              }}
+            >
+              These numbers come from recorded transactions.
+            </div>
+          </Card>
+        </div>
       </div>
 
       {showChat && (
         <ContactModal
-          name={seller}
+          name={sellerDisplay}
           context="shop inquiry"
           contactUrl={contactUrl}
           onClose={() => setShowChat(false)}
         />
       )}
     </div>
-  )
+  );
 }
 
 // Storefront batch card — matches the Home batch card look (cover image banner
@@ -503,25 +498,25 @@ function StorefrontBatchCard({
   onToggleReaction,
   reactionPending,
 }: {
-  batch: BatchType
-  canClaim: boolean
-  canReact: boolean
+  batch: BatchType;
+  canClaim: boolean;
+  canReact: boolean;
   // Buyers cannot open (or favorite) a closed batch. The seller viewing their
   // own storefront still can, to manage it.
-  blockClosed: boolean
-  onOpen?: (batchId: number) => void
-  onToggleReaction?: (batch: BatchType) => void
-  reactionPending: boolean
+  blockClosed: boolean;
+  onOpen?: (batchId: number) => void;
+  onToggleReaction?: (batch: BatchType) => void;
+  reactionPending: boolean;
 }) {
-  const pct = b.items > 0 ? Math.round((b.claimed / b.items) * 100) : 0
-  const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"]
-  const barColor = pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO
-  const closed = batchCardClosed(b)
-  const inert = closed && blockClosed
-  const soldOut = b.claimed >= b.items && !closed
-  const reacted = Boolean(b.reactedByCurrentUser)
-  const count = b.reactionCount ?? 0
-  const open = () => onOpen?.(b.id)
+  const pct = b.items > 0 ? Math.round((b.claimed / b.items) * 100) : 0;
+  const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"];
+  const barColor = pct > 85 ? "#EF4444" : pct > 60 ? AMBER : INDIGO;
+  const closed = batchCardClosed(b);
+  const inert = closed && blockClosed;
+  const soldOut = b.claimed >= b.items && !closed;
+  const reacted = Boolean(b.reactedByCurrentUser);
+  const count = b.reactionCount ?? 0;
+  const open = () => onOpen?.(b.id);
   return (
     <div
       className={`storefront-batch-card${closed ? " is-closed" : ""}${inert ? " is-inert" : ""}`}
@@ -530,7 +525,11 @@ function StorefrontBatchCard({
       role={inert ? undefined : "button"}
       tabIndex={inert ? undefined : 0}
       aria-label={
-        inert ? `${b.title}, batch closed` : closed ? `View ${b.title}, batch closed` : `View ${b.title}`
+        inert
+          ? `${b.title}, batch closed`
+          : closed
+            ? `View ${b.title}, batch closed`
+            : `View ${b.title}`
       }
       onClick={inert ? undefined : open}
       onKeyDown={
@@ -538,8 +537,8 @@ function StorefrontBatchCard({
           ? undefined
           : (e) => {
               if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault()
-                open()
+                e.preventDefault();
+                open();
               }
             }
       }
@@ -556,18 +555,18 @@ function StorefrontBatchCard({
         inert
           ? undefined
           : (e) => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.transform = "translateY(-2px)"
-              el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)"
+              const el = e.currentTarget as HTMLDivElement;
+              el.style.transform = "translateY(-2px)";
+              el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.10)";
             }
       }
       onMouseLeave={
         inert
           ? undefined
           : (e) => {
-              const el = e.currentTarget as HTMLDivElement
-              el.style.transform = ""
-              el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"
+              const el = e.currentTarget as HTMLDivElement;
+              el.style.transform = "";
+              el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)";
             }
       }
     >
@@ -585,7 +584,13 @@ function StorefrontBatchCard({
           src={batchCoverSrc(b.coverImage, b.category)}
           alt=""
           aria-hidden="true"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
         />
         <span
           style={{
@@ -614,8 +619,8 @@ function StorefrontBatchCard({
             aria-pressed={reacted}
             disabled={reactionPending}
             onClick={(event) => {
-              event.stopPropagation()
-              onToggleReaction?.(b)
+              event.stopPropagation();
+              onToggleReaction?.(b);
             }}
           >
             <Heart
@@ -692,29 +697,31 @@ function StorefrontBatchCard({
             marginBottom: canClaim ? 12 : 0,
           }}
         >
-          <div style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: 999 }} />
+          <div
+            style={{ width: `${pct}%`, height: "100%", background: barColor, borderRadius: 999 }}
+          />
         </div>
-        {canClaim && b.products.some((p) => productAvailability(p, batchCardClosed(b)).canClaim) && (
-          // Let buyers choose a product on the batch page instead of silently
-          // selecting the first available item from the storefront.
-          <div onClick={(e) => e.stopPropagation()}>
-            <PrimaryBtn
-              size="sm"
-              onClick={open}
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                background: "#C81E62",
-                boxShadow: "0 2px 8px rgba(200,30,98,0.35)",
-              }}
-            >
-              Claim an item
-            </PrimaryBtn>
-          </div>
-        )}
+        {canClaim &&
+          b.products.some((p) => productAvailability(p, batchCardClosed(b)).canClaim) && (
+            // Let buyers choose a product on the batch page instead of silently
+            // selecting the first available item from the storefront.
+            <div onClick={(e) => e.stopPropagation()}>
+              <PrimaryBtn
+                size="sm"
+                onClick={open}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  background: "#C81E62",
+                  boxShadow: "0 2px 8px rgba(200,30,98,0.35)",
+                }}
+              >
+                Claim an item
+              </PrimaryBtn>
+            </div>
+          )}
       </div>
     </div>
-  )
+  );
 }
-

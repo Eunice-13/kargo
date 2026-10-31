@@ -110,9 +110,11 @@ export function latestDeliveryRequestForOrder(
   const associated = requests.filter((request) =>
     request.members.some((member) => member.order_id === orderId),
   );
-  return (
-    associated.find((request) =>
-      ["pending_approval", "awaiting_shipping_fee", "shipping_fee_set"].includes(request.status),
-    ) ?? associated[0]
+  // Only an ACTIVE request belongs to the order. A cancelled (or otherwise
+  // terminal) request must not be returned — falling back to associated[0]
+  // kept a cancelled combined request attached to the claim, so it stayed
+  // visible in the claims tab even though it was inactive.
+  return associated.find((request) =>
+    ["pending_approval", "awaiting_shipping_fee", "shipping_fee_set"].includes(request.status),
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -7,97 +7,112 @@ import {
   Flame,
   Heart,
   ListOrdered,
-} from "lucide-react"
-import { Avatar, Modal } from "@/components/shared"
+} from "lucide-react";
+import { Avatar, Modal } from "@/components/shared";
 import {
   BATCH_CATEGORIES,
   normalizeBatchCategory,
   batchImage,
   categoryImage,
-} from "@/constants/categories"
-import type { BatchType } from "@/types"
-import { batchCardClosed } from "./batchAvailability"
-import { sortClosedLast } from "./batchSort"
-import ClosedBatchBadge from "./ClosedBatchBadge"
+} from "@/constants/categories";
+import type { BatchType } from "@/types";
+import { batchCardClosed } from "./batchAvailability";
+import { sortClosedLast } from "./batchSort";
+import { sellerLabel } from "./sellerLabel";
+import ClosedBatchBadge from "./ClosedBatchBadge";
+
+/**
+ * Buyer-facing time filter for the home grid. A group-buy batch is a trip with
+ * a join window, so buyers shop by "what can I still join / what's leaving
+ * soon", not by the calendar month a seller happened to post in.
+ */
+export type BuyerHomeAvailability = "all" | "open" | "closing" | "recent";
+
+/** Year-month key ("2026-10") used to group batches by calendar month. */
+function monthKey(value?: string): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
 
 function useHorizontalCarousel(itemCount: number) {
-  const trackRef = useRef<HTMLDivElement>(null)
-  const drag = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 })
-  const suppressClick = useRef(false)
-  const [canPrevious, setCanPrevious] = useState(false)
-  const [canNext, setCanNext] = useState(false)
+  const trackRef = useRef<HTMLDivElement>(null);
+  const drag = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 });
+  const suppressClick = useRef(false);
+  const [canPrevious, setCanPrevious] = useState(false);
+  const [canNext, setCanNext] = useState(false);
 
   const updateBounds = useCallback(() => {
-    const track = trackRef.current
-    if (!track) return
-    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth)
-    setCanPrevious(track.scrollLeft > 2)
-    setCanNext(track.scrollLeft < maxScroll - 2)
-  }, [])
+    const track = trackRef.current;
+    if (!track) return;
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    setCanPrevious(track.scrollLeft > 2);
+    setCanNext(track.scrollLeft < maxScroll - 2);
+  }, []);
 
   useEffect(() => {
-    const track = trackRef.current
-    if (!track) return
-    track.scrollTo({ left: 0 })
-    const frame = window.requestAnimationFrame(updateBounds)
-    const observer = new ResizeObserver(updateBounds)
-    observer.observe(track)
+    const track = trackRef.current;
+    if (!track) return;
+    track.scrollTo({ left: 0 });
+    const frame = window.requestAnimationFrame(updateBounds);
+    const observer = new ResizeObserver(updateBounds);
+    observer.observe(track);
     return () => {
-      window.cancelAnimationFrame(frame)
-      observer.disconnect()
-    }
-  }, [itemCount, updateBounds])
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [itemCount, updateBounds]);
 
   const scroll = (direction: -1 | 1) => {
-    const track = trackRef.current
-    if (!track) return
+    const track = trackRef.current;
+    if (!track) return;
     track.scrollBy({
       left: direction * Math.max(240, track.clientWidth * 0.92),
       behavior: "smooth",
-    })
-  }
+    });
+  };
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType !== "mouse" || event.button !== 0) return
-    const track = trackRef.current
-    if (!track) return
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+    const track = trackRef.current;
+    if (!track) return;
     drag.current = {
       active: true,
       moved: false,
       startX: event.clientX,
       scrollLeft: track.scrollLeft,
-    }
-  }
+    };
+  };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const track = trackRef.current
-    if (!track || !drag.current.active) return
-    const distance = event.clientX - drag.current.startX
+    const track = trackRef.current;
+    if (!track || !drag.current.active) return;
+    const distance = event.clientX - drag.current.startX;
     if (!drag.current.moved && Math.abs(distance) > 5) {
-      drag.current.moved = true
-      track.setPointerCapture(event.pointerId)
-      track.classList.add("is-dragging")
+      drag.current.moved = true;
+      track.setPointerCapture(event.pointerId);
+      track.classList.add("is-dragging");
     }
-    if (drag.current.moved)
-      track.scrollLeft = drag.current.scrollLeft - distance
-  }
+    if (drag.current.moved) track.scrollLeft = drag.current.scrollLeft - distance;
+  };
 
   const finishDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    const track = trackRef.current
-    if (!track || !drag.current.active) return
-    suppressClick.current = drag.current.moved
-    drag.current.active = false
+    const track = trackRef.current;
+    if (!track || !drag.current.active) return;
+    suppressClick.current = drag.current.moved;
+    drag.current.active = false;
     if (drag.current.moved) {
-      track.classList.remove("is-dragging")
+      track.classList.remove("is-dragging");
       if (track.hasPointerCapture(event.pointerId)) {
-        track.releasePointerCapture(event.pointerId)
+        track.releasePointerCapture(event.pointerId);
       }
     }
-    window.requestAnimationFrame(updateBounds)
+    window.requestAnimationFrame(updateBounds);
     window.setTimeout(() => {
-      suppressClick.current = false
-    }, 0)
-  }
+      suppressClick.current = false;
+    }, 0);
+  };
 
   return {
     trackRef,
@@ -111,45 +126,39 @@ function useHorizontalCarousel(itemCount: number) {
       onPointerUp: finishDrag,
       onPointerCancel: finishDrag,
       onClickCapture: (event: React.MouseEvent<HTMLDivElement>) => {
-        if (!suppressClick.current) return
-        event.preventDefault()
-        event.stopPropagation()
+        if (!suppressClick.current) return;
+        event.preventDefault();
+        event.stopPropagation();
       },
     },
-  }
+  };
 }
 
 function useIsPhone() {
   // Read the query on the first render so a phone never paints the desktop
   // page size first and re-paginates a frame later.
   const [isPhone, setIsPhone] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(max-width: 620px)").matches,
-  )
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 620px)").matches,
+  );
 
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 620px)")
-    const sync = () => setIsPhone(query.matches)
+    const query = window.matchMedia("(max-width: 620px)");
+    const sync = () => setIsPhone(query.matches);
 
-    sync()
-    query.addEventListener("change", sync)
-    return () => query.removeEventListener("change", sync)
-  }, [])
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
 
-  return isPhone
+  return isPhone;
 }
 
 function batchProgress(batch: BatchType) {
-  const percentage = Math.min(
-    100,
-    Math.round((batch.claimed / Math.max(1, batch.items)) * 100),
-  )
+  const percentage = Math.min(100, Math.round((batch.claimed / Math.max(1, batch.items)) * 100));
   return {
     percentage,
-    color:
-      percentage >= 80 ? "#ef466f" : percentage >= 50 ? "#f2c94c" : "#42c9a5",
-  }
+    color: percentage >= 80 ? "#ef466f" : percentage >= 50 ? "#f2c94c" : "#42c9a5",
+  };
 }
 
 function BatchCard({
@@ -161,22 +170,18 @@ function BatchCard({
   onFavorite,
   onOpen,
 }: {
-  batch: BatchType
-  favorited: boolean
-  reactionCount: number
-  reactionPending: boolean
-  rank?: number
-  onFavorite: () => void
-  onOpen: () => void
+  batch: BatchType;
+  favorited: boolean;
+  reactionCount: number;
+  reactionPending: boolean;
+  rank?: number;
+  onFavorite: () => void;
+  onOpen: () => void;
 }) {
-  const { percentage, color: progressColor } = batchProgress(batch)
-  const closed = batchCardClosed(batch)
+  const { percentage, color: progressColor } = batchProgress(batch);
+  const closed = batchCardClosed(batch);
   const rankClass =
-    rank === undefined
-      ? ""
-      : rank <= 3
-        ? ` is-ranked is-rank-${rank}`
-        : " is-ranked"
+    rank === undefined ? "" : rank <= 3 ? ` is-ranked is-rank-${rank}` : " is-ranked";
 
   return (
     // A closed batch is shown for context only. It is not a button: no role,
@@ -188,8 +193,8 @@ function BatchCard({
       tabIndex={closed ? undefined : 0}
       aria-label={
         closed
-          ? `${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${batch.seller}, batch closed`
-          : `Open ${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${batch.seller}, ${batch.trips}, ${batch.claimed} of ${batch.items} claimed${
+          ? `${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${sellerLabel(batch)}, batch closed`
+          : `Open ${batch.title}, ${normalizeBatchCategory(batch.category)}, sold by ${sellerLabel(batch)}, ${batch.trips}, ${batch.claimed} of ${batch.items} claimed${
               rank === undefined ? "" : `, ranked #${rank} by buyer favorites`
             }`
       }
@@ -199,8 +204,8 @@ function BatchCard({
           ? undefined
           : (event) => {
               if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault()
-                onOpen()
+                event.preventDefault();
+                onOpen();
               }
             }
       }
@@ -216,33 +221,23 @@ function BatchCard({
         {closed && <ClosedBatchBadge size="small" endsOn={batch.endsOn} />}
         <button
           type="button"
-          className={`buyer-batch-card__favorite${
-            favorited ? " is-favorite" : ""
-          }`}
+          className={`buyer-batch-card__favorite${favorited ? " is-favorite" : ""}`}
           aria-label={
-            favorited
-              ? `Remove ${batch.title} from favorites`
-              : `Add ${batch.title} to favorites`
+            favorited ? `Remove ${batch.title} from favorites` : `Add ${batch.title} to favorites`
           }
           aria-pressed={favorited}
           disabled={reactionPending || closed}
           onClick={(event) => {
-            event.stopPropagation()
-            onFavorite()
+            event.stopPropagation();
+            onFavorite();
           }}
         >
-          <Heart
-            size={22}
-            strokeWidth={2.2}
-            fill={favorited ? "currentColor" : "transparent"}
-          />
+          <Heart size={22} strokeWidth={2.2} fill={favorited ? "currentColor" : "transparent"} />
           <span>{reactionCount}</span>
         </button>
         {rank !== undefined && (
           <span className="buyer-batch-card__rank" aria-hidden="true">
-            {rank === 1 && (
-              <Flame size={12} strokeWidth={2.4} fill="currentColor" />
-            )}
+            {rank === 1 && <Flame size={12} strokeWidth={2.4} fill="currentColor" />}
             <span>#{rank}</span>
           </span>
         )}
@@ -250,8 +245,8 @@ function BatchCard({
       <div className="buyer-batch-card__body">
         <h3>{batch.title}</h3>
         <div className="buyer-batch-card__seller">
-          <Avatar name={batch.seller} size={21} />
-          <span>{batch.seller}</span>
+          <Avatar name={sellerLabel(batch)} size={21} />
+          <span>{sellerLabel(batch)}</span>
         </div>
         <div className="buyer-batch-card__date">
           <CalendarDays size={12} aria-hidden="true" />
@@ -264,13 +259,11 @@ function BatchCard({
           <strong style={{ color: progressColor }}>{percentage}%</strong>
         </div>
         <div className="buyer-batch-card__track" aria-hidden="true">
-          <span
-            style={{ width: `${percentage}%`, background: progressColor }}
-          />
+          <span style={{ width: `${percentage}%`, background: progressColor }} />
         </div>
       </div>
     </article>
-  )
+  );
 }
 
 function CarouselControls({
@@ -280,11 +273,11 @@ function CarouselControls({
   canNext,
   label,
 }: {
-  onPrevious: () => void
-  onNext: () => void
-  canPrevious: boolean
-  canNext: boolean
-  label: string
+  onPrevious: () => void;
+  onNext: () => void;
+  canPrevious: boolean;
+  canNext: boolean;
+  label: string;
 }) {
   return (
     <div className="buyer-carousel-controls" aria-label={`${label} navigation`}>
@@ -296,16 +289,11 @@ function CarouselControls({
       >
         <ArrowLeft size={20} strokeWidth={2.8} />
       </button>
-      <button
-        type="button"
-        aria-label={`Next ${label}`}
-        onClick={onNext}
-        disabled={!canNext}
-      >
+      <button type="button" aria-label={`Next ${label}`} onClick={onNext} disabled={!canNext}>
         <ArrowRight size={20} strokeWidth={2.8} />
       </button>
     </div>
-  )
+  );
 }
 
 function BatchSection({
@@ -316,25 +304,25 @@ function BatchSection({
   onToggleFavorite,
   onOpenBatch,
 }: {
-  title: string
-  batches: BatchType[]
-  showControls?: boolean
-  reactionPending: Set<number>
-  onToggleFavorite: (batch: BatchType) => void
-  onOpenBatch: (batch: BatchType) => void
+  title: string;
+  batches: BatchType[];
+  showControls?: boolean;
+  reactionPending: Set<number>;
+  onToggleFavorite: (batch: BatchType) => void;
+  onOpenBatch: (batch: BatchType) => void;
 }) {
   // Phones show 6 batches per slide (3 across x 2 rows, see responsive.css).
   // Desktop keeps its 5 x 2 layout of 10.
-  const isPhone = useIsPhone()
-  const pageSize = isPhone ? 6 : 10
+  const isPhone = useIsPhone();
+  const pageSize = isPhone ? 6 : 10;
   const pages = useMemo(
     () =>
       Array.from({ length: Math.ceil(batches.length / pageSize) }, (_, index) =>
         batches.slice(index * pageSize, index * pageSize + pageSize),
       ),
     [batches, pageSize],
-  )
-  const carousel = useHorizontalCarousel(pages.length)
+  );
+  const carousel = useHorizontalCarousel(pages.length);
   return (
     <section className="buyer-home-section">
       <div className="buyer-home-section__heading">
@@ -379,7 +367,7 @@ function BatchSection({
         <div className="buyer-home-empty">No batches match these filters.</div>
       )}
     </section>
-  )
+  );
 }
 
 function PopularSection({
@@ -388,27 +376,30 @@ function PopularSection({
   onToggleFavorite,
   onOpenBatch,
 }: {
-  batches: BatchType[]
-  reactionPending: Set<number>
-  onToggleFavorite: (batch: BatchType) => void
-  onOpenBatch: (batch: BatchType) => void
+  batches: BatchType[];
+  reactionPending: Set<number>;
+  onToggleFavorite: (batch: BatchType) => void;
+  onOpenBatch: (batch: BatchType) => void;
 }) {
-  const [showTopTen, setShowTopTen] = useState(false)
-  const isPhone = useIsPhone()
+  const [showTopTen, setShowTopTen] = useState(false);
+  const isPhone = useIsPhone();
   // Podium reads 2 - 1 - 3 on screen; DOM order stays 1, 2, 3 so the rank
   // order survives for screen readers and keyboard users. Ranks 4-7 fan out
   // behind the podium, but only in pairs: one card per side at a time, so a
   // filtered list never leaves the deck stacked on a single edge.
-  const podium = batches.slice(0, 3)
-  const extraCount = Math.min(4, batches.length - podium.length)
-  const pairedCount = extraCount - (extraCount % 2)
-  const peeks = batches.slice(3, 3 + pairedCount).map((batch, index) => ({
+  const podium = batches.slice(0, 3);
+  // Ranks 4-7 fan out behind the podium, alternating sides. We show every
+  // available extra (up to 4) — including a lone odd one — so the podium count
+  // always matches the "See the top N" list instead of silently dropping a
+  // single unpaired batch.
+  const extraCount = Math.min(4, batches.length - podium.length);
+  const peeks = batches.slice(3, 3 + extraCount).map((batch, index) => ({
     batch,
     rank: index + 4,
     side: index % 2 === 0 ? "left" : "right",
     depth: Math.floor(index / 2) + 1,
-  }))
-  const canExpand = batches.length > podium.length
+  }));
+  const canExpand = batches.length > podium.length;
 
   return (
     <section className="buyer-home-section buyer-home-section--popular">
@@ -425,25 +416,20 @@ function PopularSection({
                 Hot
               </span>
             </div>
-            <p className="buyer-hot-heading__note">
-              Ranked by buyer favorites
-            </p>
+            <p className="buyer-hot-heading__note">Ranked by buyer favorites</p>
           </div>
         </div>
       </div>
 
       {batches.length === 0 ? (
-        <div className="buyer-home-empty">No batches match these filters.</div>
+        <div className="buyer-home-empty">
+          No favorited batches here yet. Tap the heart on a batch to show interest.
+        </div>
       ) : (
         <>
           <div className="buyer-podium">
             {podium.map((batch, index) => (
-              <div
-                className={`buyer-podium__slot buyer-podium__slot--${
-                  index + 1
-                }`}
-                key={batch.id}
-              >
+              <div className={`buyer-podium__slot buyer-podium__slot--${index + 1}`} key={batch.id}>
                 <div className="buyer-podium__card">
                   <BatchCard
                     batch={batch}
@@ -459,7 +445,7 @@ function PopularSection({
             ))}
             {!isPhone &&
               peeks.map(({ batch, rank, side, depth }) => {
-                const progress = batchProgress(batch)
+                const progress = batchProgress(batch);
 
                 return (
                   <button
@@ -472,8 +458,8 @@ function PopularSection({
                     disabled={batchCardClosed(batch)}
                     aria-label={
                       batchCardClosed(batch)
-                        ? `${batch.title} by ${batch.seller}, batch closed`
-                        : `Open ${batch.title} by ${batch.seller}, ranked #${rank} by buyer favorites`
+                        ? `${batch.title} by ${sellerLabel(batch)}, batch closed`
+                        : `Open ${batch.title} by ${sellerLabel(batch)}, ranked #${rank} by buyer favorites`
                     }
                     onClick={() => onOpenBatch(batch)}
                   >
@@ -483,33 +469,19 @@ function PopularSection({
                         alt=""
                         draggable={false}
                       />
-                      <span
-                        className="buyer-podium__peek-rank"
-                        aria-hidden="true"
-                      >
+                      <span className="buyer-podium__peek-rank" aria-hidden="true">
                         #{rank}
                       </span>
                     </span>
-                    <span
-                      className="buyer-podium__peek-body"
-                      aria-hidden="true"
-                    >
-                      <span className="buyer-podium__peek-title">
-                        {batch.title}
-                      </span>
-                      <span className="buyer-podium__peek-seller">
-                        {batch.seller}
-                      </span>
-                      <span className="buyer-podium__peek-date">
-                        {batch.trips}
-                      </span>
+                    <span className="buyer-podium__peek-body" aria-hidden="true">
+                      <span className="buyer-podium__peek-title">{batch.title}</span>
+                      <span className="buyer-podium__peek-seller">{sellerLabel(batch)}</span>
+                      <span className="buyer-podium__peek-date">{batch.trips}</span>
                       <span className="buyer-podium__peek-progress">
                         <span>
                           {batch.claimed}/{batch.items} claimed
                         </span>
-                        <strong style={{ color: progress.color }}>
-                          {progress.percentage}%
-                        </strong>
+                        <strong style={{ color: progress.color }}>{progress.percentage}%</strong>
                       </span>
                       <span className="buyer-podium__peek-track">
                         <span
@@ -521,7 +493,7 @@ function PopularSection({
                       </span>
                     </span>
                   </button>
-                )
+                );
               })}
           </div>
 
@@ -543,41 +515,34 @@ function PopularSection({
                   width={640}
                   variant="detail"
                 >
-                  <p className="buyer-toplist__intro">
-                    Ranked by buyer favorites.
-                  </p>
+                  <p className="buyer-toplist__intro">Ranked by buyer favorites.</p>
                   <ol className="buyer-toplist">
                     {batches.map((batch, index) => {
-                      const rank = index + 1
-                      const progress = batchProgress(batch)
+                      const rank = index + 1;
+                      const progress = batchProgress(batch);
                       return (
                         <li key={batch.id}>
                           <div
                             className={`buyer-toplist__row${
-                              rank <= 3
-                                ? ` is-podium is-rank-${rank}`
-                                : ""
+                              rank <= 3 ? ` is-podium is-rank-${rank}` : ""
                             }`}
                             role="button"
                             tabIndex={0}
-                            aria-label={`Open ${batch.title} by ${batch.seller}, ranked #${rank} by buyer favorites, ${batch.claimed} of ${batch.items} claimed`}
+                            aria-label={`Open ${batch.title} by ${sellerLabel(batch)}, ranked #${rank} by buyer favorites, ${batch.claimed} of ${batch.items} claimed`}
                             onClick={() => {
-                              setShowTopTen(false)
-                              onOpenBatch(batch)
+                              setShowTopTen(false);
+                              onOpenBatch(batch);
                             }}
                             onKeyDown={(event) => {
-                              if (event.target !== event.currentTarget) return
+                              if (event.target !== event.currentTarget) return;
                               if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault()
-                                setShowTopTen(false)
-                                onOpenBatch(batch)
+                                event.preventDefault();
+                                setShowTopTen(false);
+                                onOpenBatch(batch);
                               }
                             }}
                           >
-                            <span
-                              className="buyer-toplist__rank"
-                              aria-hidden="true"
-                            >
+                            <span className="buyer-toplist__rank" aria-hidden="true">
                               #{rank}
                             </span>
                             <span className="buyer-toplist__thumb">
@@ -589,18 +554,12 @@ function PopularSection({
                               />
                             </span>
                             <span className="buyer-toplist__body">
-                              <span className="buyer-toplist__title">
-                                {batch.title}
-                              </span>
+                              <span className="buyer-toplist__title">{batch.title}</span>
                               <span className="buyer-toplist__meta">
-                                {batch.seller} ·{" "}
-                                {normalizeBatchCategory(batch.category)} ·{" "}
+                                {sellerLabel(batch)} · {normalizeBatchCategory(batch.category)} ·{" "}
                                 {batch.claimed}/{batch.items} claimed
                               </span>
-                              <span
-                                className="buyer-toplist__bar"
-                                aria-hidden="true"
-                              >
+                              <span className="buyer-toplist__bar" aria-hidden="true">
                                 <span
                                   style={{
                                     width: `${progress.percentage}%`,
@@ -612,32 +571,24 @@ function PopularSection({
                             <button
                               type="button"
                               className={`buyer-toplist__hearts${
-                                batch.reactedByCurrentUser
-                                  ? " is-favorite"
-                                  : ""
+                                batch.reactedByCurrentUser ? " is-favorite" : ""
                               }`}
                               aria-label={
                                 batch.reactedByCurrentUser
                                   ? `Remove ${batch.title} from favorites`
                                   : `Add ${batch.title} to favorites`
                               }
-                              aria-pressed={Boolean(
-                                batch.reactedByCurrentUser,
-                              )}
+                              aria-pressed={Boolean(batch.reactedByCurrentUser)}
                               disabled={reactionPending.has(batch.id)}
                               onClick={(event) => {
-                                event.stopPropagation()
-                                onToggleFavorite(batch)
+                                event.stopPropagation();
+                                onToggleFavorite(batch);
                               }}
                             >
                               <Heart
                                 size={13}
                                 strokeWidth={2.4}
-                                fill={
-                                  batch.reactedByCurrentUser
-                                    ? "currentColor"
-                                    : "none"
-                                }
+                                fill={batch.reactedByCurrentUser ? "currentColor" : "none"}
                                 aria-hidden="true"
                               />
                               {batch.reactionCount ?? 0}
@@ -650,7 +601,7 @@ function PopularSection({
                             />
                           </div>
                         </li>
-                      )
+                      );
                     })}
                   </ol>
                 </Modal>
@@ -660,63 +611,60 @@ function PopularSection({
         </>
       )}
     </section>
-  )
+  );
 }
 
 export default function BuyerHome({
   batches,
   category,
-  date,
+  availability,
   onCategoryChange,
-  onDateChange,
+  onAvailabilityChange,
   onOpenBatch,
   onToggleReaction,
   reactionPending,
 }: {
-  batches: BatchType[]
-  category: string
-  date: string
-  onCategoryChange: (category: string) => void
-  onDateChange: (date: string) => void
-  onOpenBatch: (batch: BatchType) => void
-  onToggleReaction: (batch: BatchType) => void
-  reactionPending: Set<number>
+  batches: BatchType[];
+  category: string;
+  availability: BuyerHomeAvailability;
+  onCategoryChange: (category: string) => void;
+  onAvailabilityChange: (availability: BuyerHomeAvailability) => void;
+  onOpenBatch: (batch: BatchType) => void;
+  onToggleReaction: (batch: BatchType) => void;
+  reactionPending: Set<number>;
 }) {
-  const categoryCarousel = useHorizontalCarousel(BATCH_CATEGORIES.length)
+  const categoryCarousel = useHorizontalCarousel(BATCH_CATEGORIES.length);
 
-  const postedMonth = (createdAt?: string) => {
-    if (!createdAt) return null
-    const posted = new Date(createdAt)
-    if (Number.isNaN(posted.getTime())) return null
-    return `${posted.getFullYear()}-${String(posted.getMonth() + 1).padStart(2, "0")}`
-  }
-  const dates = useMemo(() => {
-    const values = new Map<string, string>()
-    for (const batch of batches) {
-      const key = postedMonth(batch.createdAt)
-      if (key) {
-        values.set(key, new Date(batch.createdAt!).toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        }))
+  const availabilityOptions: [BuyerHomeAvailability, string][] = [
+    ["all", "All batches"],
+    ["open", "Open now"],
+    ["closing", "Closing soon"],
+    ["recent", "Recently added"],
+  ];
+
+  const filtered = useMemo(() => {
+    const now = Date.now();
+    // Both time filters are keyed to the current calendar month: "closing soon"
+    // means the batch ends this month, "recently added" means it was posted
+    // this month.
+    const thisMonth = monthKey(new Date(now).toISOString());
+    return batches.filter((batch) => {
+      if (category !== "All" && normalizeBatchCategory(batch.category) !== category) return false;
+
+      switch (availability) {
+        case "open":
+          return !batchCardClosed(batch, now);
+        case "closing":
+          // Still joinable and its end date lands in the current month.
+          return !batchCardClosed(batch, now) && monthKey(batch.endsOn) === thisMonth;
+        case "recent":
+          // Posted during the current month.
+          return monthKey(batch.createdAt) === thisMonth;
+        default:
+          return true;
       }
-    }
-    return [...values].sort(([a], [b]) => b.localeCompare(a))
-  }, [batches])
-
-  const filtered = useMemo(
-    () =>
-      batches.filter((batch) => {
-        if (category !== "All" && normalizeBatchCategory(batch.category) !== category) return false
-        if (
-          date !== "All" &&
-          postedMonth(batch.createdAt) !== date
-        )
-          return false
-        return true
-      }),
-    [batches, category, date],
-  )
+    });
+  }, [batches, category, availability]);
 
   // Closed batches stay visible for context but always trail the batches a
   // buyer can still join, in both lists.
@@ -725,29 +673,34 @@ export default function BuyerHome({
       sortClosedLast(
         [...filtered].sort((a, b) => {
           const createdDifference =
-            new Date(b.createdAt ?? 0).getTime() -
-            new Date(a.createdAt ?? 0).getTime()
-          return createdDifference || Number(b.id) - Number(a.id)
+            new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+          return createdDifference || Number(b.id) - Number(a.id);
         }),
       ),
     [filtered],
-  )
+  );
+  // "Popular" means ranked strictly by buyer favorites, so only batches with at
+  // least one reaction qualify and the heart count alone decides the order.
+  // Note: this list is deliberately NOT run through sortClosedLast — a closed
+  // batch with more hearts still outranks an open one with fewer, because the
+  // section is "ranked by favorites", not "what you can still join". The card
+  // itself still shows closed batches as gray/disabled. Ties break by newest,
+  // then id, for a stable order.
   const popular = useMemo(
     () =>
-      sortClosedLast(
-        [...filtered].sort((a, b) => {
-          const reactionDifference =
-            (b.reactionCount ?? 0) - (a.reactionCount ?? 0)
-          if (reactionDifference !== 0) return reactionDifference
+      filtered
+        .filter((batch) => (batch.reactionCount ?? 0) > 0)
+        .sort((a, b) => {
+          const reactionDifference = (b.reactionCount ?? 0) - (a.reactionCount ?? 0);
+          if (reactionDifference !== 0) return reactionDifference;
           const createdDifference =
-            new Date(b.createdAt ?? 0).getTime() -
-            new Date(a.createdAt ?? 0).getTime()
-          if (createdDifference !== 0) return createdDifference
-          return Number(b.id) - Number(a.id)
-        }),
-      ).slice(0, 10),
+            new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+          if (createdDifference !== 0) return createdDifference;
+          return Number(b.id) - Number(a.id);
+        })
+        .slice(0, 10),
     [filtered],
-  )
+  );
   return (
     <div className="buyer-home">
       <div className="buyer-home-filter">
@@ -758,17 +711,20 @@ export default function BuyerHome({
           onChange={(event) => onCategoryChange(event.target.value)}
         >
           {["All", ...BATCH_CATEGORIES].map((option) => (
-            <option key={option} value={option}>{option === "All" ? "All categories" : option}</option>
+            <option key={option} value={option}>
+              {option === "All" ? "All categories" : option}
+            </option>
           ))}
         </select>
         <select
-          aria-label="Filter batches by posting month"
-          value={date}
-          onChange={(event) => onDateChange(event.target.value)}
+          aria-label="Filter batches by availability"
+          value={availability}
+          onChange={(event) => onAvailabilityChange(event.target.value as BuyerHomeAvailability)}
         >
-          <option value="All">All months</option>
-          {dates.map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
+          {availabilityOptions.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
           ))}
         </select>
       </div>
@@ -790,9 +746,7 @@ export default function BuyerHome({
                 key={item}
                 className={category === item ? "is-selected" : ""}
                 aria-pressed={category === item}
-                onClick={() =>
-                  onCategoryChange(category === item ? "All" : item)
-                }
+                onClick={() => onCategoryChange(category === item ? "All" : item)}
               >
                 <img src={categoryImage(item)} alt="" draggable={false} />
                 <span>{item}</span>
@@ -816,5 +770,5 @@ export default function BuyerHome({
         />
       </div>
     </div>
-  )
+  );
 }

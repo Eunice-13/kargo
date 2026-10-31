@@ -6690,22 +6690,32 @@ textarea::placeholder {
   flex: 0 0 34px;
   place-items: center;
   border: 0;
-  border-radius: 50%;
-  background: #74f1df;
-  color: #2026b3;
-  cursor: pointer;
+  /* Decorative only: just the magnifying-glass glyph — no circular pill behind
+     it — tinted with the same token as the active tab icon. */
+  border-radius: 0;
+  background: transparent;
+  color: var(--kargo-coral);
+  cursor: default;
+  pointer-events: none;
 }
 
 .seller-shell-header > div:last-child {
   margin-left: clamp(8px, 2vw, 30px);
 }
 
-.seller-shell-header > div:last-child > div:first-child > button {
+/* The bell is styled by identity, not DOM position. The old
+   `> div:last-child > div:first-child > button` selector only matched when the
+   bell was the first child of the actions row, so the buyer header — which has
+   a (desktop-hidden) mobile-search toggle sitting before the bell — missed the
+   rule and kept its boxed look. Targeting the trigger class makes the buyer and
+   seller bells identical: the white, box-free bell on the gradient header. The
+   admin header keeps its own treatment via `.admin-shell-header`. */
+.seller-shell-header:not(.admin-shell-header) .kargo-notification-trigger {
   border: 0 !important;
   background: transparent !important;
 }
 
-.seller-shell-header > div:last-child > div:first-child > button svg path {
+.seller-shell-header:not(.admin-shell-header) .kargo-notification-trigger svg path {
   fill: #fff;
 }
 
@@ -8715,11 +8725,32 @@ textarea::placeholder {
 }
 
 .admin-seller-row {
+  border-bottom: 1px solid #f1f3f7;
+}
+
+/* The whole row is a button that deep-links into that seller. */
+.admin-seller-row__open {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 9px 0;
-  border-bottom: 1px solid #f1f3f7;
+  width: 100%;
+  padding: 9px 6px;
+  margin: 0 -6px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.12s;
+}
+
+.admin-seller-row__open:hover {
+  background: #f6f8fc;
+}
+
+.admin-seller-row__open:focus-visible {
+  outline: 2px solid #5cc2f2;
+  outline-offset: 1px;
 }
 
 .admin-seller-row__rank {
@@ -8747,17 +8778,19 @@ textarea::placeholder {
   white-space: nowrap;
 }
 
+/* Orders is now the primary ranking figure; GMV is secondary context. */
 .admin-seller-row__orders {
   flex: 0 0 auto;
-  color: #5f6b7a;
-  font-size: 11px;
+  color: #17212b;
+  font-size: 12.5px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .admin-seller-row__gmv {
   flex: 0 0 auto;
-  color: #17212b;
-  font-size: 12.5px;
+  color: #5f6b7a;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -15308,7 +15341,7 @@ select.admin-filter-control {
 .admin-queue-row__title,
 .admin-activity-row__main strong,
 .admin-seller-row__shop,
-.admin-seller-row__gmv,
+.admin-seller-row__orders,
 .admin-field label,
 .admin-fact dd,
 .admin-row-list__main strong,
@@ -15325,7 +15358,7 @@ select.admin-filter-control {
 .admin-queue-row__desc,
 .admin-activity-row__target,
 .admin-activity-row__time,
-.admin-seller-row__orders,
+.admin-seller-row__gmv,
 .admin-field__hint,
 .admin-footer-note,
 .admin-detail-hero__identity p,

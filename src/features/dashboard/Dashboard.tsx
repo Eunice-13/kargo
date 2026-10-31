@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, type ReactNode } from "react"
-import { createPortal } from "react-dom"
+import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import {
   Package,
@@ -12,17 +12,18 @@ import {
   Plane,
   ClipboardList,
   Maximize2,
+  Truck,
   X,
   FileText,
-} from "lucide-react"
+} from "lucide-react";
 
-import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types"
+import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types";
 
-import { navIntent } from "@/state/navIntent"
+import { navIntent } from "@/state/navIntent";
 
-import { sortWaitlistUpcoming } from "@/data/waitlist"
+import { sortWaitlistUpcoming } from "@/data/waitlist";
 
-import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme"
+import { INDIGO, CREAM, CYAN_L, GREEN, AMBER, TODAY } from "@/constants/theme";
 
 import {
   Card,
@@ -34,34 +35,31 @@ import {
   StatusBadge,
   Countdown,
   BuyerProfileModal,
-} from "@/components/shared"
+} from "@/components/shared";
 
-import { BatchCheckoutModal, completedPayments } from "@/features/payments"
+import { BatchCheckoutModal, completedPayments } from "@/features/payments";
 
-import type { PaymentSubmissionDetails } from "@/features/payments"
+import type { PaymentSubmissionDetails } from "@/features/payments";
 
 import {
   useFulfillmentBoard,
   FulfillmentLiveRegion,
   FulfillmentBoard,
-} from "@/features/fulfillment"
-import { OrderDetailsModal } from "@/features/orders"
-import SalesReportModal from "./SalesReportModal"
+} from "@/features/fulfillment";
+import { OrderDetailsModal } from "@/features/orders";
+import SalesReportModal from "./SalesReportModal";
 
-import WaitlistModal from "./WaitlistModal"
+import WaitlistModal from "./WaitlistModal";
 
-import SellerWaitlistCard from "./SellerWaitlistCard"
+import SellerWaitlistCard from "./SellerWaitlistCard";
 
-import PopularBatchesCard from "./PopularBatchesCard"
+import PopularBatchesCard from "./PopularBatchesCard";
 
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { isSupabaseConfigured } from "@/lib/supabase";
 
-import { kargoApi } from "@/services"
+import { kargoApi } from "@/services";
 
-import {
-  claimIsPayable,
-  deadlineHasPassed,
-} from "@/features/claims/claimExpiry"
+import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry";
 
 export default function Dashboard({
   batches,
@@ -100,58 +98,52 @@ export default function Dashboard({
 
   refreshData,
 }: SharedState) {
-  const [showPayAll, setShowPayAll] = useState(false)
+  const [showPayAll, setShowPayAll] = useState(false);
 
-  const [isPhone, setIsPhone] = useState(false)
+  const [isPhone, setIsPhone] = useState(false);
 
   const [buyerProfile, setBuyerProfile] = useState<{
-    name: string
-    contactUrl?: string
-    socialLinks?: Record<string, string>
-    orderCounts: { completed: number; cancelled: number; incomplete: number }
-  } | null>(null)
-  const [boardExpanded, setBoardExpanded] = useState(false)
+    name: string;
+    contactUrl?: string;
+    socialLinks?: Record<string, string>;
+    orderCounts: { completed: number; cancelled: number; incomplete: number };
+  } | null>(null);
+  const [boardExpanded, setBoardExpanded] = useState(false);
   const [portalExpandedBoard, setPortalExpandedBoard] = useState(() =>
-    typeof window !== "undefined"
-      ? window.matchMedia("(max-width: 1023px)").matches
-      : false,
-  )
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 1023px)").matches : false,
+  );
 
-  const [showSalesReport, setShowSalesReport] = useState(false)
+  const [showSalesReport, setShowSalesReport] = useState(false);
 
-  const [showWaitlist, setShowWaitlist] = useState(false)
-  const [buyerOrderDetailsId, setBuyerOrderDetailsId] = useState<string | null>(
-    null,
-  )
-  const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null)
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [buyerOrderDetailsId, setBuyerOrderDetailsId] = useState<string | null>(null);
+  const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null);
 
-  const board = useFulfillmentBoard(setFulfillment)
+  const board = useFulfillmentBoard(setFulfillment);
 
   useEffect(() => {
-    const phoneQuery = window.matchMedia("(max-width: 620px)")
-    const updatePhoneState = () => setIsPhone(phoneQuery.matches)
+    const phoneQuery = window.matchMedia("(max-width: 620px)");
+    const updatePhoneState = () => setIsPhone(phoneQuery.matches);
 
-    updatePhoneState()
-    phoneQuery.addEventListener("change", updatePhoneState)
+    updatePhoneState();
+    phoneQuery.addEventListener("change", updatePhoneState);
 
-    return () => phoneQuery.removeEventListener("change", updatePhoneState)
-  }, [])
+    return () => phoneQuery.removeEventListener("change", updatePhoneState);
+  }, []);
 
   const openBuyerProfile = (
     name: string,
     contactUrl?: string,
     socialLinks?: Record<string, string>,
   ) => {
-    const buyerOrders = claims.filter((claim) => claim.buyer === name)
+    const buyerOrders = claims.filter((claim) => claim.buyer === name);
     setBuyerProfile({
       name,
       contactUrl,
       socialLinks,
       orderCounts: {
         completed: buyerOrders.filter(
-          (claim) =>
-            claim.orderStatus === "completed" ||
-            claim.fulfillmentStage === "delivered",
+          (claim) => claim.orderStatus === "completed" || claim.fulfillmentStage === "delivered",
         ).length,
         cancelled: buyerOrders.filter(
           (claim) =>
@@ -164,63 +156,63 @@ export default function Dashboard({
             (!claim.orderStatus && claim.status === "Expired"),
         ).length,
       },
-    })
-  }
+    });
+  };
 
   const waitlistSorted = useMemo(
     () => sortWaitlistUpcoming(waitlist),
 
     [waitlist],
-  )
+  );
 
-  const closestWaitlist = waitlistSorted[0] ?? null
+  const closestWaitlist = waitlistSorted[0] ?? null;
 
   const openWaitlist = () => {
-    setActiveWaitlistId(closestWaitlist?.id ?? null)
+    setActiveWaitlistId(closestWaitlist?.id ?? null);
 
-    setShowWaitlist(true)
-  }
+    setShowWaitlist(true);
+  };
 
   // Close the expanded board with Escape.
 
   useEffect(() => {
-    if (!boardExpanded) return
+    if (!boardExpanded) return;
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setBoardExpanded(false)
-    }
+      if (e.key === "Escape") setBoardExpanded(false);
+    };
 
-    window.addEventListener("keydown", onKey)
+    window.addEventListener("keydown", onKey);
 
-    return () => window.removeEventListener("keydown", onKey)
-  }, [boardExpanded])
-
-  useEffect(() => {
-    const query = window.matchMedia("(max-width: 1023px)")
-    const updatePortalTarget = () => setPortalExpandedBoard(query.matches)
-
-    updatePortalTarget()
-    query.addEventListener("change", updatePortalTarget)
-
-    return () => query.removeEventListener("change", updatePortalTarget)
-  }, [])
+    return () => window.removeEventListener("keydown", onKey);
+  }, [boardExpanded]);
 
   useEffect(() => {
-    if (!boardExpanded || !portalExpandedBoard) return
+    const query = window.matchMedia("(max-width: 1023px)");
+    const updatePortalTarget = () => setPortalExpandedBoard(query.matches);
 
-    const scrollX = window.scrollX
-    const scrollY = window.scrollY
-    const previousOverflow = document.documentElement.style.overflow
-    document.documentElement.style.overflow = "hidden"
+    updatePortalTarget();
+    query.addEventListener("change", updatePortalTarget);
+
+    return () => query.removeEventListener("change", updatePortalTarget);
+  }, []);
+
+  useEffect(() => {
+    if (!boardExpanded || !portalExpandedBoard) return;
+
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
 
     return () => {
-      document.documentElement.style.overflow = previousOverflow
-      window.scrollTo(scrollX, scrollY)
-    }
-  }, [boardExpanded, portalExpandedBoard])
+      document.documentElement.style.overflow = previousOverflow;
+      window.scrollTo(scrollX, scrollY);
+    };
+  }, [boardExpanded, portalExpandedBoard]);
 
   const mountExpandedBoard = (layer: ReactNode, preserveSellerScope = false) => {
-    if (!portalExpandedBoard) return layer
+    if (!portalExpandedBoard) return layer;
 
     return createPortal(
       preserveSellerScope ? (
@@ -231,14 +223,14 @@ export default function Dashboard({
         layer
       ),
       document.body,
-    )
-  }
+    );
+  };
 
   const activeClaims = claims
 
     .filter((c) => c.status === "Pending")
 
-    .sort((a, b) => Number(b.id) - Number(a.id))
+    .sort((a, b) => Number(b.id) - Number(a.id));
 
   // Recent Claims preview: a fixed number of the most recent claims, shown in
 
@@ -246,20 +238,18 @@ export default function Dashboard({
 
   // All", matching the Seller Dashboard's Recent Orders preview pattern.
 
-  const RECENT_CLAIMS_PREVIEW = 7
-  const PHONE_CLAIMS_PREVIEW = 3
+  const RECENT_CLAIMS_PREVIEW = 7;
+  const PHONE_CLAIMS_PREVIEW = 3;
 
   const urgentPhonePreview = (rows: typeof claims) => {
     const urgent = rows
       .filter((claim) => claim.status === "Pending" && claim.hours > 0)
       .slice()
-      .sort((a, b) => a.hours - b.hours)
-    const remaining = rows.filter(
-      (claim) => !(claim.status === "Pending" && claim.hours > 0),
-    )
+      .sort((a, b) => a.hours - b.hours);
+    const remaining = rows.filter((claim) => !(claim.status === "Pending" && claim.hours > 0));
 
-    return [...urgent, ...remaining].slice(0, PHONE_CLAIMS_PREVIEW)
-  }
+    return [...urgent, ...remaining].slice(0, PHONE_CLAIMS_PREVIEW);
+  };
 
   const recentClaims = claims
 
@@ -267,9 +257,9 @@ export default function Dashboard({
 
     .sort((a, b) => Number(b.id) - Number(a.id))
 
-    .slice(0, RECENT_CLAIMS_PREVIEW)
+    .slice(0, RECENT_CLAIMS_PREVIEW);
 
-  const visibleRecentClaims = recentClaims
+  const visibleRecentClaims = recentClaims;
 
   const payableToPay = toPay.filter(
     (item) =>
@@ -277,23 +267,23 @@ export default function Dashboard({
       item.shippingState !== "waiting_for_seller" &&
       item.shippingState !== "correction_requested" &&
       !deadlineHasPassed(item),
-  )
+  );
 
-  const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0)
+  const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0);
 
-  const completedOrders = completedPayments(payHistory, claims)
+  const completedOrders = completedPayments(payHistory, claims);
 
   // ─── Seller stat sources (derived from live data, not hardcoded) ───────────
 
   // Scope to the signed-in seller's own batches.
 
-  const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name)
+  const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name);
 
-  const mySellerOrders = claims.filter((claim) => claim.seller === user.name)
+  const mySellerOrders = claims.filter((claim) => claim.seller === user.name);
 
   const visibleSellerOrders = isPhone
     ? urgentPhonePreview(mySellerOrders)
-    : mySellerOrders.slice(0, RECENT_CLAIMS_PREVIEW)
+    : mySellerOrders.slice(0, RECENT_CLAIMS_PREVIEW);
 
   // Only submitted proofs await seller verification. `payment_pending` means
 
@@ -301,19 +291,19 @@ export default function Dashboard({
 
   const paymentsToVerify = mySellerOrders.filter(
     (claim) => claim.status === "Awaiting Verification",
-  )
+  );
 
   // Match the seller's Orders Received > Pending filter, which is based on
 
   // claims and their payment history rather than the recent fulfillment board.
 
   const pendingReceivedOrders = mySellerOrders.filter((claim) => {
-    if (claim.status === "Paid and Reserved") return false
+    if (claim.status === "Paid and Reserved") return false;
 
-    if (claim.status === "Insufficient Payment") return true
+    if (claim.status === "Insufficient Payment") return true;
 
-    return claim.status === "Pending"
-  })
+    return claim.status === "Pending";
+  });
 
   const shippingFeesToSet = mySellerOrders.filter(
     (claim) =>
@@ -321,28 +311,25 @@ export default function Dashboard({
       claim.shippingApplies &&
       (claim.shippingState === "waiting_for_seller" ||
         claim.shippingState === "correction_requested"),
-  )
+  );
 
   // Extension requests awaiting this seller's approval: claims on their orders
 
   // that requested an extension and are still pending a decision.
 
   const pendingExtensions = claims.filter(
-    (c) =>
-      c.extensionRequested && c.status === "Pending" && c.seller === user.name,
-  )
+    (c) => c.extensionRequested && c.status === "Pending" && c.seller === user.name,
+  );
 
   // Orders fulfilled = orders moved to the board's "Delivered" column.
 
-  const ordersFulfilled = fulfillment.filter((o) => o.col === "Delivered")
+  const ordersFulfilled = fulfillment.filter((o) => o.col === "Delivered");
 
   const waitlistSub = closestWaitlist
     ? closestWaitlist.product && closestWaitlist.product !== "Product"
-      ? `${closestWaitlist.product}${
-          closestWaitlist.batch ? ` — ${closestWaitlist.batch}` : ""
-        }`
+      ? `${closestWaitlist.product}${closestWaitlist.batch ? ` — ${closestWaitlist.batch}` : ""}`
       : closestWaitlist.batch || "Waitlisted item"
-    : "No waitlisted items"
+    : "No waitlisted items";
 
   const buyerStats = [
     {
@@ -403,7 +390,7 @@ export default function Dashboard({
 
       bg: "linear-gradient(135deg, #FFFFFF 0%, #F5F7FB 55%, #E9EEF7 100%)",
     },
-  ]
+  ];
 
   const sellerStats = [
     {
@@ -461,9 +448,9 @@ export default function Dashboard({
 
       bg: "linear-gradient(135deg, #FFFFFF 0%, #F5F7FB 55%, #E9EEF7 100%)",
     },
-  ]
+  ];
 
-  const stats = role === "Seller" ? sellerStats : buyerStats
+  const stats = role === "Seller" ? sellerStats : buyerStats;
 
   // Upcoming Deadlines is driven by the buyer's real pending, still-payable
 
@@ -484,10 +471,10 @@ export default function Dashboard({
         .slice(0, 4),
 
     [activeClaims],
-  )
+  );
 
   const handleBatchPayment = async (
-    item: typeof toPay[number],
+    item: (typeof toPay)[number],
 
     method: string,
 
@@ -499,12 +486,12 @@ export default function Dashboard({
   ) => {
     const claim = claims.find(
       (candidate) => String(candidate.id) === String(item.orderId ?? item.id),
-    )
+    );
 
     if (!claim || !claimIsPayable(claim) || deadlineHasPassed(item)) {
-      alert("This claim has expired and can no longer be paid.")
+      alert("This claim has expired and can no longer be paid.");
 
-      return false
+      return false;
     }
 
     if (isSupabaseConfigured) {
@@ -525,29 +512,28 @@ export default function Dashboard({
           payerPhone: details.payerPhone,
 
           buyerContactUrl: details.buyerContactUrl,
-        })
+        });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Unable to submit payment."
+        const message = error instanceof Error ? error.message : "Unable to submit payment.";
 
         if (message === "Order is not payable") {
-          await refreshData()
+          await refreshData();
 
           alert(
             "This order already has a submitted payment or is no longer payable. Your payment data has been refreshed.",
-          )
+          );
 
-          return false
+          return false;
         }
 
-        alert(message)
+        alert(message);
 
-        return false
+        return false;
       }
 
-      await refreshData()
+      await refreshData();
 
-      return true
+      return true;
     }
 
     setPayHistory((history) => [
@@ -564,13 +550,11 @@ export default function Dashboard({
 
         date: TODAY,
 
-        status: (isSupabaseConfigured
-          ? "Pending"
-          : "Paid and Reserved") as ClaimStatus,
+        status: (isSupabaseConfigured ? "Pending" : "Paid and Reserved") as ClaimStatus,
       },
 
       ...history,
-    ])
+    ]);
 
     if (!isSupabaseConfigured)
       setClaims((prev) =>
@@ -579,13 +563,13 @@ export default function Dashboard({
             ? { ...c, status: "Paid and Reserved" as ClaimStatus }
             : c,
         ),
-      )
+      );
 
     if (!isSupabaseConfigured)
-      setToPay((items) => items.filter((candidate) => candidate.id !== item.id))
+      setToPay((items) => items.filter((candidate) => candidate.id !== item.id));
 
-    return true
-  }
+    return true;
+  };
 
   if (String(role) === "Seller") {
     return (
@@ -599,27 +583,27 @@ export default function Dashboard({
               tabIndex={0}
               aria-label={`Open ${stat.label}`}
               onClick={() => {
-                if (stat.label === "Active Batches") setTab("Batches")
+                if (stat.label === "Active Batches") setTab("Batches");
 
                 if (stat.label === "Awaiting Verification") {
-                  navIntent.orderFilter = "Pending"
+                  navIntent.orderFilter = "Pending";
 
-                  setTab("My Claims")
+                  setTab("My Claims");
                 }
 
                 if (stat.label === "Extension Requests") {
-                  navIntent.openExtensionRequests = true
+                  navIntent.openExtensionRequests = true;
 
-                  setTab("Batches")
+                  setTab("Batches");
                 }
 
-                if (stat.label === "Orders Fulfilled") setTab("Payments")
+                if (stat.label === "Orders Fulfilled") setTab("Payments");
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault()
+                  event.preventDefault();
 
-                  event.currentTarget.click()
+                  event.currentTarget.click();
                 }
               }}
               style={{
@@ -630,11 +614,7 @@ export default function Dashboard({
                 cursor: "pointer",
               }}
             >
-              <stat.icon
-                size={20}
-                aria-hidden="true"
-                style={{ color: stat.sc }}
-              />
+              <stat.icon size={20} aria-hidden="true" style={{ color: stat.sc }} />
               <strong>{stat.value}</strong>
               <span>{stat.label}</span>
               <small style={{ color: stat.sc }}>{stat.sub}</small>
@@ -673,7 +653,7 @@ export default function Dashboard({
                 </thead>
                 <tbody>
                   {visibleSellerOrders.map((claim, index) => {
-                    const buyerName = claim.buyer || claim.seller
+                    const buyerName = claim.buyer || claim.seller;
 
                     return (
                       <tr key={claim.id} onClick={() => setTab("My Claims")}>
@@ -690,9 +670,7 @@ export default function Dashboard({
                             <span>{buyerName}</span>
                           </div>
                         </td>
-                        <td className="seller-order-amount">
-                          ₱{claim.amount.toLocaleString()}
-                        </td>
+                        <td className="seller-order-amount">₱{claim.amount.toLocaleString()}</td>
                         <td>
                           <StatusBadge status={claim.status} />
                         </td>
@@ -717,7 +695,7 @@ export default function Dashboard({
                           )}
                         </td>
                       </tr>
-                    )
+                    );
                   })}
                 </tbody>
               </table>
@@ -767,16 +745,15 @@ export default function Dashboard({
                   <button
                     type="button"
                     onClick={() => {
-                      if (action.label === "Payments to Verify")
-                        navIntent.orderFilter = "Pending"
+                      if (action.label === "Payments to Verify") navIntent.orderFilter = "Pending";
 
                       if (action.label === "Shipping Fees to Set")
-                        navIntent.orderFilter = "Pending"
+                        navIntent.orderFilter = "Pending";
 
                       if (action.label === "Extension Requests")
-                        navIntent.openExtensionRequests = true
+                        navIntent.openExtensionRequests = true;
 
-                      setTab(action.tab)
+                      setTab(action.tab);
                     }}
                   >
                     View All
@@ -789,8 +766,8 @@ export default function Dashboard({
               batches={batches}
               sellerName={user.name}
               onOpenBatch={(batch) => {
-                navIntent.batchId = batch.id
-                setTab("Batches")
+                navIntent.batchId = batch.id;
+                setTab("Batches");
               }}
             />
 
@@ -819,11 +796,7 @@ export default function Dashboard({
               board={board}
               onExpand={() => setBoardExpanded(true)}
               onOpenProfile={(order) =>
-                openBuyerProfile(
-                  order.buyer,
-                  order.buyerFb,
-                  order.buyerSocialLinks,
-                )
+                openBuyerProfile(order.buyer, order.buyerFb, order.buyerSocialLinks)
               }
             />
           </div>
@@ -857,11 +830,7 @@ export default function Dashboard({
                       board={board}
                       expanded
                       onOpenProfile={(order) =>
-                        openBuyerProfile(
-                          order.buyer,
-                          order.buyerFb,
-                          order.buyerSocialLinks,
-                        )
+                        openBuyerProfile(order.buyer, order.buyerFb, order.buyerSocialLinks)
                       }
                     />
                   </div>
@@ -890,7 +859,7 @@ export default function Dashboard({
           />
         )}
       </div>
-    )
+    );
   }
 
   return (
@@ -898,14 +867,14 @@ export default function Dashboard({
       <div className="bdash-stats">
         {stats.map((s, i) => {
           const openCard = () => {
-            if (s.label === "Waitlist Position") openWaitlist()
-            else if (s.label === "Completed Orders") setTab("Payments")
+            if (s.label === "Waitlist Position") openWaitlist();
+            else if (s.label === "Completed Orders") setTab("Payments");
             else {
-              navIntent.openBatchCheckout = s.label === "Pending Payment"
+              navIntent.openBatchCheckout = s.label === "Pending Payment";
 
-              setTab("My Claims")
+              setTab("My Claims");
             }
-          }
+          };
 
           return (
             <div
@@ -926,9 +895,9 @@ export default function Dashboard({
               onClick={openCard}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault()
+                  event.preventDefault();
 
-                  openCard()
+                  openCard();
                 }
               }}
             >
@@ -941,48 +910,39 @@ export default function Dashboard({
                 {s.sub}
               </div>
             </div>
-          )
+          );
         })}
       </div>
       {role === "Seller" && (
-        <div
-          className="grid gap-6"
-          style={{ gridTemplateColumns: "1fr 340px" }}
-        >
+        <div className="grid gap-6" style={{ gridTemplateColumns: "1fr 340px" }}>
           <Card>
             <SH
               title="Recent Orders"
-              action={
-                <SecondaryBtn onClick={() => setTab("My Claims")}>
-                  View All
-                </SecondaryBtn>
-              }
+              action={<SecondaryBtn onClick={() => setTab("My Claims")}>View All</SecondaryBtn>}
             />
             <table className="w-full text-[13px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid #F3F4F6" }}>
-                  {["Product", "Buyer", "Amount", "Status", "Deadline"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        style={{
-                          color: "#9CA3AF",
+                  {["Product", "Buyer", "Amount", "Status", "Deadline"].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        color: "#9CA3AF",
 
-                          fontWeight: 600,
+                        fontWeight: 600,
 
-                          fontSize: 11,
+                        fontSize: 11,
 
-                          paddingBottom: 8,
+                        paddingBottom: 8,
 
-                          textAlign: "left",
+                        textAlign: "left",
 
-                          paddingRight: 12,
-                        }}
-                      >
-                        {h}
-                      </th>
-                    ),
-                  )}
+                        paddingRight: 12,
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -996,17 +956,13 @@ export default function Dashboard({
                     <td className="py-2.5 pr-3">
                       <div className="flex items-center gap-2">
                         <ProductThumb name={c.product} />
-                        <span style={{ color: "#111827", fontWeight: 500 }}>
-                          {c.product}
-                        </span>
+                        <span style={{ color: "#111827", fontWeight: 500 }}>{c.product}</span>
                       </div>
                     </td>
                     <td className="py-2.5 pr-3">
                       <div className="flex items-center gap-1.5">
                         <Avatar name={c.seller} size={20} />
-                        <span style={{ color: "#374151", fontSize: 12 }}>
-                          {c.seller}
-                        </span>
+                        <span style={{ color: "#374151", fontSize: 12 }}>{c.seller}</span>
                       </div>
                     </td>
                     <td
@@ -1033,9 +989,7 @@ export default function Dashboard({
                           paused={Boolean(c.deadlinePausedAt)}
                         />
                       ) : (
-                        <span style={{ color: "#D1D5DB", fontSize: 12 }}>
-                          —
-                        </span>
+                        <span style={{ color: "#D1D5DB", fontSize: 12 }}>—</span>
                       )}
                     </td>
                   </tr>
@@ -1112,18 +1066,15 @@ export default function Dashboard({
                     >
                       {item.label}
                     </div>
-                    <div
-                      style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}
-                    >
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>
                       {item.count} pending
                     </div>
                   </div>
                   <SecondaryBtn
                     onClick={() => {
-                      if (item.label === "Shipping Fees to Set")
-                        navIntent.orderFilter = "Pending"
+                      if (item.label === "Shipping Fees to Set") navIntent.orderFilter = "Pending";
 
-                      setTab(item.tab)
+                      setTab(item.tab);
                     }}
                   >
                     View All
@@ -1169,11 +1120,7 @@ export default function Dashboard({
           <div className="bdash-card">
             <div className="bdash-section-head">
               <h2>Recent Claims</h2>
-              <button
-                type="button"
-                className="bdash-viewall"
-                onClick={() => setTab("My Claims")}
-              >
+              <button type="button" className="bdash-viewall" onClick={() => setTab("My Claims")}>
                 View All
               </button>
             </div>
@@ -1200,11 +1147,7 @@ export default function Dashboard({
                 </thead>
                 <tbody>
                   {visibleRecentClaims.map((c) => (
-                    <tr
-                      key={c.id}
-                      className="cursor-pointer"
-                      onClick={() => setTab("My Claims")}
-                    >
+                    <tr key={c.id} className="cursor-pointer" onClick={() => setTab("My Claims")}>
                       <td>
                         <div className="bdash-cell-product">
                           <ProductThumb name={c.product} />
@@ -1221,24 +1164,16 @@ export default function Dashboard({
                         </div>
                       </td>
                       <td>
-                        <span className="bdash-cell-amount">
-                          ₱{c.amount.toLocaleString()}
-                        </span>
+                        <span className="bdash-cell-amount">₱{c.amount.toLocaleString()}</span>
                       </td>
                       <td>
                         <StatusBadge status={c.status} />
                       </td>
                       <td>
                         {c.status === "Pending" && c.hours > 0 ? (
-                          <Countdown
-                            hours={c.hours}
-                            id={c.id}
-                            expiresAt={c.expiresAt}
-                          />
+                          <Countdown hours={c.hours} id={c.id} expiresAt={c.expiresAt} />
                         ) : (
-                          <span style={{ color: "#D1D5DB", fontSize: 12 }}>
-                            —
-                          </span>
+                          <span style={{ color: "#D1D5DB", fontSize: 12 }}>—</span>
                         )}
                       </td>
                     </tr>
@@ -1246,9 +1181,7 @@ export default function Dashboard({
                 </tbody>
               </table>
             </div>
-            {recentClaims.length === 0 && (
-              <div className="bdash-empty">No recent claims.</div>
-            )}
+            {recentClaims.length === 0 && <div className="bdash-empty">No recent claims.</div>}
           </div>
 
           <aside className="bdash-side">
@@ -1256,34 +1189,22 @@ export default function Dashboard({
             {upcoming.map((d, i) => (
               <div
                 key={i}
-                className={`bdash-deadline${
-                  d.hours < 6 ? " bdash-deadline--urgent" : ""
-                }`}
+                className={`bdash-deadline${d.hours < 6 ? " bdash-deadline--urgent" : ""}`}
               >
                 <div>
                   <div className="bdash-deadline__name">{d.product}</div>
                   <div className="bdash-deadline__seller">{d.seller}</div>
                 </div>
                 <div>
-                  <div className="bdash-deadline__amount">
-                    ₱{d.amount.toLocaleString()}
-                  </div>
+                  <div className="bdash-deadline__amount">₱{d.amount.toLocaleString()}</div>
                   <div className="bdash-deadline__time">
-                    <Countdown
-                      hours={d.hours}
-                      id={d.id}
-                      expiresAt={d.expiresAt}
-                    />
+                    <Countdown hours={d.hours} id={d.id} expiresAt={d.expiresAt} />
                   </div>
                 </div>
               </div>
             ))}
             {upcoming.length > 0 ? (
-              <button
-                type="button"
-                className="bdash-payall"
-                onClick={() => setShowPayAll(true)}
-              >
+              <button type="button" className="bdash-payall" onClick={() => setShowPayAll(true)}>
                 Pay All Pending
               </button>
             ) : (
@@ -1308,19 +1229,37 @@ export default function Dashboard({
       <section className="buyer-fulfillment-section">
         <div className="seller-section-heading seller-board-heading">
           <h2>Fulfillment Board</h2>
-          <button type="button" onClick={() => setBoardExpanded(true)}>
-            <Maximize2 size={14} aria-hidden="true" />
-            Expand
-          </button>
+          <div className="seller-board-heading__actions">
+            <button
+              type="button"
+              className="bdash-track-order"
+              onClick={() => {
+                // Jump straight to a shipment in progress. "In delivery" is the
+                // shipped/in_transit stage; open its tracking view if one
+                // exists, otherwise fall back to the full Orders tab.
+                const inDelivery = orders.find(
+                  (order) =>
+                    order.fulfillmentStage === "shipped" || order.fulfillmentStage === "in_transit",
+                );
+                if (inDelivery) setBuyerOrderDetailsId(inDelivery.dbId || inDelivery.id);
+                else setTab("Orders");
+              }}
+            >
+              <Truck size={14} aria-hidden="true" />
+              Track order
+            </button>
+            <button type="button" onClick={() => setBoardExpanded(true)}>
+              <Maximize2 size={14} aria-hidden="true" />
+              Expand
+            </button>
+          </div>
         </div>
         <FulfillmentBoard
           fulfillment={fulfillment}
           role="buyer"
           board={board}
           onExpand={() => setBoardExpanded(true)}
-          onViewOrder={(order) =>
-            setBuyerOrderDetailsId(order.dbId || order.id)
-          }
+          onViewOrder={(order) => setBuyerOrderDetailsId(order.dbId || order.id)}
         />
         <FulfillmentLiveRegion text={board.announcement} />
       </section>
@@ -1350,12 +1289,10 @@ export default function Dashboard({
                     role="buyer"
                     board={board}
                     expanded
-                    onViewOrder={(order) =>
-                      setBuyerOrderDetailsId(order.dbId || order.id)
-                    }
+                    onViewOrder={(order) => setBuyerOrderDetailsId(order.dbId || order.id)}
                   />
                 </div>
-            </div>
+              </div>
             </div>
           </>,
         )}
@@ -1363,16 +1300,15 @@ export default function Dashboard({
         (() => {
           const order = orders.find(
             (candidate) =>
-              candidate.dbId === buyerOrderDetailsId ||
-              candidate.id === buyerOrderDetailsId,
-          )
+              candidate.dbId === buyerOrderDetailsId || candidate.id === buyerOrderDetailsId,
+          );
           return order ? (
             <OrderDetailsModal
               order={order}
               payHistory={payHistory}
               onClose={() => setBuyerOrderDetailsId(null)}
             />
-          ) : null
+          ) : null;
         })()}
       {showPayAll && (
         <BatchCheckoutModal
@@ -1405,15 +1341,20 @@ export default function Dashboard({
           activeId={activeWaitlistId}
           onSelect={setActiveWaitlistId}
           onClose={() => setShowWaitlist(false)}
+          batchExists={(batchId) => batches.some((b) => b.id === batchId)}
           onViewBatch={(batchId) => {
-            navIntent.batchId = batchId
+            // Guard against a batch deleted between render and click: only
+            // navigate when it still exists, so we never land on a blank page.
+            if (!batches.some((b) => b.id === batchId)) return;
 
-            setShowWaitlist(false)
+            navIntent.batchId = batchId;
 
-            setTab("Batches")
+            setShowWaitlist(false);
+
+            setTab("Batches");
           }}
         />
       )}
     </div>
-  )
+  );
 }

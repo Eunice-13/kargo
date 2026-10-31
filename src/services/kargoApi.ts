@@ -1,11 +1,11 @@
-import { batchFormationDeadline } from "./groupFormation"
-import { formatBatchDateRange } from "./batchDates"
-import { membershipError, resolveGroupMembership } from "./groupMembership"
-import { loadPaymentCompatibleRows } from "./paymentReadCompatibility"
-import { combinedDeliveryMutationError } from "./combinedDeliveryErrors"
-import { PASSWORD_RESET_PATH } from "@/constants/auth"
+import { batchFormationDeadline } from "./groupFormation";
+import { formatBatchDateRange } from "./batchDates";
+import { membershipError, resolveGroupMembership } from "./groupMembership";
+import { loadPaymentCompatibleRows } from "./paymentReadCompatibility";
+import { combinedDeliveryMutationError } from "./combinedDeliveryErrors";
+import { PASSWORD_RESET_PATH } from "@/constants/auth";
 
-import { normalizeBatchCategory } from "@/constants/categories"
+import { normalizeBatchCategory } from "@/constants/categories";
 
 import type {
   BatchExpenses,
@@ -24,61 +24,63 @@ import type {
   GroupOrder,
   GroupDiscountType,
   SellingUnit,
-} from "@/types"
+} from "@/types";
 
-import { requireSupabase } from "@/lib/supabase"
+import { requireSupabase } from "@/lib/supabase";
 
-import { resolveContactUrl } from "@/components/shared/contactLink"
+import { resolveContactUrl } from "@/components/shared/contactLink";
 
-import { effectiveOrderPaymentStatus } from "./orderPaymentState"
+import { effectiveOrderPaymentStatus } from "./orderPaymentState";
 
 type DbProfile = {
-  id: string
+  id: string;
 
-  display_name: string
+  display_name: string;
 
-  bio: string | null
+  shop_name: string | null;
 
-  social_links: Record<string, string> | null
+  bio: string | null;
 
-  social_visibility: Record<string, boolean> | null
+  social_links: Record<string, string> | null;
 
-  avatar_path: string | null
+  social_visibility: Record<string, boolean> | null;
 
-  can_sell: boolean
+  avatar_path: string | null;
 
-  account_status: "active" | "suspended" | null
+  can_sell: boolean;
 
-  account_status_reason: string | null
+  account_status: "active" | "suspended" | null;
 
-  notification_preferences: Record<string, boolean> | null
+  account_status_reason: string | null;
 
-  created_at: string
-}
+  notification_preferences: Record<string, boolean> | null;
+
+  created_at: string;
+};
 
 export type LoadedAppData = {
-  user: UserInfo
+  user: UserInfo;
 
-  batches: BatchType[]
+  batches: BatchType[];
 
-  claims: ClaimRow[]
+  claims: ClaimRow[];
 
-  toPay: ToPayRow[]
+  toPay: ToPayRow[];
 
-  payHistory: PayHistRow[]
+  payHistory: PayHistRow[];
 
-  orders: OrderRow[]
+  orders: OrderRow[];
 
-  fulfillment: FulfillmentOrder[]
+  fulfillment: FulfillmentOrder[];
 
-  waitlist: WaitlistEntry[]
+  waitlist: WaitlistEntry[];
 
-  sellerWaitlist: SellerWaitlistGroup[]
+  sellerWaitlist: SellerWaitlistGroup[];
 
   // display name -> profile id, for every user this account transacts with.
 
-  profileIdByName: Record<string, string>
-}
+  profileIdByName: Record<string, string>;
+};
 
 const PAYMENT_METHOD_TYPES = new Set([
   "GCash",
@@ -94,14 +96,14 @@ const PAYMENT_METHOD_TYPES = new Set([
   "Others",
 
   "Receipt Upload",
-])
+]);
 
 function statusToClaim(status: string): ClaimRow["status"] {
-  if (status === "expired") return "Expired"
+  if (status === "expired") return "Expired";
 
-  if (status === "cancelled" || status === "incomplete") return "Cancelled"
+  if (status === "cancelled" || status === "incomplete") return "Cancelled";
 
-  if (status === "insufficient_payment") return "Insufficient Payment"
+  if (status === "insufficient_payment") return "Insufficient Payment";
 
   // `payment_submitted` = the buyer submitted proof and is awaiting the
 
@@ -115,20 +117,19 @@ function statusToClaim(status: string): ClaimRow["status"] {
 
   // `insufficient_payment` (→ "Insufficient Payment", payable again).
 
-  if (status === "payment_submitted") return "Awaiting Verification"
+  if (status === "payment_submitted") return "Awaiting Verification";
 
   if (["payment_confirmed", "preparing", "completed"].includes(status)) {
-    return "Paid and Reserved"
+    return "Paid and Reserved";
   }
 
-  return "Pending"
+  return "Pending";
 }
 
 function statusToStep(status: string, fulfillmentStage?: string | null) {
-  if (fulfillmentStage === "shipped" || fulfillmentStage === "in_transit")
-    return 4
+  if (fulfillmentStage === "shipped" || fulfillmentStage === "in_transit") return 4;
 
-  if (fulfillmentStage === "delivered") return 5
+  if (fulfillmentStage === "delivered") return 5;
 
   return (
     {
@@ -150,7 +151,7 @@ function statusToStep(status: string, fulfillmentStage?: string | null) {
 
       incomplete: 0,
     }[status] ?? 1
-  )
+  );
 }
 
 function statusToColumn(
@@ -160,61 +161,55 @@ function statusToColumn(
 
   role: FulfillmentOrder["perspective"] = "seller",
 ): FulfillmentOrder["col"] | null {
-  if (fulfillmentStage === "delivered" || status === "completed")
-    return "Delivered"
+  if (fulfillmentStage === "delivered" || status === "completed") return "Delivered";
 
   if (
     ["shipped", "in_transit"].includes(fulfillmentStage ?? "") ||
     ["shipped", "in_transit"].includes(status)
   )
-    return "Shipped"
+    return "Shipped";
 
-  if (fulfillmentStage === "preparing" || status === "preparing")
-    return "Preparing"
+  if (fulfillmentStage === "preparing" || status === "preparing") return "Preparing";
 
-  if (status === "payment_confirmed") return "Payment Confirmed"
+  if (status === "payment_confirmed") return "Payment Confirmed";
 
-  if (
-    ["payment_pending", "payment_submitted", "insufficient_payment"].includes(
-      status,
-    )
-  )
-    return role === "buyer" ? "Pending Payment" : null
+  if (["payment_pending", "payment_submitted", "insufficient_payment"].includes(status))
+    return role === "buyer" ? "Pending Payment" : null;
 
   if (["cancelled", "expired", "incomplete"].includes(status))
-    return role === "seller" ? "Cancelled" : null
+    return role === "seller" ? "Cancelled" : null;
 
-  return null
+  return null;
 }
 
 function numericId(value: string) {
-  let hash = 0
+  let hash = 0;
 
   for (let index = 0; index < value.length; index += 1) {
-    hash = (Math.imul(hash, 31) + value.charCodeAt(index)) | 0
+    hash = (Math.imul(hash, 31) + value.charCodeAt(index)) | 0;
   }
 
-  return Math.abs(hash) || 1
+  return Math.abs(hash) || 1;
 }
 
 async function profileFor(id: string, email: string): Promise<UserInfo> {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
   const { data, error } = await client
 
     .from("user_profiles")
 
     .select(
-      "id,display_name,bio,social_links,social_visibility,avatar_path,can_sell,account_status,account_status_reason,notification_preferences,created_at",
+      "id,display_name,shop_name,bio,social_links,social_visibility,avatar_path,can_sell,account_status,account_status_reason,notification_preferences,created_at",
     )
 
     .eq("id", id)
 
-    .single()
+    .single();
 
-  if (error) throw error
+  if (error) throw error;
 
-  const profile = data as DbProfile
+  const profile = data as DbProfile;
 
   // Admin capability is a separate, binary membership row. A plain user can only
   // read their own row (admin_members_select_own), so this is safe for everyone.
@@ -226,25 +221,26 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     .select("*")
     .eq("user_id", id)
     .is("revoked_at", null)
-    .maybeSingle()
+    .maybeSingle();
 
-  const membership = adminRow as { accepted_at?: string | null } | null
+  const membership = adminRow as { accepted_at?: string | null } | null;
 
   // null accepted_at means the grant is still an invitation, so the account has
   // no admin power yet (is_admin() agrees). undefined means the column is absent.
-  const adminInvitePending = Boolean(membership) && membership?.accepted_at === null
-  const adminEnabled = Boolean(membership) && !adminInvitePending
-  const accountStatus = profile.account_status ?? "active"
+  const adminInvitePending = Boolean(membership) && membership?.accepted_at === null;
+  const adminEnabled = Boolean(membership) && !adminInvitePending;
+  const accountStatus = profile.account_status ?? "active";
 
   const avatarUrl = profile.avatar_path
-    ? client.storage.from("profile-avatars").getPublicUrl(profile.avatar_path)
-        .data.publicUrl
-    : undefined
+    ? client.storage.from("profile-avatars").getPublicUrl(profile.avatar_path).data.publicUrl
+    : undefined;
 
   return {
     id,
 
     name: profile.display_name,
+
+    shopName: profile.shop_name ?? undefined,
 
     email,
 
@@ -273,37 +269,37 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     accountStatusReason: profile.account_status_reason ?? undefined,
 
     notificationPreferences: profile.notification_preferences ?? {},
-  }
+  };
 }
 
 export async function signIn(email: string, password: string) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
   const { data, error } = await client.auth.signInWithPassword({
     email,
 
     password,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 
-  return profileFor(data.user.id, data.user.email ?? email)
+  return profileFor(data.user.id, data.user.email ?? email);
 }
 
 export async function signUp(input: {
-  name: string
+  name: string;
 
-  email: string
+  email: string;
 
-  password: string
+  password: string;
 
-  shopName?: string
+  shopName?: string;
 
-  socials?: Record<string, { on: boolean; url: string }>
+  socials?: Record<string, { on: boolean; url: string }>;
 
-  role?: "Buyer" | "Seller"
+  role?: "Buyer" | "Seller";
 }) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
   const links = Object.fromEntries(
     Object.entries(input.socials ?? {})
@@ -311,7 +307,7 @@ export async function signUp(input: {
       .filter(([, value]) => value.on && value.url.trim())
 
       .map(([provider, value]) => [provider, value.url.trim()]),
-  )
+  );
 
   // Every field the signup form collects travels in the auth metadata, because
 
@@ -350,18 +346,16 @@ export async function signUp(input: {
 
         social_links: links,
 
-        social_visibility: Object.fromEntries(
-          Object.keys(links).map((key) => [key, true]),
-        ),
+        social_visibility: Object.fromEntries(Object.keys(links).map((key) => [key, true])),
 
         can_sell: input.role === "Seller",
       },
     },
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 
-  if (!data.user) throw new Error("Supabase did not return a user")
+  if (!data.user) throw new Error("Supabase did not return a user");
 
   // Supabase will not reveal whether an address is registered. For an email that
 
@@ -374,15 +368,15 @@ export async function signUp(input: {
   // will never arrive, so surface it as its own outcome.
 
   if (data.user.identities && data.user.identities.length === 0)
-    return { status: "already_registered" as const, user: null }
+    return { status: "already_registered" as const, user: null };
 
-  if (!data.session) return { status: "confirmation_sent" as const, user: null }
+  if (!data.session) return { status: "confirmation_sent" as const, user: null };
 
   return {
     status: "signed_in" as const,
 
     user: await profileFor(data.user.id, data.user.email ?? input.email),
-  }
+  };
 }
 
 // Sends a fresh signup confirmation link. Supabase enforces a minimum gap between
@@ -398,21 +392,21 @@ export async function resendConfirmation(email: string) {
     email: email.trim(),
 
     options: { emailRedirectTo: `${window.location.origin}/` },
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function requestPasswordReset(email: string) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const redirectTo = `${window.location.origin}${PASSWORD_RESET_PATH}`
+  const redirectTo = `${window.location.origin}${PASSWORD_RESET_PATH}`;
 
   const { error } = await client.auth.resetPasswordForEmail(email, {
     redirectTo,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 // Called by the recovery screen once Supabase has accepted a reset link and
@@ -420,9 +414,9 @@ export async function requestPasswordReset(email: string) {
 // established the short-lived session that authorizes the change.
 
 export async function updatePassword(password: string) {
-  const { error } = await requireSupabase().auth.updateUser({ password })
+  const { error } = await requireSupabase().auth.updateUser({ password });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 // Changing a password from Settings has to prove the current one first. Supabase
@@ -432,29 +426,29 @@ export async function updatePassword(password: string) {
 // again with it and let that step reject a wrong password.
 
 export async function changePassword(input: {
-  currentPassword: string
+  currentPassword: string;
 
-  newPassword: string
+  newPassword: string;
 }) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
   // Read the address from the session rather than the profile form: the two
 
   // differ while an email change is still waiting to be confirmed.
 
-  const { data, error: userError } = await client.auth.getUser()
+  const { data, error: userError } = await client.auth.getUser();
 
-  if (userError) throw userError
+  if (userError) throw userError;
 
-  const email = data.user?.email
+  const email = data.user?.email;
 
-  if (!email) throw new Error("Authentication required")
+  if (!email) throw new Error("Authentication required");
 
   const { error: verifyError } = await client.auth.signInWithPassword({
     email,
 
     password: input.currentPassword,
-  })
+  });
 
   if (verifyError) {
     // Only a credential rejection means the password was wrong. A rate limit or a
@@ -463,56 +457,56 @@ export async function changePassword(input: {
 
     const wrongPassword =
       verifyError.code === "invalid_credentials" ||
-      /invalid login credentials/i.test(verifyError.message)
+      /invalid login credentials/i.test(verifyError.message);
 
-    if (wrongPassword) throw new Error("Current password is incorrect.")
+    if (wrongPassword) throw new Error("Current password is incorrect.");
 
-    throw verifyError
+    throw verifyError;
   }
 
   const { error } = await client.auth.updateUser({
     password: input.newPassword,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function signOut() {
-  const { error } = await requireSupabase().auth.signOut()
+  const { error } = await requireSupabase().auth.signOut();
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function setBatchReaction(batchId: string, reacted: boolean) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
   const { data, error } = await client.rpc("set_batch_reaction", {
     p_batch_id: batchId,
 
     p_reacted: reacted,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 
-  const result = Array.isArray(data) ? data[0] : data
+  const result = Array.isArray(data) ? data[0] : data;
 
-  if (!result) throw new Error("The reaction could not be confirmed.")
+  if (!result) throw new Error("The reaction could not be confirmed.");
 
   return {
     reacted: Boolean(result.reacted),
 
     reactionCount: Number(result.reaction_count ?? 0),
-  }
+  };
 }
 
 export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const { data: auth } = await client.auth.getUser()
+  const { data: auth } = await client.auth.getUser();
 
-  if (!auth.user) return null
+  if (!auth.user) return null;
 
-  const user = await profileFor(auth.user.id, auth.user.email ?? "")
+  const user = await profileFor(auth.user.id, auth.user.email ?? "");
 
   // Admins use their own data surface (adminApi); the buyer/seller loaders below
   // would be blocked by participant RLS anyway, so return an empty snapshot.
@@ -528,7 +522,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       waitlist: [],
       sellerWaitlist: [],
       profileIdByName: {},
-    }
+    };
   }
 
   const [
@@ -570,29 +564,31 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
     client
       .from("group_orders")
-      .select("*,group_order_members(status),group_order_commitments(quantity,batch_products(name))"),
-  ])
+      .select(
+        "*,group_order_members(status),group_order_commitments(quantity,batch_products(name))",
+      ),
+  ]);
 
-  if (catalogError) throw catalogError
+  if (catalogError) throw catalogError;
 
-  if (ordersError) throw ordersError
+  if (ordersError) throw ordersError;
 
   const reactionSchemaMissing = [reactionCountsError, ownReactionsError].some(
     (error) => error && ["PGRST205", "42P01"].includes(error.code),
-  )
+  );
 
-  if (reactionCountsError && !reactionSchemaMissing) throw reactionCountsError
+  if (reactionCountsError && !reactionSchemaMissing) throw reactionCountsError;
 
-  if (ownReactionsError && !reactionSchemaMissing) throw ownReactionsError
+  if (ownReactionsError && !reactionSchemaMissing) throw ownReactionsError;
 
-  if (buyerPaymentStatesError) throw buyerPaymentStatesError
+  if (buyerPaymentStatesError) throw buyerPaymentStatesError;
 
-  if (groupOrdersError) throw groupOrdersError
+  if (groupOrdersError) throw groupOrdersError;
 
   if (reactionSchemaMissing) {
     console.warn(
       "Batch reaction tables are not migrated yet; loading catalog without reaction metadata.",
-    )
+    );
   }
 
   const reactionMetadata = new Map(
@@ -605,28 +601,29 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         createdAt: row.batch_created_at as string,
       },
     ]),
-  )
+  );
 
-  const reactedBatchIds = new Set(
-    (ownReactions ?? []).map((row) => row.batch_id),
-  )
+  const reactedBatchIds = new Set((ownReactions ?? []).map((row) => row.batch_id));
 
-  const buyerPaymentStateByOrderId = new Map<string, {
-    effectiveStatus: string
+  const buyerPaymentStateByOrderId = new Map<
+    string,
+    {
+      effectiveStatus: string;
 
-    latestPaymentStatus: string | null
+      latestPaymentStatus: string | null;
 
-    rejectionDeadline: string | null
-  }>(
+      rejectionDeadline: string | null;
+    }
+  >(
     (buyerPaymentStates ?? []).map(
       (row: {
-        order_id: string
+        order_id: string;
 
-        effective_status: string
+        effective_status: string;
 
-        latest_payment_status: string | null
+        latest_payment_status: string | null;
 
-        rejection_deadline: string | null
+        rejection_deadline: string | null;
       }) => [
         row.order_id as string,
 
@@ -639,11 +636,9 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         },
       ],
     ),
-  )
+  );
 
-  const groupOrderById = new Map(
-    (dbGroupOrders ?? []).map((group) => [group.id as string, group]),
-  )
+  const groupOrderById = new Map((dbGroupOrders ?? []).map((group) => [group.id as string, group]));
 
   const participantIds = [
     ...new Set([
@@ -651,15 +646,15 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       ...(catalog ?? []).map((row) => row.seller_id),
     ]),
-  ]
+  ];
 
-  const participantNames = new Map<string, string>()
+  const participantNames = new Map<string, string>();
 
-  const participantShopNames = new Map<string, string>()
+  const participantShopNames = new Map<string, string>();
 
-  const participantLinks = new Map<string, string | undefined>()
+  const participantLinks = new Map<string, string | undefined>();
 
-  const participantSocialLinks = new Map<string, Record<string, string>>()
+  const participantSocialLinks = new Map<string, Record<string, string>>();
 
   if (participantIds.length > 0) {
     const { data: participants, error: participantsError } = await client
@@ -668,30 +663,29 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       .select("id,display_name,shop_name,social_links")
 
-      .in("id", participantIds)
+      .in("id", participantIds);
 
-    if (participantsError) throw participantsError
+    if (participantsError) throw participantsError;
 
     for (const participant of participants ?? []) {
-      participantNames.set(participant.id, participant.display_name)
+      participantNames.set(participant.id, participant.display_name);
 
       if (participant.shop_name) {
-        participantShopNames.set(participant.id, participant.shop_name)
+        participantShopNames.set(participant.id, participant.shop_name);
       }
 
-      const socialLinks = (participant.social_links ??
-        {}) as Record<string, string>
+      const socialLinks = (participant.social_links ?? {}) as Record<string, string>;
 
-      participantSocialLinks.set(participant.id, socialLinks)
+      participantSocialLinks.set(participant.id, socialLinks);
 
-      participantLinks.set(participant.id, resolveContactUrl(socialLinks))
+      participantLinks.set(participant.id, resolveContactUrl(socialLinks));
     }
   }
 
-  const batchMap = new Map<string, BatchType>()
+  const batchMap = new Map<string, BatchType>();
 
   for (const row of catalog ?? []) {
-    const reactions = reactionMetadata.get(row.batch_id)
+    const reactions = reactionMetadata.get(row.batch_id);
 
     const current: BatchType = batchMap.get(row.batch_id) ?? {
       id: numericId(row.batch_id),
@@ -711,6 +705,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       title: row.batch_title,
 
       seller: row.seller_name,
+
+      // Buyers shop at the seller's STORE: surface the shop name for display
+      // while `seller` stays the identity used for ownership/matching.
+      sellerShopName: participantShopNames.get(row.seller_id),
 
       sellerId: row.seller_id,
 
@@ -738,18 +736,16 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       coverImage: batchMediaUrl(row.batch_cover_path),
 
-      galleryImages: (row.batch_gallery_paths ?? []).map((path: string) =>
-        batchMediaUrl(path),
-      ).filter((url: string | undefined): url is string => Boolean(url)),
+      galleryImages: (row.batch_gallery_paths ?? [])
+        .map((path: string) => batchMediaUrl(path))
+        .filter((url: string | undefined): url is string => Boolean(url)),
 
       groupOrdersEnabled: Boolean(row.group_orders_enabled),
 
       groupDiscountType: row.group_discount_type ?? undefined,
 
       groupDiscountValue:
-        row.group_discount_value == null
-          ? undefined
-          : Number(row.group_discount_value),
+        row.group_discount_value == null ? undefined : Number(row.group_discount_value),
 
       groupDiscountMinSubtotal:
         row.group_discount_min_subtotal == null
@@ -757,7 +753,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
           : Number(row.group_discount_min_subtotal),
 
       products: [],
-    }
+    };
 
     current.products.push({
       id: numericId(row.product_id),
@@ -770,8 +766,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       sellingUnit: row.selling_unit === "box" ? "box" : "piece",
 
-      piecesPerBox:
-        row.pieces_per_box == null ? undefined : Number(row.pieces_per_box),
+      piecesPerBox: row.pieces_per_box == null ? undefined : Number(row.pieces_per_box),
 
       basePrice: Number(row.base_price),
 
@@ -796,74 +791,72 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         row.waitlist_limit != null && Number(row.waitlist_limit) >= 0
           ? Number(row.waitlist_limit)
           : undefined,
-    })
+    });
 
-    batchMap.set(row.batch_id, current)
+    batchMap.set(row.batch_id, current);
   }
 
-  const claims: ClaimRow[] = []
+  const claims: ClaimRow[] = [];
 
-  const orders: OrderRow[] = []
+  const orders: OrderRow[] = [];
 
-  const fulfillment: FulfillmentOrder[] = []
+  const fulfillment: FulfillmentOrder[] = [];
 
-  const payHistory: PayHistRow[] = []
+  const payHistory: PayHistRow[] = [];
 
-  const toPay: ToPayRow[] = []
+  const toPay: ToPayRow[] = [];
 
   for (const row of dbOrders ?? []) {
-    const groupOrder = row.group_order_id
-      ? groupOrderById.get(row.group_order_id)
-      : undefined
+    const groupOrder = row.group_order_id ? groupOrderById.get(row.group_order_id) : undefined;
 
-    if (groupOrder && row.id !== groupOrder.payment_order_id) continue
+    if (groupOrder && row.id !== groupOrder.payment_order_id) continue;
 
     const rawProduct = row.batch_products as unknown as {
-      name: string
+      name: string;
 
-      batch_id: string
+      batch_id: string;
 
-      batches: { title: string }
-    }
+      batches: { title: string };
+    };
 
     const groupCommitments = (groupOrder?.group_order_commitments ?? []) as Array<{
-      quantity: number
-      batch_products: { name: string }
-    }>
+      quantity: number;
+      batch_products: { name: string };
+    }>;
 
     const product = {
       ...rawProduct,
       name: groupOrder
         ? `Group Order · ${groupCommitments.length} item${groupCommitments.length === 1 ? "" : "s"}`
         : rawProduct.name,
-    }
+    };
 
-    const isBuyer = row.buyer_id === auth.user.id
+    const isBuyer = row.buyer_id === auth.user.id;
 
     const sellerName =
-      participantNames.get(row.seller_id) ??
-      batchMap.get(product.batch_id)?.seller ??
-      "Seller"
+      participantNames.get(row.seller_id) ?? batchMap.get(product.batch_id)?.seller ?? "Seller";
 
-    const buyerName = participantNames.get(row.buyer_id) ?? "Buyer"
+    const sellerShopName = participantShopNames.get(row.seller_id);
 
-    const buyerPaymentState = buyerPaymentStateByOrderId.get(row.id)
+    const buyerName = participantNames.get(row.buyer_id) ?? "Buyer";
+
+    const buyerPaymentState = buyerPaymentStateByOrderId.get(row.id);
 
     const effectiveStatus =
       isBuyer && buyerPaymentState
         ? buyerPaymentState.effectiveStatus
-        : effectiveOrderPaymentStatus(row.status, row.payments)
+        : effectiveOrderPaymentStatus(row.status, row.payments);
 
-    const expiresAt = groupOrder?.payment_deadline ?? row.reservation_expires_at
+    const expiresAt = groupOrder?.payment_deadline ?? row.reservation_expires_at;
 
-    const expires = new Date(expiresAt).getTime()
+    const expires = new Date(expiresAt).getTime();
 
-    const hours = Math.max(0, Math.ceil((expires - Date.now()) / 3_600_000))
+    const hours = Math.max(0, Math.ceil((expires - Date.now()) / 3_600_000));
 
     const deadlineExpired =
       !row.deadline_paused_at &&
       expires <= Date.now() &&
-      ["payment_pending", "insufficient_payment"].includes(effectiveStatus)
+      ["payment_pending", "insufficient_payment"].includes(effectiveStatus);
 
     const deliveryFields = {
       reservedPaymentMethod: row.reserved_payment_method ?? undefined,
@@ -872,16 +865,13 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
       shippingState: row.shipping_state ?? undefined,
 
-      shippingFee:
-        row.shipping_fee == null ? undefined : Number(row.shipping_fee),
+      shippingFee: row.shipping_fee == null ? undefined : Number(row.shipping_fee),
 
       deadlinePausedAt: row.deadline_paused_at ?? undefined,
 
-      deliveryPinLat:
-        row.delivery_pin_lat == null ? undefined : Number(row.delivery_pin_lat),
+      deliveryPinLat: row.delivery_pin_lat == null ? undefined : Number(row.delivery_pin_lat),
 
-      deliveryPinLng:
-        row.delivery_pin_lng == null ? undefined : Number(row.delivery_pin_lng),
+      deliveryPinLng: row.delivery_pin_lng == null ? undefined : Number(row.delivery_pin_lng),
 
       deliveryPinUrl: row.delivery_pin_url ?? undefined,
 
@@ -902,12 +892,11 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       fulfillmentStage: row.fulfillment_stage ?? undefined,
 
       declineReason: row.decline_reason ?? undefined,
-    }
+    };
 
     const orderTotal = groupOrder
       ? Number(groupOrder.final_subtotal) + Number(groupOrder.shipping_fee ?? 0)
-      : Number(row.total_amount) +
-        (row.shipping_fee == null ? 0 : Number(row.shipping_fee))
+      : Number(row.total_amount) + (row.shipping_fee == null ? 0 : Number(row.shipping_fee));
 
     const groupFields = groupOrder
       ? {
@@ -923,7 +912,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
           groupRegularSubtotal: Number(groupOrder.regular_subtotal ?? 0),
           groupDiscountAmount: Number(groupOrder.discount_amount ?? 0),
         }
-      : {}
+      : {};
 
     if (isBuyer) {
       claims.push({
@@ -941,6 +930,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         seller: sellerName,
 
+        sellerShopName,
+
         sellerId: row.seller_id,
 
         sellerFb: participantLinks.get(row.seller_id),
@@ -950,10 +941,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         orderStatus: effectiveStatus,
 
         qty: groupOrder
-          ? groupCommitments.reduce(
-              (sum, commitment) => sum + Number(commitment.quantity),
-              0,
-            )
+          ? groupCommitments.reduce((sum, commitment) => sum + Number(commitment.quantity), 0)
           : row.quantity,
 
         amount: orderTotal,
@@ -970,7 +958,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         extensionDecidedAt: row.extension_decided_at ?? undefined,
 
         ...deliveryFields,
-      })
+      });
 
       orders.push({
         id: row.order_number,
@@ -992,7 +980,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         qty: row.quantity,
 
         ...deliveryFields,
-      })
+      });
 
       const buyerColumn = statusToColumn(
         effectiveStatus,
@@ -1000,7 +988,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         row.fulfillment_stage,
 
         "buyer",
-      )
+      );
 
       if (buyerColumn) {
         fulfillment.push({
@@ -1025,7 +1013,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
           amount: orderTotal,
 
           ...deliveryFields,
-        })
+        });
       }
     } else {
       claims.push({
@@ -1052,10 +1040,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         orderStatus: effectiveStatus,
 
         qty: groupOrder
-          ? groupCommitments.reduce(
-              (sum, commitment) => sum + Number(commitment.quantity),
-              0,
-            )
+          ? groupCommitments.reduce((sum, commitment) => sum + Number(commitment.quantity), 0)
           : row.quantity,
 
         amount: orderTotal,
@@ -1072,7 +1057,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         extensionDecidedAt: row.extension_decided_at ?? undefined,
 
         ...deliveryFields,
-      })
+      });
 
       const sellerColumn = statusToColumn(
         effectiveStatus,
@@ -1080,7 +1065,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         row.fulfillment_stage,
 
         "seller",
-      )
+      );
 
       if (sellerColumn) {
         fulfillment.push({
@@ -1103,7 +1088,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
           amount: orderTotal,
 
           ...deliveryFields,
-        })
+        });
       }
     }
 
@@ -1112,11 +1097,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       .filter((payment: { status: string }) => payment.status === "verified")
 
       .reduce(
-        (sum: number, payment: { amount: number | string }) =>
-          sum + Number(payment.amount),
+        (sum: number, payment: { amount: number | string }) => sum + Number(payment.amount),
 
         0,
-      )
+      );
 
     if (
       isBuyer &&
@@ -1139,10 +1123,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         sellerId: row.seller_id,
 
         qty: groupOrder
-          ? groupCommitments.reduce(
-              (sum, commitment) => sum + Number(commitment.quantity),
-              0,
-            )
+          ? groupCommitments.reduce((sum, commitment) => sum + Number(commitment.quantity), 0)
           : row.quantity,
 
         amount: Math.max(0, orderTotal - verifiedPaid),
@@ -1160,20 +1141,25 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         shippingFee: deliveryFields.shippingFee,
 
         deadlinePausedAt: deliveryFields.deadlinePausedAt,
-      })
+      });
     }
 
     for (const payment of row.payments ?? []) {
-      if (!isBuyer) continue
+      if (!isBuyer) continue;
 
       payHistory.push({
         id: payment.id ?? `${row.id}-${payment.submitted_at}`,
 
         orderId: row.id,
         combinedDeliveryGroupId: payment.combined_delivery_group_id ?? undefined,
-        reservationIds: payment.combined_delivery_group_id ? (payment.combined ?? []).map((link: any) => link.order_id as string) : undefined,
+        reservationIds: payment.combined_delivery_group_id
+          ? (payment.combined ?? []).map((link: any) => link.order_id as string)
+          : undefined,
 
-        seller: participantNames.get(row.seller_id) ?? batchMap.get(product.batch_id)?.seller ?? undefined,
+        seller:
+          participantNames.get(row.seller_id) ??
+          batchMap.get(product.batch_id)?.seller ??
+          undefined,
 
         sellerShopName: participantShopNames.get(row.seller_id),
 
@@ -1185,8 +1171,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         imageUrl: batchMap
           .get(product.batch_id)
-          ?.products.find((batchProduct) => batchProduct.dbId === row.batch_product_id)
-          ?.imageUrl,
+          ?.products.find((batchProduct) => batchProduct.dbId === row.batch_product_id)?.imageUrl,
 
         batch: product.batches.title,
 
@@ -1216,20 +1201,18 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         rejectionReason: payment.rejection_reason ?? undefined,
 
         rejectionDeadline: payment.rejection_deadline ?? undefined,
-      })
+      });
     }
   }
 
-  const waitlist = await loadBuyerWaitlist(client, auth.user.id, batchMap)
+  const waitlist = await loadBuyerWaitlist(client, auth.user.id, batchMap);
 
-  const sellerWaitlist = user.sellerEnabled
-    ? await loadSellerWaitlist(client, auth.user.id)
-    : []
+  const sellerWaitlist = user.sellerEnabled ? await loadSellerWaitlist(client, auth.user.id) : [];
 
-  const profileIdByName: Record<string, string> = {}
+  const profileIdByName: Record<string, string> = {};
 
   for (const [id, name] of participantNames) {
-    if (name) profileIdByName[name] = id
+    if (name) profileIdByName[name] = id;
   }
 
   return {
@@ -1252,7 +1235,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     sellerWaitlist,
 
     profileIdByName,
-  }
+  };
 }
 
 // Seller view: every product the seller owns that has waiting buyers, each with
@@ -1278,45 +1261,43 @@ async function loadSellerWaitlist(
 
     .eq("status", "waiting")
 
-    .order("joined_at", { ascending: true })
+    .order("joined_at", { ascending: true });
 
-  if (error) throw error
+  if (error) throw error;
 
   type Row = {
-    batch_product_id: string
+    batch_product_id: string;
 
-    buyer_id: string
+    buyer_id: string;
 
-    joined_at: string
+    joined_at: string;
 
-    desired_quantity: number
+    desired_quantity: number;
 
     batch_products: {
-      name: string
+      name: string;
 
-      batch_id: string
+      batch_id: string;
 
-      batches: { title: string; seller_id: string } | null
-    } | null
-  }
+      batches: { title: string; seller_id: string } | null;
+    } | null;
+  };
 
-  const rows = (data ?? []) as unknown as Row[]
+  const rows = (data ?? []) as unknown as Row[];
 
   // Keep only rows for products owned by this seller.
 
-  const mine = rows.filter(
-    (r) => r.batch_products?.batches?.seller_id === sellerId,
-  )
+  const mine = rows.filter((r) => r.batch_products?.batches?.seller_id === sellerId);
 
-  if (mine.length === 0) return []
+  if (mine.length === 0) return [];
 
   // Resolve buyer names + contact links.
 
-  const buyerIds = [...new Set(mine.map((r) => r.buyer_id))]
+  const buyerIds = [...new Set(mine.map((r) => r.buyer_id))];
 
-  const names = new Map<string, string>()
+  const names = new Map<string, string>();
 
-  const links = new Map<string, string | undefined>()
+  const links = new Map<string, string | undefined>();
 
   if (buyerIds.length) {
     const { data: profiles } = await client
@@ -1325,27 +1306,27 @@ async function loadSellerWaitlist(
 
       .select("id,display_name,social_links")
 
-      .in("id", buyerIds)
+      .in("id", buyerIds);
 
     for (const profile of profiles ?? []) {
-      names.set(profile.id, profile.display_name)
+      names.set(profile.id, profile.display_name);
 
       links.set(
         profile.id,
 
         resolveContactUrl(profile.social_links ?? undefined),
-      )
+      );
     }
   }
 
   // Group by product, preserving join order for queue positions.
 
-  const groups = new Map<string, SellerWaitlistGroup>()
+  const groups = new Map<string, SellerWaitlistGroup>();
 
   for (const r of mine) {
-    const productId = r.batch_product_id
+    const productId = r.batch_product_id;
 
-    let group = groups.get(productId)
+    let group = groups.get(productId);
 
     if (!group) {
       group = {
@@ -1356,9 +1337,9 @@ async function loadSellerWaitlist(
         batch: r.batch_products?.batches?.title ?? "",
 
         queue: [],
-      }
+      };
 
-      groups.set(productId, group)
+      groups.set(productId, group);
     }
 
     group.queue.push({
@@ -1371,10 +1352,10 @@ async function loadSellerWaitlist(
       joinedAt: r.joined_at,
 
       desiredQuantity: r.desired_quantity ?? 1,
-    })
+    });
   }
 
-  return [...groups.values()]
+  return [...groups.values()];
 }
 
 async function loadBuyerWaitlist(
@@ -1394,39 +1375,37 @@ async function loadBuyerWaitlist(
 
     .eq("buyer_id", userId)
 
-    .eq("status", "waiting")
+    .eq("status", "waiting");
 
-  if (error) throw error
+  if (error) throw error;
 
   type WaitlistDbRow = {
-    id: string
+    id: string;
 
-    batch_product_id: string
+    batch_product_id: string;
 
-    joined_at: string
+    joined_at: string;
 
-    status: "waiting" | "converted" | "cancelled"
+    status: "waiting" | "converted" | "cancelled";
 
-    desired_quantity: number
+    desired_quantity: number;
 
     batch_products: Array<{
-      name: string
+      name: string;
 
-      selling_price: number | string
+      selling_price: number | string;
 
-      batch_id: string
-    }> | null
-  }
+      batch_id: string;
+    }> | null;
+  };
 
-  const rows = (data ?? []) as unknown as WaitlistDbRow[]
+  const rows = (data ?? []) as unknown as WaitlistDbRow[];
 
   const productIds = [
-    ...new Set(
-      rows.map((row: { batch_product_id: string }) => row.batch_product_id),
-    ),
-  ]
+    ...new Set(rows.map((row: { batch_product_id: string }) => row.batch_product_id)),
+  ];
 
-  let peers: { batch_product_id: string; joined_at: string }[] = []
+  let peers: { batch_product_id: string; joined_at: string }[] = [];
 
   if (productIds.length > 0) {
     const { data: peerRows, error: peerError } = await client
@@ -1437,31 +1416,31 @@ async function loadBuyerWaitlist(
 
       .in("batch_product_id", productIds)
 
-      .eq("status", "waiting")
+      .eq("status", "waiting");
 
-    if (peerError) throw peerError
+    if (peerError) throw peerError;
 
-    peers = peerRows ?? []
+    peers = peerRows ?? [];
   }
 
-  return rows.map((row) => {
-    const product = row.batch_products?.[0]
+  // Drop orphaned waitlist entries: if the batch_product row no longer
+  // resolves, the product (and its batch) was deleted, so there is nothing for
+  // the buyer to wait on or open. Prune them here instead of surfacing a dead
+  // entry with no batch, product name, or position.
+  const liveRows = rows.filter((row) => Boolean(row.batch_products?.[0]));
 
-    const batch = product ? batchMap.get(product.batch_id) : undefined
+  return liveRows.map((row) => {
+    const product = row.batch_products?.[0];
 
-    const joined = new Date(row.joined_at).getTime()
+    const batch = product ? batchMap.get(product.batch_id) : undefined;
 
-    const queue = peers.filter(
-      (p) => p.batch_product_id === row.batch_product_id,
-    )
+    const joined = new Date(row.joined_at).getTime();
 
-    const position = queue.filter(
-      (p) => new Date(p.joined_at).getTime() <= joined,
-    ).length
+    const queue = peers.filter((p) => p.batch_product_id === row.batch_product_id);
 
-    const catalogProduct = batch?.products.find(
-      (p) => p.dbId === row.batch_product_id,
-    )
+    const position = queue.filter((p) => new Date(p.joined_at).getTime() <= joined).length;
+
+    const catalogProduct = batch?.products.find((p) => p.dbId === row.batch_product_id);
 
     return {
       id: row.id,
@@ -1487,8 +1466,8 @@ async function loadBuyerWaitlist(
       desiredQuantity: row.desired_quantity ?? 1,
 
       status: row.status,
-    }
-  })
+    };
+  });
 }
 
 export async function claimProduct(
@@ -1516,63 +1495,63 @@ export async function claimProduct(
 
       p_pin_address: reservation.pinAddress ?? null,
     },
-  )
+  );
 
-  if (error) throw error
+  if (error) throw error;
 
-  return data
+  return data;
 }
 
 export async function createBatch(batch: {
-  title: string
+  title: string;
 
-  category: string
+  category: string;
 
-  startsOn: string
+  startsOn: string;
 
-  endsOn: string
+  endsOn: string;
 
-  reservationHours: number
+  reservationHours: number;
 
-  notes?: string
+  notes?: string;
 
-  coverFile?: File
+  coverFile?: File;
 
-  galleryFiles?: File[]
+  galleryFiles?: File[];
 
-  groupOrdersEnabled?: boolean
+  groupOrdersEnabled?: boolean;
 
-  groupDiscountType?: GroupDiscountType
+  groupDiscountType?: GroupDiscountType;
 
-  groupDiscountValue?: number
+  groupDiscountValue?: number;
 
-  groupDiscountMinSubtotal?: number
+  groupDiscountMinSubtotal?: number;
 
   products: Array<{
-    name: string
+    name: string;
 
-    basePrice: number
+    basePrice: number;
 
-    markup: number
+    markup: number;
 
-    quantity: number
+    quantity: number;
 
-    limitPerUser?: number
+    limitPerUser?: number;
 
-    waitlistLimit?: number
+    waitlistLimit?: number;
 
-    imageFile?: File
+    imageFile?: File;
 
-    sellingUnit?: SellingUnit
+    sellingUnit?: SellingUnit;
 
-    piecesPerBox?: number
-  }>
+    piecesPerBox?: number;
+  }>;
 }) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const { data: auth } = await client.auth.getUser()
+  const { data: auth } = await client.auth.getUser();
 
-  if (!auth.user) throw new Error("Authentication required")
+  if (!auth.user) throw new Error("Authentication required");
 
   const { data: created, error } = await client
 
@@ -1598,28 +1577,26 @@ export async function createBatch(batch: {
       group_orders_enabled: Boolean(batch.groupOrdersEnabled),
 
       group_discount_type:
-        batch.groupOrdersEnabled && batch.groupDiscountType
-          ? batch.groupDiscountType
-          : null,
+        batch.groupOrdersEnabled && batch.groupDiscountType ? batch.groupDiscountType : null,
 
       group_discount_value:
         batch.groupOrdersEnabled && batch.groupDiscountType
-          ? batch.groupDiscountValue ?? null
+          ? (batch.groupDiscountValue ?? null)
           : null,
 
       group_discount_min_subtotal:
         batch.groupOrdersEnabled && batch.groupDiscountType
-          ? batch.groupDiscountMinSubtotal ?? null
+          ? (batch.groupDiscountMinSubtotal ?? null)
           : null,
     })
 
     .select("id")
 
-    .single()
+    .single();
 
-  if (error) throw error
+  if (error) throw error;
 
-  let coverPath: string | null = null
+  let coverPath: string | null = null;
   if (batch.coverFile) {
     coverPath = await uploadBatchMediaFile(
       client,
@@ -1627,33 +1604,27 @@ export async function createBatch(batch: {
       created.id,
       "cover",
       batch.coverFile,
-    )
+    );
 
     const { error: coverError } = await client
       .from("batches")
       .update({ cover_path: coverPath })
-      .eq("id", created.id)
+      .eq("id", created.id);
 
-    if (coverError) throw coverError
+    if (coverError) throw coverError;
   }
 
   const galleryPaths = await Promise.all(
     (batch.galleryFiles ?? []).map((file, index) =>
-      uploadBatchMediaFile(
-        client,
-        auth.user.id,
-        created.id,
-        `gallery-${index + 1}`,
-        file,
-      ),
+      uploadBatchMediaFile(client, auth.user.id, created.id, `gallery-${index + 1}`, file),
     ),
-  )
+  );
   if (galleryPaths.length > 0) {
     const { error: galleryError } = await client
       .from("batches")
       .update({ gallery_paths: galleryPaths })
-      .eq("id", created.id)
-    if (galleryError) throw galleryError
+      .eq("id", created.id);
+    if (galleryError) throw galleryError;
   }
 
   const productImagePaths = await Promise.all(
@@ -1668,40 +1639,40 @@ export async function createBatch(batch: {
           )
         : Promise.resolve(null),
     ),
-  )
+  );
 
-  const { data: createdProducts, error: productsError } = await client.from("batch_products").insert(
-    batch.products.map((product, index) => ({
-      batch_id: created.id,
+  const { data: createdProducts, error: productsError } = await client
+    .from("batch_products")
+    .insert(
+      batch.products.map((product, index) => ({
+        batch_id: created.id,
 
-      name: product.name,
+        name: product.name,
 
-      base_price: product.basePrice,
+        base_price: product.basePrice,
 
-      markup: product.markup,
+        markup: product.markup,
 
-      quantity_total: product.quantity,
+        quantity_total: product.quantity,
 
-      image_path: productImagePaths[index],
+        image_path: productImagePaths[index],
 
-      selling_unit: product.sellingUnit ?? "piece",
+        selling_unit: product.sellingUnit ?? "piece",
 
-      pieces_per_box:
-        product.sellingUnit === "box" ? product.piecesPerBox ?? null : null,
+        pieces_per_box: product.sellingUnit === "box" ? (product.piecesPerBox ?? null) : null,
 
-      limit_per_user:
-        product.limitPerUser && product.limitPerUser > 0
-          ? product.limitPerUser
-          : null,
+        limit_per_user:
+          product.limitPerUser && product.limitPerUser > 0 ? product.limitPerUser : null,
 
-      waitlist_limit:
-        product.waitlistLimit != null && product.waitlistLimit >= 0
-          ? product.waitlistLimit
-          : null,
-    })),
-  ).select("id")
+        waitlist_limit:
+          product.waitlistLimit != null && product.waitlistLimit >= 0
+            ? product.waitlistLimit
+            : null,
+      })),
+    )
+    .select("id");
 
-  if (productsError) throw productsError
+  if (productsError) throw productsError;
 
   return {
     id: created.id as string,
@@ -1712,31 +1683,30 @@ export async function createBatch(batch: {
     productImages: (createdProducts ?? []).map((_, index) =>
       batchMediaUrl(productImagePaths[index]),
     ),
-  }
+  };
 }
 
-const BATCH_MEDIA_BUCKET = "batch-media"
-const MAX_BATCH_IMAGE_BYTES = 5 * 1024 * 1024
+const BATCH_MEDIA_BUCKET = "batch-media";
+const MAX_BATCH_IMAGE_BYTES = 5 * 1024 * 1024;
 
 function assertBatchImage(file: File) {
   if (!file.type.startsWith("image/")) {
-    throw new Error("Choose an image file for the batch photo.")
+    throw new Error("Choose an image file for the batch photo.");
   }
 
   if (file.size > MAX_BATCH_IMAGE_BYTES) {
-    throw new Error("Batch photos must be 5 MB or smaller.")
+    throw new Error("Batch photos must be 5 MB or smaller.");
   }
 }
 
 function batchMediaUrl(path?: string | null) {
-  if (!path) return undefined
+  if (!path) return undefined;
 
   // Absolute URLs (externally hosted images) and blob/data URLs are used as-is.
   // Only bucket-relative storage paths get resolved through Supabase storage.
-  if (/^(?:https?:|blob:|data:|\/)/i.test(path)) return path
+  if (/^(?:https?:|blob:|data:|\/)/i.test(path)) return path;
 
-  return requireSupabase().storage.from(BATCH_MEDIA_BUCKET).getPublicUrl(path)
-    .data.publicUrl
+  return requireSupabase().storage.from(BATCH_MEDIA_BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
 async function uploadBatchMediaFile(
@@ -1746,52 +1716,41 @@ async function uploadBatchMediaFile(
   slot: string,
   file: File,
 ) {
-  assertBatchImage(file)
-  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg"
-  const objectPath = `${userId}/${batchId}/${slot}-${Date.now()}.${extension}`
-  const { error } = await client.storage.from(BATCH_MEDIA_BUCKET).upload(
-    objectPath,
-    file,
-    { contentType: file.type || undefined, upsert: false },
-  )
+  assertBatchImage(file);
+  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const objectPath = `${userId}/${batchId}/${slot}-${Date.now()}.${extension}`;
+  const { error } = await client.storage
+    .from(BATCH_MEDIA_BUCKET)
+    .upload(objectPath, file, { contentType: file.type || undefined, upsert: false });
 
-  if (error) throw error
-  return objectPath
+  if (error) throw error;
+  return objectPath;
 }
 
 export async function updateBatchCover(batchId: string, file: File) {
-  const client = requireSupabase()
-  const { data: auth } = await client.auth.getUser()
-  if (!auth.user) throw new Error("Authentication required")
+  const client = requireSupabase();
+  const { data: auth } = await client.auth.getUser();
+  if (!auth.user) throw new Error("Authentication required");
 
-  const path = await uploadBatchMediaFile(
-    client,
-    auth.user.id,
-    batchId,
-    "cover",
-    file,
-  )
-  const { error } = await client
-    .from("batches")
-    .update({ cover_path: path })
-    .eq("id", batchId)
-  if (error) throw error
-  return batchMediaUrl(path) as string
+  const path = await uploadBatchMediaFile(client, auth.user.id, batchId, "cover", file);
+  const { error } = await client.from("batches").update({ cover_path: path }).eq("id", batchId);
+  if (error) throw error;
+  return batchMediaUrl(path) as string;
 }
 
 export async function addBatchGalleryImages(batchId: string, files: File[]) {
-  if (files.length === 0) return []
+  if (files.length === 0) return [];
 
-  const client = requireSupabase()
-  const { data: auth } = await client.auth.getUser()
-  if (!auth.user) throw new Error("Authentication required")
+  const client = requireSupabase();
+  const { data: auth } = await client.auth.getUser();
+  if (!auth.user) throw new Error("Authentication required");
 
   const { data: batch, error: loadError } = await client
     .from("batches")
     .select("gallery_paths")
     .eq("id", batchId)
-    .single()
-  if (loadError) throw loadError
+    .single();
+  if (loadError) throw loadError;
 
   const addedPaths = await Promise.all(
     files.map((file, index) =>
@@ -1803,25 +1762,21 @@ export async function addBatchGalleryImages(batchId: string, files: File[]) {
         file,
       ),
     ),
-  )
-  const galleryPaths = [...(batch.gallery_paths ?? []), ...addedPaths]
+  );
+  const galleryPaths = [...(batch.gallery_paths ?? []), ...addedPaths];
   const { error: saveError } = await client
     .from("batches")
     .update({ gallery_paths: galleryPaths })
-    .eq("id", batchId)
-  if (saveError) throw saveError
+    .eq("id", batchId);
+  if (saveError) throw saveError;
 
-  return addedPaths.map((path) => batchMediaUrl(path) as string)
+  return addedPaths.map((path) => batchMediaUrl(path) as string);
 }
 
-export async function updateProductImage(
-  batchId: string,
-  productId: string,
-  file: File,
-) {
-  const client = requireSupabase()
-  const { data: auth } = await client.auth.getUser()
-  if (!auth.user) throw new Error("Authentication required")
+export async function updateProductImage(batchId: string, productId: string, file: File) {
+  const client = requireSupabase();
+  const { data: auth } = await client.auth.getUser();
+  if (!auth.user) throw new Error("Authentication required");
 
   const path = await uploadBatchMediaFile(
     client,
@@ -1829,101 +1784,101 @@ export async function updateProductImage(
     batchId,
     `product-${productId}`,
     file,
-  )
+  );
   const { error } = await client
     .from("batch_products")
     .update({ image_path: path })
-    .eq("id", productId)
-  if (error) throw error
-  return batchMediaUrl(path) as string
+    .eq("id", productId);
+  if (error) throw error;
+  return batchMediaUrl(path) as string;
 }
 
 export async function updateBatchGroupSettings(input: {
-  batchId: string
-  enabled: boolean
-  discountType?: GroupDiscountType
-  discountValue?: number
-  discountMinSubtotal?: number
+  batchId: string;
+  enabled: boolean;
+  discountType?: GroupDiscountType;
+  discountValue?: number;
+  discountMinSubtotal?: number;
   products: Array<{
-    id: string
-    sellingUnit: SellingUnit
-    piecesPerBox?: number
-  }>
+    id: string;
+    sellingUnit: SellingUnit;
+    piecesPerBox?: number;
+  }>;
 }) {
-  const client = requireSupabase()
+  const client = requireSupabase();
   const { error: batchError } = await client
     .from("batches")
     .update({
       group_orders_enabled: input.enabled,
-      group_discount_type:
-        input.enabled && input.discountType ? input.discountType : null,
+      group_discount_type: input.enabled && input.discountType ? input.discountType : null,
       group_discount_value:
-        input.enabled && input.discountType ? input.discountValue ?? null : null,
+        input.enabled && input.discountType ? (input.discountValue ?? null) : null,
       group_discount_min_subtotal:
-        input.enabled && input.discountType
-          ? input.discountMinSubtotal ?? null
-          : null,
+        input.enabled && input.discountType ? (input.discountMinSubtotal ?? null) : null,
     })
-    .eq("id", input.batchId)
+    .eq("id", input.batchId);
 
-  if (batchError) throw batchError
+  if (batchError) throw batchError;
 
   for (const product of input.products) {
     const { error } = await client
       .from("batch_products")
       .update({
         selling_unit: product.sellingUnit,
-        pieces_per_box:
-          product.sellingUnit === "box" ? product.piecesPerBox ?? null : null,
+        pieces_per_box: product.sellingUnit === "box" ? (product.piecesPerBox ?? null) : null,
       })
-      .eq("id", product.id)
-    if (error) throw error
+      .eq("id", product.id);
+    if (error) throw error;
   }
 }
 
-export async function loadGroupOrder(groupOrderId: string, leaderOnly = false): Promise<GroupOrder> {
-  const client = requireSupabase()
-  let ownerId: string | undefined
+export async function loadGroupOrder(
+  groupOrderId: string,
+  leaderOnly = false,
+): Promise<GroupOrder> {
+  const client = requireSupabase();
+  let ownerId: string | undefined;
   if (leaderOnly) {
-    const { data, error } = await client.auth.getUser()
-    if (error) throw error
-    ownerId = data.user?.id
-    if (!ownerId) throw new Error("Sign in to view your group orders.")
+    const { data, error } = await client.auth.getUser();
+    if (error) throw error;
+    ownerId = data.user?.id;
+    if (!ownerId) throw new Error("Sign in to view your group orders.");
   }
-  let groupQuery = client.from("group_orders").select("*,batches(ends_on)").eq("id", groupOrderId)
-  if (leaderOnly) groupQuery = groupQuery.eq("leader_id", ownerId!)
-  const [{ data: group, error: groupError }, { data: members, error: memberError }, { data: commitments, error: commitmentError }] =
-    await Promise.all([
-      groupQuery.single(),
-      client
-        .from("group_order_members")
-        .select("user_id,role,status")
-        .eq("group_order_id", groupOrderId),
-      client
-        .from("group_order_commitments")
-        .select("user_id,batch_product_id,quantity,unit_selling_price,batch_products(name)")
-        .eq("group_order_id", groupOrderId),
-    ])
+  let groupQuery = client.from("group_orders").select("*,batches(ends_on)").eq("id", groupOrderId);
+  if (leaderOnly) groupQuery = groupQuery.eq("leader_id", ownerId!);
+  const [
+    { data: group, error: groupError },
+    { data: members, error: memberError },
+    { data: commitments, error: commitmentError },
+  ] = await Promise.all([
+    groupQuery.single(),
+    client
+      .from("group_order_members")
+      .select("user_id,role,status")
+      .eq("group_order_id", groupOrderId),
+    client
+      .from("group_order_commitments")
+      .select("user_id,batch_product_id,quantity,unit_selling_price,batch_products(name)")
+      .eq("group_order_id", groupOrderId),
+  ]);
 
-  if (groupError) throw groupError
-  if (!group.batches?.ends_on) throw new Error("This group’s batch is unavailable.")
-  if (memberError) throw memberError
-  if (commitmentError) throw commitmentError
+  if (groupError) throw groupError;
+  if (!group.batches?.ends_on) throw new Error("This group’s batch is unavailable.");
+  if (memberError) throw memberError;
+  if (commitmentError) throw commitmentError;
 
-  const userIds = [
-    ...new Set((members ?? []).map((member) => member.user_id as string)),
-  ]
-  const names = new Map<string, string>()
+  const userIds = [...new Set((members ?? []).map((member) => member.user_id as string))];
+  const names = new Map<string, string>();
   if (userIds.length > 0) {
     const { data: profiles, error } = await client
       .from("public_profiles")
       .select("id,display_name")
-      .in("id", userIds)
-    if (error) throw error
-    for (const profile of profiles ?? []) names.set(profile.id, profile.display_name)
+      .in("id", userIds);
+    if (error) throw error;
+    for (const profile of profiles ?? []) names.set(profile.id, profile.display_name);
   }
 
-  const userId = (await client.auth.getUser()).data.user?.id
+  const userId = (await client.auth.getUser()).data.user?.id;
   return {
     id: group.id,
     batchId: group.batch_id,
@@ -1935,8 +1890,7 @@ export async function loadGroupOrder(groupOrderId: string, leaderOnly = false): 
     regularSubtotal: Number(group.regular_subtotal ?? 0),
     discountAmount: Number(group.discount_amount ?? 0),
     finalSubtotal: Number(group.final_subtotal ?? 0),
-    shippingFee:
-      group.shipping_fee == null ? undefined : Number(group.shipping_fee),
+    shippingFee: group.shipping_fee == null ? undefined : Number(group.shipping_fee),
     shippingState: group.shipping_state ?? undefined,
     paymentDeadline: group.payment_deadline ?? undefined,
     reservedPaymentMethod: group.reserved_payment_method ?? undefined,
@@ -1956,13 +1910,13 @@ export async function loadGroupOrder(groupOrderId: string, leaderOnly = false): 
       quantity: Number(commitment.quantity),
       unitPrice: Number(commitment.unit_selling_price),
     })),
-  }
+  };
 }
 
 export async function loadMyGroupOrder(batchId: string) {
-  const client = requireSupabase()
-  const userId = (await client.auth.getUser()).data.user?.id
-  if (!userId) return null
+  const client = requireSupabase();
+  const userId = (await client.auth.getUser()).data.user?.id;
+  if (!userId) return null;
 
   const { data, error } = await client
     .from("group_order_members")
@@ -1976,27 +1930,29 @@ export async function loadMyGroupOrder(batchId: string) {
       "payment_pending",
       "payment_submitted",
       "payment_confirmed",
-    ])
+    ]);
 
-  if (error) throw error
-  const selected = resolveGroupMembership((data ?? []) as unknown as Parameters<typeof resolveGroupMembership>[0])
-  return selected ? loadGroupOrder(selected.group_order_id) : null
+  if (error) throw error;
+  const selected = resolveGroupMembership(
+    (data ?? []) as unknown as Parameters<typeof resolveGroupMembership>[0],
+  );
+  return selected ? loadGroupOrder(selected.group_order_id) : null;
 }
 
 export async function startGroupOrder(batchId: string) {
   const { data, error } = await requireSupabase().rpc("start_group_order", {
     p_batch_id: batchId,
-  })
-  if (error) throw membershipError(error)
-  return loadGroupOrder(data.id)
+  });
+  if (error) throw membershipError(error);
+  return loadGroupOrder(data.id);
 }
 
 export async function joinGroupOrder(code: string) {
   const { data, error } = await requireSupabase().rpc("join_group_order", {
     p_referral_code: code,
-  })
-  if (error) throw membershipError(error)
-  return loadGroupOrder(data.id)
+  });
+  if (error) throw membershipError(error);
+  return loadGroupOrder(data.id);
 }
 
 export async function setGroupCommitment(
@@ -2008,43 +1964,43 @@ export async function setGroupCommitment(
     p_group_order_id: groupOrderId,
     p_batch_product_id: productId,
     p_quantity: quantity,
-  })
-  if (error) throw error
-  return loadGroupOrder(groupOrderId)
+  });
+  if (error) throw error;
+  return loadGroupOrder(groupOrderId);
 }
 
 export async function leaveGroupOrder(groupOrderId: string) {
   const { error } = await requireSupabase().rpc("leave_group_order", {
     p_group_order_id: groupOrderId,
-  })
-  if (error) throw error
+  });
+  if (error) throw error;
 }
 
 export async function removeGroupMember(groupOrderId: string, userId: string) {
   const { error } = await requireSupabase().rpc("remove_group_member", {
     p_group_order_id: groupOrderId,
     p_user_id: userId,
-  })
-  if (error) throw error
-  return loadGroupOrder(groupOrderId)
+  });
+  if (error) throw error;
+  return loadGroupOrder(groupOrderId);
 }
 
 export async function regenerateGroupCode(groupOrderId: string) {
   const { data, error } = await requireSupabase().rpc("regenerate_group_code", {
     p_group_order_id: groupOrderId,
-  })
-  if (error) throw error
-  return data as string
+  });
+  if (error) throw error;
+  return data as string;
 }
 
 export async function checkoutGroupOrder(input: {
-  groupOrderId: string
-  paymentMethod: string
-  pinLat?: number
-  pinLng?: number
-  pinUrl?: string
-  pinAddress?: string
-  acceptShipping: boolean
+  groupOrderId: string;
+  paymentMethod: string;
+  pinLat?: number;
+  pinLng?: number;
+  pinUrl?: string;
+  pinAddress?: string;
+  acceptShipping: boolean;
 }) {
   const { data, error } = await requireSupabase().rpc("checkout_group_order", {
     p_group_order_id: input.groupOrderId,
@@ -2055,9 +2011,9 @@ export async function checkoutGroupOrder(input: {
     p_pin_address: input.pinAddress ?? null,
     p_accept_shipping: input.acceptShipping,
     p_acknowledged: true,
-  })
-  if (error) throw error
-  return loadGroupOrder(data.id)
+  });
+  if (error) throw error;
+  return loadGroupOrder(data.id);
 }
 
 // Translate a raw Supabase/Postgres error from submit_order_payment into a
@@ -2073,147 +2029,151 @@ export async function checkoutGroupOrder(input: {
 // Anything else falls back to the DB message so we never hide a real error.
 
 function paymentErrorMessage(error: {
-  code?: string
+  code?: string;
 
-  message?: string
+  message?: string;
 
-  details?: string
+  details?: string;
 }): string {
-  const code = error.code ?? ""
+  const code = error.code ?? "";
 
-  const raw = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase()
+  const raw = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase();
 
   // Unique violation on the reference number for this order.
 
   if (code === "23505" || raw.includes("payments_order_reference_uidx")) {
-    return "A payment with this reference number was already submitted for this order. Enter the exact reference number from your latest transaction — each submission needs its own reference."
+    return "A payment with this reference number was already submitted for this order. Enter the exact reference number from your latest transaction — each submission needs its own reference.";
   }
 
   // Check-constraint violations.
 
   if (code === "23514" || raw.includes("violates check constraint")) {
     if (raw.includes("method_type")) {
-      return "That payment method is not supported. Choose GCash, Maya, Bank Transfer, Cash on Meetup, or Cash on Delivery."
+      return "That payment method is not supported. Choose GCash, Maya, Bank Transfer, Cash on Meetup, or Cash on Delivery.";
     }
 
     if (raw.includes("amount")) {
-      return "Enter a payment amount greater than zero."
+      return "Enter a payment amount greater than zero.";
     }
 
-    return "Some of the payment details are not in the expected format. Please review the fields and try again."
+    return "Some of the payment details are not in the expected format. Please review the fields and try again.";
   }
 
   // Not-null violation — a required field was left blank.
 
   if (code === "23502") {
-    return "A required payment detail is missing. Fill in the reference number and amount, then submit again."
+    return "A required payment detail is missing. Fill in the reference number and amount, then submit again.";
   }
 
-  return error.message || "Payment was rejected"
+  return error.message || "Payment was rejected";
 }
 
 export async function submitPayment(input: {
-  orderId: string
-  combinedDeliveryGroupId?: string
+  orderId: string;
+  combinedDeliveryGroupId?: string;
 
-  method: string
+  method: string;
 
-  amount: number
+  amount: number;
 
-  referenceNumber?: string
+  referenceNumber?: string;
 
-  receipt?: File
+  receipt?: File;
 
-  payerAccountName?: string
+  payerAccountName?: string;
 
-  payerPhone?: string
+  payerPhone?: string;
 
-  buyerContactUrl?: string
+  buyerContactUrl?: string;
 }) {
   if (!PAYMENT_METHOD_TYPES.has(input.method)) {
-    throw new Error(
-      "Invalid payment method. Please select GCash, Maya, bank transfer, or cash.",
-    )
+    throw new Error("Invalid payment method. Please select GCash, Maya, bank transfer, or cash.");
   }
 
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const { data: auth } = await client.auth.getUser()
+  const { data: auth } = await client.auth.getUser();
 
-  if (!auth.user) throw new Error("Authentication required")
+  if (!auth.user) throw new Error("Authentication required");
 
-  let receiptPath: string | null = null
+  let receiptPath: string | null = null;
 
   if (input.receipt) {
-    const extension =
-      input.receipt.name.split(".").pop()?.toLowerCase() || "jpg"
+    const extension = input.receipt.name.split(".").pop()?.toLowerCase() || "jpg";
 
-    receiptPath = `${auth.user.id}/${crypto.randomUUID()}.${extension}`
+    receiptPath = `${auth.user.id}/${crypto.randomUUID()}.${extension}`;
 
     const { error: uploadError } = await client.storage
 
       .from("payment-receipts")
 
-      .upload(receiptPath, input.receipt)
+      .upload(receiptPath, input.receipt);
 
     if (uploadError)
       throw new Error(
         "We could not upload your receipt image. Please try a different photo (JPG or PNG) and submit again.",
-      )
+      );
   }
 
-  const { data, error } = await client.rpc(input.combinedDeliveryGroupId ? "submit_combined_delivery_payment" : "submit_order_payment", {
-    ...(input.combinedDeliveryGroupId
-      ? { p_group_id: input.combinedDeliveryGroupId }
-      : { p_order_id: input.orderId }),
+  const { data, error } = await client.rpc(
+    input.combinedDeliveryGroupId ? "submit_combined_delivery_payment" : "submit_order_payment",
+    {
+      ...(input.combinedDeliveryGroupId
+        ? { p_group_id: input.combinedDeliveryGroupId }
+        : { p_order_id: input.orderId }),
 
-    p_method_type: input.method,
+      p_method_type: input.method,
 
-    p_amount: input.amount,
+      p_amount: input.amount,
 
-    p_reference_number: input.referenceNumber ?? null,
+      p_reference_number: input.referenceNumber ?? null,
 
-    p_receipt_path: receiptPath,
+      p_receipt_path: receiptPath,
 
-    p_payer_account_name: input.payerAccountName ?? null,
+      p_payer_account_name: input.payerAccountName ?? null,
 
-    p_payer_phone: input.payerPhone ?? null,
+      p_payer_phone: input.payerPhone ?? null,
 
-    p_buyer_contact_url: input.buyerContactUrl ?? null,
-  })
+      p_buyer_contact_url: input.buyerContactUrl ?? null,
+    },
+  );
 
-  if (error) throw new Error(paymentErrorMessage(input.combinedDeliveryGroupId ? combinedDeliveryMutationError(error) : error))
+  if (error)
+    throw new Error(
+      paymentErrorMessage(
+        input.combinedDeliveryGroupId ? combinedDeliveryMutationError(error) : error,
+      ),
+    );
 
-  const result = data as { accepted?: boolean; error?: string } | null
+  const result = data as { accepted?: boolean; error?: string } | null;
 
-  if (!result?.accepted)
-    throw new Error(result?.error || "Payment was rejected")
+  if (!result?.accepted) throw new Error(result?.error || "Payment was rejected");
 
-  return result
+  return result;
 }
 
 export async function submitGroupPayment(input: {
-  groupOrderId: string
-  method: string
-  amount: number
-  referenceNumber?: string
-  receipt?: File
-  payerAccountName?: string
-  payerPhone?: string
-  buyerContactUrl?: string
+  groupOrderId: string;
+  method: string;
+  amount: number;
+  referenceNumber?: string;
+  receipt?: File;
+  payerAccountName?: string;
+  payerPhone?: string;
+  buyerContactUrl?: string;
 }) {
-  const client = requireSupabase()
-  const { data: auth } = await client.auth.getUser()
-  if (!auth.user) throw new Error("Authentication required")
+  const client = requireSupabase();
+  const { data: auth } = await client.auth.getUser();
+  if (!auth.user) throw new Error("Authentication required");
 
-  let receiptPath: string | null = null
+  let receiptPath: string | null = null;
   if (input.receipt) {
-    const extension = input.receipt.name.split(".").pop()?.toLowerCase() || "jpg"
-    receiptPath = `${auth.user.id}/${crypto.randomUUID()}.${extension}`
+    const extension = input.receipt.name.split(".").pop()?.toLowerCase() || "jpg";
+    receiptPath = `${auth.user.id}/${crypto.randomUUID()}.${extension}`;
     const { error: uploadError } = await client.storage
       .from("payment-receipts")
-      .upload(receiptPath, input.receipt)
-    if (uploadError) throw new Error("We could not upload your receipt image.")
+      .upload(receiptPath, input.receipt);
+    if (uploadError) throw new Error("We could not upload your receipt image.");
   }
 
   const { data, error } = await client.rpc("submit_group_order_payment", {
@@ -2225,11 +2185,11 @@ export async function submitGroupPayment(input: {
     p_payer_account_name: input.payerAccountName ?? null,
     p_payer_phone: input.payerPhone ?? null,
     p_buyer_contact_url: input.buyerContactUrl ?? null,
-  })
-  if (error) throw new Error(paymentErrorMessage(error))
-  const result = data as { accepted?: boolean; error?: string } | null
-  if (!result?.accepted) throw new Error(result?.error || "Payment was rejected")
-  return result
+  });
+  if (error) throw new Error(paymentErrorMessage(error));
+  const result = data as { accepted?: boolean; error?: string } | null;
+  if (!result?.accepted) throw new Error(result?.error || "Payment was rejected");
+  return result;
 }
 
 export async function requestOrderExtension(
@@ -2245,27 +2205,27 @@ export async function requestOrderExtension(
     p_hours: hours,
 
     p_reason: reason ?? null,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function cancelOrder(orderId: string) {
   const { error } = await requireSupabase().rpc("cancel_order", {
     p_order_id: orderId,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function expireClaim(orderId: string) {
   const { data, error } = await requireSupabase().rpc("expire_claim_if_due", {
     p_order_id: orderId,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 
-  return Boolean(data)
+  return Boolean(data);
 }
 
 export async function setFulfillmentStatus(orderId: string, status: string) {
@@ -2273,9 +2233,9 @@ export async function setFulfillmentStatus(orderId: string, status: string) {
     p_order_id: orderId,
 
     p_status: status,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function setOrderShippingFee(orderId: string, fee: number) {
@@ -2283,31 +2243,31 @@ export async function setOrderShippingFee(orderId: string, fee: number) {
     p_order_id: orderId,
 
     p_fee: fee,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function setGroupOrderShippingFee(groupOrderId: string, fee: number) {
   const { error } = await requireSupabase().rpc("set_group_order_shipping_fee", {
     p_group_order_id: groupOrderId,
     p_fee: fee,
-  })
-  if (error) throw error
+  });
+  if (error) throw error;
 }
 
 // Self-service "Start Selling". The admin foundation revoked direct updates of
 // user_profiles.can_sell, so seller enablement goes through this RPC.
 export async function enableSellerAccess() {
-  const { error } = await requireSupabase().rpc("enable_seller_access")
-  if (error) throw error
+  const { error } = await requireSupabase().rpc("enable_seller_access");
+  if (error) throw error;
 }
 
 export async function requestGroupLocationCorrection(groupOrderId: string) {
   const { error } = await requireSupabase().rpc("request_group_location_correction", {
     p_group_order_id: groupOrderId,
-  })
-  if (error) throw error
+  });
+  if (error) throw error;
 }
 
 export async function updateGroupDeliveryPin(
@@ -2320,24 +2280,24 @@ export async function updateGroupDeliveryPin(
     p_lng: pin.lng ?? null,
     p_url: pin.url ?? null,
     p_address: pin.address ?? null,
-  })
-  if (error) throw error
+  });
+  if (error) throw error;
 }
 
 export async function declineGroupDeliveryOrder(groupOrderId: string, reason: string) {
   const { error } = await requireSupabase().rpc("decline_group_delivery_order", {
     p_group_order_id: groupOrderId,
     p_reason: reason,
-  })
-  if (error) throw error
+  });
+  if (error) throw error;
 }
 
 export async function requestLocationCorrection(orderId: string) {
   const { error } = await requireSupabase().rpc("request_location_correction", {
     p_order_id: orderId,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function declineDeliveryOrder(orderId: string, reason: string) {
@@ -2345,9 +2305,9 @@ export async function declineDeliveryOrder(orderId: string, reason: string) {
     p_order_id: orderId,
 
     p_reason: reason,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function updateOrderDeliveryPin(
@@ -2369,26 +2329,26 @@ export async function updateOrderDeliveryPin(
 
       p_address: pin.address ?? null,
     },
-  )
+  );
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function setOrderTracking(
   orderId: string,
 
   tracking: {
-    courier: string
+    courier: string;
 
-    riderName: string
+    riderName: string;
 
-    riderContact: string
+    riderContact: string;
 
-    trackingNumber: string
+    trackingNumber: string;
 
-    eta: string
+    eta: string;
 
-    trackingUrl?: string
+    trackingUrl?: string;
   },
 ) {
   const { error } = await requireSupabase().rpc("set_order_tracking", {
@@ -2405,68 +2365,62 @@ export async function setOrderTracking(
     p_eta: tracking.eta,
 
     p_tracking_url: tracking.trackingUrl ?? null,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function updateProfile(values: {
-  displayName?: string
+  displayName?: string;
 
-  bio?: string
+  bio?: string;
 
-  socialLinks?: Record<string, string>
+  socialLinks?: Record<string, string>;
 
-  socialVisibility?: Record<string, boolean>
+  socialVisibility?: Record<string, boolean>;
 
-  canSell?: boolean
+  canSell?: boolean;
 
-  email?: string
+  email?: string;
 
-  notificationPreferences?: Record<string, boolean>
+  notificationPreferences?: Record<string, boolean>;
 }) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const { data: auth, error: userError } = await client.auth.getUser()
+  const { data: auth, error: userError } = await client.auth.getUser();
 
-  if (userError) throw userError
+  if (userError) throw userError;
 
-  if (!auth.user) throw new Error("Authentication required")
+  if (!auth.user) throw new Error("Authentication required");
 
-  const payload: Record<string, unknown> = {}
+  const payload: Record<string, unknown> = {};
 
-  if (values.displayName !== undefined)
-    payload.display_name = values.displayName
+  if (values.displayName !== undefined) payload.display_name = values.displayName;
 
-  if (values.bio !== undefined) payload.bio = values.bio
+  if (values.bio !== undefined) payload.bio = values.bio;
 
-  if (values.socialLinks !== undefined)
-    payload.social_links = values.socialLinks
+  if (values.socialLinks !== undefined) payload.social_links = values.socialLinks;
 
-  if (values.socialVisibility !== undefined)
-    payload.social_visibility = values.socialVisibility
+  if (values.socialVisibility !== undefined) payload.social_visibility = values.socialVisibility;
 
-  if (values.canSell !== undefined) payload.can_sell = values.canSell
+  if (values.canSell !== undefined) payload.can_sell = values.canSell;
 
   if (values.notificationPreferences !== undefined)
-    payload.notification_preferences = values.notificationPreferences
+    payload.notification_preferences = values.notificationPreferences;
 
-  const requestedEmail = values.email?.trim()
+  const requestedEmail = values.email?.trim();
 
-  const currentEmail = auth.user.email?.trim()
+  const currentEmail = auth.user.email?.trim();
 
-  if (
-    requestedEmail &&
-    requestedEmail.toLocaleLowerCase() !== currentEmail?.toLocaleLowerCase()
-  ) {
+  if (requestedEmail && requestedEmail.toLocaleLowerCase() !== currentEmail?.toLocaleLowerCase()) {
     const { error: authError } = await client.auth.updateUser({
       email: requestedEmail,
-    })
+    });
 
-    if (authError) throw authError
+    if (authError) throw authError;
   }
 
-  if (Object.keys(payload).length === 0) return
+  if (Object.keys(payload).length === 0) return;
 
   const { data, error } = await client
 
@@ -2478,35 +2432,33 @@ export async function updateProfile(values: {
 
     .select("id")
 
-    .single()
+    .single();
 
-  if (error) throw error
+  if (error) throw error;
 
-  if (!data) throw new Error("Profile update did not affect an account")
+  if (!data) throw new Error("Profile update did not affect an account");
 }
 
 export async function setBatchLock(batchId: string, locked: boolean) {
   const { error } = await requireSupabase()
-
     .from("batches")
 
     .update({ status: locked ? "locked" : "live" })
 
-    .eq("id", batchId)
+    .eq("id", batchId);
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function setProductLock(productId: string, locked: boolean) {
   const { error } = await requireSupabase()
-
     .from("batch_products")
 
     .update({ is_locked: locked })
 
-    .eq("id", productId)
+    .eq("id", productId);
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 /**
@@ -2519,9 +2471,9 @@ export async function reopenBatch(batchId: string, endsOn: string) {
     p_batch_id: batchId,
 
     p_ends_on: endsOn,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function setProductWaitlistLimit(
@@ -2529,16 +2481,15 @@ export async function setProductWaitlistLimit(
 
   limit?: number,
 ) {
-  const normalized =
-    limit !== undefined && limit >= 0 ? Math.floor(limit) : null
+  const normalized = limit !== undefined && limit >= 0 ? Math.floor(limit) : null;
 
   const { error } = await requireSupabase().rpc("set_product_waitlist_limit", {
     p_product_id: productId,
 
     p_limit: normalized,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 // Join (or update) a waitlist entry with the quantity the buyer wants. When
@@ -2550,21 +2501,21 @@ export async function joinWaitlist(productId: string, quantity: number = 1) {
     p_product_id: productId,
 
     p_quantity: Math.max(1, Math.floor(quantity)),
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function uploadProfileAvatar(file: File) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const userId = (await client.auth.getUser()).data.user?.id
+  const userId = (await client.auth.getUser()).data.user?.id;
 
-  if (!userId) throw new Error("Authentication required")
+  if (!userId) throw new Error("Authentication required");
 
-  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg"
+  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
 
-  const objectPath = `${userId}/avatar.${extension}`
+  const objectPath = `${userId}/avatar.${extension}`;
 
   const { error: uploadError } = await client.storage
 
@@ -2574,9 +2525,9 @@ export async function uploadProfileAvatar(file: File) {
       upsert: true,
 
       contentType: file.type || undefined,
-    })
+    });
 
-  if (uploadError) throw uploadError
+  if (uploadError) throw uploadError;
 
   const { error: profileError } = await client
 
@@ -2584,12 +2535,11 @@ export async function uploadProfileAvatar(file: File) {
 
     .update({ avatar_path: objectPath })
 
-    .eq("id", userId)
+    .eq("id", userId);
 
-  if (profileError) throw profileError
+  if (profileError) throw profileError;
 
-  return client.storage.from("profile-avatars").getPublicUrl(objectPath).data
-    .publicUrl
+  return client.storage.from("profile-avatars").getPublicUrl(objectPath).data.publicUrl;
 }
 
 // Upload a seller's payment QR image to the public payment-qr bucket and return
@@ -2597,15 +2547,15 @@ export async function uploadProfileAvatar(file: File) {
 // its object path (stored in seller_payment_methods.qr_path).
 
 export async function uploadPaymentQr(file: File): Promise<string> {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const userId = (await client.auth.getUser()).data.user?.id
+  const userId = (await client.auth.getUser()).data.user?.id;
 
-  if (!userId) throw new Error("Authentication required")
+  if (!userId) throw new Error("Authentication required");
 
-  const extension = file.name.split(".").pop()?.toLowerCase() || "png"
+  const extension = file.name.split(".").pop()?.toLowerCase() || "png";
 
-  const objectPath = `${userId}/qr-${Date.now()}.${extension}`
+  const objectPath = `${userId}/qr-${Date.now()}.${extension}`;
 
   const { error } = await client.storage
 
@@ -2615,30 +2565,28 @@ export async function uploadPaymentQr(file: File): Promise<string> {
       upsert: true,
 
       contentType: file.type || undefined,
-    })
+    });
 
-  if (error) throw error
+  if (error) throw error;
 
-  return objectPath
+  return objectPath;
 }
 
 export function paymentQrUrl(qrPath?: string | null): string | undefined {
-  if (!qrPath) return undefined
+  if (!qrPath) return undefined;
 
-  return requireSupabase().storage.from("payment-qr").getPublicUrl(qrPath).data
-    .publicUrl
+  return requireSupabase().storage.from("payment-qr").getPublicUrl(qrPath).data.publicUrl;
 }
 
 export async function paymentReceiptUrl(receiptPath: string): Promise<string> {
   const { data, error } = await requireSupabase()
-
     .storage.from("payment-receipts")
 
-    .createSignedUrl(receiptPath, 600)
+    .createSignedUrl(receiptPath, 600);
 
-  if (error) throw error
+  if (error) throw error;
 
-  return data.signedUrl
+  return data.signedUrl;
 }
 
 // Buyer-facing: a seller's display-safe receive methods (type, name, number,
@@ -2646,31 +2594,30 @@ export async function paymentReceiptUrl(receiptPath: string): Promise<string> {
 // public QR image URL) via the seller_receive_methods security-definer RPC.
 
 export type SellerReceiveMethod = {
-  methodType: string
+  methodType: string;
 
-  accountName: string | null
+  accountName: string | null;
 
-  accountNumber: string | null
+  accountNumber: string | null;
 
-  qrUrl?: string
-}
+  qrUrl?: string;
+};
 
 export type SellerPaymentMethod = SellerReceiveMethod & {
-  id: string
-}
+  id: string;
+};
 
 export async function loadOwnPaymentMethods(): Promise<SellerPaymentMethod[]> {
   const { data, error } = await requireSupabase()
-
     .from("seller_payment_methods")
 
     .select("id,method_type,account_name,account_number,qr_path")
 
     .eq("is_active", true)
 
-    .order("method_type")
+    .order("method_type");
 
-  if (error) throw error
+  if (error) throw error;
 
   return (data ?? []).map((row) => ({
     id: row.id,
@@ -2682,35 +2629,31 @@ export async function loadOwnPaymentMethods(): Promise<SellerPaymentMethod[]> {
     accountNumber: row.account_number,
 
     qrUrl: paymentQrUrl(row.qr_path),
-  }))
+  }));
 }
 
-export async function loadSellerReceiveMethods(
-  sellerId: string,
-): Promise<SellerReceiveMethod[]> {
+export async function loadSellerReceiveMethods(sellerId: string): Promise<SellerReceiveMethod[]> {
   const { data, error } = await requireSupabase().rpc(
     "seller_receive_methods",
 
     { p_seller_id: sellerId },
-  )
+  );
 
-  if (error) throw error
+  if (error) throw error;
 
   return (data ?? [])
 
-    .filter((row: { method_type: string }) =>
-      PAYMENT_METHOD_TYPES.has(row.method_type),
-    )
+    .filter((row: { method_type: string }) => PAYMENT_METHOD_TYPES.has(row.method_type))
 
     .map(
       (row: {
-        method_type: string
+        method_type: string;
 
-        account_name: string | null
+        account_name: string | null;
 
-        account_number: string | null
+        account_number: string | null;
 
-        qr_path: string | null
+        qr_path: string | null;
       }) => ({
         methodType: row.method_type,
 
@@ -2720,7 +2663,7 @@ export async function loadSellerReceiveMethods(
 
         qrUrl: paymentQrUrl(row.qr_path),
       }),
-    )
+    );
 }
 
 export async function addPaymentMethod(
@@ -2732,13 +2675,13 @@ export async function addPaymentMethod(
 
   qrFile?: File,
 ) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const userId = (await client.auth.getUser()).data.user?.id
+  const userId = (await client.auth.getUser()).data.user?.id;
 
-  if (!userId) throw new Error("Authentication required")
+  if (!userId) throw new Error("Authentication required");
 
-  const qrPath = qrFile ? await uploadPaymentQr(qrFile) : null
+  const qrPath = qrFile ? await uploadPaymentQr(qrFile) : null;
 
   const { error } = await client.from("seller_payment_methods").insert({
     seller_id: userId,
@@ -2750,9 +2693,9 @@ export async function addPaymentMethod(
     account_number: accountNumber,
 
     qr_path: qrPath,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function updatePaymentMethod(
@@ -2774,36 +2717,33 @@ export async function updatePaymentMethod(
     account_name: accountName,
 
     account_number: accountNumber,
-  }
+  };
 
-  if (qrFile) values.qr_path = await uploadPaymentQr(qrFile)
+  if (qrFile) values.qr_path = await uploadPaymentQr(qrFile);
 
   const { error } = await requireSupabase()
-
     .from("seller_payment_methods")
 
     .update(values)
 
-    .eq("id", id)
+    .eq("id", id);
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function deactivatePaymentMethod(id: string) {
   const { error } = await requireSupabase()
-
     .from("seller_payment_methods")
 
     .update({ is_active: false })
 
-    .eq("id", id)
+    .eq("id", id);
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function loadNotifications(offset = 0, pageSize = 20) {
   const { data, error } = await requireSupabase()
-
     .from("notifications")
 
     .select("*")
@@ -2812,73 +2752,74 @@ export async function loadNotifications(offset = 0, pageSize = 20) {
 
     .order("id", { ascending: false })
 
-    .range(offset, offset + pageSize - 1)
+    .range(offset, offset + pageSize - 1);
 
-  if (error) throw error
+  if (error) throw error;
 
-  return data ?? []
+  return data ?? [];
 }
 
 export async function loadUnreadNotificationCount() {
-  const { count, error } = await requireSupabase().from("notifications").select("id", { count: "exact", head: true }).is("read_at", null)
-  if (error) throw error
-  return count ?? 0
+  const { count, error } = await requireSupabase()
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .is("read_at", null);
+  if (error) throw error;
+  return count ?? 0;
 }
 
 export async function markNotificationRead(id?: string) {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
   let query = client
 
     .from("notifications")
 
-    .update({ read_at: new Date().toISOString() })
+    .update({ read_at: new Date().toISOString() });
 
-  if (id) query = query.eq("id", id)
-  else query = query.is("read_at", null)
+  if (id) query = query.eq("id", id);
+  else query = query.is("read_at", null);
 
-  const { error } = await query
+  const { error } = await query;
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export type AccountStatusEvent = {
-  action: string
-  reason: string | null
-  actorName: string
-  createdAt: string
-}
+  action: string;
+  reason: string | null;
+  actorName: string;
+  createdAt: string;
+};
 
 export type MyAccountStatus = {
-  status: "active" | "suspended"
-  reason: string | null
-  changedAt: string | null
-  changedBy: string | null
-  history: AccountStatusEvent[]
-}
+  status: "active" | "suspended";
+  reason: string | null;
+  changedAt: string | null;
+  changedBy: string | null;
+  history: AccountStatusEvent[];
+};
 
 // The caller's own moderation trail (who changed the status, when, and why).
 // Backed by my_account_status(), which is pinned to auth.uid() server-side.
 export async function loadMyAccountStatus(): Promise<MyAccountStatus | null> {
-  const { data, error } = await requireSupabase().rpc("my_account_status", {})
+  const { data, error } = await requireSupabase().rpc("my_account_status", {});
 
-  if (error) throw error
+  if (error) throw error;
 
-  return (data as MyAccountStatus | null) ?? null
+  return (data as MyAccountStatus | null) ?? null;
 }
 
 export async function loadSellerPaymentSubmissions() {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const { data, error } = await loadPaymentCompatibleRows(client, "submissions")
+  const { data, error } = await loadPaymentCompatibleRows(client, "submissions");
 
-  if (error) throw error
+  if (error) throw error;
 
-  const buyerIds = [
-    ...new Set((data ?? []).map((row) => row.orders.buyer_id as string)),
-  ]
+  const buyerIds = [...new Set((data ?? []).map((row) => row.orders.buyer_id as string))];
 
-  const names = new Map<string, string>()
+  const names = new Map<string, string>();
 
   if (buyerIds.length) {
     const { data: profiles } = await client
@@ -2887,10 +2828,9 @@ export async function loadSellerPaymentSubmissions() {
 
       .select("id,display_name")
 
-      .in("id", buyerIds)
+      .in("id", buyerIds);
 
-    for (const profile of profiles ?? [])
-      names.set(profile.id, profile.display_name)
+    for (const profile of profiles ?? []) names.set(profile.id, profile.display_name);
   }
 
   return (data ?? []).map((row) => ({
@@ -2906,15 +2846,15 @@ export async function loadSellerPaymentSubmissions() {
     product: row.combined_delivery_group_id
       ? `Combined delivery · ${(row.combined ?? []).map((link: any) => `${link.orders?.batch_products?.name ?? "Product"} × ${link.orders?.quantity ?? "—"}`).join(", ")}`
       : row.orders.group_order_id
-      ? `Group Order · ${row.orders.group_orders?.group_order_commitments?.length ?? 0} items`
-      : row.orders.batch_products.name as string,
+        ? `Group Order · ${row.orders.group_orders?.group_order_commitments?.length ?? 0} items`
+        : (row.orders.batch_products.name as string),
 
     amount: row.combined_delivery_group_id
       ? Number(row.amount)
       : row.orders.group_order_id
-      ? Number(row.orders.group_orders?.final_subtotal ?? 0) +
-        Number(row.orders.group_orders?.shipping_fee ?? 0)
-      : Number(row.orders.total_amount),
+        ? Number(row.orders.group_orders?.final_subtotal ?? 0) +
+          Number(row.orders.group_orders?.shipping_fee ?? 0)
+        : Number(row.orders.total_amount),
 
     ref: row.reference_number ?? "—",
 
@@ -2924,10 +2864,10 @@ export async function loadSellerPaymentSubmissions() {
 
     status:
       row.status === "verified"
-        ? "Verified" as const
+        ? ("Verified" as const)
         : row.status === "rejected"
-          ? "Rejected" as const
-          : "Pending" as const,
+          ? ("Rejected" as const)
+          : ("Pending" as const),
 
     method: row.method_type,
 
@@ -2946,7 +2886,7 @@ export async function loadSellerPaymentSubmissions() {
     amountPaid: String(row.amount),
 
     contact: row.buyer_contact_url ?? undefined,
-  }))
+  }));
 }
 
 export async function reviewPayment(
@@ -2959,17 +2899,20 @@ export async function reviewPayment(
   deadlineHours?: number,
   combinedDeliveryGroupId?: string,
 ) {
-  const { error } = await requireSupabase().rpc(combinedDeliveryGroupId ? "review_combined_delivery_payment" : "review_order_payment", {
-    p_payment_id: paymentId,
+  const { error } = await requireSupabase().rpc(
+    combinedDeliveryGroupId ? "review_combined_delivery_payment" : "review_order_payment",
+    {
+      p_payment_id: paymentId,
 
-    p_decision: decision,
+      p_decision: decision,
 
-    p_reason: reason ?? null,
+      p_reason: reason ?? null,
 
-    p_deadline_hours: deadlineHours ?? null,
-  })
+      p_deadline_hours: deadlineHours ?? null,
+    },
+  );
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function reviewGroupPayment(
@@ -2983,16 +2926,16 @@ export async function reviewGroupPayment(
     p_decision: decision,
     p_reason: reason ?? null,
     p_deadline_hours: deadlineHours ?? null,
-  })
-  if (error) throw error
+  });
+  if (error) throw error;
 }
 
 export async function notifyPaymentResubmission(paymentId: string) {
   const { error } = await requireSupabase().rpc("notify_payment_resubmission", {
     p_payment_id: paymentId,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function decideOrderExtension(orderId: string, approve: boolean) {
@@ -3000,13 +2943,13 @@ export async function decideOrderExtension(orderId: string, approve: boolean) {
     p_order_id: orderId,
 
     p_approve: approve,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export async function loadSellerExtensionRequests() {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
   const { data: extensionRows, error: extensionError } = await client
 
@@ -3016,15 +2959,13 @@ export async function loadSellerExtensionRequests() {
       "id,buyer_id,extension_status,extension_requested_at,extension_reason,batch_products(name,batches(title))",
     )
 
-    .eq("extension_status", "pending")
+    .eq("extension_status", "pending");
 
-  if (extensionError) throw extensionError
+  if (extensionError) throw extensionError;
 
-  const buyerIds = [
-    ...new Set((extensionRows ?? []).map((row) => row.buyer_id)),
-  ]
+  const buyerIds = [...new Set((extensionRows ?? []).map((row) => row.buyer_id))];
 
-  const names = new Map<string, string>()
+  const names = new Map<string, string>();
 
   if (buyerIds.length) {
     const { data: profiles } = await client
@@ -3033,20 +2974,20 @@ export async function loadSellerExtensionRequests() {
 
       .select("id,display_name")
 
-      .in("id", buyerIds)
+      .in("id", buyerIds);
 
     for (const profile of profiles ?? []) {
-      names.set(profile.id, profile.display_name)
+      names.set(profile.id, profile.display_name);
     }
   }
 
   return {
     extensions: (extensionRows ?? []).map((row) => {
       const product = row.batch_products as unknown as {
-        name: string
+        name: string;
 
-        batches: { title: string }
-      }
+        batches: { title: string };
+      };
 
       return {
         id: row.id as string,
@@ -3062,28 +3003,28 @@ export async function loadSellerExtensionRequests() {
         reason: row.extension_reason ?? "",
 
         status: row.extension_status as "pending" | "approved" | "denied",
-      }
+      };
     }),
-  }
+  };
 }
 
 export type FinancialSummary = {
-  gross_sales: number
+  gross_sales: number;
 
-  verified_payments: number
+  verified_payments: number;
 
-  outstanding_amount: number
+  outstanding_amount: number;
 
-  insufficient_outstanding: number
+  insufficient_outstanding: number;
 
-  estimated_expenses: number
+  estimated_expenses: number;
 
-  gross_profit: number
+  gross_profit: number;
 
-  order_count: number
+  order_count: number;
 
-  items_sold: number
-}
+  items_sold: number;
+};
 
 export async function getFinancialSummary(
   from: Date,
@@ -3098,15 +3039,15 @@ export async function getFinancialSummary(
     p_to: to.toISOString(),
 
     p_batch_id: batchId ?? null,
-  })
+  });
 
-  if (error) throw error
+  if (error) throw error;
 
-  const row = data?.[0] ?? {}
+  const row = data?.[0] ?? {};
 
   return Object.fromEntries(
     Object.entries(row).map(([key, value]) => [key, Number(value ?? 0)]),
-  ) as FinancialSummary
+  ) as FinancialSummary;
 }
 
 // Per-product realized sales for the signed-in seller within a date range.
@@ -3115,26 +3056,24 @@ export async function getFinancialSummary(
 
 // definition in get_financial_summary. Used by the Sales Report breakdown.
 
-export type ProductSales = { product: string; qty: number; amount: number }
+export type ProductSales = { product: string; qty: number; amount: number };
 
 export async function getSalesByProduct(
   from: Date,
 
   to: Date,
 ): Promise<ProductSales[]> {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const { data: auth } = await client.auth.getUser()
+  const { data: auth } = await client.auth.getUser();
 
-  if (!auth.user) throw new Error("Authentication required")
+  if (!auth.user) throw new Error("Authentication required");
 
   const { data, error } = await client
 
     .from("orders")
 
-    .select(
-      "quantity,total_amount,payment_confirmed_at,status,batch_products(name)",
-    )
+    .select("quantity,total_amount,payment_confirmed_at,status,batch_products(name)")
 
     .eq("seller_id", auth.user.id)
 
@@ -3142,27 +3081,25 @@ export async function getSalesByProduct(
 
     .gte("payment_confirmed_at", from.toISOString())
 
-    .lt("payment_confirmed_at", to.toISOString())
+    .lt("payment_confirmed_at", to.toISOString());
 
-  if (error) throw error
+  if (error) throw error;
 
-  const map = new Map<string, ProductSales>()
+  const map = new Map<string, ProductSales>();
 
   for (const row of data ?? []) {
-    const name =
-      (row.batch_products as unknown as { name: string } | null)?.name ??
-      "Unknown"
+    const name = (row.batch_products as unknown as { name: string } | null)?.name ?? "Unknown";
 
-    const cur = map.get(name) ?? { product: name, qty: 0, amount: 0 }
+    const cur = map.get(name) ?? { product: name, qty: 0, amount: 0 };
 
-    cur.qty += Number(row.quantity)
+    cur.qty += Number(row.quantity);
 
-    cur.amount += Number(row.total_amount)
+    cur.amount += Number(row.total_amount);
 
-    map.set(name, cur)
+    map.set(name, cur);
   }
 
-  return [...map.values()].sort((a, b) => b.amount - a.amount)
+  return [...map.values()].sort((a, b) => b.amount - a.amount);
 }
 
 // Orders (buyer + what they bought + amount) realized in a date range, for the
@@ -3170,35 +3107,33 @@ export async function getSalesByProduct(
 // signed-in seller's Sales Report period table.
 
 export type PeriodOrder = {
-  id: string
+  id: string;
 
-  buyer: string
+  buyer: string;
 
-  purchase: string
+  purchase: string;
 
-  qty: number
+  qty: number;
 
-  amount: number
-}
+  amount: number;
+};
 
 export async function getPeriodOrders(
   from: Date,
 
   to: Date,
 ): Promise<PeriodOrder[]> {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const { data: auth } = await client.auth.getUser()
+  const { data: auth } = await client.auth.getUser();
 
-  if (!auth.user) throw new Error("Authentication required")
+  if (!auth.user) throw new Error("Authentication required");
 
   const { data, error } = await client
 
     .from("orders")
 
-    .select(
-      "id,buyer_id,quantity,total_amount,payment_confirmed_at,batch_products(name)",
-    )
+    .select("id,buyer_id,quantity,total_amount,payment_confirmed_at,batch_products(name)")
 
     .eq("seller_id", auth.user.id)
 
@@ -3208,15 +3143,15 @@ export async function getPeriodOrders(
 
     .lt("payment_confirmed_at", to.toISOString())
 
-    .order("payment_confirmed_at", { ascending: true })
+    .order("payment_confirmed_at", { ascending: true });
 
-  if (error) throw error
+  if (error) throw error;
 
-  const rows = data ?? []
+  const rows = data ?? [];
 
-  const buyerIds = [...new Set(rows.map((r) => r.buyer_id as string))]
+  const buyerIds = [...new Set(rows.map((r) => r.buyer_id as string))];
 
-  const names = new Map<string, string>()
+  const names = new Map<string, string>();
 
   if (buyerIds.length) {
     const { data: profiles } = await client
@@ -3225,9 +3160,9 @@ export async function getPeriodOrders(
 
       .select("id,display_name")
 
-      .in("id", buyerIds)
+      .in("id", buyerIds);
 
-    for (const p of profiles ?? []) names.set(p.id, p.display_name)
+    for (const p of profiles ?? []) names.set(p.id, p.display_name);
   }
 
   return rows.map((r) => ({
@@ -3235,13 +3170,12 @@ export async function getPeriodOrders(
 
     buyer: names.get(r.buyer_id as string) ?? "Buyer",
 
-    purchase:
-      (r.batch_products as unknown as { name: string } | null)?.name ?? "Item",
+    purchase: (r.batch_products as unknown as { name: string } | null)?.name ?? "Item",
 
     qty: Number(r.quantity),
 
     amount: Number(r.total_amount),
-  }))
+  }));
 }
 
 // Recorded batch expenses attributed to a date range, for period kita.
@@ -3259,11 +3193,11 @@ export async function getRecordedExpensesForPeriod(
 
   to: Date,
 ): Promise<number> {
-  const client = requireSupabase()
+  const client = requireSupabase();
 
-  const { data: auth } = await client.auth.getUser()
+  const { data: auth } = await client.auth.getUser();
 
-  if (!auth.user) throw new Error("Authentication required")
+  if (!auth.user) throw new Error("Authentication required");
 
   const { data, error } = await client
 
@@ -3271,54 +3205,50 @@ export async function getRecordedExpensesForPeriod(
 
     .select("mode,total_amount,items,batches!inner(seller_id,ends_on)")
 
-    .eq("batches.seller_id", auth.user.id)
+    .eq("batches.seller_id", auth.user.id);
 
-  if (error) throw error
+  if (error) throw error;
 
-  const inRange = (d: Date) =>
-    d.getTime() >= from.getTime() && d.getTime() < to.getTime()
+  const inRange = (d: Date) => d.getTime() >= from.getTime() && d.getTime() < to.getTime();
 
-  let sum = 0
+  let sum = 0;
 
   for (const row of data ?? []) {
-    const batch = row.batches as unknown as { ends_on: string }
+    const batch = row.batches as unknown as { ends_on: string };
 
-    const endsOn = new Date(`${batch.ends_on}T00:00:00`)
+    const endsOn = new Date(`${batch.ends_on}T00:00:00`);
 
     if (row.mode === "itemized") {
-      for (const item of row.items as ExpenseItem[] ?? []) {
-        const amount = Number(item.amount) || 0
+      for (const item of (row.items as ExpenseItem[]) ?? []) {
+        const amount = Number(item.amount) || 0;
 
-        const when = item.date ? new Date(`${item.date}T00:00:00`) : endsOn
+        const when = item.date ? new Date(`${item.date}T00:00:00`) : endsOn;
 
-        if (inRange(when)) sum += amount
+        if (inRange(when)) sum += amount;
       }
     } else if (inRange(endsOn)) {
-      sum += Number(row.total_amount) || 0
+      sum += Number(row.total_amount) || 0;
     }
   }
 
-  return sum
+  return sum;
 }
 
 // ─── Per-batch expenses (seller bookkeeping) ─────────────────────────────────
 
-export async function loadBatchExpenses(
-  batchDbId: string,
-): Promise<BatchExpenses | null> {
+export async function loadBatchExpenses(batchDbId: string): Promise<BatchExpenses | null> {
   const { data, error } = await requireSupabase()
-
     .from("batch_expenses")
 
     .select("batch_id,mode,total_amount,items")
 
     .eq("batch_id", batchDbId)
 
-    .maybeSingle()
+    .maybeSingle();
 
-  if (error) throw error
+  if (error) throw error;
 
-  if (!data) return null
+  if (!data) return null;
 
   return {
     batchDbId: data.batch_id,
@@ -3327,8 +3257,8 @@ export async function loadBatchExpenses(
 
     total: Number(data.total_amount),
 
-    items: data.items as ExpenseItem[] ?? [],
-  }
+    items: (data.items as ExpenseItem[]) ?? [],
+  };
 }
 
 export async function saveBatchExpenses(
@@ -3341,10 +3271,9 @@ export async function saveBatchExpenses(
   const total =
     value.mode === "itemized"
       ? value.items.reduce((s, i) => s + (Number(i.amount) || 0), 0)
-      : Number(value.total) || 0
+      : Number(value.total) || 0;
 
   const { error } = await requireSupabase()
-
     .from("batch_expenses")
 
     .upsert(
@@ -3359,9 +3288,9 @@ export async function saveBatchExpenses(
       },
 
       { onConflict: "batch_id" },
-    )
+    );
 
-  if (error) throw error
+  if (error) throw error;
 }
 
 export const kargoApi = {
@@ -3486,4 +3415,4 @@ export const kargoApi = {
   loadBatchExpenses,
 
   saveBatchExpenses,
-}
+};

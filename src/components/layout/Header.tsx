@@ -51,6 +51,9 @@ export default function Header({
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const isAdmin = role === "Admin";
+  const isSeller = role === "Seller";
+  // Sellers have no marketplace search; only buyers get the SearchBox.
+  const showSearch = !isAdmin && !isSeller;
 
   const toggleMobileSearch = () => {
     setMobileSearchOpen((open) => {
@@ -129,7 +132,7 @@ export default function Header({
             <ShieldCheck size={14} aria-hidden="true" /> Admin console
           </span>
         </div>
-      ) : (
+      ) : showSearch ? (
         <SearchBox
           batches={batches}
           onNavigate={(tab) => {
@@ -145,9 +148,13 @@ export default function Header({
             setMobileSearchOpen(false);
           }}
         />
+      ) : (
+        // Sellers get no search; keep the center spacer so the brand and
+        // actions stay balanced the way the admin console chip does.
+        <div style={{ flex: 1, minWidth: 0 }} aria-hidden="true" />
       )}
       <div className="kargo-header-actions flex items-center gap-3 flex-shrink-0">
-        {!isAdmin && (
+        {showSearch && (
           <button
             type="button"
             className="kargo-mobile-search-toggle"

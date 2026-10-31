@@ -1,27 +1,26 @@
-import { useRef } from "react"
-import { Check } from "lucide-react"
-import { Avatar, PrimaryBtn, SecondaryBtn, SH } from "@/components/shared"
-import { GREEN } from "@/constants/theme"
-import type { UserInfo } from "@/types"
-
+import { useRef } from "react";
+import { Check } from "lucide-react";
+import { Avatar, PrimaryBtn, SecondaryBtn, SH } from "@/components/shared";
+import { GREEN } from "@/constants/theme";
+import type { UserInfo } from "@/types";
 
 type ProfileSectionProps = {
-  user: UserInfo
-  firstName: string
-  setFirstName: (v: string) => void
-  lastName: string
-  setLastName: (v: string) => void
-  email: string
-  setEmail: (v: string) => void
-  bio: string
-  setBio: (v: string) => void
-  saved: boolean
-  saveProfile: () => void
-  avatarPreview?: string
-  avatarFileName?: string
-  onAvatarSelected: (file: File) => void
-  saving: boolean
-}
+  user: UserInfo;
+  firstName: string;
+  setFirstName: (v: string) => void;
+  lastName: string;
+  setLastName: (v: string) => void;
+  email: string;
+  setEmail: (v: string) => void;
+  bio: string;
+  setBio: (v: string) => void;
+  saved: boolean;
+  saveProfile: () => void;
+  avatarPreview?: string;
+  avatarFileName?: string;
+  onAvatarSelected: (file: File) => void;
+  saving: boolean;
+};
 
 export default function ProfileSection({
   user,
@@ -40,7 +39,7 @@ export default function ProfileSection({
   onAvatarSelected,
   saving,
 }: ProfileSectionProps) {
-  const photoRef = useRef<HTMLInputElement>(null)
+  const photoRef = useRef<HTMLInputElement>(null);
   return (
     <div className="pr">
       <SH title="Profile" />
@@ -70,14 +69,12 @@ export default function ProfileSection({
             accept="image/*"
             style={{ display: "none" }}
             onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) onAvatarSelected(f)
+              const f = e.target.files?.[0];
+              if (f) onAvatarSelected(f);
             }}
           />
           <div className="flex items-center gap-2" style={{ marginTop: 8 }}>
-            <SecondaryBtn onClick={() => photoRef.current?.click()}>
-              Change Photo
-            </SecondaryBtn>
+            <SecondaryBtn onClick={() => photoRef.current?.click()}>Change Photo</SecondaryBtn>
             {avatarFileName && (
               <span
                 className="fi"
@@ -96,10 +93,7 @@ export default function ProfileSection({
           </div>
         </div>
       </div>
-      <div
-        className="grid gap-4 settings-profile-grid"
-        style={{ gridTemplateColumns: "1fr 1fr" }}
-      >
+      <div className="grid gap-4 settings-profile-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
         {[
           ["First Name", firstName, setFirstName],
           ["Last Name", lastName, setLastName],
@@ -118,9 +112,7 @@ export default function ProfileSection({
             </label>
             <input
               value={val as string}
-              onChange={(e) =>
-                (set as (v: string) => void)(e.target.value)
-              }
+              onChange={(e) => (set as (v: string) => void)(e.target.value)}
               style={{
                 width: "100%",
                 fontSize: 13,
@@ -134,6 +126,42 @@ export default function ProfileSection({
             />
           </div>
         ))}
+        {(user.role === "Seller" || user.sellerEnabled) && (
+          <div className="col-span-2">
+            <label
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#374151",
+                display: "block",
+                marginBottom: 4,
+              }}
+            >
+              Shop Name
+            </label>
+            <input
+              value={user.shopName || "—"}
+              readOnly
+              disabled
+              aria-label="Shop name (cannot be changed)"
+              style={{
+                width: "100%",
+                fontSize: 13,
+                border: "1px solid #E5E7EB",
+                borderRadius: 7,
+                padding: "8px 12px",
+                outline: "none",
+                color: "#6B7280",
+                background: "#F9FAFB",
+                cursor: "not-allowed",
+                boxSizing: "border-box",
+              }}
+            />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
+              Your shop name can't be changed here. Contact support to update it.
+            </p>
+          </div>
+        )}
         <div className="col-span-2">
           <label
             style={{
@@ -198,7 +226,14 @@ export default function ProfileSection({
         {saved && (
           <span
             className="fi"
-            style={{ fontSize: 12, color: GREEN, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}
+            style={{
+              fontSize: 12,
+              color: GREEN,
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
           >
             <Check size={13} aria-hidden="true" /> Changes saved!
           </span>
@@ -208,5 +243,5 @@ export default function ProfileSection({
         </PrimaryBtn>
       </div>
     </div>
-  )
+  );
 }

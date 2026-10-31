@@ -31,12 +31,14 @@ export default function AdminUsers() {
   const [rows, setRows] = useState<AdminUserRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
 
-  // Honor a deep-link intent from the Dashboard (e.g. filter=seller, Suspended).
+  // Honor a deep-link intent from the Dashboard (e.g. filter=seller, Suspended,
+  // or a specific seller to open from the Top sellers card).
   useEffect(() => {
     const intent = consumeAdminIntent();
     if (intent.tab !== "Users") return;
     if (intent.filter === "seller") setRole("seller");
     if (intent.subtab === "Suspended") setStatus("suspended");
+    if (intent.targetId) setSelected(intent.targetId);
   }, []);
 
   const filters: AdminUserFilters = useMemo(
@@ -134,6 +136,7 @@ export default function AdminUsers() {
                   {[
                     "Account",
                     "Type",
+                    "Shop name",
                     "Status",
                     "Last sign-in",
                     "Orders",
@@ -189,7 +192,20 @@ export default function AdminUsers() {
                     <td data-label="Type" style={{ padding: "10px 14px" }}>
                       <AdminBadge tone={roleOf(u)} label={roleLabel(u)} />
                     </td>
-                    <td data-label="Status" style={{ padding: "10px 14px" }}>
+                    <td
+                      style={{
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        color: u.shopName ? "var(--kargo-ink)" : "var(--kargo-muted)",
+                        maxWidth: 200,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {u.canSell ? (u.shopName ?? "—") : "—"}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
                       <AdminBadge
                         tone={u.accountStatus}
                         label={u.accountStatus === "active" ? "Active" : "Suspended"}
