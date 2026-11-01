@@ -66,7 +66,7 @@ export type FulfillmentAnalyticsOrders = {
     order_number: string;
     stage: FulfillmentAnalyticsStage;
     occurred_at: string;
-    source: "transition" | "order_timestamp" | "notification" | "admin_audit";
+    source: "transition" | "order_timestamp" | "notification" | "admin_audit" | "current_status";
     current_status: string;
     current_fulfillment_stage: string | null;
   }[];

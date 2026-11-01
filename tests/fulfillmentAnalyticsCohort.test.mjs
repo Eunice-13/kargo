@@ -35,6 +35,7 @@ before(async () => {
   await db.exec(sqlFile("202611060003_analytics_expired.sql"));
   await db.exec(sqlFile("202611090004_fulfillment_analytics_cohort.sql"));
   await db.exec(sqlFile("202611090006_fulfillment_analytics_current_status.sql"));
+  await db.exec(sqlFile("202611090007_fulfillment_analytics_current_status_orders.sql"));
   await db.query(
     "update fulfillment_analytics_metadata set capture_started_at='2020-02-01T00:00:00+08:00' where singleton",
   );
@@ -178,10 +179,18 @@ test("current status counts each cohort order once and folds current in_transit 
     6,
   );
 
-  const reached = await row(
-    "select admin_fulfillment_analytics('custom','2020-02-01','2020-02-03') as data",
-  );
-  assert.ok(reached.data.stageTotals.preparing >= current.counts.preparing);
+  const currentShipped = (
+    await row(
+      "select admin_fulfillment_current_status_orders('custom','2020-02-01','2020-02-03','shipped',25,0) as data",
+    )
+  ).data;
+  assert.equal(currentShipped.total, 2);
+  assert.deepEqual(currentShipped.rows.map((item) => item.order_id).sort(), [id(4), id(6)].sort());
+
+  const reached = (
+    await row("select admin_fulfillment_analytics('custom','2020-02-01','2020-02-03') as data")
+  ).data;
+  assert.ok(reached.stageTotals.preparing >= current.counts.preparing);
 });
 
 test("reports current versus reached cancellation and expiry reconciliation", async () => {

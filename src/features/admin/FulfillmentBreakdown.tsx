@@ -86,7 +86,7 @@ export default function FulfillmentBreakdown({
               <li key={r.key} className={r.key === focused ? "is-focused" : undefined}>
                 <button
                   type="button"
-                  disabled={current || r.key === "other" || !onOpen}
+                  disabled={r.key === "other" || !onOpen}
                   style={{ ["--chip" as string]: r.color }}
                   aria-pressed={r.key === focused}
                   aria-label={`${current ? "Current status" : "View"}: ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% of cohort orders)`}

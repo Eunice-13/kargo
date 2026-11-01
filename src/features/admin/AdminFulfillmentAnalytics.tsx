@@ -183,7 +183,11 @@ function AnalyticsResults({
   // On mobile the stage chips collapse behind a summary toggle to save space.
   const [stagesOpen, setStagesOpen] = useState(false);
   const visible: Stage[] = ANALYTICS_STAGES.map((s) => s.key);
-  const [point, setPoint] = useState<{ stage: Stage; bucket?: string } | null>(null);
+  const [point, setPoint] = useState<{
+    stage: Stage;
+    bucket?: string;
+    mode?: "reached" | "current";
+  } | null>(null);
   useEffect(() => {
     const active = view === "current" ? currentResource : resource;
     if (!active.loading && !active.error && active.data) onLoaded(active.data.generatedAt);
@@ -395,7 +399,11 @@ function AnalyticsResults({
           currentStatus={currentData ?? undefined}
           focused={focused}
           onFocusStage={setFocused}
-          onOpen={view === "reached" ? (stage) => setPoint({ stage }) : undefined}
+          onOpen={
+            view === "reached"
+              ? (stage) => setPoint({ stage, mode: "reached" })
+              : (stage) => setPoint({ stage, mode: "current" })
+          }
         />
       )}
       <p className="fulfillment-analytics__coverage">
@@ -408,6 +416,7 @@ function AnalyticsResults({
           data={data}
           filters={filters}
           {...point}
+          mode={point.mode ?? "reached"}
           onClose={() => setPoint(null)}
           onRefresh={() => {
             setPoint(null);

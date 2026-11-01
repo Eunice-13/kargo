@@ -7,6 +7,7 @@ import type {
   FulfillmentAnalytics,
   FulfillmentAnalyticsFilters,
   FulfillmentAnalyticsStage as Stage,
+  FulfillmentCurrentStatusStage,
 } from "@/types/fulfillmentAnalytics";
 import { useAdminResource } from "./useAdminResource";
 import AdminOrderDetailModal from "./components/AdminOrderDetailModal";
@@ -20,6 +21,7 @@ export default function FulfillmentOrdersDialog({
   filters,
   stage,
   bucket,
+  mode = "reached",
   onClose,
   onRefresh,
 }: {
@@ -27,6 +29,7 @@ export default function FulfillmentOrdersDialog({
   filters: FulfillmentAnalyticsFilters;
   stage: Stage;
   bucket?: string;
+  mode?: "reached" | "current";
   onClose: () => void;
   onRefresh: () => void;
 }) {
@@ -80,12 +83,13 @@ export default function FulfillmentOrdersDialog({
             {bucket ? analyticsDate(bucket, data.grouping) : "Selected date range"} · Asia/Manila
           </p>
           <p className="fulfillment-orders__explanation">
-            Orders that reached this stage in the selected period. Their current status may have
-            changed.
+            {mode === "current"
+              ? "Orders currently classified under this status. Each order is counted once."
+              : "Orders that reached this stage in the selected period. Their current status may have changed."}
           </p>
           <OrderPage
-            key={`${offset}:${stage}:${bucket ?? "all"}:${data.snapshot}`}
-            {...{ data, filters, stage, bucket, offset, setOffset, setOrderId, onRefresh }}
+            key={`${offset}:${stage}:${bucket ?? "all"}:${mode}:${data.snapshot}`}
+            {...{ data, filters, stage, bucket, mode, offset, setOffset, setOrderId, onRefresh }}
           />
         </div>
       </div>
@@ -99,6 +103,7 @@ function OrderPage({
   filters,
   stage,
   bucket,
+  mode,
   offset,
   setOffset,
   setOrderId,
@@ -108,6 +113,7 @@ function OrderPage({
   filters: FulfillmentAnalyticsFilters;
   stage: Stage;
   bucket?: string;
+  mode: "reached" | "current";
   offset: number;
   setOffset: (value: number) => void;
   setOrderId: (value: string) => void;
@@ -115,12 +121,19 @@ function OrderPage({
 }) {
   const page = useAdminResource(
     () =>
-      adminApi.fulfillmentOrders(
-        filters,
-        { stage, bucket, generatedAt: data.generatedAt, snapshot: data.snapshot },
-        25,
-        offset,
-      ),
+      mode === "current"
+        ? adminApi.fulfillmentCurrentStatusOrders(
+            filters,
+            stage as FulfillmentCurrentStatusStage,
+            25,
+            offset,
+          )
+        : adminApi.fulfillmentOrders(
+            filters,
+            { stage, bucket, generatedAt: data.generatedAt, snapshot: data.snapshot },
+            25,
+            offset,
+          ),
     [],
   );
   if (page.loading)

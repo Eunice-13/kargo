@@ -5,6 +5,7 @@ import type {
   FulfillmentAnalyticsOrders,
   FulfillmentAnalyticsStage,
   FulfillmentCurrentStatus,
+  FulfillmentCurrentStatusStage,
 } from "@/types/fulfillmentAnalytics";
 
 import type {
@@ -103,6 +104,23 @@ export const adminApi = {
       p_period: filters.period ?? "last_30_days",
       p_start: filters.start ?? null,
       p_end: filters.end ?? null,
+    });
+  },
+
+  async fulfillmentCurrentStatusOrders(
+    filters: FulfillmentAnalyticsFilters,
+    stage: FulfillmentCurrentStatusStage,
+    limit = 25,
+    offset = 0,
+  ): Promise<FulfillmentAnalyticsOrders> {
+    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode");
+    return callAdmin("admin_fulfillment_current_status_orders", {
+      p_period: filters.period ?? "last_30_days",
+      p_start: filters.start ?? null,
+      p_end: filters.end ?? null,
+      p_stage: stage,
+      p_limit: limit,
+      p_offset: offset,
     });
   },
 
