@@ -249,6 +249,10 @@ export default function GroupOrdersLauncher({
                     </button>
                     {pastOpen && (
                       <div id="group-orders-past">
+                        <p className="group-orders-modal__past-note">
+                          Past groups are kept here for reference. For detailed order and payment
+                          history, visit your Payments tab.
+                        </p>
                         <GroupOrderList
                           key={listKey}
                           groups={past}
