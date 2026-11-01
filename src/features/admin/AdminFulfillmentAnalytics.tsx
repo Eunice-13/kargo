@@ -242,8 +242,8 @@ function AnalyticsResults({
           : PERIODS.find(([key]) => key === filters.period)?.[1]}{" "}
         · Grouped by {data.grouping === "hour" ? "hour" : data.grouping} (Manila time). Orders that
         reached each stage are counted. An order can appear in several stages, so percentages add up
-        to more than 100%. {(data.excludedOrders ?? 0).toLocaleString()} orders excluded because
-        their history predates Oct 29.
+        to more than 100%. {(data.excludedOrders ?? 0).toLocaleString()} orders excluded by the
+        recorded-history boundary.
       </p>
       <div className="fulfillment-analytics__stage-row">
         <div className="fulfillment-analytics__stage-field">
@@ -349,8 +349,8 @@ function AnalyticsResults({
         />
       )}
       <p className="fulfillment-analytics__coverage">
-        Cohort size is based on orders whose Payment confirmed stage falls in the selected range.
-        Orders with history before the Oct 29 recording boundary are excluded.
+        Analytics uses the earliest available recorded fulfillment history. Recording began{" "}
+        {analyticsTimestamp(data.captureStartedAt)}.
       </p>
       {point && (
         <FulfillmentOrdersDialog

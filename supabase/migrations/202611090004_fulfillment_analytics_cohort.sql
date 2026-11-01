@@ -1,7 +1,10 @@
--- Phase 1 fulfillment analytics: cohort-based reached-stage funnel.
--- The capture boundary is a product contract, not the migration install time.
+-- Phase 1 fulfillment analytics: payment-confirmed cohort with full recorded history.
+-- The history boundary is the earliest available event, not a fixed calendar date.
 update public.fulfillment_analytics_metadata
-set capture_started_at = '2026-10-29 00:00:00+08'::timestamptz
+set capture_started_at = coalesce(
+  (select min(occurred_at) from public.order_fulfillment_events),
+  '1970-01-01 00:00:00+00'::timestamptz
+)
 where singleton;
 
 create or replace function public.fulfillment_analytics_range(
@@ -180,7 +183,7 @@ begin
     'countingRule','payment_confirmed_cohort_reached_stages',
     'snapshot',(select md5(coalesce(string_agg(order_id::text||stage||extract(epoch from reached_at)::text,',' order by order_id,stage),'')) from reached),
     'captureStartedAt',capture_start,
-    'historicalCoverage','cohort_excludes_pre_capture_history',
+    'historicalCoverage','full_recorded_history',
     'totalEntries',(select count(*) from reached),
     'cohortSize',(select count(*) from cohort),
     'excludedOrders',(select count(*) from excluded),
