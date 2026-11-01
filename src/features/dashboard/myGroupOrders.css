@@ -790,14 +790,3 @@
   }
 }
 
-/* Informational note at the top of the "Past groups" list. */
-.group-orders-modal__past-note {
-  margin: 0 0 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--kargo-surface, #f8f9fc);
-  border: 1px solid var(--kargo-line, #e5e7eb);
-  color: var(--kargo-muted);
-  font-size: 12.5px;
-  line-height: 1.55;
-}
