@@ -425,7 +425,10 @@ function AnalyticsResults({
                   role="radio"
                   aria-checked={countingMode === "current"}
                   aria-pressed={countingMode === "current"}
-                  onClick={() => setCountingMode("current")}
+                  onClick={() => {
+                    setCountingMode("current");
+                    setChartMode("bars");
+                  }}
                 >
                   Current status
                 </button>
@@ -439,32 +442,34 @@ function AnalyticsResults({
                   Reached stage
                 </button>
               </div>
-              <div
-                className="fulfillment-analytics__chart-toggle"
-                role="radiogroup"
-                aria-label="Chart view"
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  aria-label="Stage bars"
-                  aria-checked={chartMode === "bars"}
-                  aria-pressed={chartMode === "bars"}
-                  onClick={() => setChartMode("bars")}
+              {countingMode === "reached" && (
+                <div
+                  className="fulfillment-analytics__chart-toggle"
+                  role="radiogroup"
+                  aria-label="Chart view"
                 >
-                  <BarChart3 size={18} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-label="Trend chart"
-                  aria-checked={chartMode === "trend"}
-                  aria-pressed={chartMode === "trend"}
-                  onClick={() => setChartMode("trend")}
-                >
-                  <LineChart size={18} aria-hidden="true" />
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-label="Stage bars"
+                    aria-checked={chartMode === "bars"}
+                    aria-pressed={chartMode === "bars"}
+                    onClick={() => setChartMode("bars")}
+                  >
+                    <BarChart3 size={18} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-label="Trend chart"
+                    aria-checked={chartMode === "trend"}
+                    aria-pressed={chartMode === "trend"}
+                    onClick={() => setChartMode("trend")}
+                  >
+                    <LineChart size={18} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           {!data.totalEntries && (
