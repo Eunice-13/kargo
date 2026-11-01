@@ -183,3 +183,63 @@ test("current status counts each cohort order once and folds current in_transit 
   );
   assert.ok(reached.data.stageTotals.preparing >= current.counts.preparing);
 });
+
+test("reports current versus reached cancellation and expiry reconciliation", async () => {
+  const reached = (
+    await row("select admin_fulfillment_analytics('custom','2020-02-01','2020-02-03') as data")
+  ).data;
+  const current = await currentStatus();
+  const rows = (
+    await db.query(`
+      with cohort as (
+        select * from public.fulfillment_analytics_current_cohort(
+          'custom','2020-02-01','2020-02-03',statement_timestamp()
+        )
+      )
+      select
+        c.order_id,
+        case public.fulfillment_analytics_stage(o.status::text,o.fulfillment_stage)
+          when 'in_transit' then 'shipped'
+          else coalesce(public.fulfillment_analytics_stage(o.status::text,o.fulfillment_stage),'other')
+        end as current_stage,
+        exists(
+          select 1 from public.order_fulfillment_events e
+          where e.order_id=c.order_id and e.stage='cancelled'
+        ) as reached_cancelled,
+        exists(
+          select 1 from public.order_fulfillment_events e
+          where e.order_id=c.order_id and e.stage='expired'
+        ) as reached_expired
+      from cohort c
+      join public.orders o on o.id=c.order_id
+    `)
+  ).rows;
+  const gaps = rows
+    .filter(
+      (row) =>
+        (row.current_stage === "cancelled" && !row.reached_cancelled) ||
+        (row.current_stage === "expired" && !row.reached_expired),
+    )
+    .map((row) => ({ orderId: row.order_id, currentStage: row.current_stage }));
+  const report = {
+    cancelled: {
+      current: current.counts.cancelled,
+      reached: reached.stageTotals.cancelled,
+      missingEventOrderIds: gaps.filter((row) => row.currentStage === "cancelled"),
+    },
+    expired: {
+      current: current.counts.expired,
+      reached: reached.stageTotals.expired,
+      missingEventOrderIds: gaps.filter((row) => row.currentStage === "expired"),
+    },
+  };
+  console.log("Current versus reached exit reconciliation:", JSON.stringify(report));
+  assert.equal(
+    report.cancelled.current,
+    rows.filter((row) => row.current_stage === "cancelled").length,
+  );
+  assert.equal(
+    report.expired.current,
+    rows.filter((row) => row.current_stage === "expired").length,
+  );
+});
