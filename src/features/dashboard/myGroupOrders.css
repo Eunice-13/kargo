@@ -31,7 +31,7 @@
 }
 .group-shortcut-summary {
   display: grid;
-  grid-template-columns: minmax(130px, 1.3fr) auto minmax(110px, 1fr) auto auto;
+  grid-template-columns: 48px minmax(130px, 1.3fr) auto minmax(110px, 1fr) auto auto;
   align-items: center;
   gap: 16px;
   padding: 18px;
@@ -349,7 +349,7 @@
 }
 @media (min-width: 768px) and (max-width: 1200px) {
   .group-shortcut-summary {
-    grid-template-columns: minmax(140px, 1fr) auto auto;
+    grid-template-columns: 48px minmax(140px, 1fr) auto auto;
     gap: 12px;
   }
   .group-shortcut-mini {
@@ -437,7 +437,7 @@
 }
 @container (min-width:601px) and (max-width:1000px) {
   .group-shortcut-summary {
-    grid-template-columns: minmax(110px, 1fr) auto auto;
+    grid-template-columns: 48px minmax(110px, 1fr) auto auto;
     gap: 12px;
   }
   .group-shortcut-mini {
@@ -558,7 +558,7 @@
   align-content: center;
   gap: 2px;
   min-width: 0;
-  padding: 18px 14px 14px;
+  padding: 20px 18px;
   border: 1px solid var(--kargo-line);
   border-radius: 12px;
   background: color-mix(in srgb, var(--kargo-navy) 3%, var(--kargo-surface));
@@ -772,7 +772,7 @@
     width: 100%;
   }
   .group-orders-stat {
-    padding: 10px 10px;
+    padding: 16px 14px;
   }
   .group-orders-stat dd {
     font-size: 20px;
