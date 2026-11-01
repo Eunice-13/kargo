@@ -1503,3 +1503,106 @@
   width: 100%;
   margin: 0;
 }
+
+/* Final Order Fulfillment composition. */
+.fulfillment-analytics__content-grid {
+  align-items: stretch;
+}
+.fulfillment-analytics__main-column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+.fulfillment-analytics__definition {
+  display: none;
+}
+.fulfillment-analytics__chart-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.fulfillment-analytics__chart-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: var(--fa-ink);
+  font-size: 15px;
+  font-weight: 650;
+}
+.fulfillment-analytics__chart-header-row .fulfillment-analytics__stage-field.is-status {
+  display: none;
+}
+.fulfillment-analytics__chart-header-row .fulfillment-analytics__trend-chips {
+  order: 3;
+  flex: 1 1 100%;
+}
+.fulfillment-analytics__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e3e7f4;
+}
+.fulfillment-analytics__footer p {
+  margin: 0;
+  color: var(--fa-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.fulfillment-analytics__footer button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #c9d0ee;
+  border-radius: 12px;
+  background: #fff;
+  color: #1d2a9e;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.fulfillment-breakdown__group + .fulfillment-breakdown__group {
+  border-left: 1px solid #e3e7f4;
+  padding-left: 24px;
+}
+.fulfillment-breakdown.is-reached .fulfillment-breakdown__list {
+  min-height: 190px;
+  gap: 14px;
+}
+.fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-wrap {
+  min-height: 190px;
+}
+.fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-count {
+  color: #6b7088;
+}
+.fulfillment-breakdown.is-reached .fulfillment-breakdown__bar {
+  border-radius: 14px 14px 6px 6px;
+}
+@media (max-width: 640px) {
+  .fulfillment-analytics__chart-header-row {
+    align-items: stretch;
+    gap: 10px;
+  }
+  .fulfillment-analytics__chart-title {
+    flex-basis: 100%;
+  }
+  .fulfillment-analytics__chart-header-row .fulfillment-analytics__focus-actions {
+    width: 100%;
+  }
+  .fulfillment-analytics__footer {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .fulfillment-analytics__footer button {
+    width: 100%;
+    min-height: 48px;
+  }
+  .fulfillment-breakdown__group + .fulfillment-breakdown__group {
+    border-left: 0;
+    padding-left: 0;
+  }
+}

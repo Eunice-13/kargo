@@ -280,6 +280,12 @@ function AnalyticsResults({
           chart: currentData!.chart as unknown as typeof data.chart,
         }
       : data;
+  const chartTitle =
+    chartMode === "trend"
+      ? "Orders per day"
+      : countingMode === "current"
+        ? "Where orders are right now"
+        : "Orders that reached each stage";
   return (
     <>
       <div className="fulfillment-analytics__content-grid">
@@ -305,9 +311,11 @@ function AnalyticsResults({
             {(data.excludedOrders ?? 0).toLocaleString()} orders excluded by the recorded-history
             boundary.
           </p>
-          <div className="fulfillment-analytics__stage-row">
+          <div className="fulfillment-analytics__chart-header-row">
             {chartMode === "bars" ? (
-              <div className="fulfillment-analytics__stage-field">
+              <div
+                className={`fulfillment-analytics__stage-field ${chartMode === "bars" ? "is-status" : "is-chips"}`}
+              >
                 <button
                   type="button"
                   className="fulfillment-analytics__disclosure"
@@ -406,6 +414,7 @@ function AnalyticsResults({
                 })}
               </div>
             )}
+            <h3 className="fulfillment-analytics__chart-title">{chartTitle}</h3>
             <div className="fulfillment-analytics__focus-actions">
               <div
                 className="fulfillment-analytics__counting-toggle"
@@ -457,14 +466,6 @@ function AnalyticsResults({
                   <LineChart size={18} aria-hidden="true" />
                 </button>
               </div>
-              {chartMode === "bars" && (
-                <button
-                  type="button"
-                  onClick={() => setPoint({ stage: focused, mode: countingMode })}
-                >
-                  View orders →
-                </button>
-              )}
             </div>
           </div>
           {!data.totalEntries && (
@@ -503,12 +504,20 @@ function AnalyticsResults({
               onOpen={(stage) => setPoint({ stage, mode: countingMode })}
             />
           )}
-          <p className="fulfillment-analytics__coverage">
-            Analytics uses the earliest available recorded fulfillment history. Recording began{" "}
-            {analyticsTimestamp(data.captureStartedAt)}.
-          </p>
         </div>
       </div>
+      <footer className="fulfillment-analytics__footer">
+        <p>
+          {chartMode === "trend"
+            ? `Orders per day, grouped by ${data.grouping} (Manila time).`
+            : countingMode === "current"
+              ? `Each order counted once, in its latest stage · Recording began ${analyticsTimestamp(data.captureStartedAt)}`
+              : `An order counts in every stage it has reached · Recording began ${analyticsTimestamp(data.captureStartedAt)}`}
+        </p>
+        <button type="button" onClick={() => setPoint({ stage: focused, mode: countingMode })}>
+          View {ANALYTICS_STAGES.find((stage) => stage.key === focused)?.label ?? "stage"} orders →
+        </button>
+      </footer>
       {point && (
         <FulfillmentOrdersDialog
           key={`${point.stage}:${point.bucket ?? "all"}`}
