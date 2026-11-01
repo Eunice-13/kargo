@@ -798,6 +798,8 @@ export default function Batches({
 
                       extConfirm.action === "approved",
                     );
+                    // Refresh so approved hours appear in claims/orders
+                    await kargoApi.loadSellerExtensionRequests();
                   } catch (error) {
                     alert(error instanceof Error ? error.message : "Unable to decide extension.");
 
