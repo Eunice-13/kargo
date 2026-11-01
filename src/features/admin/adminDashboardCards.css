@@ -72,15 +72,24 @@
   color: #fff;
   box-shadow: 0 2px 5px rgb(41 53 182 / 15%);
 }
+/* One joined three-column strip: the container carries the fill, border and
+   rounded corners; the cells touch and are split by thin dividers. */
 .admin-page--dashboard .fulfillment-analytics__summary {
   max-width: none;
-  gap: 14px;
+  gap: 0;
+  border: 1px solid #dfe6f5;
+  border-radius: 14px;
+  background: #f0f4fc;
+  overflow: hidden;
 }
 .admin-page--dashboard .fulfillment-analytics__summary > div {
   padding: 20px 22px;
   border: 0;
-  border-radius: 14px;
-  background: #f0f4fc;
+  border-radius: 0;
+  background: transparent;
+}
+.admin-page--dashboard .fulfillment-analytics__summary > div + div {
+  border-left: 1px solid #dfe6f5;
 }
 .admin-page--dashboard .fulfillment-analytics__summary strong {
   color: #3348ba;
