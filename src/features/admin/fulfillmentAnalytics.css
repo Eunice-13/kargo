@@ -306,25 +306,40 @@
 }
 
 /* ─── Breakdown view ─────────────────────────────────────────────────────── */
+/* Two groups side by side, sized 4:2 so every bar ends up the same width. */
 .fulfillment-breakdown {
   margin-top: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 2fr);
+  gap: 24px;
+  align-items: stretch;
 }
-.fulfillment-breakdown__stack {
+.fulfillment-breakdown__group {
+  min-width: 0;
   display: flex;
-  gap: 3px;
-  height: 12px;
-  border-radius: 999px;
-  overflow: hidden;
+  flex-direction: column;
 }
-.fulfillment-breakdown__segment {
-  min-width: 10px;
-  border-radius: 999px;
+.fulfillment-breakdown__group-title {
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--group-line, var(--fa-border));
+  color: var(--fa-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.fulfillment-breakdown__group.is-path {
+  --group-line: color-mix(in srgb, #191ba9 22%, transparent);
+}
+.fulfillment-breakdown__group.is-drop-offs {
+  --group-line: color-mix(in srgb, #b42318 22%, transparent);
 }
 
 /* Desktop: vertical bars. */
 .fulfillment-breakdown__list {
   list-style: none;
-  margin: 24px 0 0;
+  margin: 18px 0 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr));
@@ -380,21 +395,21 @@
   color: var(--fa-ink);
   font-variant-numeric: tabular-nums;
 }
+/* Stage name with its share directly underneath the bar; no legend dot. */
 .fulfillment-breakdown__meta {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 2px 6px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-top: 8px;
+  border-top: 1px solid var(--fa-ink-soft);
   text-align: center;
   font-size: 11.5px;
   color: var(--fa-muted);
 }
-.fulfillment-breakdown__meta .fulfillment-stage-dot {
-  align-self: center;
-}
 .fulfillment-breakdown__label {
-  color: var(--fa-ink-soft);
+  color: var(--fa-ink);
+  font-size: 12.5px;
   font-weight: 600;
 }
 .fulfillment-breakdown__meta .fulfillment-breakdown__count {
@@ -1023,6 +1038,10 @@
   }
 
   /* Breakdown becomes stacked progress rows on mobile. */
+  .fulfillment-breakdown {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
   .fulfillment-breakdown__list {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -1065,9 +1084,14 @@
     display: none;
   }
   .fulfillment-breakdown__meta {
+    flex-direction: row;
+    align-items: baseline;
     flex-wrap: nowrap;
     justify-content: flex-start;
     width: 100%;
+    padding-top: 0;
+    border-top: 0;
+    text-align: left;
     font-size: 13px;
     gap: 8px;
   }
