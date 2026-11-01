@@ -15315,14 +15315,6 @@ select.admin-filter-control {
   flex: none !important;
 }
 
-/* Keep admin labels visible on desktop as well as mobile. */
-.admin-tabbar .kargo-tab-label {
-  display: block;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
 .admin-action-primary.kargo-primary {
   color: rgb(255, 255, 255);
 }
@@ -15577,8 +15569,7 @@ select.admin-filter-control {
   .admin-tabbar .kargo-tab-label {
     display: block;
     overflow: visible;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 10px;
     text-overflow: clip;
   }
 
