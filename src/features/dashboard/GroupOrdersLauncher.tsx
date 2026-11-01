@@ -152,7 +152,7 @@ export default function GroupOrdersLauncher({
       />
 
       {showList && (
-        <Modal title="My Group Orders" variant="detail" width={720} onClose={closeAll}>
+        <Modal title="My Group Orders" variant="detail" showTitleIcon={false} width={720} onClose={closeAll}>
           <div className="group-orders-modal" aria-busy={loading}>
             <div className="group-orders-modal__summary">
               <dl className="group-orders-modal__stats">
