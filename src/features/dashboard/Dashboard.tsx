@@ -37,7 +37,7 @@ import {
   BuyerProfileModal,
 } from "@/components/shared";
 
-import { BatchCheckoutModal, completedPayments } from "@/features/payments";
+import { BatchCheckoutModal } from "@/features/payments";
 
 import type { PaymentSubmissionDetails } from "@/features/payments";
 
@@ -271,7 +271,16 @@ export default function Dashboard({
 
   const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0);
 
-  const completedOrders = completedPayments(payHistory, claims);
+  // "Completed Orders" must mean genuinely delivered/completed orders so the
+  // stat agrees with the Fulfillment Board's Delivered column. The old source
+  // (completedPayments) counted anything "Paid and Reserved" — which collapses
+  // payment_confirmed/preparing/completed together — so an order still sitting
+  // in Payment Confirmed or Preparing on the board was wrongly counted here.
+  // Mirror the board exactly, the same way the seller stat (ordersFulfilled)
+  // does: the buyer's Delivered column.
+  const completedOrders = fulfillment.filter(
+    (o) => o.perspective === "buyer" && o.col === "Delivered",
+  );
 
   // ─── Seller stat sources (derived from live data, not hardcoded) ───────────
 
@@ -384,7 +393,7 @@ export default function Dashboard({
 
       icon: ReceiptText,
 
-      sub: "Completed payments",
+      sub: "Delivered orders",
 
       sc: "#6B7280",
 

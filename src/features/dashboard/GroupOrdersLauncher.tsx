@@ -152,19 +152,19 @@ export default function GroupOrdersLauncher({
       />
 
       {showList && (
-        <Modal title="My Group Orders" variant="detail" width={720} onClose={closeAll}>
+        <Modal title="My Group Orders" variant="detail" showTitleIcon={false} width={720} onClose={closeAll}>
           <div className="group-orders-modal" aria-busy={loading}>
             <div className="group-orders-modal__summary">
               <dl className="group-orders-modal__stats">
-                <div className="group-orders-stat">
+                <div className="group-orders-stat" style={{ padding: "24px 20px", alignContent: "start" }}>
                   <dt>Active</dt>
                   <dd>{pending ? "–" : ongoing.length}</dd>
                 </div>
-                <div className="group-orders-stat">
+                <div className="group-orders-stat" style={{ padding: "24px 20px", alignContent: "start" }}>
                   <dt>You lead</dt>
                   <dd>{pending ? "–" : ledCount}</dd>
                 </div>
-                <div className="group-orders-stat">
+                <div className="group-orders-stat" style={{ padding: "24px 20px", alignContent: "start" }}>
                   <dt>Joined</dt>
                   <dd>{pending ? "–" : joinedCount}</dd>
                 </div>
@@ -248,7 +248,7 @@ export default function GroupOrdersLauncher({
                       />
                     </button>
                     {pastOpen && (
-                      <div id="group-orders-past">
+                      <div id="group-orders-past" style={{ width: "100%" }}>
                         <GroupOrderList
                           key={listKey}
                           groups={past}
