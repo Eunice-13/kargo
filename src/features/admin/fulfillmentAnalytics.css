@@ -565,6 +565,7 @@
 /* ─── Custom range popover ──────────────────────────────────────────────── */
 .fulfillment-analytics__period-field {
   position: relative;
+  display: inline-flex;
 }
 .fulfillment-analytics__custom {
   position: absolute;
