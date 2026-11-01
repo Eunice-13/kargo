@@ -213,6 +213,7 @@ function TeamSection() {
           confirmWord={revoke.acceptedAt === null ? undefined : revoke.name}
           tone={revoke.acceptedAt === null ? "default" : "danger"}
           action={revoke.acceptedAt === null ? undefined : "revokeAccess"}
+          showTitleIcon={false}
           onConfirm={async (reason) => {
             await adminApi.revokeAdmin(revoke.id, reason);
             setRevoke(null);

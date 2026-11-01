@@ -2955,6 +2955,16 @@
     overscroll-behavior: contain;
   }
 
+  .kargo-modal-overlay.admin-record-modal-overlay {
+    z-index: 100000 !important;
+    inset: 0 !important;
+    padding:
+      calc(12px + env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      calc(60px + env(safe-area-inset-bottom) + 12px)
+      max(12px, env(safe-area-inset-left)) !important;
+  }
+
   @supports (height: 100dvh) {
     .kargo-modal-overlay {
       height: 100dvh !important;
@@ -2985,6 +2995,32 @@
     .expense-receipt-sheet {
       max-height: 90dvh !important;
     }
+  }
+
+  .kargo-modal.admin-record-modal {
+    max-height: calc(100vh - 60px - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    max-height: calc(100dvh - 60px - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-record-modal > .kargo-modal__body {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .admin-record-modal > .admin-modal-footer {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    background: #fff;
+  }
+
+  .admin-record-modal > .admin-modal-footer > .admin-action-button {
+    min-height: 44px !important;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .kargo-modal.is-closing {
@@ -4301,24 +4337,10 @@
     padding: 0 !important;
   }
 
-  .kargo-header .kargo-notification-trigger {
-    border: 0 !important;
+  .kargo-header .kargo-header-actions > div > button.kargo-notification-trigger {
     border-radius: 50% !important;
-    background: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .kargo-header .kargo-notification-trigger > svg path {
-    fill: #fff !important;
-  }
-
-  .kargo-header .kargo-notification-trigger[aria-expanded="true"] {
-    background: transparent !important;
-    border: 0 !important;
-  }
-
-  .kargo-header .kargo-notification-trigger[aria-expanded="true"] > svg path {
-    fill: #191ba9 !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
   }
 
   .kargo-header .kargo-user-menu__trigger {

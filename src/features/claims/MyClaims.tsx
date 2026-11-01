@@ -15,6 +15,7 @@ import type {
 } from "@/types";
 
 import { INDIGO, CREAM, TODAY } from "@/constants/theme";
+import { MAX_EXTENSION_REQUESTS } from "@/constants/claims";
 import { productImageUrl } from "@/components/shared/ProductThumb";
 import { sellerLabel } from "@/features/batches/sellerLabel";
 
@@ -127,6 +128,21 @@ function hasOrderDeadline(claim: ClaimRow) {
   if (claim.deadlinePausedAt) return true;
   if (claim.expiresAt && Number.isFinite(new Date(claim.expiresAt).getTime())) return true;
   return Number.isFinite(claim.hours) && claim.hours > 0;
+}
+
+function canCancelClaim(claim: ClaimRow) {
+  return claim.status === "Pending" && !claim.groupOrderId;
+}
+
+function extensionRequestCount(claim: ClaimRow) {
+  return (
+    claim.extensionRequestCount ??
+    (claim.extensionStatus && claim.extensionStatus !== "none" ? 1 : 0)
+  );
+}
+
+function extensionLimitMessage() {
+  return `You've used all ${MAX_EXTENSION_REQUESTS} extension requests for this claim.`;
 }
 
 export default function MyClaims({
@@ -682,59 +698,67 @@ export default function MyClaims({
     try {
       if (isSupabaseConfigured) {
         await kargoApi.cancelOrder(String(currentClaim.id));
-
-        await refreshData();
-      } else {
-        setClaims((previous) =>
-          previous.map((claim) =>
-            claim.id === currentClaim.id ? { ...claim, status: "Cancelled" as ClaimStatus } : claim,
-          ),
-        );
-
-        setToPay((previous) =>
-          previous.filter((payment) => {
-            const sameOrder = String(payment.orderId ?? payment.id) === String(currentClaim.id);
-
-            const sameLegacyClaim =
-              !payment.orderId &&
-              payment.product === currentClaim.product &&
-              payment.seller === currentClaim.seller;
-
-            return !sameOrder && !sameLegacyClaim;
-          }),
-        );
-
-        setBatches((previous) =>
-          previous.map((batch) => {
-            if (batch.title !== currentClaim.batch) return batch;
-
-            return {
-              ...batch,
-
-              claimed: Math.max(0, batch.claimed - currentClaim.qty),
-
-              products: batch.products.map((product) => {
-                const matchesProduct = currentClaim.productId
-                  ? product.dbId === currentClaim.productId
-                  : product.name === currentClaim.product;
-
-                return matchesProduct
-                  ? {
-                      ...product,
-
-                      claimed: Math.max(0, product.claimed - currentClaim.qty),
-                    }
-                  : product;
-              }),
-            };
-          }),
-        );
       }
 
-      setCancelTarget(null);
-    } catch (error) {
-      await refreshData();
+      setClaims((previous) =>
+        previous.map((claim) =>
+          claim.id === currentClaim.id ? { ...claim, status: "Cancelled" as ClaimStatus } : claim,
+        ),
+      );
 
+      setToPay((previous) =>
+        previous.filter((payment) => {
+          const sameOrder = String(payment.orderId ?? payment.id) === String(currentClaim.id);
+
+          const sameLegacyClaim =
+            !payment.orderId &&
+            payment.product === currentClaim.product &&
+            payment.seller === currentClaim.seller;
+
+          return !sameOrder && !sameLegacyClaim;
+        }),
+      );
+
+      setBatches((previous) =>
+        previous.map((batch) => {
+          if (batch.title !== currentClaim.batch) return batch;
+
+          return {
+            ...batch,
+
+            claimed: Math.max(0, batch.claimed - currentClaim.qty),
+
+            products: batch.products.map((product) => {
+              const matchesProduct = currentClaim.productId
+                ? product.dbId === currentClaim.productId
+                : product.name === currentClaim.product;
+
+              return matchesProduct
+                ? {
+                    ...product,
+
+                    claimed: Math.max(0, product.claimed - currentClaim.qty),
+                  }
+                : product;
+            }),
+          };
+        }),
+      );
+
+      setCancelTarget(null);
+
+      if (isSupabaseConfigured) {
+        try {
+          await refreshData();
+        } catch (error) {
+          alert(
+            error instanceof Error
+              ? `Claim cancelled, but the latest data could not be refreshed: ${error.message}`
+              : "Claim cancelled, but the latest data could not be refreshed.",
+          );
+        }
+      }
+    } catch (error) {
       alert(error instanceof Error ? error.message : "Unable to cancel claim.");
     } finally {
       setCancelling(false);
@@ -1774,6 +1798,7 @@ export default function MyClaims({
                         .filter((item) => !combinedPaymentOrder(String(item.id)))
                         .map((item) => {
                           const deliveryRequest = requestForOrder(String(item.id));
+                          const extensionRequestsUsed = extensionRequestCount(item);
                           const imageUrl = item.productId
                             ? batches
                                 .flatMap((batch) => batch.products)
@@ -1907,12 +1932,30 @@ export default function MyClaims({
                                       Pay Now
                                     </PrimaryBtn>
                                   </PendingPaymentHint>
-                                  {claimIsPayable(item) &&
-                                    !item.extensionRequested &&
-                                    item.extensionStatus !== "pending" && (
-                                      <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
-                                        Request Extension
-                                      </SecondaryBtn>
+                                    {claimIsPayable(item) && (
+                                      <div className="flex flex-col items-start gap-1">
+                                        <span className="text-[11px] text-gray-400">
+                                          Extension requests: {extensionRequestsUsed} of{" "}
+                                          {MAX_EXTENSION_REQUESTS} used
+                                        </span>
+                                        {!item.extensionRequested &&
+                                          item.extensionStatus !== "pending" && (
+                                            <SecondaryBtn
+                                              size="sm"
+                                              disabled={
+                                                extensionRequestsUsed >= MAX_EXTENSION_REQUESTS
+                                              }
+                                              onClick={() => setExtTarget(item)}
+                                            >
+                                              Request Extension
+                                            </SecondaryBtn>
+                                          )}
+                                        {extensionRequestsUsed >= MAX_EXTENSION_REQUESTS && (
+                                          <span className="text-[11px] text-gray-400">
+                                            {extensionLimitMessage()}
+                                          </span>
+                                        )}
+                                      </div>
                                     )}
                                 </div>
                               </td>
@@ -2192,7 +2235,11 @@ export default function MyClaims({
                       </PrimaryBtn>
                     )}
                     {c.status === "Pending" && !c.extensionRequested && (
-                      <SecondaryBtn size="sm" onClick={() => setExtTarget(c)}>
+                      <SecondaryBtn
+                        size="sm"
+                        disabled={extensionRequestCount(c) >= MAX_EXTENSION_REQUESTS}
+                        onClick={() => setExtTarget(c)}
+                      >
                         Extend
                       </SecondaryBtn>
                     )}
@@ -2214,6 +2261,11 @@ export default function MyClaims({
                       >
                         Extension Requested
                       </span>
+                    )}
+                    {canCancelClaim(c) && (
+                      <SecondaryBtn size="sm" onClick={() => setCancelTarget(c)}>
+                        Cancel
+                      </SecondaryBtn>
                     )}
                     {c.status === "Paid and Reserved" && (
                       <SecondaryBtn
@@ -2253,6 +2305,17 @@ export default function MyClaims({
                     )}
                   </div>
                 </div>
+                {claimIsPayable(c) && (
+                  <div className="mt-1 text-[11px] text-gray-400">
+                    <div>
+                      Extension requests: {extensionRequestCount(c)} of {MAX_EXTENSION_REQUESTS}{" "}
+                      used
+                    </div>
+                    {extensionRequestCount(c) >= MAX_EXTENSION_REQUESTS && (
+                      <div>{extensionLimitMessage()}</div>
+                    )}
+                  </div>
+                )}
               </Card>
             ))}
           </div>
@@ -2404,30 +2467,51 @@ export default function MyClaims({
                             Pay Now
                           </PrimaryBtn>
                         )}
-                        {c.status === "Pending" &&
-                          (c.extensionRequested ? (
-                            <span
-                              style={{
-                                background: "#FEF3C7",
-
-                                color: "#92400E",
-
-                                fontSize: 10,
-
-                                fontWeight: 600,
-
-                                padding: "3px 8px",
-
-                                borderRadius: 999,
-                              }}
-                            >
-                              Requested
+                        {c.status === "Pending" && (
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="text-[11px] text-gray-400">
+                              Extension requests: {extensionRequestCount(c)} of{" "}
+                              {MAX_EXTENSION_REQUESTS} used
                             </span>
-                          ) : (
-                            <SecondaryBtn size="sm" onClick={() => setExtTarget(c)}>
-                              Request Extension
-                            </SecondaryBtn>
-                          ))}
+                            {c.extensionRequested ? (
+                              <span
+                                style={{
+                                  background: "#FEF3C7",
+
+                                  color: "#92400E",
+
+                                  fontSize: 10,
+
+                                  fontWeight: 600,
+
+                                  padding: "3px 8px",
+
+                                  borderRadius: 999,
+                                }}
+                              >
+                                Requested
+                              </span>
+                            ) : (
+                              <SecondaryBtn
+                                size="sm"
+                                disabled={extensionRequestCount(c) >= MAX_EXTENSION_REQUESTS}
+                                onClick={() => setExtTarget(c)}
+                              >
+                                Request Extension
+                              </SecondaryBtn>
+                            )}
+                            {extensionRequestCount(c) >= MAX_EXTENSION_REQUESTS && (
+                              <span className="text-[11px] text-gray-400">
+                                {extensionLimitMessage()}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {canCancelClaim(c) && (
+                          <SecondaryBtn size="sm" onClick={() => setCancelTarget(c)}>
+                            Cancel
+                          </SecondaryBtn>
+                        )}
                         {c.status === "Paid and Reserved" && (
                           <SecondaryBtn
                             size="sm"
@@ -2657,6 +2741,7 @@ export default function MyClaims({
                       ...c,
                       extensionRequested: true,
                       extensionStatus: "pending",
+                      extensionRequestCount: extensionRequestCount(extTarget) + 1,
                       extensionRequestedHours: hours,
                     }
                   : c,
@@ -2664,6 +2749,18 @@ export default function MyClaims({
             );
 
             setExtTarget(null);
+
+            if (isSupabaseConfigured) {
+              try {
+                await refreshData();
+              } catch (error) {
+                alert(
+                  error instanceof Error
+                    ? `Request submitted, but the latest data could not be refreshed: ${error.message}`
+                    : "Request submitted, but the latest data could not be refreshed.",
+                );
+              }
+            }
           }}
           onClose={() => setExtTarget(null)}
         />

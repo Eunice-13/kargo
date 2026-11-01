@@ -19,6 +19,7 @@ export default function AdminConfirmModal({
   minReason = 8,
   tone = "danger",
   action,
+  showTitleIcon = true,
   onConfirm,
   onClose,
 }: {
@@ -30,6 +31,7 @@ export default function AdminConfirmModal({
   minReason?: number;
   tone?: AdminActionTone | "default";
   action?: AdminActionKind;
+  showTitleIcon?: boolean;
   onConfirm: (reason: string) => Promise<void>;
   onClose: () => void;
 }) {
@@ -54,6 +56,7 @@ export default function AdminConfirmModal({
     <Modal
       title={title}
       variant={destructive ? "danger" : "confirm"}
+      showTitleIcon={showTitleIcon}
       width={492}
       className="admin-modal admin-confirm-modal"
       overlayClassName="admin-modal-overlay admin-record-modal-overlay"

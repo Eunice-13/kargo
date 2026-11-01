@@ -169,6 +169,8 @@ export type ClaimRow = {
 
   extensionStatus?: "none" | "pending" | "approved" | "denied";
 
+  extensionRequestCount?: number;
+
   extensionRequestedHours?: number;
 
   extensionDecidedAt?: string;

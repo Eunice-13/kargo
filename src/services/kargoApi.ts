@@ -4,6 +4,7 @@ import { membershipError, resolveGroupMembership } from "./groupMembership";
 import { loadPaymentCompatibleRows } from "./paymentReadCompatibility";
 import { combinedDeliveryMutationError } from "./combinedDeliveryErrors";
 import { PASSWORD_RESET_PATH } from "@/constants/auth";
+import { MAX_EXTENSION_REQUESTS } from "@/constants/claims";
 
 import { normalizeBatchCategory } from "@/constants/categories";
 
@@ -536,6 +537,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
     { data: buyerPaymentStates, error: buyerPaymentStatesError },
 
+    { data: extensionRequestCounts, error: extensionRequestCountsError },
+
     { data: dbGroupOrders, error: groupOrdersError },
   ] = await Promise.all([
     client.from("batch_catalog").select("*"),
@@ -562,6 +565,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
     client.rpc("buyer_order_payment_states"),
 
+    client.rpc("my_order_extension_request_counts"),
+
     client
       .from("group_orders")
       .select(
@@ -582,6 +587,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
   if (ownReactionsError && !reactionSchemaMissing) throw ownReactionsError;
 
   if (buyerPaymentStatesError) throw buyerPaymentStatesError;
+
+  if (extensionRequestCountsError) throw extensionRequestCountsError;
 
   if (groupOrdersError) throw groupOrdersError;
 
@@ -634,6 +641,15 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
           rejectionDeadline: row.rejection_deadline as string | null,
         },
+      ],
+    ),
+  );
+
+  const extensionRequestCountByOrderId = new Map<string, number>(
+    (extensionRequestCounts ?? []).map(
+      (row: { order_id: string; request_count: number | string }): [string, number] => [
+        row.order_id,
+        Number(row.request_count),
       ],
     ),
   );
@@ -954,6 +970,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         extensionStatus: row.extension_status ?? "none",
         extensionRequested: row.extension_status === "pending",
+        extensionRequestCount: extensionRequestCountByOrderId.get(row.id) ?? 0,
         extensionRequestedHours: row.extension_requested_hours ?? undefined,
         extensionDecidedAt: row.extension_decided_at ?? undefined,
 
@@ -2199,7 +2216,21 @@ export async function requestOrderExtension(
 
   reason?: string,
 ) {
-  const { error } = await requireSupabase().rpc("request_order_extension", {
+  const client = requireSupabase();
+  const { data: counts, error: countError } = await client.rpc(
+    "my_order_extension_request_counts",
+    { p_order_id: orderId },
+  );
+  if (countError) throw countError;
+
+  const requestCount = Number(counts?.[0]?.request_count ?? 0);
+  if (requestCount >= MAX_EXTENSION_REQUESTS) {
+    throw new Error(
+      `You've used all ${MAX_EXTENSION_REQUESTS} extension requests for this claim.`,
+    );
+  }
+
+  const { error } = await client.rpc("request_order_extension", {
     p_order_id: orderId,
 
     p_hours: hours,

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react"
 import type { Tab } from "@/types"
-import { CREAM } from "@/constants/theme"
 import { NotificationItem, useNotifications } from "@/features/notifications"
 
 export default function NotificationsMenu({
@@ -50,13 +49,11 @@ export default function NotificationsMenu({
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
         style={{
-          background: CREAM,
-          border: "1px solid #E5E7EB",
           borderRadius: 8,
           width: 36,
           height: 36,
         }}
-        className="kargo-notification-trigger relative flex items-center justify-center transition-colors hover:bg-gray-100 bp"
+        className="kargo-notification-trigger relative flex items-center justify-center transition-colors bp"
       >
         <svg
           width="16"
@@ -68,7 +65,8 @@ export default function NotificationsMenu({
           <path
             className="kargo-notification-icon"
             d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6V11c0-3.07-1.64-5.64-4.5-6.32V4a1.5 1.5 0 00-3 0v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"
-            fill="#6B7280"
+            fill="currentColor"
+            stroke="currentColor"
           />
         </svg>
         {unreadCount > 0 && (
