@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BarChart3, ChevronDown, LineChart, RefreshCw } from "lucide-react";
 import { adminApi } from "@/services";
 import type {
@@ -31,7 +32,17 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
   const [periodsOpen, setPeriodsOpen] = useState(false);
   // Custom date ranges open in a compact popover instead of taking a full row.
   const [customOpen, setCustomOpen] = useState(false);
+  const periodFieldRef = useRef<HTMLDivElement>(null);
   const activePeriodLabel = PERIODS.find(([key]) => key === period)?.[1] ?? "Range";
+
+  useEffect(() => {
+    if (!customOpen) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!periodFieldRef.current?.contains(event.target as Node)) setCustomOpen(false);
+    };
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [customOpen]);
   return (
     <section className="fulfillment-analytics" aria-labelledby="fulfillment-analytics-title">
       <header className="fulfillment-analytics__header">
@@ -44,7 +55,7 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
           </p>
         </div>
         <div className="fulfillment-analytics__controls">
-          <div className="fulfillment-analytics__period-field">
+          <div ref={periodFieldRef} className="fulfillment-analytics__period-field">
             <button
               type="button"
               className="fulfillment-analytics__disclosure"
