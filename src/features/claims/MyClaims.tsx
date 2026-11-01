@@ -191,6 +191,7 @@ export default function MyClaims({
   // open, since its cards live in a modal.
   const [combinedFocusId, setCombinedFocusId] = useState<string | null>(null);
 
+  const [ongoingFilter, setOngoingFilter] = useState<"All" | "Pending" | "Awaiting Verification">("All");
   const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>(() => {
     // The dashboard can ask for "Pending". Those orders now sit in Ongoing
     // Orders at the top of the page, which is always visible, so start on All.
@@ -768,7 +769,11 @@ export default function MyClaims({
 
   if (role === "Seller") {
     const paymentForOrder = (claim: ClaimRow) =>
-      sellerPayments.find((payment) => String(payment.orderId) === String(claim.id));
+      sellerPayments.find(
+        (payment) =>
+          String(payment.orderId) === String(claim.id) ||
+          (payment.reservationIds?.includes(String(claim.id)) ?? false),
+      );
 
     const statusForOrder = (claim: ClaimRow): SellerOrderReceivedStatus => {
       const payment = paymentForOrder(claim);
@@ -834,13 +839,50 @@ export default function MyClaims({
     // and expired orders have nothing left to track, so they stay in the list
     // below. Like pendings on the buyer side, an ongoing order shows once, here.
     const finishedStatuses = ["completed", "cancelled", "expired", "incomplete"];
-    const isOngoing = (claim: ClaimRow) =>
-      menuItemsFor(claim).length > 0 &&
-      claim.fulfillmentStage !== "delivered" &&
-      !finishedStatuses.includes(claim.orderStatus ?? "");
+    const isOngoing = (claim: ClaimRow) => {
+      const s = statusForOrder(claim);
+      if (s === "Verified") return false;
+      if (finishedStatuses.includes(claim.orderStatus ?? "")) return false;
+      if (claim.fulfillmentStage === "delivered") return false;
+      // Always include Awaiting Verification — the seller needs to review it.
+      // But for combined delivery, only show the primary order (orderId match),
+      // not every secondary order covered by reservationIds.
+      if (s === "Awaiting Verification") {
+        const payment = paymentForOrder(claim);
+        // If the matching payment is a combined delivery but this claim is not
+        // the primary orderId, skip it — it's already represented by the primary.
+        if (payment?.combinedDeliveryGroupId && String(payment.orderId) !== String(claim.id)) {
+          return false;
+        }
+        return true;
+      }
+      // For Pending / Insufficient Payment: only surface if there's something
+      // actionable in the menu (contact buyer, tracking).
+      return menuItemsFor(claim).length > 0;
+    };
 
-    const ongoingOrders = claims.filter(isOngoing).sort(orderReceivedSort);
-    const otherOrders = claims.filter((claim) => !isOngoing(claim));
+    // Returns true when a claim is a secondary order in a combined delivery
+    // (it's covered by a combined VerifyItem but is not its primary orderId).
+    // These must never show as separate rows — the primary order represents them.
+    const isCombinedDeliverySecondary = (claim: ClaimRow) => {
+      const payment = paymentForOrder(claim);
+      return (
+        !!payment?.combinedDeliveryGroupId &&
+        String(payment.orderId) !== String(claim.id)
+      );
+    };
+
+    const ongoingOrdersRaw = claims.filter(isOngoing).filter((claim) => {
+      const s = statusForOrder(claim);
+      return s === "Pending" || s === "Awaiting Verification";
+    }).sort(orderReceivedSort);    const ongoingOrders = ongoingOrdersRaw.filter((claim) => {
+      if (ongoingFilter === "All") return true;
+      const s = statusForOrder(claim);
+      return s === ongoingFilter;
+    });
+    const otherOrders = claims.filter(
+      (claim) => !isOngoing(claim) && !isCombinedDeliverySecondary(claim),
+    );
 
     const ordFiltered = (
       orderFilter === "All"
@@ -872,8 +914,6 @@ export default function MyClaims({
 
     const orderFilters: OrderReceivedFilter[] = [
       "All",
-      // No "Pending" chip: pending orders live in Ongoing Orders above.
-      "Awaiting Verification",
       "Verified",
       "Expired",
       "Cancelled",
@@ -935,14 +975,42 @@ export default function MyClaims({
         {tableSections.map((section) => (
           <section key={section.key} className="seller-orders-section" aria-label={section.label}>
             {section.key === "ongoing" ? (
+              <>
               <SH
                 title="Ongoing Orders"
                 action={
-                  <span className="seller-orders-section__count">
-                    {section.rows.length} {section.rows.length === 1 ? "order" : "orders"}
-                  </span>
+                  <span className="seller-orders-section__count">{section.rows.length} {section.rows.length === 1 ? "order" : "orders"}</span>
                 }
               />
+              <div
+                className="seller-orders-filters"
+                role="group"
+                aria-label="Filter ongoing orders by status"
+                style={{ marginBottom: 12 }}
+              >
+                {["All", "Pending", "Awaiting Verification"].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setOngoingFilter(f as any)}
+                    aria-pressed={ongoingFilter === f}
+                    style={{
+                      background: ongoingFilter === f ? INDIGO : "#fff",
+                      color: ongoingFilter === f ? "#fff" : "#6B7280",
+                      border: `1px solid ${ongoingFilter === f ? INDIGO : "#E5E7EB"}`,
+                      borderRadius: 999,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: "5px 14px",
+                      transition: "all 0.15s",
+                      fontFamily: "'Quicksand',sans-serif",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+              </>
             ) : (
               <>
                 {hasOngoing && <SH title="Other Orders" />}
@@ -1208,7 +1276,9 @@ export default function MyClaims({
                               <span style={{ background: badge.dot }} />
                               {status}
                             </span>
-                            {status === "Pending" && underpaid && <small>Awaiting balance</small>}
+                            {c.status === "Insufficient Payment" && (
+                              <small style={{ color: "#92400E" }}>Insufficient payment</small>
+                            )}
                           </td>
                           <td>
                             <div className="seller-orders-actions">
@@ -1333,6 +1403,49 @@ export default function MyClaims({
             insuffAmtPaid={insufficientAmount}
             setInsuffAmtPaid={setInsufficientAmount}
             setVerifyItems={updateSellerPayments}
+            onConfirm={(paidAmt, shortAmt) => {
+              const item = insufficientTarget;
+              // Optimistically keep the payment as "Pending" in the seller's
+              // list — there's still a balance outstanding. The RPC marks the
+              // payment row as verified; because total paid < order amount, the
+              // server sets the order to `insufficient_payment` so the buyer
+              // sees "Insufficient Payment" and can top up.
+              updateSellerPayments((prev) =>
+                prev.map((v) =>
+                  v.id === item.id
+                    ? {
+                        ...v,
+                        status: "Pending" as const,
+                        amountPaid: String(paidAmt),
+                        rejectReason: `Short ₱${shortAmt.toLocaleString()} — buyer notified.`,
+                      }
+                    : v,
+                ),
+              );
+              if (isSupabaseConfigured) {
+                void kargoApi
+                  .markInsufficientPayment(String(item.id), item.groupOrderId)
+                  .then(() => {
+                    void refreshData().catch(() => {});
+                    kargoApi
+                      .loadSellerPaymentSubmissions()
+                      .then(setSellerPayments)
+                      .catch(() => {});
+                  })
+                  .catch((error) => {
+                    alert(
+                      error instanceof Error
+                        ? error.message
+                        : "Unable to mark payment as insufficient.",
+                    );
+                    // Roll back the optimistic update.
+                    void kargoApi
+                      .loadSellerPaymentSubmissions()
+                      .then(setSellerPayments)
+                      .catch(() => {});
+                  });
+              }
+            }}
           />
         )}
         {paymentRejectTarget && (
@@ -1883,6 +1996,13 @@ export default function MyClaims({
                                       {item.status !== "Pending" && (
                                         <span className="claims-to-pay-deadline__status">
                                           {item.status}
+                                          {item.status === "Insufficient Payment" && (() => {
+                                            const last = payHistory.filter(
+                                              (p) => String(p.orderId ?? p.id) === String(item.id),
+                                            ).sort((a, b) => (b.submittedAt ? new Date(b.submittedAt).getTime() : 0) - (a.submittedAt ? new Date(a.submittedAt).getTime() : 0))[0];
+                                            const paid = last ? Number(last.amount) : 0;
+                                            return paid > 0 && paid < item.amount ? <span style={{ color: "#92400E", fontWeight: 600 }}> · Short ₱{(item.amount - paid).toLocaleString()}</span> : null;
+                                          })()}
                                         </span>
                                       )}
                                       <Countdown

@@ -8,7 +8,7 @@ const combinedOrders = legacyOrders.replace(
   "rejection_deadline,combined_delivery_group_id,combined:combined_delivery_payment_reservations(order_id,orders(quantity,batch_products(name))))",
 );
 const legacySubmissions =
-  "*,orders!inner(id,total_amount,buyer_id,group_order_id,batch_products(name),group_orders!orders_group_order_id_fkey(id,final_subtotal,shipping_fee,group_order_commitments(quantity)))";
+  "*,orders!inner(id,total_amount,shipping_fee,buyer_id,group_order_id,batch_products(name),group_orders!orders_group_order_id_fkey(id,final_subtotal,shipping_fee,group_order_commitments(quantity)))";
 const combinedSubmissions = legacySubmissions.replace(
   "*,orders!inner",
   "*,combined:combined_delivery_payment_reservations(order_id,item_subtotal,orders(quantity,batch_products(name))),orders!inner",

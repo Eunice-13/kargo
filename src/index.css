@@ -7540,6 +7540,20 @@ textarea::placeholder {
   padding: 1px 10px;
   font-size: 13px;
   font-weight: 400;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Badge label truncates rather than bleeding into the Actions column. */
+.seller-orders-status > :last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Status cell uses table layout to constrain badge width to column width. */
+.seller-orders-status-cell {
+  max-width: 0;
 }
 
 .seller-orders-status-cell small,
@@ -7668,13 +7682,13 @@ textarea::placeholder {
   width: 11%;
 }
 .seller-orders-page .seller-orders-col-ordered {
-  width: 10%;
+  width: 9%;
 }
 .seller-orders-page .seller-orders-col-product {
   width: 15%;
 }
 .seller-orders-page .seller-orders-col-method {
-  width: 10%;
+  width: 9%;
 }
 .seller-orders-page .seller-orders-col-amount {
   width: 8%;
@@ -7686,10 +7700,10 @@ textarea::placeholder {
   width: 14%;
 }
 .seller-orders-page .seller-orders-col-status {
-  width: 10%;
+  width: 14%;
 }
 .seller-orders-page .seller-orders-col-actions {
-  width: 12%;
+  width: 10%;
 }
 
 /* Product and Method hold free text. Row cells are nowrap by default, which let

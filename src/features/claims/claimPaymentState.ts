@@ -20,6 +20,10 @@ export function sellerOrderReceivedStatus(
   }
   if (claimStatus === "Paid and Reserved") return "Verified"
 
+  // Insufficient payment: the seller accepted a partial amount. The order is
+  // NOT fully paid, so show "Pending" even though the payment row is "Verified".
+  if (claimStatus === "Insufficient Payment") return "Pending"
+
   if (paymentStatus === "Verified") return "Verified"
   if (paymentStatus === "Pending") return "Awaiting Verification"
   if (paymentStatus === "Rejected") return "Pending"

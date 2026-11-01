@@ -2894,6 +2894,9 @@ export async function loadSellerPaymentSubmissions() {
 
     groupOrderId: row.orders.group_order_id ?? undefined,
     combinedDeliveryGroupId: row.combined_delivery_group_id ?? undefined,
+    reservationIds: row.combined_delivery_group_id
+      ? (row.combined ?? []).map((link: any) => link.order_id as string)
+      : undefined,
 
     buyer: names.get(row.orders.buyer_id) ?? "Buyer",
 
@@ -2908,7 +2911,7 @@ export async function loadSellerPaymentSubmissions() {
       : row.orders.group_order_id
         ? Number(row.orders.group_orders?.final_subtotal ?? 0) +
           Number(row.orders.group_orders?.shipping_fee ?? 0)
-        : Number(row.orders.total_amount),
+        : Number(row.orders.total_amount) + Number(row.orders.shipping_fee ?? 0),
 
     ref: row.reference_number ?? "—",
 
@@ -2982,6 +2985,19 @@ export async function reviewGroupPayment(
     p_deadline_hours: deadlineHours ?? null,
   });
   if (error) throw error;
+}
+
+// Called when the seller confirms a short payment. Fires reviewPayment with
+// "verified" so the server sums all verified payments for the order; when
+// the running total is still less than the order amount the DB sets the order
+// status to `insufficient_payment` and the buyer can top up the balance.
+export async function markInsufficientPayment(
+  paymentId: string,
+  groupOrderId?: string,
+) {
+  return groupOrderId
+    ? reviewGroupPayment(paymentId, "verified")
+    : reviewPayment(paymentId, "verified")
 }
 
 export async function notifyPaymentResubmission(paymentId: string) {
@@ -3451,6 +3467,7 @@ export const kargoApi = {
 
   reviewPayment,
   reviewGroupPayment,
+  markInsufficientPayment,
 
   notifyPaymentResubmission,
 

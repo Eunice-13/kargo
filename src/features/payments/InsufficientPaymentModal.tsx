@@ -10,12 +10,14 @@ export default function InsufficientPaymentModal({
   insuffAmtPaid,
   setInsuffAmtPaid,
   setVerifyItems,
+  onConfirm,
 }: {
   insuffTarget: VerifyItem
   setInsuffTarget: (v: VerifyItem | null) => void
   insuffAmtPaid: string
   setInsuffAmtPaid: (v: string) => void
   setVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>>
+  onConfirm?: (paidAmt: number, shortAmt: number) => void
 }) {
   const paidAmt = Number(insuffAmtPaid) || 0
   const shortAmt = insuffTarget.amount - paidAmt

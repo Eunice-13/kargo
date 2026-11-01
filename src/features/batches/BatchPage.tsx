@@ -52,6 +52,7 @@ import ItemClaimModal from "./ItemClaimModal";
 import JoinWaitlistModal from "./JoinWaitlistModal";
 import GroupOrderModal, { GroupOrderChoiceModal } from "./GroupOrderModal";
 import BatchGroupSettingsModal from "./BatchGroupSettingsModal";
+import AddBatchItemsModal from "./AddBatchItemsModal";
 
 import { toggleBatchLock } from "./toggleBatchLock";
 
@@ -177,6 +178,7 @@ export default function BatchPage({
   }, [role, batch.groupOrdersEnabled]);
 
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
+  const [addItemsOpen, setAddItemsOpen] = useState(false);
 
   const [waitlistTarget, setWaitlistTarget] = useState<{
     p: (typeof batch.products)[0];
@@ -928,9 +930,14 @@ export default function BatchPage({
           <SH
             title="Items in this Batch"
             action={
-              role === "Buyer" ? (
-                <SecondaryBtn onClick={() => setContact(true)}>Contact Seller</SecondaryBtn>
-              ) : undefined
+              <div className="flex items-center gap-2">
+                {canEdit && (
+                  <SecondaryBtn size="sm" onClick={() => setAddItemsOpen(true)}>Add Item</SecondaryBtn>
+                )}
+                {role === "Buyer" ? (
+                  <SecondaryBtn onClick={() => setContact(true)}>Contact Seller</SecondaryBtn>
+                ) : undefined}
+              </div>
             }
           />
           <div className="space-y-3">
@@ -1622,6 +1629,23 @@ export default function BatchPage({
           context={batch.title}
           contactUrl={batch.sellerFb}
           onClose={() => setContact(false)}
+        />
+      )}
+      {addItemsOpen && (
+        <AddBatchItemsModal
+          onAdd={(added) => {
+            setBatches((current) =>
+              current.map((item) => {
+                if (item.id !== batch.id) return item;
+                return {
+                  ...item,
+                  products: [...item.products, ...added.map((a, idx) => ({ ...a, dbId: `new-${batch.id}-${item.products.length + idx}`, id: `new-${batch.id}-${item.products.length + idx}` }))],
+                  items: item.items + added.reduce((s, p) => s + p.qty, 0),
+                };
+              }),
+            );
+          }}
+          onClose={() => setAddItemsOpen(false)}
         />
       )}
     </div>
