@@ -65,7 +65,6 @@ end;
 $$;
 revoke all on function public.fulfillment_analytics_range(text,date,date,timestamptz) from public,anon,authenticated;
 
-drop function if exists public.admin_fulfillment_analytics(text,date,date);
 create or replace function public.admin_fulfillment_analytics(
   p_period text default 'last_30_days',
   p_start date default null,
@@ -201,7 +200,6 @@ $$;
 revoke all on function public.admin_fulfillment_analytics(text,date,date) from public,anon;
 grant execute on function public.admin_fulfillment_analytics(text,date,date) to authenticated;
 
-drop function if exists public.admin_fulfillment_orders(text,date,date,text,timestamptz,timestamptz,integer,integer,text);
 create or replace function public.admin_fulfillment_orders(
   p_period text default 'last_30_days',p_start date default null,p_end date default null,
   p_stage text default null,p_bucket timestamptz default null,p_as_of timestamptz default null,
