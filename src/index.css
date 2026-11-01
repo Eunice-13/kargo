@@ -15569,7 +15569,7 @@ select.admin-filter-control {
   .admin-tabbar .kargo-tab-label {
     display: block;
     overflow: visible;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 700;
     text-overflow: clip;
   }
