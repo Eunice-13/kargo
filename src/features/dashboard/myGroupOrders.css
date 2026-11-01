@@ -21,6 +21,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  width: 100%;
 }
 .group-shortcut-card {
   min-width: 0;
@@ -555,10 +556,10 @@
 }
 .group-orders-stat {
   display: grid;
-  align-content: center;
+  align-content: start;
   gap: 2px;
   min-width: 0;
-  padding: 20px 18px;
+  padding: 24px 18px;
   border: 1px solid var(--kargo-line);
   border-radius: 12px;
   background: color-mix(in srgb, var(--kargo-navy) 3%, var(--kargo-surface));
@@ -680,6 +681,10 @@
 .group-orders-modal__past {
   display: grid;
   gap: 12px;
+  width: 100%;
+}
+#group-orders-past {
+  width: 100%;
 }
 .group-orders-modal__past-toggle {
   display: flex;
@@ -772,7 +777,7 @@
     width: 100%;
   }
   .group-orders-stat {
-    padding: 16px 14px;
+    padding: 20px 16px;
   }
   .group-orders-stat dd {
     font-size: 20px;
