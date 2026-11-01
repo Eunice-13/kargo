@@ -434,9 +434,15 @@ export default function NewBatchModal({
     } catch (caught) {
       setLoading(false)
 
-      setError(
-        caught instanceof Error ? caught.message : "Unable to create batch.",
-      )
+      const msg =
+        caught instanceof Error
+          ? caught.message
+          : typeof caught === "object" && caught && typeof caught.message === "string"
+            ? caught.message
+            : typeof caught === "object"
+              ? JSON.stringify(caught)
+              : String(caught)
+      setError(msg)
     }
   }
 

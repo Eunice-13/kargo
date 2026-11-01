@@ -166,6 +166,14 @@ export default function SellerPaymentVerification({
 
   const savePaymentMethod = async () => {
     if (!methodEditor) return
+    if (!methodName.trim()) {
+      alert("Account name is required.")
+      return
+    }
+    if (!methodNumber.trim()) {
+      alert("Account number / instructions are required.")
+      return
+    }
     setSavingMethod(true)
     try {
       if (localPaymentMode) {
@@ -649,6 +657,10 @@ export default function SellerPaymentVerification({
                       <Pencil size={15} />
                     </button>
                     <button type="button" aria-label={`Delete ${method.methodType}`} onClick={async () => {
+                      if (paymentMethods.length <= 1) {
+                        alert("You must keep at least one payment method.")
+                        return
+                      }
                       if (!window.confirm(`Delete ${method.methodType}?`)) return
                       try {
                         if (localPaymentMode) {

@@ -353,7 +353,7 @@ export default function GroupOrderModal({
                   commitment.productId === product.dbId && commitment.userId === group.currentUserId)?.quantity ?? 0
                 const maximum = groupCommitmentMaximum(product, ownSaved)
                 const hintId = `group-quantity-hint-${encodeURIComponent(key)}`
-                const quantity = quantities[key] ?? 1
+                const quantity = quantities[key] ?? 0
                 const valid = validGroupCommitmentQuantity(quantity, maximum)
                 return (
                 <div key={key} className="group-order-product-row">
@@ -372,15 +372,15 @@ export default function GroupOrderModal({
                     aria-describedby={hintId}
                     aria-invalid={!valid}
                     type="number"
-                    min="1"
+                    min="0"
                     step="1"
-                    max={Math.max(1, maximum)}
+                    max={Math.max(0, maximum)}
                     value={quantity}
                     disabled={readOnly || formationClosed || group.status !== "forming"}
                     onChange={(event) =>
                       setQuantities((current) => ({
                         ...current,
-                        [product.dbId ?? product.name]: Math.max(1, Number(event.target.value)),
+                        [product.dbId ?? product.name]: Math.max(0, Number(event.target.value) || 0),
                       }))
                     }
                   />
@@ -389,7 +389,7 @@ export default function GroupOrderModal({
                     disabled={readOnly || formationClosed || working || group.status !== "forming" || !product.dbId || !valid}
                     onClick={() =>
                       run(async () => {
-                        if (!valid) { setError(`Choose a whole-number quantity between 1 and ${maximum}.`); return }
+                        if (!valid) { setError(`Choose a whole-number quantity between 0 and ${maximum}.`); return }
                         setGroup(
                           await kargoApi.setGroupCommitment(
                             group.id,

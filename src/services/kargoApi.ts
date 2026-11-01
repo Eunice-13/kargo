@@ -1666,8 +1666,8 @@ export async function createBatch(batch: {
           product.limitPerUser && product.limitPerUser > 0 ? product.limitPerUser : null,
 
         waitlist_limit:
-          product.waitlistLimit != null && product.waitlistLimit >= 0
-            ? product.waitlistLimit
+          product.waitlistLimit != null && Number(product.waitlistLimit) > 0
+            ? Number(product.waitlistLimit)
             : null,
       })),
     )

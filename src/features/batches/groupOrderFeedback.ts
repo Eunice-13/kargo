@@ -22,5 +22,5 @@ export function groupCommitmentMaximum(
   return Math.floor(Math.min(stock, limit));
 }
 export function validGroupCommitmentQuantity(quantity: number, maximum: number) {
-  return Number.isInteger(quantity) && quantity > 0 && quantity <= maximum;
+  return Number.isInteger(quantity) && quantity >= 0 && quantity <= maximum;
 }
