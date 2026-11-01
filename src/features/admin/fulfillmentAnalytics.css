@@ -152,18 +152,24 @@
 }
 
 /* ─── KPI figures ────────────────────────────────────────────────────────── */
+/* One joined strip, three columns: the cells touch and are separated only by
+   thin dividers instead of standing apart as individual cards. */
 .fulfillment-analytics__summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  max-width: 560px;
+  gap: 0;
   margin-top: 24px;
-}
-.fulfillment-analytics__summary > div {
-  padding: 14px 16px;
   border: 1px solid var(--fa-border);
   border-radius: 14px;
   background: var(--fa-soft);
+  overflow: hidden;
+}
+.fulfillment-analytics__summary > div {
+  padding: 14px 16px;
+  min-width: 0;
+}
+.fulfillment-analytics__summary > div + div {
+  border-left: 1px solid var(--fa-border);
 }
 .fulfillment-analytics__summary strong {
   display: block;
@@ -993,7 +999,7 @@
   /* ── Mobile: KPI figures sit side-by-side, not stacked full-width ── */
   .fulfillment-analytics__summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    gap: 0;
     margin-top: 20px;
   }
   .fulfillment-analytics__summary > div {
