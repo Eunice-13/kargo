@@ -49,7 +49,7 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
           <h2 id="fulfillment-analytics-title">Order Fulfillment</h2>
           <p>
             All sellers ·{" "}
-            {loadedAt ? `last loaded ${analyticsTimestamp(loadedAt)}` : "Recorded stage entries"}
+            {loadedAt ? `last loaded ${analyticsTimestamp(loadedAt)}` : "Payment-confirmed cohort"}
             <span className="fulfillment-analytics__timezone"> · Manila time</span>
           </p>
         </div>
@@ -220,38 +220,30 @@ function AnalyticsResults({
     );
   const data = resource.data;
   if (!data) return null;
-  const deliveryPercent = data.uniqueOrders
-    ? Math.round((bucketCount(data.stageTotals, "delivered") / data.uniqueOrders) * 100)
+  const cohortSize = data.cohortSize ?? data.uniqueOrders;
+  const deliveryPercent = cohortSize
+    ? Math.round((bucketCount(data.stageTotals, "delivered") / cohortSize) * 100)
     : null;
   return (
     <>
       <div className="fulfillment-analytics__summary">
         <div>
-          <strong>{data.uniqueOrders.toLocaleString()}</strong>
-          <span>orders in view</span>
+          <strong>{cohortSize.toLocaleString()}</strong>
+          <span>orders in cohort</span>
         </div>
         <div>
           <strong>{deliveryPercent === null ? "—" : `${deliveryPercent}%`}</strong>
           <span>reached delivery</span>
-        </div>
-        <div>
-          <strong>{data.totalEntries.toLocaleString()}</strong>
-          <span>stage entries</span>
         </div>
       </div>
       <p className="fulfillment-analytics__definition">
         {filters.period === "custom"
           ? `${filters.start} – ${filters.end}`
           : PERIODS.find(([key]) => key === filters.period)?.[1]}{" "}
-        ·{" "}
-        {data.grouping === "hour"
-          ? "Hourly"
-          : data.grouping === "day"
-            ? "Daily"
-            : data.grouping === "week"
-              ? "Weekly"
-              : "Monthly"}{" "}
-        entries. An order can enter more than one stage.
+        · Grouped by {data.grouping === "hour" ? "hour" : data.grouping} (Manila time). Orders that
+        reached each stage are counted. An order can appear in several stages, so percentages add up
+        to more than 100%. {(data.excludedOrders ?? 0).toLocaleString()} orders excluded because
+        their history predates Oct 29.
       </p>
       <div className="fulfillment-analytics__stage-row">
         <div className="fulfillment-analytics__stage-field">
@@ -336,7 +328,7 @@ function AnalyticsResults({
           className="fulfillment-analytics__notice fulfillment-analytics__notice--empty"
           role="status"
         >
-          No recorded stage entries in this range. Try another date range.
+          No cohort orders reached a stage in this range. Try another date range.
         </p>
       )}
       {view === "trend" ? (
@@ -357,8 +349,8 @@ function AnalyticsResults({
         />
       )}
       <p className="fulfillment-analytics__coverage">
-        Partial history — only recorded stage entries are counted. Recording began{" "}
-        {analyticsTimestamp(data.captureStartedAt)}.
+        Cohort size is based on orders whose Payment confirmed stage falls in the selected range.
+        Orders with history before the Oct 29 recording boundary are excluded.
       </p>
       {point && (
         <FulfillmentOrdersDialog

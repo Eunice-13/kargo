@@ -1,0 +1,108 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { PGlite } from "@electric-sql/pglite";
+import test, { after, before } from "node:test";
+
+let db;
+const seller = "00000000-0000-0000-0000-000000000001";
+const buyer = "00000000-0000-0000-0000-000000000002";
+const id = (n) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const sqlFile = (name) =>
+  readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8");
+const row = async (sql, args = []) => (await db.query(sql, args)).rows[0];
+
+before(async () => {
+  db = new PGlite();
+  await db.exec(`create role authenticated; create role anon; create schema auth;
+    grant usage on schema public to authenticated,anon;
+    create function auth.uid() returns uuid language sql as $$select '${seller}'::uuid$$;
+    create function can_sell(uuid) returns boolean language sql as $$select $1='${seller}'::uuid$$;
+    create function admin_assert() returns void language plpgsql as $$begin
+      if current_setting('test.admin',true) is distinct from 'yes' then raise exception 'Admin access required' using errcode='42501'; end if;
+    end$$;
+    select set_config('test.admin','yes',false);
+    create type order_status as enum ('payment_pending','payment_submitted','insufficient_payment','payment_confirmed','preparing','completed','cancelled','expired','incomplete');
+    create table orders(id uuid primary key,order_number text,seller_id uuid,buyer_id uuid,status order_status,fulfillment_stage text,payment_confirmed_at timestamptz,completed_at timestamptz,created_at timestamptz default now(),updated_at timestamptz default now(),tracking_number text,group_order_id uuid);
+    create table notifications(recipient_id uuid,category text,message text,target_path text,context jsonb,dedupe_key text,created_at timestamptz default now());
+    create unique index notif_dedupe on notifications(recipient_id,dedupe_key) where dedupe_key is not null;
+    create table admin_audit_log(target_id text,target_type text,action text,after_state jsonb,created_at timestamptz);`);
+  await db.exec(sqlFile("202611040001_forward_only_fulfillment.sql"));
+  await db.exec(sqlFile("202611050001_no_cancel_after_payment.sql"));
+  await db.exec(sqlFile("202611060001_fulfillment_analytics.sql"));
+  await db.exec(sqlFile("202611060003_analytics_expired.sql"));
+  await db.exec(sqlFile("202611090004_fulfillment_analytics_cohort.sql"));
+  await db.query(
+    "update fulfillment_analytics_metadata set capture_started_at='2020-02-01T00:00:00+08:00' where singleton",
+  );
+
+  await db.query(
+    "insert into orders(id,order_number,seller_id,buyer_id,status,payment_confirmed_at,completed_at) values ($1,$2,$3,$4,$5,$6,$7),($8,$9,$3,$4,$10,$11,$12),($13,$14,$3,$4,$5,$15,$16),($17,$18,$3,$4,$5,$19,$20)",
+    [
+      id(1),
+      id(1),
+      seller,
+      buyer,
+      "payment_confirmed",
+      "2020-02-01T02:00:00Z",
+      null,
+      id(2),
+      id(2),
+      "completed",
+      "2020-02-01T03:00:00Z",
+      "2020-02-02T03:00:00Z",
+      id(3),
+      id(3),
+      "2020-02-01T04:00:00Z",
+      null,
+      id(4),
+      id(4),
+      "2020-02-01T05:00:00Z",
+      null,
+    ],
+  );
+  await db.query(
+    "update order_fulfillment_events set occurred_at=case order_id when $1::uuid then '2020-02-01T02:00:00Z'::timestamptz when $2::uuid then '2020-02-01T03:00:00Z'::timestamptz when $3::uuid then '2020-02-01T04:00:00Z'::timestamptz when $4::uuid then '2020-02-01T05:00:00Z'::timestamptz else occurred_at end where stage='payment_confirmed'",
+    [id(1), id(2), id(3), id(4)],
+  );
+  await db.query(
+    "insert into order_fulfillment_events(order_id,stage,occurred_at,source) values ($1,'payment_confirmed','2020-02-01T02:00:00Z','order_timestamp'),($2,'payment_confirmed','2020-02-01T03:00:00Z','order_timestamp'),($3,'payment_confirmed','2020-02-01T04:00:00Z','order_timestamp'),($4,'payment_confirmed','2020-02-01T05:00:00Z','order_timestamp') on conflict do nothing",
+    [id(1), id(2), id(3), id(4)],
+  );
+  await db.query(
+    "insert into order_fulfillment_events(order_id,stage,occurred_at,source) values ($1,'preparing','2020-01-31T10:00:00Z','transition'),($2,'delivered','2020-02-02T03:00:00Z','order_timestamp'),($3,'preparing','2020-02-01T05:00:00Z','transition'),($4,'cancelled','2020-02-02T06:00:00Z','transition') on conflict do nothing",
+    [id(3), id(2), id(1), id(4)],
+  );
+});
+after(async () => db?.close());
+
+test("uses the payment-confirmed cohort, excludes pre-capture history, and implies earlier stages", async () => {
+  const summary = (
+    await row("select admin_fulfillment_analytics('custom','2020-02-01','2020-02-03') as data")
+  ).data;
+  assert.equal(summary.cohortSize, 3);
+  assert.equal(summary.uniqueOrders, 3);
+  assert.equal(summary.excludedOrders, 1);
+  assert.equal(summary.stageTotals.payment_confirmed, 3);
+  assert.equal(summary.stageTotals.preparing, 2);
+  assert.equal(summary.stageTotals.shipped, 1);
+  assert.equal(summary.stageTotals.delivered, 1);
+  assert.equal(summary.stageTotals.cancelled, 1);
+  assert.ok(summary.stageTotals.delivered <= summary.stageTotals.shipped);
+  assert.ok(summary.stageTotals.shipped <= summary.stageTotals.preparing);
+  assert.ok(summary.stageTotals.preparing <= summary.stageTotals.payment_confirmed);
+});
+
+test("drill-down uses reached-stage cohort rows", async () => {
+  const summary = (
+    await row("select admin_fulfillment_analytics('custom','2020-02-01','2020-02-03') as data")
+  ).data;
+  const detail = (
+    await row(
+      "select admin_fulfillment_orders('custom','2020-02-01','2020-02-03','shipped',null,$1,25,0,$2) as data",
+      [summary.generatedAt, summary.snapshot],
+    )
+  ).data;
+  assert.equal(detail.total, summary.stageTotals.shipped);
+  assert.equal(detail.rows.length, 1);
+  assert.equal(detail.rows[0].order_id, id(2));
+});

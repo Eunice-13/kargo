@@ -156,7 +156,7 @@
    thin dividers instead of standing apart as individual cards. */
 .fulfillment-analytics__summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0;
   margin-top: 24px;
   border: 1px solid var(--fa-border);
@@ -1035,7 +1035,7 @@
 
   /* ── Mobile: KPI figures sit side-by-side, not stacked full-width ── */
   .fulfillment-analytics__summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0;
     margin-top: 20px;
   }

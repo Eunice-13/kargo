@@ -23,9 +23,13 @@ export type FulfillmentAnalytics = {
   generatedAt: string;
   snapshot: string;
   captureStartedAt: string;
-  historicalCoverage: "partial_evidence_only";
-  countingRule: "first_recorded_entry_per_order_per_stage";
+  historicalCoverage: "partial_evidence_only" | "cohort_excludes_pre_capture_history";
+  countingRule:
+    | "first_recorded_entry_per_order_per_stage"
+    | "payment_confirmed_cohort_reached_stages";
   totalEntries: number;
+  cohortSize?: number;
+  excludedOrders?: number;
   uniqueOrders: number;
   stageTotals: Record<FulfillmentAnalyticsStage, number>;
   chart: {

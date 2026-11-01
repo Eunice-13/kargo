@@ -80,7 +80,7 @@ export default function FulfillmentOrdersDialog({
             {bucket ? analyticsDate(bucket, data.grouping) : "Selected date range"} · Asia/Manila
           </p>
           <p className="fulfillment-orders__explanation">
-            Orders that entered this stage in the selected period. Their current status may have
+            Orders that reached this stage in the selected period. Their current status may have
             changed.
           </p>
           <OrderPage
@@ -158,7 +158,7 @@ function OrderPage({
       </p>
       {!page.data.rows.length && (
         <p className="fulfillment-analytics__notice">
-          No recorded orders entered this stage in this period.
+          No cohort orders reached this stage in this period.
         </p>
       )}
       <ul className="fulfillment-orders__list">

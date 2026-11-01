@@ -33,8 +33,11 @@ export default function FulfillmentBreakdown({
     return {
       ...s,
       count,
-      // Same math as the KPI row: share of unique orders in view.
-      percent: data.uniqueOrders ? Math.round((count / data.uniqueOrders) * 100) : 0,
+      // Percentages use the payment-confirmed cohort, not raw event rows.
+      percent:
+        (data.cohortSize ?? data.uniqueOrders)
+          ? Math.round((count / (data.cohortSize ?? data.uniqueOrders)) * 100)
+          : 0,
     };
   });
   // One scale across both groups so bar heights stay comparable.
@@ -79,7 +82,7 @@ export default function FulfillmentBreakdown({
                   style={{ ["--chip" as string]: r.color }}
                   aria-pressed={r.key === focused}
                   onClick={() => select(r.key)}
-                  aria-label={`View ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% of orders in view)`}
+                  aria-label={`View ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% of cohort orders)`}
                 >
                   <span className="fulfillment-breakdown__bar-wrap">
                     <span
