@@ -75,7 +75,7 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
                     setPeriodsOpen(false);
                     if (key === "custom") {
                       setPeriod("custom");
-                      setCustomOpen(true);
+                      setCustomOpen((open) => !open);
                       return;
                     }
                     setCustomOpen(false);

@@ -1201,7 +1201,14 @@
     gap: 10px;
     align-items: baseline;
   }
+  .fulfillment-analytics__custom {
+    left: 0;
+    right: auto;
+    width: min(100%, 360px);
+    grid-template-columns: 1fr;
+  }
   .fulfillment-analytics__custom label {
-    flex-basis: calc(50% - 6px);
+    flex-basis: auto;
+    max-width: none;
   }
 }
