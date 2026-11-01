@@ -15127,8 +15127,8 @@ textarea::placeholder {
 
 .admin-page-header h2 {
   margin-bottom: 12px;
-  font-size: 22px !important;
-  font-weight: 800 !important;
+  font-size: 28px !important;
+  font-weight: 850 !important;
 }
 
 .admin-page-header__subtitle {
@@ -15313,14 +15313,6 @@ select.admin-filter-control {
   height: 64px !important;
   min-height: 64px !important;
   flex: none !important;
-}
-
-/* Admin navigation labels are visible and prominent on desktop and mobile. */
-.admin-tabbar .kargo-tab-label {
-  display: block;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.1;
 }
 
 .admin-action-primary.kargo-primary {
@@ -15577,8 +15569,7 @@ select.admin-filter-control {
   .admin-tabbar .kargo-tab-label {
     display: block;
     overflow: visible;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 10px;
     text-overflow: clip;
   }
 
