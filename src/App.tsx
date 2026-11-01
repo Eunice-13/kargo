@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   AppStage,
@@ -14,31 +14,28 @@ import type {
   WaitlistEntry,
   SellerWaitlistGroup,
   SharedState,
-} from "@/types"
+} from "@/types";
 
-import { CREAM } from "@/constants/theme"
-import kargoLogoUrl from "@/assets/kargo-logo.png"
+import { CREAM } from "@/constants/theme";
+import kargoLogoUrl from "@/assets/kargo-logo.png";
 
-import {
-  requestBatchOpen,
-  requestSellerOpen,
-} from "@/state/navIntent"
+import { requestBatchOpen, requestSellerOpen } from "@/state/navIntent";
 
-import { useScrollToTopOnRouteChange } from "@/state/routeScroll"
+import { useScrollToTopOnRouteChange } from "@/state/routeScroll";
 
-import { BATCHES_INIT } from "@/data/batches"
+import { BATCHES_INIT } from "@/data/batches";
 
-import { CLAIMS_INIT } from "@/data/claims"
+import { CLAIMS_INIT } from "@/data/claims";
 
-import { TOPAY_INIT } from "@/data/toPay"
+import { TOPAY_INIT } from "@/data/toPay";
 
-import { PAYHIST_INIT } from "@/data/payHistory"
+import { PAYHIST_INIT } from "@/data/payHistory";
 
-import { ORDERS_INIT } from "@/data/orders"
+import { ORDERS_INIT } from "@/data/orders";
 
-import { WAITLIST_INIT } from "@/data/waitlist"
+import { WAITLIST_INIT } from "@/data/waitlist";
 
-import { FULFILLMENT_INIT } from "@/features/fulfillment"
+import { FULFILLMENT_INIT } from "@/features/fulfillment";
 
 import {
   Login,
@@ -52,24 +49,24 @@ import {
   hasSignupConfirmationFragment,
   isNewAccount,
   isResetPasswordPath,
-} from "@/features/auth"
+} from "@/features/auth";
 
-import { NewBatchModal } from "@/features/batches"
+import { NewBatchModal } from "@/features/batches";
 
-import { AdminInviteModal, AdminProfile } from "@/features/admin"
+import { AdminInviteModal, AdminProfile } from "@/features/admin";
 
-import { Footer, Header, TabBar, TabContent } from "@/components/layout"
+import { Footer, Header, TabBar, TabContent } from "@/components/layout";
 
-import { isSupabaseConfigured, supabase } from "@/lib/supabase"
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
-import { kargoApi, setAdminDemoMode } from "@/services"
-import { NotificationsProvider } from "@/features/notifications"
+import { kargoApi, setAdminDemoMode } from "@/services";
+import { NotificationsProvider } from "@/features/notifications";
 
-import { deadlineHasPassed } from "@/features/claims/claimExpiry"
+import { deadlineHasPassed } from "@/features/claims/claimExpiry";
 
 // True only when this page load came from clicking the signup confirmation link.
 // Read at module load: the Supabase client strips the URL fragment right after.
-const ARRIVED_VIA_CONFIRMATION_LINK = hasSignupConfirmationFragment()
+const ARRIVED_VIA_CONFIRMATION_LINK = hasSignupConfirmationFragment();
 
 // Email CTAs deep-link to the tab where the action lives (?tab=Orders). Accept
 // the app's labels plus the few words a person might expect instead.
@@ -86,99 +83,90 @@ const TAB_DEEP_LINKS: Record<string, Tab> = {
   history: "Payments",
   orders: "Orders",
   settings: "Settings",
-}
+};
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
   const searchParams =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search)
-      : null
+    typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
 
-  const originalPreview = searchParams?.get("preview") === "original"
-  const loadingPreview = searchParams?.get("preview") === "loading"
+  const originalPreview = searchParams?.get("preview") === "original";
+  const loadingPreview = searchParams?.get("preview") === "loading";
 
   // Admin demo boot: ?preview=admin mounts the admin console in-memory (no
   // Supabase), mirroring ?preview=original for buyer/seller. Separate flag so
   // the buyer/seller demo is never affected.
-  const adminPreview = searchParams?.get("preview") === "admin"
+  const adminPreview = searchParams?.get("preview") === "admin";
 
   // Reviewer boot for the admin invitation gate: ?preview=admin-invite is a
   // buyer with an unanswered admin invitation, so Accept/Decline can be tried
   // without a second real account.
-  const invitePreview = searchParams?.get("preview") === "admin-invite"
+  const invitePreview = searchParams?.get("preview") === "admin-invite";
 
   // Either demo bypasses auth/boot and seeds the app stage directly.
-  const anyPreview = originalPreview || adminPreview || invitePreview
+  const anyPreview = originalPreview || adminPreview || invitePreview;
 
   // Route adminApi to its in-memory demo adapter for ?preview=admin (no DB).
-  setAdminDemoMode(adminPreview || invitePreview)
+  setAdminDemoMode(adminPreview || invitePreview);
 
   // Shareable batch deep link: ?batch=<id> boots into the Batches tab and opens
 
   // that batch's claim page via the existing navIntent hook (3.1).
 
   const sharedBatchId = (() => {
-    const raw = searchParams?.get("batch")
+    const raw = searchParams?.get("batch");
 
-    const n = raw ? Number(raw) : NaN
+    const n = raw ? Number(raw) : NaN;
 
-    return Number.isFinite(n) && n > 0 ? n : null
-  })()
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
 
-  const viaBatchLink = sharedBatchId !== null
+  const viaBatchLink = sharedBatchId !== null;
 
   // A batch link outranks an email tab: it promises to open that batch's page.
   const linkedTab = (() => {
-    const raw = searchParams?.get("tab")?.trim().toLowerCase().replace(/[_-]+/g, " ")
-    return raw ? TAB_DEEP_LINKS[raw] ?? null : null
-  })()
+    const raw = searchParams?.get("tab")?.trim().toLowerCase().replace(/[_-]+/g, " ");
+    return raw ? (TAB_DEEP_LINKS[raw] ?? null) : null;
+  })();
 
   const landingTab = (u: UserInfo): Tab =>
     u.adminEnabled
       ? "Dashboard"
       : sharedBatchId !== null
-      ? "Batches"
-      : linkedTab ?? (u.sellerEnabled ? "Dashboard" : "Batches")
+        ? "Batches"
+        : (linkedTab ?? (u.sellerEnabled ? "Dashboard" : "Batches"));
 
   useEffect(() => {
-    if (sharedBatchId !== null) requestBatchOpen(sharedBatchId)
-  }, [sharedBatchId])
+    if (sharedBatchId !== null) requestBatchOpen(sharedBatchId);
+  }, [sharedBatchId]);
 
-  const [stage, setStage] = useState<AppStage>(
-    anyPreview ? "app" : "login",
-  )
+  const [stage, setStage] = useState<AppStage>(anyPreview ? "app" : "login");
 
   // A recovery link can land either on the reset path or, when the redirect is
   // not allow-listed, on the root with the token in the fragment. Both are read
   // before the client has a chance to consume them.
   const [recoveryMode, setRecoveryMode] = useState(
     () => isResetPasswordPath() || hasRecoveryFragment(),
-  )
+  );
 
-  const [booting, setBooting] = useState(
-    isSupabaseConfigured && !anyPreview,
-  )
+  const [booting, setBooting] = useState(isSupabaseConfigured && !anyPreview);
 
-  const [showReservationGate, setShowReservationGate] = useState(
-    viaBatchLink && !originalPreview,
-  )
+  const [showReservationGate, setShowReservationGate] = useState(viaBatchLink && !originalPreview);
 
-  const [showOnboarding, setOnboard] = useState(false)
+  const [showOnboarding, setOnboard] = useState(false);
 
-  const [tab, setTab] = useState<Tab>(
-    () =>
-      adminPreview
-        ? "Dashboard"
-        : sharedBatchId !== null
+  const [tab, setTab] = useState<Tab>(() =>
+    adminPreview
+      ? "Dashboard"
+      : sharedBatchId !== null
         ? "Batches"
-        : linkedTab ?? (originalPreview ? "Dashboard" : "Batches"),
-  )
+        : (linkedTab ?? (originalPreview ? "Dashboard" : "Batches")),
+  );
   // Every page opens at the top. The shell owns this policy (see
   // state/routeScroll.ts); the key is the current stage plus tab, and tabs with
   // their own sub-pages extend it themselves.
-  useScrollToTopOnRouteChange(`${stage}:${tab}`)
+  useScrollToTopOnRouteChange(`${stage}:${tab}`);
 
   const [user, setUser] = useState<UserInfo>(
     adminPreview
@@ -200,47 +188,47 @@ export default function App() {
             socialLinks: {},
           }
         : {
-          name: originalPreview ? "Alex Jordan" : "",
+            name: originalPreview ? "Alex Jordan" : "",
 
-          email: originalPreview ? "alex@kargo.demo" : "",
+            email: originalPreview ? "alex@kargo.demo" : "",
 
-          role: "Buyer",
+            role: "Buyer",
 
-          sellerEnabled: originalPreview,
+            sellerEnabled: originalPreview,
 
-          bio: originalPreview
-            ? "Curated pasabuy finds with careful packing and clear trip updates."
-            : "",
+            bio: originalPreview
+              ? "Curated pasabuy finds with careful packing and clear trip updates."
+              : "",
 
-          socialLinks: originalPreview
-            ? {
-                Facebook: "https://facebook.com/alex.jordan",
-                Instagram: "https://instagram.com/alexjordan",
-              }
-            : {},
-        },
-  )
+            socialLinks: originalPreview
+              ? {
+                  Facebook: "https://facebook.com/alex.jordan",
+                  Instagram: "https://instagram.com/alexjordan",
+                }
+              : {},
+          },
+  );
 
-  const [showNewBatch, setShowNewBatch] = useState(false)
+  const [showNewBatch, setShowNewBatch] = useState(false);
 
-  const [showApplyToSell, setShowApplyToSell] = useState(false)
+  const [showApplyToSell, setShowApplyToSell] = useState(false);
 
-  const [showAdminProfile, setShowAdminProfile] = useState(false)
+  const [showAdminProfile, setShowAdminProfile] = useState(false);
 
   // "Decide later" on an admin invitation is scoped to this sign-in: closing the
   // modal hides it until the next login, but the invitation stays pending in the
   // database (and is_admin() stays false) until it is answered.
-  const [inviteDismissedFor, setInviteDismissedFor] = useState<string | null>(null)
+  const [inviteDismissedFor, setInviteDismissedFor] = useState<string | null>(null);
 
   // Role is fixed by seller capability (can_sell). There is no in-app role
 
   // switch: a seller-capable account is always a Seller, everyone else a Buyer.
 
-  const role: Role = user.adminEnabled
-    ? "Admin"
-    : user.sellerEnabled
-      ? "Seller"
-      : "Buyer"
+  const role: Role = user.adminEnabled ? "Admin" : user.sellerEnabled ? "Seller" : "Buyer";
+
+  useEffect(() => {
+    if (stage === "app" && role === "Admin" && !adminPreview) setTab("Dashboard");
+  }, [stage, role, adminPreview]);
 
   // Allowed-tab guard: keep admins inside the admin tab set and buyers/sellers
   // inside theirs. If the active tab isn't valid for the role (e.g. after a
@@ -252,7 +240,7 @@ export default function App() {
     "Transactions",
     "Security",
     "Notifications",
-  ]
+  ];
   const NON_ADMIN_ALLOWED_TABS: Tab[] = [
     "Dashboard",
     "Batches",
@@ -261,46 +249,40 @@ export default function App() {
     "Orders",
     "Settings",
     "Notifications",
-  ]
+  ];
   useEffect(() => {
-    if (stage !== "app") return
-    const allowed = role === "Admin" ? ADMIN_ALLOWED_TABS : NON_ADMIN_ALLOWED_TABS
-    if (!allowed.includes(tab)) setTab(landingTab(user))
+    if (stage !== "app") return;
+    const allowed = role === "Admin" ? ADMIN_ALLOWED_TABS : NON_ADMIN_ALLOWED_TABS;
+    if (!allowed.includes(tab)) setTab(landingTab(user));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, tab, stage])
+  }, [role, tab, stage]);
 
   // Shared mutable data
 
   // Admin demo doesn't use buyer/seller seed data; it has its own in-memory
   // surface, so keep the seed arrays empty for the admin preview.
-  const useSeeds = originalPreview || (!isSupabaseConfigured && !adminPreview)
+  const useSeeds = originalPreview || (!isSupabaseConfigured && !adminPreview);
 
-  const [claims, setClaims] = useState<ClaimRow[]>(useSeeds ? CLAIMS_INIT : [])
+  const [claims, setClaims] = useState<ClaimRow[]>(useSeeds ? CLAIMS_INIT : []);
 
-  const [toPay, setToPay] = useState<ToPayRow[]>(useSeeds ? TOPAY_INIT : [])
+  const [toPay, setToPay] = useState<ToPayRow[]>(useSeeds ? TOPAY_INIT : []);
 
-  const [payHistory, setPayHistory] = useState<PayHistRow[]>(
-    useSeeds ? PAYHIST_INIT : [],
-  )
+  const [payHistory, setPayHistory] = useState<PayHistRow[]>(useSeeds ? PAYHIST_INIT : []);
 
-  const [orders, setOrders] = useState<OrderRow[]>(useSeeds ? ORDERS_INIT : [])
+  const [orders, setOrders] = useState<OrderRow[]>(useSeeds ? ORDERS_INIT : []);
 
-  const [batches, setBatches] = useState<BatchType[]>(
-    useSeeds ? BATCHES_INIT : [],
-  )
+  const [batches, setBatches] = useState<BatchType[]>(useSeeds ? BATCHES_INIT : []);
 
   const [fulfillment, setFulfillment] = useState<FulfillmentOrder[]>(
     useSeeds ? FULFILLMENT_INIT : [],
-  )
+  );
 
-  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>(
-    useSeeds ? WAITLIST_INIT : [],
-  )
+  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>(useSeeds ? WAITLIST_INIT : []);
 
-  const expiringClaims = useRef(new Set<string>())
+  const expiringClaims = useRef(new Set<string>());
 
   useEffect(() => {
-    const initializedAt = Date.now()
+    const initializedAt = Date.now();
 
     setClaims((current) =>
       current.map((claim) =>
@@ -313,7 +295,7 @@ export default function App() {
             }
           : claim,
       ),
-    )
+    );
 
     setToPay((current) =>
       current.map((item) =>
@@ -326,28 +308,26 @@ export default function App() {
               ).toISOString(),
             },
       ),
-    )
-  }, [])
+    );
+  }, []);
 
   useEffect(() => {
     const expireDueClaims = () => {
-      const now = Date.now()
+      const now = Date.now();
 
       const due = claims.filter(
         (claim) => claim.status === "Pending" && deadlineHasPassed(claim, now),
-      )
+      );
 
-      if (due.length === 0) return
+      if (due.length === 0) return;
 
-      const dueIds = new Set(due.map((claim) => String(claim.id)))
+      const dueIds = new Set(due.map((claim) => String(claim.id)));
 
       setClaims((current) =>
         current.map((claim) =>
-          dueIds.has(String(claim.id))
-            ? { ...claim, status: "Expired", hours: 0 }
-            : claim,
+          dueIds.has(String(claim.id)) ? { ...claim, status: "Expired", hours: 0 } : claim,
         ),
-      )
+      );
 
       setToPay((current) =>
         current.filter(
@@ -355,11 +335,10 @@ export default function App() {
             !due.some(
               (claim) =>
                 dueIds.has(String(item.orderId ?? item.id)) ||
-                (item.product === claim.product &&
-                  item.seller === claim.seller),
+                (item.product === claim.product && item.seller === claim.seller),
             ),
         ),
-      )
+      );
 
       setBatches((current) =>
         current.map((batch) => {
@@ -372,17 +351,12 @@ export default function App() {
             (claim) =>
               claim.batch === batch.title ||
               (claim.productId != null &&
-                batch.products.some(
-                  (product) => product.dbId === claim.productId,
-                )),
-          )
+                batch.products.some((product) => product.dbId === claim.productId)),
+          );
 
-          if (released.length === 0) return batch
+          if (released.length === 0) return batch;
 
-          const releasedQty = released.reduce(
-            (sum, claim) => sum + claim.qty,
-            0,
-          )
+          const releasedQty = released.reduce((sum, claim) => sum + claim.qty, 0);
 
           return {
             ...batch,
@@ -396,153 +370,139 @@ export default function App() {
                     ? product.dbId === claim.productId
                     : product.name === claim.product,
                 )
-                .reduce((sum, claim) => sum + claim.qty, 0)
+                .reduce((sum, claim) => sum + claim.qty, 0);
 
               return productQty
                 ? {
                     ...product,
                     claimed: Math.max(0, product.claimed - productQty),
                   }
-                : product
+                : product;
             }),
-          }
+          };
         }),
-      )
+      );
 
       if (isSupabaseConfigured) {
         for (const claim of due) {
-          const id = String(claim.id)
+          const id = String(claim.id);
 
-          if (expiringClaims.current.has(id)) continue
+          if (expiringClaims.current.has(id)) continue;
 
-          expiringClaims.current.add(id)
+          expiringClaims.current.add(id);
 
-          void kargoApi
-            .expireClaim(id)
-            .finally(() => expiringClaims.current.delete(id))
+          void kargoApi.expireClaim(id).finally(() => expiringClaims.current.delete(id));
         }
       }
-    }
+    };
 
-    expireDueClaims()
+    expireDueClaims();
 
-    const timer = window.setInterval(expireDueClaims, 1000)
+    const timer = window.setInterval(expireDueClaims, 1000);
 
-    return () => window.clearInterval(timer)
-  }, [claims])
+    return () => window.clearInterval(timer);
+  }, [claims]);
 
-  const [sellerWaitlist, setSellerWaitlist] = useState<SellerWaitlistGroup[]>(
-    [],
-  )
+  const [sellerWaitlist, setSellerWaitlist] = useState<SellerWaitlistGroup[]>([]);
 
   const refreshData = useCallback(async () => {
-    if (!isSupabaseConfigured) return
+    if (!isSupabaseConfigured) return;
 
-    const data = await kargoApi.loadCurrentAppData()
+    const data = await kargoApi.loadCurrentAppData();
 
     if (!data) {
-      setStage("login")
+      setStage("login");
 
-      return
+      return;
     }
 
-    setUser(data.user)
+    setUser(data.user);
 
-    setBatches(data.batches)
+    setBatches(data.batches);
 
-    setClaims(data.claims)
+    setClaims(data.claims);
 
-    setToPay(data.toPay)
+    setToPay(data.toPay);
 
-    setPayHistory(data.payHistory)
+    setPayHistory(data.payHistory);
 
-    setOrders(data.orders)
+    setOrders(data.orders);
 
-    setFulfillment(data.fulfillment)
+    setFulfillment(data.fulfillment);
 
-    setWaitlist(data.waitlist)
+    setWaitlist(data.waitlist);
 
-    setSellerWaitlist(data.sellerWaitlist)
+    setSellerWaitlist(data.sellerWaitlist);
 
-    setStage("app")
-  }, [])
+    setStage("app");
+  }, []);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || anyPreview || !supabase) return
+    if (!isSupabaseConfigured || anyPreview || !supabase) return;
 
-    refreshData().finally(() => setBooting(false))
+    refreshData().finally(() => setBooting(false));
 
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") setStage("login")
+      if (event === "SIGNED_OUT") setStage("login");
 
       // A recovery link also arrives as a session, so the second signal is what
       // keeps this correct when the link does not land on the reset path.
-      if (event === "PASSWORD_RECOVERY") setRecoveryMode(true)
+      if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
 
       // A confirmation link lands with the session tokens in the URL hash, which
       // the client parses asynchronously. If the mount-time refresh above ran
       // before they were stored, adopt the session here rather than stranding the
       // confirmed user on the login screen.
-      if (event === "SIGNED_IN" && session) void refreshData().catch(() => {})
-    })
+      if (event === "SIGNED_IN" && session) void refreshData().catch(() => {});
+    });
 
-    return () => data.subscription.unsubscribe()
-  }, [originalPreview, refreshData])
+    return () => data.subscription.unsubscribe();
+  }, [originalPreview, refreshData]);
 
   // Onboarding tour for brand-new accounts. Confirming by email signs the user in
   // through the session-restore path above (not handleSignupSuccess), so it is
   // started here instead: once, when the app has loaded the user that arrived via
   // the confirmation link. Regular logins never set the flag, so they never see it.
-  const tourPendingRef = useRef(
-    ARRIVED_VIA_CONFIRMATION_LINK && sharedBatchId === null,
-  )
+  const tourPendingRef = useRef(ARRIVED_VIA_CONFIRMATION_LINK && sharedBatchId === null);
   useEffect(() => {
-    if (!tourPendingRef.current) return
-    if (stage !== "app" || !user.id) return
-    tourPendingRef.current = false
-    if (isNewAccount(user.memberSince)) setOnboard(true)
-  }, [stage, user.id, user.memberSince])
+    if (!tourPendingRef.current) return;
+    if (stage !== "app" || !user.id) return;
+    tourPendingRef.current = false;
+    if (isNewAccount(user.memberSince)) setOnboard(true);
+  }, [stage, user.id, user.memberSince]);
 
   // Keep orders, waitlists, and payment decisions synchronized across open
   // buyer and seller sessions. Related database changes can arrive as separate
   // realtime events, so each event reloads one coherent app snapshot.
   useEffect(() => {
-    if (!isSupabaseConfigured || anyPreview || !supabase || !user.id) return
-    const client = supabase
+    if (!isSupabaseConfigured || anyPreview || !supabase || !user.id) return;
+    const client = supabase;
 
-    let refreshQueued = false
+    let refreshQueued = false;
     const refreshSoon = () => {
-      if (refreshQueued) return
-      refreshQueued = true
+      if (refreshQueued) return;
+      refreshQueued = true;
       window.setTimeout(() => {
-        refreshQueued = false
-        void refreshData().catch(() => {})
-      }, 0)
-    }
+        refreshQueued = false;
+        void refreshData().catch(() => {});
+      }, 0);
+    };
 
     const channel = client
       .channel(`app-order-payment-sync-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "payments" },
-        refreshSoon,
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        refreshSoon,
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments" }, refreshSoon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, refreshSoon)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "waitlist_entries" },
         refreshSoon,
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      void client.removeChannel(channel)
-    }
-  }, [originalPreview, refreshData, user.id])
+      void client.removeChannel(channel);
+    };
+  }, [originalPreview, refreshData, user.id]);
 
   const shared: SharedState = {
     claims,
@@ -586,50 +546,50 @@ export default function App() {
     role,
 
     refreshData,
-  }
+  };
 
   const handleSignupSuccess = (u: UserInfo) => {
-    setUser(u)
-    setTab(landingTab(u))
-    setStage("app")
-    setInviteDismissedFor(null)
+    setUser(u);
+    setTab(landingTab(u));
+    setStage("app");
+    setInviteDismissedFor(null);
 
     // Shared-link buyers should reach the requested batch immediately; keep the
     // existing onboarding tour for normal signups only.
-    setOnboard(sharedBatchId === null)
-  }
+    setOnboard(sharedBatchId === null);
+  };
 
   const handleLoginSuccess = (u: UserInfo) => {
-    setUser(u)
-    setTab(landingTab(u))
-    setStage("app")
-    setInviteDismissedFor(null)
+    setUser(u);
+    setTab(landingTab(u));
+    setStage("app");
+    setInviteDismissedFor(null);
 
-    if (isSupabaseConfigured) refreshData()
-  }
+    if (isSupabaseConfigured) refreshData();
+  };
 
   const linkedBatch = viaBatchLink
     ? batches.find((batch) => batch.id === sharedBatchId)
-    : undefined
+    : undefined;
 
   // The recovery screen outranks the normal stage machine: a recovery link signs
   // the visitor in, so the usual bootstrap would otherwise drop them straight
   // into the app without ever setting a new password.
   if (recoveryMode) {
     const leaveRecovery = () => {
-      clearResetPasswordUrl()
-      setRecoveryMode(false)
-    }
+      clearResetPasswordUrl();
+      setRecoveryMode(false);
+    };
 
     return (
       <ResetPassword
         onDone={leaveRecovery}
         onBack={() => {
-          leaveRecovery()
-          setStage("login")
+          leaveRecovery();
+          setStage("login");
         }}
       />
-    )
+    );
   }
 
   if (booting || loadingPreview) {
@@ -669,7 +629,7 @@ export default function App() {
         </span>
         <span className="kargo-loading-progress" aria-hidden="true" />
       </div>
-    )
+    );
   }
 
   // A suspended account never mounts the app shell, for any role. is_admin()
@@ -727,8 +687,8 @@ export default function App() {
           <button
             type="button"
             onClick={() => {
-              if (isSupabaseConfigured) void kargoApi.signOut()
-              setStage("login")
+              if (isSupabaseConfigured) void kargoApi.signOut();
+              setStage("login");
             }}
             style={{
               minHeight: 44,
@@ -745,7 +705,7 @@ export default function App() {
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -761,31 +721,24 @@ export default function App() {
       )}
       {stage === "login" && (
         <div className="pl">
-          <Login
-            onSignUp={() => setStage("signup")}
-            onSuccess={handleLoginSuccess}
-          />
+          <Login onSignUp={() => setStage("signup")} onSuccess={handleLoginSuccess} />
         </div>
       )}
-      {viaBatchLink &&
-        stage !== "app" &&
-        !booting &&
-        !originalPreview &&
-        showReservationGate && (
-          <ReservationGate
-            batchTitle={linkedBatch?.title}
-            sellerName={linkedBatch?.seller}
-            onLogin={() => {
-              setShowReservationGate(false)
-              setStage("login")
-            }}
-            onSignUp={() => {
-              setShowReservationGate(false)
-              setStage("signup")
-            }}
-            onDismiss={() => setShowReservationGate(false)}
-          />
-        )}
+      {viaBatchLink && stage !== "app" && !booting && !originalPreview && showReservationGate && (
+        <ReservationGate
+          batchTitle={linkedBatch?.title}
+          sellerName={linkedBatch?.seller}
+          onLogin={() => {
+            setShowReservationGate(false);
+            setStage("login");
+          }}
+          onSignUp={() => {
+            setShowReservationGate(false);
+            setStage("signup");
+          }}
+          onDismiss={() => setShowReservationGate(false)}
+        />
+      )}
       {stage === "app" && (
         <NotificationsProvider
           key={`${user.id ?? user.email}:${role}`}
@@ -794,112 +747,99 @@ export default function App() {
           onOpenAdminInvite={() => {
             // A pending invitee still has the popup pending; once accepted the
             // same notification should land on the Team page instead.
-            if (user.adminInvitePending) setInviteDismissedFor(null)
-            else setTab(user.adminEnabled ? "Security" : "Dashboard")
+            if (user.adminInvitePending) setInviteDismissedFor(null);
+            else setTab(user.adminEnabled ? "Security" : "Dashboard");
           }}
         >
-        <div
-          className={`kargo-original-app${role === "Admin" ? " admin-app" : ""}`}
-          style={{
-            background: CREAM,
+          <div
+            className={`kargo-original-app${role === "Admin" ? " admin-app" : ""}`}
+            style={{
+              background: CREAM,
 
-            minHeight: "100vh",
+              minHeight: "100vh",
 
-            fontFamily: "'Inter',sans-serif",
-          }}
-        >
-          <Header
-            user={user}
-            onLogout={() => {
-              if (isSupabaseConfigured) void kargoApi.signOut()
-
-              setInviteDismissedFor(null)
-
-              setStage("login")
+              fontFamily: "'Inter',sans-serif",
             }}
-            onSettings={() =>
-              role === "Admin" ? setShowAdminProfile(true) : setTab("Settings")
-            }
-            onApplyToSell={() => setShowApplyToSell(true)}
-            role={role}
-            batches={batches}
-            onNavigate={setTab}
-            onBatchSelect={(id) => {
-              requestBatchOpen(id)
+          >
+            <Header
+              user={user}
+              onLogout={() => {
+                if (isSupabaseConfigured) void kargoApi.signOut();
 
-              setTab("Batches")
-            }}
-            onSellerSelect={(name) => {
-              requestSellerOpen(name)
+                setInviteDismissedFor(null);
 
-              setTab("Batches")
-            }}
-          />
-          <TabBar
-            active={tab}
-            setActive={setTab}
-            role={role}
-          />
-          <main style={{ minHeight: "calc(100vh - 100px)" }}>
-            <TabContent
-              tab={tab}
-              shared={shared}
-              onNewBatch={() => setShowNewBatch(true)}
-            />
-          </main>
-          <Footer role={role} />
-          {showOnboarding && (
-            <Onboarding onDone={() => setOnboard(false)} role={role} />
-          )}
-          {showNewBatch && (
-            <NewBatchModal
-              onCreate={(b) => setBatches((prev) => [b, ...prev])}
-              onClose={() => setShowNewBatch(false)}
-              sellerName={user.name}
-            />
-          )}
-          {showApplyToSell && (
-            <ApplyToSellModal
-              onEnableSeller={async () => {
-                // Phase-1 revoked direct can_sell updates; go through the RPC.
-                if (isSupabaseConfigured) await kargoApi.enableSellerAccess()
-
-                setUser((current) => ({
-                  ...current,
-                  sellerEnabled: true,
-                  role: "Seller",
-                }))
-
-                setTab("Dashboard")
+                setStage("login");
               }}
-              onClose={() => setShowApplyToSell(false)}
+              onSettings={() => (role === "Admin" ? setShowAdminProfile(true) : setTab("Settings"))}
+              onApplyToSell={() => setShowApplyToSell(true)}
+              role={role}
+              batches={batches}
+              onNavigate={setTab}
+              onBatchSelect={(id) => {
+                requestBatchOpen(id);
+
+                setTab("Batches");
+              }}
+              onSellerSelect={(name) => {
+                requestSellerOpen(name);
+
+                setTab("Batches");
+              }}
             />
-          )}
-          {showAdminProfile && (
-            <AdminProfile user={user} onClose={() => setShowAdminProfile(false)} />
-          )}
-          {user.adminInvitePending &&
-            inviteDismissedFor !== (user.id ?? user.email) && (
+            <TabBar active={tab} setActive={setTab} role={role} />
+            <main style={{ minHeight: "calc(100vh - 100px)" }}>
+              <TabContent tab={tab} shared={shared} onNewBatch={() => setShowNewBatch(true)} />
+            </main>
+            <Footer role={role} />
+            {showOnboarding && <Onboarding onDone={() => setOnboard(false)} role={role} />}
+            {showNewBatch && (
+              <NewBatchModal
+                onCreate={(b) => setBatches((prev) => [b, ...prev])}
+                onClose={() => setShowNewBatch(false)}
+                sellerName={user.name}
+              />
+            )}
+            {showApplyToSell && (
+              <ApplyToSellModal
+                onEnableSeller={async () => {
+                  // Phase-1 revoked direct can_sell updates; go through the RPC.
+                  if (isSupabaseConfigured) await kargoApi.enableSellerAccess();
+
+                  setUser((current) => ({
+                    ...current,
+                    sellerEnabled: true,
+                    role: "Seller",
+                  }));
+
+                  setTab("Dashboard");
+                }}
+                onClose={() => setShowApplyToSell(false)}
+              />
+            )}
+            {showAdminProfile && (
+              <AdminProfile user={user} onClose={() => setShowAdminProfile(false)} />
+            )}
+            {user.adminInvitePending && inviteDismissedFor !== (user.id ?? user.email) && (
               <AdminInviteModal
                 onDismiss={() => setInviteDismissedFor(user.id ?? user.email)}
                 onResolved={(accepted) => {
-                  setInviteDismissedFor(null)
+                  setInviteDismissedFor(null);
                   // The RPC already committed, so clear the pending flag locally
                   // and let the refresh reconcile the rest (role, tabs, data).
                   setUser((current) => ({
                     ...current,
                     adminEnabled: accepted,
                     adminInvitePending: false,
-                  }))
+                  }));
                   if (isSupabaseConfigured && !anyPreview) {
-                    void refreshData().catch(() => {})
+                    void refreshData().catch(() => {});
                   }
                 }}
               />
             )}
-        </div>
+          </div>
         </NotificationsProvider>
       )}
     </>
-  )
+  );
 }
