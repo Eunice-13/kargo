@@ -1649,3 +1649,11 @@
   font-size: 11px;
   line-height: 1.45;
 }
+
+/* The bars should end cleanly without a baseline beneath the percentage labels. */
+.fulfillment-breakdown__bar-wrap,
+.fulfillment-breakdown__bar,
+.fulfillment-breakdown__meta {
+  border: 0 !important;
+  box-shadow: none !important;
+}
