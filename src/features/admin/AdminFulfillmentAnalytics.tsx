@@ -56,8 +56,7 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
         <div>
           <h2 id="fulfillment-analytics-title">Order Fulfillment</h2>
           <p>
-            All sellers ·{" "}
-            {loadedAt ? `last loaded ${analyticsTimestamp(loadedAt)}` : "Payment-confirmed cohort"}
+            All sellers · {loadedAt ? `Loaded ${analyticsTimestamp(loadedAt)}` : "Loading"}
             <span className="fulfillment-analytics__timezone"> · Manila time</span>
           </p>
         </div>
