@@ -562,18 +562,31 @@
   border-top: 1px solid var(--fa-border);
   padding-top: 12px;
 }
-/* ─── Custom range form ──────────────────────────────────────────────────── */
+/* ─── Custom range popover ──────────────────────────────────────────────── */
+.fulfillment-analytics__period-field {
+  position: relative;
+}
 .fulfillment-analytics__custom {
-  display: flex;
-  flex-wrap: wrap;
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(420px, calc(100vw - 40px));
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
   gap: 12px;
-  align-items: flex-end;
-  margin-top: 18px;
+  margin-top: 0;
   padding: 14px 16px;
   border: 1px solid var(--fa-border);
   border-radius: 14px;
   background: var(--fa-soft);
+  box-shadow: 0 14px 32px -16px rgba(16, 24, 40, 0.35);
 }
+.fulfillment-analytics__custom button {
+  width: 100%;
+}
+
 .fulfillment-analytics__custom label {
   display: grid;
   gap: 5px;

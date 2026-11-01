@@ -29,6 +29,8 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
   const [loadedAt, setLoadedAt] = useState<string | null>(null);
   // On mobile the date range collapses behind a summary toggle to save space.
   const [periodsOpen, setPeriodsOpen] = useState(false);
+  // Custom date ranges open in a compact popover instead of taking a full row.
+  const [customOpen, setCustomOpen] = useState(false);
   const activePeriodLabel = PERIODS.find(([key]) => key === period)?.[1] ?? "Range";
   return (
     <section className="fulfillment-analytics" aria-labelledby="fulfillment-analytics-title">
@@ -69,16 +71,60 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
                   key={key}
                   aria-pressed={period === key}
                   onClick={() => {
-                    setPeriod(key);
                     setValidation(null);
                     setPeriodsOpen(false);
-                    if (key !== "custom") setFilters({ period: key });
+                    if (key === "custom") {
+                      setCustomOpen(true);
+                      return;
+                    }
+                    setCustomOpen(false);
+                    setPeriod(key);
+                    setFilters({ period: key });
                   }}
                 >
                   {label}
                 </button>
               ))}
             </div>
+            {customOpen && (
+              <form
+                className="fulfillment-analytics__custom"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const problem = customRangeError(start, end);
+                  setValidation(problem);
+                  if (!problem) {
+                    setPeriod("custom");
+                    setFilters({ period: "custom", start, end });
+                    setCustomOpen(false);
+                  }
+                }}
+              >
+                <label>
+                  Start date
+                  <input
+                    type="date"
+                    value={start}
+                    max={manilaToday()}
+                    onChange={(e) => setStart(e.target.value)}
+                    aria-invalid={!!validation}
+                  />
+                </label>
+                <label>
+                  End date
+                  <input
+                    type="date"
+                    value={end}
+                    max={manilaToday()}
+                    min={start || undefined}
+                    onChange={(e) => setEnd(e.target.value)}
+                    aria-invalid={!!validation}
+                  />
+                </label>
+                <button type="submit">Apply range</button>
+                {validation && <p role="alert">{validation}</p>}
+              </form>
+            )}
           </div>
           <button
             type="button"
@@ -90,47 +136,6 @@ export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshK
           </button>
         </div>
       </header>
-      {period === "custom" && (
-        <form
-          className="fulfillment-analytics__custom"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const problem = customRangeError(start, end);
-            setValidation(problem);
-            if (!problem) setFilters({ period: "custom", start, end });
-          }}
-        >
-          <label>
-            Start date
-            <input
-              type="date"
-              value={start}
-              max={manilaToday()}
-              onChange={(e) => setStart(e.target.value)}
-              aria-invalid={!!validation}
-            />
-          </label>
-          <label>
-            End date
-            <input
-              type="date"
-              value={end}
-              max={manilaToday()}
-              min={start || undefined}
-              onChange={(e) => setEnd(e.target.value)}
-              aria-invalid={!!validation}
-            />
-          </label>
-          <button type="submit">Apply range</button>
-          {validation && <p role="alert">{validation}</p>}
-          {!validation &&
-            (filters.period !== "custom" || filters.start !== start || filters.end !== end) && (
-              <p>
-                Choose dates and apply to update the chart. The last applied range remains below.
-              </p>
-            )}
-        </form>
-      )}
       <AnalyticsResults
         key={JSON.stringify(filters)}
         filters={filters}
