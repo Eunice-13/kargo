@@ -15315,6 +15315,14 @@ select.admin-filter-control {
   flex: none !important;
 }
 
+/* Admin navigation labels are visible and prominent on desktop and mobile. */
+.admin-tabbar .kargo-tab-label {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
 .admin-action-primary.kargo-primary {
   color: rgb(255, 255, 255);
 }
@@ -15569,7 +15577,8 @@ select.admin-filter-control {
   .admin-tabbar .kargo-tab-label {
     display: block;
     overflow: visible;
-    font-size: 10px;
+    font-size: 15px;
+    font-weight: 700;
     text-overflow: clip;
   }
 
