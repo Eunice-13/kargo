@@ -31,7 +31,7 @@ export default function FulfillmentBreakdown({
   currentStatus?: FulfillmentCurrentStatus;
   focused: Stage;
   onFocusStage: (stage: Stage) => void;
-  onOpen?: (stage: Stage) => void;
+  onOpen?: (stage: DisplayStage) => void;
 }) {
   const current = view === "current";
   const stages: Array<{ key: DisplayStage; label: string; color: string }> = current
@@ -64,8 +64,8 @@ export default function FulfillmentBreakdown({
   ];
 
   const select = (stage: DisplayStage) => {
-    if (stage === "other" || !onOpen) return;
-    onFocusStage(stage);
+    if (!onOpen) return;
+    if (stage !== "other") onFocusStage(stage);
     onOpen(stage);
   };
 
@@ -86,7 +86,7 @@ export default function FulfillmentBreakdown({
               <li key={r.key} className={r.key === focused ? "is-focused" : undefined}>
                 <button
                   type="button"
-                  disabled={r.key === "other" || !onOpen}
+                  disabled={!onOpen}
                   style={{ ["--chip" as string]: r.color }}
                   aria-pressed={r.key === focused}
                   aria-label={`${current ? "Current status" : "View"}: ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% of cohort orders)`}

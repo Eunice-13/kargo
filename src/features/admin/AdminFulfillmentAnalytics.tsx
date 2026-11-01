@@ -5,6 +5,7 @@ import type {
   FulfillmentAnalyticsFilters,
   FulfillmentAnalyticsStage as Stage,
   FulfillmentCurrentStatus,
+  FulfillmentCurrentStatusStage,
 } from "@/types/fulfillmentAnalytics";
 import { useAdminResource } from "./useAdminResource";
 import {
@@ -20,6 +21,8 @@ import FulfillmentTrendChart from "./FulfillmentTrendChart";
 import FulfillmentBreakdown from "./FulfillmentBreakdown";
 import FulfillmentOrdersDialog from "./FulfillmentOrdersDialog";
 import "./fulfillmentAnalytics.css";
+
+type AnalyticsPointStage = Stage | FulfillmentCurrentStatusStage;
 
 export default function AdminFulfillmentAnalytics({ refreshKey = 0 }: { refreshKey?: number }) {
   const [filters, setFilters] = useState<FulfillmentAnalyticsFilters>({ period: "last_30_days" });
@@ -184,7 +187,7 @@ function AnalyticsResults({
   const [stagesOpen, setStagesOpen] = useState(false);
   const visible: Stage[] = ANALYTICS_STAGES.map((s) => s.key);
   const [point, setPoint] = useState<{
-    stage: Stage;
+    stage: AnalyticsPointStage;
     bucket?: string;
     mode?: "reached" | "current";
   } | null>(null);

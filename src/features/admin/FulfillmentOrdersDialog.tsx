@@ -12,6 +12,9 @@ import type {
 import { useAdminResource } from "./useAdminResource";
 import AdminOrderDetailModal from "./components/AdminOrderDetailModal";
 import { ANALYTICS_STAGES, analyticsDate, analyticsTimestamp } from "./fulfillmentAnalyticsModel";
+import "./fulfillmentAnalytics.css";
+
+type OrderStage = Stage | FulfillmentCurrentStatusStage;
 
 // Right-side drawer on desktop, bottom sheet on mobile (CSS-driven). Presentation
 // only — the RPCs, snapshot handling, pagination and order drill-through are
@@ -27,7 +30,7 @@ export default function FulfillmentOrdersDialog({
 }: {
   data: FulfillmentAnalytics;
   filters: FulfillmentAnalyticsFilters;
-  stage: Stage;
+  stage: OrderStage;
   bucket?: string;
   mode?: "reached" | "current";
   onClose: () => void;
@@ -36,8 +39,9 @@ export default function FulfillmentOrdersDialog({
   const [offset, setOffset] = useState(0);
   const [orderId, setOrderId] = useState<string | null>(null);
   const dialogRef = useDialogA11y(onClose);
-  const label = ANALYTICS_STAGES.find((s) => s.key === stage)!.label;
-  const color = ANALYTICS_STAGES.find((s) => s.key === stage)!.color;
+  const stageMeta = ANALYTICS_STAGES.find((s) => s.key === stage);
+  const label = stageMeta?.label ?? "Other";
+  const color = stageMeta?.color ?? "#64748B";
 
   if (orderId)
     return (
@@ -111,7 +115,7 @@ function OrderPage({
 }: {
   data: FulfillmentAnalytics;
   filters: FulfillmentAnalyticsFilters;
-  stage: Stage;
+  stage: OrderStage;
   bucket?: string;
   mode: "reached" | "current";
   offset: number;
@@ -130,7 +134,12 @@ function OrderPage({
           )
         : adminApi.fulfillmentOrders(
             filters,
-            { stage, bucket, generatedAt: data.generatedAt, snapshot: data.snapshot },
+            {
+              stage: stage as Stage,
+              bucket,
+              generatedAt: data.generatedAt,
+              snapshot: data.snapshot,
+            },
             25,
             offset,
           ),
