@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 
-import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
+import { Card, CardSkeleton, Avatar } from "@/components/shared";
 import { ADMIN_ACTION_LABELS } from "@/constants/admin";
 import { adminApi } from "@/services";
 import { requestAdminSection } from "@/state/navIntent";
@@ -52,30 +51,11 @@ export default function AdminDashboard({ setTab }: SharedState) {
     setTab(opts.tab);
   };
 
-  const [analyticsRefresh, setAnalyticsRefresh] = useState(0);
-
   const pipeline = data?.pipeline ?? [];
 
   return (
     <div className="p-6 admin-page admin-page--dashboard">
-      <AdminPageHeader
-        title="Dashboard"
-        subtitle="What needs attention across KARGO right now."
-        actions={
-          <>
-            <PrimaryBtn
-              className="admin-action-primary"
-              size="sm"
-              onClick={() => {
-                refresh();
-                setAnalyticsRefresh((n) => n + 1);
-              }}
-            >
-              Refresh
-            </PrimaryBtn>
-          </>
-        }
-      />
+      <AdminPageHeader title="Dashboard" subtitle="What needs attention across KARGO right now." />
 
       {loading && (
         <div className="admin-stats admin-stats--operational">
@@ -133,7 +113,7 @@ export default function AdminDashboard({ setTab }: SharedState) {
       )}
 
       <AdminSectionBoundary label="Order fulfillment analytics">
-        <AdminFulfillmentAnalytics refreshKey={analyticsRefresh} />
+        <AdminFulfillmentAnalytics />
       </AdminSectionBoundary>
 
       {!loading && !error && data && (

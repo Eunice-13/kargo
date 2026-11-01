@@ -503,9 +503,6 @@ function AnalyticsResults({
               ? `Each order counted once, in its latest stage · Recording began ${analyticsTimestamp(data.captureStartedAt)}`
               : `An order counts in every stage it has reached · Recording began ${analyticsTimestamp(data.captureStartedAt)}`}
         </p>
-        <button type="button" onClick={() => setPoint({ stage: focused, mode: countingMode })}>
-          View {ANALYTICS_STAGES.find((stage) => stage.key === focused)?.label ?? "stage"} orders →
-        </button>
       </footer>
       {point && (
         <FulfillmentOrdersDialog
