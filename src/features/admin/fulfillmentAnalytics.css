@@ -173,6 +173,13 @@
   border-top: 1px solid var(--fa-border);
   border-left: 0;
 }
+.fulfillment-analytics__content-grid .fulfillment-analytics__summary > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
 
 .fulfillment-analytics__summary {
   display: grid;
