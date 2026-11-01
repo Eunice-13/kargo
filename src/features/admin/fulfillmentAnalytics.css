@@ -1382,7 +1382,7 @@
   font-weight: 600;
   white-space: nowrap;
 }
-.fulfillment-analytics__trend-chips button.is-visible {
+.fulfillment-analytics__trend-chips button.is-focused {
   border-color: color-mix(in srgb, var(--chip, #191ba9) 38%, var(--fa-border));
   background: color-mix(in srgb, var(--chip, #191ba9) 10%, var(--fa-surface));
   color: var(--fa-ink);
@@ -1410,7 +1410,7 @@
     flex-basis: 100%;
   }
 }
-.fulfillment-analytics__trend-chips button.is-cancelled.is-visible {
+.fulfillment-analytics__trend-chips button.is-cancelled.is-focused {
   border-color: #d8a29e;
   background: #f8ebe9;
 }

@@ -197,7 +197,7 @@ function AnalyticsResults({
   const [focused, setFocused] = useState<Stage>("delivered");
   // On mobile the stage chips collapse behind a summary toggle to save space.
   const [stagesOpen, setStagesOpen] = useState(false);
-  const [visible, setVisible] = useState<Stage[]>(() => ANALYTICS_STAGES.map((s) => s.key));
+  const visible: Stage[] = ANALYTICS_STAGES.map((s) => s.key);
   const [point, setPoint] = useState<{
     stage: AnalyticsPointStage;
     bucket?: string;
@@ -381,7 +381,7 @@ function AnalyticsResults({
                 aria-label="Trend stages"
               >
                 {ANALYTICS_STAGES.map((stage) => {
-                  const isVisible = visible.includes(stage.key);
+                  const isFocused = focused === stage.key;
                   const count =
                     countingMode === "current"
                       ? Number(
@@ -394,16 +394,10 @@ function AnalyticsResults({
                     <button
                       type="button"
                       key={stage.key}
-                      className={`${isVisible ? "is-visible" : ""}${stage.key === "cancelled" ? " is-cancelled" : ""}`}
+                      className={`${isFocused ? "is-focused" : ""}${stage.key === "cancelled" ? " is-cancelled" : ""}`}
                       style={{ ["--chip" as string]: stage.color }}
-                      aria-pressed={isVisible}
-                      onClick={() =>
-                        setVisible((current) =>
-                          isVisible
-                            ? current.filter((key) => key !== stage.key)
-                            : [...current, stage.key],
-                        )
-                      }
+                      aria-pressed={isFocused}
+                      onClick={() => setFocused(stage.key)}
                     >
                       <span className="fulfillment-stage-dot" style={{ background: stage.color }} />
                       <span>{stage.label}</span>
@@ -481,23 +475,14 @@ function AnalyticsResults({
             </p>
           )}
           {chartMode === "trend" ? (
-            cohortSize < 5 ? (
-              <p
-                className="fulfillment-analytics__notice fulfillment-analytics__notice--empty"
-                role="status"
-              >
-                Not enough orders to show a trend yet.
-              </p>
-            ) : (
-              <FulfillmentTrendChart
-                key={`${trendData.generatedAt}:${countingMode}`}
-                data={trendData}
-                visible={visible}
-                focused={focused}
-                onFocusStage={setFocused}
-                onOpen={(stage, bucket) => setPoint({ stage, bucket, mode: countingMode })}
-              />
-            )
+            <FulfillmentTrendChart
+              key={`${trendData.generatedAt}:${countingMode}`}
+              data={trendData}
+              visible={visible}
+              focused={focused}
+              onFocusStage={setFocused}
+              onOpen={(stage, bucket) => setPoint({ stage, bucket, mode: countingMode })}
+            />
           ) : (
             <FulfillmentBreakdown
               data={data}
