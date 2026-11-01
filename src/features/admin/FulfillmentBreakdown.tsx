@@ -1,4 +1,3 @@
-import { ChevronRight } from "lucide-react";
 import type {
   FulfillmentAnalytics,
   FulfillmentAnalyticsStage as Stage,
@@ -139,20 +138,6 @@ export default function FulfillmentBreakdown({
               </li>
             ))}
           </ul>
-          {group.id === "path" && !current && (
-            <div className="fulfillment-breakdown__conversions" aria-label="Stage conversion rates">
-              {pathRows.slice(0, -1).map((row, index) => {
-                const next = pathRows[index + 1];
-                const conversion = row.count ? Math.round((next.count / row.count) * 100) : 0;
-                return (
-                  <span key={`${row.key}-to-${next.key}`}>
-                    <ChevronRight size={14} aria-hidden="true" />
-                    {conversion}%
-                  </span>
-                );
-              })}
-            </div>
-          )}
         </section>
       ))}
     </div>

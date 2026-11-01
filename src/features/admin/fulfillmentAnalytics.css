@@ -1415,28 +1415,6 @@
   background: #f8ebe9;
 }
 
-/* Reached-stage caption and step-to-step conversion readout. */
-.fulfillment-breakdown__caption {
-  margin: 10px 0 0;
-  color: var(--fa-muted);
-  font-size: 11px;
-  line-height: 1.45;
-}
-.fulfillment-breakdown__conversions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 6px 0 0;
-  color: var(--fa-muted);
-  font-size: 11px;
-  font-weight: 700;
-  text-align: center;
-}
-.fulfillment-breakdown__conversions span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-}
 .fulfillment-breakdown__stack {
   display: flex;
   gap: 2px;
@@ -1663,4 +1641,11 @@
   .fulfillment-breakdown.is-reached .fulfillment-breakdown__group.is-drop-offs > .fulfillment-breakdown__list {
     margin-top: 42px;
   }
+}
+
+.fulfillment-breakdown__caption {
+  margin: 10px 0 0;
+  color: var(--fa-muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
