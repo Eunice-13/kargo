@@ -153,10 +153,7 @@ export default function FulfillmentTrendChart({
               className="fulfillment-trend__grid"
             />
             <text x={left - 10} y={y(tick) + 4} textAnchor="end">
-              {new Intl.NumberFormat("en", {
-                notation: "compact",
-                maximumFractionDigits: 1,
-              }).format(tick)}
+              {Math.round(tick)}
             </text>
           </g>
         ))}
@@ -209,7 +206,7 @@ export default function FulfillmentTrendChart({
             aria-hidden="true"
           />
         )}
-        {tickIndices(n, width < 600 ? 4 : 8)
+        {tickIndices(n, width < 600 ? 4 : 5)
           .filter((i) => Number.isInteger(i) && data.chart[i])
           .map((i) => (
             <text

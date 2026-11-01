@@ -36,6 +36,7 @@ before(async () => {
   await db.exec(sqlFile("202611090004_fulfillment_analytics_cohort.sql"));
   await db.exec(sqlFile("202611090006_fulfillment_analytics_current_status.sql"));
   await db.exec(sqlFile("202611090007_fulfillment_analytics_current_status_orders.sql"));
+  await db.exec(sqlFile("202611090008_fulfillment_analytics_current_status_chart.sql"));
   await db.query(
     "update fulfillment_analytics_metadata set capture_started_at='2020-02-01T00:00:00+08:00' where singleton",
   );

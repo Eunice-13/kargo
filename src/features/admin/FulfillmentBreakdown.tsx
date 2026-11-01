@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import type {
   FulfillmentAnalytics,
   FulfillmentAnalyticsStage as Stage,
@@ -70,7 +71,21 @@ export default function FulfillmentBreakdown({
   };
 
   return (
-    <div className="fulfillment-breakdown">
+    <div className={`fulfillment-breakdown ${current ? "is-current" : "is-reached"}`}>
+      {current && (
+        <div className="fulfillment-breakdown__stack" aria-label="Current status proportions">
+          {visibleRows
+            .filter((row) => row.key !== "other")
+            .map((row) => (
+              <span
+                key={row.key}
+                className="fulfillment-breakdown__segment"
+                style={{ background: row.color, flexGrow: row.count / Math.max(1, denominator) }}
+                title={`${row.label}: ${row.count}`}
+              />
+            ))}
+        </div>
+      )}
       {groups.map((group) => (
         <section
           key={group.id}
@@ -78,6 +93,12 @@ export default function FulfillmentBreakdown({
           aria-label={group.title}
         >
           <h3 className="fulfillment-breakdown__group-title">{group.title}</h3>
+          {group.id === "path" && !current && (
+            <p className="fulfillment-breakdown__caption">
+              An order counts in every stage it has reached, so stages add up to more than the
+              total.
+            </p>
+          )}
           <ul
             className="fulfillment-breakdown__list"
             style={{ ["--cols" as string]: group.rows.length }}
@@ -89,7 +110,7 @@ export default function FulfillmentBreakdown({
                   disabled={!onOpen}
                   style={{ ["--chip" as string]: r.color }}
                   aria-pressed={r.key === focused}
-                  aria-label={`${current ? "Current status" : "View"}: ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% of cohort orders)`}
+                  aria-label={`${current ? "Current status" : "Reached stage"}: ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% ${current ? "of orders" : "reached"})`}
                   onClick={() => select(r.key)}
                 >
                   <span className="fulfillment-breakdown__bar-wrap">
@@ -97,7 +118,7 @@ export default function FulfillmentBreakdown({
                       className="fulfillment-breakdown__bar"
                       style={{
                         background: r.color,
-                        ["--fill" as string]: `${(r.count / peak) * 100}%`,
+                        ["--fill" as string]: `${current ? r.percent : (r.count / peak) * 100}%`,
                       }}
                     >
                       <span className="fulfillment-breakdown__bar-count">
@@ -110,12 +131,28 @@ export default function FulfillmentBreakdown({
                     <strong className="fulfillment-breakdown__count">
                       {r.count.toLocaleString()}
                     </strong>
-                    <span className="fulfillment-breakdown__percent">{r.percent}%</span>
+                    <span className="fulfillment-breakdown__percent">
+                      {r.percent}% {current ? "of orders" : "reached"}
+                    </span>
                   </span>
                 </button>
               </li>
             ))}
           </ul>
+          {group.id === "path" && !current && (
+            <div className="fulfillment-breakdown__conversions" aria-label="Stage conversion rates">
+              {pathRows.slice(0, -1).map((row, index) => {
+                const next = pathRows[index + 1];
+                const conversion = row.count ? Math.round((next.count / row.count) * 100) : 0;
+                return (
+                  <span key={`${row.key}-to-${next.key}`}>
+                    <ChevronRight size={14} aria-hidden="true" />
+                    {conversion}%
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </section>
       ))}
     </div>

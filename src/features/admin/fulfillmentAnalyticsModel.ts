@@ -4,6 +4,8 @@ import type {
 } from "@/types/fulfillmentAnalytics";
 
 export type FulfillmentAnalyticsView = "trend" | "reached" | "current";
+export type FulfillmentCountingMode = "current" | "reached";
+export type FulfillmentChartMode = "bars" | "trend";
 
 export const ANALYTICS_STAGES: { key: Stage; label: string; color: string; dash?: string }[] = [
   { key: "payment_confirmed", label: "Payment confirmed", color: "#191BA9", dash: "3 3" },

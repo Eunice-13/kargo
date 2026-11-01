@@ -1319,3 +1319,187 @@
     flex: 1 1 100%;
   }
 }
+
+/* Independent counting and chart controls. */
+.fulfillment-analytics__counting-toggle,
+.fulfillment-analytics__chart-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: #f3f5fc;
+  border: 1px solid #e3e7f4;
+  border-radius: 12px;
+}
+.fulfillment-analytics__counting-toggle button,
+.fulfillment-analytics__chart-toggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--fa-muted);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.fulfillment-analytics__counting-toggle button[aria-pressed="true"],
+.fulfillment-analytics__chart-toggle button[aria-pressed="true"] {
+  border-color: #e3e7f4;
+  background: #fff;
+  color: #1d2a9e;
+  box-shadow: 0 1px 2px rgb(16 24 40 / 6%);
+}
+.fulfillment-analytics__chart-toggle button {
+  width: 44px;
+  padding: 7px;
+}
+.fulfillment-analytics__trend-chips {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+.fulfillment-analytics__trend-chips button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--fa-border);
+  border-radius: 999px;
+  background: var(--fa-surface);
+  color: var(--fa-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fulfillment-analytics__trend-chips button.is-visible {
+  border-color: color-mix(in srgb, var(--chip, #191ba9) 38%, var(--fa-border));
+  background: color-mix(in srgb, var(--chip, #191ba9) 10%, var(--fa-surface));
+  color: var(--fa-ink);
+}
+.fulfillment-analytics__trend-chips button strong {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  .fulfillment-analytics__focus-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .fulfillment-analytics__counting-toggle {
+    width: 100%;
+  }
+  .fulfillment-analytics__counting-toggle button {
+    flex: 1 1 50%;
+  }
+  .fulfillment-analytics__chart-toggle {
+    margin-left: auto;
+  }
+  .fulfillment-analytics__trend-chips {
+    width: 100%;
+    flex-basis: 100%;
+  }
+}
+.fulfillment-analytics__trend-chips button.is-cancelled.is-visible {
+  border-color: #d8a29e;
+  background: #f8ebe9;
+}
+
+/* Reached-stage caption and step-to-step conversion readout. */
+.fulfillment-breakdown__caption {
+  margin: 10px 0 0;
+  color: var(--fa-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.fulfillment-breakdown__conversions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 6px 0 0;
+  color: var(--fa-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.fulfillment-breakdown__conversions span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.fulfillment-breakdown__stack {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  margin: 14px 0 2px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+.fulfillment-breakdown__segment {
+  min-width: 2px;
+  border-radius: 999px;
+}
+@media (max-width: 640px) {
+  .fulfillment-breakdown__conversions {
+    display: none;
+  }
+  .fulfillment-breakdown__stack {
+    margin-top: 10px;
+  }
+}
+
+@media (min-width: 641px) {
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list {
+    min-height: 0;
+    margin-top: 12px;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list button {
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--fa-border);
+    border-radius: 12px;
+    background: var(--fa-soft);
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-wrap {
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--fa-border);
+    overflow: hidden;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar {
+    width: var(--fill, 0%);
+    height: 100%;
+    min-height: 0;
+    border-radius: 999px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-count {
+    display: none;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 6px;
+  }
+}
+.fulfillment-breakdown.is-current > .fulfillment-breakdown__stack {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0;
+}

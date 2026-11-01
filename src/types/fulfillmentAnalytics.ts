@@ -17,9 +17,19 @@ export type FulfillmentCurrentStatusStage =
   | "other";
 
 export type FulfillmentCurrentStatus = {
+  period: NonNullable<FulfillmentAnalyticsFilters["period"]>;
+  timezone: "Asia/Manila";
+  startAt: string;
+  endAt: string;
+  grouping: "hour" | "day" | "week" | "month";
   cohortSize: number;
   generatedAt: string;
   counts: Record<FulfillmentCurrentStatusStage, number>;
+  chart: {
+    bucketStart: string;
+    bucketEnd: string;
+    counts: Record<FulfillmentCurrentStatusStage, number>;
+  }[];
 };
 
 export type FulfillmentAnalyticsFilters = {
