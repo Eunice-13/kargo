@@ -169,6 +169,11 @@ export type ClaimRow = {
 
   extensionStatus?: "none" | "pending" | "approved" | "denied";
 
+  // How many extension requests have been made for this claim. If the backend
+  // RPC hasn't been applied yet, MyClaims falls back to estimating from
+  // extensionStatus (0 or 1).
+  extensionRequestCount?: number;
+
   extensionRequestedHours?: number;
 
   extensionDecidedAt?: string;

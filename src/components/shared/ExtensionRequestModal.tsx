@@ -1,4 +1,9 @@
 import { useMemo, useState } from "react"
+import {
+  extensionLimitMessage,
+  extensionRequestCount,
+  MAX_EXTENSION_REQUESTS,
+} from "@/constants/claims"
 import type { ClaimRow } from "@/types"
 import Modal from "./Modal"
 import PrimaryBtn from "./PrimaryBtn"
@@ -22,9 +27,11 @@ export default function ExtensionRequestModal({
   const [submitting, setSubmitting] = useState(false)
   const hours = preset === "custom" ? Number(customHours) : Number(preset)
   const trimmedReason = reason.trim()
+  const used = extensionRequestCount(claim)
+  const atLimit = used >= MAX_EXTENSION_REQUESTS
   const valid = useMemo(
-    () => Number.isInteger(hours) && hours >= MIN_HOURS && hours <= MAX_HOURS && trimmedReason.length >= 10 && trimmedReason.length <= 500,
-    [hours, trimmedReason],
+    () => !atLimit && Number.isInteger(hours) && hours >= MIN_HOURS && hours <= MAX_HOURS && trimmedReason.length >= 10 && trimmedReason.length <= 500,
+    [atLimit, hours, trimmedReason],
   )
   const reasonError = trimmedReason.length > 0 && trimmedReason.length < 10 ? "Please provide at least 10 characters." : trimmedReason.length > 500 ? "Reason must be 500 characters or fewer." : ""
   const hoursError = preset === "custom" && (!Number.isInteger(hours) || hours < MIN_HOURS || hours > MAX_HOURS) ? `Enter a whole number from ${MIN_HOURS} to ${MAX_HOURS} hours.` : ""
@@ -47,6 +54,20 @@ export default function ExtensionRequestModal({
         >
           Requesting extension for <strong>{claim.product}</strong> from{" "}
           {claim.seller}.
+          <div
+            className="mt-1"
+            style={{
+              color: atLimit ? "#92400E" : "#6B7280",
+              fontWeight: atLimit ? 600 : 400,
+            }}
+          >
+            Extension requests: {used} of {MAX_EXTENSION_REQUESTS} used
+          </div>
+          {atLimit && (
+            <div className="mt-1" style={{ color: "#92400E", fontWeight: 600 }}>
+              {extensionLimitMessage()}
+            </div>
+          )}
         </div>
         <div>
           <label
@@ -107,7 +128,7 @@ export default function ExtensionRequestModal({
             Cancel
           </SecondaryBtn>
           <PrimaryBtn onClick={submit} disabled={!valid || submitting}>
-            {submitting ? "Sending…" : "Send Request"}
+            {atLimit ? "Limit reached" : submitting ? "Sending…" : "Send Request"}
           </PrimaryBtn>
         </div>
       </div>

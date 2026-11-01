@@ -7,7 +7,6 @@ export const ANALYTICS_STAGES: { key: Stage; label: string; color: string; dash?
   { key: "payment_confirmed", label: "Payment confirmed", color: "#191BA9", dash: "3 3" },
   { key: "preparing", label: "Preparing", color: "#B4690E" },
   { key: "shipped", label: "Shipped", color: "#2563EB" },
-  { key: "in_transit", label: "In transit", color: "#8755C7", dash: "7 3" },
   { key: "delivered", label: "Delivered", color: "#0B8C69" },
   { key: "cancelled", label: "Cancelled", color: "#B42318", dash: "4 3" },
   { key: "expired", label: "Expired", color: "#64748B", dash: "2 4" },

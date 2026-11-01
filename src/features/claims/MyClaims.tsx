@@ -15,6 +15,7 @@ import type {
 } from "@/types";
 
 import { INDIGO, CREAM, TODAY } from "@/constants/theme";
+import { extensionRequestCount } from "@/constants/claims";
 import { productImageUrl } from "@/components/shared/ProductThumb";
 import { sellerLabel } from "@/features/batches/sellerLabel";
 
@@ -121,6 +122,10 @@ function needsShippingFee(claim: ClaimRow) {
     claim.status === "Pending" &&
     (claim.shippingState === "waiting_for_seller" || claim.shippingState === "correction_requested")
   );
+}
+
+function canCancelClaim(claim: ClaimRow) {
+  return claim.status === "Pending" && !claim.groupOrderId;
 }
 
 function hasOrderDeadline(claim: ClaimRow) {
@@ -682,59 +687,70 @@ export default function MyClaims({
     try {
       if (isSupabaseConfigured) {
         await kargoApi.cancelOrder(String(currentClaim.id));
-
-        await refreshData();
-      } else {
-        setClaims((previous) =>
-          previous.map((claim) =>
-            claim.id === currentClaim.id ? { ...claim, status: "Cancelled" as ClaimStatus } : claim,
-          ),
-        );
-
-        setToPay((previous) =>
-          previous.filter((payment) => {
-            const sameOrder = String(payment.orderId ?? payment.id) === String(currentClaim.id);
-
-            const sameLegacyClaim =
-              !payment.orderId &&
-              payment.product === currentClaim.product &&
-              payment.seller === currentClaim.seller;
-
-            return !sameOrder && !sameLegacyClaim;
-          }),
-        );
-
-        setBatches((previous) =>
-          previous.map((batch) => {
-            if (batch.title !== currentClaim.batch) return batch;
-
-            return {
-              ...batch,
-
-              claimed: Math.max(0, batch.claimed - currentClaim.qty),
-
-              products: batch.products.map((product) => {
-                const matchesProduct = currentClaim.productId
-                  ? product.dbId === currentClaim.productId
-                  : product.name === currentClaim.product;
-
-                return matchesProduct
-                  ? {
-                      ...product,
-
-                      claimed: Math.max(0, product.claimed - currentClaim.qty),
-                    }
-                  : product;
-              }),
-            };
-          }),
-        );
       }
 
-      setCancelTarget(null);
-    } catch (error) {
-      await refreshData();
+      // Update local state immediately so the UI responds without waiting for
+      // a full refresh. Then refresh in the background to sync any server-side
+      // side effects.
+      setClaims((previous) =>
+        previous.map((claim) =>
+          claim.id === currentClaim.id ? { ...claim, status: "Cancelled" as ClaimStatus } : claim,
+        ),
+      );
 
+      setToPay((previous) =>
+        previous.filter((payment) => {
+          const sameOrder = String(payment.orderId ?? payment.id) === String(currentClaim.id);
+
+          const sameLegacyClaim =
+            !payment.orderId &&
+            payment.product === currentClaim.product &&
+            payment.seller === currentClaim.seller;
+
+          return !sameOrder && !sameLegacyClaim;
+        }),
+      );
+
+      setBatches((previous) =>
+        previous.map((batch) => {
+          if (batch.title !== currentClaim.batch) return batch;
+
+          return {
+            ...batch,
+
+            claimed: Math.max(0, batch.claimed - currentClaim.qty),
+
+            products: batch.products.map((product) => {
+              const matchesProduct = currentClaim.productId
+                ? product.dbId === currentClaim.productId
+                : product.name === currentClaim.product;
+
+              return matchesProduct
+                ? {
+                    ...product,
+
+                    claimed: Math.max(0, product.claimed - currentClaim.qty),
+                  }
+                : product;
+            }),
+          };
+        }),
+      );
+
+      setCancelTarget(null);
+
+      if (isSupabaseConfigured) {
+        try {
+          await refreshData();
+        } catch (error) {
+          alert(
+            error instanceof Error
+              ? `Claim cancelled, but the latest data could not be refreshed: ${error.message}`
+              : "Claim cancelled, but the latest data could not be refreshed.",
+          );
+        }
+      }
+    } catch (error) {
       alert(error instanceof Error ? error.message : "Unable to cancel claim.");
     } finally {
       setCancelling(false);
@@ -2196,6 +2212,11 @@ export default function MyClaims({
                         Extend
                       </SecondaryBtn>
                     )}
+                    {canCancelClaim(c) && (
+                      <SecondaryBtn size="sm" onClick={() => setCancelTarget(c)}>
+                        Cancel
+                      </SecondaryBtn>
+                    )}
                     {c.extensionRequested && (
                       <span
                         style={{
@@ -2428,6 +2449,11 @@ export default function MyClaims({
                               Request Extension
                             </SecondaryBtn>
                           ))}
+                        {canCancelClaim(c) && (
+                          <SecondaryBtn size="sm" onClick={() => setCancelTarget(c)}>
+                            Cancel
+                          </SecondaryBtn>
+                        )}
                         {c.status === "Paid and Reserved" && (
                           <SecondaryBtn
                             size="sm"
@@ -2658,6 +2684,7 @@ export default function MyClaims({
                       extensionRequested: true,
                       extensionStatus: "pending",
                       extensionRequestedHours: hours,
+                      extensionRequestCount: extensionRequestCount(c) + 1,
                     }
                   : c,
               ),

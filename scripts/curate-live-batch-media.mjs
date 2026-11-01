@@ -113,7 +113,15 @@ async function uploadUnique(pathStem, preferredKinds) {
   throw new Error("No remaining verified unique source image")
 }
 
-const incomplete = batches.filter((batch) => !batch.cover_path || (batch.gallery_paths?.length ?? 0) < 3).slice(0, limit)
+// Fill in any missing cover/item photos, then derive each processed batch's
+// gallery from its own media: cover first, then item photos in product order.
+const incomplete = batches
+  .filter(
+    (batch) =>
+      !batch.cover_path ||
+      products.some((product) => product.batch_id === batch.id && !product.image_path),
+  )
+  .slice(0, limit);
 let covers = 0
 let galleryImages = 0
 let productImages = 0
@@ -121,25 +129,28 @@ let productImages = 0
 for (const batch of incomplete) {
   const base = `curated-media/${batch.id}`
   const preferred = batchKinds(batch.category)
-  const changes = {}
-  if (!batch.cover_path) {
-    changes.cover_path = await uploadUnique(`${base}/cover`, preferred)
+  let coverPath = batch.cover_path
+  if (!coverPath) {
+    coverPath = await uploadUnique(`${base}/cover`, preferred)
     covers++
   }
-  const gallery = [...(batch.gallery_paths ?? [])]
-  while (gallery.length < 3) {
-    gallery.push(await uploadUnique(`${base}/gallery-${gallery.length + 1}`, preferred))
-    galleryImages++
-  }
-  changes.gallery_paths = gallery
-  const { error } = await db.from("batches").update(changes).eq("id", batch.id)
-  if (error) throw error
   for (const product of products.filter((product) => product.batch_id === batch.id && !product.image_path)) {
     const path = await uploadUnique(`${base}/product-${product.id}`, productKinds(product.name))
     const { error: imageError } = await db.from("batch_products").update({ image_path: path }).eq("id", product.id)
     if (imageError) throw imageError
+    product.image_path = path
     productImages++
   }
+  const gallery = [
+    ...(coverPath ? [coverPath] : []),
+    ...products
+      .filter((product) => product.batch_id === batch.id && product.image_path)
+      .map((product) => product.image_path),
+  ].filter((path, index, all) => all.indexOf(path) === index)
+  const changes = { cover_path: coverPath, gallery_paths: gallery }
+  galleryImages += gallery.length
+  const { error } = await db.from("batches").update(changes).eq("id", batch.id)
+  if (error) throw error
 }
 
 console.log(JSON.stringify({ batches: incomplete.length, covers, galleryImages, productImages, uniqueImages: usedHashes.size }))

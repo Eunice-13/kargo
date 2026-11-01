@@ -954,6 +954,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         extensionStatus: row.extension_status ?? "none",
         extensionRequested: row.extension_status === "pending",
+        extensionRequestCount: Number(
+          row.extension_request_count ??
+            (row.extension_status && row.extension_status !== "none" ? 1 : 0),
+        ),
         extensionRequestedHours: row.extension_requested_hours ?? undefined,
         extensionDecidedAt: row.extension_decided_at ?? undefined,
 
@@ -1053,6 +1057,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         extensionStatus: row.extension_status ?? "none",
         extensionRequested: row.extension_status === "pending",
+        extensionRequestCount: Number(
+          row.extension_request_count ??
+            (row.extension_status && row.extension_status !== "none" ? 1 : 0),
+        ),
         extensionRequestedHours: row.extension_requested_hours ?? undefined,
         extensionDecidedAt: row.extension_decided_at ?? undefined,
 
@@ -1614,18 +1622,11 @@ export async function createBatch(batch: {
     if (coverError) throw coverError;
   }
 
-  const galleryPaths = await Promise.all(
+  const uploadedGalleryPaths = await Promise.all(
     (batch.galleryFiles ?? []).map((file, index) =>
       uploadBatchMediaFile(client, auth.user.id, created.id, `gallery-${index + 1}`, file),
     ),
   );
-  if (galleryPaths.length > 0) {
-    const { error: galleryError } = await client
-      .from("batches")
-      .update({ gallery_paths: galleryPaths })
-      .eq("id", created.id);
-    if (galleryError) throw galleryError;
-  }
 
   const productImagePaths = await Promise.all(
     batch.products.map((product, index) =>
@@ -1673,6 +1674,20 @@ export async function createBatch(batch: {
     .select("id");
 
   if (productsError) throw productsError;
+
+  // The catalog gallery always leads with the batch photo, then the item
+  // photos in product order. Seller-added gallery photos are extras after them.
+  const galleryPaths = [
+    ...(coverPath ? [coverPath] : []),
+    ...productImagePaths.filter((path): path is string => Boolean(path)),
+    ...uploadedGalleryPaths,
+  ].filter((path, index, all) => all.indexOf(path) === index);
+
+  const { error: galleryError } = await client
+    .from("batches")
+    .update({ gallery_paths: galleryPaths })
+    .eq("id", created.id);
+  if (galleryError) throw galleryError;
 
   return {
     id: created.id as string,
@@ -1732,8 +1747,24 @@ export async function updateBatchCover(batchId: string, file: File) {
   const { data: auth } = await client.auth.getUser();
   if (!auth.user) throw new Error("Authentication required");
 
+  const { data: batch, error: loadError } = await client
+    .from("batches")
+    .select("cover_path,gallery_paths")
+    .eq("id", batchId)
+    .single();
+  if (loadError) throw loadError;
+
   const path = await uploadBatchMediaFile(client, auth.user.id, batchId, "cover", file);
-  const { error } = await client.from("batches").update({ cover_path: path }).eq("id", batchId);
+  const galleryPaths = [
+    path,
+    ...(batch.gallery_paths ?? []).filter(
+      (existing: string) => existing !== batch.cover_path && existing !== path,
+    ),
+  ];
+  const { error } = await client
+    .from("batches")
+    .update({ cover_path: path, gallery_paths: galleryPaths })
+    .eq("id", batchId);
   if (error) throw error;
   return batchMediaUrl(path) as string;
 }
@@ -1778,6 +1809,14 @@ export async function updateProductImage(batchId: string, productId: string, fil
   const { data: auth } = await client.auth.getUser();
   if (!auth.user) throw new Error("Authentication required");
 
+  const [{ data: product, error: productLoadError }, { data: batch, error: batchLoadError }] =
+    await Promise.all([
+      client.from("batch_products").select("image_path").eq("id", productId).single(),
+      client.from("batches").select("gallery_paths").eq("id", batchId).single(),
+    ]);
+  if (productLoadError) throw productLoadError;
+  if (batchLoadError) throw batchLoadError;
+
   const path = await uploadBatchMediaFile(
     client,
     auth.user.id,
@@ -1790,6 +1829,21 @@ export async function updateProductImage(batchId: string, productId: string, fil
     .update({ image_path: path })
     .eq("id", productId);
   if (error) throw error;
+
+  // Keep the derived catalog gallery in sync while preserving seller-added
+  // extra photos: replace the item's previous photo in place.
+  const previousPath = product?.image_path;
+  const galleryPaths = (batch.gallery_paths ?? []).map((existing: string) =>
+    existing === previousPath ? path : existing,
+  );
+  if (!galleryPaths.includes(path)) galleryPaths.push(path);
+
+  const { error: galleryError } = await client
+    .from("batches")
+    .update({ gallery_paths: galleryPaths })
+    .eq("id", batchId);
+  if (galleryError) throw galleryError;
+
   return batchMediaUrl(path) as string;
 }
 

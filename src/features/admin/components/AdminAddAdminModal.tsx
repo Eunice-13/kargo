@@ -62,6 +62,7 @@ export default function AdminAddAdminModal({
     <Modal
       title="Add admin"
       variant="confirm"
+      showTitleIcon={false}
       width={500}
       className="admin-modal"
       overlayClassName="admin-modal-overlay"

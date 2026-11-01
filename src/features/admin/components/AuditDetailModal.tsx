@@ -33,6 +33,7 @@ export default function AuditDetailModal({
     <Modal
       title="Audit entry"
       variant="detail"
+      showTitleIcon={false}
       width={580}
       className="admin-modal"
       overlayClassName="admin-modal-overlay"

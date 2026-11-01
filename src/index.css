@@ -2829,7 +2829,7 @@ tr:last-child td {
   filter: saturate(0.78);
 }
 
-.kargo-header button:hover {
+.kargo-header button:hover:not(.kargo-notification-trigger) {
   background-color: #eef4f6 !important;
 }
 
@@ -2840,6 +2840,14 @@ tr:last-child td {
   border: 1px solid #dfe7ec !important;
   border-radius: 12px !important;
   box-shadow: 0 1px 2px rgba(23, 33, 43, 0.035) !important;
+}
+
+/* Mirrors the gallery selection: the product card whose photo is showing in
+   the batch gallery gets a clear identity border. */
+.kargo-card.batch-product-card.is-gallery-selected {
+  border: 2px solid var(--kargo-navy) !important;
+  box-shadow: 0 0 0 3px rgba(25, 27, 169, 0.18) !important;
+  background: #f4f5ff !important;
 }
 
 .kargo-card > .flex.items-center.justify-between.mb-4 {
@@ -5722,7 +5730,7 @@ textarea::placeholder {
   filter: sepia(0.25) saturate(0.7);
 }
 
-.kargo-original-retro .kargo-header button:hover {
+.kargo-original-retro .kargo-header button:hover:not(.kargo-notification-trigger) {
   background: #f1e8d6 !important;
 }
 
@@ -6703,20 +6711,46 @@ textarea::placeholder {
   margin-left: clamp(8px, 2vw, 30px);
 }
 
-/* The bell is styled by identity, not DOM position. The old
-   `> div:last-child > div:first-child > button` selector only matched when the
-   bell was the first child of the actions row, so the buyer header — which has
-   a (desktop-hidden) mobile-search toggle sitting before the bell — missed the
-   rule and kept its boxed look. Targeting the trigger class makes the buyer and
-   seller bells identical: the white, box-free bell on the gradient header. The
-   admin header keeps its own treatment via `.admin-shell-header`. */
-.seller-shell-header:not(.admin-shell-header) .kargo-notification-trigger {
-  border: 0 !important;
-  background: transparent !important;
+/* The bell uses currentColor so active states stay visible on both header surfaces. */
+.seller-shell-header .kargo-notification-trigger {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+  -webkit-tap-highlight-color: transparent;
 }
-
-.seller-shell-header:not(.admin-shell-header) .kargo-notification-trigger svg path {
-  fill: #fff;
+.seller-shell-header .kargo-notification-trigger:hover,
+.seller-shell-header .kargo-notification-trigger:active,
+.seller-shell-header .kargo-notification-trigger[aria-expanded="true"] {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.seller-shell-header .kargo-notification-trigger:active,
+.seller-shell-header .kargo-notification-trigger[aria-expanded="true"] {
+  color: #1d20b5;
+}
+.seller-shell-header .kargo-notification-trigger:focus:not(:focus-visible) {
+  outline: none;
+}
+.seller-shell-header .kargo-notification-trigger:focus-visible {
+  outline: 2px solid var(--kargo-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.seller-shell-header .kargo-notification-trigger > svg path {
+  fill: currentColor;
+  stroke: currentColor;
+}
+.kargo-original-retro .seller-shell-header .kargo-notification-trigger {
+  color: var(--kargo-navy);
+}
+.kargo-original-retro .seller-shell-header .kargo-notification-trigger:active,
+.kargo-original-retro .seller-shell-header .kargo-notification-trigger[aria-expanded="true"] {
+  color: #1d20b5;
+}
+.kargo-original-retro .seller-shell-header .kargo-notification-trigger:focus-visible {
+  outline-color: var(--kargo-navy);
 }
 
 .seller-shell-header > div:last-child > div:last-child > button > span {
@@ -15626,25 +15660,23 @@ select.admin-filter-control {
     z-index: 100000 !important;
     inset: 0 !important;
     padding:
-      max(12px, env(safe-area-inset-top))
+      calc(12px + env(safe-area-inset-top))
       max(12px, env(safe-area-inset-right))
-      max(12px, env(safe-area-inset-bottom))
+      calc(60px + env(safe-area-inset-bottom) + 12px)
       max(12px, env(safe-area-inset-left)) !important;
   }
 
-  .admin-record-modal,
-  .admin-confirm-modal {
+  .admin-record-modal {
     width: calc(100% - 24px) !important;
     max-width: 420px !important;
-    max-height: calc(100vh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
-    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    max-height: calc(100vh - 60px - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    max-height: calc(100dvh - 60px - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
     display: flex;
     flex-direction: column;
     border-radius: 16px !important;
   }
 
-  .admin-record-modal > .kargo-modal__header,
-  .admin-confirm-modal > .kargo-modal__header {
+  .admin-record-modal > .kargo-modal__header {
     position: sticky;
     top: 0;
     flex: 0 0 auto;
@@ -15652,12 +15684,12 @@ select.admin-filter-control {
     padding: 6px 12px !important;
   }
 
-  .admin-record-modal > .kargo-modal__body,
-  .admin-confirm-modal > .kargo-modal__body {
+  .admin-record-modal > .kargo-modal__body {
     min-height: 0;
     flex: 1 1 auto;
     padding: 12px 14px !important;
-    overflow-y: auto;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
   }
 
   .admin-modal .kargo-modal__close {
@@ -15693,7 +15725,8 @@ select.admin-filter-control {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: stretch;
     gap: 8px;
-    padding: 10px 14px 12px;
+    padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+    background: #fff;
   }
 
   .admin-record-modal > .admin-modal-footer:has(> :only-child),
@@ -15708,8 +15741,12 @@ select.admin-filter-control {
   .admin-record-modal > .admin-modal-footer > .admin-action-button,
   .admin-confirm-modal > .admin-modal-footer > .admin-action-button {
     width: 100%;
-    min-height: 42px;
-    padding-inline: 8px;
+    min-height: 44px;
+    padding: 8px;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .admin-record-modal .admin-detail-hero {

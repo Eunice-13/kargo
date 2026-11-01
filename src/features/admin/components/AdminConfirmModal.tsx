@@ -54,6 +54,7 @@ export default function AdminConfirmModal({
     <Modal
       title={title}
       variant={destructive ? "danger" : "confirm"}
+      showTitleIcon={false}
       width={492}
       className="admin-modal admin-confirm-modal"
       overlayClassName="admin-modal-overlay admin-record-modal-overlay"

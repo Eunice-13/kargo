@@ -196,25 +196,6 @@ export default function BatchPage({
 
   const [galleryZoomOpen, setGalleryZoomOpen] = useState(false);
 
-  // Per-batch photo overrides keyed by batch title. The PLM thrift batch is a
-  // live DB record whose stored images don't match its ukay-ukay listing, so
-  // its first two gallery photos are swapped for curated thrift shots at render
-  // time (purely visual; the database is left untouched).
-  const BATCH_PHOTO_OVERRIDES: Record<string, { imageUrl: string; name: string }[]> = {
-    "PLM - October 2026": [
-      {
-        imageUrl: "https://filebroker-cdn.lazada.com.ph/kf/Se45419c8921b45289b11e40d6b67fa415.jpg",
-        name: "Floral Wide-Leg Jeans",
-      },
-      {
-        imageUrl:
-          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSTlH8LVnHJwC6jlvsk1HbSiFA9A5MGG_KcVAu-V3Jh_T8QmHZfGKWAWdJ3&s=10",
-        name: "Assorted Thrifted Denim",
-      },
-    ],
-  };
-  const photoOverrides = BATCH_PHOTO_OVERRIDES[batch.title.trim()] ?? [];
-
   // Display-only category correction for the PLM thrift batch (its DB record
   // still reads "Food"). Visual only — does not touch the stored category.
   const BATCH_CATEGORY_OVERRIDES: Record<string, string> = {
@@ -222,47 +203,71 @@ export default function BatchPage({
   };
   const displayCategory = BATCH_CATEGORY_OVERRIDES[batch.title.trim()] ?? batch.category;
 
-  const baseGalleryItems = [
-    ...(batch.galleryImages ?? []).map((imageUrl, index) => ({
-      key: `batch-${index}`,
-      imageUrl,
-      name: `Batch photo ${index + 1}`,
-    })),
-    ...batch.products
-      .filter((product) => product.imageUrl)
-      .map((product, index) => ({
-        key: product.dbId ?? product.id ?? `product-${index}`,
-        imageUrl: product.imageUrl!,
-        name: product.name,
-      })),
-  ];
-  // Exchange the first N photos for the override images and their captions,
-  // keeping each item's key so selection stays stable.
-  const uploadedGalleryItems = baseGalleryItems.map((item, index) =>
-    index < photoOverrides.length
-      ? {
-          ...item,
-          imageUrl: photoOverrides[index].imageUrl,
-          name: photoOverrides[index].name,
-        }
-      : item,
-  );
-  const galleryItems = uploadedGalleryItems.length
-    ? uploadedGalleryItems
+  // The stored gallery already leads with the batch photo followed by the item
+  // photos. Fall back to that same order for local/seed batches that predate
+  // the derived gallery, and to samples only when the batch has no media.
+  // Each item remembers which product it belongs to so the matching card in
+  // "Items in this Batch" can be highlighted while that photo is showing.
+  const productIndexByImage = new Map<string, number>();
+  batch.products.forEach((product, index) => {
+    if (product.imageUrl && product.imageUrl !== batch.coverImage) {
+      productIndexByImage.set(product.imageUrl, index);
+    }
+  });
+  const derivedGalleryItems = (batch.galleryImages ?? []).length
+    ? (batch.galleryImages ?? []).map((imageUrl, index) => {
+        const productIndex = productIndexByImage.get(imageUrl);
+        return {
+          key: `batch-${index}`,
+          imageUrl,
+          name:
+            productIndex !== undefined
+              ? batch.products[productIndex].name
+              : index === 0
+                ? "Batch photo"
+                : `Item photo ${index}`,
+          productIndex,
+        };
+      })
+    : [
+        ...(batch.coverImage
+          ? [
+              {
+                key: "cover",
+                imageUrl: batchCoverSrc(batch.coverImage, batch.category),
+                name: "Cover photo",
+                productIndex: undefined,
+              },
+            ]
+          : []),
+        ...batch.products
+          .filter((product) => product.imageUrl)
+          .map((product, index) => ({
+            key: product.dbId ?? product.id ?? `product-${index}`,
+            imageUrl: product.imageUrl!,
+            name: product.name,
+            productIndex: batch.products.indexOf(product),
+          })),
+      ];
+  const galleryItems = derivedGalleryItems.length
+    ? derivedGalleryItems
     : [
         {
           key: "sample-cover",
           imageUrl: batchCoverSrc(batch.coverImage, batch.category),
           name: batch.coverImage ? "Cover photo" : "Sample cover photo",
+          productIndex: undefined,
         },
         ...[1, 2].map((index) => ({
           key: `sample-${index}`,
           imageUrl: batchImage(batch.category, `${batch.id}-sample-${index}`),
           name: `Sample batch photo ${index}`,
+          productIndex: undefined,
         })),
       ];
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
   const selectedGalleryItem = galleryItems[selectedProductIndex] ?? galleryItems[0];
+  const highlightedProductIndex = selectedGalleryItem?.productIndex;
 
   const changeCoverPhoto = async (file?: File) => {
     if (!file || !canEdit) return;
@@ -277,7 +282,20 @@ export default function BatchPage({
         : URL.createObjectURL(file);
 
       setBatches((current) =>
-        current.map((item) => (item.id === batch.id ? { ...item, coverImage: imageUrl } : item)),
+        current.map((item) =>
+          item.id === batch.id
+            ? {
+                ...item,
+                coverImage: imageUrl,
+                galleryImages: [
+                  imageUrl,
+                  ...(item.galleryImages ?? []).filter(
+                    (url) => url !== item.coverImage && url !== imageUrl,
+                  ),
+                ],
+              }
+            : item,
+        ),
       );
     } catch (error) {
       alert(error instanceof Error ? error.message : "Unable to update photo.");
@@ -337,6 +355,9 @@ export default function BatchPage({
                 ...item,
                 products: item.products.map((candidate, index) =>
                   index === productIndex ? { ...candidate, imageUrl } : candidate,
+                ),
+                galleryImages: (item.galleryImages ?? []).map((url) =>
+                  url === product.imageUrl ? imageUrl : url,
                 ),
               },
         ),
@@ -941,7 +962,19 @@ export default function BatchPage({
               const waitlistLimitKey = p.dbId ?? `${batch.id}-${pIdx}`;
 
               return (
-                <Card key={pIdx} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <Card
+                  key={pIdx}
+                  className={
+                    pIdx === highlightedProductIndex
+                      ? "batch-product-card is-gallery-selected"
+                      : "batch-product-card"
+                  }
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                  }}
+                >
                   <div className="batch-product-photo-control">
                     <button
                       type="button"
