@@ -248,15 +248,22 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 0%, transparent);
 }
 
-/* ─── Focus / inspect row ────────────────────────────────────────────────── */
-.fulfillment-analytics__focus {
-  margin: 20px 0 6px;
+/* Stage chips and view actions share one horizontal control row. */
+.fulfillment-analytics__stage-row {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  flex-wrap: wrap;
+  width: 100%;
 }
+.fulfillment-analytics__stage-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.fulfillment-analytics__stage-row > .fulfillment-analytics__focus-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
 .fulfillment-analytics__focus label,
 .fulfillment-analytics__focus-label {
   display: inline-flex;
@@ -284,7 +291,7 @@
   border: 1px solid var(--fa-border);
   border-radius: 10px;
 }
-.fulfillment-analytics__focus .fulfillment-analytics__view-toggle button {
+.fulfillment-analytics__stage-row .fulfillment-analytics__view-toggle button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -302,10 +309,10 @@
     background 0.15s,
     box-shadow 0.15s;
 }
-.fulfillment-analytics__focus .fulfillment-analytics__view-toggle button:hover {
+.fulfillment-analytics__stage-row .fulfillment-analytics__view-toggle button:hover {
   color: var(--fa-ink-soft);
 }
-.fulfillment-analytics__focus .fulfillment-analytics__view-toggle button[aria-pressed="true"] {
+.fulfillment-analytics__stage-row .fulfillment-analytics__view-toggle button[aria-pressed="true"] {
   color: var(--fa-indigo);
   background: var(--fa-surface);
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
@@ -435,7 +442,7 @@
   font-size: 12.5px;
   font-weight: 600;
 }
-.fulfillment-analytics__focus button,
+.fulfillment-analytics__stage-row > .fulfillment-analytics__focus-actions > button,
 .fulfillment-analytics__notice button,
 .fulfillment-orders__pagination button {
   color: var(--fa-indigo);
@@ -450,7 +457,7 @@
     background 0.15s,
     box-shadow 0.15s;
 }
-.fulfillment-analytics__focus button:hover:not(:disabled),
+.fulfillment-analytics__stage-row > .fulfillment-analytics__focus-actions > button:hover:not(:disabled),
 .fulfillment-orders__pagination button:hover:not(:disabled) {
   background: var(--fa-soft);
 }
@@ -904,6 +911,22 @@
   }
   .fulfillment-analytics__header p {
     font-size: 11px;
+  }
+
+  .fulfillment-analytics__stage-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .fulfillment-analytics__stage-row > .fulfillment-analytics__focus-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+  .fulfillment-analytics__stage-field {
+    width: 100%;
+  }
+  .fulfillment-analytics__stage-field .fulfillment-analytics__stages {
+    width: 100%;
   }
 
   /* ── Mobile: date range + stage collapse behind a summary toggle ── */
