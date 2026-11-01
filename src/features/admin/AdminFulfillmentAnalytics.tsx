@@ -255,164 +255,168 @@ function AnalyticsResults({
   const deliveryPercent = cohortSize ? Math.round((deliveryCount / cohortSize) * 100) : null;
   return (
     <>
-      <div className="fulfillment-analytics__summary">
-        <div>
-          <strong>{cohortSize.toLocaleString()}</strong>
-          <span>orders in cohort</span>
+      <div className="fulfillment-analytics__content-grid">
+        <div className="fulfillment-analytics__summary">
+          <div>
+            <strong>{cohortSize.toLocaleString()}</strong>
+            <span>orders in cohort</span>
+          </div>
+          <div>
+            <strong>{deliveryPercent === null ? "—" : `${deliveryPercent}%`}</strong>
+            <span>reached delivery</span>
+          </div>
         </div>
-        <div>
-          <strong>{deliveryPercent === null ? "—" : `${deliveryPercent}%`}</strong>
-          <span>reached delivery</span>
-        </div>
-      </div>
-      <p className="fulfillment-analytics__definition">
-        {filters.period === "custom"
-          ? `${filters.start} – ${filters.end}`
-          : PERIODS.find(([key]) => key === filters.period)?.[1]}{" "}
-        · Grouped by {data.grouping === "hour" ? "hour" : data.grouping} (Manila time).{" "}
-        {view === "current"
-          ? "Where orders are right now. Each order is counted once, in its latest stage. Orders without payment confirmation are not included."
-          : "Orders that reached each stage are counted. An order can appear in several stages, so percentages add up to more than 100%."}{" "}
-        {(data.excludedOrders ?? 0).toLocaleString()} orders excluded by the recorded-history
-        boundary.
-      </p>
-      <div className="fulfillment-analytics__stage-row">
-        <div className="fulfillment-analytics__stage-field">
-          <button
-            type="button"
-            className="fulfillment-analytics__disclosure"
-            aria-expanded={stagesOpen}
-            aria-controls="fulfillment-stage-options"
-            onClick={() => setStagesOpen((o) => !o)}
-          >
-            <span>
-              <span className="fulfillment-analytics__disclosure-label">Stage</span>
-              <span
-                className="fulfillment-stage-dot"
-                style={{ background: ANALYTICS_STAGES.find((s) => s.key === focused)?.color }}
-              />
-              {ANALYTICS_STAGES.find((s) => s.key === focused)?.label}
-            </span>
-            <ChevronDown size={16} aria-hidden="true" />
-          </button>
-          <div
-            id="fulfillment-stage-options"
-            className="fulfillment-analytics__stages"
-            role="radiogroup"
-            aria-label="Highlight a fulfillment stage"
-            data-open={stagesOpen}
-          >
-            {ANALYTICS_STAGES.map((stage) => (
+        <div className="fulfillment-analytics__main-column">
+          <p className="fulfillment-analytics__definition">
+            {filters.period === "custom"
+              ? `${filters.start} – ${filters.end}`
+              : PERIODS.find(([key]) => key === filters.period)?.[1]}{" "}
+            · Grouped by {data.grouping === "hour" ? "hour" : data.grouping} (Manila time).{" "}
+            {view === "current"
+              ? "Where orders are right now. Each order is counted once, in its latest stage. Orders without payment confirmation are not included."
+              : "Orders that reached each stage are counted. An order can appear in several stages, so percentages add up to more than 100%."}{" "}
+            {(data.excludedOrders ?? 0).toLocaleString()} orders excluded by the recorded-history
+            boundary.
+          </p>
+          <div className="fulfillment-analytics__stage-row">
+            <div className="fulfillment-analytics__stage-field">
               <button
                 type="button"
-                key={stage.key}
-                role="radio"
-                aria-checked={focused === stage.key}
-                aria-pressed={focused === stage.key}
-                style={{ ["--chip" as string]: stage.color }}
-                onClick={() => {
-                  setFocused(stage.key);
-                  setStagesOpen(false);
-                }}
+                className="fulfillment-analytics__disclosure"
+                aria-expanded={stagesOpen}
+                aria-controls="fulfillment-stage-options"
+                onClick={() => setStagesOpen((o) => !o)}
               >
-                <span className="fulfillment-stage-dot" style={{ background: stage.color }} />
-                <span>{stage.label}</span>
-                <strong>
-                  {view === "current"
-                    ? Number(
-                        currentData!.counts[
-                          stage.key as keyof FulfillmentCurrentStatus["counts"]
-                        ] ?? 0,
-                      ).toLocaleString()
-                    : bucketCount(data.stageTotals, stage.key).toLocaleString()}
-                </strong>
+                <span>
+                  <span className="fulfillment-analytics__disclosure-label">Stage</span>
+                  <span
+                    className="fulfillment-stage-dot"
+                    style={{ background: ANALYTICS_STAGES.find((s) => s.key === focused)?.color }}
+                  />
+                  {ANALYTICS_STAGES.find((s) => s.key === focused)?.label}
+                </span>
+                <ChevronDown size={16} aria-hidden="true" />
               </button>
-            ))}
-            {view === "current" && (currentData!.counts.other ?? 0) > 0 && (
-              <button type="button" disabled aria-label="Other current-status orders">
-                <span className="fulfillment-stage-dot" style={{ background: "#64748B" }} />
-                <span>Other</span>
-                <strong>{currentData!.counts.other.toLocaleString()}</strong>
+              <div
+                id="fulfillment-stage-options"
+                className="fulfillment-analytics__stages"
+                role="radiogroup"
+                aria-label="Highlight a fulfillment stage"
+                data-open={stagesOpen}
+              >
+                {ANALYTICS_STAGES.map((stage) => (
+                  <button
+                    type="button"
+                    key={stage.key}
+                    role="radio"
+                    aria-checked={focused === stage.key}
+                    aria-pressed={focused === stage.key}
+                    style={{ ["--chip" as string]: stage.color }}
+                    onClick={() => {
+                      setFocused(stage.key);
+                      setStagesOpen(false);
+                    }}
+                  >
+                    <span className="fulfillment-stage-dot" style={{ background: stage.color }} />
+                    <span>{stage.label}</span>
+                    <strong>
+                      {view === "current"
+                        ? Number(
+                            currentData!.counts[
+                              stage.key as keyof FulfillmentCurrentStatus["counts"]
+                            ] ?? 0,
+                          ).toLocaleString()
+                        : bucketCount(data.stageTotals, stage.key).toLocaleString()}
+                    </strong>
+                  </button>
+                ))}
+                {view === "current" && (currentData!.counts.other ?? 0) > 0 && (
+                  <button type="button" disabled aria-label="Other current-status orders">
+                    <span className="fulfillment-stage-dot" style={{ background: "#64748B" }} />
+                    <span>Other</span>
+                    <strong>{currentData!.counts.other.toLocaleString()}</strong>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="fulfillment-analytics__focus-actions">
+              <div
+                className="fulfillment-analytics__view-toggle"
+                role="radiogroup"
+                aria-label="Analytics view"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={view === "trend"}
+                  aria-pressed={view === "trend"}
+                  onClick={() => setView("trend")}
+                >
+                  <LineChart size={15} aria-hidden="true" />
+                  Trend
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={view === "reached"}
+                  aria-pressed={view === "reached"}
+                  onClick={() => setView("reached")}
+                >
+                  <BarChart3 size={15} aria-hidden="true" />
+                  Reached stage
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={view === "current"}
+                  aria-pressed={view === "current"}
+                  onClick={() => setView("current")}
+                >
+                  Current status
+                </button>
+              </div>
+              <button type="button" onClick={() => setPoint({ stage: focused })}>
+                View orders →
               </button>
-            )}
+            </div>
           </div>
-        </div>
-        <div className="fulfillment-analytics__focus-actions">
-          <div
-            className="fulfillment-analytics__view-toggle"
-            role="radiogroup"
-            aria-label="Analytics view"
-          >
-            <button
-              type="button"
-              role="radio"
-              aria-checked={view === "trend"}
-              aria-pressed={view === "trend"}
-              onClick={() => setView("trend")}
+          {!data.totalEntries && (
+            <p
+              className="fulfillment-analytics__notice fulfillment-analytics__notice--empty"
+              role="status"
             >
-              <LineChart size={15} aria-hidden="true" />
-              Trend
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={view === "reached"}
-              aria-pressed={view === "reached"}
-              onClick={() => setView("reached")}
-            >
-              <BarChart3 size={15} aria-hidden="true" />
-              Reached stage
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={view === "current"}
-              aria-pressed={view === "current"}
-              onClick={() => setView("current")}
-            >
-              Current status
-            </button>
-          </div>
-          <button type="button" onClick={() => setPoint({ stage: focused })}>
-            View orders →
-          </button>
+              No cohort orders are available in this range. Try another date range.
+            </p>
+          )}
+          {view === "trend" ? (
+            <FulfillmentTrendChart
+              key={data.generatedAt}
+              data={data}
+              visible={visible}
+              focused={focused}
+              onFocusStage={setFocused}
+              onOpen={(stage, bucket) => setPoint({ stage, bucket })}
+            />
+          ) : (
+            <FulfillmentBreakdown
+              data={data}
+              view={view}
+              currentStatus={currentData ?? undefined}
+              focused={focused}
+              onFocusStage={setFocused}
+              onOpen={
+                view === "reached"
+                  ? (stage) => setPoint({ stage, mode: "reached" })
+                  : (stage) => setPoint({ stage, mode: "current" })
+              }
+            />
+          )}
+          <p className="fulfillment-analytics__coverage">
+            Analytics uses the earliest available recorded fulfillment history. Recording began{" "}
+            {analyticsTimestamp(data.captureStartedAt)}.
+          </p>
         </div>
       </div>
-      {!data.totalEntries && (
-        <p
-          className="fulfillment-analytics__notice fulfillment-analytics__notice--empty"
-          role="status"
-        >
-          No cohort orders are available in this range. Try another date range.
-        </p>
-      )}
-      {view === "trend" ? (
-        <FulfillmentTrendChart
-          key={data.generatedAt}
-          data={data}
-          visible={visible}
-          focused={focused}
-          onFocusStage={setFocused}
-          onOpen={(stage, bucket) => setPoint({ stage, bucket })}
-        />
-      ) : (
-        <FulfillmentBreakdown
-          data={data}
-          view={view}
-          currentStatus={currentData ?? undefined}
-          focused={focused}
-          onFocusStage={setFocused}
-          onOpen={
-            view === "reached"
-              ? (stage) => setPoint({ stage, mode: "reached" })
-              : (stage) => setPoint({ stage, mode: "current" })
-          }
-        />
-      )}
-      <p className="fulfillment-analytics__coverage">
-        Analytics uses the earliest available recorded fulfillment history. Recording began{" "}
-        {analyticsTimestamp(data.captureStartedAt)}.
-      </p>
       {point && (
         <FulfillmentOrdersDialog
           key={`${point.stage}:${point.bucket ?? "all"}`}

@@ -151,9 +151,29 @@
   outline-offset: 2px;
 }
 
-/* ─── KPI figures ────────────────────────────────────────────────────────── */
-/* One joined strip, three columns: the cells touch and are separated only by
-   thin dividers instead of standing apart as individual cards. */
+/* The KPI column and chart column share one composition. */
+.fulfillment-analytics__content-grid {
+  display: grid;
+  grid-template-columns: minmax(160px, 190px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+  margin-top: 24px;
+}
+.fulfillment-analytics__main-column {
+  min-width: 0;
+}
+.fulfillment-analytics__content-grid .fulfillment-analytics__summary {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-self: stretch;
+  margin-top: 0;
+  max-width: none;
+}
+.fulfillment-analytics__content-grid .fulfillment-analytics__summary > div + div {
+  border-top: 1px solid var(--fa-border);
+  border-left: 0;
+}
+
 .fulfillment-analytics__summary {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -943,7 +963,18 @@
     width: 100%;
   }
 
-  /* ── Mobile: date range + stage collapse behind a summary toggle ── */
+  .fulfillment-analytics__content-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .fulfillment-analytics__content-grid .fulfillment-analytics__summary {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    margin-top: 0;
+  }
+
+  /* Mobile: date range + stage collapse behind a summary toggle */
   .fulfillment-analytics__period-field {
     display: block;
     position: relative;
