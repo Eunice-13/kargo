@@ -1930,6 +1930,11 @@ export default function MyClaims({
                                         Request Extension
                                       </SecondaryBtn>
                                     )}
+                                  {canCancelClaim(item) && (
+                                    <SecondaryBtn size="sm" onClick={() => setCancelTarget(item)}>
+                                      Cancel
+                                    </SecondaryBtn>
+                                  )}
                                 </div>
                               </td>
                             </tr>
