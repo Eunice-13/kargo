@@ -1655,7 +1655,12 @@
 }
 
 @media (min-width: 641px) {
-  .fulfillment-breakdown__group > .fulfillment-breakdown__list {
-    flex: 1 1 auto;
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__group > .fulfillment-breakdown__list {
+    flex: 0 0 220px;
+    height: 220px;
+    min-height: 220px;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__group.is-drop-offs > .fulfillment-breakdown__list {
+    margin-top: 42px;
   }
 }
