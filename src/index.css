@@ -16006,6 +16006,150 @@ tr.record-focus {
   }
 }
 
+/* ─── Buyer Claim Actions: "Manage ▾" split button ──────────────────────────
+   Self-contained; does not share class names with the seller split button so
+   neither set of styles can accidentally affect the other. */
+.claim-actions-split {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.claim-actions-manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  min-height: 32px;
+  background: #fff;
+  color: #1f2937;
+  border: 1px solid #d5dae3;
+  border-radius: 8px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(17 24 39 / 6%);
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease;
+}
+
+.claim-actions-manage:hover {
+  border-color: #aeb8c8;
+  background: #f5f7fa;
+  box-shadow: 0 2px 6px rgb(17 24 39 / 10%);
+}
+
+.claim-actions-manage:focus-visible {
+  outline: 3px solid var(--kargo-focus);
+  outline-offset: 2px;
+}
+
+.claim-actions-manage[aria-expanded="true"] {
+  background: #eef1f6;
+  border-color: #aeb8c8;
+}
+
+.claim-actions-manage svg {
+  transition: transform 140ms ease;
+  flex-shrink: 0;
+}
+
+.claim-actions-manage svg.is-open {
+  transform: rotate(180deg);
+}
+
+/* The menu is portaled to <body> and fixed to the viewport. */
+.claim-actions-menu {
+  position: fixed;
+  z-index: 70;
+  min-width: 168px;
+  background: #fff;
+  border: 1px solid #e5e9f0;
+  border-radius: 10px;
+  padding: 4px;
+  box-shadow:
+    0 4px 16px rgb(17 24 39 / 12%),
+    0 2px 6px rgb(17 24 39 / 8%);
+}
+
+.claim-actions-menu button,
+.claim-actions-menu__item-wrap button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  font-family: 'Quicksand', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+  text-align: left;
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+
+.claim-actions-menu__item-wrap {
+  display: contents;
+}
+
+.claim-actions-menu button svg,
+.claim-actions-menu__item-wrap button svg {
+  flex-shrink: 0;
+  color: var(--kargo-navy);
+}
+
+.claim-actions-menu button:hover,
+.claim-actions-menu__item-wrap button:hover,
+.claim-actions-menu button:focus-visible,
+.claim-actions-menu__item-wrap button:focus-visible {
+  background: #f1f4f9;
+  color: var(--kargo-ink);
+}
+
+.claim-actions-menu button:focus-visible,
+.claim-actions-menu__item-wrap button:focus-visible {
+  outline: 2px solid var(--kargo-focus);
+  outline-offset: -2px;
+}
+
+.claim-actions-menu button.is-disabled,
+.claim-actions-menu__item-wrap button[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.claim-actions-menu button.is-disabled:hover,
+.claim-actions-menu__item-wrap button[aria-disabled="true"]:hover {
+  background: transparent;
+}
+
+@media (max-width: 767px) {
+  .claim-actions-split {
+    width: 100%;
+  }
+  .claim-actions-manage {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .claim-actions-menu button,
+  .claim-actions-menu__item-wrap button {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .claim-actions-manage svg {
+    transition: none;
+  }
+}
+
 /* ─── Seller Orders Received: Ongoing Orders above Other Orders ─────────────
    Same table in both sections; the heading row mirrors the buyer's "My Claims
    To Pay" (SH with a quiet count on the right). */

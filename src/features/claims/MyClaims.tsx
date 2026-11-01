@@ -65,9 +65,9 @@ import { navIntent } from "@/state/navIntent";
 import { GroupOrdersLauncher } from "@/features/dashboard";
 
 import SellerOrderActions, { type SellerOrderMenuItem } from "./SellerOrderActions";
+import BuyerClaimActions, { buildClaimMenuItems } from "./BuyerClaimActions";
 
 import SetShippingFeeModal from "./SetShippingFeeModal";
-import PendingPaymentHint from "./PendingPaymentHint";
 
 import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal";
 
@@ -1911,30 +1911,23 @@ export default function MyClaims({
                               </td>
                               <td>
                                 <div className="claims-to-pay-actions">
-                                  <PendingPaymentHint
-                                    waiting={item.shippingState === "waiting_for_seller"}
-                                    sharedFeeSet={deliveryRequest?.status === "shipping_fee_set"}
-                                  >
-                                    <PrimaryBtn
-                                      size="sm"
-                                      disabled={!claimIsPayable(item)}
-                                      onClick={() => claimIsPayable(item) && setPayTarget(item)}
-                                    >
-                                      Pay Now
-                                    </PrimaryBtn>
-                                  </PendingPaymentHint>
-                                  {claimIsPayable(item) &&
-                                    !item.extensionRequested &&
-                                    item.extensionStatus !== "pending" && (
-                                      <SecondaryBtn size="sm" onClick={() => setExtTarget(item)}>
-                                        Request Extension
-                                      </SecondaryBtn>
-                                    )}
-                                  {canCancelClaim(item) && (
-                                    <SecondaryBtn size="sm" onClick={() => setCancelTarget(item)}>
-                                      Cancel
-                                    </SecondaryBtn>
-                                  )}
+                                  <BuyerClaimActions
+                                    items={buildClaimMenuItems({
+                                      payable: claimIsPayable(item),
+                                      waitingForShipping:
+                                        item.shippingState === "waiting_for_seller",
+                                      sharedFeeSet:
+                                        deliveryRequest?.status === "shipping_fee_set",
+                                      showExtension:
+                                        claimIsPayable(item) &&
+                                        !item.extensionRequested &&
+                                        item.extensionStatus !== "pending",
+                                      showCancel: canCancelClaim(item),
+                                      onPay: () => setPayTarget(item),
+                                      onExtend: () => setExtTarget(item),
+                                      onCancel: () => setCancelTarget(item),
+                                    })}
+                                  />
                                 </div>
                               </td>
                             </tr>

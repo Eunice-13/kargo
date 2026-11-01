@@ -2261,7 +2261,7 @@ export async function requestOrderExtension(
     p_reason: reason ?? null,
   });
 
-  if (error) throw error;
+  if (error) throw new Error(error.message ?? "Unable to request extension");
 }
 
 export async function cancelOrder(orderId: string) {
