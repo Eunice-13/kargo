@@ -154,7 +154,7 @@ export default function AdminDashboard({ setTab }: SharedState) {
 
             <Card className="admin-seller-card">
               <AdminPanelHeader
-                title="Top shops (30d)"
+                title="Top Shops (30d)"
                 hint="Ranked by orders in the last 30 days."
                 actionLabel="View all"
                 onAction={() => goto({ tab: "Users", filter: "seller" })}
@@ -177,7 +177,9 @@ export default function AdminDashboard({ setTab }: SharedState) {
                           {index + 1}
                         </span>
                         <Avatar name={s.shop} size={28} />
-                        <span className="admin-seller-row__shop">{s.shop || "Seller shop"}</span>
+                        <span className="admin-seller-row__shop">
+                          {s.shop?.trim() || "Seller shop"}
+                        </span>
                         <strong className="admin-seller-row__orders">
                           {s.orders.toLocaleString()} {s.orders === 1 ? "order" : "orders"}
                         </strong>

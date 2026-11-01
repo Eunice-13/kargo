@@ -61,7 +61,7 @@
     border-top: 1px solid #e5e7eb;
     border-bottom: 0 !important;
     background: #f8f8f8 !important;
-    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
   .admin-tabbar > div:first-child {
@@ -219,7 +219,7 @@
     border: 1px solid #e5e7eb !important;
     border-radius: 10px;
     background: #fff !important;
-    box-shadow: 0 3px 10px rgba(18, 30, 71, .1);
+    box-shadow: 0 3px 10px rgba(18, 30, 71, 0.1);
   }
 
   .admin-page table:not(.sr-only) tbody tr.admin-clickable-row {
@@ -378,7 +378,7 @@
 
 .payment-history-search:focus-within {
   border-color: #6892d5;
-  box-shadow: 0 0 0 3px rgba(104, 146, 213, .14);
+  box-shadow: 0 0 0 3px rgba(104, 146, 213, 0.14);
 }
 
 .payment-history-search input {
@@ -467,7 +467,7 @@
   }
 
   :is(button, a[href], [role="button"]):active {
-    transform: scale(.98);
+    transform: scale(0.98);
   }
 
   a[href]:focus-visible,
@@ -529,7 +529,14 @@
   }
 
   /* Convert wide operational tables to cards before they overflow tablets. */
-  :is(.mobile-data-page, .seller-dashboard, .bdash) :is(.seller-orders-table-wrap, .seller-orders-table-scroll, .bdash-table-wrap, [style*="overflow-x"], [style*="overflowX"]) {
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    :is(
+      .seller-orders-table-wrap,
+      .seller-orders-table-scroll,
+      .bdash-table-wrap,
+      [style*="overflow-x"],
+      [style*="overflowX"]
+    ) {
     overflow: visible !important;
   }
 
@@ -558,7 +565,7 @@
     border: 1px solid #e5e7eb !important;
     border-radius: 10px;
     background: #fff !important;
-    box-shadow: 0 3px 10px rgba(18, 30, 71, .1);
+    box-shadow: 0 3px 10px rgba(18, 30, 71, 0.1);
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td {
@@ -582,31 +589,67 @@
   }
 
   .seller-dashboard .seller-orders-table td:nth-child(1)::before,
-  .bdash-table td:nth-child(1)::before { content: "Product"; }
+  .bdash-table td:nth-child(1)::before {
+    content: "Product";
+  }
   .seller-dashboard .seller-orders-table td:nth-child(2)::before,
-  .bdash-table td:nth-child(2)::before { content: "Batch"; }
+  .bdash-table td:nth-child(2)::before {
+    content: "Batch";
+  }
   .seller-dashboard .seller-orders-table td:nth-child(3)::before,
-  .bdash-table td:nth-child(3)::before { content: "Seller"; }
+  .bdash-table td:nth-child(3)::before {
+    content: "Seller";
+  }
   .seller-dashboard .seller-orders-table td:nth-child(4)::before,
-  .bdash-table td:nth-child(4)::before { content: "Amount"; }
+  .bdash-table td:nth-child(4)::before {
+    content: "Amount";
+  }
   .seller-dashboard .seller-orders-table td:nth-child(5)::before,
-  .bdash-table td:nth-child(5)::before { content: "Status"; }
+  .bdash-table td:nth-child(5)::before {
+    content: "Status";
+  }
   .seller-dashboard .seller-orders-table td:nth-child(6)::before,
-  .bdash-table td:nth-child(6)::before { content: "Deadline"; }
+  .bdash-table td:nth-child(6)::before {
+    content: "Deadline";
+  }
 
-  .seller-orders-page td:nth-child(1)::before { content: "Buyer"; }
-  .seller-orders-page td:nth-child(2)::before { content: "Ordered"; }
-  .seller-orders-page td:nth-child(3)::before { content: "Product"; }
-  .seller-orders-page td:nth-child(4)::before { content: "Method"; }
-  .seller-orders-page td:nth-child(5)::before { content: "Amount"; }
-  .seller-orders-page td:nth-child(6)::before { content: "Amount paid"; }
-  .seller-orders-page td:nth-child(7)::before { content: "Deadline"; }
-  .seller-orders-page td:nth-child(8)::before { content: "Status"; }
-  .seller-orders-page td:nth-child(9)::before { content: "Actions"; }
+  .seller-orders-page td:nth-child(1)::before {
+    content: "Buyer";
+  }
+  .seller-orders-page td:nth-child(2)::before {
+    content: "Ordered";
+  }
+  .seller-orders-page td:nth-child(3)::before {
+    content: "Product";
+  }
+  .seller-orders-page td:nth-child(4)::before {
+    content: "Method";
+  }
+  .seller-orders-page td:nth-child(5)::before {
+    content: "Amount";
+  }
+  .seller-orders-page td:nth-child(6)::before {
+    content: "Amount paid";
+  }
+  .seller-orders-page td:nth-child(7)::before {
+    content: "Deadline";
+  }
+  .seller-orders-page td:nth-child(8)::before {
+    content: "Status";
+  }
+  .seller-orders-page td:nth-child(9)::before {
+    content: "Actions";
+  }
 
-  .claims-to-pay-table td:nth-child(2)::before { content: "Seller"; }
-  .claims-to-pay-table td:nth-child(3)::before { content: "Deadline"; }
-  .claims-to-pay-table td:nth-child(4)::before { content: "Amount"; }
+  .claims-to-pay-table td:nth-child(2)::before {
+    content: "Seller";
+  }
+  .claims-to-pay-table td:nth-child(3)::before {
+    content: "Deadline";
+  }
+  .claims-to-pay-table td:nth-child(4)::before {
+    content: "Amount";
+  }
 
   /* a7fd1a0 card layout on mobile: a large photo on the left, with the labeled
      details (Seller, Deadline, Amount) and actions stacked to its right. */
@@ -691,31 +734,77 @@
     white-space: nowrap;
   }
 
-  .claims-history-table td:nth-child(1)::before { content: "Product"; }
-  .claims-history-table td:nth-child(2)::before { content: "Batch"; }
-  .claims-history-table td:nth-child(3)::before { content: "Seller"; }
-  .claims-history-table td:nth-child(4)::before { content: "Qty"; }
-  .claims-history-table td:nth-child(5)::before { content: "Amount"; }
-  .claims-history-table td:nth-child(6)::before { content: "Status"; }
-  .claims-history-table td:nth-child(7)::before { content: "Deadline"; }
-  .claims-history-table td:nth-child(8)::before { content: "Actions"; }
+  .claims-history-table td:nth-child(1)::before {
+    content: "Product";
+  }
+  .claims-history-table td:nth-child(2)::before {
+    content: "Batch";
+  }
+  .claims-history-table td:nth-child(3)::before {
+    content: "Seller";
+  }
+  .claims-history-table td:nth-child(4)::before {
+    content: "Qty";
+  }
+  .claims-history-table td:nth-child(5)::before {
+    content: "Amount";
+  }
+  .claims-history-table td:nth-child(6)::before {
+    content: "Status";
+  }
+  .claims-history-table td:nth-child(7)::before {
+    content: "Deadline";
+  }
+  .claims-history-table td:nth-child(8)::before {
+    content: "Actions";
+  }
 
-  .payment-history-table td:nth-child(1)::before { content: "Product"; }
-  .payment-history-table td:nth-child(2)::before { content: "Batch"; }
-  .payment-history-table td:nth-child(3)::before { content: "Method"; }
-  .payment-history-table td:nth-child(4)::before { content: "Amount"; }
-  .payment-history-table td:nth-child(5)::before { content: "Date"; }
-  .payment-history-table td:nth-child(6)::before { content: "Status"; }
-  .payment-history-table td:nth-child(7)::before { content: "Actions"; }
+  .payment-history-table td:nth-child(1)::before {
+    content: "Product";
+  }
+  .payment-history-table td:nth-child(2)::before {
+    content: "Batch";
+  }
+  .payment-history-table td:nth-child(3)::before {
+    content: "Method";
+  }
+  .payment-history-table td:nth-child(4)::before {
+    content: "Amount";
+  }
+  .payment-history-table td:nth-child(5)::before {
+    content: "Date";
+  }
+  .payment-history-table td:nth-child(6)::before {
+    content: "Status";
+  }
+  .payment-history-table td:nth-child(7)::before {
+    content: "Actions";
+  }
 
-  .seller-payment-table td:nth-child(1)::before { content: "Product"; }
-  .seller-payment-table td:nth-child(2)::before { content: "Buyer"; }
-  .seller-payment-table td:nth-child(3)::before { content: "Method"; }
-  .seller-payment-table td:nth-child(4)::before { content: "Amount"; }
-  .seller-payment-table td:nth-child(5)::before { content: "Payment"; }
-  .seller-payment-table td:nth-child(6)::before { content: "Date"; }
-  .seller-payment-table td:nth-child(7)::before { content: "Status"; }
-  .seller-payment-table td:nth-child(8)::before { content: "Actions"; }
+  .seller-payment-table td:nth-child(1)::before {
+    content: "Product";
+  }
+  .seller-payment-table td:nth-child(2)::before {
+    content: "Buyer";
+  }
+  .seller-payment-table td:nth-child(3)::before {
+    content: "Method";
+  }
+  .seller-payment-table td:nth-child(4)::before {
+    content: "Amount";
+  }
+  .seller-payment-table td:nth-child(5)::before {
+    content: "Payment";
+  }
+  .seller-payment-table td:nth-child(6)::before {
+    content: "Date";
+  }
+  .seller-payment-table td:nth-child(7)::before {
+    content: "Status";
+  }
+  .seller-payment-table td:nth-child(8)::before {
+    content: "Actions";
+  }
 }
 
 @media (max-width: 1024px) and (pointer: coarse) {
@@ -743,8 +832,13 @@
     gap: 4px;
   }
 
-  .settings-nav > div:first-child { display: none; }
-  .settings-nav button { justify-content: center; text-align: center; }
+  .settings-nav > div:first-child {
+    display: none;
+  }
+  .settings-nav button {
+    justify-content: center;
+    text-align: center;
+  }
 
   .buyer-batch-page {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -784,7 +878,9 @@
     cursor: pointer;
   }
 
-  .seller-shell-header .kargo-mobile-search-toggle { color: #fff; }
+  .seller-shell-header .kargo-mobile-search-toggle {
+    color: #fff;
+  }
 
   .kargo-header.is-mobile-search-open .kargo-brand-lockup,
   .kargo-header.is-mobile-search-open .kargo-header-actions > div {
@@ -802,10 +898,10 @@
   .kargo-header.is-mobile-search-open .kargo-search {
     min-height: 42px;
     padding: 3px 4px 3px 14px !important;
-    border: 1px solid rgba(255, 255, 255, .42) !important;
+    border: 1px solid rgba(255, 255, 255, 0.42) !important;
     border-radius: 12px !important;
     background: #fff !important;
-    box-shadow: 0 4px 14px rgba(8, 25, 74, .2) !important;
+    box-shadow: 0 4px 14px rgba(8, 25, 74, 0.2) !important;
   }
 
   .kargo-header.is-mobile-search-open .kargo-search input {
@@ -826,7 +922,7 @@
 
   .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle {
     border-radius: 10px;
-    background: rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, 0.12);
   }
 
   .kargo-notifications-popover {
@@ -867,10 +963,12 @@
     border: 1px solid #dfe6ee;
     border-radius: 12px;
     background: #fff;
-    box-shadow: 0 3px 12px rgba(24, 50, 74, .09);
+    box-shadow: 0 3px 12px rgba(24, 50, 74, 0.09);
   }
 
-  .buyer-home-filter > strong { display: none; }
+  .buyer-home-filter > strong {
+    display: none;
+  }
 
   .buyer-home-filter select {
     width: 100% !important;
@@ -886,7 +984,9 @@
     font-weight: 650;
   }
 
-  .buyer-home-section { margin-top: 28px; }
+  .buyer-home-section {
+    margin-top: 28px;
+  }
 
   .kargo-original-app main .buyer-home-section__heading h2 {
     font-size: 17px !important;
@@ -935,16 +1035,18 @@
     border: 1px solid #e1e5ec;
     border-radius: 10px;
     background: #fff;
-    box-shadow: 0 2px 7px rgba(28, 38, 62, .08);
+    box-shadow: 0 2px 7px rgba(28, 38, 62, 0.08);
   }
 
   .buyer-batch-card__image-wrap {
     overflow: hidden;
     border-radius: 9px 9px 0 0;
-    box-shadow: 0 3px 11px rgba(28, 38, 62, .16);
+    box-shadow: 0 3px 11px rgba(28, 38, 62, 0.16);
   }
 
-  .buyer-batch-card__body { padding: 7px 5px 8px; }
+  .buyer-batch-card__body {
+    padding: 7px 5px 8px;
+  }
 
   .kargo-original-app main .buyer-batch-card__body h3 {
     display: -webkit-box;
@@ -968,11 +1070,17 @@
     text-align: left;
   }
 
-  .buyer-batch-card__seller { margin-top: 4px; }
+  .buyer-batch-card__seller {
+    margin-top: 4px;
+  }
 
-  .buyer-batch-card__seller > :first-child { display: none; }
+  .buyer-batch-card__seller > :first-child {
+    display: none;
+  }
 
-  .buyer-batch-card__date { margin-top: 3px; }
+  .buyer-batch-card__date {
+    margin-top: 3px;
+  }
 
   .buyer-batch-card__date svg {
     width: 11px;
@@ -990,7 +1098,9 @@
     text-align: left;
   }
 
-  .buyer-batch-card__progress-label strong { font-size: inherit; }
+  .buyer-batch-card__progress-label strong {
+    font-size: inherit;
+  }
 
   .buyer-batch-card__body :is(span, strong) {
     min-width: 0;
@@ -1036,8 +1146,8 @@
     width: 31px;
     height: 20px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, .94);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     content: "";
   }
 
@@ -1061,7 +1171,9 @@
 
   /* Popular batches: the rank badge takes the free top-left corner, since the
      category chip already sits at the bottom on phones. */
-  .buyer-home-section__title { gap: 8px; }
+  .buyer-home-section__title {
+    gap: 8px;
+  }
 
   .buyer-hot-flame {
     width: 30px;
@@ -1085,7 +1197,9 @@
     font-size: 8px;
   }
 
-  .buyer-hot-heading__row { gap: 6px; }
+  .buyer-hot-heading__row {
+    gap: 6px;
+  }
 
   .buyer-hot-heading__note {
     margin-top: 2px;
@@ -1099,7 +1213,7 @@
     height: 20px;
     padding: 0 6px;
     font-size: 10px;
-    box-shadow: 0 2px 6px rgba(16, 26, 38, .22);
+    box-shadow: 0 2px 6px rgba(16, 26, 38, 0.22);
   }
 
   .buyer-batch-card.is-rank-1 .buyer-batch-card__rank {
@@ -1119,7 +1233,9 @@
     padding: 14px 0 6px;
   }
 
-  .buyer-podium::before { inset: -10% -4% -6%; }
+  .buyer-podium::before {
+    inset: -10% -4% -6%;
+  }
 
   .buyer-podium::after {
     bottom: -2px;
@@ -1148,21 +1264,23 @@
     margin-left: -9px;
   }
 
-  .buyer-podium__slot--1::before { inset: -6% -14% 8%; }
+  .buyer-podium__slot--1::before {
+    inset: -6% -14% 8%;
+  }
 
   .buyer-podium__slot--1 .buyer-podium__card {
     --podium-tilt: 0deg;
-    animation-delay: .04s, 0s;
+    animation-delay: 0.04s, 0s;
   }
 
   .buyer-podium__slot--2 .buyer-podium__card {
     --podium-tilt: -7deg;
-    animation-delay: .16s, 1.2s;
+    animation-delay: 0.16s, 1.2s;
   }
 
   .buyer-podium__slot--3 .buyer-podium__card {
     --podium-tilt: 7deg;
-    animation-delay: .22s, 2s;
+    animation-delay: 0.22s, 2s;
   }
 
   .buyer-podium__card {
@@ -1178,8 +1296,12 @@
     height: 96px;
   }
 
-  .buyer-podium .buyer-batch-card__body { padding: 9px 7px 10px; }
-  .buyer-podium__slot--1 .buyer-batch-card__body { padding: 9px 9px 10px; }
+  .buyer-podium .buyer-batch-card__body {
+    padding: 9px 7px 10px;
+  }
+  .buyer-podium__slot--1 .buyer-batch-card__body {
+    padding: 9px 9px 10px;
+  }
 
   .kargo-original-app main .buyer-podium .buyer-batch-card__body h3 {
     min-height: 2.4em;
@@ -1202,7 +1324,9 @@
     text-align: center;
   }
 
-  .buyer-podium .buyer-batch-card__date { display: none; }
+  .buyer-podium .buyer-batch-card__date {
+    display: none;
+  }
 
   .buyer-podium .buyer-batch-card__progress-label {
     justify-content: center;
@@ -1274,7 +1398,10 @@
     font-size: 12.5px;
   }
 
-  .buyer-toplist { gap: 6px; padding-top: 2px; }
+  .buyer-toplist {
+    gap: 6px;
+    padding-top: 2px;
+  }
 
   .buyer-toplist__row {
     grid-template-columns: 32px 44px minmax(0, 1fr) auto;
@@ -1283,7 +1410,9 @@
     border-radius: 10px;
   }
 
-  .buyer-toplist__chevron { display: none; }
+  .buyer-toplist__chevron {
+    display: none;
+  }
 
   .buyer-toplist__rank {
     height: 26px;
@@ -1298,15 +1427,21 @@
     border-radius: 7px;
   }
 
-  .buyer-toplist__title { font-size: 12.5px; }
-  .buyer-toplist__meta { font-size: 10px; }
+  .buyer-toplist__title {
+    font-size: 12.5px;
+  }
+  .buyer-toplist__meta {
+    font-size: 10px;
+  }
 
   .buyer-toplist__bar {
     height: 2px;
     margin-top: 3px;
   }
 
-  .buyer-toplist__hearts { font-size: 11px; }
+  .buyer-toplist__hearts {
+    font-size: 11px;
+  }
 
   .buyer-carousel-controls button {
     position: relative;
@@ -1327,10 +1462,16 @@
   }
 
   .kargo-original-app .seller-stat strong,
-  .kargo-original-app .bdash-stat__value { font-size: 22px !important; }
+  .kargo-original-app .bdash-stat__value {
+    font-size: 22px !important;
+  }
 
-  .bdash-stat__label { font-size: 12px; }
-  .bdash-stat__sub { font-size: 11px; }
+  .bdash-stat__label {
+    font-size: 12px;
+  }
+  .bdash-stat__sub {
+    font-size: 11px;
+  }
 
   .bdash-stat__icon {
     top: 16px;
@@ -1357,7 +1498,9 @@
   }
 
   .kargo-original-app main .seller-dashboard-sidebar > .kargo-card,
-  .kargo-original-app main .seller-side-card { padding: 14px !important; }
+  .kargo-original-app main .seller-side-card {
+    padding: 14px !important;
+  }
 
   .seller-orders-filters {
     flex-wrap: wrap;
@@ -1369,7 +1512,9 @@
     flex-wrap: wrap;
   }
 
-  .kargo-original-app main .flex.items-start.gap-3 > * { min-width: 0; }
+  .kargo-original-app main .flex.items-start.gap-3 > * {
+    min-width: 0;
+  }
 
   .kargo-original-app main .flex-1,
   .kargo-original-app main .flex-1 > div {
@@ -1392,7 +1537,9 @@
     font-size: 14px;
   }
 
-  .kargo-footer nav { gap: 7px; }
+  .kargo-footer nav {
+    gap: 7px;
+  }
   .kargo-footer:not(.kargo-footer--admin) a {
     min-height: 22px;
     font-size: 12px;
@@ -1489,7 +1636,7 @@
     min-width: 0 !important;
     overflow: hidden !important;
     border-radius: 9px !important;
-    box-shadow: 0 1px 4px rgba(18, 30, 71, .12) !important;
+    box-shadow: 0 1px 4px rgba(18, 30, 71, 0.12) !important;
   }
 
   :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table),
@@ -1541,7 +1688,9 @@
     content: none !important;
   }
 
-  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+  :is(.bdash, .seller-dashboard)
+    :is(.bdash-table, .seller-orders-table)
+    :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
     display: none !important;
   }
 
@@ -1568,7 +1717,7 @@
     color: #fff !important;
     font-size: 10px !important;
     font-weight: 700 !important;
-    letter-spacing: .02em !important;
+    letter-spacing: 0.02em !important;
     text-align: left !important;
     text-transform: uppercase !important;
     white-space: nowrap !important;
@@ -1644,10 +1793,16 @@
     border-radius: 8px !important;
   }
 
-  .bdash-deadline__name { font-size: 12px !important; }
+  .bdash-deadline__name {
+    font-size: 12px !important;
+  }
   .bdash-deadline__seller,
-  .bdash-deadline__time { font-size: 11px !important; }
-  .bdash-deadline__amount { font-size: 12px !important; }
+  .bdash-deadline__time {
+    font-size: 11px !important;
+  }
+  .bdash-deadline__amount {
+    font-size: 12px !important;
+  }
 
   .bdash-payall {
     padding: 11px 0 !important;
@@ -1671,8 +1826,13 @@
     font-size: 14px !important;
   }
 
-  .settings-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .settings-nav button { min-width: 0; padding: 10px 6px !important; }
+  .settings-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .settings-nav button {
+    min-width: 0;
+    padding: 10px 6px !important;
+  }
 
   .settings-profile-grid,
   .si [style*="grid-template-columns: 1fr 1fr"],
@@ -1680,7 +1840,9 @@
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  .settings-profile-grid .col-span-2 { grid-column: auto; }
+  .settings-profile-grid .col-span-2 {
+    grid-column: auto;
+  }
 
   .settings-linked-row {
     grid-template-columns: minmax(0, 1fr) auto !important;
@@ -1746,7 +1908,9 @@
 
   .si .flex.gap-3,
   .si .flex.gap-2,
-  .si .no-print { flex-wrap: wrap; }
+  .si .no-print {
+    flex-wrap: wrap;
+  }
 
   .si .flex.gap-3 > button,
   .si .no-print > button {
@@ -1761,7 +1925,9 @@
     background: #fff;
   }
 
-  .auth-brand { display: none; }
+  .auth-brand {
+    display: none;
+  }
 
   .auth-form-pane,
   .auth-page--signup .auth-form-pane {
@@ -1782,7 +1948,9 @@
     zoom: 1;
   }
 
-  .auth-heading h1 { font-size: 26px; }
+  .auth-heading h1 {
+    font-size: 26px;
+  }
 
   .auth-page :is(p, span, small, label, button, a) {
     font-size: 12px !important;
@@ -1795,7 +1963,9 @@
   }
 
   .auth-login-fields,
-  .auth-signup-fields { gap: 28px; }
+  .auth-signup-fields {
+    gap: 28px;
+  }
 
   .auth-social-row {
     flex-wrap: wrap;
@@ -1813,11 +1983,15 @@
     min-height: 44px;
   }
 
-  .auth-role-options { grid-template-columns: minmax(0, 1fr); }
+  .auth-role-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 380px) {
-  .kargo-header-actions { gap: 2px !important; }
+  .kargo-header-actions {
+    gap: 2px !important;
+  }
 
   .seller-shell-header .kargo-brand-mark {
     width: 36px !important;
@@ -1829,7 +2003,9 @@
     padding-left: 1px !important;
   }
 
-  .kargo-tab-label { font-size: 10px !important; }
+  .kargo-tab-label {
+    font-size: 10px !important;
+  }
 }
 
 /* ===== Final responsive contract =====
@@ -2118,7 +2294,7 @@
     border-top: 1px solid #e5e7eb !important;
     border-bottom: 0 !important;
     background: #f8f8f8 !important;
-    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
   body > .admin-tabbar > div:first-child {
@@ -2196,7 +2372,7 @@
     height: calc(60px + env(safe-area-inset-bottom)) !important;
     padding-bottom: env(safe-area-inset-bottom) !important;
     background: #f8f8f8 !important;
-    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
   .admin-tabbar > div:first-child {
@@ -3177,7 +3353,8 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  body:has(.kargo-modal-overlay) :is(
+  body:has(.kargo-modal-overlay)
+    :is(
       .kargo-header.is-mobile-search-open .kargo-search-wrap,
       .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
       .kargo-search-wrap > div,
@@ -3187,7 +3364,8 @@
     display: none !important;
   }
 
-  body:has(.seller-board-dialog) :is(
+  body:has(.seller-board-dialog)
+    :is(
       .kargo-header.is-mobile-search-open .kargo-search-wrap,
       .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
       .kargo-search-wrap > div,
@@ -3268,7 +3446,8 @@
     margin-top: 14px !important;
   }
 
-  .kargo-modal__content :is(
+  .kargo-modal__content
+    :is(
       .grid,
       .batch-meta-grid,
       .batch-group-discount-fields,
@@ -3281,7 +3460,8 @@
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  .kargo-modal__content label:not(
+  .kargo-modal__content
+    label:not(
       .batch-image-upload,
       .batch-hero-photo-action,
       .batch-group-config__toggle,
@@ -3291,13 +3471,19 @@
     text-align: left;
   }
 
-  .kargo-modal__content label:not(:has(input[type="checkbox"], input[type="radio"]))
+  .kargo-modal__content
+    label:not(:has(input[type="checkbox"], input[type="radio"]))
     > :is(input, select, textarea) {
     margin-top: 5px;
   }
 
-  .kargo-modal .kargo-modal__content :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]),
-  .kargo-legacy-modal :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+  .kargo-modal
+    .kargo-modal__content
+    :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+      [type="button"]
+    ):not([type="submit"]),
+  .kargo-legacy-modal
+    :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
     width: 100% !important;
     max-width: 100%;
     min-width: 0;
@@ -3337,7 +3523,8 @@
     text-align: left;
   }
 
-  .kargo-modal__content label:not(.batch-group-config__toggle):has(input[type="checkbox"], input[type="radio"]),
+  .kargo-modal__content
+    label:not(.batch-group-config__toggle):has(input[type="checkbox"], input[type="radio"]),
   .kargo-modal__content .group-order-ack {
     display: flex !important;
     width: 100%;
@@ -3362,8 +3549,7 @@
     padding: 0 !important;
   }
 
-  .kargo-modal__content label:has(input[type="checkbox"], input[type="radio"])
-    > :is(span, div),
+  .kargo-modal__content label:has(input[type="checkbox"], input[type="radio"]) > :is(span, div),
   .kargo-modal__content .group-order-ack > span {
     min-width: 0;
     flex: 1 1 auto;
@@ -3390,7 +3576,8 @@
     margin: 0;
   }
 
-  .kargo-modal__content :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label) {
+  .kargo-modal__content
+    :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label) {
     display: flex !important;
     width: 100% !important;
     min-height: 46px;
@@ -3402,7 +3589,8 @@
     text-align: center;
   }
 
-  .kargo-modal__content :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label)
+  .kargo-modal__content
+    :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label)
     > :is(svg, img) {
     flex: 0 0 auto;
   }
@@ -3465,7 +3653,10 @@
     padding: 10px 0;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl :is(dt, dd) {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal)
+    .kargo-modal__content
+    dl
+    :is(dt, dd) {
     min-width: 0;
     margin: 0;
   }
@@ -3802,7 +3993,8 @@
     overflow-wrap: anywhere;
   }
 
-  .seller-board-dialog :is(
+  .seller-board-dialog
+    :is(
       .fulfillment-board__card-trigger,
       .fulfillment-board__profile-link,
       .fulfillment-board__more,
@@ -3833,7 +4025,7 @@
     box-sizing: border-box;
     border-top: 1px solid #e5e7eb;
     border-bottom: 0 !important;
-    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
   .icon-tabbar > div:first-child {
@@ -4550,7 +4742,9 @@
     background: transparent;
   }
 
-  .fulfillment-board--seller .fulfillment-board__column.is-collapsed .fulfillment-board__column-head {
+  .fulfillment-board--seller
+    .fulfillment-board__column.is-collapsed
+    .fulfillment-board__column-head {
     border-radius: 9px;
   }
 }
@@ -4677,7 +4871,7 @@
     height: calc(60px + env(safe-area-inset-bottom)) !important;
     padding-bottom: env(safe-area-inset-bottom) !important;
     background: #f8f8f8 !important;
-    box-shadow: 0 -4px 14px rgba(30, 39, 91, .12) !important;
+    box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
   .admin-tabbar > div:first-child {
@@ -4755,7 +4949,6 @@
     justify-content: space-between;
   }
 }
-
 
 /* Admin dashboard phone presentation; the shared dashboard styles stay intact. */
 @media (max-width: 767px) {
@@ -4883,13 +5076,14 @@
     margin-bottom: 0;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) :is(
-    .admin-queue-card,
-    .admin-chart-card,
-    .admin-pipeline-card,
-    .admin-activity-card,
-    .admin-seller-card
-  ) {
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page)
+    :is(
+      .admin-queue-card,
+      .admin-chart-card,
+      .admin-pipeline-card,
+      .admin-activity-card,
+      .admin-seller-card
+    ) {
     min-width: 0;
     padding: 14px !important;
     border: 1px solid #e4e9ee !important;
@@ -4938,13 +5132,14 @@
     border-radius: 9px;
   }
 
-  .admin-page--dashboard :is(
-    .admin-queue-row__title,
-    .admin-queue-row__desc,
-    .admin-activity-row__main,
-    .admin-activity-row__main strong,
-    .admin-pipeline__labels > span:first-child
-  ) {
+  .admin-page--dashboard
+    :is(
+      .admin-queue-row__title,
+      .admin-queue-row__desc,
+      .admin-activity-row__main,
+      .admin-activity-row__main strong,
+      .admin-pipeline__labels > span:first-child
+    ) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -4974,11 +5169,8 @@
     font-size: 12px;
   }
 
-  .admin-page--dashboard :is(
-    .admin-activity-row__target,
-    .admin-activity-row__time,
-    .admin-seller-row__orders
-  ) {
+  .admin-page--dashboard
+    :is(.admin-activity-row__target, .admin-activity-row__time, .admin-seller-row__orders) {
     color: #748391;
     font-size: 11px;
   }
@@ -5183,4 +5375,387 @@ body > :not(#root) * {
     grid-column: 4;
     grid-row: 1 / 3;
   }
+}
+
+@media (max-width: 767px) {
+  /* Keep the Users list compact on mobile; tapping a row opens the full modal. */
+  .admin-page--dashboard .admin-page-header h2,
+  .admin-page:not(.admin-page--dashboard) .admin-page-header h2 {
+    font-size: 50px !important;
+    font-weight: 900 !important;
+  }
+
+  .admin-users-table {
+    display: block;
+    min-width: 0 !important;
+  }
+  .admin-users-table thead {
+    display: none;
+  }
+  .admin-users-table tbody {
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+  }
+  .admin-users-table tbody tr.admin-users-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--kargo-line) !important;
+    border-radius: 12px;
+    background: #fff;
+  }
+  .admin-users-table tbody tr.admin-users-row > td {
+    display: none;
+    min-width: 0;
+    padding: 0 !important;
+    border: 0;
+  }
+  .admin-users-table tbody tr.admin-users-row > td:first-child,
+  .admin-users-table tbody tr.admin-users-row > td:nth-child(2),
+  .admin-users-table tbody tr.admin-users-row > td:nth-child(4),
+  .admin-users-table tbody tr.admin-users-row > td:last-child {
+    display: block;
+  }
+  .admin-users-table tbody tr.admin-users-row > td:first-child {
+    grid-column: 1;
+    grid-row: 1 / 3;
+  }
+  .admin-users-table tbody tr.admin-users-row > td:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .admin-users-table tbody tr.admin-users-row > td:nth-child(4) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .admin-users-table tbody tr.admin-users-row > td:last-child {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    align-self: center;
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* The <li> must not be a grid: its only child is the row button, which was
+     being squeezed into the 20px rank column and left the shop name 0px wide. */
+  .admin-page--dashboard .admin-seller-row {
+    display: block !important;
+  }
+  .admin-page--dashboard .admin-seller-row__open {
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+  }
+}
+
+/* Admin Users: card list on mobile (collapsed + expanded), table on desktop. */
+.admin-users-cards {
+  display: none;
+}
+@media (max-width: 767px) {
+  .admin-users-table-wrap {
+    display: none;
+  }
+  .admin-users-cards {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+  }
+  .admin-ucard {
+    background: #fff;
+    border: 1px solid var(--kargo-line);
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+  }
+  .admin-ucard__top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .admin-ucard__who {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .admin-ucard__name {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--kargo-ink);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .admin-ucard__email {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+    overflow-wrap: anywhere;
+  }
+  .admin-ucard__toggle {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 0;
+    background: #eef2fb;
+    color: #3b4bb8;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .admin-ucard__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .admin-ucard__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-ucard__badges .admin-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .admin-ucard__gmv {
+    display: grid;
+    text-align: right;
+    flex: 0 0 auto;
+  }
+  .admin-ucard__gmv strong {
+    font-size: 15px;
+    font-weight: 800;
+    color: #000;
+  }
+  .admin-ucard__gmv span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+  .admin-ucard__body {
+    display: grid;
+    gap: 8px;
+  }
+  .admin-ucard__stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .admin-ucard__stat {
+    background: #eef2fb;
+    border: 1px solid #dde3f5;
+    border-radius: 12px;
+    padding: 10px;
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    min-width: 0;
+  }
+  .admin-ucard__stat strong {
+    font-size: 18px;
+    font-weight: 800;
+    color: #3b4bb8;
+  }
+  .admin-ucard__stat span {
+    font-size: 11px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+  .admin-ucard__facts {
+    margin: 0;
+    border-top: 1px solid var(--kargo-line);
+  }
+  .admin-ucard__facts > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 2px 2px;
+  }
+  .admin-ucard__shopline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--kargo-line);
+    color: #3b4bb8;
+  }
+  .admin-ucard__shopline strong {
+    font-size: 14px;
+    font-weight: 800;
+    color: #000;
+    overflow-wrap: anywhere;
+  }
+  .admin-ucard__shopline span {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+  .admin-ucard__facts dt {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--kargo-muted);
+  }
+  .admin-ucard__facts dd {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #000;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .admin-ucard__facts dd.is-muted {
+    color: var(--kargo-muted);
+  }
+  .admin-ucard__details {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #d5d9f0;
+    background: #fff;
+    color: #2a2fb0;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
+
+/* Admin user "Account details" modal. */
+.admin-record-modal .admin-detail-hero {
+  align-items: center;
+  flex-wrap: nowrap;
+  background: #f5f4f0;
+}
+.admin-record-modal .admin-detail-hero__badges {
+  margin: 8px 0 0;
+}
+.admin-user-stats {
+  display: grid;
+  grid-template-columns: 0.8fr 1fr 1.2fr;
+  background: #eef2fb;
+  border: 1px solid #e1e7f5;
+  border-radius: 14px;
+  padding: 12px 0;
+}
+.admin-user-stats > div {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 12px;
+}
+.admin-user-stats > div + div {
+  border-left: 1px solid #d6ddf0;
+}
+.admin-user-stats strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: #17212b;
+  white-space: nowrap;
+}
+.admin-user-stats > div:nth-child(-n + 2) strong {
+  color: #3b4bb8;
+}
+.admin-user-stats span {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-user-rows {
+  margin: 0;
+  border-top: 1px solid var(--kargo-line);
+}
+.admin-user-rows > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 2px;
+  border-bottom: 1px solid var(--kargo-line);
+}
+.admin-user-rows dt {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kargo-muted);
+}
+.admin-user-rows dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #17212b;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.admin-user-rows__id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-user-rows__id button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: none;
+  color: #3b4bb8;
+  cursor: pointer;
+}
+.admin-user-orders .admin-row-list__item {
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+}
+.admin-user-orders__num {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #17212b;
+  overflow-wrap: anywhere;
+}
+.admin-user-orders .admin-row-list__value {
+  flex: 0 0 72px;
+  margin-left: 0;
+  font-size: 13px;
+}
+@media (max-width: 767px) {
+  /* Scroll the whole record; keep the last row clear of the sticky footer. */
+  .admin-record-modal > .kargo-modal__body {
+    padding-bottom: 20px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Keep the whole record modal (incl. sticky action footer) above the bottom nav. */
+  .admin-modal-overlay.admin-record-modal-overlay {
+    align-items: flex-start !important;
+    padding-top: calc(12px + env(safe-area-inset-top)) !important;
+  }
+  .admin-record-modal {
+    max-height: calc(
+      100dvh - 12px - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    ) !important;
+  }
+}
+
+.admin-user-orders .admin-user-orders__num {
+  flex: 1 1 auto;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.admin-user-orders .admin-badge {
+  padding: 3px 8px;
+  font-size: 10.5px;
+}
+.admin-user-orders .admin-row-list__value {
+  flex-basis: 64px;
+  font-size: 12.5px;
 }
