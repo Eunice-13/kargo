@@ -252,7 +252,7 @@
 .fulfillment-analytics__focus {
   margin: 20px 0 6px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;

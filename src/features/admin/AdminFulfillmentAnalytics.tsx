@@ -283,15 +283,6 @@ function AnalyticsResults({
         </div>
       </div>
       <div className="fulfillment-analytics__focus">
-        <span className="fulfillment-analytics__focus-label">
-          {view === "trend" ? (
-            <>
-              Highlighting <strong>{ANALYTICS_STAGES.find((s) => s.key === focused)?.label}</strong>
-            </>
-          ) : (
-            "Share of orders in view"
-          )}
-        </span>
         <div className="fulfillment-analytics__focus-actions">
           <div
             className="fulfillment-analytics__view-toggle"
