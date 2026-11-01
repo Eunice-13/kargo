@@ -1606,3 +1606,56 @@
     padding-left: 0;
   }
 }
+
+/* Current status uses the original vertical bars rather than horizontal tiles. */
+@media (min-width: 641px) {
+  .fulfillment-breakdown.is-current > .fulfillment-breakdown__stack {
+    display: none;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list {
+    min-height: 220px;
+    margin-top: 18px;
+    align-items: end;
+    gap: 10px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list button {
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-wrap {
+    flex: 1;
+    min-height: 150px;
+    height: auto;
+    display: flex;
+    align-items: flex-end;
+    background: transparent;
+    overflow: visible;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar {
+    width: 100%;
+    height: var(--fill, 0%);
+    min-height: 10px;
+    border-radius: 14px 14px 6px 6px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-count {
+    display: block;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta {
+    flex-direction: column;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+@media (min-width: 641px) {
+  .fulfillment-breakdown__group > .fulfillment-breakdown__list {
+    flex: 1 1 auto;
+  }
+}
