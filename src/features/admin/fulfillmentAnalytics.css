@@ -1263,16 +1263,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
-  min-height: 40px;
-  padding: 8px 12px;
+  min-height: 44px;
+  padding: 9px 16px;
   border: 1px solid var(--fa-border);
   border-radius: 11px;
   background: var(--fa-surface);
   color: var(--fa-ink);
   font-size: 13px;
   font-weight: 600;
+}
+
+.fulfillment-analytics__stage-field .fulfillment-analytics__disclosure > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fulfillment-analytics__stage-field .fulfillment-analytics__disclosure-label {
+  flex: 0 0 auto;
+  color: var(--fa-muted);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .fulfillment-analytics__stage-field .fulfillment-analytics__stages {
