@@ -52,6 +52,10 @@ export default function FulfillmentBreakdown({
   });
   const visibleRows = current ? rows.filter((row) => row.key !== "other" || row.count > 0) : rows;
   const peak = Math.max(1, ...visibleRows.map((r) => r.count));
+  const stackTotal = Math.max(
+    1,
+    visibleRows.reduce((sum, row) => sum + row.count, 0),
+  );
   const pathRows = visibleRows.filter(
     (row) => !DROP_OFF_STAGES.includes(row.key as Stage) && row.key !== "other",
   );
@@ -71,15 +75,15 @@ export default function FulfillmentBreakdown({
 
   return (
     <div className={`fulfillment-breakdown ${current ? "is-current" : "is-reached"}`}>
-      {current && (
-        <div className="fulfillment-breakdown__stack" aria-label="Current status proportions">
+      {visibleRows.length > 0 && (
+        <div className="fulfillment-breakdown__stack" aria-label="Fulfillment proportions">
           {visibleRows
             .filter((row) => row.key !== "other")
             .map((row) => (
               <span
                 key={row.key}
                 className="fulfillment-breakdown__segment"
-                style={{ background: row.color, flexGrow: row.count / Math.max(1, denominator) }}
+                style={{ background: row.color, flexGrow: row.count / stackTotal }}
                 title={`${row.label}: ${row.count}`}
               />
             ))}
@@ -92,12 +96,6 @@ export default function FulfillmentBreakdown({
           aria-label={group.title}
         >
           <h3 className="fulfillment-breakdown__group-title">{group.title}</h3>
-          {group.id === "path" && !current && (
-            <p className="fulfillment-breakdown__caption">
-              An order counts in every stage it has reached, so stages add up to more than the
-              total.
-            </p>
-          )}
           <ul
             className="fulfillment-breakdown__list"
             style={{ ["--cols" as string]: group.rows.length }}
@@ -107,7 +105,15 @@ export default function FulfillmentBreakdown({
                 <button
                   type="button"
                   disabled={!onOpen}
-                  style={{ ["--chip" as string]: r.color }}
+                  style={{
+                    ["--chip" as string]: r.color,
+                    ...(r.key === focused
+                      ? {
+                          background: `color-mix(in srgb, ${r.color} 12%, var(--fa-soft))`,
+                          borderColor: `color-mix(in srgb, ${r.color} 55%, var(--fa-border))`,
+                        }
+                      : {}),
+                  }}
                   aria-pressed={r.key === focused}
                   aria-label={`${current ? "Current status" : "Reached stage"}: ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% ${current ? "of orders" : "reached"})`}
                   onClick={() => select(r.key)}
@@ -126,6 +132,7 @@ export default function FulfillmentBreakdown({
                     </span>
                   </span>
                   <span className="fulfillment-breakdown__meta">
+                    <span className="fulfillment-stage-dot" style={{ background: r.color }} />
                     <span className="fulfillment-breakdown__label">{r.label}</span>
                     <strong className="fulfillment-breakdown__count">
                       {r.count.toLocaleString()}

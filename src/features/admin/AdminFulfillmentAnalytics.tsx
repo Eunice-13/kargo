@@ -198,6 +198,8 @@ function AnalyticsResults({
   // On mobile the stage chips collapse behind a summary toggle to save space.
   const [stagesOpen, setStagesOpen] = useState(false);
   const visible: Stage[] = ANALYTICS_STAGES.map((s) => s.key);
+  const [reachedViewOpen, setReachedViewOpen] = useState(false);
+  const reachedViewPickerRef = useRef<HTMLDivElement>(null);
   const [point, setPoint] = useState<{
     stage: AnalyticsPointStage;
     bucket?: string;
@@ -222,6 +224,16 @@ function AnalyticsResults({
   useEffect(() => {
     setPoint(null);
   }, [refreshKey]);
+  useEffect(() => {
+    if (!reachedViewOpen) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!reachedViewPickerRef.current?.contains(event.target as Node)) {
+        setReachedViewOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [reachedViewOpen]);
   const activeResource = countingMode === "current" ? currentResource : resource;
   if (activeResource.loading || resource.loading)
     return (
@@ -375,37 +387,89 @@ function AnalyticsResults({
                 </div>
               </div>
             ) : (
-              <div
-                className="fulfillment-analytics__trend-chips"
-                role="list"
-                aria-label="Trend stages"
-              >
-                {ANALYTICS_STAGES.map((stage) => {
-                  const isFocused = focused === stage.key;
-                  const count =
-                    countingMode === "current"
-                      ? Number(
-                          currentData!.counts[
-                            stage.key as keyof FulfillmentCurrentStatus["counts"]
-                          ] ?? 0,
-                        )
-                      : bucketCount(data.stageTotals, stage.key);
-                  return (
-                    <button
-                      type="button"
-                      key={stage.key}
-                      className={`${isFocused ? "is-focused" : ""}${stage.key === "cancelled" ? " is-cancelled" : ""}`}
-                      style={{ ["--chip" as string]: stage.color }}
-                      aria-pressed={isFocused}
-                      onClick={() => setFocused(stage.key)}
-                    >
-                      <span className="fulfillment-stage-dot" style={{ background: stage.color }} />
-                      <span>{stage.label}</span>
-                      <strong>{count.toLocaleString()}</strong>
-                    </button>
-                  );
-                })}
-              </div>
+              <>
+                <div className="fulfillment-analytics__trend-mobile-selector">
+                  <button
+                    type="button"
+                    className="fulfillment-analytics__disclosure"
+                    aria-expanded={stagesOpen}
+                    aria-controls="fulfillment-trend-stage-options"
+                    onClick={() => setStagesOpen((open) => !open)}
+                  >
+                    <span>
+                      <span className="fulfillment-analytics__disclosure-label">Stage</span>
+                      <span
+                        className="fulfillment-stage-dot"
+                        style={{
+                          background: ANALYTICS_STAGES.find((s) => s.key === focused)?.color,
+                        }}
+                      />
+                      {ANALYTICS_STAGES.find((s) => s.key === focused)?.label}
+                    </span>
+                    <ChevronDown size={16} aria-hidden="true" />
+                  </button>
+                  <div
+                    id="fulfillment-trend-stage-options"
+                    className="fulfillment-analytics__trend-mobile-options"
+                    data-open={stagesOpen}
+                    role="radiogroup"
+                    aria-label="Trend stage"
+                  >
+                    {ANALYTICS_STAGES.map((stage) => (
+                      <button
+                        type="button"
+                        key={stage.key}
+                        role="radio"
+                        aria-checked={focused === stage.key}
+                        onClick={() => {
+                          setFocused(stage.key);
+                          setStagesOpen(false);
+                        }}
+                      >
+                        <span
+                          className="fulfillment-stage-dot"
+                          style={{ background: stage.color }}
+                        />
+                        {stage.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div
+                  className="fulfillment-analytics__trend-chips"
+                  role="list"
+                  aria-label="Trend stages"
+                >
+                  {ANALYTICS_STAGES.map((stage) => {
+                    const isFocused = focused === stage.key;
+                    const count =
+                      countingMode === "current"
+                        ? Number(
+                            currentData!.counts[
+                              stage.key as keyof FulfillmentCurrentStatus["counts"]
+                            ] ?? 0,
+                          )
+                        : bucketCount(data.stageTotals, stage.key);
+                    return (
+                      <button
+                        type="button"
+                        key={stage.key}
+                        className={`${isFocused ? "is-focused" : ""}${stage.key === "cancelled" ? " is-cancelled" : ""}`}
+                        style={{ ["--chip" as string]: stage.color }}
+                        aria-pressed={isFocused}
+                        onClick={() => setFocused(stage.key)}
+                      >
+                        <span
+                          className="fulfillment-stage-dot"
+                          style={{ background: stage.color }}
+                        />
+                        <span>{stage.label}</span>
+                        <strong>{count.toLocaleString()}</strong>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
             )}
             <h3 className="fulfillment-analytics__chart-title">{chartTitle}</h3>
             <div className="fulfillment-analytics__focus-actions">
@@ -431,14 +495,51 @@ function AnalyticsResults({
                   role="radio"
                   aria-checked={countingMode === "reached"}
                   aria-pressed={countingMode === "reached"}
-                  onClick={() => setCountingMode("reached")}
+                  onClick={() => {
+                    setCountingMode("reached");
+                    if (window.matchMedia("(max-width: 640px)").matches) {
+                      setReachedViewOpen(true);
+                    }
+                  }}
                 >
                   Reached stage
                 </button>
               </div>
+              {countingMode === "reached" && reachedViewOpen && (
+                <div
+                  ref={reachedViewPickerRef}
+                  className="fulfillment-analytics__reached-view-picker"
+                  role="dialog"
+                  aria-label="Choose Reached stage view"
+                >
+                  <span>Choose view</span>
+                  <button
+                    type="button"
+                    className={chartMode === "bars" ? "is-selected" : undefined}
+                    onClick={() => {
+                      setChartMode("bars");
+                      setReachedViewOpen(false);
+                    }}
+                  >
+                    <BarChart3 size={18} aria-hidden="true" />
+                    Stage bars
+                  </button>
+                  <button
+                    type="button"
+                    className={chartMode === "trend" ? "is-selected" : undefined}
+                    onClick={() => {
+                      setChartMode("trend");
+                      setReachedViewOpen(false);
+                    }}
+                  >
+                    <LineChart size={18} aria-hidden="true" />
+                    Trend chart
+                  </button>
+                </div>
+              )}
               {countingMode === "reached" && (
                 <div
-                  className="fulfillment-analytics__chart-toggle"
+                  className="fulfillment-analytics__chart-toggle is-inline-chart-toggle"
                   role="radiogroup"
                   aria-label="Chart view"
                 >

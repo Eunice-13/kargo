@@ -1668,3 +1668,348 @@
     border-left: 1px solid var(--fa-border);
   }
 }
+
+@media (max-width: 640px) {
+  .fulfillment-breakdown__list li.is-focused button {
+    border-color: color-mix(in srgb, var(--chip, #191ba9) 55%, var(--fa-border));
+    background: color-mix(in srgb, var(--chip, #191ba9) 12%, var(--fa-soft));
+  }
+}
+
+@media (max-width: 640px) {
+  /* Mobile stage rows match the compact reference: only the selected stage is
+     a tinted card; the other stages stay open rows with a thin progress track. */
+  .fulfillment-breakdown__list button,
+  .fulfillment-breakdown__list li:not(.is-focused) button {
+    padding: 12px 0;
+    border-color: transparent;
+    border-radius: 0;
+    background: transparent;
+  }
+  .fulfillment-breakdown__list li.is-focused button {
+    padding: 14px 16px;
+    border-radius: 18px;
+  }
+  .fulfillment-breakdown__meta {
+    gap: 8px;
+  }
+  .fulfillment-breakdown__meta .fulfillment-breakdown__label {
+    font-size: 14px;
+  }
+  .fulfillment-breakdown__meta .fulfillment-breakdown__count {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .fulfillment-breakdown__percent {
+    font-size: 13px;
+  }
+}
+
+/* Mobile trend stages use a single toggle instead of the full chip row. */
+.fulfillment-analytics__trend-mobile-selector {
+  display: none;
+}
+@media (max-width: 640px) {
+  .fulfillment-analytics__trend-mobile-selector {
+    display: block;
+    position: relative;
+    width: 100%;
+  }
+  .fulfillment-analytics__trend-mobile-selector .fulfillment-analytics__disclosure {
+    min-height: 44px;
+  }
+  .fulfillment-analytics__trend-mobile-options {
+    display: none;
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    padding: 6px;
+    border: 1px solid var(--fa-border);
+    border-radius: 12px;
+    background: var(--fa-surface);
+    box-shadow: 0 8px 24px -12px rgba(16, 24, 40, 0.28);
+  }
+  .fulfillment-analytics__trend-mobile-options[data-open="true"] {
+    display: grid;
+    gap: 4px;
+  }
+  .fulfillment-analytics__trend-mobile-options button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 9px 12px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--fa-ink);
+    font-size: 13px;
+    text-align: left;
+  }
+  .fulfillment-analytics__trend-mobile-options button[aria-checked="true"] {
+    border-color: var(--fa-border);
+    background: var(--fa-soft);
+    color: var(--fa-indigo);
+    font-weight: 650;
+  }
+  .fulfillment-analytics__trend-chips {
+    display: none;
+  }
+}
+
+@media (min-width: 641px) {
+  .fulfillment-breakdown__meta .fulfillment-stage-dot {
+    display: none;
+  }
+}
+
+@media (min-width: 641px) {
+  .fulfillment-breakdown.is-reached > .fulfillment-breakdown__stack {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list {
+    min-height: 0;
+    margin-top: 16px;
+    gap: 8px;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-wrap {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: 7px;
+    width: 100%;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar {
+    width: var(--fill, 0%);
+    height: 100%;
+    min-height: 0;
+    border-radius: 999px;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-count {
+    display: none;
+  }
+}
+
+/* Final mobile reached-stage track override: never inherit desktop plot height. */
+@media (max-width: 640px) {
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-wrap {
+    display: block !important;
+    flex: 0 0 7px !important;
+    width: 100% !important;
+    height: 7px !important;
+    min-height: 7px !important;
+    border-radius: 999px !important;
+    overflow: hidden !important;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar {
+    display: block !important;
+    width: var(--fill, 0%) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border-radius: 999px !important;
+  }
+}
+
+/* Desktop vertical bars do not show the mobile metadata dot. */
+@media (min-width: 641px) {
+  .fulfillment-breakdown__meta .fulfillment-stage-dot {
+    display: none !important;
+}
+}
+
+/* Reached stage mobile must match the Current status mobile row treatment. */
+@media (max-width: 640px) {
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+    margin-top: 16px !important;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list li {
+    height: auto !important;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list button,
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list li:not(.is-focused) button {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 44px !important;
+    padding: 12px 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list li.is-focused button {
+    padding: 14px 16px !important;
+    border: 1px solid color-mix(in srgb, var(--chip, #191ba9) 55%, var(--fa-border)) !important;
+    border-radius: 18px !important;
+    background: color-mix(in srgb, var(--chip, #191ba9) 12%, var(--fa-soft)) !important;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-wrap {
+    display: block !important;
+    flex: 0 0 7px !important;
+    width: 100% !important;
+    height: 7px !important;
+    min-height: 7px !important;
+    border-radius: 999px !important;
+    background: var(--fa-border) !important;
+    overflow: hidden !important;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar {
+    display: block !important;
+    width: var(--fill, 0%) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border-radius: 999px !important;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-count {
+    display: none !important;
+  }
+  .fulfillment-breakdown.is-reached .fulfillment-breakdown__meta {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: baseline !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    text-align: left !important;
+  }
+}
+
+.fulfillment-analytics__reached-view-picker {
+  display: none;
+}
+@media (max-width: 640px) {
+  .fulfillment-analytics__reached-view-picker {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 8px);
+    right: 0;
+    display: grid;
+    min-width: 220px;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid #e3e7f4;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 12px 30px -16px rgba(16, 24, 40, 0.35);
+  }
+  .fulfillment-analytics__reached-view-picker > span {
+    padding: 4px 8px;
+    color: var(--fa-muted);
+    font-size: 11px;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .fulfillment-analytics__reached-view-picker button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 9px 10px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--fa-muted);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+  }
+  .fulfillment-analytics__reached-view-picker button.is-selected {
+    border-color: #e3e7f4;
+    background: #f3f5fc;
+    color: #1d2a9e;
+  }
+  .fulfillment-analytics__chart-toggle.is-inline-chart-toggle {
+    display: none;
+  }
+}
+
+/* Current status mobile uses the exact same row/progress treatment as Reached stage. */
+@media (max-width: 640px) {
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+    margin-top: 16px !important;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list li {
+    height: auto !important;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list button,
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list li:not(.is-focused) button {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 44px !important;
+    padding: 12px 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list li.is-focused button {
+    padding: 14px 16px !important;
+    border: 1px solid color-mix(in srgb, var(--chip, #191ba9) 55%, var(--fa-border)) !important;
+    border-radius: 18px !important;
+    background: color-mix(in srgb, var(--chip, #191ba9) 12%, var(--fa-soft)) !important;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-wrap {
+    display: block !important;
+    flex: 0 0 7px !important;
+    width: 100% !important;
+    height: 7px !important;
+    min-height: 7px !important;
+    border-radius: 999px !important;
+    background: var(--fa-border) !important;
+    overflow: hidden !important;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar {
+    display: block !important;
+    width: var(--fill, 0%) !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border-radius: 999px !important;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-count {
+    display: none !important;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: baseline !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .fulfillment-analytics__focus-actions {
+    position: relative;
+  }
+  .fulfillment-analytics__reached-view-picker {
+    top: 52px;
+    right: auto;
+    left: 0;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}

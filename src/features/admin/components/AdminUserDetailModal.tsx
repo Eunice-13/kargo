@@ -133,7 +133,10 @@ export default function AdminUserDetailModal({
                   label="Last sign-in"
                   value={data.lastSignInAt ? fmtDate(data.lastSignInAt) : "Never"}
                 />
-                <AdminFact label="Buyer orders (all-time)" value={String(data.buyerOrders)} />
+                <AdminFact
+                  label={data.canSell ? "Buyers (all-time)" : "Buyer orders (all-time)"}
+                  value={String(data.canSell ? data.sellerBuyers : data.buyerOrders)}
+                />
                 <AdminFact label="Buyer spend (30d)" value={peso(data.buyerSpend30)} />
                 {data.canSell && (
                   <>
