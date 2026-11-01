@@ -7,6 +7,9 @@ let db;
 const seller = "00000000-0000-0000-0000-000000000001";
 const buyer = "00000000-0000-0000-0000-000000000002";
 const id = (n) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const currentStatus = async (period = "custom", start = "2020-02-01", end = "2020-02-03") =>
+  (await row("select admin_fulfillment_current_status($1,$2,$3) as data", [period, start, end]))
+    .data;
 const sqlFile = (name) =>
   readFileSync(new URL(`../supabase/migrations/${name}`, import.meta.url), "utf8");
 const row = async (sql, args = []) => (await db.query(sql, args)).rows[0];
@@ -31,6 +34,7 @@ before(async () => {
   await db.exec(sqlFile("202611060001_fulfillment_analytics.sql"));
   await db.exec(sqlFile("202611060003_analytics_expired.sql"));
   await db.exec(sqlFile("202611090004_fulfillment_analytics_cohort.sql"));
+  await db.exec(sqlFile("202611090006_fulfillment_analytics_current_status.sql"));
   await db.query(
     "update fulfillment_analytics_metadata set capture_started_at='2020-02-01T00:00:00+08:00' where singleton",
   );
@@ -105,4 +109,77 @@ test("drill-down uses reached-stage cohort rows", async () => {
   assert.equal(detail.total, summary.stageTotals.shipped);
   assert.equal(detail.rows.length, 1);
   assert.equal(detail.rows[0].order_id, id(2));
+});
+
+test("current-status cohort size matches reached-stage cohort across every range", async () => {
+  const ranges = [
+    ["today", null, null],
+    ["last_7_days", null, null],
+    ["last_30_days", null, null],
+    ["all_time", null, null],
+    ["custom", "2020-02-01", "2020-02-03"],
+  ];
+  for (const [period, start, end] of ranges) {
+    const reached = (
+      await row("select admin_fulfillment_analytics($1,$2,$3) as data", [period, start, end])
+    ).data;
+    const current = await currentStatus(period, start, end);
+    assert.equal(current.cohortSize, reached.cohortSize ?? reached.uniqueOrders, period);
+  }
+});
+
+test("current status counts each cohort order once and folds current in_transit into shipped", async () => {
+  await db.query("update orders set status='preparing' where id=$1", [id(4)]);
+  await db.query("update orders set fulfillment_stage='preparing' where id=$1", [id(4)]);
+  await db.query("update orders set fulfillment_stage='shipped' where id=$1", [id(4)]);
+  const extra = id(6);
+  await db.query(
+    "insert into orders(id,order_number,seller_id,buyer_id,status,fulfillment_stage,payment_confirmed_at) values($1::uuid,$1::text,$2::uuid,$3::uuid,'preparing','in_transit','2020-02-01T06:00:00Z')",
+    [extra, seller, buyer],
+  );
+  await db.query(
+    "insert into order_fulfillment_events(order_id,stage,occurred_at,source) values($1,'payment_confirmed','2020-02-01T06:00:00Z','order_timestamp') on conflict do nothing",
+    [extra],
+  );
+  await db.query(
+    "insert into order_fulfillment_events(order_id,stage,occurred_at,source) values($1,'shipped','2020-02-01T07:00:00Z','transition') on conflict do nothing",
+    [id(1)],
+  );
+
+  const cancelled = id(7);
+  await db.query(
+    "insert into orders(id,order_number,seller_id,buyer_id,status,payment_confirmed_at) values($1::uuid,$1::text,$2::uuid,$3::uuid,'cancelled','2020-02-01T07:00:00Z')",
+    [cancelled, seller, buyer],
+  );
+  await db.query(
+    "insert into order_fulfillment_events(order_id,stage,occurred_at,source) values($1,'payment_confirmed','2020-02-01T07:00:00Z','order_timestamp'),($1,'preparing','2020-02-01T08:00:00Z','transition'),($1,'shipped','2020-02-01T09:00:00Z','transition'),($1,'cancelled','2020-02-01T10:00:00Z','transition') on conflict do nothing",
+    [cancelled],
+  );
+
+  const other = id(8);
+  await db.query(
+    "insert into orders(id,order_number,seller_id,buyer_id,status,payment_confirmed_at) values($1::uuid,$1::text,$2::uuid,$3::uuid,'payment_pending','2020-02-01T08:00:00Z')",
+    [other, seller, buyer],
+  );
+  await db.query(
+    "insert into order_fulfillment_events(order_id,stage,occurred_at,source) values($1,'payment_confirmed','2020-02-01T08:00:00Z','order_timestamp') on conflict do nothing",
+    [other],
+  );
+
+  const current = await currentStatus();
+  assert.equal(current.cohortSize, 6);
+  assert.equal(current.counts.cancelled, 1);
+  assert.equal(current.counts.delivered, 1);
+  assert.equal(current.counts.shipped, 2);
+  assert.equal(current.counts.payment_confirmed, 1);
+  assert.equal(current.counts.other, 1);
+  assert.equal(
+    Object.values(current.counts).reduce((sum, value) => sum + value, 0),
+    6,
+  );
+
+  const reached = await row(
+    "select admin_fulfillment_analytics('custom','2020-02-01','2020-02-03') as data",
+  );
+  assert.ok(reached.data.stageTotals.preparing >= current.counts.preparing);
 });

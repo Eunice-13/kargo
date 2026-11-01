@@ -1,10 +1,11 @@
-import { requireSupabase } from "@/lib/supabase"
+import { requireSupabase } from "@/lib/supabase";
 import type {
   FulfillmentAnalytics,
   FulfillmentAnalyticsFilters,
   FulfillmentAnalyticsOrders,
   FulfillmentAnalyticsStage,
-} from "@/types/fulfillmentAnalytics"
+  FulfillmentCurrentStatus,
+} from "@/types/fulfillmentAnalytics";
 
 import type {
   AdminAuditFilters,
@@ -28,7 +29,7 @@ import type {
   AdminUserRow,
   AdminUserSearchResult,
   BatchModerationAction,
-} from "@/features/admin/adminTypes"
+} from "@/features/admin/adminTypes";
 
 import {
   demoAcceptAdminInvite,
@@ -54,58 +55,69 @@ import {
   demoSearchUsers,
   demoSetAccountStatus,
   demoSetSellerAccess,
-} from "@/data/admin"
+} from "@/data/admin";
 
 // Thrown when the current session is not an active admin (Postgres 42501 or a
 // matching message). Lets the UI show a clean "access required" state.
 export class AdminAccessError extends Error {
   constructor(message = "Admin access required") {
-    super(message)
-    this.name = "AdminAccessError"
+    super(message);
+    this.name = "AdminAccessError";
   }
 }
 
 // Demo mode (?preview=admin) runs entirely in-memory with no Supabase calls.
-let demoMode = false
+let demoMode = false;
 export function setAdminDemoMode(on: boolean) {
-  demoMode = on
+  demoMode = on;
 }
 
 async function callAdmin<T>(fn: string, args: Record<string, unknown>): Promise<T> {
-  const { data, error } = await requireSupabase().rpc(fn, args)
+  const { data, error } = await requireSupabase().rpc(fn, args);
   if (error) {
     if (error.code === "42501" || /admin access required/i.test(error.message)) {
-      throw new AdminAccessError(error.message)
+      throw new AdminAccessError(error.message);
     }
-    throw new Error(error.message)
+    throw new Error(error.message);
   }
-  return data as T
+  return data as T;
 }
 
 export const adminApi = {
   async fulfillmentAnalytics(
     filters: FulfillmentAnalyticsFilters = {},
   ): Promise<FulfillmentAnalytics> {
-    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode")
+    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode");
     return callAdmin("admin_fulfillment_analytics", {
       p_period: filters.period ?? "last_30_days",
       p_start: filters.start ?? null,
       p_end: filters.end ?? null,
-    })
+    });
+  },
+
+  async fulfillmentCurrentStatus(
+    filters: FulfillmentAnalyticsFilters = {},
+  ): Promise<FulfillmentCurrentStatus> {
+    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode");
+    return callAdmin("admin_fulfillment_current_status", {
+      p_period: filters.period ?? "last_30_days",
+      p_start: filters.start ?? null,
+      p_end: filters.end ?? null,
+    });
   },
 
   async fulfillmentOrders(
     filters: FulfillmentAnalyticsFilters,
     point: {
-      stage: FulfillmentAnalyticsStage
-      bucket?: string
-      generatedAt: string
-      snapshot: string
+      stage: FulfillmentAnalyticsStage;
+      bucket?: string;
+      generatedAt: string;
+      snapshot: string;
     },
     limit = 25,
     offset = 0,
   ): Promise<FulfillmentAnalyticsOrders> {
-    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode")
+    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode");
     return callAdmin("admin_fulfillment_orders", {
       p_period: filters.period ?? "last_30_days",
       p_start: filters.start ?? null,
@@ -116,12 +128,12 @@ export const adminApi = {
       p_snapshot: point.snapshot,
       p_limit: limit,
       p_offset: offset,
-    })
+    });
   },
 
   async dashboard(): Promise<AdminDashboardData> {
-    if (demoMode) return demoAdminDashboard()
-    return callAdmin<AdminDashboardData>("admin_dashboard", {})
+    if (demoMode) return demoAdminDashboard();
+    return callAdmin<AdminDashboardData>("admin_dashboard", {});
   },
 
   async listUsers(
@@ -129,27 +141,27 @@ export const adminApi = {
     limit = 25,
     offset = 0,
   ): Promise<AdminListResult<AdminUserRow>> {
-    if (demoMode) return demoListUsers(filters, limit, offset)
+    if (demoMode) return demoListUsers(filters, limit, offset);
     return callAdmin<AdminListResult<AdminUserRow>>("admin_list_users", {
       p_search: filters.search ?? null,
       p_role: filters.role ?? "all",
       p_status: filters.status ?? "all",
       p_limit: limit,
       p_offset: offset,
-    })
+    });
   },
 
   async getUser(userId: string): Promise<AdminUserDetail> {
-    if (demoMode) return demoGetUser(userId)
-    return callAdmin<AdminUserDetail>("admin_get_user", { p_user_id: userId })
+    if (demoMode) return demoGetUser(userId);
+    return callAdmin<AdminUserDetail>("admin_get_user", { p_user_id: userId });
   },
 
   async searchUsers(query: string, limit = 10): Promise<AdminUserSearchResult[]> {
-    if (demoMode) return demoSearchUsers(query, limit)
+    if (demoMode) return demoSearchUsers(query, limit);
     return callAdmin<AdminUserSearchResult[]>("admin_search_users", {
       p_query: query,
       p_limit: limit,
-    })
+    });
   },
 
   async setAccountStatus(
@@ -157,12 +169,12 @@ export const adminApi = {
     status: "active" | "suspended",
     reason: string,
   ): Promise<{ changed: boolean; status: string }> {
-    if (demoMode) return demoSetAccountStatus(userId, status, reason)
+    if (demoMode) return demoSetAccountStatus(userId, status, reason);
     return callAdmin("admin_set_account_status", {
       p_user_id: userId,
       p_status: status,
       p_reason: reason,
-    })
+    });
   },
 
   async setSellerAccess(
@@ -170,12 +182,12 @@ export const adminApi = {
     enabled: boolean,
     reason: string,
   ): Promise<{ changed: boolean; canSell: boolean }> {
-    if (demoMode) return demoSetSellerAccess(userId, enabled, reason)
+    if (demoMode) return demoSetSellerAccess(userId, enabled, reason);
     return callAdmin("admin_set_seller_access", {
       p_user_id: userId,
       p_enabled: enabled,
       p_reason: reason,
-    })
+    });
   },
 
   // ─── Batches ──────────────────────────────────────────────────────────────
@@ -185,7 +197,7 @@ export const adminApi = {
     limit = 25,
     offset = 0,
   ): Promise<AdminListResult<AdminBatchRow>> {
-    if (demoMode) return demoListBatches(filters, limit, offset)
+    if (demoMode) return demoListBatches(filters, limit, offset);
     return callAdmin("admin_list_batches", {
       p_search: filters.search ?? null,
       p_status: filters.status ?? "all",
@@ -193,12 +205,12 @@ export const adminApi = {
       p_category: filters.category ?? "all",
       p_limit: limit,
       p_offset: offset,
-    })
+    });
   },
 
   async getBatch(batchId: string): Promise<AdminBatchDetail> {
-    if (demoMode) return demoGetBatch(batchId)
-    return callAdmin("admin_get_batch", { p_batch_id: batchId })
+    if (demoMode) return demoGetBatch(batchId);
+    return callAdmin("admin_get_batch", { p_batch_id: batchId });
   },
 
   async moderateBatch(
@@ -206,12 +218,12 @@ export const adminApi = {
     action: BatchModerationAction,
     reason: string,
   ): Promise<{ changed: boolean }> {
-    if (demoMode) return demoModerateBatch(batchId, action, reason)
+    if (demoMode) return demoModerateBatch(batchId, action, reason);
     return callAdmin("admin_moderate_batch", {
       p_batch_id: batchId,
       p_action: action,
       p_reason: reason,
-    })
+    });
   },
 
   // ─── Orders ───────────────────────────────────────────────────────────────
@@ -221,24 +233,24 @@ export const adminApi = {
     limit = 25,
     offset = 0,
   ): Promise<AdminListResult<AdminOrderRow>> {
-    if (demoMode) return demoListOrders(filters, limit, offset)
+    if (demoMode) return demoListOrders(filters, limit, offset);
     return callAdmin("admin_list_orders", {
       p_search: filters.search ?? null,
       p_status: filters.status ?? "all",
       p_days: filters.days ?? 30,
       p_limit: limit,
       p_offset: offset,
-    })
+    });
   },
 
   async getOrder(orderId: string): Promise<AdminOrderDetail> {
-    if (demoMode) return demoGetOrder(orderId)
-    return callAdmin("admin_get_order", { p_order_id: orderId })
+    if (demoMode) return demoGetOrder(orderId);
+    return callAdmin("admin_get_order", { p_order_id: orderId });
   },
 
   async cancelOrder(orderId: string, reason: string): Promise<{ changed: boolean }> {
-    if (demoMode) return demoCancelOrder(orderId, reason)
-    return callAdmin("admin_cancel_order", { p_order_id: orderId, p_reason: reason })
+    if (demoMode) return demoCancelOrder(orderId, reason);
+    return callAdmin("admin_cancel_order", { p_order_id: orderId, p_reason: reason });
   },
 
   // ─── Payments ─────────────────────────────────────────────────────────────
@@ -248,19 +260,19 @@ export const adminApi = {
     limit = 25,
     offset = 0,
   ): Promise<AdminListResult<AdminPaymentRow>> {
-    if (demoMode) return demoListPayments(filters, limit, offset)
+    if (demoMode) return demoListPayments(filters, limit, offset);
     return callAdmin("admin_list_payments", {
       p_search: filters.search ?? null,
       p_status: filters.status ?? "all",
       p_days: filters.days ?? 30,
       p_limit: limit,
       p_offset: offset,
-    })
+    });
   },
 
   async getPayment(paymentId: string): Promise<AdminPaymentDetail> {
-    if (demoMode) return demoGetPayment(paymentId)
-    return callAdmin("admin_get_payment", { p_payment_id: paymentId })
+    if (demoMode) return demoGetPayment(paymentId);
+    return callAdmin("admin_get_payment", { p_payment_id: paymentId });
   },
 
   async reviewPayment(
@@ -268,22 +280,22 @@ export const adminApi = {
     decision: "verified" | "rejected",
     reason: string,
   ): Promise<{ changed: boolean; status?: string }> {
-    if (demoMode) return demoReviewPayment(paymentId, decision, reason)
+    if (demoMode) return demoReviewPayment(paymentId, decision, reason);
     return callAdmin("admin_review_payment", {
       p_payment_id: paymentId,
       p_decision: decision,
       p_reason: reason,
-    })
+    });
   },
 
   // Short-lived signed URL for a private payment receipt. Never cached/logged.
   async receiptUrl(path: string): Promise<string | null> {
-    if (demoMode || !path) return null
+    if (demoMode || !path) return null;
     const { data, error } = await requireSupabase()
       .storage.from("payment-receipts")
-      .createSignedUrl(path, 60)
-    if (error) return null
-    return data?.signedUrl ?? null
+      .createSignedUrl(path, 60);
+    if (error) return null;
+    return data?.signedUrl ?? null;
   },
 
   // ─── Combined payments (read-only) ──────────────────────────────────────────
@@ -293,49 +305,47 @@ export const adminApi = {
     limit = 25,
     offset = 0,
   ): Promise<AdminCombinedListResult> {
-    if (demoMode) return demoListCombinedPayments(filters, limit, offset)
+    if (demoMode) return demoListCombinedPayments(filters, limit, offset);
     return callAdmin("admin_list_combined_payments", {
       p_search: filters.search ?? null,
       p_status: filters.status ?? "all",
       p_limit: limit,
       p_offset: offset,
-    })
+    });
   },
 
   // ─── Team ─────────────────────────────────────────────────────────────────
 
   async listTeam(): Promise<{ rows: AdminTeamMember[] }> {
-    if (demoMode) return demoListTeam()
-    return callAdmin("admin_list_team", {})
+    if (demoMode) return demoListTeam();
+    return callAdmin("admin_list_team", {});
   },
 
   async grantAdmin(userId: string, reason: string): Promise<{ changed: boolean }> {
-    if (demoMode) return demoGrantAdmin(userId, reason)
-    return callAdmin("admin_grant_admin", { p_user_id: userId, p_reason: reason })
+    if (demoMode) return demoGrantAdmin(userId, reason);
+    return callAdmin("admin_grant_admin", { p_user_id: userId, p_reason: reason });
   },
 
   async revokeAdmin(userId: string, reason: string): Promise<{ changed: boolean }> {
-    if (demoMode) return demoRevokeAdmin(userId, reason)
-    return callAdmin("admin_revoke_admin", { p_user_id: userId, p_reason: reason })
+    if (demoMode) return demoRevokeAdmin(userId, reason);
+    return callAdmin("admin_revoke_admin", { p_user_id: userId, p_reason: reason });
   },
 
   // ─── The invitee's own invitation (no admin rights required) ───────────────
 
   async getMyInvite(): Promise<AdminInvite | null> {
-    if (demoMode) return demoGetMyInvite()
-    return callAdmin<AdminInvite | null>("admin_my_invite", {})
+    if (demoMode) return demoGetMyInvite();
+    return callAdmin<AdminInvite | null>("admin_my_invite", {});
   },
 
   async acceptAdminInvite(): Promise<{ accepted: boolean; changed: boolean }> {
-    if (demoMode) return demoAcceptAdminInvite()
-    return callAdmin("admin_accept_invite", {})
+    if (demoMode) return demoAcceptAdminInvite();
+    return callAdmin("admin_accept_invite", {});
   },
 
-  async declineAdminInvite(
-    reason?: string,
-  ): Promise<{ declined: boolean; changed: boolean }> {
-    if (demoMode) return demoDeclineAdminInvite(reason ?? null)
-    return callAdmin("admin_decline_invite", { p_reason: reason?.trim() || null })
+  async declineAdminInvite(reason?: string): Promise<{ declined: boolean; changed: boolean }> {
+    if (demoMode) return demoDeclineAdminInvite(reason ?? null);
+    return callAdmin("admin_decline_invite", { p_reason: reason?.trim() || null });
   },
 
   // ─── Audit log ──────────────────────────────────────────────────────────────
@@ -345,13 +355,13 @@ export const adminApi = {
     limit = 25,
     offset = 0,
   ): Promise<AdminListResult<AdminAuditRow>> {
-    if (demoMode) return demoListAudit(filters, limit, offset)
+    if (demoMode) return demoListAudit(filters, limit, offset);
     return callAdmin("admin_list_audit", {
       p_search: filters.search ?? null,
       p_action: filters.action ?? "all",
       p_days: filters.days ?? 30,
       p_limit: limit,
       p_offset: offset,
-    })
+    });
   },
-}
+};

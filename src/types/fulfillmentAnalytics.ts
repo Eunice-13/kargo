@@ -7,6 +7,21 @@ export type FulfillmentAnalyticsStage =
   | "cancelled"
   | "expired";
 
+export type FulfillmentCurrentStatusStage =
+  | "payment_confirmed"
+  | "preparing"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "expired"
+  | "other";
+
+export type FulfillmentCurrentStatus = {
+  cohortSize: number;
+  generatedAt: string;
+  counts: Record<FulfillmentCurrentStatusStage, number>;
+};
+
 export type FulfillmentAnalyticsFilters = {
   period?: "today" | "last_7_days" | "last_30_days" | "all_time" | "custom";
   /** Inclusive Manila calendar dates (YYYY-MM-DD), custom period only. */

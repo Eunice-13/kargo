@@ -1,64 +1,72 @@
 import type {
   FulfillmentAnalytics,
   FulfillmentAnalyticsStage as Stage,
+  FulfillmentCurrentStatus,
 } from "@/types/fulfillmentAnalytics";
 import { ANALYTICS_STAGES, bucketCount } from "./fulfillmentAnalyticsModel";
 
-// Stages where an order left the happy path. They are charted apart from the
-// fulfillment path so a drop-off is never read as progress.
 const DROP_OFF_STAGES: Stage[] = ["cancelled", "expired"];
+const OTHER_STAGE = {
+  key: "other" as const,
+  label: "Other",
+  color: "#64748B",
+};
+type DisplayStage = Stage | "other";
+type BreakdownView = "reached" | "current";
 
-// Alternate "breakdown" view of the same analytics data: one bar per stage,
-// grouped into the fulfillment path and the drop-offs. Each stage has one job
-// per surface: the filter chips above filter and carry the counts, and the bars
-// show the count on top with the stage name and share underneath, so there is no
-// separate legend. Uses the exact same stage definitions, labels, colours and KPI
-// math as the rest of the card (share = stageTotals[stage] / uniqueOrders).
-// Desktop shows vertical bars; mobile shows progress rows, switched purely in
-// CSS. Clicking a stage opens its orders.
+// Shared bar view for reached-stage and current-status counts. Reached uses
+// stageTotals and percentages may add above 100%; current uses one status per
+// order and percentages sum to 100%. Current-status bars have no drill-down
+// until the orders RPC can support current-state membership safely.
 export default function FulfillmentBreakdown({
   data,
+  view,
+  currentStatus,
   focused,
   onFocusStage,
   onOpen,
 }: {
   data: FulfillmentAnalytics;
+  view: BreakdownView;
+  currentStatus?: FulfillmentCurrentStatus;
   focused: Stage;
   onFocusStage: (stage: Stage) => void;
-  onOpen: (stage: Stage) => void;
+  onOpen?: (stage: Stage) => void;
 }) {
-  const rows = ANALYTICS_STAGES.map((s) => {
-    // Safe against a stage key the RPC payload omits (schema/version drift).
-    const count = bucketCount(data.stageTotals, s.key);
+  const current = view === "current";
+  const stages: Array<{ key: DisplayStage; label: string; color: string }> = current
+    ? [...ANALYTICS_STAGES, OTHER_STAGE]
+    : ANALYTICS_STAGES;
+  const denominator = current
+    ? (currentStatus?.cohortSize ?? 0)
+    : (data.cohortSize ?? data.uniqueOrders);
+  const rows = stages.map((s) => {
+    const count = current
+      ? (currentStatus?.counts[s.key as keyof FulfillmentCurrentStatus["counts"]] ?? 0)
+      : bucketCount(data.stageTotals, s.key as Stage);
     return {
       ...s,
       count,
-      // Percentages use the payment-confirmed cohort, not raw event rows.
-      percent:
-        (data.cohortSize ?? data.uniqueOrders)
-          ? Math.round((count / (data.cohortSize ?? data.uniqueOrders)) * 100)
-          : 0,
+      percent: denominator ? Math.round((count / denominator) * 100) : 0,
     };
   });
-  // One scale across both groups so bar heights stay comparable.
-  const peak = Math.max(1, ...rows.map((r) => r.count));
-
+  const visibleRows = current ? rows.filter((row) => row.key !== "other" || row.count > 0) : rows;
+  const peak = Math.max(1, ...visibleRows.map((r) => r.count));
+  const pathRows = visibleRows.filter(
+    (row) => !DROP_OFF_STAGES.includes(row.key as Stage) && row.key !== "other",
+  );
+  const dropOffRows = visibleRows.filter((row) => DROP_OFF_STAGES.includes(row.key as Stage));
+  const otherRows = visibleRows.filter((row) => row.key === "other");
   const groups = [
-    {
-      id: "path",
-      title: "Fulfillment path",
-      rows: rows.filter((r) => !DROP_OFF_STAGES.includes(r.key)),
-    },
-    {
-      id: "drop-offs",
-      title: "Drop-offs",
-      rows: rows.filter((r) => DROP_OFF_STAGES.includes(r.key)),
-    },
+    { id: "path", title: "Fulfillment path", rows: pathRows },
+    { id: "drop-offs", title: "Drop-offs", rows: dropOffRows },
+    ...(otherRows.length ? [{ id: "other", title: "Other", rows: otherRows }] : []),
   ];
 
-  const select = (s: Stage) => {
-    onFocusStage(s);
-    onOpen(s);
+  const select = (stage: DisplayStage) => {
+    if (stage === "other" || !onOpen) return;
+    onFocusStage(stage);
+    onOpen(stage);
   };
 
   return (
@@ -70,7 +78,6 @@ export default function FulfillmentBreakdown({
           aria-label={group.title}
         >
           <h3 className="fulfillment-breakdown__group-title">{group.title}</h3>
-          {/* Desktop: vertical bars. Mobile: progress rows (CSS swaps the layout). */}
           <ul
             className="fulfillment-breakdown__list"
             style={{ ["--cols" as string]: group.rows.length }}
@@ -79,10 +86,11 @@ export default function FulfillmentBreakdown({
               <li key={r.key} className={r.key === focused ? "is-focused" : undefined}>
                 <button
                   type="button"
+                  disabled={current || r.key === "other" || !onOpen}
                   style={{ ["--chip" as string]: r.color }}
                   aria-pressed={r.key === focused}
+                  aria-label={`${current ? "Current status" : "View"}: ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% of cohort orders)`}
                   onClick={() => select(r.key)}
-                  aria-label={`View ${r.count.toLocaleString()} ${r.label} orders (${r.percent}% of cohort orders)`}
                 >
                   <span className="fulfillment-breakdown__bar-wrap">
                     <span

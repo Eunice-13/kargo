@@ -3,6 +3,8 @@ import type {
   FulfillmentAnalyticsStage as Stage,
 } from "@/types/fulfillmentAnalytics";
 
+export type FulfillmentAnalyticsView = "trend" | "reached" | "current";
+
 export const ANALYTICS_STAGES: { key: Stage; label: string; color: string; dash?: string }[] = [
   { key: "payment_confirmed", label: "Payment confirmed", color: "#191BA9", dash: "3 3" },
   { key: "preparing", label: "Preparing", color: "#B4690E" },

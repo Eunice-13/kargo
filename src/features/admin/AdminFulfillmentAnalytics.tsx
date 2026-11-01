@@ -4,6 +4,7 @@ import { adminApi } from "@/services";
 import type {
   FulfillmentAnalyticsFilters,
   FulfillmentAnalyticsStage as Stage,
+  FulfillmentCurrentStatus,
 } from "@/types/fulfillmentAnalytics";
 import { useAdminResource } from "./useAdminResource";
 import {
@@ -13,6 +14,7 @@ import {
   bucketCount,
   customRangeError,
   manilaToday,
+  type FulfillmentAnalyticsView,
 } from "./fulfillmentAnalyticsModel";
 import FulfillmentTrendChart from "./FulfillmentTrendChart";
 import FulfillmentBreakdown from "./FulfillmentBreakdown";
@@ -166,25 +168,43 @@ function AnalyticsResults({
   onLoaded: (iso: string) => void;
 }) {
   const resource = useAdminResource(() => adminApi.fulfillmentAnalytics(filters), [], refreshKey);
+  const currentResource = useAdminResource(
+    () => adminApi.fulfillmentCurrentStatus(filters),
+    [],
+    refreshKey,
+  );
   // YouTube-style: every stage line is always drawn, but the selected
   // (`focused`) stage is pulled to the front and emphasised while the rest
   // stay visible but dimmed in the back. Selecting a chip only changes which
   // line is highlighted — it never hides the others.
   const [focused, setFocused] = useState<Stage>("delivered");
-  // Two ways to view the same data: the time "trend" line chart, or a "breakdown"
-  // of each stage's share of orders in view.
-  const [view, setView] = useState<"trend" | "breakdown">("trend");
+  // Three ways to view the same cohort: trend, reached-stage funnel, or current status.
+  const [view, setView] = useState<FulfillmentAnalyticsView>("current");
   // On mobile the stage chips collapse behind a summary toggle to save space.
   const [stagesOpen, setStagesOpen] = useState(false);
   const visible: Stage[] = ANALYTICS_STAGES.map((s) => s.key);
   const [point, setPoint] = useState<{ stage: Stage; bucket?: string } | null>(null);
   useEffect(() => {
-    if (!resource.loading && !resource.error && resource.data) onLoaded(resource.data.generatedAt);
-  }, [resource.loading, resource.error, resource.data, onLoaded]);
+    const active = view === "current" ? currentResource : resource;
+    if (!active.loading && !active.error && active.data) onLoaded(active.data.generatedAt);
+  }, [
+    view,
+    resource.loading,
+    resource.error,
+    resource.data,
+    currentResource.loading,
+    currentResource.error,
+    currentResource.data,
+    onLoaded,
+  ]);
+  useEffect(() => {
+    setPoint(null);
+  }, [view]);
   useEffect(() => {
     setPoint(null);
   }, [refreshKey]);
-  if (resource.loading)
+  const activeResource = view === "current" ? currentResource : resource;
+  if (activeResource.loading || resource.loading)
     return (
       <>
         <div role="status" className="fulfillment-analytics__loading">
@@ -197,7 +217,7 @@ function AnalyticsResults({
         </div>
       </>
     );
-  if (resource.error)
+  if (activeResource.error)
     return (
       <div
         role="alert"
@@ -205,25 +225,27 @@ function AnalyticsResults({
       >
         <h3>Fulfillment analytics unavailable</h3>
         <p>
-          {resource.accessDenied
+          {activeResource.accessDenied
             ? "Admin access is required to view fulfillment analytics."
-            : /demo mode/i.test(resource.error)
+            : /demo mode/i.test(activeResource.error)
               ? "Recorded fulfillment history isn’t available in demo mode."
-              : /function|schema cache|does not exist/i.test(resource.error)
+              : /function|schema cache|does not exist/i.test(activeResource.error)
                 ? "Fulfillment analytics hasn’t been enabled in this environment yet."
                 : "We couldn’t load fulfillment history. Your last successful load time is shown above."}
         </p>
-        <button type="button" onClick={resource.refresh}>
+        <button type="button" onClick={activeResource.refresh}>
           Try again
         </button>
       </div>
     );
   const data = resource.data;
-  if (!data) return null;
-  const cohortSize = data.cohortSize ?? data.uniqueOrders;
-  const deliveryPercent = cohortSize
-    ? Math.round((bucketCount(data.stageTotals, "delivered") / cohortSize) * 100)
-    : null;
+  const currentData = currentResource.data;
+  if (!data || (view === "current" && !currentData)) return null;
+  const cohortSize =
+    view === "current" ? currentData!.cohortSize : (data.cohortSize ?? data.uniqueOrders);
+  const deliveryCount =
+    view === "current" ? currentData!.counts.delivered : bucketCount(data.stageTotals, "delivered");
+  const deliveryPercent = cohortSize ? Math.round((deliveryCount / cohortSize) * 100) : null;
   return (
     <>
       <div className="fulfillment-analytics__summary">
@@ -240,10 +262,12 @@ function AnalyticsResults({
         {filters.period === "custom"
           ? `${filters.start} – ${filters.end}`
           : PERIODS.find(([key]) => key === filters.period)?.[1]}{" "}
-        · Grouped by {data.grouping === "hour" ? "hour" : data.grouping} (Manila time). Orders that
-        reached each stage are counted. An order can appear in several stages, so percentages add up
-        to more than 100%. {(data.excludedOrders ?? 0).toLocaleString()} orders excluded by the
-        recorded-history boundary.
+        · Grouped by {data.grouping === "hour" ? "hour" : data.grouping} (Manila time).{" "}
+        {view === "current"
+          ? "Where orders are right now. Each order is counted once, in its latest stage. Orders without payment confirmation are not included."
+          : "Orders that reached each stage are counted. An order can appear in several stages, so percentages add up to more than 100%."}{" "}
+        {(data.excludedOrders ?? 0).toLocaleString()} orders excluded by the recorded-history
+        boundary.
       </p>
       <div className="fulfillment-analytics__stage-row">
         <div className="fulfillment-analytics__stage-field">
@@ -286,9 +310,24 @@ function AnalyticsResults({
               >
                 <span className="fulfillment-stage-dot" style={{ background: stage.color }} />
                 <span>{stage.label}</span>
-                <strong>{bucketCount(data.stageTotals, stage.key).toLocaleString()}</strong>
+                <strong>
+                  {view === "current"
+                    ? Number(
+                        currentData!.counts[
+                          stage.key as keyof FulfillmentCurrentStatus["counts"]
+                        ] ?? 0,
+                      ).toLocaleString()
+                    : bucketCount(data.stageTotals, stage.key).toLocaleString()}
+                </strong>
               </button>
             ))}
+            {view === "current" && (currentData!.counts.other ?? 0) > 0 && (
+              <button type="button" disabled aria-label="Other current-status orders">
+                <span className="fulfillment-stage-dot" style={{ background: "#64748B" }} />
+                <span>Other</span>
+                <strong>{currentData!.counts.other.toLocaleString()}</strong>
+              </button>
+            )}
           </div>
         </div>
         <div className="fulfillment-analytics__focus-actions">
@@ -310,12 +349,21 @@ function AnalyticsResults({
             <button
               type="button"
               role="radio"
-              aria-checked={view === "breakdown"}
-              aria-pressed={view === "breakdown"}
-              onClick={() => setView("breakdown")}
+              aria-checked={view === "reached"}
+              aria-pressed={view === "reached"}
+              onClick={() => setView("reached")}
             >
               <BarChart3 size={15} aria-hidden="true" />
-              Breakdown
+              Reached stage
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={view === "current"}
+              aria-pressed={view === "current"}
+              onClick={() => setView("current")}
+            >
+              Current status
             </button>
           </div>
           <button type="button" onClick={() => setPoint({ stage: focused })}>
@@ -328,7 +376,7 @@ function AnalyticsResults({
           className="fulfillment-analytics__notice fulfillment-analytics__notice--empty"
           role="status"
         >
-          No cohort orders reached a stage in this range. Try another date range.
+          No cohort orders are available in this range. Try another date range.
         </p>
       )}
       {view === "trend" ? (
@@ -343,9 +391,11 @@ function AnalyticsResults({
       ) : (
         <FulfillmentBreakdown
           data={data}
+          view={view}
+          currentStatus={currentData ?? undefined}
           focused={focused}
           onFocusStage={setFocused}
-          onOpen={(stage) => setPoint({ stage })}
+          onOpen={view === "reached" ? (stage) => setPoint({ stage }) : undefined}
         />
       )}
       <p className="fulfillment-analytics__coverage">
