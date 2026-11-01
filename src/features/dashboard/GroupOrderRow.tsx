@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { Check, ChevronDown, Users } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import type { LeaderGroupOrder } from "@/types/leaderGroupOrder";
 import Avatar from "@/components/shared/Avatar";
 import { groupMoney, groupProgress, groupSteps, groupTimeLeft } from "./groupOrderProgress";
@@ -130,9 +130,6 @@ export default function GroupOrderRow({
   return (
     <li className="group-shortcut-card" data-group-card={group.id} data-tone={progress.tone}>
       <div className="group-shortcut-summary" onClick={onToggle}>
-        <span className="group-shortcut-icon" aria-hidden="true">
-          <Users size={23} />
-        </span>
         <div className="group-shortcut-name">
           <h3>{group.batchTitle ?? "Batch unavailable"}</h3>
           <p>
