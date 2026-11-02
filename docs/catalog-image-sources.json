@@ -1,0 +1,3058 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-10-29",
+  "scope": "Complete local demo seed only; no live Supabase records read or written.",
+  "policy": [
+    "Only actual photographs discovered through web searches and individually opened/viewed before mapping are included.",
+    "Covers are at least 1200px wide and approximately 2:1 (accepted range 1.8–2.2); Seoul retains its native 1280x595 composition. All other covers are 2:1.",
+    "Product sources and final square files are at least 600px in both dimensions. No upscaling or generated imagery.",
+    "sourceDimensions describes downloaded image bytes used for the crop; originalDimensions is full original metadata where applicable. imageUrl/downloadUrl are exact observed URLs.",
+    "Photo reuse is allowed only for identical named product occurrences. Destination covers may repeat for the same destination or a location within a specified country.",
+    "Attribution, license and changes are retained per asset. Commercial product photography has no asserted open reuse license.",
+    "Representative real photographs within the same named brand/product family are allowed. Exact pictured variants are recorded in assets without adding shade, model, size, flavor, edition or contents claims to seed labels. Unconfirmable bundles remain empty. All mapped product photographs are visually checked watermark-free; no watermark removal is used."
+  ],
+  "counts": {
+    "batches": 33,
+    "uniqueProducts": 48,
+    "productOccurrences": 50,
+    "covers": {
+      "verified": 33,
+      "missing": 0
+    },
+    "products": {
+      "verified": 21,
+      "missing": 27
+    },
+    "localFiles": 44
+  },
+  "assets": [
+    {
+      "id": "cover-osaka",
+      "kind": "cover",
+      "label": "Osaka",
+      "path": "/catalog/covers/osaka.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Osaka_Dotonbori_yoru.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Osaka_Dotonbori_yoru.jpg/1280px-Osaka_Dotonbori_yoru.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Osaka_Dotonbori_yoru.jpg/1280px-Osaka_Dotonbori_yoru.jpg",
+      "originalImageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Osaka_Dotonbori_yoru.jpg",
+      "originalSourcePageUrl": null,
+      "originalDimensions": {
+        "width": 5707,
+        "height": 3805
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 853
+      },
+      "dimensions": {
+        "width": 1280,
+        "height": 640
+      },
+      "transformation": {
+        "operation": "Photographic crop and JPEG encoding; no upscaling",
+        "crop": {
+          "x": 0,
+          "y": 70,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "15615168d0954fe0691bf1a78d52086780e3cfc7ed270578826009a051da0d54",
+      "verifiedOn": "2026-10-29",
+      "verification": "Source explicitly identifies Dotonbori, Osaka. Viewed the downloaded and final local photo: Dotonbori canal, lanterns, crowds and Glico runner sign are visible. Final crop preserves the canal and principal signs.",
+      "attribution": {
+        "credit": "Sakai Yayoi / Wikimedia Commons",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "changes": "Cropped to about 2:1 and JPEG encoded.",
+        "rightsNote": null
+      }
+    },
+    {
+      "id": "cover-seoul",
+      "kind": "cover",
+      "label": "Seoul",
+      "path": "/catalog/covers/seoul.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Seoul_panorama.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/Seoul_panorama.jpg/1280px-Seoul_panorama.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/Seoul_panorama.jpg/1280px-Seoul_panorama.jpg",
+      "originalImageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Seoul_panorama.jpg",
+      "originalSourcePageUrl": null,
+      "originalDimensions": {
+        "width": 2500,
+        "height": 1163
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 595
+      },
+      "dimensions": {
+        "width": 1280,
+        "height": 595
+      },
+      "transformation": {
+        "operation": "JPEG re-encoding only; full photographic composition retained. Share-alike license retained for this derivative."
+      },
+      "sha256": "03dfdb0b38c3729320e41aa3719b6749438dd6a6b7b09833785de2b401f70427",
+      "verifiedOn": "2026-10-29",
+      "verification": "Source explicitly identifies Seoul panorama. Viewed downloaded and final local photo: forested Namsan foreground, Han River and dense Seoul cityscape in the distance. Native 2.151:1 aspect is approximately 2:1; retained without padding or enlargement.",
+      "attribution": {
+        "credit": "Oleg Kurtsev / Wikimedia Commons",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "changes": "JPEG re-encoding only; full photographic composition retained. Share-alike license retained for this derivative.",
+        "rightsNote": null
+      }
+    },
+    {
+      "id": "cover-tokyo",
+      "kind": "cover",
+      "label": "Tokyo",
+      "path": "/catalog/covers/tokyo.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Tokyo_skyline_seen_from_Tokyo_Skytree.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Tokyo_skyline_seen_from_Tokyo_Skytree.jpg/1280px-Tokyo_skyline_seen_from_Tokyo_Skytree.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Tokyo_skyline_seen_from_Tokyo_Skytree.jpg/1280px-Tokyo_skyline_seen_from_Tokyo_Skytree.jpg",
+      "originalImageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/98/Tokyo_skyline_seen_from_Tokyo_Skytree.jpg",
+      "originalSourcePageUrl": null,
+      "originalDimensions": {
+        "width": 4898,
+        "height": 3265
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 853
+      },
+      "dimensions": {
+        "width": 1280,
+        "height": 640
+      },
+      "transformation": {
+        "operation": "Photographic crop and JPEG encoding; no upscaling",
+        "crop": {
+          "x": 0,
+          "y": 200,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "005adf4c8c2603f2955367d2dd5abd1ea238411dbb68a184bd8f7bf0e061a605",
+      "verifiedOn": "2026-10-29",
+      "verification": "Source explicitly identifies Tokyo skyline viewed from Tokyo Skytree. Viewed downloaded and final local photo: dense Tokyo towers beneath hazy late-afternoon sky, with Tokyo Tower near the center. Final crop prioritizes the skyline.",
+      "attribution": {
+        "credit": "Ruthsic / Wikimedia Commons",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "changes": "Cropped sky and narrow lower edge to 2:1, JPEG re-encoded. Share-alike license retained for this derivative.",
+        "rightsNote": null
+      }
+    },
+    {
+      "id": "cover-jeju",
+      "kind": "cover",
+      "label": "Jeju",
+      "path": "/catalog/covers/jeju.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Seongsan_Ilchulbong_01.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Seongsan_Ilchulbong_01.jpg/1280px-Seongsan_Ilchulbong_01.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/Seongsan_Ilchulbong_01.jpg/1280px-Seongsan_Ilchulbong_01.jpg",
+      "originalImageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fc/Seongsan_Ilchulbong_01.jpg",
+      "originalSourcePageUrl": null,
+      "originalDimensions": {
+        "width": 5084,
+        "height": 3389
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 853
+      },
+      "dimensions": {
+        "width": 1280,
+        "height": 640
+      },
+      "transformation": {
+        "operation": "Photographic crop and JPEG encoding; no upscaling",
+        "crop": {
+          "x": 0,
+          "y": 160,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "b70cc21c380c9ea0195325808d64bbd9fad37d9c24ac55ace59010c58a625097",
+      "verifiedOn": "2026-10-29",
+      "verification": "Source explicitly identifies Seongsan Ilchulbong, Jeju Island. Viewed downloaded and final local photo: broad volcanic tuff cone, grassland and visitor approach. Final crop retains the full cone silhouette.",
+      "attribution": {
+        "credit": "Bernard Gagnon / Wikimedia Commons",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "changes": "Cropped to about 2:1 and JPEG encoded.",
+        "rightsNote": null
+      }
+    },
+    {
+      "id": "cover-kyoto",
+      "kind": "cover",
+      "label": "Kyoto",
+      "path": "/catalog/covers/kyoto.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kiyomizu_Temple_in_Kyoto.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/80/Kiyomizu_Temple_in_Kyoto.jpg/1280px-Kiyomizu_Temple_in_Kyoto.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/80/Kiyomizu_Temple_in_Kyoto.jpg/1280px-Kiyomizu_Temple_in_Kyoto.jpg",
+      "originalImageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/80/Kiyomizu_Temple_in_Kyoto.jpg",
+      "originalSourcePageUrl": null,
+      "originalDimensions": {
+        "width": 6016,
+        "height": 4016
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 854
+      },
+      "dimensions": {
+        "width": 1280,
+        "height": 640
+      },
+      "transformation": {
+        "operation": "Photographic crop and JPEG encoding; no upscaling",
+        "crop": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "9b712c78e3924ea9a70c2edd1d38b43bdd709b82c7efa0f8df48bbe4009a55eb",
+      "verifiedOn": "2026-10-29",
+      "verification": "Source identifies Kiyomizu-dera temple in Kyoto. Viewed downloaded and final local photo: main temple hall, wooden terrace and visitors above green trees, with Kyoto skyline at left. Crop retains the hall and terrace.",
+      "attribution": {
+        "credit": "Tmv (Tsuyoshi Matsumoto) / Wikimedia Commons",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "changes": "Cropped lower foliage to 2:1, JPEG re-encoded. Share-alike license retained for this derivative.",
+        "rightsNote": null
+      }
+    },
+    {
+      "id": "cover-nagoya",
+      "kind": "cover",
+      "label": "Nagoya",
+      "path": "/catalog/covers/nagoya.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nagoya_Castle.JPG",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Nagoya_Castle.JPG/1280px-Nagoya_Castle.JPG",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Nagoya_Castle.JPG/1280px-Nagoya_Castle.JPG",
+      "originalImageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Nagoya_Castle.JPG",
+      "originalSourcePageUrl": null,
+      "originalDimensions": {
+        "width": 3328,
+        "height": 1872
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 720
+      },
+      "dimensions": {
+        "width": 1280,
+        "height": 640
+      },
+      "transformation": {
+        "operation": "Photographic crop and JPEG encoding; no upscaling",
+        "crop": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "58f45dfe9dd184553b95150f256f9f184a8591f16b788571867eadb4fd52a150",
+      "verifiedOn": "2026-10-29",
+      "verification": "Source explicitly identifies Nagoya Castle. Viewed downloaded and final local photo: castle keep with green roofs, golden shachi ornaments, stone base and cherry blossom trees. Top-aligned crop retains the full roofline.",
+      "attribution": {
+        "credit": "Brücke-Osteuropa / Wikimedia Commons",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "changes": "Cropped to about 2:1 and JPEG encoded.",
+        "rightsNote": null
+      }
+    },
+    {
+      "id": "cover-busan",
+      "kind": "cover",
+      "label": "Busan",
+      "path": "/catalog/covers/busan.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Busan_Haeundae-gu_Night_View.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Busan_Haeundae-gu_Night_View.jpg/1280px-Busan_Haeundae-gu_Night_View.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Busan_Haeundae-gu_Night_View.jpg/1280px-Busan_Haeundae-gu_Night_View.jpg",
+      "originalImageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/15/Busan_Haeundae-gu_Night_View.jpg",
+      "originalSourcePageUrl": "https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=13072217&menuNo=200018",
+      "originalDimensions": {
+        "width": 7242,
+        "height": 4534
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 801
+      },
+      "dimensions": {
+        "width": 1280,
+        "height": 640
+      },
+      "transformation": {
+        "operation": "Photographic crop and JPEG encoding; no upscaling",
+        "crop": {
+          "x": 0,
+          "y": 100,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "12f3079ca03cf66689114683954d69d6b3d6d1012e799e805fda14e0e861805e",
+      "verifiedOn": "2026-10-29",
+      "verification": "Source explicitly identifies Haeundae-gu, Busan at night. Viewed downloaded and final local photo: illuminated Marine City towers, waterfront, Gwangan Bridge and distant hills. Crop retains the bridge and skyline.",
+      "attribution": {
+        "credit": "최경이(자유이용저작물), 공유마당 / Wikimedia Commons",
+        "license": "Korea Open Government License Type 1",
+        "licenseUrl": "https://www.kogl.or.kr/info/licenseType1.do",
+        "changes": "Cropped to 2:1 and JPEG re-encoded.",
+        "rightsNote": null
+      }
+    },
+    {
+      "id": "cover-incheon",
+      "kind": "cover",
+      "label": "Incheon",
+      "path": "/catalog/covers/incheon.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Songdo%27s_central_park_and_the_NEATT,_Incheon,_South_Korea.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Songdo%27s_central_park_and_the_NEATT%2C_Incheon%2C_South_Korea.jpg/1280px-Songdo%27s_central_park_and_the_NEATT%2C_Incheon%2C_South_Korea.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Songdo%27s_central_park_and_the_NEATT%2C_Incheon%2C_South_Korea.jpg/1280px-Songdo%27s_central_park_and_the_NEATT%2C_Incheon%2C_South_Korea.jpg",
+      "originalImageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Songdo%27s_central_park_and_the_NEATT%2C_Incheon%2C_South_Korea.jpg",
+      "originalSourcePageUrl": "https://www.flickr.com/photos/133152005@N07/22466768671",
+      "originalDimensions": {
+        "width": 1700,
+        "height": 1133
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 853
+      },
+      "dimensions": {
+        "width": 1280,
+        "height": 640
+      },
+      "transformation": {
+        "operation": "Photographic crop and JPEG encoding; no upscaling",
+        "crop": {
+          "x": 0,
+          "y": 100,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "b2b9163080790ed0d5a287eae127807d65e5320c25ca87b9c710e5df40eaa3cd",
+      "verifiedOn": "2026-10-29",
+      "verification": "Source explicitly identifies Songdo Central Park and the NEATT in Incheon. Viewed downloaded and final local photo: park waterway, boats, apartment towers and the tall NEATT/Posco tower. Crop retains tower top and waterway. Photo identity and resolution verified; separate architectural rights warning remains documented.",
+      "attribution": {
+        "credit": "dongjun Kim (Anycis) / Flickr / Wikimedia Commons",
+        "license": "CC BY 2.0 (photograph)",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "changes": "Cropped to 2:1 and JPEG re-encoded.",
+        "rightsNote": "Commons flags this image NoFoP-South Korea: architectural copyright may limit commercial reuse independently of the photograph's CC BY 2.0 license. Review rights before commercial publication."
+      }
+    },
+    {
+      "id": "cover-bangkok",
+      "kind": "cover",
+      "label": "Bangkok",
+      "path": "/catalog/covers/bangkok.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Bangkok_skyline,_Bangkok,_Thailand.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/Bangkok_skyline%2C_Bangkok%2C_Thailand.jpg/1280px-Bangkok_skyline%2C_Bangkok%2C_Thailand.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/Bangkok_skyline%2C_Bangkok%2C_Thailand.jpg/1280px-Bangkok_skyline%2C_Bangkok%2C_Thailand.jpg",
+      "originalDimensions": {
+        "width": 3072,
+        "height": 2048
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 853
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 0,
+          "y": 106.5,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "7dc38716a58b2789350912c09e7b919be5e2c4f945c858a3355e79bf634693f8",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Central Bangkok skyline, towers and Royal Bangkok Sports Club greenery; foreground balcony visible."
+      },
+      "attribution": {
+        "credit": "Vyacheslav Argenberg / Wikimedia Commons",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-singapore",
+      "kind": "cover",
+      "label": "Singapore",
+      "path": "/catalog/covers/singapore.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Singapore_Skyline_Panorama_(54146978992).jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Singapore_Skyline_Panorama_%2854146978992%29.jpg/3840px-Singapore_Skyline_Panorama_%2854146978992%29.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Singapore_Skyline_Panorama_%2854146978992%29.jpg/3840px-Singapore_Skyline_Panorama_%2854146978992%29.jpg",
+      "originalDimensions": {
+        "width": 9456,
+        "height": 4372
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 1775
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 145,
+          "y": 0,
+          "width": 3550,
+          "height": 1775
+        }
+      },
+      "sha256": "c67b0c21593267562f8e6a675213bd7ebcbbd2b2b00dee8236a1b44a9c803dc1",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Marina Bay waterfront skyline, DBS/HSBC towers, waterfront and clouds visible."
+      },
+      "attribution": {
+        "credit": "Mustang Joe (Joe deSousa) / Wikimedia Commons",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-phuket",
+      "kind": "cover",
+      "label": "Phuket",
+      "path": "/catalog/covers/phuket.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Patong_Beach,_Phuket,_Thailand_Panorama.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/Patong_Beach%2C_Phuket%2C_Thailand_Panorama.jpg/3840px-Patong_Beach%2C_Phuket%2C_Thailand_Panorama.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/Patong_Beach%2C_Phuket%2C_Thailand_Panorama.jpg/3840px-Patong_Beach%2C_Phuket%2C_Thailand_Panorama.jpg",
+      "originalDimensions": {
+        "width": 4912,
+        "height": 1080
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 844
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 1076,
+          "y": 0,
+          "width": 1688,
+          "height": 844
+        }
+      },
+      "sha256": "8c5496d6b522f889f8a2b3f769673626821c402c1c8b521fb1b963e835a09b85",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Patong Beach in Phuket; sand, swimmers, boats and bay headlands visible."
+      },
+      "attribution": {
+        "credit": "Ryomaandres / Wikimedia Commons",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-chiang-mai",
+      "kind": "cover",
+      "label": "Chiang Mai",
+      "path": "/catalog/covers/chiang-mai.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Chiang_Mai_Panorama.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Chiang_Mai_Panorama.jpg/3840px-Chiang_Mai_Panorama.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Chiang_Mai_Panorama.jpg/3840px-Chiang_Mai_Panorama.jpg",
+      "originalDimensions": {
+        "width": 8516,
+        "height": 3142
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 1417
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 503,
+          "y": 0,
+          "width": 2834,
+          "height": 1417
+        }
+      },
+      "sha256": "9c2c8b31ceeb66123db01ecff3cd39aae824c60c34d3803191633ab49dabb398",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Chiang Mai city panorama with low rise roofs and distant hills; source description and coordinates establish the city."
+      },
+      "attribution": {
+        "credit": "Jan Beck / Wikimedia Commons",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-hong-kong",
+      "kind": "cover",
+      "label": "Hong Kong",
+      "path": "/catalog/covers/hong-kong.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Hong-Kong_skyline.JPG",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Hong-Kong_skyline.JPG/1280px-Hong-Kong_skyline.JPG",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Hong-Kong_skyline.JPG/1280px-Hong-Kong_skyline.JPG",
+      "originalDimensions": {
+        "width": 2272,
+        "height": 1704
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 960
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 0,
+          "y": 160,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "30922344bd6106575b999db6695e084c4a3b41bddce287e860fbb42489cf19ae",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Night skyline from Victoria Peak; Bank of China tower and Victoria Harbour visible."
+      },
+      "attribution": {
+        "credit": "Robster1983 / Wikimedia Commons",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-taiwan",
+      "kind": "cover",
+      "label": "Taiwan",
+      "path": "/catalog/covers/taiwan.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Taipei_city.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Taipei_city.jpg/1280px-Taipei_city.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Taipei_city.jpg/1280px-Taipei_city.jpg",
+      "originalDimensions": {
+        "width": 5998,
+        "height": 3998
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 853
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 0,
+          "y": 106.5,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "3d133e21b08734dfae878a7b4ad6ae981faf9cfc866cb5224379ba1f217e2fa6",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Taipei skyline in Taiwan at dusk with Taipei 101 clearly visible."
+      },
+      "attribution": {
+        "credit": "tingyaoh / Wikimedia Commons",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-vietnam",
+      "kind": "cover",
+      "label": "Vietnam",
+      "path": "/catalog/covers/vietnam.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:20190926_Ha_Long_Bay-27.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/20190926_Ha_Long_Bay-27.jpg/1280px-20190926_Ha_Long_Bay-27.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/20190926_Ha_Long_Bay-27.jpg/1280px-20190926_Ha_Long_Bay-27.jpg",
+      "originalDimensions": {
+        "width": 5719,
+        "height": 3813
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 853
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 0,
+          "y": 106.5,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "40dd518a01c8bb3f6724ef577873c21d3e69449e86cb980b75781f38fc2eda91",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Ha Long Bay in northern Vietnam, limestone islands, water and boats visible."
+      },
+      "attribution": {
+        "credit": "Balon Greyjoy / Wikimedia Commons",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-dubai",
+      "kind": "cover",
+      "label": "Dubai",
+      "path": "/catalog/covers/dubai.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Dubai_Marina_Panorama.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Dubai_Marina_Panorama.jpg/3840px-Dubai_Marina_Panorama.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Dubai_Marina_Panorama.jpg/3840px-Dubai_Marina_Panorama.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+      "originalDimensions": {
+        "width": 7188,
+        "height": 3543
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 1893
+      },
+      "dimensions": {
+        "width": 1600,
+        "height": 800
+      },
+      "transformation": {
+        "operation": "Centered 2:1 crop and downsample with high-quality bicubic interpolation; JPEG quality 92; no upscaling, exposure edits or generated content",
+        "cropFromDownloaded": {
+          "x": 27,
+          "y": 0,
+          "width": 3786,
+          "height": 1893
+        }
+      },
+      "sha256": "ec309e72889345161b9714d8e68e96491bbb8d06e60a2d139bc06f480d7f1554",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedSourceImageViewed": true,
+        "downloadedFinalImageViewed": true,
+        "watermarkFree": true,
+        "method": "Actual web and image searches, Commons source page opened, exact linked 3840px image downloaded, source and final 1600x800 JPEG individually opened with view_image.",
+        "description": "Bright daylight Dubai Marina panorama: sharply defined sunlit waterfront towers, clear blue sky, white yachts and water reflections. Final 2:1 crop preserves the skyline roofline and marina; no watermark observed.",
+        "qualityReview": "Replaces the rejected hazy Panorama_of_Dubai.jpg. Source and final were checked for clear architectural detail, adequate light and contrast; no artificial brightening or sharpening was applied."
+      },
+      "attribution": {
+        "credit": "Ferdigraphy (©2013 @ferd1graphy) / Wikimedia Commons",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "changes": "Centered 2:1 photographic crop, downsampled to 1600x800 and JPEG encoded at quality 92. Share-alike license retained for this derivative."
+      }
+    },
+    {
+      "id": "cover-uk",
+      "kind": "cover",
+      "label": "United Kingdom",
+      "path": "/catalog/covers/uk.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Thames_Panorama,_London_-_June_2009.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Thames_Panorama%2C_London_-_June_2009.jpg/3840px-Thames_Panorama%2C_London_-_June_2009.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Thames_Panorama%2C_London_-_June_2009.jpg/3840px-Thames_Panorama%2C_London_-_June_2009.jpg",
+      "originalDimensions": {
+        "width": 10110,
+        "height": 4324
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 1642
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 278,
+          "y": 0,
+          "width": 3284,
+          "height": 1642
+        }
+      },
+      "sha256": "1861b688849f8ed075de9c1924082c73b02c85bb2e85e51ada60936114d717be",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "London Thames panorama with London Eye, Westminster Bridge, Big Ben and river traffic."
+      },
+      "attribution": {
+        "credit": "DAVID ILIFF / Wikimedia Commons",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-australia",
+      "kind": "cover",
+      "label": "Australia",
+      "path": "/catalog/covers/australia.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sydney_Harbour_Bridge_and_Sydney_Opera_House_panorama.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Sydney_Harbour_Bridge_and_Sydney_Opera_House_panorama.jpg/1280px-Sydney_Harbour_Bridge_and_Sydney_Opera_House_panorama.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Sydney_Harbour_Bridge_and_Sydney_Opera_House_panorama.jpg/1280px-Sydney_Harbour_Bridge_and_Sydney_Opera_House_panorama.jpg",
+      "originalDimensions": {
+        "width": 7553,
+        "height": 3936
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 667
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 0,
+          "y": 13.5,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "b66aa97cc8fa01c74654353039db56139a7dff2e28e3487f1f67d0ad22b14913",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Sydney Harbour Bridge and Sydney Opera House at dusk with harbour foreground."
+      },
+      "attribution": {
+        "credit": "Kgbo / Wikimedia Commons",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-france",
+      "kind": "cover",
+      "label": "France",
+      "path": "/catalog/covers/france.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Panorama_of_the_Paris_Skyline.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Panorama_of_the_Paris_Skyline.jpg/3840px-Panorama_of_the_Paris_Skyline.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Panorama_of_the_Paris_Skyline.jpg/3840px-Panorama_of_the_Paris_Skyline.jpg",
+      "originalDimensions": {
+        "width": 16342,
+        "height": 2623
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 616
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 0,
+          "y": 0,
+          "width": 1232,
+          "height": 616
+        }
+      },
+      "sha256": "b65d7cabad1fa2475f440a36edbd6b2d333181603e5569fcaa362ae8c8e4bfac",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Paris rooftops and Louvre architecture from Tuileries Ferris wheel; left crop avoids major wheel supports, some window reflections remain."
+      },
+      "attribution": {
+        "credit": "DiscoA340 / Wikimedia Commons",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-orchard-road",
+      "kind": "cover",
+      "label": "Orchard Road, Singapore",
+      "path": "/catalog/covers/orchard-road.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:OrchardRoad.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/OrchardRoad.jpg/1280px-OrchardRoad.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/OrchardRoad.jpg/1280px-OrchardRoad.jpg",
+      "originalDimensions": {
+        "width": 2592,
+        "height": 1944
+      },
+      "sourceDimensions": {
+        "width": 1280,
+        "height": 960
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 0,
+          "y": 160,
+          "width": 1280,
+          "height": 640
+        }
+      },
+      "sha256": "1849b33a0b3129108002f7effdf4bf8c903e69a9b54df64b49891a7cbee2a874",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Actual Orchard Road/Scotts Road intersection showing Tangs Plaza and Orchard Road ERP gantry."
+      },
+      "attribution": {
+        "credit": "mailer_diablo / Wikimedia Commons",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-california",
+      "kind": "cover",
+      "label": "California",
+      "path": "/catalog/covers/california.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Panorama_of_Golden_Gate_Bridge.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Panorama_of_Golden_Gate_Bridge.jpg/3840px-Panorama_of_Golden_Gate_Bridge.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Panorama_of_Golden_Gate_Bridge.jpg/3840px-Panorama_of_Golden_Gate_Bridge.jpg",
+      "originalDimensions": {
+        "width": 10289,
+        "height": 3195
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 1192
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 728,
+          "y": 0,
+          "width": 2384,
+          "height": 1192
+        }
+      },
+      "sha256": "c176e38a331c407bef577e320dab7b06ba01ba5baf3329573e52958abd826787",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Golden Gate Bridge from Marin Headlands, San Francisco Bay and distant city visible; valid California and US cover."
+      },
+      "attribution": {
+        "credit": "Bogdan Oporowski / Wikimedia Commons",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-new-york",
+      "kind": "cover",
+      "label": "New York",
+      "path": "/catalog/covers/new-york.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:NYC_skyline_panorama.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/NYC_skyline_panorama.jpg/3840px-NYC_skyline_panorama.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/NYC_skyline_panorama.jpg/3840px-NYC_skyline_panorama.jpg",
+      "originalDimensions": {
+        "width": 6312,
+        "height": 1568
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 954
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 966,
+          "y": 0,
+          "width": 1908,
+          "height": 954
+        }
+      },
+      "sha256": "c1da8ad99e8df381c75396c6cf10f22196ddb8e41099e4c0a30bc00a72713faf",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "New York City skyline across Hudson River from Weehawken; Empire State Building visible."
+      },
+      "attribution": {
+        "credit": "Juliancolton / Wikimedia Commons",
+        "license": "Public domain (PD-self)",
+        "licenseUrl": "https://commons.wikimedia.org/wiki/Template:PD-self",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "cover-seattle",
+      "kind": "cover",
+      "label": "Seattle",
+      "path": "/catalog/covers/seattle.jpg",
+      "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Seattle_skyline_panorama_from_Kerry_Park,_June_2022.jpg",
+      "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Seattle_skyline_panorama_from_Kerry_Park%2C_June_2022.jpg/3840px-Seattle_skyline_panorama_from_Kerry_Park%2C_June_2022.jpg",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Seattle_skyline_panorama_from_Kerry_Park%2C_June_2022.jpg/3840px-Seattle_skyline_panorama_from_Kerry_Park%2C_June_2022.jpg",
+      "originalDimensions": {
+        "width": 13516,
+        "height": 2221
+      },
+      "sourceDimensions": {
+        "width": 3840,
+        "height": 631
+      },
+      "dimensions": {
+        "width": 1200,
+        "height": 600
+      },
+      "transformation": {
+        "operation": "Crop to 2:1 and downsample; no upscaling; JPEG encoding",
+        "cropFromDownloaded": {
+          "x": 1289,
+          "y": 0,
+          "width": 1262,
+          "height": 631
+        }
+      },
+      "sha256": "19237ec49bad9d374049898bcdbdd37059c1541587cf7fdb17f3273f4c005ebe",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "date": "2026-10-29",
+        "searched": true,
+        "sourcePageOpened": true,
+        "downloadedFinalImageViewed": true,
+        "method": "Actual web search, Commons file page opened, explicit linked thumbnail downloaded, final local JPEG individually opened with view_image before mapping.",
+        "description": "Seattle skyline from Kerry Park, Space Needle prominently visible; Mount Rainier partially visible at right."
+      },
+      "attribution": {
+        "credit": "SounderBruce / Wikimedia Commons",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "changes": "Crop to 2:1 and downsample; no upscaling; JPEG encoding"
+      }
+    },
+    {
+      "id": "product-tokyo-banana",
+      "kind": "product",
+      "label": "Tokyo Banana",
+      "identifiedProduct": "TOKYO BANANA Original Flavor banana custard sponge cake",
+      "path": "/catalog/products/tokyo-banana.jpg",
+      "searchQuery": "Tokyo Banana original official product",
+      "sourcePageUrl": "https://www.tokyobanana.jp/language/en/products/28.html",
+      "imageUrl": "https://www.tokyobanana.jp/language/images/products/28_original_01.jpg",
+      "downloadUrl": "https://www.tokyobanana.jp/language/images/products/28_original_01.jpg",
+      "corroboratingManufacturerPageUrl": null,
+      "originalDimensions": {
+        "width": 640,
+        "height": 640
+      },
+      "sourceDimensions": {
+        "width": 640,
+        "height": 640
+      },
+      "dimensions": {
+        "width": 640,
+        "height": 640
+      },
+      "transformation": "None; original JPEG downloaded unchanged.",
+      "sha256": "91b25775e5e7bcd69e036afe3a047539a772ec36887d24183e89aca5eddfe2d5",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "notes": "Official page identifies Original Flavor. Photo shows plain banana-shaped sponge cakes and exposed banana custard. No package-count claim or other flavor is introduced.",
+        "watermarkFree": true
+      },
+      "attribution": {
+        "credit": "TOKYO BANANA / GRAPESTONE official product photography",
+        "rights": "Official commercial product image. No open reuse license asserted; source credit retained here."
+      }
+    },
+    {
+      "id": "product-cosrx-snail-cream",
+      "kind": "product",
+      "label": "COSRX Snail Cream",
+      "identifiedProduct": "COSRX Advanced Snail 92 All In One Cream",
+      "path": "/catalog/products/cosrx-snail-cream.jpg",
+      "searchQuery": "site.cosrx.com Advanced Snail 92 All In One Cream",
+      "sourcePageUrl": "https://www.cosrx.com/products/advanced-snail-92-all-in-one-cream",
+      "imageUrl": "https://www.cosrx.com/cdn/shop/files/5_bc6986a1-1b85-42ce-b761-6bc4acbb07a3_1024x1024.png?v=1757571879",
+      "downloadUrl": "https://www.cosrx.com/cdn/shop/files/5_bc6986a1-1b85-42ce-b761-6bc4acbb07a3_1024x1024.png?v=1757571879",
+      "corroboratingManufacturerPageUrl": null,
+      "originalDimensions": {
+        "width": 768,
+        "height": 1024
+      },
+      "sourceDimensions": {
+        "width": 768,
+        "height": 1024
+      },
+      "dimensions": {
+        "width": 768,
+        "height": 768
+      },
+      "transformation": "Crop rectangle x=0, y=256, width=768, height=768, removing excess top background; saved JPEG without upscaling. Entire jar and label preserved.",
+      "sha256": "45104440a0817b56b82b9dfcc0d06823e19ed26253fa0d2aafc5a011668f01cd",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "notes": "Visible label reads COSRX Advanced Snail 92 All in one Cream, 100g. Official page confirms jar/tube size options of this same formulation. The photograph identifies the cream; the seed does not promise a size.",
+        "watermarkFree": true
+      },
+      "attribution": {
+        "credit": "COSRX official product photography",
+        "rights": "Official commercial product image. No open reuse license asserted; source credit retained here."
+      }
+    },
+    {
+      "name": "Paldo Bibimmyeon",
+      "id": "product-paldo-bibimmyeon",
+      "kind": "product",
+      "label": "Paldo Bibimmyeon",
+      "identifiedProduct": "Paldo Bibimmyeon original blue packet; pictured 130g package",
+      "path": "/catalog/products/paldo-bibimmyeon.jpg",
+      "searchQuery": "Paldo Bibim Men 130g product official image",
+      "sourcePageUrl": "https://www.kankokuichiba.jp/en/products/ks-5039",
+      "imageUrl": "https://www.kankokuichiba.jp/cdn/shop/files/KS-5039_20240812_2.jpg?v=1723459073&width=1500",
+      "downloadUrl": "https://www.kankokuichiba.jp/cdn/shop/files/KS-5039_20240812_2.jpg?v=1723459073&width=1500",
+      "originalDimensions": {
+        "width": 600,
+        "height": 600
+      },
+      "sourceDimensions": {
+        "width": 600,
+        "height": 600
+      },
+      "dimensions": {
+        "width": 600,
+        "height": 600
+      },
+      "transformation": "None; native 600 by 600 JPEG copied unchanged. The larger CDN width parameter returns the actual 600 by 600 original. Replaces the earlier watermarked Ktown4u image entirely.",
+      "sha256": "3c49ecac26df4bd3ab27a8cdde7fa0515b13dc4214e188a5d7707fcb66ecdc5f",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "Paldo product photograph via Korean Market (Kankoku Ichiba)",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "Nars Blush",
+      "id": "product-nars-blush",
+      "kind": "product",
+      "label": "Nars Blush",
+      "identifiedProduct": "NARS Powder Blush; Deep Throat gallery photograph (source asset name)",
+      "path": "/catalog/products/nars-blush.jpg",
+      "sourcePageUrl": "https://www.narscosmetics.ie/en/powder-blush/0194251140414.html",
+      "imageUrl": "https://www.narscosmetics.ie/fstrz/r/s/www.narscosmetics.ie/dw/image/v2/BCMQ_PRD/on/demandware.static/-/Sites-itemmaster_NARS/default/dw26b97d78/pdp/999NAC0000192/NARS_SP26_DeeplyBloomingCollection_PDPCrop_Blush_SoldierSwatch_DeepThroat_GLBL.jpg?sw=1080&sh=1080&sm=fit&frz-v=1643",
+      "downloadUrl": "https://www.narscosmetics.ie/fstrz/r/s/www.narscosmetics.ie/dw/image/v2/BCMQ_PRD/on/demandware.static/-/Sites-itemmaster_NARS/default/dw26b97d78/pdp/999NAC0000192/NARS_SP26_DeeplyBloomingCollection_PDPCrop_Blush_SoldierSwatch_DeepThroat_GLBL.jpg?sw=1080&sh=1080&sm=fit&frz-v=1643",
+      "originalDimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "sourceDimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "dimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "transformation": "Downsampled 1080x1080 to800x800 and JPEG encoded; no crop, watermark or promotional badge.",
+      "sha256": "5c0dbd45a83abebfb6c2e1f95e0ed1efd00ca3819850637cd2b50d770501f1bf",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "familyOnly": true,
+        "notes": "Clean NARS compact with pink powder and adjacent swatch; NARS label readable. Official NARS page and actual responsive image link inspected; final800square viewed. Image represents Nars Blush family only, with no shade,size or formula promise added to seed."
+      },
+      "attribution": {
+        "credit": "NARS official product photography",
+        "rights": "Commercial product photograph; no open reuse license asserted. Source credit retained."
+      }
+    },
+    {
+      "name": "Meiji Chocolate",
+      "id": "product-meiji-chocolate",
+      "kind": "product",
+      "label": "Meiji Chocolate",
+      "identifiedProduct": "Meiji Milk Chocolate bar, brown/gold package",
+      "path": "/catalog/products/meiji-chocolate.jpg",
+      "sourcePageUrl": "https://www.japancandystore.com/products/japanese-meiji-chocolate-bar-milk-chocolate",
+      "imageUrl": "https://cdn.shopify.com/s/files/1/0713/9790/0584/files/20140221_003_1.jpg?v=1780845238",
+      "downloadUrl": "https://cdn.shopify.com/s/files/1/0713/9790/0584/files/20140221_003_1.jpg?v=1780845238",
+      "originalDimensions": {
+        "width": 600,
+        "height": 600
+      },
+      "sourceDimensions": {
+        "width": 600,
+        "height": 600
+      },
+      "dimensions": {
+        "width": 600,
+        "height": 600
+      },
+      "transformation": "JPEG encoded at unchanged600x600; no crop or enlargement.",
+      "sha256": "0eaa4c880862cbdad2370c76e7ef3b9968c61ff3832c1f7014bc256e93eae77d",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "familyOnly": true,
+        "notes": "Viewed square photograph of brown/gold wrapper visibly labeled meiji milk chocolate on pink background. Retailer names same brand/chocolate product; original official Meiji family page corroborates product. No watermark visible. Family representative only; seed label unchanged with no flavor/size promise."
+      },
+      "attribution": {
+        "credit": "Japan Candy Store product photography",
+        "rights": "Commercial product photograph; no open reuse license asserted. Source credit retained."
+      }
+    },
+    {
+      "name": "Aesop Hand Cream",
+      "id": "product-aesop-hand-cream",
+      "kind": "product",
+      "label": "Aesop Hand Cream",
+      "identifiedProduct": "Aesop Resurrection Aromatique Hand Balm,75mL tube",
+      "path": "/catalog/products/aesop-hand-cream.jpg",
+      "sourcePageUrl": "https://www.aesop.ae/products/resurrection-aromatique-hand-balm-s",
+      "imageUrl": "https://www.aesop.ae/cdn/shop/files/Aesop_Hand_Resurrection_Aromatique_Hand_Balm_75mL_Web_Front_A_2000x2000px.png?v=1764851818&width=1445",
+      "downloadUrl": "https://www.aesop.ae/cdn/shop/files/Aesop_Hand_Resurrection_Aromatique_Hand_Balm_75mL_Web_Front_A_2000x2000px.png?v=1764851818&width=1445",
+      "originalDimensions": {
+        "width": 1445,
+        "height": 1445
+      },
+      "sourceDimensions": {
+        "width": 1445,
+        "height": 1445
+      },
+      "dimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "transformation": "Rotated180degrees to make label upright, downsampled1445square to800square, composited transparency on white and JPEG encoded; no enlargement.",
+      "sha256": "1def472ae82756f1b39bb08c1bf5ecc975a5bca0b158d72e9e22809c545cd407",
+      "verifiedOn": "2026-10-29",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "familyOnly": true,
+        "notes": "Viewed official page calling this a hand cream and actual source photo. Final label clearly reads Aesop Resurrection Aromatique Hand Balm; complete tube retained, no watermark. Representative Aesop hand cream family; seed makes no scent or volume claim."
+      },
+      "attribution": {
+        "credit": "Aesop UAE official product photography",
+        "rights": "Commercial product photograph; no open reuse license asserted. Source credit retained."
+      }
+    },
+    {
+      "name": "Laneige Lip Mask",
+      "id": "product-laneige-lip-mask",
+      "kind": "product",
+      "label": "Laneige Lip Mask",
+      "identifiedProduct": "LANEIGE Lip Sleeping Mask Berry, pictured 8g jar",
+      "path": "/catalog/products/laneige-lip-mask.jpg",
+      "searchQuery": "site.laneige.com Lip Sleeping Mask flavors Berry",
+      "sourcePageUrl": "https://us.laneige.com/products/lip-sleeping-mask",
+      "imageUrl": "https://us.laneige.com/cdn/shop/files/LSM_Berry_Infographic_2000x2000Product1_1.jpg?v=1785772326&width=1080",
+      "downloadUrl": "https://us.laneige.com/cdn/shop/files/LSM_Berry_Infographic_2000x2000Product1_1.jpg?v=1785772326&width=1080",
+      "originalDimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "sourceDimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "dimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "transformation": "None; JPEG copied unchanged.",
+      "sha256": "dda291549eea9a0783d0c9a527ea2433ab3fc137fa9cf2d7933ac70bd0a694ab",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "LANEIGE / AMOREPACIFIC official product photograph",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "SK-II Essence",
+      "id": "product-sk-ii-essence",
+      "kind": "product",
+      "label": "SK-II Essence",
+      "identifiedProduct": "SK-II PITERA Facial Treatment Essence, silver-cap bottle",
+      "path": "/catalog/products/sk-ii-essence.webp",
+      "searchQuery": "site.sk-ii.com facial treatment essence",
+      "sourcePageUrl": "https://www.sk-ii.com.sg/product/facial-treatment-essence",
+      "imageUrl": "https://images.ctfassets.net/ety4hqvfnjnx/7lTLK1ORB2XRPhdcA6jpIr/66e7e06f93260777aba475b4b7a65192/FTE-Hero-Image-SP.jpg?fm=webp&w=1200&q=90",
+      "downloadUrl": "https://images.ctfassets.net/ety4hqvfnjnx/7lTLK1ORB2XRPhdcA6jpIr/66e7e06f93260777aba475b4b7a65192/FTE-Hero-Image-SP.jpg?fm=webp&w=1200&q=90",
+      "originalDimensions": {
+        "width": 1132,
+        "height": 1132
+      },
+      "sourceDimensions": {
+        "width": 1132,
+        "height": 1132
+      },
+      "dimensions": {
+        "width": 1132,
+        "height": 1132
+      },
+      "transformation": "None; native WebP copied unchanged. VP8 header dimensions measured 1132 by 1132; requested CDN width does not upscale original.",
+      "sha256": "ff6b949d0e5c7889159a07efff7bd56cc890fd99cc8d80c121c1b899f4a81846",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "SK-II / Procter & Gamble official product photograph",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "Shiseido Sunscreen",
+      "id": "product-shiseido-sunscreen",
+      "kind": "product",
+      "label": "Shiseido Sunscreen",
+      "identifiedProduct": "SHISEIDO Perfect Sun Protector Lotion SPF50+ PA++++, pictured Japanese 50mL blue bottle",
+      "path": "/catalog/products/shiseido-sunscreen.jpg",
+      "searchQuery": "Shiseido sunscreen official ultimate sun protector lotion product",
+      "sourcePageUrl": "https://brand.shiseido.co.jp/shiseido-perfect-sun-protector-lotion-4514254148877.html?cgid=AXE_Suncare",
+      "imageUrl": "https://brand.shiseido.co.jp/dw/image/v2/BBSC_PRD/on/demandware.static/-/Sites-itemmaster_shiseido_jp/default/dw6d89ad68/products-02/21283/21283_J_01.jpg?sh=1000&sm=fit&sw=1000",
+      "downloadUrl": "https://brand.shiseido.co.jp/dw/image/v2/BBSC_PRD/on/demandware.static/-/Sites-itemmaster_shiseido_jp/default/dw6d89ad68/products-02/21283/21283_J_01.jpg?sh=1000&sm=fit&sw=1000",
+      "originalDimensions": {
+        "width": 1000,
+        "height": 1000
+      },
+      "sourceDimensions": {
+        "width": 1000,
+        "height": 1000
+      },
+      "dimensions": {
+        "width": 1000,
+        "height": 1000
+      },
+      "transformation": "None; JPEG copied unchanged. Selected clean Japanese packshot instead of US version with certification overlay.",
+      "sha256": "ce8a06c3c3462c66b9ea34cc1dd999e241e85da24f4f8d517972b94e684f5d32",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "Shiseido Japan official product photograph",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "Round Lab Sunscreen",
+      "id": "product-round-lab-sunscreen",
+      "kind": "product",
+      "label": "Round Lab Sunscreen",
+      "identifiedProduct": "ROUND LAB Birch Juice Moisturizing UVLock Sunscreen SPF50, pictured 50mL tube",
+      "path": "/catalog/products/round-lab-sunscreen.jpg",
+      "searchQuery": "Round Lab Birch Juice sunscreen official product",
+      "sourcePageUrl": "https://roundlab.com/products/birch-moisturizing-uv-sunscreen",
+      "imageUrl": "https://roundlab.com/cdn/shop/files/hf_20261013_021617_2ce362ea-2ac0-48da-885e-730aca2d6c83.png?v=1791858401&width=1946",
+      "downloadUrl": "https://roundlab.com/cdn/shop/files/hf_20261013_021617_2ce362ea-2ac0-48da-885e-730aca2d6c83.png?v=1791858401&width=1946",
+      "originalDimensions": {
+        "width": 1946,
+        "height": 1946
+      },
+      "sourceDimensions": {
+        "width": 1946,
+        "height": 1946
+      },
+      "dimensions": {
+        "width": 1946,
+        "height": 1946
+      },
+      "transformation": "PNG converted to JPEG at native dimensions with explicit pixel rectangle, white transparency background; no crop or resampling.",
+      "sha256": "9a785ba00dec068f0788e246bf46d06b43f9500bdd2de90542a7eba223111989",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "ROUND LAB official product photograph",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "Mistine Sunscreen",
+      "id": "product-mistine-sunscreen",
+      "kind": "product",
+      "label": "Mistine Sunscreen",
+      "identifiedProduct": "MISTINE UV Restore Face Serum Sunscreen SPF50, pictured blue 30mL tube",
+      "path": "/catalog/products/mistine-sunscreen.jpg",
+      "searchQuery": "Mistine sunscreen official aqua base serum sunscreen",
+      "sourcePageUrl": "https://mistineglobal.com/products/mistine-sunscreen-serum-broad-spectrum-spf-50",
+      "imageUrl": "https://mistineglobal.com/cdn/shop/files/2026-3-10JZ1115_582589f1-9519-411f-825f-0c32b65edc68.jpg?v=1774424747&width=1500",
+      "downloadUrl": "https://mistineglobal.com/cdn/shop/files/2026-3-10JZ1115_582589f1-9519-411f-825f-0c32b65edc68.jpg?v=1774424747&width=1500",
+      "originalDimensions": {
+        "width": 1500,
+        "height": 1500
+      },
+      "sourceDimensions": {
+        "width": 1500,
+        "height": 1500
+      },
+      "dimensions": {
+        "width": 1500,
+        "height": 1500
+      },
+      "transformation": "None; JPEG copied unchanged.",
+      "sha256": "57a2656e1e89f34783ccac509ee5337c83ff7b19e63b2a4214c0fb6b23596aac",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "MISTINE official product photograph",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "Hada Labo Serum",
+      "id": "product-hada-labo-serum",
+      "kind": "product",
+      "label": "Hada Labo Serum",
+      "identifiedProduct": "Hada Labo Gokujyun Premium Ultimate Moisturizing Serum, gold bottle and carton",
+      "path": "/catalog/products/hada-labo-serum.jpg",
+      "searchQuery": "Hada Labo serum official premium",
+      "sourcePageUrl": "https://www.rohto.co.id/product/detail/hada-labo-gokujyun-premium-serum",
+      "imageUrl": "https://www.rohto.co.id/assets/uploads/product/20240212102147.png",
+      "downloadUrl": "https://www.rohto.co.id/assets/uploads/product/20240212102147.png",
+      "originalDimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "sourceDimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "dimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "transformation": "Transparent PNG flattened onto white and converted to JPEG at native dimensions with explicit pixel rectangle; no crop or resampling.",
+      "sha256": "823d6d3ea86a52b89dc5bba47f0138b087e3f87cb0528944be63203eb2cd54c0",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "Rohto Laboratories Indonesia official product photograph",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "Dr. Wu Serum",
+      "id": "product-dr-wu-serum",
+      "kind": "product",
+      "label": "Dr. Wu Serum",
+      "identifiedProduct": "DR.WU Mandelik Intensive Renewal Serum 18%, pictured 30mL red dropper bottle",
+      "path": "/catalog/products/dr-wu-serum.jpg",
+      "searchQuery": "Dr Wu serum official mandelik serum 18 product",
+      "sourcePageUrl": "https://www.drwu.com/en/products/intensive-renewal-serum-with-mandelic-acid-18-30ml-1",
+      "imageUrl": "https://img.shoplineapp.com/media/image_clips/63b095725241990014007791/original.jpg?1672516978",
+      "downloadUrl": "https://img.shoplineapp.com/media/image_clips/63b095725241990014007791/original.jpg?1672516978",
+      "originalDimensions": {
+        "width": 750,
+        "height": 750
+      },
+      "sourceDimensions": {
+        "width": 750,
+        "height": 750
+      },
+      "dimensions": {
+        "width": 750,
+        "height": 750
+      },
+      "transformation": "None; manufacturer page og:image URL downloaded as native JPEG and copied unchanged. Web open redirected to inaccessible CDN WebP; native download and local visual inspection succeeded.",
+      "sha256": "b659a536e910ad9bfcc97904bd8a811fb798232753a46e79cd529b5b22514304",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "DR.WU official product photograph",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "Innisfree Sheet Mask",
+      "id": "product-innisfree-sheet-mask",
+      "kind": "product",
+      "label": "Innisfree Sheet Mask",
+      "identifiedProduct": "innisfree Green Tea Energy facial sheet mask, pictured 22mL sachet",
+      "path": "/catalog/products/innisfree-sheet-mask.jpg",
+      "searchQuery": "Innisfree sheet mask official energy mask",
+      "sourcePageUrl": "https://us.innisfree.com/products/energy-sheet-mask",
+      "imageUrl": "https://us.innisfree.com/cdn/shop/files/10IF_SM-GreenTea_Packshot_2024_1080x1080_01_768e4107-b4b8-4527-8997-3fea7aeca326.jpg?v=1760636961&width=1080",
+      "downloadUrl": "https://us.innisfree.com/cdn/shop/files/10IF_SM-GreenTea_Packshot_2024_1080x1080_01_768e4107-b4b8-4527-8997-3fea7aeca326.jpg?v=1760636961&width=1080",
+      "originalDimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "sourceDimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "dimensions": {
+        "width": 1080,
+        "height": 1080
+      },
+      "transformation": "None; JPEG copied unchanged.",
+      "sha256": "97625ddfc9f6205236928be38d26625045c1760f1d1a5cc21af5ba9063a0c23d",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "product family; pictured variant does not become a catalog claim",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      },
+      "attribution": {
+        "credit": "innisfree / AMOREPACIFIC US official product photograph",
+        "rights": "Commercial product image; no open reuse license asserted. Source credit recorded here."
+      },
+      "researchNotes": null
+    },
+    {
+      "name": "KitKat Sakura",
+      "id": "product-kitkat-sakura",
+      "kind": "product",
+      "label": "KitKat Sakura",
+      "identifiedProduct": "キットカット サクラサク 桜味 (KitKat Sakura Saku, Sakura flavor), pink 9-piece Japanese retail bag. Exact photographed front label reads 桜味; this is a flavor-labeled edition, not inferred from a spring wrapper.",
+      "path": "/catalog/products/kitkat-sakura.jpg",
+      "sourcePageUrl": "https://www.kitkat-japan.com/products/kitkat-japan-sakura",
+      "imageUrl": "https://www.kitkat-japan.com/cdn/shop/files/KitKat_Japan_Sakura.jpg?v=1765020289&width=1780",
+      "downloadUrl": "https://www.kitkat-japan.com/cdn/shop/files/KitKat_Japan_Sakura.jpg?v=1765020289&width=1780",
+      "originalDimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "sourceDimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "dimensions": {
+        "width": 800,
+        "height": 800
+      },
+      "transformation": "JPEG re-encoded at native dimensions; no crop or enlargement.",
+      "sha256": "f93fb22b3ce6592ef8958891a62bf3062bd8e0dce2c8be3aa930997cbb5ca309",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "Sakura product-family match; no edition, package count or formulation claim is added to the seed product name.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "supportingProductPageOpened": false,
+        "finalImageViewed": true,
+        "watermarkFree": true,
+        "notes": "Product page explicitly names KitKat Sakura and Sakura Saku cherry-blossom flavor. Viewed downloaded source and final local photo: real pink cherry-blossom bag, Nestlé KitKat branding, Japanese sakura flavor text, white chocolate pieces and 9-piece marking. No watermark."
+      },
+      "attribution": {
+        "credit": "Choco Japan / KitKat Japan product gallery; Nestlé product packaging",
+        "rights": "No open reuse license stated on the product page. Source and credit recorded."
+      },
+      "supportingProductPageUrl": null,
+      "sourcePageCheck": null
+    },
+    {
+      "name": "Lancôme Serum",
+      "id": "product-lancome-serum",
+      "kind": "product",
+      "label": "Lancôme Serum",
+      "identifiedProduct": "Lancôme Advanced Génifique Youth Activating Concentrate, 100ml bottle, outer box and dropper.",
+      "path": "/catalog/products/lancome-serum.jpg",
+      "sourcePageUrl": "https://www.perfumenz.co.nz/products/lancome-advanced-genifique-youth-activating-serum-100ml",
+      "imageUrl": "https://www.perfumenz.co.nz/cdn/shop/files/lancome-advanced-genifique-100ml_1024x1024.png?v=1712635417",
+      "downloadUrl": "https://www.perfumenz.co.nz/cdn/shop/files/lancome-advanced-genifique-100ml_1024x1024.png?v=1712635417",
+      "originalDimensions": {
+        "width": 895,
+        "height": 895
+      },
+      "sourceDimensions": {
+        "width": 895,
+        "height": 895
+      },
+      "dimensions": {
+        "width": 895,
+        "height": 895
+      },
+      "transformation": "PNG converted to JPEG at native dimensions; no crop or enlargement.",
+      "sha256": "8bc90eab0367dbca36e4837fb0de698972d0d582abc0d4e37cd8314055b13a66",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "Lancôme serum family match; seed name remains generic and makes no size or serum-line claim.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": false,
+        "supportingProductPageOpened": true,
+        "finalImageViewed": true,
+        "watermarkFree": true,
+        "notes": "Viewed downloaded source and final local photo: clearly readable LANCÔME PARIS, ADVANCED GÉNIFIQUE and Youth Activating Concentrate markings, 100ml box, matching black-to-clear bottle and separate silver dropper. No watermark."
+      },
+      "attribution": {
+        "credit": "Perfume NZ product gallery; Lancôme product packaging",
+        "rights": "No open reuse license established; source and credit recorded."
+      },
+      "supportingProductPageUrl": "https://www.lancome-usa.com/skincare/face-serum/advanced-genifique-face-serum/1000302.html?geo=false",
+      "sourcePageCheck": "Actual image-search result identifies this exact product and source page. Subsequent web open of the page returned 404; native page request was unavailable. The exact indexed source image itself remained downloadable and was inspected locally. Identity is independently readable on the bottle and box, and consistent with the opened official Advanced Génifique product page."
+    },
+    {
+      "name": "Uniqlo U Collection Tee",
+      "id": "product-uniqlo-u-collection-tee",
+      "kind": "product",
+      "label": "Uniqlo U Collection Tee",
+      "identifiedProduct": "UNIQLO U Crew Neck Short-Sleeve T-Shirt, product 452405, color 38 Dark Brown.",
+      "path": "/catalog/products/uniqlo-u-collection-tee.jpg",
+      "sourcePageUrl": "https://www.uniqlo.com/us/en/products/E452405-000/00",
+      "imageUrl": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/452405/item/goods_38_452405_3x4.jpg",
+      "downloadUrl": "https://image.uniqlo.com/UQ/ST3/WesternCommon/imagesgoods/452405/item/goods_38_452405_3x4.jpg",
+      "originalDimensions": {
+        "width": 1500,
+        "height": 2000
+      },
+      "sourceDimensions": {
+        "width": 1500,
+        "height": 2000
+      },
+      "dimensions": {
+        "width": 1500,
+        "height": 1500
+      },
+      "transformation": "Square crop of empty upper and lower background; whole shirt, sleeves and hem retained. JPEG re-encoded without enlargement.",
+      "sha256": "7c51fe58c197efefc2cd197d915405496d680611b07f74476ede5c3b37763615",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "Uniqlo U tee family match; seed name makes no color, size, year or SKU claim.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "supportingProductPageOpened": false,
+        "finalImageViewed": true,
+        "watermarkFree": true,
+        "notes": "Official product page identifies U Crew Neck Short-Sleeve T-Shirt, product 452405, and Uniqlo U collection. Exact full-resolution asset URL extracted from that page's HTML. Viewed source and final crop: real brown flat-lay tee with crew neck, short sleeves, complete hem and readable Uniqlo U inner neck label. No watermark; source's upper corner brand graphic is outside the crop."
+      },
+      "attribution": {
+        "credit": "UNIQLO official product gallery",
+        "rights": "No open reuse license stated on the product page. Source and credit recorded."
+      },
+      "supportingProductPageUrl": null,
+      "sourcePageCheck": null
+    },
+    {
+      "name": "Tim Tam Assorted",
+      "id": "product-tim-tam-assorted",
+      "kind": "product",
+      "label": "Tim Tam Assorted",
+      "identifiedProduct": "Actual assorted Tim Tam four-flavor gift assortment: Original, Chewy Caramel, Double Coat, and Sweet & Salty inspired by Jatz, in a Treats From Home gift box.",
+      "path": "/catalog/products/tim-tam-assorted.jpg",
+      "sourcePageUrl": "https://treatsfromhome.com/products/tim-tam-variety-pack-australian-biscuits",
+      "imageUrl": "https://treatsfromhome.com/cdn/shop/files/1_b046dc14-8967-4c20-a0cd-4bef878ba631.png?v=1750341737",
+      "downloadUrl": "https://treatsfromhome.com/cdn/shop/files/1_b046dc14-8967-4c20-a0cd-4bef878ba631.png?v=1750341737",
+      "originalDimensions": {
+        "width": 1000,
+        "height": 1000
+      },
+      "sourceDimensions": {
+        "width": 1000,
+        "height": 1000
+      },
+      "dimensions": {
+        "width": 1000,
+        "height": 1000
+      },
+      "transformation": "PNG converted to JPEG at native dimensions; no crop or enlargement.",
+      "sha256": "8c2a8ab852536f6db043105706c896a654caf5bb5bed7396884531e68dc7532f",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "An actual assorted collection of Tim Tam products, rather than a single flavor used as a substitute. Seed name makes no assortment contents or gift-box claim.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "supportingProductPageOpened": false,
+        "finalImageViewed": true,
+        "watermarkFree": true,
+        "notes": "Opened source product page explicitly offers four distinct Tim Tam packs. Exact image URL appears in page HTML and actual image-search result. Viewed source and final local photo: four different readable Tim Tam flavor wrappers in a green/yellow Australian gift box. Treats From Home words are printed on the photographed box, not a watermark. No watermark."
+      },
+      "attribution": {
+        "credit": "Treats From Home product gallery; Arnott's Tim Tam packaging",
+        "rights": "No open reuse license stated on the product page. Source and credit recorded."
+      },
+      "supportingProductPageUrl": null,
+      "sourcePageCheck": null
+    },
+    {
+      "name": "Muji Skincare",
+      "id": "product-muji-skincare",
+      "kind": "product",
+      "label": "Muji Skincare",
+      "identifiedProduct": "MUJI Sensitive Skin Moisturising Milk - Moisture, 200ml",
+      "picturedSku": "4550583435035",
+      "path": "/catalog/products/muji-skincare.jpg",
+      "sourcePageUrl": "https://muji.com.au/products/moisturising-milk-moisture-oao05a3a?variant=47114979049691",
+      "imageUrl": "https://muji.com.au/cdn/shop/files/4550583435035_1260.jpg?v=1751435825",
+      "downloadUrl": "https://muji.com.au/cdn/shop/files/4550583435035_1260.jpg?v=1751435825",
+      "originalDimensions": {
+        "width": 1260,
+        "height": 1260
+      },
+      "sourceDimensions": {
+        "width": 1260,
+        "height": 1260
+      },
+      "dimensions": {
+        "width": 1000,
+        "height": 1000
+      },
+      "transformation": "Downsampled 1260x1260 to1000x1000 and JPEG encoded; no crop, no upscale.",
+      "sha256": "d95d5ccc6161a142cc0ab83746e5bcf32f54f92cd19d2c58c6aa346b5edb6d18",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "MUJI skincare family only. Does not assert that the demo seed is the photographed moisturising milk variant.",
+      "verification": {
+        "actualWebSearch": true,
+        "sourcePageOpened": true,
+        "finalLocalImageViewed": true,
+        "noWatermarkObserved": true,
+        "description": "Official MUJI product bottle on white background. Japanese sensitive-skin emulsion wording and English MOISTURISING MILK MOISTURE are legible; official store/SKU establish the brand. Single bottle, no bundle claim.",
+        "watermarkFree": true,
+        "finalImageViewed": true
+      },
+      "attribution": {
+        "credit": "MUJI Australia / Ryohin Keikaku",
+        "rights": "Copyrighted manufacturer product photography; no open reuse license stated on product page."
+      }
+    },
+    {
+      "name": "Boots Skincare",
+      "id": "product-boots-skincare",
+      "kind": "product",
+      "label": "Boots Skincare",
+      "identifiedProduct": "Boots Ingredients Hyaluronic Acid Serum 30ml, pump bottle and pink carton",
+      "picturedSku": "Unichem SKU20029100",
+      "path": "/catalog/products/boots-skincare.jpg",
+      "sourcePageUrl": "https://www.unichem.co.nz/products/boots-ingredients-hyaluronic-acid-serum-30ml",
+      "imageUrl": "https://www.unichem.co.nz/cdn/shop/files/GXH_20029100-0.jpg?v=1765334116",
+      "downloadUrl": "https://www.unichem.co.nz/cdn/shop/files/GXH_20029100-0.jpg?v=1765334116",
+      "originalDimensions": {
+        "width": 3000,
+        "height": 3000
+      },
+      "sourceDimensions": {
+        "width": 3000,
+        "height": 3000
+      },
+      "dimensions": {
+        "width": 1000,
+        "height": 1000
+      },
+      "transformation": "Downsampled3000x3000 to1000x1000 and JPEG encoded; no crop, no upscale.",
+      "sha256": "49d8e1b61f500ed3c9d4d727cb808e4e13f5eb813476ec99d6bce89b293426cf",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "Boots own-brand skincare family only. Does not assert exact serum, formula, size or variant for the demo item.",
+      "verification": {
+        "actualWebSearch": true,
+        "sourcePageOpened": true,
+        "finalLocalImageViewed": true,
+        "noWatermarkObserved": true,
+        "description": "Boots logo and INGREDIENTS / HYALURONIC ACID / SERUM wording clearly visible on actual bottle and carton. Own-brand Boots skincare rather than a different brand sold at Boots.",
+        "watermarkFree": true,
+        "finalImageViewed": true
+      },
+      "attribution": {
+        "credit": "Boots product photography via Unichem Pharmacy",
+        "rights": "Copyrighted product photography; no open reuse license stated on product page."
+      }
+    },
+    {
+      "name": "Charles & Keith Wallet",
+      "id": "product-charles-keith-wallet",
+      "kind": "product",
+      "label": "Charles & Keith Wallet",
+      "identifiedProduct": "CHARLES & KEITH Muriel Front Flap Long Wallet, Black, XS",
+      "picturedSku": "CK6-10701370_BLACK_XS",
+      "path": "/catalog/products/charles-keith-wallet.jpg",
+      "sourcePageUrl": "https://www.charleskeith.com/us/CK6-10701370_BLACK.html",
+      "imageUrl": "https://www.charleskeith.com/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-ck-products/default/dw02c2bb82/images/hi-res/2024-L2-CK6-10701370-01-1.jpg?sh=1008&sw=756",
+      "downloadUrl": "https://www.charleskeith.com/dw/image/v2/BCWJ_PRD/on/demandware.static/-/Sites-ck-products/default/dw02c2bb82/images/hi-res/2024-L2-CK6-10701370-01-1.jpg?sh=1008&sw=756",
+      "originalDimensions": {
+        "width": 756,
+        "height": 1008
+      },
+      "sourceDimensions": {
+        "width": 756,
+        "height": 1008
+      },
+      "dimensions": {
+        "width": 756,
+        "height": 756
+      },
+      "transformation": "Centre crop from756x1008 at x0,y126,width756,height756; JPEG encoded without upscaling.",
+      "sha256": "3fef8fa2131f6ad239814fc39a277c7cd2e3670d2a7fa81cac3ddd6b22386666",
+      "verifiedOn": "2026-10-29",
+      "mappingScope": "CHARLES & KEITH wallet family only. Does not assert that the seed item is this model or colour.",
+      "verification": {
+        "actualWebSearch": true,
+        "sourcePageOpened": true,
+        "finalLocalImageViewed": true,
+        "noWatermarkObserved": true,
+        "description": "Black long flap wallet, subtle CHARLES & KEITH wordmark visible on front, gold zip pull at left. Entire wallet preserved in square crop; no watermark.",
+        "watermarkFree": true,
+        "finalImageViewed": true
+      },
+      "attribution": {
+        "credit": "CHARLES & KEITH",
+        "rights": "Copyrighted manufacturer product photography; no open reuse license stated on product page."
+      }
+    }
+  ],
+  "covers": [
+    {
+      "batchId": 1,
+      "title": "Japan Trip — March 2026",
+      "destinationShown": "Tokyo",
+      "status": "verified",
+      "path": "/catalog/covers/tokyo.jpg",
+      "assetId": "cover-tokyo",
+      "verification": "Individually viewed photograph of Tokyo; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 2,
+      "title": "Korea Haul — April 2026",
+      "destinationShown": "Seoul",
+      "status": "verified",
+      "path": "/catalog/covers/seoul.jpg",
+      "assetId": "cover-seoul",
+      "verification": "Individually viewed photograph of Seoul; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 3,
+      "title": "US Pasabuy — May 2026",
+      "destinationShown": "California",
+      "status": "verified",
+      "path": "/catalog/covers/california.jpg",
+      "assetId": "cover-california",
+      "verification": "Individually viewed photograph of California; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 4,
+      "title": "HK Beauty Run — June 2026",
+      "destinationShown": "Hong Kong",
+      "status": "verified",
+      "path": "/catalog/covers/hong-kong.jpg",
+      "assetId": "cover-hong-kong",
+      "verification": "Individually viewed photograph of Hong Kong; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 5,
+      "title": "Bangkok Haul — June 2026",
+      "destinationShown": "Bangkok",
+      "status": "verified",
+      "path": "/catalog/covers/bangkok.jpg",
+      "assetId": "cover-bangkok",
+      "verification": "Individually viewed photograph of Bangkok; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 6,
+      "title": "Dubai Pasabuy — July 2026",
+      "destinationShown": "Dubai",
+      "status": "verified",
+      "path": "/catalog/covers/dubai.jpg",
+      "assetId": "cover-dubai",
+      "verification": "Individually viewed photograph of Dubai; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 7,
+      "title": "UK Trip — August 2026",
+      "destinationShown": "United Kingdom",
+      "status": "verified",
+      "path": "/catalog/covers/uk.jpg",
+      "assetId": "cover-uk",
+      "verification": "Individually viewed photograph of United Kingdom; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 8,
+      "title": "Taiwan Finds — July 2026",
+      "destinationShown": "Taiwan",
+      "status": "verified",
+      "path": "/catalog/covers/taiwan.jpg",
+      "assetId": "cover-taiwan",
+      "verification": "Individually viewed photograph of Taiwan; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 9,
+      "title": "Singapore Haul — Aug 2026",
+      "destinationShown": "Singapore",
+      "status": "verified",
+      "path": "/catalog/covers/singapore.jpg",
+      "assetId": "cover-singapore",
+      "verification": "Individually viewed photograph of Singapore; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 10,
+      "title": "Australia Run — Sep 2026",
+      "destinationShown": "Australia",
+      "status": "verified",
+      "path": "/catalog/covers/australia.jpg",
+      "assetId": "cover-australia",
+      "verification": "Individually viewed photograph of Australia; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 11,
+      "title": "France Luxury — Oct 2026",
+      "destinationShown": "France",
+      "status": "verified",
+      "path": "/catalog/covers/france.jpg",
+      "assetId": "cover-france",
+      "verification": "Individually viewed photograph of France; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 12,
+      "title": "Vietnam Haul — May 2026",
+      "destinationShown": "Vietnam",
+      "status": "verified",
+      "path": "/catalog/covers/vietnam.jpg",
+      "assetId": "cover-vietnam",
+      "verification": "Individually viewed photograph of Vietnam; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 13,
+      "title": "Osaka Street Food — October 2026",
+      "destinationShown": "Osaka",
+      "status": "verified",
+      "path": "/catalog/covers/osaka.jpg",
+      "assetId": "cover-osaka",
+      "verification": "Individually viewed photograph of Osaka; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 14,
+      "title": "Seoul Glow Edit — November 2026",
+      "destinationShown": "Seoul",
+      "status": "verified",
+      "path": "/catalog/covers/seoul.jpg",
+      "assetId": "cover-seoul",
+      "verification": "Individually viewed photograph of Seoul; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 15,
+      "title": "California Pantry Run — November 2026",
+      "destinationShown": "California",
+      "status": "verified",
+      "path": "/catalog/covers/california.jpg",
+      "assetId": "cover-california",
+      "verification": "Individually viewed photograph of California; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 16,
+      "title": "Bangkok Beauty Picks — November 2026",
+      "destinationShown": "Bangkok",
+      "status": "verified",
+      "path": "/catalog/covers/bangkok.jpg",
+      "assetId": "cover-bangkok",
+      "verification": "Individually viewed photograph of Bangkok; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 17,
+      "title": "Singapore Luxe Finds — December 2026",
+      "destinationShown": "Singapore",
+      "status": "verified",
+      "path": "/catalog/covers/singapore.jpg",
+      "assetId": "cover-singapore",
+      "verification": "Individually viewed photograph of Singapore; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 18,
+      "title": "Tokyo Variety Run — December 2026",
+      "destinationShown": "Tokyo",
+      "status": "verified",
+      "path": "/catalog/covers/tokyo.jpg",
+      "assetId": "cover-tokyo",
+      "verification": "Individually viewed photograph of Tokyo; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 19,
+      "title": "Jeju Local Flavors — January 2027",
+      "destinationShown": "Jeju",
+      "status": "verified",
+      "path": "/catalog/covers/jeju.jpg",
+      "assetId": "cover-jeju",
+      "verification": "Individually viewed photograph of Jeju; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 20,
+      "title": "Busan Barrier Care — January 2027",
+      "destinationShown": "Busan",
+      "status": "verified",
+      "path": "/catalog/covers/busan.jpg",
+      "assetId": "cover-busan",
+      "verification": "Individually viewed photograph of Busan; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 21,
+      "title": "New York Snack Drop — January 2027",
+      "destinationShown": "New York",
+      "status": "verified",
+      "path": "/catalog/covers/new-york.jpg",
+      "assetId": "cover-new-york",
+      "verification": "Individually viewed photograph of New York; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 22,
+      "title": "Phuket Beauty Market — February 2027",
+      "destinationShown": "Phuket",
+      "status": "verified",
+      "path": "/catalog/covers/phuket.jpg",
+      "assetId": "cover-phuket",
+      "verification": "Individually viewed photograph of Phuket; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 23,
+      "title": "Singapore Designer Edit — February 2027",
+      "destinationShown": "Singapore",
+      "status": "verified",
+      "path": "/catalog/covers/singapore.jpg",
+      "assetId": "cover-singapore",
+      "verification": "Individually viewed photograph of Singapore; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 24,
+      "title": "Kyoto Seasonal Mix — February 2027",
+      "destinationShown": "Kyoto",
+      "status": "verified",
+      "path": "/catalog/covers/kyoto.jpg",
+      "assetId": "cover-kyoto",
+      "verification": "Individually viewed photograph of Kyoto; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 25,
+      "title": "Nagoya Food Finds — February 2027",
+      "destinationShown": "Nagoya",
+      "status": "verified",
+      "path": "/catalog/covers/nagoya.jpg",
+      "assetId": "cover-nagoya",
+      "verification": "Individually viewed photograph of Nagoya; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 26,
+      "title": "Incheon Skincare Run — March 2027",
+      "destinationShown": "Incheon",
+      "status": "verified",
+      "path": "/catalog/covers/incheon.jpg",
+      "assetId": "cover-incheon",
+      "verification": "Individually viewed photograph of Incheon; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 27,
+      "title": "Seattle Grocery Haul — March 2027",
+      "destinationShown": "Seattle",
+      "status": "verified",
+      "path": "/catalog/covers/seattle.jpg",
+      "assetId": "cover-seattle",
+      "verification": "Individually viewed photograph of Seattle; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 28,
+      "title": "Chiang Mai Beauty Finds — March 2027",
+      "destinationShown": "Chiang Mai",
+      "status": "verified",
+      "path": "/catalog/covers/chiang-mai.jpg",
+      "assetId": "cover-chiang-mai",
+      "verification": "Individually viewed photograph of Chiang Mai; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 29,
+      "title": "Orchard Road Luxury — March 2027",
+      "destinationShown": "Orchard Road, Singapore",
+      "status": "verified",
+      "path": "/catalog/covers/orchard-road.jpg",
+      "assetId": "cover-orchard-road",
+      "verification": "Individually viewed photograph of Orchard Road, Singapore; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 30,
+      "title": "Japan Spring Mix — April 2027",
+      "destinationShown": "Tokyo",
+      "status": "verified",
+      "path": "/catalog/covers/tokyo.jpg",
+      "assetId": "cover-tokyo",
+      "verification": "Individually viewed photograph of Tokyo; mapped to this trip's destination. The batch specifies a country/region, so the verified location within that country/region is used. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 31,
+      "title": "Tokyo Streetwear Drop — April 2027",
+      "destinationShown": "Tokyo",
+      "status": "verified",
+      "path": "/catalog/covers/tokyo.jpg",
+      "assetId": "cover-tokyo",
+      "verification": "Individually viewed photograph of Tokyo; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 32,
+      "title": "Seoul Fashion Week Finds — May 2027",
+      "destinationShown": "Seoul",
+      "status": "verified",
+      "path": "/catalog/covers/seoul.jpg",
+      "assetId": "cover-seoul",
+      "verification": "Individually viewed photograph of Seoul; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    },
+    {
+      "batchId": 33,
+      "title": "Bangkok Thrift Haul — May 2027",
+      "destinationShown": "Bangkok",
+      "status": "verified",
+      "path": "/catalog/covers/bangkok.jpg",
+      "assetId": "cover-bangkok",
+      "verification": "Individually viewed photograph of Bangkok; mapped to this trip's destination. Source, dimensions, crop and visual verification are recorded on the linked asset."
+    }
+  ],
+  "products": [
+    {
+      "name": "Tokyo Banana",
+      "batchIds": [1],
+      "status": "verified",
+      "path": "/catalog/products/tokyo-banana.jpg",
+      "assetId": "product-tokyo-banana",
+      "verification": {
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "notes": "Official page identifies Original Flavor. Photo shows plain banana-shaped sponge cakes and exposed banana custard. No package-count claim or other flavor is introduced."
+      }
+    },
+    {
+      "name": "KitKat Sakura",
+      "batchIds": [1],
+      "status": "verified",
+      "path": "/catalog/products/kitkat-sakura.jpg",
+      "assetId": "product-kitkat-sakura",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "supportingProductPageOpened": false,
+        "finalImageViewed": true,
+        "watermarkFree": true,
+        "notes": "Product page explicitly names KitKat Sakura and Sakura Saku cherry-blossom flavor. Viewed downloaded source and final local photo: real pink cherry-blossom bag, Nestlé KitKat branding, Japanese sakura flavor text, white chocolate pieces and 9-piece marking. No watermark."
+      }
+    },
+    {
+      "name": "Shiseido Sunscreen",
+      "batchIds": [1, 4],
+      "status": "verified",
+      "path": "/catalog/products/shiseido-sunscreen.jpg",
+      "assetId": "product-shiseido-sunscreen",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "Meiji Chocolate",
+      "batchIds": [1],
+      "status": "verified",
+      "path": "/catalog/products/meiji-chocolate.jpg",
+      "assetId": "product-meiji-chocolate",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "familyOnly": true,
+        "notes": "Viewed square photograph of brown/gold wrapper visibly labeled meiji milk chocolate on pink background. Retailer names same brand/chocolate product; original official Meiji family page corroborates product. No watermark visible. Family representative only; seed label unchanged with no flavor/size promise."
+      }
+    },
+    {
+      "name": "Laneige Lip Mask",
+      "batchIds": [2],
+      "status": "verified",
+      "path": "/catalog/products/laneige-lip-mask.jpg",
+      "assetId": "product-laneige-lip-mask",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "COSRX Snail Cream",
+      "batchIds": [2],
+      "status": "verified",
+      "path": "/catalog/products/cosrx-snail-cream.jpg",
+      "assetId": "product-cosrx-snail-cream",
+      "verification": {
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "notes": "Visible label reads COSRX Advanced Snail 92 All in one Cream, 100g. Official page confirms jar/tube size options of this same formulation. The photograph identifies the cream; the seed does not promise a size."
+      }
+    },
+    {
+      "name": "Korean Skincare Set",
+      "batchIds": [2],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs a brand, exact set name and contents; this is a generic bundle description.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Paldo Bibimmyeon",
+      "batchIds": [2],
+      "status": "verified",
+      "path": "/catalog/products/paldo-bibimmyeon.jpg",
+      "assetId": "product-paldo-bibimmyeon",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "Trader Joe's Snacks",
+      "batchIds": [3],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact snack SKU or a seller photo of the specified bundle; this describes an assortment with no contents.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Muji Skincare",
+      "batchIds": [3, 4],
+      "status": "verified",
+      "path": "/catalog/products/muji-skincare.jpg",
+      "assetId": "product-muji-skincare",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "actualWebSearch": true,
+        "sourcePageOpened": true,
+        "finalLocalImageViewed": true,
+        "noWatermarkObserved": true,
+        "description": "Official MUJI product bottle on white background. Japanese sensitive-skin emulsion wording and English MOISTURISING MILK MOISTURE are legible; official store/SKU establish the brand. Single bottle, no bundle claim.",
+        "watermarkFree": true,
+        "finalImageViewed": true
+      }
+    },
+    {
+      "name": "Thai Snack Box",
+      "batchIds": [5],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the seller/brand and box contents; several unrelated snack boxes use this generic name.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Mistine Sunscreen",
+      "batchIds": [5],
+      "status": "verified",
+      "path": "/catalog/products/mistine-sunscreen.jpg",
+      "assetId": "product-mistine-sunscreen",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "Nars Blush",
+      "batchIds": [6],
+      "status": "verified",
+      "path": "/catalog/products/nars-blush.jpg",
+      "assetId": "product-nars-blush",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "familyOnly": true,
+        "notes": "Clean NARS compact with pink powder and adjacent swatch; NARS label readable. Official NARS page and actual responsive image link inspected; final800square viewed. Image represents Nars Blush family only, with no shade,size or formula promise added to seed."
+      }
+    },
+    {
+      "name": "MAC Lipstick Set",
+      "batchIds": [6],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact set name, shade list and edition; an arbitrary MAC lipstick collection would not identify this bundle.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Cadbury Hamper",
+      "batchIds": [7],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact hamper name and contents; Cadbury sells multiple different gift hampers.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Boots Skincare",
+      "batchIds": [7],
+      "status": "verified",
+      "path": "/catalog/products/boots-skincare.jpg",
+      "assetId": "product-boots-skincare",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "actualWebSearch": true,
+        "sourcePageOpened": true,
+        "finalLocalImageViewed": true,
+        "noWatermarkObserved": true,
+        "description": "Boots logo and INGREDIENTS / HYALURONIC ACID / SERUM wording clearly visible on actual bottle and carton. Own-brand Boots skincare rather than a different brand sold at Boots.",
+        "watermarkFree": true,
+        "finalImageViewed": true
+      }
+    },
+    {
+      "name": "85°C Pastries",
+      "batchIds": [8],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the named pastry or confirmed assortment contents. A bakery/category name does not identify an exact product.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Dr. Wu Serum",
+      "batchIds": [8],
+      "status": "verified",
+      "path": "/catalog/products/dr-wu-serum.jpg",
+      "assetId": "product-dr-wu-serum",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "SK-II Essence",
+      "batchIds": [9],
+      "status": "verified",
+      "path": "/catalog/products/sk-ii-essence.webp",
+      "assetId": "product-sk-ii-essence",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "Hada Labo Serum",
+      "batchIds": [9],
+      "status": "verified",
+      "path": "/catalog/products/hada-labo-serum.jpg",
+      "assetId": "product-hada-labo-serum",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "Innisfree Sheet Mask",
+      "batchIds": [9],
+      "status": "verified",
+      "path": "/catalog/products/innisfree-sheet-mask.jpg",
+      "assetId": "product-innisfree-sheet-mask",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "Tim Tam Assorted",
+      "batchIds": [10],
+      "status": "verified",
+      "path": "/catalog/products/tim-tam-assorted.jpg",
+      "assetId": "product-tim-tam-assorted",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "supportingProductPageOpened": false,
+        "finalImageViewed": true,
+        "watermarkFree": true,
+        "notes": "Opened source product page explicitly offers four distinct Tim Tam packs. Exact image URL appears in page HTML and actual image-search result. Viewed source and final local photo: four different readable Tim Tam flavor wrappers in a green/yellow Australian gift box. Treats From Home words are printed on the photographed box, not a watermark. No watermark."
+      }
+    },
+    {
+      "name": "Aesop Hand Cream",
+      "batchIds": [10],
+      "status": "verified",
+      "path": "/catalog/products/aesop-hand-cream.jpg",
+      "assetId": "product-aesop-hand-cream",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "familyOnly": true,
+        "notes": "Viewed official page calling this a hand cream and actual source photo. Final label clearly reads Aesop Resurrection Aromatique Hand Balm; complete tube retained, no watermark. Representative Aesop hand cream family; seed makes no scent or volume claim."
+      }
+    },
+    {
+      "name": "L'Occitane Set",
+      "batchIds": [11],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the named set, edition and contents; the brand sells numerous unrelated gift sets.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Lancôme Serum",
+      "batchIds": [11],
+      "status": "verified",
+      "path": "/catalog/products/lancome-serum.jpg",
+      "assetId": "product-lancome-serum",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": false,
+        "supportingProductPageOpened": true,
+        "finalImageViewed": true,
+        "watermarkFree": true,
+        "notes": "Viewed downloaded source and final local photo: clearly readable LANCÔME PARIS, ADVANCED GÉNIFIQUE and Youth Activating Concentrate markings, 100ml box, matching black-to-clear bottle and separate silver dropper. No watermark."
+      }
+    },
+    {
+      "name": "Lacvert Sheet Mask",
+      "batchIds": [12],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "No accepted, branded and watermark-free product photo with native width and height both at least 600px was verified. Do not substitute another brand or enlarge/pad a smaller source to fake compliance.",
+      "research": [
+        {
+          "sourcePageUrl": "https://www.yesstyle.com/en/lacvert-lv-mask-10-types-pearl-essential/info.html/pid.1035183408",
+          "result": "Opened retailer page identifies real Lacvert LV masks, but the gallery image resolves to XXL_nocover.png, an explicit unavailable-image placeholder. Rejected."
+        },
+        {
+          "sourcePageUrl": "https://www.hwahae.com/en/products/LACVERT-Aloe-Moisture-Soothing-Mask/1803101",
+          "result": "Search identifies actual Lacvert Aloe Moisture Soothing Mask; page requests blocked by robot verification/403. No product image file verified."
+        },
+        {
+          "sourcePageUrl": "https://www.atfirstwink.com/2017/05/review-lacvert-green-tea-herb-sheet-mask.html",
+          "imageUrl": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh7LjzstHlTgBf8q-yZEndTNlRR-MWhQaqTqda3JhMHHp2sNAqWfnq8OPJHlURLzgC1FRl1vdIMaqc1FJTO0Ji0pKfzzr0FGPL2LaQKPsd2uxTt7lzfVyPhCcpnO6s8F0coYbsOmJwffN4/s1600/lacvert-green-tea-herb-sheet-mask.JPG",
+          "sourceDimensions": [800, 551],
+          "result": "Downloaded and viewed actual branded Green Tea Herb Mask packet photo. Rejected because native height is only 551px and the photograph has an At First Wink watermark. A second 800x647 unwrapped-sheet photo was viewed but rejected because the image itself cannot identify the brand. Rejected downloads removed from public assets."
+        },
+        {
+          "sourcePageUrl": "https://prod.danawa.com/info/?pcode=3732133",
+          "result": "Opened product page for Lacvert X Will You Marry Me peptide sheet masks. Search/page image links expose 330px/360px thumbnails; no sufficiently large original file was verified. Native page fetch failed DNS."
+        },
+        {
+          "sourcePageUrl": "https://m.danawa.com/product/product.html?code=3732056",
+          "result": "Opened another actual Lacvert sheet-mask listing; no qualifying product photo was verified."
+        }
+      ]
+    },
+    {
+      "name": "X-Men Serum",
+      "batchIds": [12],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "No exact SKU or confirmed manufacturer/product match established from the seed name; needs the full product identity and a manual image.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Osaka Takoyaki Kit",
+      "batchIds": [13],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the brand, exact kit name and contents; a destination/food description does not identify a packaged kit.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Round Lab Sunscreen",
+      "batchIds": [14],
+      "status": "verified",
+      "path": "/catalog/products/round-lab-sunscreen.jpg",
+      "assetId": "product-round-lab-sunscreen",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "sourceImageOpened": true,
+        "downloadedImageViewed": true,
+        "finalImageViewed": true,
+        "dimensionsMeasured": true,
+        "watermarkFree": true,
+        "productLabelPreserved": true,
+        "noUpscaling": true
+      }
+    },
+    {
+      "name": "Trader Joe's Cookie Box",
+      "batchIds": [15],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact named cookie product or seller-defined box contents; no identifiable SKU is supplied.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Cathy Doll Lip Set",
+      "batchIds": [16],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact set name, included formulas and shades; selecting a marketed lip combo would invent the bundle.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "TWG Tea Gift Box",
+      "batchIds": [17],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact gift-box name and teas/contents; Classic, Tea for Two, Ramadan and other boxes differ.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Don Quijote Favorites",
+      "batchIds": [18],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the seller-defined bundle contents and a matching seller image; this is an open-ended store assortment.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Jeju Tangerine Sweets",
+      "batchIds": [19],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the manufacturer, candy/pastry name and package variant; the regional category is insufficient.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Etude SoonJung Set",
+      "batchIds": [20],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact set name and included products/sizes. SoonJung is a product line with multiple sets.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Whole Foods Snack Bag",
+      "batchIds": [21],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the seller-defined contents or exact named retail bundle; no single identifiable product is specified.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Srichand Powder Duo",
+      "batchIds": [22],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the powder formula, shades and exact duo contents; two arbitrary powders would be an approximate substitute.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Charles & Keith Wallet",
+      "batchIds": [23],
+      "status": "verified",
+      "path": "/catalog/products/charles-keith-wallet.jpg",
+      "assetId": "product-charles-keith-wallet",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "actualWebSearch": true,
+        "sourcePageOpened": true,
+        "finalLocalImageViewed": true,
+        "noWatermarkObserved": true,
+        "description": "Black long flap wallet, subtle CHARLES & KEITH wordmark visible on front, gold zip pull at left. Entire wallet preserved in square crop; no watermark.",
+        "watermarkFree": true,
+        "finalImageViewed": true
+      }
+    },
+    {
+      "name": "Kyoto Market Bundle",
+      "batchIds": [24],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the seller-defined contents and an actual photograph of that bundle; no identifiable retail product is specified.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Nagoya Miso Snack Set",
+      "batchIds": [25],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the brand, exact set name and contents; regional ingredients do not identify a packaged set.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Anua Heartleaf Kit",
+      "batchIds": [26],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact kit and contents. Trial/travel kits and retailer full-size Heartleaf bundles differ.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Seattle Coffee Sampler",
+      "batchIds": [27],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the roaster, exact sampler name and coffees/contents; the location is insufficient.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Oriental Princess Set",
+      "batchIds": [28],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the named range, fragrance and set contents; the seed specifies only a brand and generic set.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Bacha Coffee Gift Set",
+      "batchIds": [29],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the exact named gift set and contents; Discovery, Heritage and seasonal gifts differ.",
+      "research": {
+        "method": "Actual web search plus seed identity review; no exact variant/contents established.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Sakura Lifestyle Box",
+      "batchIds": [30],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the brand/seller and exact bundle contents; a seasonal description cannot identify the merchandise.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Uniqlo U Collection Tee",
+      "batchIds": [31],
+      "status": "verified",
+      "path": "/catalog/products/uniqlo-u-collection-tee.jpg",
+      "assetId": "product-uniqlo-u-collection-tee",
+      "mappingScope": "Product family only; exact photographed variant recorded on asset and not asserted by catalog label.",
+      "verification": {
+        "searched": true,
+        "sourcePageOpened": true,
+        "supportingProductPageOpened": false,
+        "finalImageViewed": true,
+        "watermarkFree": true,
+        "notes": "Official product page identifies U Crew Neck Short-Sleeve T-Shirt, product 452405, and Uniqlo U collection. Exact full-resolution asset URL extracted from that page's HTML. Viewed source and final crop: real brown flat-lay tee with crew neck, short sleeves, complete hem and readable Uniqlo U inner neck label. No watermark; source's upper corner brand graphic is outside the crop."
+      }
+    },
+    {
+      "name": "Korean Oversized Knit",
+      "batchIds": [32],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs the brand/SKU, cut and color or a seller photo of the actual garment; the name is only a clothing description.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    },
+    {
+      "name": "Chatuchak Vintage Denim",
+      "batchIds": [33],
+      "status": "needs manual image",
+      "path": "",
+      "assetId": null,
+      "sourcePageUrl": null,
+      "imageUrl": null,
+      "dimensions": null,
+      "reason": "Needs a seller photo of the actual vintage garment, style and wash; a generic denim photo would misrepresent it.",
+      "research": {
+        "method": "Seed identity review; generic bundle/garment description lacks the details needed to choose an exact photograph.",
+        "imageMapped": false,
+        "exactProductConfirmed": false
+      }
+    }
+  ]
+}

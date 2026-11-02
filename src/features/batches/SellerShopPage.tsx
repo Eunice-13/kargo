@@ -109,8 +109,9 @@ export default function SellerShopPage({
   return (
     <div className="space-y-5 seller-shop-page">
       {/* ── Storefront header ──────────────────────────────────────────────── */}
-      <Card style={{ overflow: "hidden", padding: 0 }}>
+      <Card className="seller-shop-header-card" style={{ overflow: "hidden", padding: 0 }}>
         <div
+          className="seller-shop-header-banner"
           style={{
             background: `linear-gradient(135deg, ${INDIGO} 0%, #3548BD 100%)`,
             padding: "24px 24px",
@@ -133,8 +134,9 @@ export default function SellerShopPage({
           >
             <Avatar name={sellerDisplay} size={72} imageUrl={profileData?.avatarUrl} />
           </span>
-          <div style={{ flex: 1, minWidth: 200 }}>
+          <div className="seller-shop-identity" style={{ flex: 1, minWidth: 200 }}>
             <div
+              className="seller-shop-name"
               style={{
                 fontFamily: "'Josefin Sans',sans-serif",
                 fontSize: 22,
@@ -169,7 +171,7 @@ export default function SellerShopPage({
               Online now
             </div>
           </div>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div className="seller-shop-contact" style={{ display: "flex", gap: 10 }}>
             <button
               type="button"
               onClick={() => setShowChat(true)}
@@ -196,6 +198,7 @@ export default function SellerShopPage({
 
         {/* Stats row */}
         <div
+          className="seller-shop-stats"
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${stats.length}, 1fr)`,
@@ -245,6 +248,7 @@ export default function SellerShopPage({
 
       {/* ── Tab / category nav ─────────────────────────────────────────────── */}
       <div
+        className="seller-shop-tabs"
         style={{
           display: "flex",
           gap: 6,

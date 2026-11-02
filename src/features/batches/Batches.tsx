@@ -826,8 +826,9 @@ export default function Batches({
 
   if (shopPage)
     return (
-      <div>
+      <div className="seller-shop-view">
         <div
+          className="seller-shop-breadcrumb"
           style={{
             background: "#fff",
 
@@ -875,7 +876,7 @@ export default function Batches({
           <span style={{ fontSize: 12, color: "#D1D5DB" }}>/</span>
           <span style={{ fontSize: 13, color: "#6B7280" }}>{shopPage}</span>
         </div>
-        <div className="p-6">
+        <div className="p-6 seller-shop-content">
           <SellerShopPage
             seller={shopPage}
             batches={batches}
