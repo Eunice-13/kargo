@@ -7,6 +7,31 @@ export type FulfillmentAnalyticsStage =
   | "cancelled"
   | "expired";
 
+export type FulfillmentCurrentStatusStage =
+  | "payment_confirmed"
+  | "preparing"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "expired"
+  | "other";
+
+export type FulfillmentCurrentStatus = {
+  period: NonNullable<FulfillmentAnalyticsFilters["period"]>;
+  timezone: "Asia/Manila";
+  startAt: string;
+  endAt: string;
+  grouping: "hour" | "day" | "week" | "month";
+  cohortSize: number;
+  generatedAt: string;
+  counts: Record<FulfillmentCurrentStatusStage, number>;
+  chart: {
+    bucketStart: string;
+    bucketEnd: string;
+    counts: Record<FulfillmentCurrentStatusStage, number>;
+  }[];
+};
+
 export type FulfillmentAnalyticsFilters = {
   period?: "today" | "last_7_days" | "last_30_days" | "all_time" | "custom";
   /** Inclusive Manila calendar dates (YYYY-MM-DD), custom period only. */
@@ -23,9 +48,16 @@ export type FulfillmentAnalytics = {
   generatedAt: string;
   snapshot: string;
   captureStartedAt: string;
-  historicalCoverage: "partial_evidence_only";
-  countingRule: "first_recorded_entry_per_order_per_stage";
+  historicalCoverage:
+    | "partial_evidence_only"
+    | "cohort_excludes_pre_capture_history"
+    | "full_recorded_history";
+  countingRule:
+    | "first_recorded_entry_per_order_per_stage"
+    | "payment_confirmed_cohort_reached_stages";
   totalEntries: number;
+  cohortSize?: number;
+  excludedOrders?: number;
   uniqueOrders: number;
   stageTotals: Record<FulfillmentAnalyticsStage, number>;
   chart: {
@@ -44,7 +76,7 @@ export type FulfillmentAnalyticsOrders = {
     order_number: string;
     stage: FulfillmentAnalyticsStage;
     occurred_at: string;
-    source: "transition" | "order_timestamp" | "notification" | "admin_audit";
+    source: "transition" | "order_timestamp" | "notification" | "admin_audit" | "current_status";
     current_status: string;
     current_fulfillment_stage: string | null;
   }[];

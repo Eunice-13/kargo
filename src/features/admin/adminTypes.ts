@@ -55,6 +55,7 @@ export type AdminUserDetail = AdminUserRow & {
   bio: string | null;
   accountStatusReason: string | null;
   buyerOrders: number;
+  sellerBuyers: number;
   sellerOrders: number;
   sellerGmv30: number;
   buyerSpend30: number;

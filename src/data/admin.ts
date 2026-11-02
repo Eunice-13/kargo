@@ -182,6 +182,7 @@ export function demoGetUser(userId: string): AdminUserDetail {
   if (!u) throw new Error("User not found");
   return {
     ...u,
+    sellerBuyers: 0,
     recentOrders: [
       {
         id: "demo-o-1",

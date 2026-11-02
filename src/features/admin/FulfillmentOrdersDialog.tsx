@@ -7,10 +7,14 @@ import type {
   FulfillmentAnalytics,
   FulfillmentAnalyticsFilters,
   FulfillmentAnalyticsStage as Stage,
+  FulfillmentCurrentStatusStage,
 } from "@/types/fulfillmentAnalytics";
 import { useAdminResource } from "./useAdminResource";
 import AdminOrderDetailModal from "./components/AdminOrderDetailModal";
 import { ANALYTICS_STAGES, analyticsDate, analyticsTimestamp } from "./fulfillmentAnalyticsModel";
+import "./fulfillmentAnalytics.css";
+
+type OrderStage = Stage | FulfillmentCurrentStatusStage;
 
 // Right-side drawer on desktop, bottom sheet on mobile (CSS-driven). Presentation
 // only — the RPCs, snapshot handling, pagination and order drill-through are
@@ -20,21 +24,24 @@ export default function FulfillmentOrdersDialog({
   filters,
   stage,
   bucket,
+  mode = "reached",
   onClose,
   onRefresh,
 }: {
   data: FulfillmentAnalytics;
   filters: FulfillmentAnalyticsFilters;
-  stage: Stage;
+  stage: OrderStage;
   bucket?: string;
+  mode?: "reached" | "current";
   onClose: () => void;
   onRefresh: () => void;
 }) {
   const [offset, setOffset] = useState(0);
   const [orderId, setOrderId] = useState<string | null>(null);
   const dialogRef = useDialogA11y(onClose);
-  const label = ANALYTICS_STAGES.find((s) => s.key === stage)!.label;
-  const color = ANALYTICS_STAGES.find((s) => s.key === stage)!.color;
+  const stageMeta = ANALYTICS_STAGES.find((s) => s.key === stage);
+  const label = stageMeta?.label ?? "Other";
+  const color = stageMeta?.color ?? "#64748B";
 
   if (orderId)
     return (
@@ -80,12 +87,13 @@ export default function FulfillmentOrdersDialog({
             {bucket ? analyticsDate(bucket, data.grouping) : "Selected date range"} · Asia/Manila
           </p>
           <p className="fulfillment-orders__explanation">
-            Orders that entered this stage in the selected period. Their current status may have
-            changed.
+            {mode === "current"
+              ? "Orders currently classified under this status. Each order is counted once."
+              : "Orders that reached this stage in the selected period. Their current status may have changed."}
           </p>
           <OrderPage
-            key={`${offset}:${stage}:${bucket ?? "all"}:${data.snapshot}`}
-            {...{ data, filters, stage, bucket, offset, setOffset, setOrderId, onRefresh }}
+            key={`${offset}:${stage}:${bucket ?? "all"}:${mode}:${data.snapshot}`}
+            {...{ data, filters, stage, bucket, mode, offset, setOffset, setOrderId, onRefresh }}
           />
         </div>
       </div>
@@ -99,6 +107,7 @@ function OrderPage({
   filters,
   stage,
   bucket,
+  mode,
   offset,
   setOffset,
   setOrderId,
@@ -106,8 +115,9 @@ function OrderPage({
 }: {
   data: FulfillmentAnalytics;
   filters: FulfillmentAnalyticsFilters;
-  stage: Stage;
+  stage: OrderStage;
   bucket?: string;
+  mode: "reached" | "current";
   offset: number;
   setOffset: (value: number) => void;
   setOrderId: (value: string) => void;
@@ -115,12 +125,24 @@ function OrderPage({
 }) {
   const page = useAdminResource(
     () =>
-      adminApi.fulfillmentOrders(
-        filters,
-        { stage, bucket, generatedAt: data.generatedAt, snapshot: data.snapshot },
-        25,
-        offset,
-      ),
+      mode === "current"
+        ? adminApi.fulfillmentCurrentStatusOrders(
+            filters,
+            stage as FulfillmentCurrentStatusStage,
+            25,
+            offset,
+          )
+        : adminApi.fulfillmentOrders(
+            filters,
+            {
+              stage: stage as Stage,
+              bucket,
+              generatedAt: data.generatedAt,
+              snapshot: data.snapshot,
+            },
+            25,
+            offset,
+          ),
     [],
   );
   if (page.loading)
@@ -158,7 +180,7 @@ function OrderPage({
       </p>
       {!page.data.rows.length && (
         <p className="fulfillment-analytics__notice">
-          No recorded orders entered this stage in this period.
+          No cohort orders reached this stage in this period.
         </p>
       )}
       <ul className="fulfillment-orders__list">

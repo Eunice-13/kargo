@@ -27,7 +27,7 @@ export default function FulfillmentTrendChart({
   const host = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(800);
   const [selected, setSelected] = useState(Math.max(0, data.chart.length - 1));
-  // The day tooltip is a transient hover affordance (YouTube-style): it only
+  // The bucket tooltip is a transient hover affordance (YouTube-style): it only
   // shows while the user is hovering/scrubbing the chart or navigating by
   // keyboard, and hides as soon as the pointer leaves.
   const [active, setActive] = useState(false);
@@ -153,10 +153,7 @@ export default function FulfillmentTrendChart({
               className="fulfillment-trend__grid"
             />
             <text x={left - 10} y={y(tick) + 4} textAnchor="end">
-              {new Intl.NumberFormat("en", {
-                notation: "compact",
-                maximumFractionDigits: 1,
-              }).format(tick)}
+              {Math.round(tick)}
             </text>
           </g>
         ))}
@@ -209,7 +206,7 @@ export default function FulfillmentTrendChart({
             aria-hidden="true"
           />
         )}
-        {tickIndices(n, width < 600 ? 4 : 8)
+        {tickIndices(n, width < 600 ? 4 : 5)
           .filter((i) => Number.isInteger(i) && data.chart[i])
           .map((i) => (
             <text
@@ -256,7 +253,7 @@ export default function FulfillmentTrendChart({
         </div>
       )}
       <p className="fulfillment-trend__hint">
-        Hover a day for its breakdown. Arrow keys and Enter work too.
+        Hover a bucket for its breakdown. Arrow keys and Enter work too.
       </p>
     </div>
   );

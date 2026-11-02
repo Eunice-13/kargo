@@ -1,14 +1,15 @@
 import { useState } from "react";
+import { Check, Copy } from "lucide-react";
 
 import { Modal, Avatar, CardSkeleton } from "@/components/shared";
 import { adminApi } from "@/services";
-import { ADMIN_ACTION_LABELS } from "@/constants/admin";
+import { ADMIN_ACTION_LABELS, toneForStatus } from "@/constants/admin";
 
 import { useAdminResource } from "../useAdminResource";
 import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
-import { AdminEmptyText, AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
+import { AdminEmptyText, AdminModalSection } from "./AdminFacts";
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
 const fmtDate = (iso: string) =>
@@ -17,6 +18,8 @@ const fmtDate = (iso: string) =>
     month: "short",
     day: "numeric",
   });
+
+const shortId = (id: string) => (id.length > 16 ? `${id.slice(0, 8)}…${id.slice(-6)}` : id);
 
 type PendingAction =
   | { kind: "suspend" }
@@ -39,15 +42,15 @@ export default function AdminUserDetailModal({
     [userId],
   );
   const [pending, setPending] = useState<PendingAction>(null);
+  const [copied, setCopied] = useState(false);
 
   const roleTone = data?.isAdmin ? "admin" : data?.canSell ? "seller" : "buyer";
   const roleLabel = data?.isAdmin ? "Admin" : data?.canSell ? "Seller" : "Buyer";
   return (
     <>
       <Modal
-        title={data?.name ?? "Account"}
+        title="Account details"
         variant="detail"
-        showTitle={false}
         width={720}
         className="admin-modal admin-record-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"
@@ -56,8 +59,12 @@ export default function AdminUserDetailModal({
           !loading && data && !data.isAdmin ? (
             <div className="admin-modal-footer">
               {data.accountStatus === "active" ? (
-                <AdminActionButton action="suspend" onClick={() => setPending({ kind: "suspend" })}>
-                  Suspend account
+                <AdminActionButton
+                  action="suspend"
+                  size="sm"
+                  onClick={() => setPending({ kind: "suspend" })}
+                >
+                  Suspend
                 </AdminActionButton>
               ) : (
                 <AdminActionButton
@@ -107,13 +114,13 @@ export default function AdminUserDetailModal({
               <div className="admin-detail-hero__identity">
                 <h2>{data.name}</h2>
                 <p>{data.email}</p>
-              </div>
-              <div className="admin-detail-hero__badges">
-                <AdminBadge tone={roleTone} label={roleLabel} />
-                <AdminBadge
-                  tone={data.accountStatus}
-                  label={data.accountStatus === "active" ? "Active" : "Suspended"}
-                />
+                <div className="admin-detail-hero__badges">
+                  <AdminBadge tone={roleTone} label={roleLabel} />
+                  <AdminBadge
+                    tone={data.accountStatus}
+                    label={data.accountStatus === "active" ? "Active" : "Suspended"}
+                  />
+                </div>
               </div>
             </div>
 
@@ -125,37 +132,83 @@ export default function AdminUserDetailModal({
               </div>
             )}
 
-            <AdminModalSection title="Account">
-              <AdminFactGrid>
-                <AdminFact label="User ID" value={data.id} mono />
-                <AdminFact label="Joined" value={fmtDate(data.createdAt)} />
-                <AdminFact
-                  label="Last sign-in"
-                  value={data.lastSignInAt ? fmtDate(data.lastSignInAt) : "Never"}
-                />
-                <AdminFact label="Buyer orders (all-time)" value={String(data.buyerOrders)} />
-                <AdminFact label="Buyer spend (30d)" value={peso(data.buyerSpend30)} />
-                {data.canSell && (
-                  <>
-                    <AdminFact label="Seller orders (all-time)" value={String(data.sellerOrders)} />
-                    <AdminFact label="Seller GMV (30d)" value={peso(data.sellerGmv30)} />
-                    <AdminFact label="Live batches" value={String(data.liveBatches)} />
-                  </>
-                )}
-              </AdminFactGrid>
-            </AdminModalSection>
+            <div className="admin-user-stats">
+              <div>
+                <strong>{data.canSell ? data.sellerOrders : data.buyerOrders}</strong>
+                <span>Orders · all-time</span>
+              </div>
+              <div>
+                <strong>{peso(data.canSell ? data.sellerGmv30 : data.buyerSpend30)}</strong>
+                <span>{data.canSell ? "GMV · 30d" : "Spend · 30d"}</span>
+              </div>
+              <div>
+                <strong>{data.lastSignInAt ? fmtDate(data.lastSignInAt) : "Never"}</strong>
+                <span>Last sign-in</span>
+              </div>
+            </div>
+
+            <dl className="admin-user-rows">
+              {data.canSell && (
+                <div>
+                  <dt>Shop name</dt>
+                  <dd>{data.shopName ?? "—"}</dd>
+                </div>
+              )}
+              <div>
+                <dt>Joined</dt>
+                <dd>{fmtDate(data.createdAt)}</dd>
+              </div>
+              <div>
+                <dt>User ID</dt>
+                <dd className="admin-user-rows__id">
+                  <span title={data.id}>{shortId(data.id)}</span>
+                  <button
+                    type="button"
+                    aria-label="Copy user ID"
+                    onClick={() => {
+                      void navigator.clipboard?.writeText(data.id);
+                      setCopied(true);
+                      window.setTimeout(() => setCopied(false), 1500);
+                    }}
+                  >
+                    {copied ? (
+                      <Check size={16} aria-hidden="true" />
+                    ) : (
+                      <Copy size={16} aria-hidden="true" />
+                    )}
+                  </button>
+                </dd>
+              </div>
+              {data.canSell && (
+                <>
+                  <div>
+                    <dt>Buyers (all-time)</dt>
+                    <dd>{data.sellerBuyers}</dd>
+                  </div>
+                  <div>
+                    <dt>Live batches</dt>
+                    <dd>{data.liveBatches}</dd>
+                  </div>
+                  <div>
+                    <dt>Buyer spend (30d)</dt>
+                    <dd>{peso(data.buyerSpend30)}</dd>
+                  </div>
+                </>
+              )}
+            </dl>
 
             <AdminModalSection title="Recent orders" hint="Latest 5">
               {data.recentOrders.length === 0 ? (
                 <AdminEmptyText>No recent orders for this account.</AdminEmptyText>
               ) : (
-                <ul className="admin-row-list">
+                <ul className="admin-row-list admin-user-orders">
                   {data.recentOrders.map((o) => (
                     <li key={o.id} className="admin-row-list__item">
-                      <span className="admin-row-list__main">
-                        <strong>{o.order_number}</strong>
-                        <span>{o.status.replace(/_/g, " ")}</span>
-                      </span>
+                      <strong className="admin-user-orders__num">{o.order_number}</strong>
+                      <AdminBadge
+                        tone={toneForStatus(o.status)}
+                        label={o.status.replace(/_/g, " ")}
+                      />
                       <span className="admin-row-list__value">{peso(o.total_amount)}</span>
                     </li>
                   ))}
@@ -180,7 +233,6 @@ export default function AdminUserDetailModal({
                 </ul>
               )}
             </AdminModalSection>
-
           </div>
         )}
       </Modal>

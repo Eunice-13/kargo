@@ -15127,8 +15127,8 @@ textarea::placeholder {
 
 .admin-page-header h2 {
   margin-bottom: 12px;
-  font-size: 22px !important;
-  font-weight: 800 !important;
+  font-size: 50px !important;
+  font-weight: 850 !important;
 }
 
 .admin-page-header__subtitle {
@@ -15497,7 +15497,8 @@ select.admin-filter-control {
   }
 
   .admin-page-header h2 {
-    font-size: 20px !important;
+    font-size: 28px !important;
+    font-weight: 900 !important;
   }
 
   .admin-page-header__actions {
