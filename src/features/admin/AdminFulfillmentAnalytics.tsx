@@ -303,7 +303,7 @@ function AnalyticsResults({
         <div className="fulfillment-analytics__summary">
           <div>
             <strong>{cohortSize.toLocaleString()}</strong>
-            <span>orders in cohort</span>
+            <span>paid orders created in range</span>
           </div>
           <div>
             <strong>{deliveryPercent === null ? "—" : `${deliveryPercent}%`}</strong>
@@ -317,8 +317,8 @@ function AnalyticsResults({
               : PERIODS.find(([key]) => key === filters.period)?.[1]}{" "}
             · Grouped by {data.grouping === "hour" ? "hour" : data.grouping} (Manila time).{" "}
             {countingMode === "current"
-              ? "Where orders are right now. Each order is counted once, in its latest stage. Orders without payment confirmation are not included."
-              : "Orders that reached each stage are counted. An order can appear in several stages, so percentages add up to more than 100%."}{" "}
+              ? "Orders created in this range that have been payment-confirmed. Each order is counted once, in its latest stage. Unpaid orders are not included."
+              : "Orders created in this range that have been payment-confirmed, counted in every stage they reached. An order can appear in several stages, so percentages add up to more than 100%."}{" "}
             {(data.excludedOrders ?? 0).toLocaleString()} orders excluded by the recorded-history
             boundary.
           </p>

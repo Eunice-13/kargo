@@ -37,6 +37,11 @@ before(async () => {
   await db.exec(sqlFile("202611090006_fulfillment_analytics_current_status.sql"));
   await db.exec(sqlFile("202611090007_fulfillment_analytics_current_status_orders.sql"));
   await db.exec(sqlFile("202611090008_fulfillment_analytics_current_status_chart.sql"));
+  await db.exec(sqlFile("202611100001_fulfillment_analytics_created_window.sql"));
+  await db.exec(sqlFile("202611100002_fulfillment_current_status_all_orders.sql"));
+  // The cohort window is now chosen by orders.created_at, so give every test order a
+  // created_at inside the 2020-02-01..2020-02-03 range used below.
+  await db.exec("alter table orders alter column created_at set default '2020-02-01T01:00:00Z'");
   await db.query(
     "update fulfillment_analytics_metadata set capture_started_at='2020-02-01T00:00:00+08:00' where singleton",
   );
@@ -113,7 +118,7 @@ test("drill-down uses reached-stage cohort rows", async () => {
   assert.equal(detail.rows[0].order_id, id(2));
 });
 
-test("current-status cohort size matches reached-stage cohort across every range", async () => {
+test("current status covers every order created in the range; reached is the paid subset", async () => {
   const ranges = [
     ["today", null, null],
     ["last_7_days", null, null],
@@ -126,7 +131,23 @@ test("current-status cohort size matches reached-stage cohort across every range
       await row("select admin_fulfillment_analytics($1,$2,$3) as data", [period, start, end])
     ).data;
     const current = await currentStatus(period, start, end);
-    assert.equal(current.cohortSize, reached.cohortSize ?? reached.uniqueOrders, period);
+    const created = Number(
+      (
+        await row(
+          `select count(*) as n from orders o
+             cross join fulfillment_analytics_range($1,$2,$3,statement_timestamp()) r
+            where o.created_at >= r.start_at and o.created_at < r.end_at`,
+          [period, start, end],
+        )
+      ).n,
+    );
+    assert.equal(current.cohortSize, created, period);
+    assert.equal(
+      Object.values(current.counts).reduce((sum, value) => sum + value, 0),
+      created,
+      `${period}: each order counted once`,
+    );
+    assert.ok((reached.cohortSize ?? reached.uniqueOrders) <= current.cohortSize, period);
   }
 });
 
@@ -169,15 +190,17 @@ test("current status counts each cohort order once and folds current in_transit 
   );
 
   const current = await currentStatus();
-  assert.equal(current.cohortSize, 6);
+  // Every order created in the range, paid or not, once, in its latest status.
+  assert.equal(current.cohortSize, 7);
   assert.equal(current.counts.cancelled, 1);
   assert.equal(current.counts.delivered, 1);
   assert.equal(current.counts.shipped, 2);
-  assert.equal(current.counts.payment_confirmed, 1);
-  assert.equal(current.counts.other, 1);
+  assert.equal(current.counts.payment_confirmed, 2);
+  assert.equal(current.counts.payment_pending, 1);
+  assert.equal(current.counts.other, 0);
   assert.equal(
     Object.values(current.counts).reduce((sum, value) => sum + value, 0),
-    6,
+    7,
   );
 
   const currentShipped = (
@@ -251,5 +274,53 @@ test("reports current versus reached cancellation and expiry reconciliation", as
   assert.equal(
     report.expired.current,
     rows.filter((row) => row.current_stage === "expired").length,
+  );
+});
+
+test("cohort window follows orders.created_at: paid late counts, created earlier or unpaid does not", async () => {
+  const range = ["custom", "2020-02-01", "2020-02-03"];
+  const summary = async () =>
+    (await row("select admin_fulfillment_analytics($1,$2,$3) as data", range)).data;
+  const before = await summary();
+  const currentBefore = await currentStatus(...range);
+  const createdEarlyPaidInRange = id(20);
+  const createdInRangePaidLater = id(21);
+  const createdInRangeUnpaid = id(22);
+  await db.query(
+    `insert into orders(id,order_number,seller_id,buyer_id,status,payment_confirmed_at,created_at) values
+      ($1::uuid,$1::text,$4::uuid,$5::uuid,'payment_confirmed','2020-02-01T06:00:00Z','2020-01-15T00:00:00Z'),
+      ($2::uuid,$2::text,$4::uuid,$5::uuid,'payment_confirmed','2020-03-01T06:00:00Z','2020-02-02T00:00:00Z'),
+      ($3::uuid,$3::text,$4::uuid,$5::uuid,'payment_pending',null,'2020-02-02T00:00:00Z')`,
+    [createdEarlyPaidInRange, createdInRangePaidLater, createdInRangeUnpaid, seller, buyer],
+  );
+  await db.query(
+    `update order_fulfillment_events
+        set occurred_at = case order_id when $1::uuid then '2020-02-01T06:00:00Z'::timestamptz
+                                        else '2020-03-01T06:00:00Z'::timestamptz end
+      where order_id in ($1::uuid,$2::uuid) and stage='payment_confirmed'`,
+    [createdEarlyPaidInRange, createdInRangePaidLater],
+  );
+
+  const after = await summary();
+  // Only the order created in range AND payment-confirmed (even later) joins the cohort.
+  assert.equal(after.cohortSize, before.cohortSize + 1);
+  const detail = (
+    await row(
+      "select admin_fulfillment_orders($1,$2,$3,'payment_confirmed',null,null,100,0,null) as data",
+      range,
+    )
+  ).data;
+  const ids = detail.rows.map((item) => item.order_id);
+  assert.ok(ids.includes(createdInRangePaidLater));
+  assert.ok(!ids.includes(createdEarlyPaidInRange));
+  assert.ok(!ids.includes(createdInRangeUnpaid));
+  // Current status is every order created in the range: it gains the late-paid order and
+  // the unpaid one (counted as payment_pending), but not the one created before the range.
+  const current = await currentStatus(...range);
+  assert.equal(current.cohortSize, currentBefore.cohortSize + 2);
+  assert.equal(current.counts.payment_pending, currentBefore.counts.payment_pending + 1);
+  assert.equal(
+    Object.values(current.counts).reduce((sum, value) => sum + value, 0),
+    current.cohortSize,
   );
 });

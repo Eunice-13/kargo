@@ -216,8 +216,8 @@ function PipelineChart({
           <h2 className="admin-chart-title">Where orders stand</h2>
           <p className="admin-chart-sub">
             {total > 0
-              ? `${total.toLocaleString()} orders created in the last 30 days.`
-              : "Orders created in the last 30 days."}
+              ? `${total.toLocaleString()} orders created in the last 30 days, paid and unpaid.`
+              : "Orders created in the last 30 days, paid and unpaid."}
           </p>
         </div>
         <button type="button" className="admin-chart-link" onClick={onViewOrders}>
