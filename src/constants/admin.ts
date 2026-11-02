@@ -62,6 +62,24 @@ export function toneForStatus(status: string): AdminTone {
   return STATUS_TONE[status] ?? NEUTRAL;
 }
 
+// Single source of truth for order-status names. The Orders tab filter and the
+// dashboard's "Where orders stand" chart both read from this so they never drift.
+export const ORDER_STATUS_OPTIONS = [
+  { value: "payment_pending", label: "Payment pending" },
+  { value: "payment_submitted", label: "Payment submitted" },
+  { value: "insufficient_payment", label: "Insufficient payment" },
+  { value: "payment_confirmed", label: "Payment confirmed" },
+  { value: "preparing", label: "Preparing" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "expired", label: "Expired" },
+  { value: "incomplete", label: "Incomplete" },
+] as const;
+
+export const ORDER_STATUS_LABELS: Record<string, string> = Object.fromEntries(
+  ORDER_STATUS_OPTIONS.map((o) => [o.value, o.label]),
+);
+
 export const USER_ROLE_FILTERS = [
   { value: "all", label: "All types" },
   { value: "buyer", label: "Buyers" },

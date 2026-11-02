@@ -1,7 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 
 import { Card, CardSkeleton, Avatar } from "@/components/shared";
-import { ADMIN_ACTION_LABELS } from "@/constants/admin";
+import { ADMIN_ACTION_LABELS, ORDER_STATUS_LABELS } from "@/constants/admin";
 import { adminApi } from "@/services";
 import { requestAdminSection } from "@/state/navIntent";
 import type { SharedState } from "@/types";
@@ -27,16 +27,17 @@ const relativeTime = (iso: string) => {
   return `${Math.round(hrs / 24)}d ago`;
 };
 
-const PIPELINE_META: Record<string, { label: string; tone: string }> = {
-  payment_pending: { label: "Awaiting payment", tone: "#B4690E" },
-  payment_submitted: { label: "Awaiting review", tone: "#191BA9" },
-  insufficient_payment: { label: "Insufficient payment", tone: "#B42318" },
-  payment_confirmed: { label: "Payment confirmed", tone: "#0B7A59" },
-  preparing: { label: "Preparing", tone: "#0E7490" },
-  completed: { label: "Completed", tone: "#15803D" },
-  cancelled: { label: "Cancelled", tone: "#9CA3AF" },
-  expired: { label: "Expired", tone: "#9CA3AF" },
-  incomplete: { label: "Incomplete", tone: "#B42318" },
+// Labels come from ORDER_STATUS_LABELS so they match the Orders tab filter exactly.
+const PIPELINE_TONE: Record<string, string> = {
+  payment_pending: "#B4690E",
+  payment_submitted: "#191BA9",
+  insufficient_payment: "#B42318",
+  payment_confirmed: "#0B7A59",
+  preparing: "#0E7490",
+  completed: "#15803D",
+  cancelled: "#9CA3AF",
+  expired: "#9CA3AF",
+  incomplete: "#B42318",
 };
 
 export default function AdminDashboard({ setTab }: SharedState) {
@@ -229,9 +230,11 @@ function PipelineChart({
       ) : (
         <ul className="admin-pipeline">
           {visible.map((row) => {
-            const meta = PIPELINE_META[row.status] ?? {
-              label: row.status.replace(/_/g, " "),
-              tone: "#9CA3AF",
+            const meta = {
+              label:
+                ORDER_STATUS_LABELS[row.status] ??
+                row.status.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()),
+              tone: PIPELINE_TONE[row.status] ?? "#9CA3AF",
             };
             const share = total > 0 ? Math.round((row.count / total) * 100) : 0;
             return (

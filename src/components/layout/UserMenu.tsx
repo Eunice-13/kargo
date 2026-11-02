@@ -1,12 +1,19 @@
-import { useState, useEffect, useRef } from "react"
-import { UserRound, Settings as SettingsIcon, LogOut, Store, Clock3, AlertTriangle, ShieldCheck } from "lucide-react"
-import type { UserInfo } from "@/types"
-import { Avatar } from "@/components/shared"
+import { useState, useEffect, useRef } from "react";
+import {
+  UserRound,
+  Settings as SettingsIcon,
+  LogOut,
+  Store,
+  Clock3,
+  AlertTriangle,
+  ShieldCheck,
+} from "lucide-react";
+import type { UserInfo } from "@/types";
+import { Avatar } from "@/components/shared";
 
-type SellerMenuStatus = "None" | "Uploading" | "Scanning" | "Verifying" | "Verified" | "Flagged"
+type SellerMenuStatus = "None" | "Uploading" | "Scanning" | "Verifying" | "Verified" | "Flagged";
 
-const sellerMenuStatus = (enabled?: boolean): SellerMenuStatus =>
-  enabled ? "Verified" : "None"
+const sellerMenuStatus = (enabled?: boolean): SellerMenuStatus => (enabled ? "Verified" : "None");
 
 export default function UserMenu({
   user,
@@ -14,23 +21,25 @@ export default function UserMenu({
   onLogout,
   onApplyToSell,
   displayLabel,
+  hideViewProfile = false,
 }: {
-  user: UserInfo
-  onSettings: () => void
-  onLogout: () => void
-  onApplyToSell?: () => void
-  displayLabel?: string
+  user: UserInfo;
+  onSettings: () => void;
+  onLogout: () => void;
+  onApplyToSell?: () => void;
+  displayLabel?: string;
+  /** Admins only have Settings; "View Profile" would open the same screen. */
+  hideViewProfile?: boolean;
 }) {
-  const [showUser, setShowUser] = useState(false)
-  const userRef = useRef<HTMLDivElement>(null)
+  const [showUser, setShowUser] = useState(false);
+  const userRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (userRef.current && !userRef.current.contains(e.target as Node))
-        setShowUser(false)
-    }
-    document.addEventListener("mousedown", h)
-    return () => document.removeEventListener("mousedown", h)
-  }, [])
+      if (userRef.current && !userRef.current.contains(e.target as Node)) setShowUser(false);
+    };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
 
   return (
     <div ref={userRef} className="kargo-user-menu" style={{ position: "relative" }}>
@@ -106,9 +115,7 @@ export default function UserMenu({
             >
               {user.name || "User"}
             </div>
-            <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>
-              {user.email}
-            </div>
+            <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>{user.email}</div>
           </div>
           {/* Seller status / apply entry point — reflects verification state.
               Admins get a single Administrator row instead (no seller CTA). */}
@@ -129,9 +136,9 @@ export default function UserMenu({
                 >
                   <ShieldCheck size={15} aria-hidden="true" /> Administrator
                 </div>
-              )
+              );
             }
-            const s = sellerMenuStatus(user.sellerEnabled)
+            const s = sellerMenuStatus(user.sellerEnabled);
             if (s === "Verified") {
               return (
                 <div
@@ -148,9 +155,9 @@ export default function UserMenu({
                 >
                   <Store size={15} aria-hidden="true" /> Seller
                 </div>
-              )
+              );
             }
-            if (user.sellerEnabled) return null
+            if (user.sellerEnabled) return null;
             if (s === "Flagged") {
               return (
                 <div
@@ -172,7 +179,7 @@ export default function UserMenu({
                   />
                   Seller verification failed — access suspended pending review.
                 </div>
-              )
+              );
             }
             if (s === "Uploading" || s === "Scanning" || s === "Verifying") {
               return (
@@ -188,17 +195,16 @@ export default function UserMenu({
                     fontWeight: 600,
                   }}
                 >
-                  <Clock3 size={15} aria-hidden="true" /> Seller application under
-                  review
+                  <Clock3 size={15} aria-hidden="true" /> Seller application under review
                 </div>
-              )
+              );
             }
             // None → offer to apply
             return (
               <button
                 onClick={() => {
-                  setShowUser(false)
-                  onApplyToSell?.()
+                  setShowUser(false);
+                  onApplyToSell?.();
                 }}
                 style={{
                   display: "flex",
@@ -220,53 +226,55 @@ export default function UserMenu({
                 <Store size={16} aria-hidden="true" />
                 Start Selling
               </button>
-            )
+            );
           })()}
           {[
             {
               icon: <UserRound size={16} aria-hidden="true" />,
               label: "View Profile",
               action: () => {
-                onSettings()
-                setShowUser(false)
+                onSettings();
+                setShowUser(false);
               },
             },
             {
               icon: <SettingsIcon size={16} aria-hidden="true" />,
               label: "Settings",
               action: () => {
-                onSettings()
-                setShowUser(false)
+                onSettings();
+                setShowUser(false);
               },
             },
-          ].map((item) => (
-            <button
-              key={item.label}
-              onClick={item.action}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                width: "100%",
-                padding: "10px 14px",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: 13,
-                color: "#374151",
-                textAlign: "left",
-              }}
-              className="hover:bg-gray-50 transition-colors"
-            >
-              {item.icon}
-              {item.label}
-            </button>
-          ))}
+          ]
+            .filter((item) => !(hideViewProfile && item.label === "View Profile"))
+            .map((item) => (
+              <button
+                key={item.label}
+                onClick={item.action}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  width: "100%",
+                  padding: "10px 14px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  color: "#374151",
+                  textAlign: "left",
+                }}
+                className="hover:bg-gray-50 transition-colors"
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
           <div style={{ borderTop: "1px solid #F3F4F6" }}>
             <button
               onClick={() => {
-                setShowUser(false)
-                onLogout()
+                setShowUser(false);
+                onLogout();
               }}
               style={{
                 display: "flex",
@@ -284,11 +292,12 @@ export default function UserMenu({
               }}
               className="hover:bg-red-50 transition-colors"
             >
-              <LogOut size={16} aria-hidden="true" />Log Out
+              <LogOut size={16} aria-hidden="true" />
+              Log Out
             </button>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }

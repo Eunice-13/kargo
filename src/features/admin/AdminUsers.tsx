@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
-import { USER_ROLE_FILTERS, USER_STATUS_FILTERS } from "@/constants/admin";
+import { ADMIN_TONES, USER_ROLE_FILTERS, USER_STATUS_FILTERS } from "@/constants/admin";
 import { adminApi } from "@/services";
 import { consumeAdminIntent } from "@/state/navIntent";
 import type { AdminUserFilters, AdminUserRow } from "./adminTypes";
@@ -14,6 +14,7 @@ import {
   AdminSelect,
   AdminBadge,
   AdminEmptyState,
+  AdminFilterSheet,
 } from "./components";
 import { AdminErrorState } from "./components/AdminStates";
 import AdminUserDetailModal from "./components/AdminUserDetailModal";
@@ -80,7 +81,39 @@ export default function AdminUsers() {
         search={search}
         onSearch={setSearch}
         searchPlaceholder="Search name, email, shop, or user ID"
+        className="admin-filter-bar--sheet"
       >
+        <AdminFilterSheet
+          noun={["account", "accounts"]}
+          count={loading && offset === 0 ? null : total}
+          groups={[
+            {
+              key: "role",
+              label: "Type",
+              value: role ?? "all",
+              defaultValue: "all",
+              onChange: (v) => setRole(v as AdminUserFilters["role"]),
+              options: [
+                { value: "all", label: "All" },
+                { value: "seller", label: "Sellers", dot: ADMIN_TONES.seller.dot },
+                { value: "buyer", label: "Buyers", dot: ADMIN_TONES.buyer.dot },
+                { value: "admin", label: "Admins", dot: ADMIN_TONES.admin.dot },
+              ],
+            },
+            {
+              key: "status",
+              label: "Status",
+              value: status ?? "all",
+              defaultValue: "all",
+              onChange: (v) => setStatus(v as AdminUserFilters["status"]),
+              options: [
+                { value: "all", label: "All" },
+                { value: "active", label: "Active", dot: ADMIN_TONES.active.dot },
+                { value: "suspended", label: "Suspended", dot: ADMIN_TONES.suspended.dot },
+              ],
+            },
+          ]}
+        />
         <AdminSelect
           value={role ?? "all"}
           onChange={(v) => setRole(v as AdminUserFilters["role"])}

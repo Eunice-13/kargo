@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CreditCard, Layers } from "lucide-react";
 
 import { Avatar, Card, CardSkeleton, PrimaryBtn, ProductThumb } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
@@ -7,7 +8,7 @@ import { consumeAdminIntent } from "@/state/navIntent";
 import type { AdminCombinedPaymentRow, AdminOrderRow, AdminPaymentRow } from "./adminTypes";
 
 import { useAdminResource } from "./useAdminResource";
-import { toneForStatus } from "@/constants/admin";
+import { ORDER_STATUS_OPTIONS, toneForStatus } from "@/constants/admin";
 import {
   AdminPageHeader,
   AdminFilterBar,
@@ -15,6 +16,7 @@ import {
   AdminBadge,
   AdminEmptyState,
   AdminSectionTabs,
+  AdminFilterSheet,
 } from "./components";
 import { AdminErrorState } from "./components/AdminStates";
 import AdminOrderDetailModal from "./components/AdminOrderDetailModal";
@@ -209,17 +211,46 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
         search={search}
         onSearch={setSearch}
         searchPlaceholder="Search order #, product, buyer, seller"
+        className="admin-filter-bar--sheet"
       >
+        <AdminFilterSheet
+          noun={["order", "orders"]}
+          count={loading && offset === 0 ? null : total}
+          groups={[
+            {
+              key: "status",
+              label: "Status",
+              value: status,
+              defaultValue: "all",
+              onChange: setStatus,
+              options: [
+                { value: "all", label: "All" },
+                { value: "paid_missing_tracking", label: "No tracking · paid 7+ days" },
+                ...ORDER_STATUS_OPTIONS.map((o) => ({
+                  value: o.value,
+                  label: o.label,
+                  dot: toneForStatus(o.value).dot,
+                })),
+              ],
+            },
+            {
+              key: "days",
+              label: "Date range",
+              value: days,
+              defaultValue: "30",
+              onChange: setDays,
+              options: DATE_FILTERS,
+            },
+          ]}
+        />
         <AdminSelect value={status} onChange={setStatus} ariaLabel="Filter orders by status">
           <option value="all">All statuses</option>
           <option value="paid_missing_tracking">No tracking · paid 7+ days</option>
-          <option value="payment_pending">Payment pending</option>
-          <option value="payment_submitted">Payment submitted</option>
-          <option value="payment_confirmed">Payment confirmed</option>
-          <option value="preparing">Preparing</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-          <option value="expired">Expired</option>
+          {ORDER_STATUS_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
         </AdminSelect>
         <AdminSelect value={days} onChange={setDays} ariaLabel="Filter orders by date">
           {DATE_FILTERS.map((d) => (
@@ -493,7 +524,39 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
         search={search}
         onSearch={setSearch}
         searchPlaceholder="Search order #, reference, buyer, seller"
+        className="admin-filter-bar--sheet"
       >
+        <AdminFilterSheet
+          noun={["payment", "payments"]}
+          count={loading && offset === 0 ? null : total}
+          groups={[
+            {
+              key: "status",
+              label: "Status",
+              value: status,
+              defaultValue: "all",
+              onChange: setStatus,
+              options: [
+                { value: "all", label: "All" },
+                ...(
+                  [
+                    ["pending_review", "Pending review"],
+                    ["verified", "Verified"],
+                    ["rejected", "Rejected"],
+                  ] as const
+                ).map(([value, label]) => ({ value, label, dot: toneForStatus(value).dot })),
+              ],
+            },
+            {
+              key: "days",
+              label: "Date range",
+              value: days,
+              defaultValue: "30",
+              onChange: setDays,
+              options: DATE_FILTERS,
+            },
+          ]}
+        />
         <AdminSelect value={status} onChange={setStatus} ariaLabel="Filter payments by status">
           <option value="all">All statuses</option>
           <option value="pending_review">Pending review</option>
@@ -528,7 +591,71 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
       )}
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
+          <div className="admin-orders-cards">
+            {rows.map((p) => (
+              <article
+                key={p.id}
+                className="admin-ocard"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelected(p.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(p.id);
+                  }
+                }}
+              >
+                <div className="admin-ocard__top">
+                  <span className="admin-ocard__icon" aria-hidden="true">
+                    <CreditCard size={22} />
+                  </span>
+                  <div className="admin-ocard__who">
+                    <div className="admin-ocard__num">{p.orderNumber}</div>
+                    <div className="admin-ocard__product">
+                      {p.method}
+                      {p.referenceNumber ? ` · ${p.referenceNumber}` : ""}
+                    </div>
+                  </div>
+                  <span className="admin-ucard__toggle" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                      <path
+                        d="M6 3l5 5-5 5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div className="admin-ocard__meta">
+                  <span className="admin-ocard__badges">
+                    <AdminBadge
+                      tone={toneForStatus(p.status)}
+                      label={p.status.replace(/_/g, " ")}
+                    />
+                    {over24(p) && <AdminBadge tone="warn" label="24h+" />}
+                  </span>
+                  <strong className="admin-ocard__price">{peso(p.amount)}</strong>
+                </div>
+                <div className="admin-ocard__foot">
+                  <span className="admin-ocard__parties">
+                    <Avatar name={p.buyer} size={24} />
+                    <span>{p.buyer || "—"}</span>
+                    <span className="admin-ocard__arrow" aria-hidden="true">
+                      →
+                    </span>
+                    <Avatar name={p.seller} size={24} />
+                    <span>{p.seller || "—"}</span>
+                  </span>
+                  <span className="admin-ocard__date">{fmtDate(p.submittedAt)}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="admin-orders-table-wrap" style={{ overflowX: "auto" }}>
             <table
               className="admin-payments-table"
               style={{ width: "100%", borderCollapse: "collapse" }}
@@ -703,6 +830,7 @@ function CombinedSection() {
         search={search}
         onSearch={setSearch}
         searchPlaceholder="Search buyer, seller, or group ID"
+        className="admin-filter-bar--sheet"
       />
 
       {loading && offset === 0 && (
@@ -720,7 +848,42 @@ function CombinedSection() {
       )}
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
+          <div className="admin-orders-cards">
+            {rows.map((c) => (
+              <article key={c.id} className="admin-ocard admin-ocard--static">
+                <div className="admin-ocard__top">
+                  <span className="admin-ocard__icon" aria-hidden="true">
+                    <Layers size={22} />
+                  </span>
+                  <div className="admin-ocard__who">
+                    <div className="admin-ocard__num">Group {c.id.slice(0, 8)}</div>
+                    <div className="admin-ocard__product">
+                      {c.memberCount} order{c.memberCount === 1 ? "" : "s"} combined
+                    </div>
+                  </div>
+                </div>
+                <div className="admin-ocard__meta">
+                  <AdminBadge tone={toneForStatus(c.status)} label={c.status.replace(/_/g, " ")} />
+                  <span className="admin-ocard__amount">
+                    <strong>{c.shippingFee != null ? peso(c.shippingFee) : "—"}</strong>
+                    <span>Shipping fee</span>
+                  </span>
+                </div>
+                <div className="admin-ocard__foot">
+                  <span className="admin-ocard__parties">
+                    <Avatar name={c.buyer} size={24} />
+                    <span>{c.buyer || "—"}</span>
+                    <span className="admin-ocard__arrow" aria-hidden="true">
+                      →
+                    </span>
+                    <Avatar name={c.seller} size={24} />
+                    <span>{c.seller || "—"}</span>
+                  </span>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="admin-orders-table-wrap" style={{ overflowX: "auto" }}>
             <table
               className="admin-combined-table"
               style={{ width: "100%", borderCollapse: "collapse" }}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { UserMinus } from "lucide-react";
+import { ChevronDown, Info, Plus, UserMinus } from "lucide-react";
 
 import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
@@ -17,6 +17,7 @@ import {
   AdminEmptyState,
   AdminSectionTabs,
   AdminConfirmModal,
+  AdminFilterSheet,
 } from "./components";
 import { AdminErrorState } from "./components/AdminStates";
 import AdminAddAdminModal from "./components/AdminAddAdminModal";
@@ -60,6 +61,9 @@ export default function AdminSecurity() {
   );
 }
 
+const TEAM_NOTE =
+  "Every admin can do everything in this console: verify sellers, moderate batches, cancel orders, override payments, and manage the team. There are no read-only admins. Actions are recorded in the audit log with your name.";
+
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 
@@ -70,10 +74,12 @@ function TeamSection() {
   );
   const [adding, setAdding] = useState(false);
   const [revoke, setRevoke] = useState<AdminTeamMember | null>(null);
+  const [noteOpen, setNoteOpen] = useState(false);
 
   return (
     <>
       <div
+        className="admin-team-note admin-team-note--desktop"
         style={{
           padding: "10px 12px",
           borderRadius: 10,
@@ -84,13 +90,28 @@ function TeamSection() {
           marginBottom: 14,
         }}
       >
-        Every admin can do everything in this console: verify sellers, moderate batches, cancel
-        orders, override payments, and manage the team. There are no read-only admins. Actions are
-        recorded in the audit log with your name.
+        {TEAM_NOTE}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+      <div className="admin-team-note admin-team-note--mobile">
+        <Info size={20} aria-hidden="true" />
+        <div>
+          <p>
+            Every admin has full access. Actions are logged with your name.{" "}
+            <button type="button" aria-expanded={noteOpen} onClick={() => setNoteOpen((o) => !o)}>
+              Details <ChevronDown size={14} aria-hidden="true" data-open={noteOpen} />
+            </button>
+          </p>
+          {noteOpen && <p className="admin-team-note__more">{TEAM_NOTE}</p>}
+        </div>
+      </div>
+
+      <div className="admin-team-actions">
+        <h3 className="admin-team-actions__title">
+          Admins <span>· {data?.rows.length ?? 0}</span>
+        </h3>
         <PrimaryBtn size="sm" onClick={() => setAdding(true)}>
+          <Plus size={16} aria-hidden="true" className="admin-team-actions__plus" />
           Add admin
         </PrimaryBtn>
       </div>
@@ -107,7 +128,36 @@ function TeamSection() {
       )}
       {!loading && data && data.rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
+          <div className="admin-team-cards">
+            {data.rows.map((m) => (
+              <article key={m.id} className="admin-tcard">
+                <div className="admin-tcard__top">
+                  <Avatar name={m.name} size={48} />
+                  <div className="admin-tcard__who">
+                    <div className="admin-tcard__name">{m.name}</div>
+                    <div className="admin-tcard__email">{m.email ?? "—"}</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-tcard__revoke"
+                    onClick={() => setRevoke(m)}
+                  >
+                    <UserMinus size={16} aria-hidden="true" />
+                    {m.acceptedAt === null ? "Cancel invite" : "Revoke"}
+                  </button>
+                </div>
+                <div className="admin-tcard__foot">
+                  <span>Granted by {m.grantedBy ?? "—"}</span>
+                  {m.acceptedAt === null ? (
+                    <AdminBadge tone="warn" label="Invite pending" />
+                  ) : (
+                    <span>{fmtDate(m.grantedAt)}</span>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="admin-team-table-wrap" style={{ overflowX: "auto" }}>
             <table
               className="admin-team-table"
               style={{ width: "100%", borderCollapse: "collapse" }}
@@ -278,7 +328,27 @@ function AuditSection() {
         search={search}
         onSearch={setSearch}
         searchPlaceholder="Search actor, target, or action"
+        className="admin-filter-bar--sheet"
       >
+        <AdminFilterSheet
+          noun={["entry", "entries"]}
+          count={loading && offset === 0 ? null : total}
+          groups={[
+            {
+              key: "days",
+              label: "Date range",
+              value: days,
+              defaultValue: "30",
+              onChange: setDays,
+              options: [
+                { value: "7", label: "Last 7 days" },
+                { value: "30", label: "Last 30 days" },
+                { value: "90", label: "Last 90 days" },
+                { value: "0", label: "All time" },
+              ],
+            },
+          ]}
+        />
         <AdminSelect value={days} onChange={setDays} ariaLabel="Filter audit by date">
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>

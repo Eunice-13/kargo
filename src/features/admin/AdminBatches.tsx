@@ -14,6 +14,7 @@ import {
   AdminSelect,
   AdminBadge,
   AdminEmptyState,
+  AdminFilterSheet,
 } from "./components";
 import { AdminErrorState } from "./components/AdminStates";
 import AdminBatchDetailModal from "./components/AdminBatchDetailModal";
@@ -75,7 +76,41 @@ export default function AdminBatches() {
         search={search}
         onSearch={setSearch}
         searchPlaceholder="Search title, seller, or batch ID"
+        className="admin-filter-bar--sheet"
       >
+        <AdminFilterSheet
+          noun={["batch", "batches"]}
+          count={loading && offset === 0 ? null : total}
+          groups={[
+            {
+              key: "status",
+              label: "Status",
+              value: status,
+              defaultValue: "all",
+              onChange: setStatus,
+              options: [
+                { value: "all", label: "All" },
+                { value: "live", label: "Live", dot: toneForStatus("live").dot },
+                { value: "locked", label: "Locked", dot: toneForStatus("locked").dot },
+                { value: "closed", label: "Closed", dot: toneForStatus("closed").dot },
+              ],
+            },
+            {
+              key: "moderation",
+              label: "Moderation",
+              value: moderation,
+              defaultValue: "all",
+              onChange: setModeration,
+              options: [
+                { value: "all", label: "All" },
+                { value: "flagged_hidden", label: "Flagged or hidden" },
+                { value: "visible", label: "Visible", dot: "#3EB489" },
+                { value: "flagged", label: "Flagged", dot: "#E0B341" },
+                { value: "hidden", label: "Hidden", dot: "#A06BD1" },
+              ],
+            },
+          ]}
+        />
         <AdminSelect value={status} onChange={setStatus} ariaLabel="Filter by status">
           <option value="all">All statuses</option>
           <option value="live">Live</option>
