@@ -23,7 +23,6 @@ import {
   Search,
   ArrowRight,
   ArrowLeft,
-  ChevronDown,
   Plus,
 } from "lucide-react";
 
@@ -49,6 +48,7 @@ import {
 import { isBatchSoldOut, sortSoldOutLast } from "./batchSort";
 
 import ClosedBatchBadge from "./ClosedBatchBadge";
+import SellerBatchFilterSelect from "./SellerBatchFilterSelect";
 
 import FinancialSummaryModal from "./FinancialSummaryModal";
 
@@ -1508,9 +1508,15 @@ export default function Batches({
       >
         Filter:
       </span>
-      <div className={role === "Seller" ? "seller-batch-select-wrap" : undefined}>
+      {role === "Seller" ? (
+        <SellerBatchFilterSelect
+          label="Category"
+          value={catFilter}
+          options={["All", ...BATCH_CATEGORIES]}
+          onChange={setCatFilter}
+        />
+      ) : <div>
         <select
-          className={role === "Seller" ? "seller-batch-filter-select" : undefined}
           value={catFilter}
           onChange={(e) => {
             setCatFilter(e.target.value);
@@ -1539,15 +1545,16 @@ export default function Batches({
             </option>
           ))}
         </select>
-        {role === "Seller" && (
-          <span className="seller-batch-select-icon">
-            <ChevronDown size={12} aria-hidden="true" />
-          </span>
-        )}
-      </div>
-      <div className={role === "Seller" ? "seller-batch-select-wrap" : undefined}>
+      </div>}
+      {role === "Seller" ? (
+        <SellerBatchFilterSelect
+          label="Month"
+          value={dateFilter}
+          options={["All", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026"]}
+          onChange={setDateFilter}
+        />
+      ) : <div>
         <select
-          className={role === "Seller" ? "seller-batch-filter-select" : undefined}
           value={dateFilter}
           onChange={(e) => {
             setDateFilter(e.target.value);
@@ -1590,12 +1597,7 @@ export default function Batches({
             </option>
           ))}
         </select>
-        {role === "Seller" && (
-          <span className="seller-batch-select-icon">
-            <ChevronDown size={12} aria-hidden="true" />
-          </span>
-        )}
-      </div>
+      </div>}
       <div className="flex-1" />
       {role === "Seller" && (
         <>
@@ -1698,7 +1700,13 @@ export default function Batches({
         )}
         {/* Seller request pop-ups (opened from the header buttons above) */}
         {showExtReqModal && (
-          <Modal title="Extension Requests" onClose={() => setShowExtReqModal(false)} width={480}>
+          <Modal
+            title="Extension Requests"
+            onClose={() => setShowExtReqModal(false)}
+            width={480}
+            showTitleIcon={false}
+            className="seller-extension-requests-modal"
+          >
             {extensionRequests.length === 0 ? (
               <div
                 style={{

@@ -109,7 +109,7 @@ export default function FulfillmentBoard({
 
   if (scopedOrders.length === 0 && role === "buyer") {
     return (
-      <div>
+      <div className={expanded ? "fulfillment-board-empty fulfillment-board-empty--expanded" : "fulfillment-board-empty"}>
         <EmptyState
           icon={PackageOpen}
           title="No fulfillment orders yet"

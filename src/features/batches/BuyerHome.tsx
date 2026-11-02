@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CalendarDays,
+  ChevronDown,
   ChevronRight,
   Flame,
   Heart,
@@ -34,6 +35,72 @@ function monthKey(value?: string): string | null {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return null;
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function BuyerHomeFilterDropdown({
+  value,
+  options,
+  label,
+  onChange,
+}: {
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  label: string;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selected = options.find((option) => option.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="buyer-home-filter__dropdown">
+      <button
+        type="button"
+        className="buyer-home-filter__trigger"
+        aria-label={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        <span>{selected?.label}</span>
+        <ChevronDown size={14} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="buyer-home-filter__options" role="listbox" aria-label={label}>
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="option"
+              aria-selected={value === option.value}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function useHorizontalCarousel(itemCount: number) {
@@ -705,28 +772,21 @@ export default function BuyerHome({
     <div className="buyer-home">
       <div className="buyer-home-filter">
         <strong>Filter:</strong>
-        <select
-          aria-label="Filter batches by category"
+        <BuyerHomeFilterDropdown
+          label="Filter batches by category"
           value={category}
-          onChange={(event) => onCategoryChange(event.target.value)}
-        >
-          {["All", ...BATCH_CATEGORIES].map((option) => (
-            <option key={option} value={option}>
-              {option === "All" ? "All categories" : option}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Filter batches by availability"
+          onChange={onCategoryChange}
+          options={["All", ...BATCH_CATEGORIES].map((option) => ({
+            value: option,
+            label: option === "All" ? "All categories" : option,
+          }))}
+        />
+        <BuyerHomeFilterDropdown
+          label="Filter batches by availability"
           value={availability}
-          onChange={(event) => onAvailabilityChange(event.target.value as BuyerHomeAvailability)}
-        >
-          {availabilityOptions.map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => onAvailabilityChange(value as BuyerHomeAvailability)}
+          options={availabilityOptions.map(([value, label]) => ({ value, label }))}
+        />
       </div>
 
       <div className="buyer-home__content">

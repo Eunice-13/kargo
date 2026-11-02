@@ -1,12 +1,11 @@
 import { useState } from "react"
-import { ImageUp, X } from "lucide-react"
+import { ImageUp, Plus, X } from "lucide-react"
 
 import type { BatchType, GroupDiscountType, SellingUnit } from "@/types"
 
-import { INDIGO, CAT_GRAD } from "@/constants/theme"
+import { INDIGO } from "@/constants/theme"
 import { BATCH_CATEGORIES } from "@/constants/categories"
 import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
-import BatchCover from "./BatchCover"
 
 import { isSupabaseConfigured } from "@/lib/supabase"
 
@@ -447,7 +446,13 @@ export default function NewBatchModal({
   }
 
   return (
-    <Modal title="Create New Batch" onClose={onClose} width={560}>
+    <Modal
+      title="Create New Batch"
+      onClose={onClose}
+      width={560}
+      showTitleIcon={false}
+      className="create-batch-modal"
+    >
       <div className="space-y-4">
         <div>
           <label
@@ -608,15 +613,15 @@ export default function NewBatchModal({
           </label>
           {/* Live preview — the exact banner buyers see on the Home card and the
               batch detail hero. Empty falls back to the category gradient + icon. */}
-          <BatchCover
-            category={cat}
-            coverImage={coverPreview || undefined}
-            height={110}
-            radius={8}
-          />
-          <label className="batch-image-upload">
-            <ImageUp size={16} aria-hidden="true" />
-            <span>{coverFile ? "Change cover photo" : "Upload cover photo"}</span>
+          <label className="batch-cover-upload">
+            {coverPreview ? (
+              <img src={coverPreview} alt="Selected batch cover" />
+            ) : (
+              <>
+                <Plus size={22} aria-hidden="true" />
+                <span>Add cover photo</span>
+              </>
+            )}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
