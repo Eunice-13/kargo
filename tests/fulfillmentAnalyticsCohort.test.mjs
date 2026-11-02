@@ -324,3 +324,51 @@ test("cohort window follows orders.created_at: paid late counts, created earlier
     current.cohortSize,
   );
 });
+
+test("current status buckets unpaid and closed orders: awaiting payment, expired, cancelled", async () => {
+  const range = ["custom", "2020-02-01", "2020-02-03"];
+  const before = await currentStatus(...range);
+  const submitted = id(30);
+  const insufficient = id(31);
+  const expiredUnpaid = id(32);
+  const cancelledUnpaid = id(33);
+  const incomplete = id(34);
+  await db.query(
+    `insert into orders(id,order_number,seller_id,buyer_id,status,created_at) values
+      ($1::uuid,$1::text,$6::uuid,$7::uuid,'payment_submitted','2020-02-02T02:00:00Z'),
+      ($2::uuid,$2::text,$6::uuid,$7::uuid,'insufficient_payment','2020-02-02T03:00:00Z'),
+      ($3::uuid,$3::text,$6::uuid,$7::uuid,'expired','2020-02-02T04:00:00Z'),
+      ($4::uuid,$4::text,$6::uuid,$7::uuid,'cancelled','2020-02-02T05:00:00Z'),
+      ($5::uuid,$5::text,$6::uuid,$7::uuid,'incomplete','2020-02-02T06:00:00Z')`,
+    [submitted, insufficient, expiredUnpaid, cancelledUnpaid, incomplete, seller, buyer],
+  );
+  const after = await currentStatus(...range);
+  assert.equal(after.cohortSize, before.cohortSize + 5);
+  assert.equal(after.counts.payment_submitted, before.counts.payment_submitted + 1);
+  assert.equal(after.counts.insufficient_payment, before.counts.insufficient_payment + 1);
+  assert.equal(after.counts.expired, before.counts.expired + 1);
+  assert.equal(after.counts.cancelled, before.counts.cancelled + 1);
+  assert.equal(after.counts.other, before.counts.other + 1);
+  assert.equal(
+    Object.values(after.counts).reduce((sum, value) => sum + value, 0),
+    after.cohortSize,
+  );
+
+  const drill = async (stage) =>
+    (
+      await row("select admin_fulfillment_current_status_orders($1,$2,$3,$4,100,0) as data", [
+        ...range,
+        stage,
+      ])
+    ).data;
+  const expired = await drill("expired");
+  assert.equal(expired.total, after.counts.expired);
+  assert.ok(expired.rows.some((item) => item.order_id === expiredUnpaid));
+  assert.equal(
+    expired.rows.find((item) => item.order_id === expiredUnpaid).occurred_at.slice(0, 10),
+    "2020-02-02",
+  );
+  const awaiting = await drill("payment_submitted");
+  assert.equal(awaiting.total, after.counts.payment_submitted);
+  await assert.rejects(drill("awaiting_payment"), /Select a current order status/);
+});

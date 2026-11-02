@@ -8,6 +8,9 @@ export type FulfillmentAnalyticsStage =
   | "expired";
 
 export type FulfillmentCurrentStatusStage =
+  | "payment_pending"
+  | "payment_submitted"
+  | "insufficient_payment"
   | "payment_confirmed"
   | "preparing"
   | "shipped"

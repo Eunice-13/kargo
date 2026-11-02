@@ -484,7 +484,9 @@
     background 0.15s,
     box-shadow 0.15s;
 }
-.fulfillment-analytics__stage-row > .fulfillment-analytics__focus-actions > button:hover:not(:disabled),
+.fulfillment-analytics__stage-row
+  > .fulfillment-analytics__focus-actions
+  > button:hover:not(:disabled),
 .fulfillment-orders__pagination button:hover:not(:disabled) {
   background: var(--fa-soft);
 }
@@ -1638,7 +1640,9 @@
     height: 220px;
     min-height: 220px;
   }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__group.is-drop-offs > .fulfillment-breakdown__list {
+  .fulfillment-breakdown.is-reached
+    .fulfillment-breakdown__group.is-drop-offs
+    > .fulfillment-breakdown__list {
     margin-top: 42px;
   }
 }
@@ -1818,7 +1822,7 @@
 @media (min-width: 641px) {
   .fulfillment-breakdown__meta .fulfillment-stage-dot {
     display: none !important;
-}
+  }
 }
 
 /* Reached stage mobile must match the Current status mobile row treatment. */
@@ -2011,5 +2015,127 @@
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
+  }
+}
+
+/* ─── Current status: every order, grouped (awaiting payment / fulfillment / closed) ─── */
+.fulfillment-breakdown__tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fdecc8;
+  color: #8a5300;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.fulfillment-breakdown__group-summary {
+  margin: 0;
+  color: var(--fa-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (min-width: 641px) {
+  /* Three groups sized by their number of columns, separated by space not rules. */
+  .fulfillment-breakdown.is-current {
+    grid-template-columns: var(--fb-cols, minmax(0, 3fr) minmax(0, 4fr) minmax(0, 2fr));
+    gap: 28px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group + .fulfillment-breakdown__group {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-head {
+    box-sizing: border-box;
+    min-height: 58px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--group-line, var(--fa-border));
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-title {
+    padding-bottom: 2px;
+    border-bottom: 0;
+    color: #3a4261;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Bars share one baseline: the label area is a fixed height in every column. */
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list {
+    position: relative;
+    min-height: 260px;
+    margin-top: 26px;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 78px;
+    left: 0;
+    height: 1.5px;
+    background: #1f2937;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list li:not(.is-focused) button {
+    opacity: 1;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__list button {
+    justify-content: flex-start;
+    gap: 0;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-wrap {
+    flex: 1 1 auto;
+    min-height: 160px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar {
+    min-height: 8px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta {
+    flex: 0 0 78px;
+    justify-content: flex-start;
+    gap: 2px;
+    padding-top: 10px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta .fulfillment-stage-dot {
+    display: none;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__label {
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 640px) {
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-head {
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--group-line, var(--fa-border));
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-title {
+    border-bottom: 0;
+    padding-bottom: 2px;
+  }
+}
+
+/* Keep every group heading the same height so the three baselines line up. */
+@media (min-width: 1201px) {
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-head {
+    min-height: 52px;
+  }
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-title {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+}
+@media (min-width: 641px) and (max-width: 1200px) {
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-head {
+    min-height: 68px;
+  }
+}
+
+@media (min-width: 1201px) {
+  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-title {
+    letter-spacing: 0.03em;
   }
 }

@@ -1,6 +1,7 @@
 import type {
   FulfillmentAnalytics,
   FulfillmentAnalyticsStage as Stage,
+  FulfillmentCurrentStatusStage,
 } from "@/types/fulfillmentAnalytics";
 
 export type FulfillmentAnalyticsView = "trend" | "reached" | "current";
@@ -15,6 +16,52 @@ export const ANALYTICS_STAGES: { key: Stage; label: string; color: string; dash?
   { key: "cancelled", label: "Cancelled", color: "#B42318", dash: "4 3" },
   { key: "expired", label: "Expired", color: "#64748B", dash: "2 4" },
 ];
+
+// "Current status" covers every order created in the range, so it has its own
+// stage list: orders awaiting payment, in fulfillment, or closed without delivery.
+// `delivered` keeps its API key but reads "Completed" here, matching the order status.
+export type CurrentStageGroupId = "awaiting" | "fulfillment" | "closed";
+export const CURRENT_STAGE_GROUPS: { id: CurrentStageGroupId; title: string; line: string }[] = [
+  { id: "awaiting", title: "Awaiting payment", line: "#E8A317" },
+  { id: "fulfillment", title: "Fulfillment", line: "#A5B4FC" },
+  { id: "closed", title: "Closed without delivery", line: "#FCA5A5" },
+];
+export const CURRENT_STAGES: {
+  key: FulfillmentCurrentStatusStage;
+  label: string;
+  color: string;
+  group: CurrentStageGroupId;
+  /** Needs an admin to look at it (payment proof to verify or fix). */
+  review?: boolean;
+}[] = [
+  { key: "payment_pending", label: "Payment pending", color: "#F0C94A", group: "awaiting" },
+  {
+    key: "payment_submitted",
+    label: "Payment submitted",
+    color: "#E8A317",
+    group: "awaiting",
+    review: true,
+  },
+  {
+    key: "insufficient_payment",
+    label: "Insufficient payment",
+    color: "#C2410C",
+    group: "awaiting",
+    review: true,
+  },
+  { key: "payment_confirmed", label: "Payment confirmed", color: "#4F46E5", group: "fulfillment" },
+  { key: "preparing", label: "Preparing", color: "#0EA5E9", group: "fulfillment" },
+  { key: "shipped", label: "Shipped", color: "#2563EB", group: "fulfillment" },
+  { key: "delivered", label: "Completed", color: "#0B8C69", group: "fulfillment" },
+  { key: "expired", label: "Expired", color: "#64748B", group: "closed" },
+  { key: "cancelled", label: "Cancelled", color: "#DC2626", group: "closed" },
+];
+export const AWAITING_PAYMENT_KEYS: FulfillmentCurrentStatusStage[] = [
+  "payment_pending",
+  "payment_submitted",
+  "insufficient_payment",
+];
+
 export const PERIODS = [
   ["today", "Today"],
   ["last_7_days", "Last 7 Days"],

@@ -11,7 +11,12 @@ import type {
 } from "@/types/fulfillmentAnalytics";
 import { useAdminResource } from "./useAdminResource";
 import AdminOrderDetailModal from "./components/AdminOrderDetailModal";
-import { ANALYTICS_STAGES, analyticsDate, analyticsTimestamp } from "./fulfillmentAnalyticsModel";
+import {
+  ANALYTICS_STAGES,
+  CURRENT_STAGES,
+  analyticsDate,
+  analyticsTimestamp,
+} from "./fulfillmentAnalyticsModel";
 import "./fulfillmentAnalytics.css";
 
 type OrderStage = Stage | FulfillmentCurrentStatusStage;
@@ -39,7 +44,10 @@ export default function FulfillmentOrdersDialog({
   const [offset, setOffset] = useState(0);
   const [orderId, setOrderId] = useState<string | null>(null);
   const dialogRef = useDialogA11y(onClose);
-  const stageMeta = ANALYTICS_STAGES.find((s) => s.key === stage);
+  const stageMeta =
+    mode === "current"
+      ? CURRENT_STAGES.find((s) => s.key === stage)
+      : ANALYTICS_STAGES.find((s) => s.key === stage);
   const label = stageMeta?.label ?? "Other";
   const color = stageMeta?.color ?? "#64748B";
 
@@ -88,7 +96,7 @@ export default function FulfillmentOrdersDialog({
           </p>
           <p className="fulfillment-orders__explanation">
             {mode === "current"
-              ? "Orders currently classified under this status. Each order is counted once."
+              ? "Orders created in this range that are in this status right now. Each order is counted once."
               : "Orders that reached this stage in the selected period. Their current status may have changed."}
           </p>
           <OrderPage
@@ -180,7 +188,9 @@ function OrderPage({
       </p>
       {!page.data.rows.length && (
         <p className="fulfillment-analytics__notice">
-          No cohort orders reached this stage in this period.
+          {mode === "current"
+            ? "No orders are in this status for this period."
+            : "No cohort orders reached this stage in this period."}
         </p>
       )}
       <ul className="fulfillment-orders__list">
@@ -193,14 +203,22 @@ function OrderPage({
             >
               <span>
                 <strong>{order.order_number || order.order_id}</strong>
-                <small>Entered {analyticsTimestamp(order.occurred_at)}</small>
+                <small>
+                  {mode === "current" ? "Created" : "Entered"}{" "}
+                  {analyticsTimestamp(order.occurred_at)}
+                </small>
               </span>
               <span>
                 <span className="fulfillment-orders__status">
                   {(order.current_fulfillment_stage || order.current_status).replace(/_/g, " ")}
                 </span>
                 <small>
-                  {order.source === "transition" ? "Recorded transition" : "Recovered history"} →
+                  {mode === "current"
+                    ? "Open order"
+                    : order.source === "transition"
+                      ? "Recorded transition"
+                      : "Recovered history"}{" "}
+                  →
                 </small>
               </span>
             </button>

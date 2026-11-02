@@ -135,13 +135,40 @@
 }
 .admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary {
   grid-template-columns: 1fr;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-rows: none;
+  align-content: start;
+  gap: 10px;
   margin-top: 0;
   max-width: none;
+  border: 0;
+  background: transparent;
+  overflow: visible;
 }
-.admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary > div + div {
-  border-top: 1px solid #dfe6f5;
-  border-left: 0;
+/* Each KPI is its own soft tile, left-aligned. */
+.admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary > div,
+.admin-page--dashboard
+  .fulfillment-analytics__content-grid
+  .fulfillment-analytics__summary
+  > div
+  + div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 14px 16px;
+  border: 1px solid #e4e8f6;
+  border-radius: 14px;
+  background: #eef1fb;
+  text-align: left;
+}
+.admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary strong {
+  color: #1d2a9e;
+  font-size: 28px;
+}
+.admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary span {
+  margin-top: 2px;
+  color: #3a4261;
+  font-size: 13px;
 }
 @media (max-width: 640px) {
   .admin-page--dashboard .fulfillment-analytics__content-grid {
@@ -149,15 +176,26 @@
     gap: 16px;
     margin-top: 20px;
   }
-}
-
-@media (max-width: 640px) {
   .admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: 1fr;
+    grid-template-columns: repeat(var(--kpis, 2), minmax(0, 1fr));
+    grid-template-rows: none;
+    gap: 8px;
   }
-  .admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary > div + div {
-    border-top: 0;
-    border-left: 1px solid #dfe6f5;
+  .admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary > div,
+  .admin-page--dashboard
+    .fulfillment-analytics__content-grid
+    .fulfillment-analytics__summary
+    > div
+    + div {
+    padding: 12px;
+  }
+  .admin-page--dashboard
+    .fulfillment-analytics__content-grid
+    .fulfillment-analytics__summary
+    strong {
+    font-size: 22px;
+  }
+  .admin-page--dashboard .fulfillment-analytics__content-grid .fulfillment-analytics__summary span {
+    font-size: 12px;
   }
 }
