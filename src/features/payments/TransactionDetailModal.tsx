@@ -28,7 +28,13 @@ export default function TransactionDetailModal({
   }
   return (
     <>
-    <Modal title="Transaction Details" onClose={onClose} width={460}>
+    <Modal
+      title="Transaction Details"
+      onClose={onClose}
+      width={460}
+      showTitleIcon={false}
+      className="transaction-detail-modal"
+    >
       <div className="space-y-4">
         <div
           style={{

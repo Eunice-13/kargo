@@ -1274,7 +1274,7 @@ export default function MyClaims({
                               }}
                             >
                               <span style={{ background: badge.dot }} />
-                              {status}
+                              <span className="seller-orders-status__label">{status}</span>
                             </span>
                             {c.status === "Insufficient Payment" && (
                               <small style={{ color: "#92400E" }}>Insufficient payment</small>
@@ -1314,7 +1314,13 @@ export default function MyClaims({
           />
         )}
         {orderDetailTarget && (
-          <Modal title="Order details" onClose={() => setOrderDetailTarget(null)} width={420}>
+          <Modal
+            title="Order details"
+            onClose={() => setOrderDetailTarget(null)}
+            width={420}
+            showTitleIcon={false}
+            className="seller-order-detail-modal"
+          >
             <div className="seller-order-details">
               <strong>{orderDetailTarget.product}</strong>
               <span>{orderDetailTarget.batch}</span>

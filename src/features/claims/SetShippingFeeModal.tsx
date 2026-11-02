@@ -31,7 +31,13 @@ export default function SetShippingFeeModal({
     fee.trim() !== "" && Number.isFinite(numericFee) && numericFee >= 0
 
   return (
-    <Modal title="Set shipping fee" onClose={onClose} width={540}>
+    <Modal
+      title="Set Shipping Fee"
+      onClose={onClose}
+      width={540}
+      showTitleIcon={false}
+      className="set-shipping-fee-modal"
+    >
       <div className="space-y-4">
         <div>
           <SummaryBlock

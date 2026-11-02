@@ -186,7 +186,13 @@ export default function PaymentSubmitModal({
 
   return (
     <>
-    <Modal title="Submit Payment" onClose={onClose} width={480}>
+    <Modal
+      title="Submit Payment"
+      onClose={onClose}
+      width={480}
+      showTitleIcon={false}
+      className="submit-payment-modal"
+    >
       <div className="space-y-4">
         {submissionDisabled && <p role="status" className="text-xs text-[var(--kargo-muted)]">Checking payment availability…</p>}
         <section className="kargo-summary-block" aria-label={item.product}>

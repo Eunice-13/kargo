@@ -40,7 +40,13 @@ export default function BatchCheckoutModal({
 
     return (
         <>
-            <Modal title="Batch Checkout" onClose={onClose} width={680}>
+            <Modal
+              title="Batch Checkout"
+              onClose={onClose}
+              width={680}
+              showTitleIcon={false}
+              className="batch-checkout-modal"
+            >
                 <div className="space-y-4">
                     <div style={{ fontSize: 12, color: "#6B7280" }}>
                         Payments are separated by seller so each proof is sent against the correct account.

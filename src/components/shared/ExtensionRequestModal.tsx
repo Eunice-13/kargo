@@ -41,7 +41,13 @@ export default function ExtensionRequestModal({
     try { await onSubmit(hours, trimmedReason) } finally { setSubmitting(false) }
   }
   return (
-    <Modal title="Request Extension" onClose={onClose} width={420}>
+    <Modal
+      title="Request Extension"
+      onClose={onClose}
+      width={420}
+      showTitleIcon={false}
+      className="request-extension-modal"
+    >
       <div className="space-y-4">
         <div
           style={{

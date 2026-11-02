@@ -45,7 +45,13 @@ export default function OrderDetailsModal({
   return (
     <>
       {detailOrder && !detailPayment && (
-        <Modal title="Order Details" onClose={() => onClose()} width={480}>
+        <Modal
+          title="Order Details"
+          onClose={() => onClose()}
+          width={480}
+          showTitleIcon={false}
+          className="buyer-order-details-modal"
+        >
           <StageProgress stages={BUYER_COLUMNS} current={currentStage} />
           <dl className="space-y-3">
             {[

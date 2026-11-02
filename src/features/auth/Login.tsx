@@ -117,7 +117,13 @@ export default function Login({
           <p>Sign in to your Kargo account</p>
         </header>
 
-        <div className="auth-login-fields">
+        <form
+          className="auth-login-fields"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void submit()
+          }}
+        >
           <AuthInput
             label="Email address"
             type="email"
@@ -157,10 +163,10 @@ export default function Login({
             </div>
           </div>
           {needsConfirm && <ResendConfirmation email={email.trim()} />}
-          <PrimaryBtn onClick={submit} loading={loading} style={{ width: "100%" }}>
+          <PrimaryBtn loading={loading} style={{ width: "100%" }}>
             {loading ? "Signing in…" : "Login"}
           </PrimaryBtn>
-        </div>
+        </form>
 
         <div className="auth-switch-copy">
           <span>Don’t have an account? </span>
