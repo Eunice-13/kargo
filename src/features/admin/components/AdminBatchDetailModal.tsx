@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Lock } from "lucide-react";
+import { CalendarDays, Lock } from "lucide-react";
 
-import { Modal, CardSkeleton, BatchMedia } from "@/components/shared";
+import { Modal, Avatar, CardSkeleton, BatchMedia } from "@/components/shared";
 import { toneForStatus } from "@/constants/admin";
 import { adminApi } from "@/services";
 import type { BatchModerationAction } from "../adminTypes";
@@ -10,7 +10,7 @@ import { useAdminResource } from "../useAdminResource";
 import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
-import { AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
+import { AdminModalSection } from "./AdminFacts";
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
 
@@ -56,11 +56,11 @@ export default function AdminBatchDetailModal({
   return (
     <>
       <Modal
-        title={data?.title ?? "Batch"}
+        title="Batch details"
+        showTitleIcon={false}
         variant="detail"
-        showTitle={false}
         width={680}
-        className="admin-modal admin-record-modal"
+        className="admin-modal admin-record-modal admin-batch-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"
         onClose={onClose}
         footer={
@@ -90,7 +90,11 @@ export default function AdminBatchDetailModal({
                 </AdminActionButton>
               )}
               {data.status !== "closed" && (
-                <AdminActionButton action="closeBatch" size="sm" onClick={() => setPending("close")}>
+                <AdminActionButton
+                  action="closeBatch"
+                  size="sm"
+                  onClick={() => setPending("close")}
+                >
                   Close batch
                 </AdminActionButton>
               )}
@@ -107,22 +111,32 @@ export default function AdminBatchDetailModal({
         {!loading && data && (
           <div className="space-y-5">
             <div className="admin-detail-hero">
-              <BatchMedia
-                src={data.coverPath ?? undefined}
-                alt=""
-                width={1200}
-                height={600}
-                className="admin-detail-hero__thumb"
-              />
+              {data.coverPath ? (
+                <BatchMedia
+                  src={data.coverPath}
+                  alt=""
+                  width={1200}
+                  height={600}
+                  className="admin-detail-hero__thumb"
+                />
+              ) : (
+                <span className="admin-detail-hero__thumb admin-bcard__thumb" aria-hidden="true" />
+              )}
               <div className="admin-detail-hero__identity">
                 <h2>{data.title}</h2>
-                <p>
-                  {data.sellerName} · {data.category}
+                <p className="admin-batch-seller">
+                  <Avatar name={data.sellerName} size={22} />
+                  <span>
+                    {data.sellerName} · {data.category}
+                  </span>
                 </p>
-              </div>
-              <div className="admin-detail-hero__badges">
-                <AdminBadge tone={statusTone} label={data.status} />
-                <AdminBadge tone={MOD_TONE[data.moderationStatus]} label={data.moderationStatus} />
+                <div className="admin-detail-hero__badges">
+                  <AdminBadge tone={statusTone} label={data.status} />
+                  <AdminBadge
+                    tone={MOD_TONE[data.moderationStatus]}
+                    label={data.moderationStatus}
+                  />
+                </div>
               </div>
             </div>
 
@@ -133,35 +147,43 @@ export default function AdminBatchDetailModal({
             )}
 
             <AdminModalSection title="Batch summary">
-              <AdminFactGrid>
-                <AdminFact
-                  label="Window"
-                  value={`${data.startsOn.slice(0, 10)} → ${data.endsOn.slice(0, 10)}`}
-                />
-                <AdminFact label="Orders" value={String(data.orderCount)} />
-                <AdminFact label="Confirmed GMV" value={peso(data.confirmedGmv)} />
-                <AdminFact label="Products" value={String(data.products.length)} />
-              </AdminFactGrid>
+              <div className="admin-batch-window">
+                <span>
+                  <CalendarDays size={16} aria-hidden="true" />
+                  Window
+                </span>
+                <strong>
+                  {data.startsOn.slice(0, 10)} → {data.endsOn.slice(0, 10)}
+                </strong>
+              </div>
+              <div className="admin-user-stats admin-batch-stats">
+                <div>
+                  <strong>{data.orderCount}</strong>
+                  <span>Orders</span>
+                </div>
+                <div>
+                  <strong>{peso(data.confirmedGmv)}</strong>
+                  <span>Confirmed GMV</span>
+                </div>
+                <div>
+                  <strong>{data.products.length}</strong>
+                  <span>Products</span>
+                </div>
+              </div>
             </AdminModalSection>
 
             <AdminModalSection
               title="Products"
               hint={`${data.products.length} item${data.products.length === 1 ? "" : "s"}`}
             >
-              <div className="admin-table-wrap">
-                <table className="admin-mini-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Price</th>
-                      <th>Claimed</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.products.map((p) => (
-                      <tr key={p.name}>
-                        <td className="admin-mini-table__name" data-label="Name">
+              <ul className="admin-batch-products">
+                {data.products.map((p) => {
+                  const pct =
+                    p.quantityTotal > 0 ? Math.min(100, (p.claimed / p.quantityTotal) * 100) : 0;
+                  return (
+                    <li key={p.name}>
+                      <div className="admin-batch-products__head">
+                        <span>
                           {p.name}
                           {p.isLocked && (
                             <Lock
@@ -170,20 +192,24 @@ export default function AdminBatchDetailModal({
                               style={{ marginLeft: 5, verticalAlign: "-1px" }}
                             />
                           )}
-                        </td>
-                        <td data-label="Price">{peso(p.sellingPrice)}</td>
-                        <td data-label="Claimed">
-                          {p.claimed}
+                        </span>
+                        <strong>{peso(p.sellingPrice)}</strong>
+                      </div>
+                      <div className="admin-batch-products__claim">
+                        <span>
+                          Claimed {p.claimed}
                           {p.waitlist > 0 ? ` (+${p.waitlist} waitlist)` : ""}
-                        </td>
-                        <td data-label="Total">{p.quantityTotal}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </span>
+                        <span className="admin-bcard__bar" aria-hidden="true">
+                          <span style={{ width: `${pct}%` }} />
+                        </span>
+                        <span>Total {p.quantityTotal}</span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </AdminModalSection>
-
           </div>
         )}
       </Modal>
@@ -194,13 +220,7 @@ export default function AdminBatchDetailModal({
           consequence={consequenceFor(pending)}
           confirmLabel={pending[0].toUpperCase() + pending.slice(1)}
           minReason={needsReason(pending) ? 8 : 0}
-          action={
-            pending === "restore"
-              ? "show"
-              : pending === "close"
-                ? "closeBatch"
-                : pending
-          }
+          action={pending === "restore" ? "show" : pending === "close" ? "closeBatch" : pending}
           onConfirm={async (reason) => {
             await adminApi.moderateBatch(batchId, pending, reason);
             setPending(null);

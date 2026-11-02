@@ -307,7 +307,58 @@ function AuditSection() {
       )}
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
+          <div className="admin-audit-cards">
+            {rows.map((a) => (
+              <article
+                key={a.id}
+                className="admin-acard"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelected(a)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(a);
+                  }
+                }}
+              >
+                <div className="admin-acard__top">
+                  <Avatar name={a.actorName} size={48} />
+                  <div className="admin-acard__who">
+                    <div className="admin-acard__name">{a.actorName || "—"}</div>
+                    <div className="admin-acard__date">
+                      {new Date(a.createdAt).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </div>
+                  </div>
+                  <span className="admin-ucard__toggle" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                      <path
+                        d="M6 3l5 5-5 5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div className="admin-acard__meta">
+                  <AdminBadge tone="info" label={ADMIN_ACTION_LABELS[a.action] ?? a.action} />
+                  <span className="admin-acard__target">{a.targetLabel ?? a.targetType}</span>
+                </div>
+                {a.reason && (
+                  <p className="admin-acard__reason">
+                    <strong>Reason</strong> · {a.reason}
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+          <div className="admin-audit-table-wrap" style={{ overflowX: "auto" }}>
             <table
               className="admin-audit-table"
               style={{ width: "100%", borderCollapse: "collapse" }}

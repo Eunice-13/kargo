@@ -50,6 +50,7 @@ export default function AdminUserDetailModal({
     <>
       <Modal
         title="Account details"
+        showTitleIcon={false}
         variant="detail"
         width={720}
         className="admin-modal admin-record-modal"

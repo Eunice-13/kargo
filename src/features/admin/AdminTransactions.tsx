@@ -252,7 +252,62 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
       )}
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
+          <div className="admin-orders-cards">
+            {rows.map((o) => (
+              <article
+                key={o.id}
+                className="admin-ocard"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelected(o.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(o.id);
+                  }
+                }}
+              >
+                <div className="admin-ocard__top">
+                  <span className="admin-ocard__thumb">
+                    <ProductThumb name={o.product} />
+                  </span>
+                  <div className="admin-ocard__who">
+                    <div className="admin-ocard__num">{o.orderNumber}</div>
+                    <div className="admin-ocard__product">{o.product}</div>
+                  </div>
+                  <span className="admin-ucard__toggle" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                      <path
+                        d="M6 3l5 5-5 5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div className="admin-ocard__meta">
+                  <AdminBadge tone={toneForStatus(o.status)} label={o.status.replace(/_/g, " ")} />
+                  <strong className="admin-ocard__price">{peso(o.amount)}</strong>
+                </div>
+                <div className="admin-ocard__foot">
+                  <span className="admin-ocard__parties">
+                    <Avatar name={o.buyer} size={24} />
+                    <span>{o.buyer || "—"}</span>
+                    <span className="admin-ocard__arrow" aria-hidden="true">
+                      →
+                    </span>
+                    <Avatar name={o.seller} size={24} />
+                    <span>{o.seller || "—"}</span>
+                  </span>
+                  <span className="admin-ocard__date">{fmtDate(o.createdAt)}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="admin-orders-table-wrap" style={{ overflowX: "auto" }}>
             <table
               className="admin-orders-table"
               style={{ width: "100%", borderCollapse: "collapse" }}

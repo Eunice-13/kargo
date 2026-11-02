@@ -1,6 +1,8 @@
 import { useState } from "react";
 
-import { Modal, CardSkeleton } from "@/components/shared";
+import { MapPin } from "lucide-react";
+
+import { Modal, Avatar, CardSkeleton, ProductThumb } from "@/components/shared";
 import { adminApi } from "@/services";
 import { toneForStatus } from "@/constants/admin";
 
@@ -8,7 +10,7 @@ import { useAdminResource } from "../useAdminResource";
 import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
-import { AdminEmptyText, AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
+import { AdminEmptyText, AdminModalSection } from "./AdminFacts";
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : "—");
@@ -43,9 +45,9 @@ export default function AdminOrderDetailModal({
   return (
     <>
       <Modal
-        title={data?.orderNumber ?? "Order"}
+        title="Order details"
+        showTitleIcon={false}
         variant="detail"
-        showTitle={false}
         width={640}
         className="admin-modal admin-record-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"
@@ -78,39 +80,72 @@ export default function AdminOrderDetailModal({
         )}
         {!loading && data && (
           <div className="space-y-5">
-            <div className="admin-detail-hero">
+            <div className="admin-detail-hero admin-order-hero">
+              <span className="admin-order-hero__thumb">
+                <ProductThumb name={data.product} />
+              </span>
               <div className="admin-detail-hero__identity">
                 <h2>{data.product}</h2>
                 <p>
-                  {data.orderNumber} · Qty {data.quantity} · {peso(data.amount)}
+                  {data.orderNumber} · Qty {data.quantity}
                 </p>
+                <div className="admin-detail-hero__badges">
+                  <AdminBadge tone={statusTone} label={data.status.replace(/_/g, " ")} />
+                </div>
               </div>
-              <div className="admin-detail-hero__badges">
-                <AdminBadge tone={statusTone} label={data.status.replace(/_/g, " ")} />
+              <strong className="admin-order-hero__amount">{peso(data.amount)}</strong>
+            </div>
+
+            <div className="admin-order-parties">
+              <div>
+                <Avatar name={data.buyer} size={36} />
+                <span>
+                  <small>Buyer</small>
+                  <strong>{data.buyer || "—"}</strong>
+                </span>
+              </div>
+              <div>
+                <Avatar name={data.seller} size={36} />
+                <span>
+                  <small>Seller</small>
+                  <strong>{data.seller || "—"}</strong>
+                </span>
               </div>
             </div>
 
-            <AdminModalSection title="Parties">
-              <AdminFactGrid>
-                <AdminFact label="Buyer" value={data.buyer} />
-                <AdminFact label="Seller" value={data.seller} />
-              </AdminFactGrid>
-            </AdminModalSection>
-
             <AdminModalSection title="Timeline">
-              <AdminFactGrid>
-                <AdminFact label="Created" value={fmt(data.createdAt)} />
-                <AdminFact label="Payment confirmed" value={fmt(data.paymentConfirmedAt)} />
-                <AdminFact label="Completed" value={fmt(data.completedAt)} />
-              </AdminFactGrid>
+              <ul className="admin-order-timeline">
+                {(
+                  [
+                    ["Created", data.createdAt],
+                    ["Payment confirmed", data.paymentConfirmedAt],
+                    ["Completed", data.completedAt],
+                  ] as const
+                ).map(([label, at]) => (
+                  <li key={label} className={at ? "is-done" : undefined}>
+                    <span className="admin-order-timeline__box" aria-hidden="true" />
+                    <span className="admin-order-timeline__label">{label}</span>
+                    <span className="admin-order-timeline__value">{fmt(at)}</span>
+                  </li>
+                ))}
+              </ul>
             </AdminModalSection>
 
             <AdminModalSection title="Delivery">
-              <AdminFactGrid>
-                <AdminFact label="Tracking" value={data.trackingNumber ?? "—"} />
-                <AdminFact label="ETA" value={fmt(data.eta)} />
-                <AdminFact label="Address" value={data.deliveryAddress ?? "—"} />
-              </AdminFactGrid>
+              <div className="admin-order-delivery">
+                <div>
+                  <span>Tracking</span>
+                  <strong>{data.trackingNumber ?? "—"}</strong>
+                </div>
+                <div>
+                  <span>ETA</span>
+                  <strong>{fmt(data.eta)}</strong>
+                </div>
+              </div>
+              <p className="admin-order-address">
+                <MapPin size={16} aria-hidden="true" />
+                <span>{data.deliveryAddress ?? "—"}</span>
+              </p>
             </AdminModalSection>
 
             <AdminModalSection
@@ -120,22 +155,25 @@ export default function AdminOrderDetailModal({
               {data.payments.length === 0 ? (
                 <AdminEmptyText>No payment submissions yet.</AdminEmptyText>
               ) : (
-                <ul className="admin-row-list">
+                <ul className="admin-order-payments">
                   {data.payments.map((p) => (
-                    <li key={p.id} className="admin-row-list__item">
-                      <span className="admin-row-list__main">
+                    <li key={p.id}>
+                      <div className="admin-order-payments__head">
                         <strong>{p.method}</strong>
-                        <span>
-                          {p.status.replace(/_/g, " ")} · {p.referenceNumber ?? "no reference"}
-                        </span>
-                      </span>
-                      <span className="admin-row-list__value">{peso(p.amount)}</span>
+                        <strong>{peso(p.amount)}</strong>
+                      </div>
+                      <div className="admin-order-payments__meta">
+                        <AdminBadge
+                          tone={toneForStatus(p.status)}
+                          label={p.status.replace(/_/g, " ")}
+                        />
+                        <span>· {p.referenceNumber ?? "no reference"}</span>
+                      </div>
                     </li>
                   ))}
                 </ul>
               )}
             </AdminModalSection>
-
           </div>
         )}
       </Modal>

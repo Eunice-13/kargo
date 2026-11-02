@@ -5378,11 +5378,10 @@ body > :not(#root) * {
 }
 
 @media (max-width: 767px) {
-  /* Keep the Users list compact on mobile; tapping a row opens the full modal. */
+  /* The bottom nav already names the tab; drop the big page title on mobile. */
   .admin-page--dashboard .admin-page-header h2,
   .admin-page:not(.admin-page--dashboard) .admin-page-header h2 {
-    font-size: 50px !important;
-    font-weight: 900 !important;
+    display: none !important;
   }
 
   .admin-users-table {
@@ -5452,7 +5451,7 @@ body > :not(#root) * {
   }
 }
 
-/* Admin Users: card list on mobile (collapsed + expanded), table on desktop. */
+/* Admin Users: single card list on mobile, table on desktop. */
 .admin-users-cards {
   display: none;
 }
@@ -5472,6 +5471,7 @@ body > :not(#root) * {
     padding: 12px;
     display: grid;
     gap: 10px;
+    cursor: pointer;
   }
   .admin-ucard__top {
     display: flex;
@@ -5496,34 +5496,6 @@ body > :not(#root) * {
     color: var(--kargo-muted);
     overflow-wrap: anywhere;
   }
-  .admin-ucard__toggle {
-    flex: 0 0 auto;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 0;
-    background: #eef2fb;
-    color: #3b4bb8;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-  }
-  .admin-ucard__meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .admin-ucard__badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .admin-ucard__badges .admin-badge {
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 700;
-  }
   .admin-ucard__gmv {
     display: grid;
     text-align: right;
@@ -5539,80 +5511,17 @@ body > :not(#root) * {
     font-weight: 600;
     color: var(--kargo-muted);
   }
-  .admin-ucard__body {
-    display: grid;
-    gap: 8px;
-  }
-  .admin-ucard__stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .admin-ucard__stat {
+  .admin-ucard__toggle {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 0;
     background: #eef2fb;
-    border: 1px solid #dde3f5;
-    border-radius: 12px;
-    padding: 10px;
+    color: #3b4bb8;
     display: grid;
-    align-content: start;
-    gap: 2px;
-    min-width: 0;
-  }
-  .admin-ucard__stat strong {
-    font-size: 18px;
-    font-weight: 800;
-    color: #3b4bb8;
-  }
-  .admin-ucard__stat span {
-    font-size: 11px;
-    white-space: nowrap;
-    font-weight: 600;
-    color: var(--kargo-muted);
-  }
-  .admin-ucard__facts {
-    margin: 0;
-    border-top: 1px solid var(--kargo-line);
-  }
-  .admin-ucard__facts > div {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 9px 2px 2px;
-  }
-  .admin-ucard__shopline {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-top: 10px;
-    border-top: 1px solid var(--kargo-line);
-    color: #3b4bb8;
-  }
-  .admin-ucard__shopline strong {
-    font-size: 14px;
-    font-weight: 800;
-    color: #000;
-    overflow-wrap: anywhere;
-  }
-  .admin-ucard__shopline span {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--kargo-muted);
-  }
-  .admin-ucard__facts dt {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--kargo-muted);
-  }
-  .admin-ucard__facts dd {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 700;
-    color: #000;
-    text-align: right;
-    overflow-wrap: anywhere;
-  }
-  .admin-ucard__facts dd.is-muted {
-    color: var(--kargo-muted);
+    place-items: center;
+    cursor: pointer;
   }
   .admin-ucard__details {
     width: 100%;
@@ -5624,6 +5533,51 @@ body > :not(#root) * {
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
+  }
+  .admin-ucard__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .admin-ucard__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .admin-ucard .admin-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .admin-ucard__shop {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: #3b4bb8;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .admin-ucard__shop strong {
+    font-size: 13px;
+    font-weight: 800;
+    color: #000;
+    overflow-wrap: anywhere;
+  }
+  .admin-ucard__shop > span {
+    color: var(--kargo-muted);
+    flex: 0 0 auto;
+  }
+  .admin-ucard__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--kargo-line);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--kargo-muted);
   }
 }
 
@@ -5736,8 +5690,9 @@ body > :not(#root) * {
 @media (max-width: 767px) {
   /* Keep the whole record modal (incl. sticky action footer) above the bottom nav. */
   .admin-modal-overlay.admin-record-modal-overlay {
-    align-items: flex-start !important;
+    align-items: center !important;
     padding-top: calc(12px + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
   }
   .admin-record-modal {
     max-height: calc(
@@ -5758,4 +5713,582 @@ body > :not(#root) * {
 .admin-user-orders .admin-row-list__value {
   flex-basis: 64px;
   font-size: 12.5px;
+}
+
+/* Admin Batches: card list on mobile (collapsed + expanded), table on desktop. */
+.admin-batches-cards {
+  display: none;
+}
+@media (max-width: 767px) {
+  .admin-batches-table-wrap {
+    display: none;
+  }
+  .admin-batches-cards {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+  }
+  .admin-bcard {
+    background: #fff;
+    border: 1px solid var(--kargo-line);
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+  }
+  .admin-bcard__top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .admin-bcard__who {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+  }
+  .admin-bcard__title {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: var(--kargo-ink);
+    overflow-wrap: anywhere;
+  }
+  .admin-bcard__seller {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+  .admin-bcard__seller > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .admin-bcard__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .admin-bcard__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .admin-bcard .admin-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .admin-bcard__summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+    flex: 0 0 auto;
+  }
+  .admin-bcard__claimed {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .admin-bcard__claimed strong {
+    font-size: 13px;
+    font-weight: 800;
+    color: #17212b;
+  }
+  .admin-bcard__bar {
+    display: inline-block;
+    width: 44px;
+    height: 6px;
+    border-radius: 999px;
+    background: #e3e8f4;
+    overflow: hidden;
+  }
+  .admin-bcard__bar > span {
+    display: block;
+    height: 100%;
+    background: #3b4bb8;
+    border-radius: 999px;
+  }
+  .admin-bcard__body {
+    display: grid;
+    gap: 10px;
+  }
+  .admin-bcard__panel {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 10px;
+    padding: 12px;
+    background: #eef2fb;
+    border: 1px solid #dde3f5;
+    border-radius: 12px;
+  }
+  .admin-bcard__panel dt {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+  .admin-bcard__panel dd {
+    margin: 4px 0 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #17212b;
+  }
+  .admin-bcard__panel .admin-bcard__bar {
+    width: 56px;
+  }
+}
+
+.admin-bcard__thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6b3d1f 0%, #c8702a 55%, #e8a23c 100%);
+}
+
+/* Admin Transactions > Orders: card list on mobile, table on desktop. */
+.admin-orders-cards {
+  display: none;
+}
+@media (max-width: 767px) {
+  .admin-orders-table-wrap {
+    display: none;
+  }
+  .admin-orders-cards {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+  }
+  .admin-ocard {
+    background: #fff;
+    border: 1px solid var(--kargo-line);
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+  }
+  .admin-ocard__top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .admin-ocard__thumb img {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 12px !important;
+  }
+  .admin-ocard__who {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .admin-ocard__num {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--kargo-ink);
+    overflow-wrap: anywhere;
+  }
+  .admin-ocard__product {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+    overflow-wrap: anywhere;
+  }
+  .admin-ocard {
+    cursor: pointer;
+  }
+  .admin-ocard__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .admin-ocard .admin-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .admin-ocard__price {
+    font-size: 16px;
+    font-weight: 800;
+    color: #000;
+  }
+  .admin-ocard__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--kargo-line);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+  .admin-ocard__parties {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+  }
+  .admin-ocard__arrow {
+    color: #9aa3c4;
+  }
+  .admin-ocard__date {
+    flex: 0 0 auto;
+    font-weight: 700;
+  }
+}
+
+/* Admin batch details modal. */
+.admin-batch-seller {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.admin-batch-seller > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-batch-window {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.admin-batch-window span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--kargo-muted);
+}
+.admin-batch-window span svg {
+  color: #3b4bb8;
+}
+.admin-batch-window strong {
+  font-weight: 800;
+  color: #17212b;
+}
+.admin-batch-stats {
+  grid-template-columns: 1fr 1.2fr 1fr;
+}
+.admin-batch-products {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+}
+.admin-batch-products > li {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--kargo-line);
+}
+.admin-batch-products__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #17212b;
+}
+.admin-batch-products__head strong {
+  font-weight: 800;
+}
+.admin-batch-products__claim {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-batch-products__claim .admin-bcard__bar {
+  flex: 1 1 auto;
+  width: auto;
+}
+.admin-batch-modal .admin-detail-hero__thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+}
+@media (max-width: 767px) {
+  .admin-record-modal.admin-batch-modal > .admin-modal-footer {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+  .admin-batch-modal > .admin-modal-footer > .admin-action-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 4px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 12px;
+  }
+}
+
+/* Admin order details modal. */
+.admin-order-hero__thumb img {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 14px !important;
+}
+.admin-order-hero__amount {
+  align-self: flex-start;
+  font-size: 17px;
+  font-weight: 800;
+  color: #000;
+  white-space: nowrap;
+}
+.admin-order-parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #eef2fb;
+  border: 1px solid #e1e7f5;
+  border-radius: 14px;
+  padding: 10px 0;
+}
+.admin-order-parties > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 12px;
+}
+.admin-order-parties > div + div {
+  border-left: 1px solid #d6ddf0;
+}
+.admin-order-parties span {
+  display: grid;
+  min-width: 0;
+}
+.admin-order-parties small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-order-parties strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: #17212b;
+  overflow-wrap: anywhere;
+}
+.admin-order-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+.admin-order-timeline li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--kargo-muted);
+}
+.admin-order-timeline__box {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border: 2px solid #b9c1e6;
+  border-radius: 3px;
+  background: #fff;
+}
+.admin-order-timeline li.is-done .admin-order-timeline__box {
+  background: #3b4bb8;
+  border-color: #3b4bb8;
+}
+.admin-order-timeline__label {
+  flex: 1 1 auto;
+}
+.admin-order-timeline li.is-done .admin-order-timeline__value {
+  color: #17212b;
+}
+.admin-order-timeline__value {
+  text-align: right;
+}
+.admin-order-delivery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--kargo-line);
+}
+.admin-order-delivery span {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-order-delivery strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--kargo-muted);
+  overflow-wrap: anywhere;
+}
+.admin-order-address {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #17212b;
+}
+.admin-order-address svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #3b4bb8;
+}
+.admin-order-payments {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--kargo-line);
+  padding-top: 10px;
+}
+.admin-order-payments__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  color: #17212b;
+}
+.admin-order-payments__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+
+/* Admin Security > Audit log: card list on mobile, table on desktop. */
+.admin-audit-cards {
+  display: none;
+}
+@media (max-width: 767px) {
+  .admin-audit-table-wrap {
+    display: none;
+  }
+  .admin-audit-cards {
+    display: grid;
+    gap: 8px;
+    padding: 8px;
+  }
+  .admin-acard {
+    background: #fff;
+    border: 1px solid var(--kargo-line);
+    border-radius: 16px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .admin-acard__top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .admin-acard__who {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .admin-acard__name {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--kargo-ink);
+    overflow-wrap: anywhere;
+  }
+  .admin-acard__date {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+  .admin-acard__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .admin-acard .admin-badge {
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .admin-acard__target {
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #191ba9;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .admin-acard__reason {
+    margin: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--kargo-line);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+    overflow-wrap: anywhere;
+  }
+  .admin-acard__reason strong {
+    font-weight: 800;
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-ucard__badges {
+    flex-wrap: nowrap;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+  .admin-ucard .admin-badge {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  .admin-ucard__shop {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  .admin-ucard__shop svg {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+  }
+  .admin-ucard__shop strong {
+    min-width: 0;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
