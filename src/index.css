@@ -6773,6 +6773,13 @@ textarea::placeholder {
   box-shadow: 0 8px 18px rgba(30, 39, 91, 0.16) !important;
 }
 
+/* Keep the shop breadcrumb flush below the 64px sticky desktop navigation. */
+@media (min-width: 768px) {
+  .seller-shop-view .seller-shop-breadcrumb {
+    top: 64px !important;
+  }
+}
+
 .icon-tabbar > div:first-child {
   width: min(100%, 930px);
   max-width: 930px;
