@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 
 import { Modal, Avatar, CardSkeleton } from "@/components/shared";
@@ -6,6 +6,7 @@ import { adminApi } from "@/services";
 import { ADMIN_ACTION_LABELS, toneForStatus } from "@/constants/admin";
 
 import { useAdminResource } from "../useAdminResource";
+import useIsDesktop from "../useIsDesktop";
 import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
@@ -21,20 +22,6 @@ const fmtDate = (iso: string) =>
   });
 
 const shortId = (id: string) => (id.length > 16 ? `${id.slice(0, 8)}…${id.slice(-6)}` : id);
-
-// Desktop gets a two-column layout; phones keep the stacked one below.
-const DESKTOP_QUERY = "(min-width: 768px)";
-function useIsDesktop() {
-  return useSyncExternalStore(
-    (notify) => {
-      const mq = window.matchMedia(DESKTOP_QUERY);
-      mq.addEventListener("change", notify);
-      return () => mq.removeEventListener("change", notify);
-    },
-    () => window.matchMedia(DESKTOP_QUERY).matches,
-    () => false,
-  );
-}
 
 function DesktopBody({
   data,

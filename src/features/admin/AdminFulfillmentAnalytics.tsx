@@ -293,7 +293,7 @@ function AnalyticsResults({
       ? [
           { value: cohortSize.toLocaleString(), label: "Orders created in range" },
           { value: percentOf(awaitingCount), label: `Awaiting Payment (${awaitingCount})` },
-          { value: percentOf(deliveryCount), label: `Reached delivery (${deliveryCount})` },
+          { value: percentOf(deliveryCount), label: `Completed (${deliveryCount})` },
         ]
       : [
           { value: cohortSize.toLocaleString(), label: "Orders created in range" },
@@ -301,7 +301,7 @@ function AnalyticsResults({
             value: percentOf(reachedCount("payment_confirmed")),
             label: `Reached payment (${reachedCount("payment_confirmed")})`,
           },
-          { value: percentOf(deliveryCount), label: `Reached delivery (${deliveryCount})` },
+          { value: percentOf(deliveryCount), label: `Completed (${deliveryCount})` },
         ];
   const hasOrders = cohortSize > 0;
   // An older database function lacks the awaiting-payment buckets. Say so, instead of

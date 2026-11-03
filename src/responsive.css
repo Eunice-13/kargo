@@ -7115,3 +7115,181 @@ body > :not(#root) * {
     max-width: none;
   }
 }
+
+/* Batch details (desktop): cover and identity on the left, summary and products on the right. */
+@media (min-width: 768px) {
+  .admin-batch-modal > .kargo-modal__body {
+    padding: 0 !important;
+  }
+  .admin-batch {
+    display: grid;
+    grid-template-columns: 372px minmax(0, 1fr);
+    align-items: stretch;
+    min-height: 100%;
+  }
+  .admin-batch__side {
+    padding: 28px;
+    border-right: 1px solid #e6e9f2;
+  }
+  .admin-batch__cover {
+    display: block;
+    width: min(100%, 280px);
+    aspect-ratio: 1 / 1;
+    height: auto;
+    border-radius: 22px;
+    object-fit: cover;
+  }
+  .admin-batch__title {
+    margin: 20px 0 0;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: #17212b;
+    overflow-wrap: anywhere;
+  }
+  .admin-batch__seller {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+  .admin-batch__seller em {
+    font-style: normal;
+    font-weight: 500;
+  }
+  .admin-batch__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .admin-batch__reason {
+    margin-top: 14px;
+  }
+  .admin-batch__window {
+    display: grid;
+    gap: 6px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #e9ecf5;
+  }
+  .admin-batch__window span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--kargo-muted);
+  }
+  .admin-batch__window span svg {
+    color: #3b4bb8;
+  }
+  .admin-batch__window strong {
+    padding-left: 24px;
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #17212b;
+  }
+  .admin-batch__main {
+    display: grid;
+    align-content: start;
+    gap: 26px;
+    min-width: 0;
+    padding: 28px;
+  }
+  .admin-batch__table {
+    display: grid;
+  }
+  .admin-batch__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) 110px minmax(0, 2fr);
+    align-items: center;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #eef0f6;
+    font-size: 14.5px;
+    color: #17212b;
+  }
+  .admin-batch__row--head {
+    padding: 12px 0 8px;
+    border-bottom: 1px solid #eef0f6;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--kargo-muted);
+  }
+  .admin-batch__name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+  .admin-batch__name svg {
+    flex: 0 0 auto;
+    color: var(--kargo-muted);
+  }
+  .admin-batch__row strong {
+    font-weight: 800;
+  }
+  .admin-batch__claimed {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  /* The shared bar styles live in the mobile block, so desktop defines its own. */
+  .admin-batch__claimed .admin-bcard__bar {
+    display: block;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 60px;
+    height: 8px;
+    border-radius: 999px;
+    background: #e3e8f4;
+    overflow: hidden;
+  }
+  .admin-batch__claimed .admin-bcard__bar > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: #6f77d6;
+  }
+  .admin-batch__claimed > span:last-child {
+    flex: 0 0 auto;
+    min-width: 78px;
+  }
+  .admin-batch__claimed small {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--kargo-muted);
+  }
+
+  /* Footer: moderation actions on the left, Close batch pushed to the right. */
+  .admin-batch-modal > .admin-modal-footer {
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 16px 28px 20px;
+    background: #fff;
+  }
+  .admin-batch-modal > .admin-modal-footer .admin-action-button {
+    min-height: 46px;
+    padding: 0 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .admin-batch-modal > .admin-modal-footer .admin-action-button--danger:last-child {
+    margin-left: auto;
+  }
+  .kargo-modal__content .admin-batch :is(p, li) {
+    max-width: none;
+  }
+}

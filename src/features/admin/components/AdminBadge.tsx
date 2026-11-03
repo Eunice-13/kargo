@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { ADMIN_TONES, type AdminTone } from "@/constants/admin";
 
 // Status/role/moderation pill. Matches StatusBadge: rounded-full, 11px semibold,
@@ -6,9 +8,12 @@ import { ADMIN_TONES, type AdminTone } from "@/constants/admin";
 export default function AdminBadge({
   tone,
   label,
+  icon,
 }: {
   tone: keyof typeof ADMIN_TONES | string | AdminTone;
   label: string;
+  /** Replaces the status dot, e.g. an eye for "visible". Decorative; the label says it. */
+  icon?: ReactNode;
 }) {
   const t = typeof tone === "string" ? (ADMIN_TONES[tone] ?? ADMIN_TONES.info) : tone;
   return (
@@ -27,17 +32,19 @@ export default function AdminBadge({
         whiteSpace: "nowrap",
       }}
     >
-      <span
-        className="admin-badge__dot"
-        aria-hidden="true"
-        style={{
-          width: 6,
-          height: 6,
-          borderRadius: "50%",
-          background: t.dot,
-          flex: "0 0 auto",
-        }}
-      />
+      {icon ?? (
+        <span
+          className="admin-badge__dot"
+          aria-hidden="true"
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: t.dot,
+            flex: "0 0 auto",
+          }}
+        />
+      )}
       {label}
     </span>
   );
