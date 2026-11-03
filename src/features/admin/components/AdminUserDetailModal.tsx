@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Check, Copy } from "lucide-react";
 
 import { Modal, Avatar, CardSkeleton } from "@/components/shared";
@@ -10,6 +10,7 @@ import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminEmptyText, AdminModalSection } from "./AdminFacts";
+import type { AdminUserDetail } from "../adminTypes";
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
 const fmtDate = (iso: string) =>
@@ -20,6 +21,167 @@ const fmtDate = (iso: string) =>
   });
 
 const shortId = (id: string) => (id.length > 16 ? `${id.slice(0, 8)}…${id.slice(-6)}` : id);
+
+// Desktop gets a two-column layout; phones keep the stacked one below.
+const DESKTOP_QUERY = "(min-width: 768px)";
+function useIsDesktop() {
+  return useSyncExternalStore(
+    (notify) => {
+      const mq = window.matchMedia(DESKTOP_QUERY);
+      mq.addEventListener("change", notify);
+      return () => mq.removeEventListener("change", notify);
+    },
+    () => window.matchMedia(DESKTOP_QUERY).matches,
+    () => false,
+  );
+}
+
+function DesktopBody({
+  data,
+  roleTone,
+  roleLabel,
+  copied,
+  onCopy,
+}: {
+  data: AdminUserDetail;
+  roleTone: string;
+  roleLabel: string;
+  copied: boolean;
+  onCopy: () => void;
+}) {
+  const seller = data.canSell;
+  const stats = seller
+    ? [
+        { value: String(data.sellerOrders), label: "Orders · all-time" },
+        { value: peso(data.sellerGmv30), label: "GMV · 30d" },
+        { value: String(data.sellerBuyers), label: "Buyers · all-time" },
+        { value: String(data.liveBatches), label: "Live batches" },
+      ]
+    : [
+        { value: String(data.buyerOrders), label: "Orders · all-time" },
+        { value: peso(data.buyerSpend30), label: "Spend · 30d" },
+      ];
+  return (
+    <div className="admin-account">
+      <aside className="admin-account__side">
+        <Avatar name={data.name} size={76} imageUrl={undefined} />
+        <h2 className="admin-account__name">{data.name}</h2>
+        <p className="admin-account__email">{data.email}</p>
+        <div className="admin-account__pills">
+          <AdminBadge tone={roleTone} label={roleLabel} />
+          <AdminBadge
+            tone={data.accountStatus}
+            label={data.accountStatus === "active" ? "Active" : "Suspended"}
+          />
+        </div>
+        <dl className="admin-account__facts">
+          {seller && (
+            <div>
+              <dt>Shop name</dt>
+              <dd>{data.shopName ?? "—"}</dd>
+            </div>
+          )}
+          <div>
+            <dt>Joined</dt>
+            <dd>{fmtDate(data.createdAt)}</dd>
+          </div>
+          <div>
+            <dt>Last sign-in</dt>
+            <dd>{data.lastSignInAt ? fmtDate(data.lastSignInAt) : "Never"}</dd>
+          </div>
+          <div>
+            <dt>User ID</dt>
+            <dd className="admin-account__id">
+              <span title={data.id}>{shortId(data.id)}</span>
+              <button type="button" aria-label="Copy user ID" onClick={onCopy}>
+                {copied ? (
+                  <Check size={15} aria-hidden="true" />
+                ) : (
+                  <Copy size={15} aria-hidden="true" />
+                )}
+              </button>
+            </dd>
+          </div>
+        </dl>
+      </aside>
+
+      <div className="admin-account__main">
+        {data.accountStatus === "suspended" && data.accountStatusReason && (
+          <div className="admin-callout admin-callout--danger">
+            <p>
+              <strong>Suspended.</strong> {data.accountStatusReason}
+            </p>
+          </div>
+        )}
+
+        <section aria-label={seller ? "As seller" : "As buyer"}>
+          <p className="admin-account__eyebrow">{seller ? "As seller" : "As buyer"}</p>
+          <div className="admin-account__stats" style={{ ["--stat-cols" as string]: stats.length }}>
+            {stats.map((stat) => (
+              <div key={stat.label}>
+                <strong>{stat.value}</strong>
+                <span>{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <div className="admin-account__head">
+            <h3>
+              Recent orders
+              <span> · {seller ? "as buyer or seller" : "as buyer"}</span>
+            </h3>
+            <p>
+              Latest 5
+              {seller && (
+                <>
+                  {" "}
+                  · Buyer spend (30d) <strong>{peso(data.buyerSpend30)}</strong>
+                </>
+              )}
+            </p>
+          </div>
+          {data.recentOrders.length === 0 ? (
+            <AdminEmptyText>No recent orders for this account.</AdminEmptyText>
+          ) : (
+            <ul className="admin-account__orders">
+              {data.recentOrders.map((o) => (
+                <li key={o.id}>
+                  <strong>{o.order_number}</strong>
+                  <AdminBadge tone={toneForStatus(o.status)} label={o.status.replace(/_/g, " ")} />
+                  <span>{peso(o.total_amount)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section>
+          <div className="admin-account__head">
+            <h3>Moderation history</h3>
+            <p>Newest first</p>
+          </div>
+          {data.moderationHistory.length === 0 ? (
+            <AdminEmptyText>No admin actions recorded for this account.</AdminEmptyText>
+          ) : (
+            <ol className="admin-account__timeline">
+              {data.moderationHistory.map((h) => (
+                <li key={h.id}>
+                  <div>
+                    <strong>{ADMIN_ACTION_LABELS[h.action] ?? h.action}</strong>
+                    {h.reason && <span>{h.reason}</span>}
+                  </div>
+                  <time dateTime={h.created_at}>{fmtDate(h.created_at)}</time>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
 
 type PendingAction =
   | { kind: "suspend" }
@@ -43,6 +205,13 @@ export default function AdminUserDetailModal({
   );
   const [pending, setPending] = useState<PendingAction>(null);
   const [copied, setCopied] = useState(false);
+  const isDesktop = useIsDesktop();
+  const copyId = () => {
+    if (!data) return;
+    void navigator.clipboard?.writeText(data.id);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  };
 
   const roleTone = data?.isAdmin ? "admin" : data?.canSell ? "seller" : "buyer";
   const roleLabel = data?.isAdmin ? "Admin" : data?.canSell ? "Seller" : "Buyer";
@@ -52,8 +221,8 @@ export default function AdminUserDetailModal({
         title="Account details"
         showTitleIcon={false}
         variant="detail"
-        width={720}
-        className="admin-modal admin-record-modal"
+        width={isDesktop ? 980 : 720}
+        className="admin-modal admin-record-modal admin-account-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"
         onClose={onClose}
         footer={
@@ -108,7 +277,16 @@ export default function AdminUserDetailModal({
             {error}
           </p>
         )}
-        {!loading && data && (
+        {!loading && data && isDesktop && (
+          <DesktopBody
+            data={data}
+            roleTone={roleTone}
+            roleLabel={roleLabel}
+            copied={copied}
+            onCopy={copyId}
+          />
+        )}
+        {!loading && data && !isDesktop && (
           <div className="space-y-5">
             <div className="admin-detail-hero">
               <Avatar name={data.name} size={52} imageUrl={undefined} />
