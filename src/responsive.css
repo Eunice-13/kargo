@@ -5995,9 +5995,9 @@ body > :not(#root) * {
   flex-basis: 64px;
   font-size: 12.5px;
 }
-  .seller-shop-view .seller-shop-tabs > button[aria-current="page"] {
+.seller-shop-view .seller-shop-tabs > button[aria-current="page"] 
+{
     border-bottom-width: 3px !important;
-  }
 }
 
 /* Admin Batches: card list on mobile (collapsed + expanded), table on desktop. */
