@@ -97,7 +97,7 @@ export default function FulfillmentOrdersDialog({
           <p className="fulfillment-orders__explanation">
             {mode === "current"
               ? "Orders created in this range that are in this status right now. Each order is counted once."
-              : "Orders that reached this stage in the selected period. Their current status may have changed."}
+              : "Orders created in this range that have reached this stage at some point. Their current status may have changed."}
           </p>
           <OrderPage
             key={`${offset}:${stage}:${bucket ?? "all"}:${mode}:${data.snapshot}`}
@@ -190,7 +190,7 @@ function OrderPage({
         <p className="fulfillment-analytics__notice">
           {mode === "current"
             ? "No orders are in this status for this period."
-            : "No cohort orders reached this stage in this period."}
+            : "No orders created in this period have reached this stage."}
         </p>
       )}
       <ul className="fulfillment-orders__list">
@@ -204,8 +204,9 @@ function OrderPage({
               <span>
                 <strong>{order.order_number || order.order_id}</strong>
                 <small>
-                  {mode === "current" ? "Created" : "Entered"}{" "}
-                  {analyticsTimestamp(order.occurred_at)}
+                  {order.occurred_at
+                    ? `${mode === "current" ? "Created" : "Entered"} ${analyticsTimestamp(order.occurred_at)}`
+                    : "Date not recorded"}
                 </small>
               </span>
               <span>
@@ -213,7 +214,7 @@ function OrderPage({
                   {(order.current_fulfillment_stage || order.current_status).replace(/_/g, " ")}
                 </span>
                 <small>
-                  {mode === "current"
+                  {mode === "current" || order.source === "current_status"
                     ? "Open order"
                     : order.source === "transition"
                       ? "Recorded transition"

@@ -70,7 +70,7 @@ export const ORDER_STATUS_OPTIONS = [
   { value: "insufficient_payment", label: "Insufficient payment" },
   { value: "payment_confirmed", label: "Payment confirmed" },
   { value: "preparing", label: "Preparing" },
-  { value: "completed", label: "Completed" },
+  { value: "completed", label: "Delivered" },
   { value: "cancelled", label: "Cancelled" },
   { value: "expired", label: "Expired" },
   { value: "incomplete", label: "Incomplete" },

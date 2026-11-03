@@ -1439,13 +1439,13 @@
 }
 
 @media (min-width: 641px) {
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list {
     min-height: 0;
     margin-top: 12px;
     align-items: stretch;
     gap: 8px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list button {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list button {
     justify-content: center;
     gap: 8px;
     padding: 12px;
@@ -1453,7 +1453,7 @@
     border-radius: 12px;
     background: var(--fa-soft);
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-wrap {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar-wrap {
     flex: 0 0 auto;
     width: 100%;
     min-height: 6px;
@@ -1462,23 +1462,23 @@
     background: var(--fa-border);
     overflow: hidden;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar {
     width: var(--fill, 0%);
     height: 100%;
     min-height: 0;
     border-radius: 999px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-count {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar-count {
     display: none;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__meta {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: baseline;
     gap: 2px 6px;
   }
 }
-.fulfillment-breakdown.is-current > .fulfillment-breakdown__stack {
+.fulfillment-breakdown.is-grouped > .fulfillment-breakdown__stack {
   grid-column: 1 / -1;
   width: 100%;
   margin: 0;
@@ -1548,19 +1548,6 @@
   border-left: 1px solid #e3e7f4;
   padding-left: 24px;
 }
-.fulfillment-breakdown.is-reached .fulfillment-breakdown__list {
-  min-height: 190px;
-  gap: 14px;
-}
-.fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-wrap {
-  min-height: 190px;
-}
-.fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-count {
-  color: #6b7088;
-}
-.fulfillment-breakdown.is-reached .fulfillment-breakdown__bar {
-  border-radius: 14px 14px 6px 6px;
-}
 @media (max-width: 640px) {
   .fulfillment-analytics__chart-header-row {
     align-items: stretch;
@@ -1589,16 +1576,16 @@
 
 /* Current status uses the original vertical bars rather than horizontal tiles. */
 @media (min-width: 641px) {
-  .fulfillment-breakdown.is-current > .fulfillment-breakdown__stack {
+  .fulfillment-breakdown.is-grouped > .fulfillment-breakdown__stack {
     display: none;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list {
     min-height: 220px;
     margin-top: 18px;
     align-items: end;
     gap: 10px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list button {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list button {
     justify-content: flex-end;
     gap: 10px;
     padding: 0;
@@ -1606,7 +1593,7 @@
     border-radius: 10px;
     background: transparent;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-wrap {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar-wrap {
     flex: 1;
     min-height: 150px;
     height: auto;
@@ -1615,35 +1602,22 @@
     background: transparent;
     overflow: visible;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar {
     width: 100%;
     height: var(--fill, 0%);
     min-height: 10px;
     border-radius: 14px 14px 6px 6px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-count {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar-count {
     display: block;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__meta {
     flex-direction: column;
     align-items: center;
     flex-wrap: wrap;
     gap: 2px;
     padding-top: 0;
     border-top: 0;
-  }
-}
-
-@media (min-width: 641px) {
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__group > .fulfillment-breakdown__list {
-    flex: 0 0 220px;
-    height: 220px;
-    min-height: 220px;
-  }
-  .fulfillment-breakdown.is-reached
-    .fulfillment-breakdown__group.is-drop-offs
-    > .fulfillment-breakdown__list {
-    margin-top: 42px;
   }
 }
 
@@ -1769,123 +1743,10 @@
   }
 }
 
-@media (min-width: 641px) {
-  .fulfillment-breakdown.is-reached > .fulfillment-breakdown__stack {
-    display: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list {
-    min-height: 0;
-    margin-top: 16px;
-    gap: 8px;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-wrap {
-    flex: 0 0 auto;
-    min-height: 0;
-    height: 7px;
-    width: 100%;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar {
-    width: var(--fill, 0%);
-    height: 100%;
-    min-height: 0;
-    border-radius: 999px;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-count {
-    display: none;
-  }
-}
-
-/* Final mobile reached-stage track override: never inherit desktop plot height. */
-@media (max-width: 640px) {
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-wrap {
-    display: block !important;
-    flex: 0 0 7px !important;
-    width: 100% !important;
-    height: 7px !important;
-    min-height: 7px !important;
-    border-radius: 999px !important;
-    overflow: hidden !important;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar {
-    display: block !important;
-    width: var(--fill, 0%) !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    border-radius: 999px !important;
-  }
-}
-
 /* Desktop vertical bars do not show the mobile metadata dot. */
 @media (min-width: 641px) {
   .fulfillment-breakdown__meta .fulfillment-stage-dot {
     display: none !important;
-  }
-}
-
-/* Reached stage mobile must match the Current status mobile row treatment. */
-@media (max-width: 640px) {
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
-    min-height: 0 !important;
-    margin-top: 16px !important;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list li {
-    height: auto !important;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list button,
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list li:not(.is-focused) button {
-    display: flex !important;
-    flex-direction: column-reverse !important;
-    gap: 8px !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 44px !important;
-    padding: 12px 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__list li.is-focused button {
-    padding: 14px 16px !important;
-    border: 1px solid color-mix(in srgb, var(--chip, #191ba9) 55%, var(--fa-border)) !important;
-    border-radius: 18px !important;
-    background: color-mix(in srgb, var(--chip, #191ba9) 12%, var(--fa-soft)) !important;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-wrap {
-    display: block !important;
-    flex: 0 0 7px !important;
-    width: 100% !important;
-    height: 7px !important;
-    min-height: 7px !important;
-    border-radius: 999px !important;
-    background: var(--fa-border) !important;
-    overflow: hidden !important;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar {
-    display: block !important;
-    width: var(--fill, 0%) !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    border-radius: 999px !important;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__bar-count {
-    display: none !important;
-  }
-  .fulfillment-breakdown.is-reached .fulfillment-breakdown__meta {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: baseline !important;
-    flex-wrap: nowrap !important;
-    width: 100% !important;
-    gap: 8px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    text-align: left !important;
   }
 }
 
@@ -1941,18 +1802,18 @@
 
 /* Current status mobile uses the exact same row/progress treatment as Reached stage. */
 @media (max-width: 640px) {
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list {
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 8px !important;
     min-height: 0 !important;
     margin-top: 16px !important;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list li {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list li {
     height: auto !important;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list button,
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list li:not(.is-focused) button {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list button,
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list li:not(.is-focused) button {
     display: flex !important;
     flex-direction: column-reverse !important;
     gap: 8px !important;
@@ -1964,13 +1825,13 @@
     border-radius: 0 !important;
     background: transparent !important;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list li.is-focused button {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list li.is-focused button {
     padding: 14px 16px !important;
     border: 1px solid color-mix(in srgb, var(--chip, #191ba9) 55%, var(--fa-border)) !important;
     border-radius: 18px !important;
     background: color-mix(in srgb, var(--chip, #191ba9) 12%, var(--fa-soft)) !important;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-wrap {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar-wrap {
     display: block !important;
     flex: 0 0 7px !important;
     width: 100% !important;
@@ -1980,17 +1841,17 @@
     background: var(--fa-border) !important;
     overflow: hidden !important;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar {
     display: block !important;
     width: var(--fill, 0%) !important;
     height: 100% !important;
     min-height: 0 !important;
     border-radius: 999px !important;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-count {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar-count {
     display: none !important;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__meta {
     display: flex !important;
     flex-direction: row !important;
     align-items: baseline !important;
@@ -2039,21 +1900,21 @@
 
 @media (min-width: 641px) {
   /* Three groups sized by their number of columns, separated by space not rules. */
-  .fulfillment-breakdown.is-current {
+  .fulfillment-breakdown.is-grouped {
     grid-template-columns: var(--fb-cols, minmax(0, 3fr) minmax(0, 4fr) minmax(0, 2fr));
     gap: 28px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group + .fulfillment-breakdown__group {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group + .fulfillment-breakdown__group {
     border-left: 0;
     padding-left: 0;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-head {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group-head {
     box-sizing: border-box;
     min-height: 58px;
     padding-bottom: 8px;
     border-bottom: 2px solid var(--group-line, var(--fa-border));
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-title {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group-title {
     padding-bottom: 2px;
     border-bottom: 0;
     color: #3a4261;
@@ -2062,14 +1923,14 @@
   }
 
   /* Bars share one baseline: the label area is a fixed height in every column. */
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list {
     position: relative;
     min-height: 260px;
     margin-top: 26px;
     align-items: stretch;
     gap: 10px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list::after {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list::after {
     content: "";
     position: absolute;
     right: 0;
@@ -2078,40 +1939,40 @@
     height: 1.5px;
     background: #1f2937;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list li:not(.is-focused) button {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list li:not(.is-focused) button {
     opacity: 1;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__list button {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__list button {
     justify-content: flex-start;
     gap: 0;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar-wrap {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar-wrap {
     flex: 1 1 auto;
     min-height: 160px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__bar {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__bar {
     min-height: 8px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__meta {
     flex: 0 0 78px;
     justify-content: flex-start;
     gap: 2px;
     padding-top: 10px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__meta .fulfillment-stage-dot {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__meta .fulfillment-stage-dot {
     display: none;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__label {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__label {
     line-height: 1.25;
   }
 }
 
 @media (max-width: 640px) {
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-head {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group-head {
     padding-bottom: 6px;
     border-bottom: 2px solid var(--group-line, var(--fa-border));
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-title {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group-title {
     border-bottom: 0;
     padding-bottom: 2px;
   }
@@ -2119,23 +1980,35 @@
 
 /* Keep every group heading the same height so the three baselines line up. */
 @media (min-width: 1201px) {
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-head {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group-head {
     min-height: 52px;
   }
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-title {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group-title {
     font-size: 10px;
     letter-spacing: 0.04em;
     white-space: nowrap;
   }
 }
 @media (min-width: 641px) and (max-width: 1200px) {
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-head {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group-head {
     min-height: 68px;
   }
 }
 
 @media (min-width: 1201px) {
-  .fulfillment-breakdown.is-current .fulfillment-breakdown__group-title {
+  .fulfillment-breakdown.is-grouped .fulfillment-breakdown__group-title {
     letter-spacing: 0.03em;
+  }
+}
+
+/* Nine trend stages: wrap the chips instead of scrolling sideways on desktop. */
+@media (min-width: 641px) {
+  .fulfillment-analytics__chart-header-row .fulfillment-analytics__trend-chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  /* Reached stage groups have no order total, so their headings need less height. */
+  .fulfillment-breakdown.is-grouped.is-reached .fulfillment-breakdown__group-head {
+    min-height: 34px;
   }
 }

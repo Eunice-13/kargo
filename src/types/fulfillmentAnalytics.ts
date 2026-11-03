@@ -1,4 +1,7 @@
 export type FulfillmentAnalyticsStage =
+  | "payment_pending"
+  | "payment_submitted"
+  | "insufficient_payment"
   | "payment_confirmed"
   | "preparing"
   | "shipped"
@@ -57,7 +60,8 @@ export type FulfillmentAnalytics = {
     | "full_recorded_history";
   countingRule:
     | "first_recorded_entry_per_order_per_stage"
-    | "payment_confirmed_cohort_reached_stages";
+    | "payment_confirmed_cohort_reached_stages"
+    | "all_orders_reached_stages";
   totalEntries: number;
   cohortSize?: number;
   excludedOrders?: number;
@@ -78,7 +82,8 @@ export type FulfillmentAnalyticsOrders = {
     order_id: string;
     order_number: string;
     stage: FulfillmentAnalyticsStage;
-    occurred_at: string;
+    /** Null when only the order's current state proves it reached this stage. */
+    occurred_at: string | null;
     source: "transition" | "order_timestamp" | "notification" | "admin_audit" | "current_status";
     current_status: string;
     current_fulfillment_stage: string | null;

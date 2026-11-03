@@ -28,7 +28,8 @@ before(async () => {
     create table orders(id uuid primary key,order_number text,seller_id uuid,buyer_id uuid,status order_status,fulfillment_stage text,payment_confirmed_at timestamptz,completed_at timestamptz,created_at timestamptz default now(),updated_at timestamptz default now(),tracking_number text,group_order_id uuid);
     create table notifications(recipient_id uuid,category text,message text,target_path text,context jsonb,dedupe_key text,created_at timestamptz default now());
     create unique index notif_dedupe on notifications(recipient_id,dedupe_key) where dedupe_key is not null;
-    create table admin_audit_log(target_id text,target_type text,action text,after_state jsonb,created_at timestamptz);`);
+    create table admin_audit_log(target_id text,target_type text,action text,after_state jsonb,created_at timestamptz);
+    create table payments(id uuid primary key default gen_random_uuid(),order_id uuid,submitted_at timestamptz default now(),reviewed_at timestamptz);`);
   await db.exec(sqlFile("202611040001_forward_only_fulfillment.sql"));
   await db.exec(sqlFile("202611050001_no_cancel_after_payment.sql"));
   await db.exec(sqlFile("202611060001_fulfillment_analytics.sql"));
@@ -39,6 +40,7 @@ before(async () => {
   await db.exec(sqlFile("202611090008_fulfillment_analytics_current_status_chart.sql"));
   await db.exec(sqlFile("202611100001_fulfillment_analytics_created_window.sql"));
   await db.exec(sqlFile("202611100002_fulfillment_current_status_all_orders.sql"));
+  await db.exec(sqlFile("202611100003_fulfillment_reached_all_orders.sql"));
   // The cohort window is now chosen by orders.created_at, so give every test order a
   // created_at inside the 2020-02-01..2020-02-03 range used below.
   await db.exec("alter table orders alter column created_at set default '2020-02-01T01:00:00Z'");
@@ -86,21 +88,28 @@ before(async () => {
 });
 after(async () => db?.close());
 
-test("uses the payment-confirmed cohort, excludes pre-capture history, and implies earlier stages", async () => {
+test("reached stage covers every order created in the range and counts every stage reached", async () => {
   const summary = (
     await row("select admin_fulfillment_analytics('custom','2020-02-01','2020-02-03') as data")
   ).data;
-  assert.equal(summary.cohortSize, 3);
-  assert.equal(summary.uniqueOrders, 3);
-  assert.equal(summary.excludedOrders, 1);
-  assert.equal(summary.stageTotals.payment_confirmed, 3);
-  assert.equal(summary.stageTotals.preparing, 2);
+  assert.equal(summary.cohortSize, 4);
+  assert.equal(summary.uniqueOrders, 4);
+  assert.equal(summary.excludedOrders, 0);
+  // Every order starts as payment_pending; paid orders also reached payment_submitted.
+  assert.equal(summary.stageTotals.payment_pending, 4);
+  assert.equal(summary.stageTotals.payment_submitted, 4);
+  assert.equal(summary.stageTotals.insufficient_payment, 0);
+  assert.equal(summary.stageTotals.payment_confirmed, 4);
+  // Earlier stages are implied by later ones (history of one order spans many stages).
+  assert.equal(summary.stageTotals.preparing, 3);
   assert.equal(summary.stageTotals.shipped, 1);
   assert.equal(summary.stageTotals.delivered, 1);
   assert.equal(summary.stageTotals.cancelled, 1);
-  assert.ok(summary.stageTotals.delivered <= summary.stageTotals.shipped);
-  assert.ok(summary.stageTotals.shipped <= summary.stageTotals.preparing);
-  assert.ok(summary.stageTotals.preparing <= summary.stageTotals.payment_confirmed);
+  assert.equal(summary.stageTotals.expired, 0);
+  const t = summary.stageTotals;
+  assert.ok(t.delivered <= t.shipped && t.shipped <= t.preparing);
+  assert.ok(t.preparing <= t.payment_confirmed && t.payment_confirmed <= t.payment_submitted);
+  assert.ok(t.payment_submitted <= t.payment_pending);
 });
 
 test("drill-down uses reached-stage cohort rows", async () => {
@@ -118,7 +127,7 @@ test("drill-down uses reached-stage cohort rows", async () => {
   assert.equal(detail.rows[0].order_id, id(2));
 });
 
-test("current status covers every order created in the range; reached is the paid subset", async () => {
+test("current status and reached stage start from the same orders created in the range", async () => {
   const ranges = [
     ["today", null, null],
     ["last_7_days", null, null],
@@ -147,7 +156,7 @@ test("current status covers every order created in the range; reached is the pai
       created,
       `${period}: each order counted once`,
     );
-    assert.ok((reached.cohortSize ?? reached.uniqueOrders) <= current.cohortSize, period);
+    assert.equal(reached.cohortSize, current.cohortSize, `${period}: same cohort`);
   }
 });
 
@@ -277,7 +286,7 @@ test("reports current versus reached cancellation and expiry reconciliation", as
   );
 });
 
-test("cohort window follows orders.created_at: paid late counts, created earlier or unpaid does not", async () => {
+test("cohort window follows orders.created_at for both views, paid or not", async () => {
   const range = ["custom", "2020-02-01", "2020-02-03"];
   const summary = async () =>
     (await row("select admin_fulfillment_analytics($1,$2,$3) as data", range)).data;
@@ -301,23 +310,27 @@ test("cohort window follows orders.created_at: paid late counts, created earlier
     [createdEarlyPaidInRange, createdInRangePaidLater],
   );
 
+  // Created in range = the late-paid order and the unpaid one; the one created earlier is out.
   const after = await summary();
-  // Only the order created in range AND payment-confirmed (even later) joins the cohort.
-  assert.equal(after.cohortSize, before.cohortSize + 1);
-  const detail = (
-    await row(
-      "select admin_fulfillment_orders($1,$2,$3,'payment_confirmed',null,null,100,0,null) as data",
-      range,
-    )
-  ).data;
-  const ids = detail.rows.map((item) => item.order_id);
-  assert.ok(ids.includes(createdInRangePaidLater));
-  assert.ok(!ids.includes(createdEarlyPaidInRange));
-  assert.ok(!ids.includes(createdInRangeUnpaid));
-  // Current status is every order created in the range: it gains the late-paid order and
-  // the unpaid one (counted as payment_pending), but not the one created before the range.
+  assert.equal(after.cohortSize, before.cohortSize + 2);
+  const detail = async (stage) =>
+    (
+      await row("select admin_fulfillment_orders($1,$2,$3,$4,null,null,100,0,null) as data", [
+        ...range,
+        stage,
+      ])
+    ).data.rows.map((item) => item.order_id);
+  const pending = await detail("payment_pending");
+  assert.ok(pending.includes(createdInRangePaidLater) && pending.includes(createdInRangeUnpaid));
+  assert.ok(!pending.includes(createdEarlyPaidInRange));
+  const confirmed = await detail("payment_confirmed");
+  assert.ok(confirmed.includes(createdInRangePaidLater));
+  assert.ok(!confirmed.includes(createdInRangeUnpaid));
+  assert.ok(!confirmed.includes(createdEarlyPaidInRange));
+
   const current = await currentStatus(...range);
   assert.equal(current.cohortSize, currentBefore.cohortSize + 2);
+  assert.equal(current.cohortSize, after.cohortSize);
   assert.equal(current.counts.payment_pending, currentBefore.counts.payment_pending + 1);
   assert.equal(
     Object.values(current.counts).reduce((sum, value) => sum + value, 0),
@@ -371,4 +384,101 @@ test("current status buckets unpaid and closed orders: awaiting payment, expired
   const awaiting = await drill("payment_submitted");
   assert.equal(awaiting.total, after.counts.payment_submitted);
   await assert.rejects(drill("awaiting_payment"), /Select a current order status/);
+});
+
+test("reached stage counts awaiting-payment stages; an order sits in many stages, current status in one", async () => {
+  const range = ["custom", "2020-02-01", "2020-02-03"];
+  const reached = (await row("select admin_fulfillment_analytics($1,$2,$3) as data", range)).data;
+  const current = await currentStatus(...range);
+  const t = reached.stageTotals;
+  // Never fewer orders reached a stage than are in it right now.
+  assert.ok(t.payment_pending >= current.counts.payment_pending);
+  assert.ok(t.payment_submitted >= current.counts.payment_submitted);
+  assert.ok(t.insufficient_payment >= current.counts.insufficient_payment);
+  assert.ok(t.payment_confirmed >= current.counts.payment_confirmed);
+  assert.ok(t.preparing >= current.counts.preparing);
+  assert.ok(t.shipped >= current.counts.shipped);
+  assert.ok(t.delivered >= current.counts.delivered);
+  assert.ok(t.expired >= current.counts.expired, "expired orders reached expired");
+  assert.ok(t.cancelled >= current.counts.cancelled, "cancelled orders reached cancelled");
+  // Reached adds up to more than the number of orders; current adds up to exactly that.
+  const reachedSum = Object.values(t).reduce((sum, value) => sum + value, 0);
+  assert.ok(reachedSum > reached.cohortSize);
+  assert.equal(
+    Object.values(current.counts).reduce((sum, value) => sum + value, 0),
+    current.cohortSize,
+  );
+  // An unpaid order that only expired has reached payment_pending and expired, nothing in between.
+  const expiredIds = (
+    await row(
+      "select admin_fulfillment_orders($1,$2,$3,'expired',null,null,100,0,null) as data",
+      range,
+    )
+  ).data.rows.map((item) => item.order_id);
+  assert.ok(expiredIds.includes(id(32)));
+  const submittedIds = (
+    await row(
+      "select admin_fulfillment_orders($1,$2,$3,'payment_submitted',null,null,100,0,null) as data",
+      range,
+    )
+  ).data.rows.map((item) => item.order_id);
+  assert.ok(submittedIds.includes(id(30)), "payment_submitted order reached payment_submitted");
+  assert.ok(submittedIds.includes(id(31)), "insufficient payment implies a submission");
+  assert.ok(!submittedIds.includes(id(32)), "an order that only expired never submitted payment");
+});
+
+test("awaiting-payment stages are recorded as they happen and backfilled from evidence", async () => {
+  const stageTimes = async (orderId) =>
+    Object.fromEntries(
+      (
+        await db.query(
+          "select stage,occurred_at,source from order_fulfillment_events where order_id=$1 order by stage",
+          [orderId],
+        )
+      ).rows.map((item) => [item.stage, item]),
+    );
+
+  // Going forward the orders trigger records each awaiting-payment stage once.
+  const live = id(40);
+  await db.query(
+    "insert into orders(id,order_number,seller_id,buyer_id,status,created_at) values ($1::uuid,$1::text,$2::uuid,$3::uuid,'payment_pending','2020-02-02T07:00:00Z')",
+    [live, seller, buyer],
+  );
+  assert.ok((await stageTimes(live)).payment_pending, "payment_pending recorded on insert");
+  await db.query("update orders set status='payment_submitted' where id=$1", [live]);
+  await db.query("update orders set status='insufficient_payment' where id=$1", [live]);
+  await db.query("update orders set status='payment_submitted' where id=$1", [live]);
+  const recorded = await stageTimes(live);
+  assert.ok(recorded.payment_submitted && recorded.insufficient_payment);
+  assert.equal(recorded.payment_submitted.source, "transition");
+
+  // Existing orders are backfilled from their own timestamps and payment records only.
+  const old = id(41);
+  await db.query(
+    "insert into orders(id,order_number,seller_id,buyer_id,status,created_at) values ($1::uuid,$1::text,$2::uuid,$3::uuid,'payment_submitted','2020-02-02T08:00:00Z')",
+    [old, seller, buyer],
+  );
+  await db.query(
+    "insert into payments(order_id,submitted_at,reviewed_at) values ($1,'2020-02-02T09:30:00Z',null)",
+    [old],
+  );
+  await db.query("delete from order_fulfillment_events where order_id=$1", [old]);
+  await db.exec(sqlFile("202611100003_fulfillment_reached_all_orders.sql"));
+  const backfilled = await stageTimes(old);
+  assert.equal(
+    new Date(backfilled.payment_pending.occurred_at).toISOString(),
+    "2020-02-02T08:00:00.000Z",
+  );
+  assert.equal(
+    new Date(backfilled.payment_submitted.occurred_at).toISOString(),
+    "2020-02-02T09:30:00.000Z",
+  );
+  assert.equal(backfilled.insufficient_payment, undefined, "no evidence, so no insufficient stage");
+
+  // Re-running does not duplicate or change anything.
+  const count = async () =>
+    Number((await row("select count(*) as n from order_fulfillment_events")).n);
+  const n = await count();
+  await db.exec(sqlFile("202611100003_fulfillment_reached_all_orders.sql"));
+  assert.equal(await count(), n);
 });
