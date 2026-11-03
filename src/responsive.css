@@ -401,6 +401,14 @@
   flex: 0 0 auto;
 }
 
+.seller-shop-date-sort {
+  z-index: 1;
+}
+
+.seller-shop-date-sort.is-open {
+  z-index: 90;
+}
+
 .payment-history-date-sort__trigger {
   display: flex;
   width: 100%;
@@ -483,6 +491,10 @@
     width: 100%;
     max-width: none;
     flex: 0 0 auto;
+  }
+
+  .seller-shop-date-sort {
+    max-width: min(220px, 100%);
   }
 
   .payment-history-date-sort__trigger {
@@ -3824,7 +3836,10 @@
     flex: 0 0 auto;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl > div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    > div {
     display: grid !important;
     grid-template-columns: minmax(82px, 0.8fr) minmax(0, 1.2fr) !important;
     align-items: start;
@@ -3841,7 +3856,10 @@
     margin: 0;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl dd {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    dd {
     text-align: right;
     overflow-wrap: anywhere;
   }
@@ -3906,7 +3924,10 @@
 }
 
 @media (max-width: 480px) {
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl > div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    > div {
     grid-template-columns: minmax(72px, 0.75fr) minmax(0, 1.25fr) !important;
   }
 }

@@ -1,8 +1,8 @@
 import { productAvailability } from "./productAvailability";
 import { batchCardClosed } from "./batchAvailability";
 import ClosedBatchBadge from "./ClosedBatchBadge";
-import { Fragment, useEffect, useState } from "react";
-import { MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { ChevronDown, MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react";
 import type { BatchType, Role, UserInfo } from "@/types";
 import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme";
 import { Card, Avatar, PrimaryBtn, ContactModal, PaymentIcon } from "@/components/shared";
@@ -84,6 +84,24 @@ export default function SellerShopPage({
   const TABS = ["All Batches", ...categories] as const;
   const [tab, setTab] = useState<string>("All Batches");
   const [sortBy, setSortBy] = useState("Newest");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!sortRef.current?.contains(event.target as Node)) setSortOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSortOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [sortOpen]);
 
   // Which batches the current tab shows.
   const catFilter = tab === "All Batches" ? "All" : tab;
@@ -304,23 +322,44 @@ export default function SellerShopPage({
             >
               {`${visibleBatches.length} batch${visibleBatches.length !== 1 ? "es" : ""}`}
             </div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{
-                fontSize: 12,
-                border: "1px solid #E5E7EB",
-                borderRadius: 6,
-                padding: "6px 10px",
-                background: "#fff",
-                outline: "none",
-                color: "#374151",
-              }}
+            <div
+              ref={sortRef}
+              className={`payment-history-date-sort seller-shop-date-sort${sortOpen ? " is-open" : ""}`}
             >
-              {["Newest", "Most Claimed", "Ending Soonest"].map((o) => (
-                <option key={o}>{o}</option>
-              ))}
-            </select>
+              <button
+                type="button"
+                className="payment-history-date-sort__trigger"
+                aria-label="Sort batches"
+                aria-haspopup="listbox"
+                aria-expanded={sortOpen}
+                onClick={() => setSortOpen((current) => !current)}
+              >
+                <span>{sortBy}</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </button>
+              {sortOpen && (
+                <div
+                  className="payment-history-date-sort__options"
+                  role="listbox"
+                  aria-label="Sort batches"
+                >
+                  {["Newest", "Most Claimed", "Ending Soonest"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      role="option"
+                      aria-selected={sortBy === option}
+                      onClick={() => {
+                        setSortBy(option);
+                        setSortOpen(false);
+                      }}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {gridBatches.length === 0 ? (

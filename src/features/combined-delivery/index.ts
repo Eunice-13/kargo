@@ -7,3 +7,7 @@ export {
 export { default as BuyerCombinedDelivery } from "./BuyerCombinedDelivery";
 
 export { default as SellerCombinedDelivery } from "./SellerCombinedDelivery";
+export {
+  combinedRequestHasOpenPayment,
+  combinedRequestStatus,
+} from "./requestStatus";

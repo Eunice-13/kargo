@@ -1,7 +1,7 @@
 import { OrderDetailsModal } from "@/features/orders";
 import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combined-delivery";
 
-import { useEffect, useRef, useState, type SetStateAction } from "react";
+import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
 
 import { List, LayoutGrid, AlertTriangle, Link2, MessageCircle, Truck } from "lucide-react";
 
@@ -53,7 +53,7 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 import { kargoApi } from "@/services";
 
-import { claimIsPayable } from "./claimExpiry";
+import { claimBelongsToPendingPayments, claimIsPayable } from "./claimExpiry";
 
 import {
   claimShortfall,
@@ -77,6 +77,9 @@ import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal";
 import DeclineDeliveryOrderModal from "./DeclineDeliveryOrderModal";
 
 import { TrackingDetailsModal, type TrackingDetailsInput } from "@/features/fulfillment";
+import type { BuyerDeliveryRequestsState } from "@/features/combined-delivery/useBuyerDeliveryRequests";
+import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
+import { buildClaimsListRows, getToPayTotal } from "./claimListRows";
 
 type OrderReceivedFilter = SellerOrderReceivedStatus | "All";
 
@@ -167,7 +170,8 @@ export default function MyClaims({
   setTab,
 
   refreshData,
-}: SharedState) {
+  combinedDelivery,
+}: SharedState & { combinedDelivery: BuyerDeliveryRequestsState }) {
   const [showBatchCheckout, setShowBatchCheckout] = useState(navIntent.openBatchCheckout);
 
   useEffect(() => {
@@ -193,6 +197,31 @@ export default function MyClaims({
   // A notification about a combined delivery request asks the seller's list to
   // open, since its cards live in a modal.
   const [combinedFocusId, setCombinedFocusId] = useState<string | null>(null);
+  const [combinedListRequests, setCombinedListRequests] = useState<CombinedDeliveryRequest[]>([]);
+  const [combinedRequestsLoaded, setCombinedRequestsLoaded] = useState(false);
+  const handleCombinedRequestsChange = useCallback(
+    (
+      requests: CombinedDeliveryRequest[],
+      loaded: boolean,
+    ) => {
+      setCombinedListRequests((current) => {
+        const sameRequests =
+          current.length === requests.length &&
+          current.every((request, index) => {
+            const next = requests[index];
+            return (
+              request.id === next.id &&
+              request.payment?.status === next.payment?.status &&
+              request.members.map((member) => member.order_id).join("|") ===
+                next.members.map((member) => member.order_id).join("|")
+            );
+          });
+        return sameRequests ? current : requests;
+      });
+      setCombinedRequestsLoaded(loaded);
+    },
+    [],
+  );
 
   const [ongoingFilter, setOngoingFilter] = useState<"All" | "Pending" | "Awaiting Verification">("All");
   const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>(() => {
@@ -524,15 +553,9 @@ export default function MyClaims({
 
   const reconciledClaims = claims.map((claim) => reconcileRejectedClaim(claim, payHistory));
 
-  const belongsToPendingPayments = (claim: ClaimRow) =>
-    claim.status !== "Awaiting Verification" &&
-    (claimIsPayable(claim) ||
-      claim.shippingState === "waiting_for_seller" ||
-      claim.shippingState === "correction_requested");
-
   const claimsToPay = reconciledClaims
 
-    .filter(belongsToPendingPayments)
+    .filter((claim) => claimBelongsToPendingPayments(claim))
 
     .sort((left, right) => {
       const leftPaused = Boolean(left.deadlinePausedAt);
@@ -555,7 +578,7 @@ export default function MyClaims({
     : claimsToPay.slice(0, pendingPaymentLimit);
 
   const payableClaims = claimsToPay.filter(claimIsPayable);
-  const totalDue = payableClaims.reduce((sum, item) => sum + item.amount, 0);
+  const totalDue = getToPayTotal(payableClaims);
 
   const itemPreviewBatch = itemPreview
     ? batches.find(
@@ -574,7 +597,7 @@ export default function MyClaims({
   // list — and every filter (All, Awaiting Verification, Paid and Reserved,
   // Expired, Cancelled) — never repeats a payable row.
   const claimsForList = reconciledClaims
-    .filter((c) => !belongsToPendingPayments(c))
+    .filter((c) => !claimBelongsToPendingPayments(c))
     .sort((left, right) => {
       // "Awaiting Verification" — proof submitted, awaiting the seller's
 
@@ -603,9 +626,6 @@ export default function MyClaims({
 
       return rightTime - leftTime;
     });
-
-  const filtered =
-    filter === "All" ? claimsForList : claimsForList.filter((c) => c.status === filter);
 
   const [fbToast, setFbToast] = useState<string | null>(null);
 
@@ -1892,6 +1912,7 @@ export default function MyClaims({
               buyerId={user.id}
               claims={reconciledClaims}
               excludeAwaitingVerification
+              deliveryState={combinedDelivery}
               onRecovered={refreshData}
               imageForOrder={(id) => {
                 const productId = reconciledClaims.find(
@@ -2139,7 +2160,7 @@ export default function MyClaims({
             }}
           >
             {f}
-            {f !== "All" && (
+            {combinedRequestsLoaded && (
               <span
                 style={{
                   marginLeft: 6,
@@ -2153,7 +2174,7 @@ export default function MyClaims({
                   fontSize: 10,
                 }}
               >
-                {claimsForList.filter((c) => c.status === f).length}
+                {buildClaimsListRows(claimsForList, f, combinedListRequests).length}
               </span>
             )}
           </button>
@@ -2215,6 +2236,8 @@ export default function MyClaims({
         buyerId={user.id}
         claims={reconciledClaims}
         showClaimRowsInsteadOfPaymentCards={true}
+        deliveryState={combinedDelivery}
+        onCombinedRequestsChange={handleCombinedRequestsChange}
         onRecovered={refreshData}
         imageForOrder={(id) => {
           const productId = reconciledClaims.find(
@@ -2241,29 +2264,15 @@ export default function MyClaims({
           };
           
           // Create a unified list mixing regular claims and combined delivery placeholders
-          const itemsToShow: Array<ClaimRow | { type: "combined"; request: any }> = [];
-          const processedOrderIds = new Set<string>();
-          
-          // Add combined delivery items first (they'll be sorted with claims)
-          combinedRequests.forEach((request) => {
-            request.members.forEach((member: any) => {
-              processedOrderIds.add(member.order_id);
-            });
-            itemsToShow.push({ type: "combined" as const, request });
-          });
-          
-          // Add regular claims that aren't part of combined deliveries
-          filtered.forEach((claim) => {
-            if (!processedOrderIds.has(String(claim.id))) {
-              itemsToShow.push(claim);
-            }
-          });
+          const itemsToShow = combinedDelivery.ready
+            ? buildClaimsListRows(claimsForList, filter, combinedRequests)
+            : [];
           
           return (
           <>
             {isMobile || viewMode === "card" ? (
         <>
-          {itemsToShow.length === 0 && (
+          {combinedDelivery.ready && itemsToShow.length === 0 && (
             <div
               style={{
                 padding: "40px 0",
@@ -2287,17 +2296,17 @@ export default function MyClaims({
                 const request = item.request;
                 const first = request.members[0];
                 const seller = reconciledClaims.find((claim) =>
-                  request.members.some((member: any) => member.order_id === String(claim.id)),
+                  request.members.some((member) => member.order_id === String(claim.id)),
                 )?.seller ?? "Seller";
                 const account = request.payment;
-                const status = account?.status === "pending_review" ? "Awaiting Verification" : "Pending";
+                const status = item.status;
                 
                 return (
                   <Card
                     key={`combined-${request.id}`}
                     recordKeys={recordKeys({
                       combinedGroupId: request.id,
-                      orderIds: request.members.map((m: any) => m.order_id),
+                      orderIds:                       request.members.map((member) => member.order_id),
                     })}
                   >
                     <div className="claims-card__summary flex items-start gap-3">
@@ -2602,17 +2611,17 @@ export default function MyClaims({
                     const request = item.request;
                     const first = request.members[0];
                     const seller = reconciledClaims.find((claim) =>
-                      request.members.some((member: any) => member.order_id === String(claim.id)),
+                      request.members.some((member) => member.order_id === String(claim.id)),
                     )?.seller ?? "Seller";
                     const account = request.payment;
-                    const status = account?.status === "pending_review" ? "Awaiting Verification" : "Pending";
+                    const status = item.status;
                     
                     return (
                       <tr
                         key={`combined-${request.id}`}
                         data-record-keys={recordKeys({
                           combinedGroupId: request.id,
-                          orderIds: request.members.map((m: any) => m.order_id),
+                          orderIds: request.members.map((member) => member.order_id),
                         })}
                         style={{
                           borderTop: "1px solid #F3F4F6",
@@ -2849,7 +2858,7 @@ export default function MyClaims({
               </tbody>
             </table>
           </div>
-          {filtered.length === 0 && (
+          {combinedDelivery.ready && itemsToShow.length === 0 && (
             <div
               style={{
                 padding: "40px 0",

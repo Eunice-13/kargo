@@ -521,10 +521,12 @@ export default function PaymentSubmitModal({
               </label>
               <input
                 type="number"
+                className="submit-payment-amount-input"
                 min="0.01"
                 step="0.01"
                 value={amountPaid}
                 onChange={(e) => setAmountPaid(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
                 placeholder={String(item.amount)}
                 style={{
                   width: "100%",

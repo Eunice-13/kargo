@@ -63,6 +63,7 @@ import { kargoApi, setAdminDemoMode } from "@/services";
 import { NotificationsProvider } from "@/features/notifications";
 
 import { deadlineHasPassed } from "@/features/claims/claimExpiry";
+import useBuyerDeliveryRequests from "@/features/combined-delivery/useBuyerDeliveryRequests";
 
 // True only when this page load came from clicking the signup confirmation link.
 // Read at module load: the Supabase client strips the URL fragment right after.
@@ -264,6 +265,24 @@ export default function App() {
   const useSeeds = originalPreview || (!isSupabaseConfigured && !adminPreview);
 
   const [claims, setClaims] = useState<ClaimRow[]>(useSeeds ? CLAIMS_INIT : []);
+
+  const combinedDeliveryRevision = JSON.stringify(
+    claims.map((claim) => [
+      claim.id,
+      claim.status,
+      claim.shippingState,
+      claim.shippingFee,
+      claim.deliveryPinLat,
+      claim.deliveryPinLng,
+      claim.deliveryPinAddress,
+      claim.deadlinePausedAt,
+    ]),
+  );
+  const combinedDelivery = useBuyerDeliveryRequests(
+    user.id,
+    isSupabaseConfigured && user.role === "Buyer" && Boolean(user.id),
+    combinedDeliveryRevision,
+  );
 
   const [toPay, setToPay] = useState<ToPayRow[]>(useSeeds ? TOPAY_INIT : []);
 
@@ -788,7 +807,12 @@ export default function App() {
             />
             <TabBar active={tab} setActive={setTab} role={role} />
             <main style={{ minHeight: "calc(100vh - 100px)" }}>
-              <TabContent tab={tab} shared={shared} onNewBatch={() => setShowNewBatch(true)} />
+              <TabContent
+                tab={tab}
+                shared={shared}
+                combinedDelivery={combinedDelivery}
+                onNewBatch={() => setShowNewBatch(true)}
+              />
             </main>
             <Footer role={role} />
             {showOnboarding && <Onboarding onDone={() => setOnboard(false)} role={role} />}

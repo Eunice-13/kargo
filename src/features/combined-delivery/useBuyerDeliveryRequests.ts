@@ -25,11 +25,13 @@ export default function useBuyerDeliveryRequests(
   const [candidates, setCandidates] = useState<CombinedDeliveryRequestCandidate[]>([]);
   const [requests, setRequests] = useState<CombinedDeliveryRequest[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadedFor, setLoadedFor] = useState("");
   const [error, setError] = useState("");
   const [unavailable, setUnavailable] = useState(false);
   const [busy, setBusy] = useState(false);
   const sequence = useRef(0);
   const mutation = useRef(false);
+  const loadKey = `${buyerId ?? ""}:${revision}`;
   const reload = useCallback(async () => {
     if (!enabled || !buyerId) return;
     const current = ++sequence.current;
@@ -52,9 +54,12 @@ export default function useBuyerDeliveryRequests(
         setError(deliveryFailureMessage(failure));
       }
     } finally {
-      if (current === sequence.current) setLoading(false);
+      if (current === sequence.current) {
+        setLoading(false);
+        setLoadedFor(loadKey);
+      }
     }
-  }, [buyerId, enabled]);
+  }, [buyerId, enabled, loadKey]);
   useEffect(() => {
     setCandidates([]);
     setRequests([]);
@@ -62,6 +67,7 @@ export default function useBuyerDeliveryRequests(
     setError("");
     if (!enabled || !buyerId) {
       setLoading(false);
+      setLoadedFor(loadKey);
       return;
     }
     void reload();
@@ -73,7 +79,7 @@ export default function useBuyerDeliveryRequests(
       sequence.current++;
       window.removeEventListener("focus", refresh);
     };
-  }, [reload, revision, enabled, buyerId]);
+  }, [reload, loadKey, enabled, buyerId]);
   async function run(operation: () => Promise<unknown>) {
     if (mutation.current || loading || error || unavailable) return false;
     mutation.current = true;
@@ -95,10 +101,14 @@ export default function useBuyerDeliveryRequests(
       setBusy(false);
     }
   }
+  const loaded = !enabled || (loadedFor === loadKey && !loading);
+  const ready = loaded && (!enabled || (!error && !unavailable));
   return {
-    candidates,
-    requests,
+    candidates: loaded && enabled ? candidates : [],
+    requests: loaded && enabled ? requests : [],
     loading,
+    loaded,
+    ready,
     unavailable,
     available: enabled && !error && !unavailable,
     error,
@@ -109,3 +119,5 @@ export default function useBuyerDeliveryRequests(
     cancel: (groupId: string) => run(() => cancelCombinedDeliveryRequest(groupId)),
   };
 }
+
+export type BuyerDeliveryRequestsState = ReturnType<typeof useBuyerDeliveryRequests>;

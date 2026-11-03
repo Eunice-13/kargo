@@ -1,11 +1,13 @@
 import DeliveryAvailabilityNotice from "./DeliveryAvailabilityNotice";
-import { useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { ClaimRow } from "@/types";
 import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import SecondaryBtn from "@/components/shared/SecondaryBtn";
 import useBuyerDeliveryRequests from "./useBuyerDeliveryRequests";
+import type { BuyerDeliveryRequestsState } from "./useBuyerDeliveryRequests";
 import { latestDeliveryRequestForOrder, potentialDeliveryRequests } from "./requestEligibility";
+import { combinedRequestHasOpenPayment } from "./requestStatus";
 import CombinedPaymentCard from "./CombinedPaymentCard";
 import CombinedClaimRow from "./CombinedClaimRow";
 import CombinedDeliveryRequestDialog from "./CombinedDeliveryRequestDialog";
@@ -17,6 +19,8 @@ export default function BuyerCombinedDelivery({
   onRecovered,
   showClaimRowsInsteadOfPaymentCards,
   excludeAwaitingVerification,
+  deliveryState,
+  onCombinedRequestsChange,
   children,
 }: {
   buyerId?: string;
@@ -25,6 +29,11 @@ export default function BuyerCombinedDelivery({
   onRecovered?: () => Promise<void>;
   showClaimRowsInsteadOfPaymentCards?: boolean;
   excludeAwaitingVerification?: boolean;
+  deliveryState?: BuyerDeliveryRequestsState;
+  onCombinedRequestsChange?: (
+    requests: CombinedDeliveryRequest[],
+    loaded: boolean,
+  ) => void;
   children: (controls: {
     combinedPaymentOrder: (id: string) => boolean;
     requestForOrder: (id: string) => CombinedDeliveryRequest | undefined;
@@ -44,11 +53,27 @@ export default function BuyerCombinedDelivery({
       claim.deadlinePausedAt,
     ]),
   );
-  const state = useBuyerDeliveryRequests(
+  const localState = useBuyerDeliveryRequests(
     buyerId,
-    isSupabaseConfigured && Boolean(buyerId),
+    !deliveryState && isSupabaseConfigured && Boolean(buyerId),
     revision,
   );
+  const state = deliveryState ?? localState;
+  const combinedRequests = useMemo(
+    () =>
+      state.available
+        ? state.requests.filter(
+            (request) =>
+              request.payment &&
+              request.status === "shipping_fee_set" &&
+              (!excludeAwaitingVerification || request.payment.status !== "pending_review"),
+          )
+        : [],
+    [excludeAwaitingVerification, state.available, state.requests],
+  );
+  useEffect(() => {
+    onCombinedRequestsChange?.(combinedRequests, state.ready);
+  }, [combinedRequests, onCombinedRequestsChange, state.ready]);
   const [refreshError, setRefreshError] = useState("");
   const [dialog, setDialog] = useState<"new" | CombinedDeliveryRequest | null>(null);
   const options = potentialDeliveryRequests(state.candidates, buyerId ?? "");
@@ -94,8 +119,8 @@ export default function BuyerCombinedDelivery({
             .filter(
               (request) =>
                 state.available &&
+                combinedRequestHasOpenPayment(request) &&
                 request.payment &&
-                request.status === "shipping_fee_set" &&
                 (!excludeAwaitingVerification || request.payment.status !== "pending_review"),
             )
             .map((request) => (
@@ -122,9 +147,8 @@ export default function BuyerCombinedDelivery({
           state.available &&
           state.requests.some(
             (request) =>
-              request.status === "shipping_fee_set" &&
+              combinedRequestHasOpenPayment(request) &&
               request.payment &&
-              ["ready", "pending_review", "rejected"].includes(request.payment.status) &&
               (!excludeAwaitingVerification || request.payment.status !== "pending_review") &&
               request.members.some((member) => member.order_id === id && !member.released_at),
           ),
@@ -135,14 +159,7 @@ export default function BuyerCombinedDelivery({
           setDialog(request);
           void state.reload();
         },
-        combinedRequests: state.available
-          ? state.requests.filter(
-              (request) =>
-                request.payment &&
-                request.status === "shipping_fee_set" &&
-                (!excludeAwaitingVerification || request.payment.status !== "pending_review"),
-            )
-          : [],
+        combinedRequests,
       })}
       {dialog && buyerId && state.available && (
         <CombinedDeliveryRequestDialog
