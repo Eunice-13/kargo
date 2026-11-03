@@ -44,7 +44,6 @@ const STATUS_TONE: Record<string, AdminTone> = {
   completed: SUCCESS,
   expired: DANGER,
   cancelled: NEUTRAL,
-  incomplete: NEUTRAL,
   // payment_status
   pending_review: PENDING,
   verified: SUCCESS,
@@ -70,10 +69,9 @@ export const ORDER_STATUS_OPTIONS = [
   { value: "insufficient_payment", label: "Insufficient payment" },
   { value: "payment_confirmed", label: "Payment confirmed" },
   { value: "preparing", label: "Preparing" },
-  { value: "completed", label: "Delivered" },
+  { value: "completed", label: "Completed" },
   { value: "cancelled", label: "Cancelled" },
   { value: "expired", label: "Expired" },
-  { value: "incomplete", label: "Incomplete" },
 ] as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = Object.fromEntries(

@@ -69,7 +69,7 @@ export default function FulfillmentBreakdown({
         ? (currentStatus?.counts[s.key] ?? 0)
         : bucketCount(data.stageTotals, s.key as Stage),
     })),
-    // Orders in no recognised status (for example incomplete) only exist in Current status.
+    // Safety net for any status the stage list does not know; only exists in Current status.
     ...(current
       ? [{ ...OTHER_STAGE, key: "other" as DisplayStage, count: currentStatus?.counts.other ?? 0 }]
       : []),

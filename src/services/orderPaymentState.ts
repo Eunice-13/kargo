@@ -9,7 +9,6 @@ const TERMINAL_ORDER_STATUSES = new Set([
   "completed",
   "expired",
   "cancelled",
-  "incomplete",
 ])
 
 /**

@@ -38,8 +38,8 @@ export default function AdminOrderDetailModal({
     data != null &&
     (data.paymentConfirmedAt != null ||
       ["payment_confirmed", "preparing", "completed"].includes(data.status));
-  // Expired and incomplete orders are final, so they can never be cancelled either.
-  const isFinal = data != null && (data.status === "expired" || data.status === "incomplete");
+  // Expired orders are final, so they can never be cancelled either.
+  const isFinal = data != null && data.status === "expired";
   const canCancel =
     data != null &&
     data.status !== "completed" &&

@@ -44,7 +44,7 @@ export const CURRENT_STAGES: {
   { key: "payment_confirmed", label: "Payment confirmed", color: "#4F46E5", group: "fulfillment" },
   { key: "preparing", label: "Preparing", color: "#0EA5E9", group: "fulfillment" },
   { key: "shipped", label: "Shipped", color: "#2563EB", group: "fulfillment" },
-  { key: "delivered", label: "Delivered", color: "#0B8C69", group: "fulfillment" },
+  { key: "delivered", label: "Completed", color: "#0B8C69", group: "fulfillment" },
   { key: "expired", label: "Expired", color: "#64748B", group: "closed" },
   { key: "cancelled", label: "Cancelled", color: "#DC2626", group: "closed" },
 ];

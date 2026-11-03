@@ -101,7 +101,7 @@ const PAYMENT_METHOD_TYPES = new Set([
 function statusToClaim(status: string): ClaimRow["status"] {
   if (status === "expired") return "Expired";
 
-  if (status === "cancelled" || status === "incomplete") return "Cancelled";
+  if (status === "cancelled") return "Cancelled";
 
   if (status === "insufficient_payment") return "Insufficient Payment";
 
@@ -149,7 +149,6 @@ function statusToStep(status: string, fulfillmentStage?: string | null) {
 
       expired: 0,
 
-      incomplete: 0,
     }[status] ?? 1
   );
 }
@@ -176,7 +175,7 @@ function statusToColumn(
   if (["payment_pending", "payment_submitted", "insufficient_payment"].includes(status))
     return role === "buyer" ? "Pending Payment" : null;
 
-  if (["cancelled", "expired", "incomplete"].includes(status))
+  if (["cancelled", "expired"].includes(status))
     return role === "seller" ? "Cancelled" : null;
 
   return null;

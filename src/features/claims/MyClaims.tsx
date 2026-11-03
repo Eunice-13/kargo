@@ -225,7 +225,7 @@ export default function MyClaims({
         ).length,
         incomplete: buyerOrders.filter(
           (item) =>
-            ["incomplete", "expired"].includes(item.orderStatus ?? "") ||
+            ["expired"].includes(item.orderStatus ?? "") ||
             (!item.orderStatus && item.status === "Expired"),
         ).length,
       },
@@ -838,7 +838,7 @@ export default function MyClaims({
     // payment, or on their way with tracking. Delivered, completed, cancelled
     // and expired orders have nothing left to track, so they stay in the list
     // below. Like pendings on the buyer side, an ongoing order shows once, here.
-    const finishedStatuses = ["completed", "cancelled", "expired", "incomplete"];
+    const finishedStatuses = ["completed", "cancelled", "expired"];
     const isOngoing = (claim: ClaimRow) => {
       const s = statusForOrder(claim);
       if (s === "Verified") return false;

@@ -152,7 +152,7 @@ export default function Dashboard({
         ).length,
         incomplete: buyerOrders.filter(
           (claim) =>
-            ["incomplete", "expired"].includes(claim.orderStatus ?? "") ||
+            ["expired"].includes(claim.orderStatus ?? "") ||
             (!claim.orderStatus && claim.status === "Expired"),
         ).length,
       },
