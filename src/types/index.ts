@@ -167,6 +167,12 @@ export type ClaimRow = {
   // while the order is in the `insufficient_payment` state.
   shortfallAmount?: number;
 
+  // Set on the single representative row for a combined-delivery group so
+  // surfaces can collapse the child orders into one row.
+  combinedDeliveryGroupId?: string;
+
+  combinedItemCount?: number;
+
   hours: number;
 
   expiresAt?: string;

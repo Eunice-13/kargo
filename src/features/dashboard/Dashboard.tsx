@@ -65,6 +65,7 @@ import {
   claimShortfall,
   displayClaimStatus,
 } from "@/features/claims/claimPaymentState";
+import { claimPreview } from "./dashboardClaimRows";
 
 export default function Dashboard({
   batches,
@@ -256,13 +257,9 @@ export default function Dashboard({
     return [...urgent, ...remaining].slice(0, PHONE_CLAIMS_PREVIEW);
   };
 
-  const recentClaims = claims
-
-    .slice()
-
-    .sort((a, b) => Number(b.id) - Number(a.id))
-
-    .slice(0, RECENT_CLAIMS_PREVIEW);
+  // Combined Delivery collapses into one row per combined group; actionable
+  // Pending / Insufficient rows lead so an outstanding balance is never hidden.
+  const recentClaims = claimPreview(claims, payHistory).slice(0, RECENT_CLAIMS_PREVIEW);
 
   const visibleRecentClaims = recentClaims;
 
@@ -295,9 +292,11 @@ export default function Dashboard({
 
   const mySellerOrders = claims.filter((claim) => claim.seller === user.name);
 
+  const collapsedSellerOrders = claimPreview(mySellerOrders, payHistory);
+
   const visibleSellerOrders = isPhone
-    ? urgentPhonePreview(mySellerOrders)
-    : mySellerOrders.slice(0, RECENT_CLAIMS_PREVIEW);
+    ? urgentPhonePreview(collapsedSellerOrders)
+    : collapsedSellerOrders.slice(0, RECENT_CLAIMS_PREVIEW);
 
   // Only submitted proofs await seller verification. `payment_pending` means
 
@@ -674,7 +673,21 @@ export default function Dashboard({
                         <td>
                           <div className="seller-product-cell">
                             <ProductThumb name={claim.product} />
-                            <span>{claim.product}</span>
+                            <span>
+                              {claim.product}
+                              {claim.combinedItemCount ? (
+                                <small
+                                  style={{
+                                    display: "block",
+                                    color: "#6B7280",
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  Combined Delivery · {claim.combinedItemCount} items
+                                </small>
+                              ) : null}
+                            </span>
                           </div>
                         </td>
                         <td>{claim.batch}</td>
@@ -1173,7 +1186,21 @@ export default function Dashboard({
                       <td>
                         <div className="bdash-cell-product">
                           <ProductThumb name={c.product} />
-                          <span>{c.product}</span>
+                          <span>
+                            {c.product}
+                            {c.combinedItemCount ? (
+                              <small
+                                style={{
+                                  display: "block",
+                                  color: "#6B7280",
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Combined Delivery · {c.combinedItemCount} items
+                              </small>
+                            ) : null}
+                          </span>
                         </div>
                       </td>
                       <td>

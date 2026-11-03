@@ -1158,7 +1158,9 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     }
 
     for (const payment of row.payments ?? []) {
-      if (!isBuyer) continue;
+      // Buyer payment history, plus combined-delivery payments for the seller
+      // so the seller dashboard can collapse the combined child orders.
+      if (!isBuyer && !payment.combined_delivery_group_id) continue;
 
       payHistory.push({
         id: payment.id ?? `${row.id}-${payment.submitted_at}`,
