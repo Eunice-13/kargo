@@ -258,6 +258,44 @@ test("delivery cannot be cancelled or have its history erased", async () => {
   );
 });
 
+test("an expired order can never be cancelled: row trigger and admin cancel both refuse", async () => {
+  // Stand-ins for the admin helpers the real RPC calls (defined in the admin foundation).
+  await db.exec(`create or replace function public.admin_assert() returns void language sql as $$ select $$;
+    create or replace function public.admin_audit(text,text,text,text,text,jsonb,jsonb) returns void language sql as $$ select $$;`);
+  await db.exec(
+    readFileSync(
+      new URL("../supabase/migrations/202611100004_no_cancel_expired_orders.sql", import.meta.url),
+      "utf8",
+    ),
+  );
+
+  for (const terminal of ["expired", "incomplete"]) {
+    const id = await order(terminal);
+    const before = await row(id);
+    // Admin action: a plain message, and nothing is written.
+    await assert.rejects(
+      db.query("select public.admin_cancel_order($1,$2)", [id, "customer asked to cancel it"]),
+      /expired order cannot be cancelled/,
+    );
+    // Any other path (direct SQL, other RPCs) hits the row trigger.
+    await assert.rejects(
+      db.query("update orders set status='cancelled' where id=$1", [id]),
+      /Terminal orders cannot be reopened/,
+    );
+    assert.deepEqual(await row(id), before, "refused cancellation must not change the row");
+  }
+
+  // Unpaid, still-live orders remain cancellable by an admin.
+  const pending = await order("payment_pending");
+  await db.query("select public.admin_cancel_order($1,$2)", [pending, "duplicate order placed"]);
+  assert.equal((await row(pending)).status, "cancelled");
+  // Cancelling an already-cancelled order is a no-op, not an error.
+  const again = await db.query("select public.admin_cancel_order($1,$2)", [
+    pending,
+    "duplicate order placed",
+  ]);
+  assert.equal(again.rows[0].admin_cancel_order.changed, false);
+});
 test("unpaid orders can still be cancelled (buyer self-cancel / seller decline are unaffected)", async () => {
   // The no-cancel rule keys on payment confirmation, so pre-payment states
   // remain cancellable exactly as before.
