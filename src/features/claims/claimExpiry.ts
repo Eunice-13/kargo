@@ -34,6 +34,15 @@ export function claimIsPayable(claim: Expirable, now = Date.now()) {
   )
 }
 
+export function claimBelongsToPendingPayments(claim: ClaimRow, now = Date.now()) {
+  return (
+    claim.status !== "Awaiting Verification" &&
+    (claimIsPayable(claim, now) ||
+      claim.shippingState === "waiting_for_seller" ||
+      claim.shippingState === "correction_requested")
+  )
+}
+
 export function expireClaimRows(claims: ClaimRow[], now = Date.now()) {
   return claims.map((claim) =>
     (claim.status === "Pending" || claim.status === "Insufficient Payment") &&

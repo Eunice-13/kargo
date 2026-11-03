@@ -830,8 +830,6 @@ export default function Batches({
         <div
           className="seller-shop-breadcrumb"
           style={{
-            background: "#fff",
-
             borderBottom: "1px solid #E5E7EB",
 
             padding: "10px 24px",
@@ -842,11 +840,7 @@ export default function Batches({
 
             gap: 8,
 
-            position: "sticky",
-
-            top: 88,
-
-            zIndex: 30,
+            position: "static",
           }}
         >
           <button

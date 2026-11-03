@@ -6773,13 +6773,6 @@ textarea::placeholder {
   box-shadow: 0 8px 18px rgba(30, 39, 91, 0.16) !important;
 }
 
-/* Keep the shop breadcrumb flush below the 64px sticky desktop navigation. */
-@media (min-width: 768px) {
-  .seller-shop-view .seller-shop-breadcrumb {
-    top: 64px !important;
-  }
-}
-
 .icon-tabbar > div:first-child {
   width: min(100%, 930px);
   max-width: 930px;
@@ -7328,51 +7321,51 @@ textarea::placeholder {
 }
 
 .payment-method-editor-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .payment-submission-detail-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .seller-order-detail-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .seller-extension-requests-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .create-batch-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .set-shipping-fee-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .batch-checkout-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .submit-payment-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .request-extension-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .buyer-order-details-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .transaction-detail-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .contact-modal .kargo-modal__title-group {
-  margin-left: 10px;
+  margin-left: 0;
 }
 
 .seller-batch-select-icon {
@@ -10941,6 +10934,18 @@ textarea::placeholder {
   font-weight: 600;
 }
 
+.submit-payment-amount-input {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.submit-payment-amount-input::-webkit-inner-spin-button,
+.submit-payment-amount-input::-webkit-outer-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .buyer-home-filter__dropdown {
   position: relative;
   width: 190px;
@@ -14230,7 +14235,7 @@ textarea::placeholder {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 11px;
+  gap: 0;
 }
 
 .kargo-modal__title-icon {
@@ -14445,7 +14450,10 @@ textarea::placeholder {
   box-shadow: 0 6px 18px rgb(17 24 39 / 6%);
 }
 
-.kargo-modal[data-variant="detail"] .kargo-modal__content dl > div {
+.kargo-modal[data-variant="detail"]:not(:has(.group-orders-modal))
+  .kargo-modal__content
+  dl
+  > div {
   padding: 8px 0;
 }
 

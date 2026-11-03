@@ -16,14 +16,17 @@ import {
   AdminTransactions,
   AdminSecurity,
 } from "@/features/admin"
+import type { BuyerDeliveryRequestsState } from "@/features/combined-delivery/useBuyerDeliveryRequests"
 
 export default function TabContent({
   tab,
   shared,
+  combinedDelivery,
   onNewBatch,
 }: {
   tab: Tab
   shared: SharedState
+  combinedDelivery: BuyerDeliveryRequestsState
   onNewBatch: () => void
 }) {
   const [displayed, setDisplayed] = useState(tab)
@@ -47,9 +50,9 @@ export default function TabContent({
   // Branch on role so the admin console never renders buyer/seller screens and
   // vice versa. Non-admin rendering is unchanged.
   const map: Record<Tab, React.ReactNode> = {
-    Dashboard: isAdmin ? <AdminDashboard {...shared} /> : <Dashboard {...shared} />,
+    Dashboard: isAdmin ? <AdminDashboard {...shared} /> : <Dashboard {...shared} combinedDelivery={combinedDelivery} />,
     Batches: isAdmin ? <AdminBatches /> : <Batches {...shared} onNewBatch={onNewBatch} />,
-    "My Claims": <MyClaims {...shared} />,
+    "My Claims": <MyClaims {...shared} combinedDelivery={combinedDelivery} />,
     Payments: <Payments {...shared} />,
     Orders: <Orders {...shared} />,
     Settings: <Settings {...shared} />,

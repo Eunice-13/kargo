@@ -2734,6 +2734,20 @@ export async function loadSellerReceiveMethods(sellerId: string): Promise<Seller
     );
 }
 
+// Public join date for a seller, so their shop page can show "Seller since
+// <year>". Mirrors UserInfo.memberSince (public_profiles.created_at).
+export async function loadSellerMemberSince(sellerId: string): Promise<string | null> {
+  const { data, error } = await requireSupabase()
+    .from("public_profiles")
+    .select("created_at")
+    .eq("id", sellerId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return (data?.created_at as string | undefined) ?? null;
+}
+
 export async function addPaymentMethod(
   methodType: string,
 
@@ -3466,6 +3480,8 @@ export const kargoApi = {
   joinWaitlist,
 
   loadSellerReceiveMethods,
+
+  loadSellerMemberSince,
 
   loadOwnPaymentMethods,
 
