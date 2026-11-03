@@ -713,6 +713,25 @@
     content: "Actions";
   }
 
+  /* On mobile the status cell is display:flex which ignores the table-layout
+     max-width:0 trick from index.css. Reset it so the badge + note wrap. */
+  .seller-orders-page .seller-orders-status-cell {
+    max-width: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+  }
+
+  .seller-orders-page .seller-orders-status-cell .seller-orders-status {
+    max-width: 100%;
+    white-space: nowrap;
+  }
+
+  .seller-orders-page .seller-orders-status-cell small {
+    flex: 1 1 100%;
+    white-space: normal;
+  }
+
   .claims-to-pay-table td:nth-child(2)::before {
     content: "Seller";
   }
@@ -731,6 +750,11 @@
     align-items: start;
     column-gap: 14px;
     row-gap: 8px;
+    padding: 14px;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px;
+    background: #fff !important;
+    box-shadow: 0 3px 10px rgba(18, 30, 71, 0.1);
   }
 
   .claims-to-pay-table td:nth-child(1) {
@@ -786,15 +810,30 @@
 
   .claims-to-pay-table td:nth-child(5) {
     grid-column: 1 / -1;
-    display: block !important;
-    justify-content: flex-start;
+    display: flex !important;
+    justify-content: flex-end;
   }
 
   .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
+    display: flex !important;
+    justify-content: flex-end;
+    width: auto;
     gap: 8px;
+  }
+
+  /* Keep "Manage" a compact control pinned to the right (matches the design);
+     the cell-wide button rule would otherwise stretch it to the full width. */
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .claim-actions-split {
+    width: auto !important;
+  }
+
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .claim-actions-manage {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+    padding: 0 14px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
   }
 
   .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .kargo-primary,
@@ -1040,6 +1079,26 @@
 
   .buyer-home-filter > strong {
     display: none;
+  }
+
+  /* Each dropdown wrapper fills its grid cell and looks like a pill. */
+  .buyer-home-filter__dropdown {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .buyer-home-filter__trigger {
+    width: 100% !important;
+    min-width: 0;
+    min-height: 36px;
+    padding: 0 10px 0 10px !important;
+    border: 1px solid #e4e9ef !important;
+    border-radius: 8px !important;
+    background: #f6f8fa !important;
+    color: #253545 !important;
+    font-size: 12px !important;
+    font-weight: 650 !important;
+    justify-content: space-between;
   }
 
   .buyer-home-filter select {
@@ -2582,6 +2641,17 @@
     line-height: 44px;
   }
 
+  /* The custom category/month dropdown is a flex trigger button, not a native
+     select; keep the label left and the circular chevron badge on the right
+     instead of letting the block display drop the icon below the label. */
+  .seller-batch-filter-bar .seller-batch-filter-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px !important;
+    line-height: 1.2;
+  }
+
   .seller-batch-filter-bar .seller-batch-select-icon {
     position: absolute;
     top: 50%;
@@ -2652,6 +2722,18 @@
     min-height: 44px;
     margin: 0;
     text-align: center;
+  }
+
+  /* The Review split button stays compact: the cell-wide button rule above
+     would otherwise stretch each half to 100% and push the chevron out of the
+     row (which clips it). Size both halves to their content instead. */
+  .seller-orders-page .seller-orders-split {
+    width: auto !important;
+    max-width: 100%;
+  }
+
+  .seller-orders-page .seller-orders-split > .seller-orders-review {
+    width: auto !important;
   }
 
   /* Footer: compact link rhythm, flush edge, and a flex shell that keeps the
@@ -7532,5 +7614,133 @@ body > :not(#root) * {
 
   .seller-shop-view .seller-shop-tabs > button[aria-current="page"] {
     border-bottom-width: 3px !important;
+  }
+}
+
+/* Sellers (and any header without the marketplace search) have room for the
+   KARGO wordmark in the phone header, so bring it back instead of hiding it. */
+@media (max-width: 767px) {
+  /* Let the brand column size to the logo + wordmark so both stay on screen. */
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-lockup {
+    width: auto !important;
+    grid-column: 1;
+    justify-self: start;
+    gap: 10px !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-mark {
+    display: grid !important;
+    width: 40px !important;
+    height: 40px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-name {
+    display: inline-block !important;
+    font-size: 17px !important;
+  }
+}
+
+/* Seller batch item cards on phones: the desktop three-column row squeezes the
+   product name to a sliver (one character per line) and turns the availability
+   controls into a tall, cluttered column. Reflow into an identity row plus a
+   full-width control toolbar. */
+@media (max-width: 700px) {
+  .batch-product-card {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start !important;
+    gap: 14px 12px !important;
+  }
+
+  .batch-product-card .batch-product-photo-control {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .batch-product-card > .flex-1 {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  /* The price + controls wrapper dissolves so the price can sit in the identity
+     row and the controls can span the full width below it. */
+  .batch-product-card .batch-product-side {
+    display: contents;
+  }
+
+  .batch-product-card .batch-product-price {
+    grid-column: 3;
+    grid-row: 1;
+    margin-bottom: 0 !important;
+  }
+
+  .batch-product-card .batch-product-controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center !important;
+    gap: 8px 12px !important;
+    padding-top: 12px;
+    border-top: 1px solid #eef1f5;
+  }
+
+  /* "Waitlist max [input] Save" takes its own line under the status + toggle. */
+  .batch-product-card .batch-product-controls > div {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  /* Buyer action ("Claim this item" / status) tucks into the card's lower-right,
+     matching the design, instead of wrapping to the lower-left. */
+  .batch-product-card
+    .batch-product-side
+    > :not(.batch-product-price):not(.batch-product-controls) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: end;
+    text-align: right;
+  }
+
+  /* Keep the claim button a smaller, tighter control on phones. */
+  .batch-product-card .batch-product-side > button.kargo-primary {
+    min-height: 34px !important;
+    padding: 5px 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* A slightly larger product photo anchors the mobile item card. */
+  .batch-product-card .batch-product-photo-control img {
+    width: 56px !important;
+    height: 56px !important;
+  }
+}
+
+/* Buyer home: keep every batch card the same height by holding the title to
+   two lines across the multi-column breakpoints, so a longer title cannot make
+   one card taller than its neighbour. */
+@media (max-width: 800px) {
+  .kargo-original-app main .buyer-batch-card__body h3 {
+    display: -webkit-box;
+    min-height: 2.4em;
+    overflow: hidden;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  /* Keep seller and date to a single line so a long shop name cannot push the
+     date/claimed rows down and make one card taller than its neighbour. */
+  .kargo-original-app main .buyer-batch-card__seller span,
+  .kargo-original-app main .buyer-batch-card__date span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

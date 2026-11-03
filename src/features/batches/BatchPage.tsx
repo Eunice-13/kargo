@@ -5,7 +5,7 @@ import { sellerLabel } from "./sellerLabel";
 
 import { batchClosedByDate, batchOrdersClosed, formatBatchEndDate } from "./batchAvailability";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Lock,
@@ -19,6 +19,8 @@ import {
   Tag,
   CalendarDays,
   Clock,
+  ChevronDown,
+  Settings2,
 } from "lucide-react";
 
 import type {
@@ -179,6 +181,26 @@ export default function BatchPage({
 
   const [groupSettingsOpen, setGroupSettingsOpen] = useState(false);
   const [addItemsOpen, setAddItemsOpen] = useState(false);
+  const [gallerySettingsOpen, setGallerySettingsOpen] = useState(false);
+  const gallerySettingsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!gallerySettingsOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!gallerySettingsRef.current?.contains(event.target as Node)) {
+        setGallerySettingsOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setGallerySettingsOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [gallerySettingsOpen]);
 
   const [waitlistTarget, setWaitlistTarget] = useState<{
     p: (typeof batch.products)[0];
@@ -819,41 +841,84 @@ export default function BatchPage({
           </div>
           <div className="batch-gallery__actions">
             {canEdit && (
-              <label className="batch-hero-photo-action">
-                <ImageUp size={15} aria-hidden="true" />
-                <span>{uploadingPhoto === "gallery" ? "Uploading…" : "Add batch photos"}</span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  multiple
-                  disabled={uploadingPhoto !== null}
-                  onChange={(event) => {
-                    void addBatchPhotos(Array.from(event.target.files ?? []));
-                    event.currentTarget.value = "";
-                  }}
-                />
-              </label>
-            )}
-            {canEdit && (
-              <label className="batch-hero-photo-action">
-                <ImageUp size={15} aria-hidden="true" />
-                <span>{uploadingPhoto === "cover" ? "Uploading…" : "Change cover"}</span>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  disabled={uploadingPhoto !== null}
-                  onChange={(event) => changeCoverPhoto(event.target.files?.[0])}
-                />
-              </label>
-            )}
-            {canEdit && (
-              <button
-                type="button"
-                className="batch-group-settings-action"
-                onClick={() => setGroupSettingsOpen(true)}
-              >
-                <Users size={15} aria-hidden="true" /> Selling & groups
-              </button>
+              <div className="batch-gallery-settings" ref={gallerySettingsRef}>
+                <button
+                  type="button"
+                  className="batch-gallery-settings__trigger"
+                  aria-haspopup="true"
+                  aria-expanded={gallerySettingsOpen}
+                  onClick={() => setGallerySettingsOpen((value) => !value)}
+                >
+                  <Settings2 size={15} aria-hidden="true" />
+                  Settings
+                  <ChevronDown
+                    size={14}
+                    aria-hidden="true"
+                    className={gallerySettingsOpen ? "is-open" : ""}
+                  />
+                </button>
+                {gallerySettingsOpen && (
+                  <div className="batch-gallery-settings__menu" aria-label="Batch settings">
+                    <label
+                      className="batch-gallery-settings__item"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          event.currentTarget.querySelector("input")?.click();
+                        }
+                      }}
+                    >
+                      <ImageUp size={15} aria-hidden="true" />
+                      <span>{uploadingPhoto === "gallery" ? "Uploading…" : "Add batch photos"}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        multiple
+                        disabled={uploadingPhoto !== null}
+                        onChange={(event) => {
+                          void addBatchPhotos(Array.from(event.target.files ?? []));
+                          event.currentTarget.value = "";
+                          setGallerySettingsOpen(false);
+                        }}
+                      />
+                    </label>
+                    <label
+                      className="batch-gallery-settings__item"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          event.currentTarget.querySelector("input")?.click();
+                        }
+                      }}
+                    >
+                      <ImageUp size={15} aria-hidden="true" />
+                      <span>{uploadingPhoto === "cover" ? "Uploading…" : "Change cover"}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        disabled={uploadingPhoto !== null}
+                        onChange={(event) => {
+                          changeCoverPhoto(event.target.files?.[0]);
+                          setGallerySettingsOpen(false);
+                        }}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="batch-gallery-settings__item"
+                      onClick={() => {
+                        setGallerySettingsOpen(false);
+                        setGroupSettingsOpen(true);
+                      }}
+                    >
+                      <Users size={15} aria-hidden="true" />
+                      Selling &amp; groups
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
             {role === "Buyer" && batch.groupOrdersEnabled && !ordersClosed && (
               <button
@@ -1127,8 +1192,9 @@ export default function BatchPage({
                       )}
                     </div>
                   </div>
-                  <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
+                  <div className="batch-product-side" style={{ textAlign: "right" as const, flexShrink: 0 }}>
                     <div
+                      className="batch-product-price"
                       style={{
                         fontSize: 16,
 
@@ -1145,6 +1211,7 @@ export default function BatchPage({
                     </div>
                     {canEdit ? (
                       <div
+                        className="batch-product-controls"
                         style={{
                           display: "flex",
                           flexDirection: "column",
