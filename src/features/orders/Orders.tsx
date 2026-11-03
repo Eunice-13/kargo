@@ -6,11 +6,17 @@ import {
   Avatar,
   Card,
   ContactModal,
+  InsufficientPaymentNotice,
   SecondaryBtn,
   SH,
+  StatusBadge,
   recordKeys,
   useRecordFocus,
 } from "@/components/shared"
+import {
+  claimShortfall,
+  displayClaimStatus,
+} from "@/features/claims/claimPaymentState"
 import {
   FulfillmentBoard,
   FulfillmentLiveRegion,
@@ -21,6 +27,7 @@ import OrderDetailsModal from "./OrderDetailsModal"
 
 export default function Orders({
   orders,
+  claims,
   role,
   fulfillment,
   setFulfillment,
@@ -35,12 +42,37 @@ export default function Orders({
   useRecordFocus("Orders", (target) => setFocusOrderId(target.orderId))
 
   if (role === "Seller") {
+    const insufficientOrders = claims.filter(
+      (claim) => claim.status === "Insufficient Payment",
+    )
+
     return (
       <div className="seller-page-shell seller-fulfillment-page orders-page orders-page--seller">
         <SH title="Fulfillment Board" />
         <p className="orders-board-intro">
           Track all orders across fulfillment stages.
         </p>
+        {insufficientOrders.length > 0 && (
+          <Card className="orders-payment-issues">
+            <SH title="Payment issues" />
+            <div className="space-y-2">
+              {insufficientOrders.map((claim) => (
+                <div
+                  key={claim.id}
+                  className="flex flex-wrap items-center justify-between gap-2 text-[12px]"
+                >
+                  <span style={{ color: "#374151" }}>
+                    {claim.product} · {claim.buyer || claim.seller}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={displayClaimStatus(claim.status)} />
+                    <InsufficientPaymentNotice shortfall={claimShortfall(claim)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
         <FulfillmentBoard
           fulfillment={fulfillment}
           role="seller"
@@ -55,7 +87,14 @@ export default function Orders({
 
   return (
     <div className="p-6 space-y-5 orders-page orders-page--buyer">
-      {orders.map((order) => (
+      {orders.map((order) => {
+        const claim = claims.find((candidate) =>
+          order.dbId
+            ? String(candidate.id) === String(order.dbId)
+            : String(candidate.id) === String(order.id),
+        )
+
+        return (
         <Card
           key={order.id}
           className="buyer-order-card"
@@ -79,6 +118,12 @@ export default function Orders({
                   {order.batch ? ` · ${order.batch}` : ""}
                 </span>
               </div>
+              {claim && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <StatusBadge status={displayClaimStatus(claim.status)} />
+                  <InsufficientPaymentNotice shortfall={claimShortfall(claim)} />
+                </div>
+              )}
             </div>
             <div className="buyer-order-card__amount">
               ₱{order.amount.toLocaleString()}
@@ -96,7 +141,8 @@ export default function Orders({
             </div>
           </div>
         </Card>
-      ))}
+        )
+      })}
       {contactOrder && (
         <ContactModal
           name={contactOrder.seller}

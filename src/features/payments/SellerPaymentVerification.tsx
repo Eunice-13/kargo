@@ -262,13 +262,6 @@ export default function SellerPaymentVerification({
             decision = "verified"
           if (item.status !== before.status && item.status === "Rejected")
             decision = "rejected"
-          if (
-            item.status === "Pending" &&
-            item.rejectReason?.startsWith("Short") &&
-            item.rejectReason !== before.rejectReason
-          ) {
-            decision = "verified"
-          }
           if (decision) {
             const deadlineHours = item.rejectionDeadline
               ? Math.max(
@@ -839,6 +832,46 @@ export default function SellerPaymentVerification({
           insuffAmtPaid={insuffAmtPaid}
           setInsuffAmtPaid={setInsuffAmtPaid}
           setVerifyItems={updateVerifyItems}
+          onConfirm={(_paidAmt, shortAmt) => {
+            const item = insuffTarget
+
+            if (!isSupabaseConfigured) {
+              setVerifyItems((items) =>
+                items.map((candidate) =>
+                  candidate.id === item.id
+                    ? {
+                        ...candidate,
+                        status: "Rejected" as const,
+                        shortfallAmount: shortAmt,
+                        rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
+                      }
+                    : candidate,
+                ),
+              )
+              return
+            }
+
+            void kargoApi
+              .markInsufficientPayment(String(item.id), shortAmt, item.groupOrderId)
+              .then(() => {
+                void refreshData?.().catch(() => {})
+                kargoApi
+                  .loadSellerPaymentSubmissions()
+                  .then(setVerifyItems)
+                  .catch(() => {})
+              })
+              .catch((error) => {
+                alert(
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to mark payment as insufficient.",
+                )
+                kargoApi
+                  .loadSellerPaymentSubmissions()
+                  .then(setVerifyItems)
+                  .catch(() => {})
+              })
+          }}
         />
       )}
 

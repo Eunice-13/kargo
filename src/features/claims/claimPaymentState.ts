@@ -9,6 +9,18 @@ export type SellerOrderReceivedStatus =
 
 type SellerPaymentReviewStatus = "Pending" | "Verified" | "Rejected"
 
+// An insufficient payment is still an unpaid balance: every surface shows the
+// ordinary Pending badge plus a separate "Insufficient" tag and shortfall.
+export function displayClaimStatus(status: ClaimStatus): ClaimStatus {
+  return status === "Insufficient Payment" ? "Pending" : status
+}
+
+export function claimShortfall(claim: Pick<ClaimRow, "shortfallAmount">) {
+  return claim.shortfallAmount && claim.shortfallAmount > 0
+    ? claim.shortfallAmount
+    : undefined
+}
+
 export function sellerOrderReceivedStatus(
   claimStatus: ClaimStatus,
   paymentStatus?: SellerPaymentReviewStatus,

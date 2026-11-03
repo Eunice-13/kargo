@@ -163,6 +163,10 @@ export type ClaimRow = {
 
   status: ClaimStatus;
 
+  // Amount still owed after an insufficient payment was reviewed. Only set
+  // while the order is in the `insufficient_payment` state.
+  shortfallAmount?: number;
+
   hours: number;
 
   expiresAt?: string;
@@ -296,6 +300,9 @@ export type PayHistRow = {
   date: string;
 
   status: PaymentHistoryStatus;
+
+  // Stored on the payment record when the seller rejects a short payment.
+  shortfallAmount?: number;
 
   referenceNumber?: string;
 

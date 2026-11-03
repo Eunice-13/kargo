@@ -33,6 +33,7 @@ import {
   Avatar,
   ProductThumb,
   StatusBadge,
+  InsufficientPaymentNotice,
   Countdown,
   BuyerProfileModal,
 } from "@/components/shared";
@@ -60,6 +61,10 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { kargoApi } from "@/services";
 
 import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry";
+import {
+  claimShortfall,
+  displayClaimStatus,
+} from "@/features/claims/claimPaymentState";
 
 export default function Dashboard({
   batches,
@@ -681,7 +686,11 @@ export default function Dashboard({
                         </td>
                         <td className="seller-order-amount">₱{claim.amount.toLocaleString()}</td>
                         <td>
-                          <StatusBadge status={claim.status} />
+                          <StatusBadge status={displayClaimStatus(claim.status)} />
+                          <InsufficientPaymentNotice
+                            shortfall={claimShortfall(claim)}
+                            compact
+                          />
                         </td>
                         <td
                           className={
@@ -987,7 +996,11 @@ export default function Dashboard({
                       ₱{c.amount.toLocaleString()}
                     </td>
                     <td className="py-2.5 pr-3">
-                      <StatusBadge status={c.status} />
+                      <StatusBadge status={displayClaimStatus(c.status)} />
+                      <InsufficientPaymentNotice
+                        shortfall={claimShortfall(c)}
+                        compact
+                      />
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
@@ -1176,7 +1189,11 @@ export default function Dashboard({
                         <span className="bdash-cell-amount">₱{c.amount.toLocaleString()}</span>
                       </td>
                       <td>
-                        <StatusBadge status={c.status} />
+                        <StatusBadge status={displayClaimStatus(c.status)} />
+                        <InsufficientPaymentNotice
+                          shortfall={claimShortfall(c)}
+                          compact
+                        />
                       </td>
                       <td>
                         {c.status === "Pending" && c.hours > 0 ? (

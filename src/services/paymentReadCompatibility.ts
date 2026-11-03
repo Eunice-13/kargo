@@ -2,10 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 type SchemaError = { code?: string; message?: string; details?: string };
 const legacyOrders =
-  "*,batch_products(name,batch_id,batches(title)),payments(id,amount,status,method_type,submitted_at,reference_number,receipt_path,payer_account_name,payer_phone,buyer_contact_url,rejection_reason,rejection_deadline)";
+  "*,batch_products(name,batch_id,batches(title)),payments(id,amount,status,method_type,submitted_at,reference_number,receipt_path,payer_account_name,payer_phone,buyer_contact_url,rejection_reason,rejection_deadline,shortfall_amount)";
 const combinedOrders = legacyOrders.replace(
-  "rejection_deadline)",
-  "rejection_deadline,combined_delivery_group_id,combined:combined_delivery_payment_reservations(order_id,orders(quantity,batch_products(name))))",
+  "shortfall_amount)",
+  "shortfall_amount,combined_delivery_group_id,combined:combined_delivery_payment_reservations(order_id,orders(quantity,batch_products(name))))",
 );
 const legacySubmissions =
   "*,orders!inner(id,total_amount,shipping_fee,buyer_id,group_order_id,batch_products(name),group_orders!orders_group_order_id_fkey(id,final_subtotal,shipping_fee,group_order_commitments(quantity)))";

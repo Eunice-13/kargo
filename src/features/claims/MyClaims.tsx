@@ -27,6 +27,7 @@ import {
   Avatar,
   ProductThumb,
   StatusBadge,
+  InsufficientPaymentNotice,
   Countdown,
   SH,
   BuyerProfileModal,
@@ -55,6 +56,8 @@ import { kargoApi } from "@/services";
 import { claimIsPayable } from "./claimExpiry";
 
 import {
+  claimShortfall,
+  displayClaimStatus,
   reconcileRejectedClaim,
   sellerOrderReceivedStatus,
   type SellerOrderReceivedStatus,
@@ -1098,13 +1101,22 @@ export default function MyClaims({
                       const status = statusForOrder(c);
 
                       const amountPaid =
-                        submission?.amountPaid && submission.status !== "Rejected"
+                        submission?.amountPaid &&
+                        (submission.status !== "Rejected" ||
+                          Number(submission.shortfallAmount ?? 0) > 0)
                           ? Number(submission.amountPaid)
                           : status === "Verified"
                             ? c.amount
                             : 0;
 
-                      const underpaid = amountPaid > 0 && amountPaid < c.amount;
+                      const shortfall =
+                        claimShortfall(c) ??
+                        (submission?.shortfallAmount && submission.shortfallAmount > 0
+                          ? submission.shortfallAmount
+                          : undefined);
+
+                      const underpaid =
+                        shortfall == null && amountPaid > 0 && amountPaid < c.amount;
 
                       const isCashOnMeetup = submission?.method === "Cash on Meetup";
 
@@ -1276,9 +1288,7 @@ export default function MyClaims({
                               <span style={{ background: badge.dot }} />
                               <span className="seller-orders-status__label">{status}</span>
                             </span>
-                            {c.status === "Insufficient Payment" && (
-                              <small style={{ color: "#92400E" }}>Insufficient payment</small>
-                            )}
+                            <InsufficientPaymentNotice shortfall={shortfall} compact />
                           </td>
                           <td>
                             <div className="seller-orders-actions">
@@ -1409,28 +1419,26 @@ export default function MyClaims({
             insuffAmtPaid={insufficientAmount}
             setInsuffAmtPaid={setInsufficientAmount}
             setVerifyItems={updateSellerPayments}
-            onConfirm={(paidAmt, shortAmt) => {
+            onConfirm={(_paidAmt, shortAmt) => {
               const item = insufficientTarget;
-              // Optimistically keep the payment as "Pending" in the seller's
-              // list — there's still a balance outstanding. The RPC marks the
-              // payment row as verified; because total paid < order amount, the
-              // server sets the order to `insufficient_payment` so the buyer
-              // sees "Insufficient Payment" and can top up.
-              updateSellerPayments((prev) =>
+              // The payment is rejected with a stored shortfall, never verified.
+              // Use setSellerPayments directly so the review diff cannot fire a
+              // competing verified/rejected RPC.
+              setSellerPayments((prev) =>
                 prev.map((v) =>
                   v.id === item.id
                     ? {
                         ...v,
-                        status: "Pending" as const,
-                        amountPaid: String(paidAmt),
-                        rejectReason: `Short ₱${shortAmt.toLocaleString()} — buyer notified.`,
+                        status: "Rejected" as const,
+                        shortfallAmount: shortAmt,
+                        rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
                       }
                     : v,
                 ),
               );
               if (isSupabaseConfigured) {
                 void kargoApi
-                  .markInsufficientPayment(String(item.id), item.groupOrderId)
+                  .markInsufficientPayment(String(item.id), shortAmt, item.groupOrderId)
                   .then(() => {
                     void refreshData().catch(() => {});
                     kargoApi
@@ -1805,7 +1813,7 @@ export default function MyClaims({
 
       date: TODAY,
 
-      status: isSupabaseConfigured ? "Pending" : "Paid and Reserved",
+      status: "Pending",
 
       referenceNumber: refNo || undefined,
 
@@ -1821,7 +1829,9 @@ export default function MyClaims({
     if (!isSupabaseConfigured)
       setClaims((prev) =>
         prev.map((c) =>
-          c.id === target.id ? { ...c, status: "Paid and Reserved" as ClaimStatus } : c,
+          c.id === target.id
+            ? { ...c, status: "Awaiting Verification" as ClaimStatus }
+            : c,
         ),
       );
 
@@ -1838,7 +1848,7 @@ export default function MyClaims({
 
       amount: target.amount,
 
-      step: 3,
+      step: 2,
     };
 
     if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev]);
@@ -2262,7 +2272,8 @@ export default function MyClaims({
                     </div>
                   </div>
                   <div className="claims-card__status">
-                    <StatusBadge status={c.status} />
+                    <StatusBadge status={displayClaimStatus(c.status)} />
+                    <InsufficientPaymentNotice shortfall={claimShortfall(c)} compact />
                   </div>
                 </div>
                 {c.status === "Pending" && c.hours > 0 && (
@@ -2522,7 +2533,8 @@ export default function MyClaims({
                       ₱{c.amount.toLocaleString()}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
-                      <StatusBadge status={c.status} />
+                      <StatusBadge status={displayClaimStatus(c.status)} />
+                      <InsufficientPaymentNotice shortfall={claimShortfall(c)} compact />
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       {c.status === "Pending" && c.hours > 0 ? (

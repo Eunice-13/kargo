@@ -36,8 +36,9 @@ export function claimIsPayable(claim: Expirable, now = Date.now()) {
 
 export function expireClaimRows(claims: ClaimRow[], now = Date.now()) {
   return claims.map((claim) =>
-    claim.status === "Pending" && deadlineHasPassed(claim, now)
-      ? { ...claim, status: "Expired" as const, hours: 0 }
+    (claim.status === "Pending" || claim.status === "Insufficient Payment") &&
+    deadlineHasPassed(claim, now)
+      ? { ...claim, status: "Expired" as const, hours: 0, shortfallAmount: undefined }
       : claim,
   )
 }

@@ -21,6 +21,24 @@ test("a resubmission after rejection returns the claim to awaiting verification"
   )
 })
 
+test("a rejected short payment stays insufficient instead of becoming a plain rejection", () => {
+  assert.equal(
+    effectiveOrderPaymentStatus("payment_submitted", [
+      { status: "rejected", submitted_at: "2026-09-28T10:00:00Z", shortfall_amount: 250 },
+    ]),
+    "insufficient_payment",
+  )
+})
+
+test("a new submission is awaiting verification until the seller reviews it", () => {
+  assert.equal(
+    effectiveOrderPaymentStatus("payment_submitted", [
+      { status: "pending_review", submitted_at: "2026-11-03T02:31:50Z" },
+    ]),
+    "payment_submitted",
+  )
+})
+
 test("payment decisions do not reopen terminal orders", () => {
   assert.equal(
     effectiveOrderPaymentStatus("completed", [
