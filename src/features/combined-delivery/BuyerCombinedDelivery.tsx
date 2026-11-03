@@ -7,6 +7,7 @@ import SecondaryBtn from "@/components/shared/SecondaryBtn";
 import useBuyerDeliveryRequests from "./useBuyerDeliveryRequests";
 import { latestDeliveryRequestForOrder, potentialDeliveryRequests } from "./requestEligibility";
 import CombinedPaymentCard from "./CombinedPaymentCard";
+import CombinedClaimRow from "./CombinedClaimRow";
 import CombinedDeliveryRequestDialog from "./CombinedDeliveryRequestDialog";
 
 export default function BuyerCombinedDelivery({
@@ -14,16 +15,21 @@ export default function BuyerCombinedDelivery({
   claims,
   imageForOrder,
   onRecovered,
+  showClaimRowsInsteadOfPaymentCards,
+  excludeAwaitingVerification,
   children,
 }: {
   buyerId?: string;
   claims: ClaimRow[];
   imageForOrder: (id: string) => string | undefined;
   onRecovered?: () => Promise<void>;
+  showClaimRowsInsteadOfPaymentCards?: boolean;
+  excludeAwaitingVerification?: boolean;
   children: (controls: {
     combinedPaymentOrder: (id: string) => boolean;
     requestForOrder: (id: string) => CombinedDeliveryRequest | undefined;
     openRequest: (request: CombinedDeliveryRequest) => void;
+    combinedRequests: CombinedDeliveryRequest[];
   }) => ReactNode;
 }) {
   const revision = JSON.stringify(
@@ -83,29 +89,33 @@ export default function BuyerCombinedDelivery({
         />
       )}
       <div className="pending-payments-list mb-3">
-        {state.requests
-          .filter(
-            (request) =>
-              state.available && request.payment && request.status === "shipping_fee_set",
-          )
-          .map((request) => (
-            <CombinedPaymentCard
-              key={request.id}
-              request={request}
-              actionsDisabled={state.loading || state.busy}
-              seller={
-                claims.find((claim) =>
-                  request.members.some((member) => member.order_id === String(claim.id)),
-                )?.seller ?? "Seller"
-              }
-              imageForOrder={imageForOrder}
-              onDetails={() => setDialog(request)}
-              onUpdated={async () => {
-                await state.reload();
-                await onRecovered?.();
-              }}
-            />
-          ))}
+        {!showClaimRowsInsteadOfPaymentCards &&
+          state.requests
+            .filter(
+              (request) =>
+                state.available &&
+                request.payment &&
+                request.status === "shipping_fee_set" &&
+                (!excludeAwaitingVerification || request.payment.status !== "pending_review"),
+            )
+            .map((request) => (
+              <CombinedPaymentCard
+                key={request.id}
+                request={request}
+                actionsDisabled={state.loading || state.busy}
+                seller={
+                  claims.find((claim) =>
+                    request.members.some((member) => member.order_id === String(claim.id)),
+                  )?.seller ?? "Seller"
+                }
+                imageForOrder={imageForOrder}
+                onDetails={() => setDialog(request)}
+                onUpdated={async () => {
+                  await state.reload();
+                  await onRecovered?.();
+                }}
+              />
+            ))}
       </div>
       {children({
         combinedPaymentOrder: (id) =>
@@ -115,6 +125,7 @@ export default function BuyerCombinedDelivery({
               request.status === "shipping_fee_set" &&
               request.payment &&
               ["ready", "pending_review", "rejected"].includes(request.payment.status) &&
+              (!excludeAwaitingVerification || request.payment.status !== "pending_review") &&
               request.members.some((member) => member.order_id === id && !member.released_at),
           ),
         requestForOrder: (id) =>
@@ -124,6 +135,14 @@ export default function BuyerCombinedDelivery({
           setDialog(request);
           void state.reload();
         },
+        combinedRequests: state.available
+          ? state.requests.filter(
+              (request) =>
+                request.payment &&
+                request.status === "shipping_fee_set" &&
+                (!excludeAwaitingVerification || request.payment.status !== "pending_review"),
+            )
+          : [],
       })}
       {dialog && buyerId && state.available && (
         <CombinedDeliveryRequestDialog

@@ -525,9 +525,10 @@ export default function MyClaims({
   const reconciledClaims = claims.map((claim) => reconcileRejectedClaim(claim, payHistory));
 
   const belongsToPendingPayments = (claim: ClaimRow) =>
-    claimIsPayable(claim) ||
-    claim.shippingState === "waiting_for_seller" ||
-    claim.shippingState === "correction_requested";
+    claim.status !== "Awaiting Verification" &&
+    (claimIsPayable(claim) ||
+      claim.shippingState === "waiting_for_seller" ||
+      claim.shippingState === "correction_requested");
 
   const claimsToPay = reconciledClaims
 
@@ -1890,6 +1891,7 @@ export default function MyClaims({
               key={user.id ?? user.email}
               buyerId={user.id}
               claims={reconciledClaims}
+              excludeAwaitingVerification
               onRecovered={refreshData}
               imageForOrder={(id) => {
                 const productId = reconciledClaims.find(
@@ -2208,9 +2210,60 @@ export default function MyClaims({
         </div>
       </div>
 
-      {isMobile || viewMode === "card" ? (
+      <BuyerCombinedDelivery
+        key={`claims-list-${user.id ?? user.email}`}
+        buyerId={user.id}
+        claims={reconciledClaims}
+        showClaimRowsInsteadOfPaymentCards={true}
+        onRecovered={refreshData}
+        imageForOrder={(id) => {
+          const productId = reconciledClaims.find(
+            (claim) => String(claim.id) === id,
+          )?.productId;
+          return productId
+            ? batches
+                .flatMap((batch) => batch.products)
+                .find((product) => product.dbId === productId)?.imageUrl
+            : undefined;
+        }}
+      >
+        {({ requestForOrder, openRequest, combinedPaymentOrder, combinedRequests }) => {
+          // Helper to get image for an order
+          const getImageForOrder = (id: string) => {
+            const productId = reconciledClaims.find(
+              (claim) => String(claim.id) === id,
+            )?.productId;
+            return productId
+              ? batches
+                  .flatMap((batch) => batch.products)
+                  .find((product) => product.dbId === productId)?.imageUrl
+              : undefined;
+          };
+          
+          // Create a unified list mixing regular claims and combined delivery placeholders
+          const itemsToShow: Array<ClaimRow | { type: "combined"; request: any }> = [];
+          const processedOrderIds = new Set<string>();
+          
+          // Add combined delivery items first (they'll be sorted with claims)
+          combinedRequests.forEach((request) => {
+            request.members.forEach((member: any) => {
+              processedOrderIds.add(member.order_id);
+            });
+            itemsToShow.push({ type: "combined" as const, request });
+          });
+          
+          // Add regular claims that aren't part of combined deliveries
+          filtered.forEach((claim) => {
+            if (!processedOrderIds.has(String(claim.id))) {
+              itemsToShow.push(claim);
+            }
+          });
+          
+          return (
+          <>
+            {isMobile || viewMode === "card" ? (
         <>
-          {filtered.length === 0 && (
+          {itemsToShow.length === 0 && (
             <div
               style={{
                 padding: "40px 0",
@@ -2229,7 +2282,92 @@ export default function MyClaims({
             className="grid gap-4 claims-card-grid"
             style={{ gridTemplateColumns: "repeat(2,1fr)" }}
           >
-            {filtered.map((c) => (
+            {itemsToShow.map((item) => {
+              if ("type" in item && item.type === "combined") {
+                const request = item.request;
+                const first = request.members[0];
+                const seller = reconciledClaims.find((claim) =>
+                  request.members.some((member: any) => member.order_id === String(claim.id)),
+                )?.seller ?? "Seller";
+                const account = request.payment;
+                const status = account?.status === "pending_review" ? "Awaiting Verification" : "Pending";
+                
+                return (
+                  <Card
+                    key={`combined-${request.id}`}
+                    recordKeys={recordKeys({
+                      combinedGroupId: request.id,
+                      orderIds: request.members.map((m: any) => m.order_id),
+                    })}
+                  >
+                    <div className="claims-card__summary flex items-start gap-3">
+                      <button
+                        type="button"
+                        className="buyer-claim-item-preview-trigger"
+                        aria-label="View combined delivery details"
+                        onClick={() => openRequest(request)}
+                      >
+                        <ProductThumb
+                          name="Combined Delivery"
+                          imageUrl={first ? getImageForOrder(first.order_id) : undefined}
+                        />
+                      </button>
+                      <div className="claims-card__info min-w-0 flex-1">
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: "#111827",
+                            fontFamily: "'Josefin Sans',sans-serif",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            className="buyer-claim-item-preview-name"
+                            onClick={() => openRequest(request)}
+                          >
+                            Combined Delivery · {request.members.length} {request.members.length === 1 ? "item" : "items"}
+                          </button>
+                        </div>
+                        <div
+                          className="claims-card__seller"
+                          style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
+                        >
+                          Seller: {seller}
+                        </div>
+                      </div>
+                      <div className="claims-card__status">
+                        <StatusBadge status={displayClaimStatus(status as any)} />
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 800,
+                          color: "#111827",
+                          fontFamily: "'Josefin Sans',sans-serif",
+                        }}
+                      >
+                        {account?.total ? `₱${Number(account.total).toLocaleString()}` : "—"}
+                      </span>
+                      <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
+                        View Order
+                      </SecondaryBtn>
+                    </div>
+                  </Card>
+                );
+              }
+              
+              const c = item as ClaimRow;
+              return (
               <Card
                 key={c.id}
                 recordKeys={recordKeys({ orderId: c.id, groupOrderId: c.groupOrderId })}
@@ -2410,7 +2548,8 @@ export default function MyClaims({
                   </div>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </>
       ) : (
@@ -2458,7 +2597,83 @@ export default function MyClaims({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((c, i) => (
+                {itemsToShow.map((item, i) => {
+                  if ("type" in item && item.type === "combined") {
+                    const request = item.request;
+                    const first = request.members[0];
+                    const seller = reconciledClaims.find((claim) =>
+                      request.members.some((member: any) => member.order_id === String(claim.id)),
+                    )?.seller ?? "Seller";
+                    const account = request.payment;
+                    const status = account?.status === "pending_review" ? "Awaiting Verification" : "Pending";
+                    
+                    return (
+                      <tr
+                        key={`combined-${request.id}`}
+                        data-record-keys={recordKeys({
+                          combinedGroupId: request.id,
+                          orderIds: request.members.map((m: any) => m.order_id),
+                        })}
+                        style={{
+                          borderTop: "1px solid #F3F4F6",
+                          background: i % 2 ? "#FAFAFA" : "#fff",
+                        }}
+                        className="hover:bg-blue-50 transition-colors cursor-pointer"
+                      >
+                        <td style={{ padding: "10px 14px" }}>
+                          <div className="flex items-center gap-2.5">
+                            <button
+                              type="button"
+                              className="buyer-claim-item-preview-trigger"
+                              aria-label="View combined delivery details"
+                              onClick={() => openRequest(request)}
+                            >
+                              <ProductThumb
+                                name="Combined Delivery"
+                                imageUrl={first ? getImageForOrder(first.order_id) : undefined}
+                              />
+                            </button>
+                            <button
+                              type="button"
+                              className="buyer-claim-item-preview-name"
+                              onClick={() => openRequest(request)}
+                            >
+                              Combined Delivery · {request.members.length} {request.members.length === 1 ? "item" : "items"}
+                            </button>
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}>
+                          {first?.order?.batches?.title ?? "—"}
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <div className="flex items-center gap-1.5">
+                            <Avatar name={seller} size={20} />
+                            <span style={{ fontSize: 12, color: "#374151" }}>{seller}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 14px", color: "#374151", fontSize: 12 }}>
+                          {request.members.length}
+                        </td>
+                        <td style={{ padding: "10px 14px", fontWeight: 700, color: "#111827" }}>
+                          {account?.total ? `₱${Number(account.total).toLocaleString()}` : "—"}
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <StatusBadge status={displayClaimStatus(status as any)} />
+                        </td>
+                        <td style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}>
+                          —
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
+                            View Order
+                          </SecondaryBtn>
+                        </td>
+                      </tr>
+                    );
+                  }
+                  
+                  const c = item as ClaimRow;
+                  return (
                   <tr
                     key={c.id}
                     data-record-keys={recordKeys({
@@ -2629,7 +2844,8 @@ export default function MyClaims({
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -2649,7 +2865,11 @@ export default function MyClaims({
             </div>
           )}
         </Card>
-      )}
+            )}
+          </>
+        );
+        }}
+      </BuyerCombinedDelivery>
       {showBatchCheckout && (
         <BatchCheckoutModal
           items={payableClaims.map((claim) => ({
