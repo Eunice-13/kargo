@@ -488,7 +488,7 @@ function FinancialReceipt({
       tabIndex={-1}
       style={{
         position: "fixed",
-        top: 56,
+        top: 0,
         left: 0,
         right: 0,
         bottom: 0,
@@ -497,7 +497,8 @@ function FinancialReceipt({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "16px",
+        // Cover the header too; the top padding keeps the dialog below it as before.
+        padding: "72px 16px 16px",
         boxSizing: "border-box",
       }}
       onClick={onClose}

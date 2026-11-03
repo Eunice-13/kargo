@@ -195,7 +195,12 @@ export default function Modal({
   return createPortal(
     <div
       className={`fi kargo-modal-overlay${isClosing ? " is-closing" : ""} ${overlayClassName}`}
-      style={{ top: topOffset }}
+      // The backdrop covers the whole screen, header included. The padding keeps the
+      // dialog centred in the space below the header, exactly as before.
+      style={{
+        top: 0,
+        paddingTop: `calc(${topOffset}px + clamp(12px, 2.4vw, 28px))`,
+      }}
       onClick={(event) => {
         if (event.target === event.currentTarget) requestClose()
       }}
