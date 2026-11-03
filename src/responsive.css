@@ -5659,11 +5659,10 @@ body > :not(#root) * {
 }
 
 @media (max-width: 767px) {
-  /* Keep the Users list compact on mobile; tapping a row opens the full modal. */
+  /* The bottom nav already names the tab; drop the big page title on mobile. */
   .admin-page--dashboard .admin-page-header h2,
   .admin-page:not(.admin-page--dashboard) .admin-page-header h2 {
-    font-size: 50px !important;
-    font-weight: 900 !important;
+    display: none !important;
   }
 
   .admin-users-table {
@@ -5733,7 +5732,7 @@ body > :not(#root) * {
   }
 }
 
-/* Admin Users: card list on mobile (collapsed + expanded), table on desktop. */
+/* Admin Users: single card list on mobile, table on desktop. */
 .admin-users-cards {
   display: none;
 }
@@ -5753,6 +5752,7 @@ body > :not(#root) * {
     padding: 12px;
     display: grid;
     gap: 10px;
+    cursor: pointer;
   }
   .admin-ucard__top {
     display: flex;
@@ -5777,34 +5777,6 @@ body > :not(#root) * {
     color: var(--kargo-muted);
     overflow-wrap: anywhere;
   }
-  .admin-ucard__toggle {
-    flex: 0 0 auto;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 0;
-    background: #eef2fb;
-    color: #3b4bb8;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-  }
-  .admin-ucard__meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .admin-ucard__badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .admin-ucard__badges .admin-badge {
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: 700;
-  }
   .admin-ucard__gmv {
     display: grid;
     text-align: right;
@@ -5820,80 +5792,17 @@ body > :not(#root) * {
     font-weight: 600;
     color: var(--kargo-muted);
   }
-  .admin-ucard__body {
-    display: grid;
-    gap: 8px;
-  }
-  .admin-ucard__stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .admin-ucard__stat {
+  .admin-ucard__toggle {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 0;
     background: #eef2fb;
-    border: 1px solid #dde3f5;
-    border-radius: 12px;
-    padding: 10px;
+    color: #3b4bb8;
     display: grid;
-    align-content: start;
-    gap: 2px;
-    min-width: 0;
-  }
-  .admin-ucard__stat strong {
-    font-size: 18px;
-    font-weight: 800;
-    color: #3b4bb8;
-  }
-  .admin-ucard__stat span {
-    font-size: 11px;
-    white-space: nowrap;
-    font-weight: 600;
-    color: var(--kargo-muted);
-  }
-  .admin-ucard__facts {
-    margin: 0;
-    border-top: 1px solid var(--kargo-line);
-  }
-  .admin-ucard__facts > div {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 9px 2px 2px;
-  }
-  .admin-ucard__shopline {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-top: 10px;
-    border-top: 1px solid var(--kargo-line);
-    color: #3b4bb8;
-  }
-  .admin-ucard__shopline strong {
-    font-size: 14px;
-    font-weight: 800;
-    color: #000;
-    overflow-wrap: anywhere;
-  }
-  .admin-ucard__shopline span {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--kargo-muted);
-  }
-  .admin-ucard__facts dt {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--kargo-muted);
-  }
-  .admin-ucard__facts dd {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 700;
-    color: #000;
-    text-align: right;
-    overflow-wrap: anywhere;
-  }
-  .admin-ucard__facts dd.is-muted {
-    color: var(--kargo-muted);
+    place-items: center;
+    cursor: pointer;
   }
   .admin-ucard__details {
     width: 100%;
@@ -5905,6 +5814,51 @@ body > :not(#root) * {
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
+  }
+  .admin-ucard__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .admin-ucard__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .admin-ucard .admin-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .admin-ucard__shop {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: #3b4bb8;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .admin-ucard__shop strong {
+    font-size: 13px;
+    font-weight: 800;
+    color: #000;
+    overflow-wrap: anywhere;
+  }
+  .admin-ucard__shop > span {
+    color: var(--kargo-muted);
+    flex: 0 0 auto;
+  }
+  .admin-ucard__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--kargo-line);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--kargo-muted);
   }
 }
 
@@ -6017,8 +5971,9 @@ body > :not(#root) * {
 @media (max-width: 767px) {
   /* Keep the whole record modal (incl. sticky action footer) above the bottom nav. */
   .admin-modal-overlay.admin-record-modal-overlay {
-    align-items: flex-start !important;
+    align-items: center !important;
     padding-top: calc(12px + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
   }
   .admin-record-modal {
     max-height: calc(
@@ -6040,163 +5995,12 @@ body > :not(#root) * {
   flex-basis: 64px;
   font-size: 12.5px;
 }
-
-/* Buyer-facing storefront only. Keep tablet/desktop and shared cards untouched. */
-@media (max-width: 640px) {
-  .kargo-original-app:has(.seller-shop-view) {
-    --seller-shop-header-height: calc(56px + env(safe-area-inset-top));
-    --seller-shop-chrome: linear-gradient(90deg, #1719b4 0%, #3852bd 49%, #6995d7 100%);
-  }
-
-  .kargo-original-app:has(.seller-shop-view) .kargo-header {
-    height: var(--seller-shop-header-height) !important;
-    min-height: var(--seller-shop-header-height) !important;
-    padding-inline: 12px !important;
-    border: 0 !important;
-    background: var(--seller-shop-chrome) !important;
-    box-shadow: none !important;
-  }
-
-  .seller-shop-view .seller-shop-breadcrumb {
-    top: var(--seller-shop-header-height, calc(56px + env(safe-area-inset-top))) !important;
-    width: 100%;
-    min-width: 0;
-    min-height: 52px;
-    padding: 4px 12px !important;
-    background: var(--seller-shop-chrome) !important;
-    border-bottom: 0 !important;
-    box-shadow: 0 3px 8px rgba(23, 25, 180, 0.12);
-  }
-
-  .seller-shop-view .seller-shop-breadcrumb > button {
-    flex: 0 0 auto;
-    min-height: 44px;
-    padding: 8px 0;
-    color: #fff !important;
-    white-space: nowrap;
-  }
-
-  .seller-shop-view .seller-shop-breadcrumb > span:first-of-type {
-    flex: 0 0 auto;
-    color: rgba(255, 255, 255, 0.6) !important;
-  }
-
-  .seller-shop-view .seller-shop-breadcrumb > span:last-child {
-    min-width: 0;
-    overflow: hidden;
-    color: #fff !important;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .kargo-original-app main .seller-shop-view > .seller-shop-content {
-    padding: 16px !important;
-  }
-
-  .seller-shop-view .seller-shop-page {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-
-  .seller-shop-view .seller-shop-page > * {
-    margin-block: 0 !important;
-  }
-
-  /* Extra specificity is intentional: shared card padding is !important. */
-  .kargo-original-app main .seller-shop-view .seller-shop-header-card {
-    padding: 0 !important;
-    overflow: hidden;
-    border-radius: 14px !important;
-  }
-
-  .seller-shop-view .seller-shop-header-banner {
-    padding: 20px !important;
-    gap: 16px 14px !important;
-  }
-
-  .seller-shop-view .seller-shop-identity {
-    min-width: 0 !important;
-  }
-
-  .seller-shop-view .seller-shop-name {
-    font-size: 21px !important;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
-  }
-
-  .seller-shop-view .seller-shop-identity > div + div {
-    margin-top: 8px !important;
-    line-height: 1.5;
-  }
-
-  .seller-shop-view .seller-shop-contact {
-    flex: 0 0 100%;
-    min-width: 0;
-  }
-
-  .seller-shop-view .seller-shop-contact > button {
-    justify-content: center;
-    width: 100%;
-    min-height: 44px;
-    padding: 12px 18px !important;
-    line-height: 1.4;
-  }
-
-  .seller-shop-view .seller-shop-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    border-color: #e5e7eb !important;
-  }
-
-  .seller-shop-view .seller-shop-stats > div {
-    min-width: 0;
-    padding: 16px 6px !important;
-    border-color: #e5e7eb !important;
-  }
-
-  .seller-shop-view .seller-shop-stats > div > div:first-child {
-    font-size: 17px !important;
-    line-height: 1.3;
-    overflow-wrap: anywhere;
-  }
-
-  .seller-shop-view .seller-shop-stats > div > div:last-child {
-    margin-top: 5px !important;
-    font-size: 12px !important;
-    line-height: 1.4;
-    color: #6b7280 !important;
-  }
-
-  .seller-shop-view .seller-shop-stats svg {
-    flex-shrink: 0;
-    width: 12px;
-    height: 12px;
-  }
-
-  .seller-shop-view .seller-shop-tabs {
-    min-width: 0;
-    max-width: 100%;
-    gap: 4px !important;
-    padding-bottom: 0 !important;
-    /* Local covers reveal the scroll shadows only when there is more to see. */
-    background:
-      linear-gradient(to right, var(--kargo-canvas) 30%, transparent) left / 24px 100% local,
-      linear-gradient(to left, var(--kargo-canvas) 30%, transparent) right / 24px 100% local,
-      radial-gradient(farthest-side at 0 50%, rgba(25, 27, 169, 0.18), transparent) left / 8px 100%
-        scroll,
-      radial-gradient(farthest-side at 100% 50%, rgba(25, 27, 169, 0.18), transparent) right / 8px
-        100% scroll;
-    background-repeat: no-repeat;
-  }
-
-  .seller-shop-view .seller-shop-tabs > button {
-    flex: 0 0 auto;
-    min-height: 48px !important;
-    padding: 12px 14px !important;
-    line-height: 1.4;
-  }
-
   .seller-shop-view .seller-shop-tabs > button[aria-current="page"] {
     border-bottom-width: 3px !important;
   }
+}
+
+/* Admin Batches: card list on mobile (collapsed + expanded), table on desktop. */
+.admin-batches-cards {
+  display: none;
 }

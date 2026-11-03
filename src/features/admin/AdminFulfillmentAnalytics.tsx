@@ -10,6 +10,7 @@ import type {
 import { useAdminResource } from "./useAdminResource";
 import {
   ANALYTICS_STAGES,
+  AWAITING_PAYMENT_KEYS,
   PERIODS,
   analyticsTimestamp,
   bucketCount,
@@ -278,7 +279,41 @@ function AnalyticsResults({
     countingMode === "current"
       ? currentData!.counts.delivered
       : bucketCount(data.stageTotals, "delivered");
-  const deliveryPercent = cohortSize ? Math.round((deliveryCount / cohortSize) * 100) : null;
+  const percentOf = (count: number) =>
+    cohortSize ? `${Math.round((count / cohortSize) * 100)}%` : "—";
+  // Current status looks at every order created in the range, so it also reports how many
+  // are still awaiting payment. Reached stage only covers payment-confirmed orders.
+  const awaitingCount =
+    countingMode === "current"
+      ? AWAITING_PAYMENT_KEYS.reduce((sum, key) => sum + (currentData!.counts[key] ?? 0), 0)
+      : 0;
+  const reachedCount = (stage: Stage) => bucketCount(data.stageTotals, stage);
+  const summaryCards =
+    countingMode === "current"
+      ? [
+          { value: cohortSize.toLocaleString(), label: "Orders created in range" },
+          { value: percentOf(awaitingCount), label: `Awaiting Payment (${awaitingCount})` },
+          { value: percentOf(deliveryCount), label: `Reached delivery (${deliveryCount})` },
+        ]
+      : [
+          { value: cohortSize.toLocaleString(), label: "Orders created in range" },
+          {
+            value: percentOf(reachedCount("payment_confirmed")),
+            label: `Reached payment (${reachedCount("payment_confirmed")})`,
+          },
+          { value: percentOf(deliveryCount), label: `Reached delivery (${deliveryCount})` },
+        ];
+  const hasOrders = cohortSize > 0;
+  // An older database function lacks the awaiting-payment buckets. Say so, instead of
+  // quietly drawing zeros for orders that are awaiting payment.
+  const missingDbUpdate =
+    countingMode === "current"
+      ? currentData != null && !("payment_pending" in currentData.counts)
+      : !("payment_pending" in data.stageTotals);
+  const missingMigration =
+    countingMode === "current"
+      ? "202611100002_fulfillment_current_status_all_orders.sql"
+      : "202611100003_fulfillment_reached_all_orders.sql";
   const trendData =
     countingMode === "current"
       ? {
@@ -300,15 +335,16 @@ function AnalyticsResults({
   return (
     <>
       <div className="fulfillment-analytics__content-grid">
-        <div className="fulfillment-analytics__summary">
-          <div>
-            <strong>{cohortSize.toLocaleString()}</strong>
-            <span>orders in cohort</span>
-          </div>
-          <div>
-            <strong>{deliveryPercent === null ? "—" : `${deliveryPercent}%`}</strong>
-            <span>reached delivery</span>
-          </div>
+        <div
+          className="fulfillment-analytics__summary"
+          style={{ ["--kpis" as string]: summaryCards.length }}
+        >
+          {summaryCards.map((card) => (
+            <div key={card.label}>
+              <strong>{card.value}</strong>
+              <span>{card.label}</span>
+            </div>
+          ))}
         </div>
         <div className="fulfillment-analytics__main-column">
           <p className="fulfillment-analytics__definition">
@@ -317,10 +353,8 @@ function AnalyticsResults({
               : PERIODS.find(([key]) => key === filters.period)?.[1]}{" "}
             · Grouped by {data.grouping === "hour" ? "hour" : data.grouping} (Manila time).{" "}
             {countingMode === "current"
-              ? "Where orders are right now. Each order is counted once, in its latest stage. Orders without payment confirmation are not included."
-              : "Orders that reached each stage are counted. An order can appear in several stages, so percentages add up to more than 100%."}{" "}
-            {(data.excludedOrders ?? 0).toLocaleString()} orders excluded by the recorded-history
-            boundary.
+              ? "Every order created in this range, paid or not. Each order is counted once, in its latest status."
+              : "Every order created in this range, counted in every stage it has reached. An order can appear in several stages, so percentages add up to more than 100%."}
           </p>
           <div className="fulfillment-analytics__chart-header-row">
             {chartMode === "bars" ? (
@@ -567,12 +601,23 @@ function AnalyticsResults({
               )}
             </div>
           </div>
-          {!data.totalEntries && (
+          {missingDbUpdate && (
+            <p
+              className="fulfillment-analytics__notice fulfillment-analytics__notice--error"
+              role="status"
+            >
+              Orders awaiting payment can’t be counted yet. The database is missing the latest
+              analytics update ({missingMigration}).
+            </p>
+          )}
+          {!hasOrders && (
             <p
               className="fulfillment-analytics__notice fulfillment-analytics__notice--empty"
               role="status"
             >
-              No cohort orders are available in this range. Try another date range.
+              {countingMode === "current"
+                ? "No orders were created in this range. Try another date range."
+                : "No cohort orders are available in this range. Try another date range."}
             </p>
           )}
           {chartMode === "trend" ? (
@@ -601,7 +646,7 @@ function AnalyticsResults({
           {chartMode === "trend"
             ? `Orders per day, grouped by ${data.grouping} (Manila time).`
             : countingMode === "current"
-              ? `Each order counted once, in its latest stage · Recording began ${analyticsTimestamp(data.captureStartedAt)}`
+              ? `Each order is counted once, in its latest status, so percentages add up to 100%. · Recording began ${analyticsTimestamp(data.captureStartedAt)}`
               : `An order counts in every stage it has reached · Recording began ${analyticsTimestamp(data.captureStartedAt)}`}
         </p>
       </footer>

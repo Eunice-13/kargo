@@ -15,6 +15,7 @@ export default function AdminProfile({ user, onClose }: { user: UserInfo; onClos
   return (
     <Modal
       title="My profile"
+      showTitleIcon={false}
       variant="detail"
       width={520}
       className="admin-modal"

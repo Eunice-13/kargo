@@ -1,20 +1,75 @@
 import type {
   FulfillmentAnalytics,
   FulfillmentAnalyticsStage as Stage,
+  FulfillmentCurrentStatusStage,
 } from "@/types/fulfillmentAnalytics";
 
 export type FulfillmentAnalyticsView = "trend" | "reached" | "current";
 export type FulfillmentCountingMode = "current" | "reached";
 export type FulfillmentChartMode = "bars" | "trend";
 
-export const ANALYTICS_STAGES: { key: Stage; label: string; color: string; dash?: string }[] = [
-  { key: "payment_confirmed", label: "Payment confirmed", color: "#191BA9", dash: "3 3" },
-  { key: "preparing", label: "Preparing", color: "#B4690E" },
-  { key: "shipped", label: "Shipped", color: "#2563EB" },
-  { key: "delivered", label: "Delivered", color: "#0B8C69" },
-  { key: "cancelled", label: "Cancelled", color: "#B42318", dash: "4 3" },
-  { key: "expired", label: "Expired", color: "#64748B", dash: "2 4" },
+// Stages shared by Current status and Reached stage: orders awaiting payment, in
+// fulfillment, or closed without delivery. Both views start from every order created in
+// the range; they differ only in whether an order counts once (current) or in every
+// stage it has reached (reached).
+export type CurrentStageGroupId = "awaiting" | "fulfillment" | "closed";
+export const CURRENT_STAGE_GROUPS: { id: CurrentStageGroupId; title: string; line: string }[] = [
+  { id: "awaiting", title: "Awaiting payment", line: "#E8A317" },
+  { id: "fulfillment", title: "Fulfillment", line: "#A5B4FC" },
+  { id: "closed", title: "Closed without delivery", line: "#FCA5A5" },
 ];
+export const CURRENT_STAGES: {
+  key: FulfillmentCurrentStatusStage;
+  label: string;
+  color: string;
+  group: CurrentStageGroupId;
+  /** Needs an admin to look at it (payment proof to verify or fix). */
+  review?: boolean;
+}[] = [
+  { key: "payment_pending", label: "Payment pending", color: "#F0C94A", group: "awaiting" },
+  {
+    key: "payment_submitted",
+    label: "Payment submitted",
+    color: "#E8A317",
+    group: "awaiting",
+    review: true,
+  },
+  {
+    key: "insufficient_payment",
+    label: "Insufficient payment",
+    color: "#C2410C",
+    group: "awaiting",
+    review: true,
+  },
+  { key: "payment_confirmed", label: "Payment confirmed", color: "#4F46E5", group: "fulfillment" },
+  { key: "preparing", label: "Preparing", color: "#0EA5E9", group: "fulfillment" },
+  { key: "shipped", label: "Shipped", color: "#2563EB", group: "fulfillment" },
+  { key: "delivered", label: "Delivered", color: "#0B8C69", group: "fulfillment" },
+  { key: "expired", label: "Expired", color: "#64748B", group: "closed" },
+  { key: "cancelled", label: "Cancelled", color: "#DC2626", group: "closed" },
+];
+export const AWAITING_PAYMENT_KEYS: FulfillmentCurrentStatusStage[] = [
+  "payment_pending",
+  "payment_submitted",
+  "insufficient_payment",
+];
+
+// Reached stage and the trend chart use the same stages, labels and colours as Current
+// status, so one order reads the same everywhere. Only the line style is trend-specific.
+const STAGE_DASH: Partial<Record<Stage, string>> = {
+  payment_pending: "2 3",
+  insufficient_payment: "5 3",
+  payment_confirmed: "3 3",
+  cancelled: "4 3",
+  expired: "2 4",
+};
+export const ANALYTICS_STAGES: { key: Stage; label: string; color: string; dash?: string }[] =
+  CURRENT_STAGES.map((s) => ({
+    key: s.key as Stage,
+    label: s.label,
+    color: s.color,
+    dash: STAGE_DASH[s.key as Stage],
+  }));
 export const PERIODS = [
   ["today", "Today"],
   ["last_7_days", "Last 7 Days"],

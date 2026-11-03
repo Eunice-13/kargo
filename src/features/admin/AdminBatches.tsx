@@ -14,6 +14,7 @@ import {
   AdminSelect,
   AdminBadge,
   AdminEmptyState,
+  AdminFilterSheet,
 } from "./components";
 import { AdminErrorState } from "./components/AdminStates";
 import AdminBatchDetailModal from "./components/AdminBatchDetailModal";
@@ -28,6 +29,7 @@ export default function AdminBatches() {
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminBatchRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     const intent = consumeAdminIntent();
@@ -74,7 +76,41 @@ export default function AdminBatches() {
         search={search}
         onSearch={setSearch}
         searchPlaceholder="Search title, seller, or batch ID"
+        className="admin-filter-bar--sheet"
       >
+        <AdminFilterSheet
+          noun={["batch", "batches"]}
+          count={loading && offset === 0 ? null : total}
+          groups={[
+            {
+              key: "status",
+              label: "Status",
+              value: status,
+              defaultValue: "all",
+              onChange: setStatus,
+              options: [
+                { value: "all", label: "All" },
+                { value: "live", label: "Live", dot: toneForStatus("live").dot },
+                { value: "locked", label: "Locked", dot: toneForStatus("locked").dot },
+                { value: "closed", label: "Closed", dot: toneForStatus("closed").dot },
+              ],
+            },
+            {
+              key: "moderation",
+              label: "Moderation",
+              value: moderation,
+              defaultValue: "all",
+              onChange: setModeration,
+              options: [
+                { value: "all", label: "All" },
+                { value: "flagged_hidden", label: "Flagged or hidden" },
+                { value: "visible", label: "Visible", dot: "#3EB489" },
+                { value: "flagged", label: "Flagged", dot: "#E0B341" },
+                { value: "hidden", label: "Hidden", dot: "#A06BD1" },
+              ],
+            },
+          ]}
+        />
         <AdminSelect value={status} onChange={setStatus} ariaLabel="Filter by status">
           <option value="all">All statuses</option>
           <option value="live">Live</option>
@@ -111,7 +147,126 @@ export default function AdminBatches() {
 
       {!error && rows.length > 0 && (
         <Card className="!p-0 overflow-hidden">
-          <div style={{ overflowX: "auto" }}>
+          <div className="admin-batches-cards">
+            {rows.map((b) => {
+              const open = expanded === b.id;
+              const pct = b.totalQty > 0 ? Math.min(100, (b.claimedQty / b.totalQty) * 100) : 0;
+              const claimed = (
+                <span className="admin-bcard__claimed">
+                  <strong>
+                    {b.claimedQty}/{b.totalQty}
+                  </strong>
+                  <span className="admin-bcard__bar" aria-hidden="true">
+                    <span style={{ width: `${pct}%` }} />
+                  </span>
+                </span>
+              );
+              return (
+                <article key={b.id} className={`admin-bcard${open ? " is-open" : ""}`}>
+                  <div className="admin-bcard__top">
+                    {b.coverPath ? (
+                      <BatchMedia
+                        src={b.coverPath ?? undefined}
+                        alt=""
+                        width={96}
+                        height={64}
+                        style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 12,
+                          objectFit: "cover",
+                          flex: "0 0 auto",
+                        }}
+                      />
+                    ) : (
+                      <span className="admin-bcard__thumb" aria-hidden="true" />
+                    )}
+                    <div className="admin-bcard__who">
+                      <div className="admin-bcard__title">{b.title}</div>
+                      <div className="admin-bcard__seller">
+                        <Avatar name={b.sellerName} size={20} />
+                        <span>
+                          {b.sellerName} · {b.category}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="admin-ucard__toggle"
+                      aria-expanded={open}
+                      aria-label={open ? `Collapse ${b.title}` : `Expand ${b.title}`}
+                      onClick={() => setExpanded(open ? null : b.id)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                        <path
+                          d={open ? "M3 10l5-5 5 5" : "M3 6l5 5 5-5"}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {!open && (
+                    <div className="admin-bcard__meta">
+                      <div className="admin-bcard__badges">
+                        <AdminBadge tone={toneForStatus(b.status)} label={b.status} />
+                        <AdminBadge
+                          tone={MOD_TONE[b.moderationStatus]}
+                          label={b.moderationStatus}
+                        />
+                      </div>
+                      <span className="admin-bcard__summary">
+                        {claimed}
+                        <span>claimed</span>
+                      </span>
+                    </div>
+                  )}
+
+                  {open && (
+                    <div className="admin-bcard__body">
+                      <dl className="admin-bcard__panel">
+                        <div>
+                          <dt>Category</dt>
+                          <dd>{b.category}</dd>
+                        </div>
+                        <div>
+                          <dt>Claimed</dt>
+                          <dd>{claimed}</dd>
+                        </div>
+                        <div>
+                          <dt>Status</dt>
+                          <dd>
+                            <AdminBadge tone={toneForStatus(b.status)} label={b.status} />
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Moderation</dt>
+                          <dd>
+                            <AdminBadge
+                              tone={MOD_TONE[b.moderationStatus]}
+                              label={b.moderationStatus}
+                            />
+                          </dd>
+                        </div>
+                      </dl>
+                      <button
+                        type="button"
+                        className="admin-ucard__details"
+                        onClick={() => setSelected(b.id)}
+                      >
+                        View details ›
+                      </button>
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+          <div className="admin-batches-table-wrap" style={{ overflowX: "auto" }}>
             <table
               className="admin-batches-table"
               style={{ width: "100%", borderCollapse: "collapse" }}

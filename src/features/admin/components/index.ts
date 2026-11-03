@@ -11,3 +11,5 @@ export { AdminFact, AdminFactGrid, AdminModalSection, AdminEmptyText } from "./A
 export { default as AdminPanelHeader } from "./AdminPanelHeader";
 export { adminActionTone, default as AdminActionButton } from "./AdminActionButton";
 export type { AdminActionKind, AdminActionTone } from "./AdminActionButton";
+export { default as AdminFilterSheet } from "./AdminFilterSheet";
+export type { FilterGroup, FilterOption } from "./AdminFilterSheet";

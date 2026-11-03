@@ -191,6 +191,7 @@ export default function Header({
           onLogout={onLogout}
           onApplyToSell={isAdmin ? undefined : onApplyToSell}
           displayLabel={isAdmin ? "Admin" : "User"}
+          hideViewProfile={isAdmin}
         />
       </div>
     </header>

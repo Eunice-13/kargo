@@ -27,18 +27,6 @@ const relativeTime = (iso: string) => {
   return `${Math.round(hrs / 24)}d ago`;
 };
 
-const PIPELINE_META: Record<string, { label: string; tone: string }> = {
-  payment_pending: { label: "Awaiting payment", tone: "#B4690E" },
-  payment_submitted: { label: "Awaiting review", tone: "#191BA9" },
-  insufficient_payment: { label: "Insufficient payment", tone: "#B42318" },
-  payment_confirmed: { label: "Payment confirmed", tone: "#0B7A59" },
-  preparing: { label: "Preparing", tone: "#0E7490" },
-  completed: { label: "Completed", tone: "#15803D" },
-  cancelled: { label: "Cancelled", tone: "#9CA3AF" },
-  expired: { label: "Expired", tone: "#9CA3AF" },
-  incomplete: { label: "Incomplete", tone: "#B42318" },
-};
-
 export default function AdminDashboard({ setTab }: SharedState) {
   const { data, loading, error, accessDenied, refresh } = useAdminResource(
     () => adminApi.dashboard(),
@@ -50,8 +38,6 @@ export default function AdminDashboard({ setTab }: SharedState) {
     requestAdminSection(opts);
     setTab(opts.tab);
   };
-
-  const pipeline = data?.pipeline ?? [];
 
   return (
     <div className="p-6 admin-page admin-page--dashboard">
@@ -118,13 +104,8 @@ export default function AdminDashboard({ setTab }: SharedState) {
 
       {!loading && !error && data && (
         <>
-          {/* Order pipeline + recent activity + top sellers */}
+          {/* Recent activity + top shops */}
           <div className="admin-grid">
-            <PipelineChart
-              rows={pipeline}
-              onViewOrders={() => goto({ tab: "Transactions", subtab: "Orders" })}
-            />
-
             <Card className="admin-activity-card">
               <AdminPanelHeader
                 title="Recent admin activity"
@@ -194,68 +175,5 @@ export default function AdminDashboard({ setTab }: SharedState) {
         </>
       )}
     </div>
-  );
-}
-
-function PipelineChart({
-  rows,
-  onViewOrders,
-}: {
-  rows: { status: string; count: number }[];
-  onViewOrders: () => void;
-}) {
-  const visible = rows.filter((row) => row.count > 0);
-  const total = visible.reduce((sum, row) => sum + row.count, 0);
-  const max = Math.max(1, ...visible.map((row) => row.count));
-
-  return (
-    <Card className="admin-pipeline-card">
-      <div className="admin-chart-head">
-        <div>
-          <h2 className="admin-chart-title">Where orders stand</h2>
-          <p className="admin-chart-sub">
-            {total > 0
-              ? `${total.toLocaleString()} orders created in the last 30 days.`
-              : "Orders created in the last 30 days."}
-          </p>
-        </div>
-        <button type="button" className="admin-chart-link" onClick={onViewOrders}>
-          View orders <ArrowUpRight size={13} aria-hidden="true" />
-        </button>
-      </div>
-
-      {visible.length === 0 ? (
-        <p style={{ color: "var(--kargo-muted)", fontSize: 13 }}>No orders in the last 30 days.</p>
-      ) : (
-        <ul className="admin-pipeline">
-          {visible.map((row) => {
-            const meta = PIPELINE_META[row.status] ?? {
-              label: row.status.replace(/_/g, " "),
-              tone: "#9CA3AF",
-            };
-            const share = total > 0 ? Math.round((row.count / total) * 100) : 0;
-            return (
-              <li key={row.status} className="admin-pipeline__row">
-                <div className="admin-pipeline__labels">
-                  <span>{meta.label}</span>
-                  <span>
-                    {row.count.toLocaleString()} · {share}%
-                  </span>
-                </div>
-                <div className="admin-pipeline__track">
-                  <div
-                    className="admin-pipeline__fill"
-                    style={{
-                      width: `${Math.max((row.count / max) * 100, 2)}%`,
-                      background: meta.tone,
-                    }}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </Card>
   );
 }
