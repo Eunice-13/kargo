@@ -8086,3 +8086,172 @@ body > :not(#root) * {
     max-width: none;
   }
 }
+
+/* Small phones: card lists must never be wider than the screen.
+   Grid items default to min-width:auto, so one unbreakable row (pills, a shop name)
+   used to stretch every card past the edge and get clipped. */
+@media (max-width: 767px) {
+  .admin-users-cards,
+  .admin-batches-cards,
+  .admin-orders-cards,
+  .admin-audit-cards,
+  .admin-team-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-ucard,
+  .admin-bcard,
+  .admin-ocard,
+  .admin-acard,
+  .admin-tcard {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .admin-ucard__top > *,
+  .admin-bcard__top > *,
+  .admin-ocard__top > *,
+  .admin-acard__top > *,
+  .admin-tcard__top > * {
+    min-width: 0;
+  }
+}
+
+/* Under ~360px there is no room for side-by-side rows, so let them wrap. */
+@media (max-width: 359px) {
+  .admin-ucard,
+  .admin-bcard,
+  .admin-ocard,
+  .admin-acard,
+  .admin-tcard {
+    padding: 10px;
+    border-radius: 14px;
+  }
+  .admin-users-cards,
+  .admin-batches-cards,
+  .admin-orders-cards,
+  .admin-audit-cards,
+  .admin-team-cards {
+    padding: 6px;
+  }
+
+  /* Users */
+  .admin-ucard__top {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .admin-ucard__gmv {
+    order: 5;
+    flex: 1 1 100%;
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 6px;
+    text-align: left;
+  }
+  .admin-ucard__meta {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .admin-ucard__badges {
+    flex-wrap: wrap;
+  }
+  .admin-ucard__shop {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+  .admin-ucard__shop strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .admin-ucard__foot {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  /* Batches */
+  .admin-bcard__meta {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .admin-bcard__summary {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+  .admin-bcard__panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Orders */
+  .admin-ocard__meta {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .admin-ocard__foot {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  /* Audit log */
+  .admin-acard__meta {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .admin-acard__target {
+    flex: 1 1 100%;
+    text-align: left;
+  }
+
+  /* Team */
+  .admin-tcard__top {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .admin-tcard__revoke {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .admin-tcard__foot {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+}
+
+/* Very small phones. */
+@media (max-width: 359px) {
+  /* Avatar, name and arrow stay on one row; only the amount drops to its own line.
+     A zero flex-basis stops the long email from forcing the arrow onto a new row. */
+  .admin-ucard__who,
+  .admin-bcard__who,
+  .admin-ocard__who,
+  .admin-acard__who,
+  .admin-tcard__who {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .admin-ucard__email,
+  .admin-tcard__email {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Bottom nav: five labels in under 300px must not run into each other. */
+  .admin-tabbar .kargo-tab-label {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 9px;
+    letter-spacing: -0.02em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .admin-tabbar__item {
+    padding-right: 1px !important;
+    padding-left: 1px !important;
+  }
+
+  /* Header: let the "Admin console" pill shrink instead of pushing the avatar away. */
+  .admin-shell-header .kargo-admin-badge,
+  .admin-shell-header [class*="admin-console"] {
+    min-width: 0;
+  }
+}
