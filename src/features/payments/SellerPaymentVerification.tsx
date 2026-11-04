@@ -428,7 +428,7 @@ export default function SellerPaymentVerification({
                 >
                   <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
                     <div className={showAmountPaid ? "flex items-center gap-2" : "seller-product-cell"}>
-                      <ProductThumb name={item.product} />
+                      <ProductThumb name={item.product} imageUrl={item.imageUrl} />
                       <span>{item.product}</span>
                     </div>
                   </td>

@@ -2933,6 +2933,8 @@ export async function loadSellerPaymentSubmissions() {
 
     buyer: names.get(row.orders.buyer_id) ?? "Buyer",
 
+    imageUrl: batchMediaUrl(row.orders.batch_products?.image_path),
+
     product: row.combined_delivery_group_id
       ? `Combined delivery · ${(row.combined ?? []).map((link: any) => `${link.orders?.batch_products?.name ?? "Product"} × ${link.orders?.quantity ?? "—"}`).join(", ")}`
       : row.orders.group_order_id
