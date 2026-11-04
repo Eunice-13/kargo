@@ -60,6 +60,10 @@ import PopularBatchesCard from "./PopularBatchesCard";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 import { kargoApi } from "@/services";
+import {
+  countPendingExtensionRequests,
+  createDemoSellerExtensionRequests,
+} from "@/services/extensionRequests";
 
 import {
   claimBelongsToPendingPayments,
@@ -118,6 +122,9 @@ export default function Dashboard({
   combinedDelivery,
 }: SharedState & { combinedDelivery: BuyerDeliveryRequestsState }) {
   const [showPayAll, setShowPayAll] = useState(false);
+  const [pendingExtensionRequestCount, setPendingExtensionRequestCount] = useState(() =>
+    isSupabaseConfigured ? 0 : countPendingExtensionRequests(createDemoSellerExtensionRequests()),
+  );
 
   const [isPhone, setIsPhone] = useState(false);
 
@@ -139,6 +146,46 @@ export default function Dashboard({
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null);
 
   const board = useFulfillmentBoard(setFulfillment);
+
+  const extensionRequestsRevision = useMemo(
+    () =>
+      claims
+        .filter((claim) => claim.extensionRequested || claim.extensionStatus !== "none")
+        .map((claim) => `${claim.id}:${claim.extensionStatus ?? "unknown"}`)
+        .sort()
+        .join("|"),
+    [claims],
+  );
+
+  useEffect(() => {
+    if (role !== "Seller") return;
+    let active = true;
+
+    const refreshExtensionRequestCount = async () => {
+      if (!isSupabaseConfigured) {
+        setPendingExtensionRequestCount(
+          countPendingExtensionRequests(createDemoSellerExtensionRequests()),
+        );
+        return;
+      }
+
+      try {
+        const { extensions } = await kargoApi.loadSellerExtensionRequests();
+        if (active) {
+          setPendingExtensionRequestCount(countPendingExtensionRequests(extensions));
+        }
+      } catch (error) {
+        console.error("Unable to refresh seller extension request count.", error);
+      }
+    };
+
+    void refreshExtensionRequestCount();
+    window.addEventListener("focus", refreshExtensionRequestCount);
+    return () => {
+      active = false;
+      window.removeEventListener("focus", refreshExtensionRequestCount);
+    };
+  }, [extensionRequestsRevision, role, user.id]);
 
   useEffect(() => {
     const phoneQuery = window.matchMedia("(max-width: 620px)");
@@ -430,10 +477,6 @@ export default function Dashboard({
 
   // that requested an extension and are still pending a decision.
 
-  const pendingExtensions = claims.filter(
-    (c) => c.extensionRequested && c.status === "Pending" && c.seller === user.name,
-  );
-
   // Orders fulfilled = orders moved to the board's "Delivered" column.
 
   const ordersFulfilled = fulfillment.filter((o) => o.col === "Delivered");
@@ -540,7 +583,7 @@ export default function Dashboard({
     {
       label: "Extension Requests",
 
-      value: String(pendingExtensions.length),
+      value: String(pendingExtensionRequestCount),
 
       icon: ClipboardList,
 
@@ -863,7 +906,7 @@ export default function Dashboard({
 
                   label: "Extension Requests",
 
-                  count: pendingExtensions.length,
+                  count: pendingExtensionRequestCount,
 
                   tab: "Batches" as Tab,
                 },
@@ -1162,7 +1205,7 @@ export default function Dashboard({
 
                   label: "Extension Requests",
 
-                  count: pendingExtensions.length,
+                  count: pendingExtensionRequestCount,
 
                   tab: "Batches" as Tab,
                 },

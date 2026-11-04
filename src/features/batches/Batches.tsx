@@ -27,7 +27,7 @@ import {
   CalendarClock,
 } from "lucide-react";
 
-import type { ClaimRow, BatchType, SharedState, EntityId, ClaimReservationInput } from "@/types";
+import type { ClaimRow, BatchType, SharedState, ClaimReservationInput } from "@/types";
 import { INDIGO, CORAL, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme";
 
 import { navIntent, subscribeNavIntent } from "@/state/navIntent";
@@ -68,6 +68,11 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { kargoApi } from "@/services";
 
 import { formatBatchDateRange } from "@/services/batchDates";
+import {
+  countPendingExtensionRequests,
+  createDemoSellerExtensionRequests,
+  type SellerExtensionRequest,
+} from "@/services/extensionRequests";
 
 function ExtensionRequestsButton({
   pendingCount,
@@ -283,54 +288,8 @@ export default function Batches({
 
   // Seller-only state
 
-  type ExtReq = {
-    id: EntityId;
-
-    buyer: string;
-
-    product: string;
-
-    batch: string;
-
-    requestedAt: string;
-
-    reason?: string;
-
-    status: "pending" | "approved" | "denied";
-  };
-
-  const [extensionRequests, setExtensionRequests] = useState<ExtReq[]>(
-    isSupabaseConfigured
-      ? []
-      : [
-          {
-            id: 1,
-
-            buyer: "Carlo Reyes",
-
-            product: "Laneige Lip Mask",
-
-            batch: "Korea Haul",
-
-            requestedAt: "Sep 9, 2026",
-
-            status: "pending",
-          },
-
-          {
-            id: 2,
-
-            buyer: "Mia Santos",
-
-            product: "SK-II Essence",
-
-            batch: "Singapore Haul",
-
-            requestedAt: "Sep 10, 2026",
-
-            status: "pending",
-          },
-        ],
+  const [extensionRequests, setExtensionRequests] = useState<SellerExtensionRequest[]>(
+    isSupabaseConfigured ? [] : createDemoSellerExtensionRequests(),
   );
 
   // Seller request pop-ups (moved from inline bottom cards to top-of-tab buttons).
@@ -362,7 +321,7 @@ export default function Batches({
   // Confirmation target for extension approve/deny (#16)
 
   const [extConfirm, setExtConfirm] = useState<{
-    req: ExtReq;
+    req: SellerExtensionRequest;
 
     action: "approved" | "denied";
   } | null>(null);
@@ -1461,9 +1420,7 @@ export default function Batches({
     );
   };
 
-  const pendingExtCount = extensionRequests.filter(
-    (request) => request.status === "pending",
-  ).length;
+  const pendingExtCount = countPendingExtensionRequests(extensionRequests);
 
   const FilterBar = () => (
     <div
