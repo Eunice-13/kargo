@@ -3065,14 +3065,19 @@ export async function decideOrderExtension(orderId: string, approve: boolean) {
 
 export async function loadSellerExtensionRequests() {
   const client = requireSupabase();
+  const { data: auth, error: authError } = await client.auth.getUser();
+  if (authError) throw authError;
+  if (!auth.user) throw new Error("Authentication required");
 
   const { data: extensionRows, error: extensionError } = await client
 
     .from("orders")
 
     .select(
-      "id,buyer_id,extension_status,extension_requested_at,extension_reason,batch_products(name,batches(title))",
+      "id,buyer_id,status,reservation_expires_at,deadline_paused_at,shipping_state,extension_status,extension_requested_at,extension_reason,batch_products(name,batches(title))",
     )
+
+    .eq("seller_id", auth.user.id)
 
     .eq("extension_status", "pending");
 
@@ -3118,6 +3123,10 @@ export async function loadSellerExtensionRequests() {
         reason: row.extension_reason ?? "",
 
         status: row.extension_status as "pending" | "approved" | "denied",
+        orderStatus: row.status,
+        expiresAt: row.reservation_expires_at ?? undefined,
+        deadlinePausedAt: row.deadline_paused_at,
+        shippingState: row.shipping_state,
       };
     }),
   };

@@ -82,7 +82,8 @@ import {
   displayClaimStatus,
   reconcileRejectedClaim,
 } from "@/features/claims/claimPaymentState";
-import { claimPreview } from "./dashboardClaimRows";
+import { claimPreview, combinedClaimMembers } from "./dashboardClaimRows";
+import CombinedDeliveryDetailsModal from "./CombinedDeliveryDetailsModal";
 import type { BuyerDeliveryRequestsState } from "@/features/combined-delivery/useBuyerDeliveryRequests";
 import {
   buildClaimsListRows,
@@ -149,6 +150,7 @@ export default function Dashboard({
   const [showSalesReport, setShowSalesReport] = useState(false);
 
   const [showWaitlist, setShowWaitlist] = useState(false);
+  const [combinedDetailsId, setCombinedDetailsId] = useState<string | null>(null);
   const [buyerOrderDetailsId, setBuyerOrderDetailsId] = useState<string | null>(null);
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null);
 
@@ -422,7 +424,10 @@ export default function Dashboard({
   }, [batches]);
 
   const claimImageUrl = (claim: ClaimRow): string | undefined => {
-    if (claim.groupOrderId || claim.combinedDeliveryGroupId) return undefined;
+    if (claim.groupOrderId) return undefined;
+
+    // Combined deliveries retain a representative member's product identity,
+    // so their thumbnails follow the same lookup as individual orders.
 
     const imageUrl = claim.productId ? productImagesById.get(claim.productId) : undefined;
     if (imageUrl) return imageUrl;
@@ -430,6 +435,31 @@ export default function Dashboard({
     return batches
       .find((batch) => batch.title === claim.batch && batch.seller === claim.seller)
       ?.products.find((product) => product.name === claim.product)?.imageUrl;
+  };
+
+  const combinedDetailsModal = combinedDetailsId ? (
+    <CombinedDeliveryDetailsModal
+      items={combinedClaimMembers(combinedDetailsId, claims, payHistory)}
+      imageForClaim={claimImageUrl}
+      onClose={() => setCombinedDetailsId(null)}
+    />
+  ) : null;
+
+  const combinedDetailsButton = (claim: ClaimRow) => {
+    const groupId = claim.combinedDeliveryGroupId;
+    return groupId ? (
+      <button
+        type="button"
+        className="mt-1 block text-xs font-semibold text-[#246B8F] underline underline-offset-2"
+        aria-label={`View details for combined delivery containing ${claim.product}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          setCombinedDetailsId(groupId);
+        }}
+      >
+        View details
+      </button>
+    ) : null;
   };
 
   const payableToPay = toPay.filter(
@@ -870,6 +900,7 @@ export default function Dashboard({
                                   Combined Delivery · {claim.combinedItemCount} items
                                 </small>
                               ) : null}
+                              {combinedDetailsButton(claim)}
                             </span>
                           </div>
                         </td>
@@ -1073,6 +1104,7 @@ export default function Dashboard({
             true,
           )}
 
+        {combinedDetailsModal}
         {buyerProfile && (
           <BuyerProfileModal
             buyer={buyerProfile.name}
@@ -1398,6 +1430,7 @@ export default function Dashboard({
                                 Combined Delivery · {c.combinedItemCount} items
                               </small>
                             ) : null}
+                            {combinedDetailsButton(c)}
                           </span>
                         </div>
                       </td>
@@ -1577,6 +1610,7 @@ export default function Dashboard({
             />
           ) : null;
         })()}
+      {combinedDetailsModal}
       {showPayAll && (
         <BatchCheckoutModal
           items={payableToPay}

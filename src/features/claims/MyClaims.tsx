@@ -1005,6 +1005,10 @@ export default function MyClaims({
           <SellerCombinedDelivery
             key={user.id ?? user.email}
             sellerId={user.id}
+            imageForOrder={(id) => {
+              const claim = reconciledClaims.find((item) => String(item.id) === id);
+              return claim ? claimImageUrl(claim) : undefined;
+            }}
             onRecovered={refreshData}
             focusRequestId={combinedFocusId}
             onFocusHandled={() => setCombinedFocusId(null)}

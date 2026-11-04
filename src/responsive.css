@@ -8392,13 +8392,16 @@ body> :not(#root) * {
     display: flex;
     width: 100%;
     min-width: 0;
+    /* Let mobile controls fit alongside the cell's vertical padding. */
+    height: auto;
     min-height: 44px;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
     padding: 10px 0;
     border: 0;
-    border-bottom: 1px solid #e5e7eb;
+    /* Each table row is a card; preserve its internal dividers even in the last row. */
+    border-bottom: 1px solid #e5e7eb !important;
     background: #fff;
     text-align: right;
     vertical-align: middle;
@@ -8406,7 +8409,11 @@ body> :not(#root) * {
   }
 
   .seller-orders-page .seller-orders-received-table tbody td:last-child {
-    border-bottom: 0;
+    border-bottom: 0 !important;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td.seller-orders-deadline {
+    padding-inline: 0;
   }
 
   .seller-orders-page .seller-orders-received-table tbody td::before {

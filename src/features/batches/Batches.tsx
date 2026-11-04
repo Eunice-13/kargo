@@ -51,6 +51,7 @@ import { isBatchSoldOut, sortSoldOutLast } from "./batchSort";
 
 import ClosedBatchBadge from "./ClosedBatchBadge";
 import SellerBatchFilterSelect from "./SellerBatchFilterSelect";
+import SellerExtensionRequests from "./SellerExtensionRequests";
 
 import FinancialSummaryModal from "./FinancialSummaryModal";
 
@@ -72,6 +73,7 @@ import { formatBatchDateRange } from "@/services/batchDates";
 import {
   countPendingExtensionRequests,
   createDemoSellerExtensionRequests,
+  extensionRequestStatus,
   type SellerExtensionRequest,
 } from "@/services/extensionRequests";
 
@@ -288,6 +290,30 @@ export default function Batches({
   const [extensionRequests, setExtensionRequests] = useState<SellerExtensionRequest[]>(
     isSupabaseConfigured ? [] : createDemoSellerExtensionRequests(),
   );
+  const [extensionNow, setExtensionNow] = useState(Date.now);
+
+  // Reclassify at the next deadline even if the server expiry sweep has not run.
+  useEffect(() => {
+    if (role !== "Seller") return;
+    const updateClock = () => setExtensionNow(Date.now());
+    const nextDeadline = Math.min(
+      ...extensionRequests
+        .filter((request) => extensionRequestStatus(request, extensionNow) === "pending")
+        .map((request) => Date.parse(request.expiresAt ?? ""))
+        .filter((deadline) => Number.isFinite(deadline) && deadline > extensionNow),
+    );
+    const timer = Number.isFinite(nextDeadline)
+      ? window.setTimeout(
+          updateClock,
+          Math.min(2_147_483_647, Math.max(1, nextDeadline - Date.now() + 1)),
+        )
+      : undefined;
+    window.addEventListener("focus", updateClock);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("focus", updateClock);
+    };
+  }, [role, extensionRequests, extensionNow]);
 
   // Seller request pop-ups (moved from inline bottom cards to top-of-tab buttons).
 
@@ -325,19 +351,24 @@ export default function Batches({
 
   useEffect(() => {
     if (!isSupabaseConfigured || role !== "Seller") return;
+    let active = true;
 
     kargoApi
 
       .loadSellerExtensionRequests()
 
       .then((data) => {
-        setExtensionRequests(data.extensions);
+        if (active) setExtensionRequests(data.extensions);
       })
 
-      .catch((error) =>
-        alert(error instanceof Error ? error.message : "Unable to load extension requests."),
-      );
-  }, [role]);
+      .catch((error) => {
+        if (active)
+          alert(error instanceof Error ? error.message : "Unable to load extension requests.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [role, user.id, showExtReqModal]);
 
   const filtered = batches.filter((b) => {
     if (catFilter !== "All" && normalizeBatchCategory(b.category) !== catFilter) return false;
@@ -777,6 +808,12 @@ export default function Batches({
             <SecondaryBtn onClick={() => setExtConfirm(null)}>Cancel</SecondaryBtn>
             <PrimaryBtn
               onClick={async () => {
+                if (extensionRequestStatus(extConfirm.req) === "expired") {
+                  setExtensionNow(Date.now());
+                  setExtConfirm(null);
+                  alert("This extension request has expired because its payment timer ran out.");
+                  return;
+                }
                 if (isSupabaseConfigured) {
                   try {
                     await kargoApi.decideOrderExtension(
@@ -1456,7 +1493,7 @@ export default function Batches({
     );
   };
 
-  const pendingExtCount = countPendingExtensionRequests(extensionRequests);
+  const pendingExtCount = countPendingExtensionRequests(extensionRequests, extensionNow);
 
   const FilterBar = () => (
     <div
@@ -1592,7 +1629,10 @@ export default function Batches({
       {role === "Seller" && (
         <ExtensionRequestsButton
           pendingCount={pendingExtCount}
-          onClick={() => setShowExtReqModal(true)}
+          onClick={() => {
+            setExtensionNow(Date.now());
+            setShowExtReqModal(true);
+          }}
         />
       )}
       {role === "Buyer" && (
@@ -1691,130 +1731,11 @@ export default function Batches({
             showTitleIcon={false}
             className="seller-extension-requests-modal"
           >
-            {extensionRequests.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-
-                  color: "#9CA3AF",
-
-                  fontSize: 13,
-
-                  padding: "16px 0",
-                }}
-              >
-                No pending extension requests.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {extensionRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    style={{
-                      border: "1px solid #E5E7EB",
-
-                      borderRadius: 8,
-
-                      padding: "12px 14px",
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 13,
-
-                            fontWeight: 600,
-
-                            color: "#111827",
-                          }}
-                        >
-                          {req.buyer}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-
-                            color: "#9CA3AF",
-
-                            marginTop: 2,
-                          }}
-                        >
-                          {req.product} · {req.batch}
-                        </div>
-                        <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                          Requested {req.requestedAt}
-                        </div>
-                        {req.reason?.trim() && (
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: "#9CA3AF",
-                              marginTop: 4,
-                              whiteSpace: "pre-wrap",
-                              overflowWrap: "anywhere",
-                            }}
-                          >
-                            <span style={{ fontWeight: 600 }}>Reason: </span>
-                            {req.reason}
-                          </div>
-                        )}
-                      </div>
-                      {req.status === "pending" ? (
-                        <div className="flex gap-2">
-                          <PrimaryBtn
-                            size="sm"
-                            onClick={() => setExtConfirm({ req, action: "approved" })}
-                          >
-                            Approve
-                          </PrimaryBtn>
-                          <button
-                            onClick={() => setExtConfirm({ req, action: "denied" })}
-                            style={{
-                              fontSize: 12,
-
-                              color: "#EF4444",
-
-                              fontWeight: 600,
-
-                              background: "none",
-
-                              border: "1px solid #EF4444",
-
-                              borderRadius: 6,
-
-                              padding: "4px 10px",
-
-                              cursor: "pointer",
-                            }}
-                          >
-                            Deny
-                          </button>
-                        </div>
-                      ) : (
-                        <span
-                          style={{
-                            background: req.status === "approved" ? "#D4F5EA" : "#FEE2E2",
-
-                            color: req.status === "approved" ? "#0B7A59" : "#991B1B",
-
-                            fontSize: 11,
-
-                            fontWeight: 600,
-
-                            padding: "3px 9px",
-
-                            borderRadius: 999,
-                          }}
-                        >
-                          {req.status === "approved" ? "Approved" : "Denied"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <SellerExtensionRequests
+              requests={extensionRequests}
+              now={extensionNow}
+              onDecision={(req, action) => setExtConfirm({ req, action })}
+            />
           </Modal>
         )}
         {financialBatch && (
