@@ -1,7 +1,7 @@
 import { OrderDetailsModal } from "@/features/orders";
 import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combined-delivery";
 
-import { useEffect, useRef, useState, type SetStateAction } from "react";
+import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
 
 import { List, LayoutGrid, AlertTriangle, Link2, MessageCircle, Truck } from "lucide-react";
 
@@ -27,6 +27,7 @@ import {
   Avatar,
   ProductThumb,
   StatusBadge,
+  InsufficientPaymentNotice,
   Countdown,
   SH,
   BuyerProfileModal,
@@ -52,9 +53,11 @@ import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 import { kargoApi } from "@/services";
 
-import { claimIsPayable } from "./claimExpiry";
+import { claimBelongsToPendingPayments, claimIsPayable } from "./claimExpiry";
 
 import {
+  claimShortfall,
+  displayClaimStatus,
   reconcileRejectedClaim,
   sellerOrderReceivedStatus,
   type SellerOrderReceivedStatus,
@@ -74,6 +77,9 @@ import RequestLocationCorrectionModal from "./RequestLocationCorrectionModal";
 import DeclineDeliveryOrderModal from "./DeclineDeliveryOrderModal";
 
 import { TrackingDetailsModal, type TrackingDetailsInput } from "@/features/fulfillment";
+import type { BuyerDeliveryRequestsState } from "@/features/combined-delivery/useBuyerDeliveryRequests";
+import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
+import { buildClaimsListRows, getToPayTotal } from "./claimListRows";
 
 type OrderReceivedFilter = SellerOrderReceivedStatus | "All";
 
@@ -164,7 +170,8 @@ export default function MyClaims({
   setTab,
 
   refreshData,
-}: SharedState) {
+  combinedDelivery,
+}: SharedState & { combinedDelivery: BuyerDeliveryRequestsState }) {
   const [showBatchCheckout, setShowBatchCheckout] = useState(navIntent.openBatchCheckout);
 
   useEffect(() => {
@@ -190,6 +197,31 @@ export default function MyClaims({
   // A notification about a combined delivery request asks the seller's list to
   // open, since its cards live in a modal.
   const [combinedFocusId, setCombinedFocusId] = useState<string | null>(null);
+  const [combinedListRequests, setCombinedListRequests] = useState<CombinedDeliveryRequest[]>([]);
+  const [combinedRequestsLoaded, setCombinedRequestsLoaded] = useState(false);
+  const handleCombinedRequestsChange = useCallback(
+    (
+      requests: CombinedDeliveryRequest[],
+      loaded: boolean,
+    ) => {
+      setCombinedListRequests((current) => {
+        const sameRequests =
+          current.length === requests.length &&
+          current.every((request, index) => {
+            const next = requests[index];
+            return (
+              request.id === next.id &&
+              request.payment?.status === next.payment?.status &&
+              request.members.map((member) => member.order_id).join("|") ===
+                next.members.map((member) => member.order_id).join("|")
+            );
+          });
+        return sameRequests ? current : requests;
+      });
+      setCombinedRequestsLoaded(loaded);
+    },
+    [],
+  );
 
   const [ongoingFilter, setOngoingFilter] = useState<"All" | "Pending" | "Awaiting Verification">("All");
   const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>(() => {
@@ -521,14 +553,9 @@ export default function MyClaims({
 
   const reconciledClaims = claims.map((claim) => reconcileRejectedClaim(claim, payHistory));
 
-  const belongsToPendingPayments = (claim: ClaimRow) =>
-    claimIsPayable(claim) ||
-    claim.shippingState === "waiting_for_seller" ||
-    claim.shippingState === "correction_requested";
-
   const claimsToPay = reconciledClaims
 
-    .filter(belongsToPendingPayments)
+    .filter((claim) => claimBelongsToPendingPayments(claim))
 
     .sort((left, right) => {
       const leftPaused = Boolean(left.deadlinePausedAt);
@@ -551,7 +578,7 @@ export default function MyClaims({
     : claimsToPay.slice(0, pendingPaymentLimit);
 
   const payableClaims = claimsToPay.filter(claimIsPayable);
-  const totalDue = payableClaims.reduce((sum, item) => sum + item.amount, 0);
+  const totalDue = getToPayTotal(payableClaims);
 
   const itemPreviewBatch = itemPreview
     ? batches.find(
@@ -570,7 +597,7 @@ export default function MyClaims({
   // list — and every filter (All, Awaiting Verification, Paid and Reserved,
   // Expired, Cancelled) — never repeats a payable row.
   const claimsForList = reconciledClaims
-    .filter((c) => !belongsToPendingPayments(c))
+    .filter((c) => !claimBelongsToPendingPayments(c))
     .sort((left, right) => {
       // "Awaiting Verification" — proof submitted, awaiting the seller's
 
@@ -599,9 +626,6 @@ export default function MyClaims({
 
       return rightTime - leftTime;
     });
-
-  const filtered =
-    filter === "All" ? claimsForList : claimsForList.filter((c) => c.status === filter);
 
   const [fbToast, setFbToast] = useState<string | null>(null);
 
@@ -1098,13 +1122,22 @@ export default function MyClaims({
                       const status = statusForOrder(c);
 
                       const amountPaid =
-                        submission?.amountPaid && submission.status !== "Rejected"
+                        submission?.amountPaid &&
+                        (submission.status !== "Rejected" ||
+                          Number(submission.shortfallAmount ?? 0) > 0)
                           ? Number(submission.amountPaid)
                           : status === "Verified"
                             ? c.amount
                             : 0;
 
-                      const underpaid = amountPaid > 0 && amountPaid < c.amount;
+                      const shortfall =
+                        claimShortfall(c) ??
+                        (submission?.shortfallAmount && submission.shortfallAmount > 0
+                          ? submission.shortfallAmount
+                          : undefined);
+
+                      const underpaid =
+                        shortfall == null && amountPaid > 0 && amountPaid < c.amount;
 
                       const isCashOnMeetup = submission?.method === "Cash on Meetup";
 
@@ -1274,11 +1307,9 @@ export default function MyClaims({
                               }}
                             >
                               <span style={{ background: badge.dot }} />
-                              {status}
+                              <span className="seller-orders-status__label">{status}</span>
                             </span>
-                            {c.status === "Insufficient Payment" && (
-                              <small style={{ color: "#92400E" }}>Insufficient payment</small>
-                            )}
+                            <InsufficientPaymentNotice shortfall={shortfall} compact />
                           </td>
                           <td>
                             <div className="seller-orders-actions">
@@ -1314,7 +1345,13 @@ export default function MyClaims({
           />
         )}
         {orderDetailTarget && (
-          <Modal title="Order details" onClose={() => setOrderDetailTarget(null)} width={420}>
+          <Modal
+            title="Order details"
+            onClose={() => setOrderDetailTarget(null)}
+            width={420}
+            showTitleIcon={false}
+            className="seller-order-detail-modal"
+          >
             <div className="seller-order-details">
               <strong>{orderDetailTarget.product}</strong>
               <span>{orderDetailTarget.batch}</span>
@@ -1403,28 +1440,26 @@ export default function MyClaims({
             insuffAmtPaid={insufficientAmount}
             setInsuffAmtPaid={setInsufficientAmount}
             setVerifyItems={updateSellerPayments}
-            onConfirm={(paidAmt, shortAmt) => {
+            onConfirm={(_paidAmt, shortAmt) => {
               const item = insufficientTarget;
-              // Optimistically keep the payment as "Pending" in the seller's
-              // list — there's still a balance outstanding. The RPC marks the
-              // payment row as verified; because total paid < order amount, the
-              // server sets the order to `insufficient_payment` so the buyer
-              // sees "Insufficient Payment" and can top up.
-              updateSellerPayments((prev) =>
+              // The payment is rejected with a stored shortfall, never verified.
+              // Use setSellerPayments directly so the review diff cannot fire a
+              // competing verified/rejected RPC.
+              setSellerPayments((prev) =>
                 prev.map((v) =>
                   v.id === item.id
                     ? {
                         ...v,
-                        status: "Pending" as const,
-                        amountPaid: String(paidAmt),
-                        rejectReason: `Short ₱${shortAmt.toLocaleString()} — buyer notified.`,
+                        status: "Rejected" as const,
+                        shortfallAmount: shortAmt,
+                        rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
                       }
                     : v,
                 ),
               );
               if (isSupabaseConfigured) {
                 void kargoApi
-                  .markInsufficientPayment(String(item.id), item.groupOrderId)
+                  .markInsufficientPayment(String(item.id), shortAmt, item.groupOrderId)
                   .then(() => {
                     void refreshData().catch(() => {});
                     kargoApi
@@ -1799,7 +1834,7 @@ export default function MyClaims({
 
       date: TODAY,
 
-      status: isSupabaseConfigured ? "Pending" : "Paid and Reserved",
+      status: "Pending",
 
       referenceNumber: refNo || undefined,
 
@@ -1815,7 +1850,9 @@ export default function MyClaims({
     if (!isSupabaseConfigured)
       setClaims((prev) =>
         prev.map((c) =>
-          c.id === target.id ? { ...c, status: "Paid and Reserved" as ClaimStatus } : c,
+          c.id === target.id
+            ? { ...c, status: "Awaiting Verification" as ClaimStatus }
+            : c,
         ),
       );
 
@@ -1832,7 +1869,7 @@ export default function MyClaims({
 
       amount: target.amount,
 
-      step: 3,
+      step: 2,
     };
 
     if (!isSupabaseConfigured) setOrders((prev) => [newOrder, ...prev]);
@@ -1874,6 +1911,8 @@ export default function MyClaims({
               key={user.id ?? user.email}
               buyerId={user.id}
               claims={reconciledClaims}
+              excludeAwaitingVerification
+              deliveryState={combinedDelivery}
               onRecovered={refreshData}
               imageForOrder={(id) => {
                 const productId = reconciledClaims.find(
@@ -2121,7 +2160,7 @@ export default function MyClaims({
             }}
           >
             {f}
-            {f !== "All" && (
+            {combinedRequestsLoaded && (
               <span
                 style={{
                   marginLeft: 6,
@@ -2135,7 +2174,7 @@ export default function MyClaims({
                   fontSize: 10,
                 }}
               >
-                {claimsForList.filter((c) => c.status === f).length}
+                {buildClaimsListRows(claimsForList, f, combinedListRequests).length}
               </span>
             )}
           </button>
@@ -2192,9 +2231,48 @@ export default function MyClaims({
         </div>
       </div>
 
-      {isMobile || viewMode === "card" ? (
+      <BuyerCombinedDelivery
+        key={`claims-list-${user.id ?? user.email}`}
+        buyerId={user.id}
+        claims={reconciledClaims}
+        showClaimRowsInsteadOfPaymentCards={true}
+        deliveryState={combinedDelivery}
+        onCombinedRequestsChange={handleCombinedRequestsChange}
+        onRecovered={refreshData}
+        imageForOrder={(id) => {
+          const productId = reconciledClaims.find(
+            (claim) => String(claim.id) === id,
+          )?.productId;
+          return productId
+            ? batches
+                .flatMap((batch) => batch.products)
+                .find((product) => product.dbId === productId)?.imageUrl
+            : undefined;
+        }}
+      >
+        {({ requestForOrder, openRequest, combinedPaymentOrder, combinedRequests }) => {
+          // Helper to get image for an order
+          const getImageForOrder = (id: string) => {
+            const productId = reconciledClaims.find(
+              (claim) => String(claim.id) === id,
+            )?.productId;
+            return productId
+              ? batches
+                  .flatMap((batch) => batch.products)
+                  .find((product) => product.dbId === productId)?.imageUrl
+              : undefined;
+          };
+          
+          // Create a unified list mixing regular claims and combined delivery placeholders
+          const itemsToShow = combinedDelivery.ready
+            ? buildClaimsListRows(claimsForList, filter, combinedRequests)
+            : [];
+          
+          return (
+          <>
+            {isMobile || viewMode === "card" ? (
         <>
-          {filtered.length === 0 && (
+          {combinedDelivery.ready && itemsToShow.length === 0 && (
             <div
               style={{
                 padding: "40px 0",
@@ -2213,7 +2291,92 @@ export default function MyClaims({
             className="grid gap-4 claims-card-grid"
             style={{ gridTemplateColumns: "repeat(2,1fr)" }}
           >
-            {filtered.map((c) => (
+            {itemsToShow.map((item) => {
+              if ("type" in item && item.type === "combined") {
+                const request = item.request;
+                const first = request.members[0];
+                const seller = reconciledClaims.find((claim) =>
+                  request.members.some((member) => member.order_id === String(claim.id)),
+                )?.seller ?? "Seller";
+                const account = request.payment;
+                const status = item.status;
+                
+                return (
+                  <Card
+                    key={`combined-${request.id}`}
+                    recordKeys={recordKeys({
+                      combinedGroupId: request.id,
+                      orderIds:                       request.members.map((member) => member.order_id),
+                    })}
+                  >
+                    <div className="claims-card__summary flex items-start gap-3">
+                      <button
+                        type="button"
+                        className="buyer-claim-item-preview-trigger"
+                        aria-label="View combined delivery details"
+                        onClick={() => openRequest(request)}
+                      >
+                        <ProductThumb
+                          name="Combined Delivery"
+                          imageUrl={first ? getImageForOrder(first.order_id) : undefined}
+                        />
+                      </button>
+                      <div className="claims-card__info min-w-0 flex-1">
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: "#111827",
+                            fontFamily: "'Josefin Sans',sans-serif",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            className="buyer-claim-item-preview-name"
+                            onClick={() => openRequest(request)}
+                          >
+                            Combined Delivery · {request.members.length} {request.members.length === 1 ? "item" : "items"}
+                          </button>
+                        </div>
+                        <div
+                          className="claims-card__seller"
+                          style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
+                        >
+                          Seller: {seller}
+                        </div>
+                      </div>
+                      <div className="claims-card__status">
+                        <StatusBadge status={displayClaimStatus(status as any)} />
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 14,
+                          fontWeight: 800,
+                          color: "#111827",
+                          fontFamily: "'Josefin Sans',sans-serif",
+                        }}
+                      >
+                        {account?.total ? `₱${Number(account.total).toLocaleString()}` : "—"}
+                      </span>
+                      <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
+                        View Order
+                      </SecondaryBtn>
+                    </div>
+                  </Card>
+                );
+              }
+              
+              const c = item as ClaimRow;
+              return (
               <Card
                 key={c.id}
                 recordKeys={recordKeys({ orderId: c.id, groupOrderId: c.groupOrderId })}
@@ -2256,7 +2419,8 @@ export default function MyClaims({
                     </div>
                   </div>
                   <div className="claims-card__status">
-                    <StatusBadge status={c.status} />
+                    <StatusBadge status={displayClaimStatus(c.status)} />
+                    <InsufficientPaymentNotice shortfall={claimShortfall(c)} compact />
                   </div>
                 </div>
                 {c.status === "Pending" && c.hours > 0 && (
@@ -2393,7 +2557,8 @@ export default function MyClaims({
                   </div>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </>
       ) : (
@@ -2441,7 +2606,83 @@ export default function MyClaims({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((c, i) => (
+                {itemsToShow.map((item, i) => {
+                  if ("type" in item && item.type === "combined") {
+                    const request = item.request;
+                    const first = request.members[0];
+                    const seller = reconciledClaims.find((claim) =>
+                      request.members.some((member) => member.order_id === String(claim.id)),
+                    )?.seller ?? "Seller";
+                    const account = request.payment;
+                    const status = item.status;
+                    
+                    return (
+                      <tr
+                        key={`combined-${request.id}`}
+                        data-record-keys={recordKeys({
+                          combinedGroupId: request.id,
+                          orderIds: request.members.map((member) => member.order_id),
+                        })}
+                        style={{
+                          borderTop: "1px solid #F3F4F6",
+                          background: i % 2 ? "#FAFAFA" : "#fff",
+                        }}
+                        className="hover:bg-blue-50 transition-colors cursor-pointer"
+                      >
+                        <td style={{ padding: "10px 14px" }}>
+                          <div className="flex items-center gap-2.5">
+                            <button
+                              type="button"
+                              className="buyer-claim-item-preview-trigger"
+                              aria-label="View combined delivery details"
+                              onClick={() => openRequest(request)}
+                            >
+                              <ProductThumb
+                                name="Combined Delivery"
+                                imageUrl={first ? getImageForOrder(first.order_id) : undefined}
+                              />
+                            </button>
+                            <button
+                              type="button"
+                              className="buyer-claim-item-preview-name"
+                              onClick={() => openRequest(request)}
+                            >
+                              Combined Delivery · {request.members.length} {request.members.length === 1 ? "item" : "items"}
+                            </button>
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}>
+                          {first?.order?.batches?.title ?? "—"}
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <div className="flex items-center gap-1.5">
+                            <Avatar name={seller} size={20} />
+                            <span style={{ fontSize: 12, color: "#374151" }}>{seller}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 14px", color: "#374151", fontSize: 12 }}>
+                          {request.members.length}
+                        </td>
+                        <td style={{ padding: "10px 14px", fontWeight: 700, color: "#111827" }}>
+                          {account?.total ? `₱${Number(account.total).toLocaleString()}` : "—"}
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <StatusBadge status={displayClaimStatus(status as any)} />
+                        </td>
+                        <td style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}>
+                          —
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
+                            View Order
+                          </SecondaryBtn>
+                        </td>
+                      </tr>
+                    );
+                  }
+                  
+                  const c = item as ClaimRow;
+                  return (
                   <tr
                     key={c.id}
                     data-record-keys={recordKeys({
@@ -2516,7 +2757,8 @@ export default function MyClaims({
                       ₱{c.amount.toLocaleString()}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
-                      <StatusBadge status={c.status} />
+                      <StatusBadge status={displayClaimStatus(c.status)} />
+                      <InsufficientPaymentNotice shortfall={claimShortfall(c)} compact />
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       {c.status === "Pending" && c.hours > 0 ? (
@@ -2611,11 +2853,12 @@ export default function MyClaims({
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
-          {filtered.length === 0 && (
+          {combinedDelivery.ready && itemsToShow.length === 0 && (
             <div
               style={{
                 padding: "40px 0",
@@ -2631,7 +2874,11 @@ export default function MyClaims({
             </div>
           )}
         </Card>
-      )}
+            )}
+          </>
+        );
+        }}
+      </BuyerCombinedDelivery>
       {showBatchCheckout && (
         <BatchCheckoutModal
           items={payableClaims.map((claim) => ({

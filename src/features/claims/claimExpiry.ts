@@ -34,10 +34,20 @@ export function claimIsPayable(claim: Expirable, now = Date.now()) {
   )
 }
 
+export function claimBelongsToPendingPayments(claim: ClaimRow, now = Date.now()) {
+  return (
+    claim.status !== "Awaiting Verification" &&
+    (claimIsPayable(claim, now) ||
+      claim.shippingState === "waiting_for_seller" ||
+      claim.shippingState === "correction_requested")
+  )
+}
+
 export function expireClaimRows(claims: ClaimRow[], now = Date.now()) {
   return claims.map((claim) =>
-    claim.status === "Pending" && deadlineHasPassed(claim, now)
-      ? { ...claim, status: "Expired" as const, hours: 0 }
+    (claim.status === "Pending" || claim.status === "Insufficient Payment") &&
+    deadlineHasPassed(claim, now)
+      ? { ...claim, status: "Expired" as const, hours: 0, shortfallAmount: undefined }
       : claim,
   )
 }

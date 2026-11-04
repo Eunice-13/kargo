@@ -21,6 +21,7 @@ export type VerifyItem = {
   rejectionDeadline?: string
   phone?: string
   amountPaid?: string
+  shortfallAmount?: number
   contact?: string
   buyerNotified?: boolean
 }

@@ -14,6 +14,7 @@ import {
 } from "@/components/shared"
 import { productImageUrl } from "@/components/shared/ProductThumb"
 import TransactionDetailModal from "./TransactionDetailModal"
+import PaymentHistoryDateSort from "./PaymentHistoryDateSort"
 import SellerPaymentVerification from "./SellerPaymentVerification"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { Search } from "lucide-react"
@@ -113,15 +114,10 @@ export default function Payments({
               aria-label="Search payment history by seller, shop, or order details"
             />
           </label>
-          <select
-            className="payment-history-date-sort"
+          <PaymentHistoryDateSort
             value={dateOrder}
-            onChange={(event) => setDateOrder(event.target.value as "newest" | "oldest")}
-            aria-label="Sort transactions by date"
-          >
-            <option value="newest">Latest transactions</option>
-            <option value="oldest">Oldest transactions</option>
-          </select>
+            onChange={setDateOrder}
+          />
         </div>
         <Card className="!p-0 overflow-hidden payment-history-table">
           <div style={{ overflowX: "auto" }}>

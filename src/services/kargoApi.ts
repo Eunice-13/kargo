@@ -30,7 +30,10 @@ import { requireSupabase } from "@/lib/supabase";
 
 import { resolveContactUrl } from "@/components/shared/contactLink";
 
-import { effectiveOrderPaymentStatus } from "./orderPaymentState";
+import {
+  effectiveOrderPaymentStatus,
+  orderStatusToClaimLabel,
+} from "./orderPaymentState";
 
 type DbProfile = {
   id: string;
@@ -106,24 +109,12 @@ function statusToClaim(status: string): ClaimRow["status"] {
   if (status === "insufficient_payment") return "Insufficient Payment";
 
   // `payment_submitted` = the buyer submitted proof and is awaiting the
-
   // seller's verification. It gets its OWN status so it shows in the filtered
-
   // table (as "Awaiting Verification") but is NOT payable — the buyer can't pay
-
   // again until the seller acts. Rejection sends the order back to
-
   // `payment_pending` (→ "Pending", payable) and a short payment lands on
-
   // `insufficient_payment` (→ "Insufficient Payment", payable again).
-
-  if (status === "payment_submitted") return "Awaiting Verification";
-
-  if (["payment_confirmed", "preparing", "completed"].includes(status)) {
-    return "Paid and Reserved";
-  }
-
-  return "Pending";
+  return orderStatusToClaimLabel(status);
 }
 
 function statusToStep(status: string, fulfillmentStage?: string | null) {
@@ -624,16 +615,16 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         rejection_deadline: string | null;
       }) => [
-        row.order_id as string,
+          row.order_id as string,
 
-        {
-          effectiveStatus: row.effective_status as string,
+          {
+            effectiveStatus: row.effective_status as string,
 
-          latestPaymentStatus: row.latest_payment_status as string | null,
+            latestPaymentStatus: row.latest_payment_status as string | null,
 
-          rejectionDeadline: row.rejection_deadline as string | null,
-        },
-      ],
+            rejectionDeadline: row.rejection_deadline as string | null,
+          },
+        ],
     ),
   );
 
@@ -897,20 +888,46 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       ? Number(groupOrder.final_subtotal) + Number(groupOrder.shipping_fee ?? 0)
       : Number(row.total_amount) + (row.shipping_fee == null ? 0 : Number(row.shipping_fee));
 
+    // Money already received: verified payments, plus short payments that were
+    // rejected with a stored shortfall (their `amount` was still received).
+    const receivedPaid = (row.payments ?? [])
+      .filter(
+        (payment: { status: string; shortfall_amount?: number | string | null }) =>
+          payment.status === "verified" ||
+          (payment.status === "rejected" &&
+            Number(payment.shortfall_amount ?? 0) > 0),
+      )
+      .reduce(
+        (sum: number, payment: { amount: number | string }) =>
+          sum + Number(payment.amount),
+        0,
+      );
+
+    const storedShortfall = (row.payments ?? [])
+      .map((payment: { shortfall_amount?: number | string | null }) =>
+        payment.shortfall_amount == null ? 0 : Number(payment.shortfall_amount),
+      )
+      .reduce((max: number, value: number) => Math.max(max, value), 0);
+
+    const shortfallAmount =
+      effectiveStatus === "insufficient_payment"
+        ? Math.max(storedShortfall, Math.round((orderTotal - receivedPaid) * 100) / 100)
+        : undefined;
+
     const groupFields = groupOrder
       ? {
-          groupOrderId: groupOrder.id as string,
-          groupOrderCode: groupOrder.referral_code as string,
-          groupItemCount: groupCommitments.reduce(
-            (sum, commitment) => sum + Number(commitment.quantity),
-            0,
-          ),
-          groupMemberCount: (groupOrder.group_order_members ?? []).filter(
-            (member: { status: string }) => member.status === "active",
-          ).length,
-          groupRegularSubtotal: Number(groupOrder.regular_subtotal ?? 0),
-          groupDiscountAmount: Number(groupOrder.discount_amount ?? 0),
-        }
+        groupOrderId: groupOrder.id as string,
+        groupOrderCode: groupOrder.referral_code as string,
+        groupItemCount: groupCommitments.reduce(
+          (sum, commitment) => sum + Number(commitment.quantity),
+          0,
+        ),
+        groupMemberCount: (groupOrder.group_order_members ?? []).filter(
+          (member: { status: string }) => member.status === "active",
+        ).length,
+        groupRegularSubtotal: Number(groupOrder.regular_subtotal ?? 0),
+        groupDiscountAmount: Number(groupOrder.discount_amount ?? 0),
+      }
       : {};
 
     if (isBuyer) {
@@ -947,6 +964,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         status: deadlineExpired ? "Expired" : statusToClaim(effectiveStatus),
 
+        shortfallAmount: deadlineExpired ? undefined : shortfallAmount,
+
         hours,
 
         expiresAt,
@@ -955,7 +974,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         extensionRequested: row.extension_status === "pending",
         extensionRequestCount: Number(
           row.extension_request_count ??
-            (row.extension_status && row.extension_status !== "none" ? 1 : 0),
+          (row.extension_status && row.extension_status !== "none" ? 1 : 0),
         ),
         extensionRequestedHours: row.extension_requested_hours ?? undefined,
         extensionDecidedAt: row.extension_decided_at ?? undefined,
@@ -1050,6 +1069,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         status: deadlineExpired ? "Expired" : statusToClaim(effectiveStatus),
 
+        shortfallAmount: deadlineExpired ? undefined : shortfallAmount,
+
         hours,
 
         expiresAt,
@@ -1058,7 +1079,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         extensionRequested: row.extension_status === "pending",
         extensionRequestCount: Number(
           row.extension_request_count ??
-            (row.extension_status && row.extension_status !== "none" ? 1 : 0),
+          (row.extension_status && row.extension_status !== "none" ? 1 : 0),
         ),
         extensionRequestedHours: row.extension_requested_hours ?? undefined,
         extensionDecidedAt: row.extension_decided_at ?? undefined,
@@ -1099,16 +1120,6 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       }
     }
 
-    const verifiedPaid = (row.payments ?? [])
-
-      .filter((payment: { status: string }) => payment.status === "verified")
-
-      .reduce(
-        (sum: number, payment: { amount: number | string }) => sum + Number(payment.amount),
-
-        0,
-      );
-
     if (
       isBuyer &&
       !deadlineExpired &&
@@ -1133,7 +1144,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
           ? groupCommitments.reduce((sum, commitment) => sum + Number(commitment.quantity), 0)
           : row.quantity,
 
-        amount: Math.max(0, orderTotal - verifiedPaid),
+        amount: Math.max(0, orderTotal - receivedPaid),
 
         hours,
 
@@ -1152,7 +1163,9 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
     }
 
     for (const payment of row.payments ?? []) {
-      if (!isBuyer) continue;
+      // Buyer payment history, plus combined-delivery payments for the seller
+      // so the seller dashboard can collapse the combined child orders.
+      if (!isBuyer && !payment.combined_delivery_group_id) continue;
 
       payHistory.push({
         id: payment.id ?? `${row.id}-${payment.submitted_at}`,
@@ -1190,10 +1203,17 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         status:
           payment.status === "rejected"
-            ? "Rejected"
+            ? Number(payment.shortfall_amount ?? 0) > 0
+              ? "Pending"
+              : "Rejected"
             : payment.status === "verified"
               ? "Paid and Reserved"
               : "Pending",
+
+        shortfallAmount:
+          payment.shortfall_amount == null
+            ? undefined
+            : Number(payment.shortfall_amount),
 
         referenceNumber: payment.reference_number ?? undefined,
 
@@ -1631,12 +1651,12 @@ export async function createBatch(batch: {
     batch.products.map((product, index) =>
       product.imageFile
         ? uploadBatchMediaFile(
-            client,
-            auth.user.id,
-            created.id,
-            `product-${index + 1}`,
-            product.imageFile,
-          )
+          client,
+          auth.user.id,
+          created.id,
+          `product-${index + 1}`,
+          product.imageFile,
+        )
         : Promise.resolve(null),
     ),
   );
@@ -2719,6 +2739,20 @@ export async function loadSellerReceiveMethods(sellerId: string): Promise<Seller
     );
 }
 
+// Public join date for a seller, so their shop page can show "Seller since
+// <year>". Mirrors UserInfo.memberSince (public_profiles.created_at).
+export async function loadSellerMemberSince(sellerId: string): Promise<string | null> {
+  const { data, error } = await requireSupabase()
+    .from("public_profiles")
+    .select("created_at")
+    .eq("id", sellerId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return (data?.created_at as string | undefined) ?? null;
+}
+
 export async function addPaymentMethod(
   methodType: string,
 
@@ -2909,7 +2943,7 @@ export async function loadSellerPaymentSubmissions() {
       ? Number(row.amount)
       : row.orders.group_order_id
         ? Number(row.orders.group_orders?.final_subtotal ?? 0) +
-          Number(row.orders.group_orders?.shipping_fee ?? 0)
+        Number(row.orders.group_orders?.shipping_fee ?? 0)
         : Number(row.orders.total_amount) + Number(row.orders.shipping_fee ?? 0),
 
     ref: row.reference_number ?? "—",
@@ -2941,6 +2975,9 @@ export async function loadSellerPaymentSubmissions() {
 
     amountPaid: String(row.amount),
 
+    shortfallAmount:
+      row.shortfall_amount == null ? undefined : Number(row.shortfall_amount),
+
     contact: row.buyer_contact_url ?? undefined,
   }));
 }
@@ -2954,9 +2991,12 @@ export async function reviewPayment(
 
   deadlineHours?: number,
   combinedDeliveryGroupId?: string,
+  shortfallAmount?: number,
 ) {
+  const combined = Boolean(combinedDeliveryGroupId);
+
   const { error } = await requireSupabase().rpc(
-    combinedDeliveryGroupId ? "review_combined_delivery_payment" : "review_order_payment",
+    combined ? "review_combined_delivery_payment" : "review_order_payment",
     {
       p_payment_id: paymentId,
 
@@ -2965,6 +3005,9 @@ export async function reviewPayment(
       p_reason: reason ?? null,
 
       p_deadline_hours: deadlineHours ?? null,
+
+      // Combined delivery payments have no per-order shortfall workflow.
+      ...(combined ? {} : { p_shortfall_amount: shortfallAmount ?? null }),
     },
   );
 
@@ -2976,27 +3019,30 @@ export async function reviewGroupPayment(
   decision: "verified" | "rejected",
   reason?: string,
   deadlineHours?: number,
+  shortfallAmount?: number,
 ) {
   const { error } = await requireSupabase().rpc("review_group_order_payment", {
     p_payment_id: paymentId,
     p_decision: decision,
     p_reason: reason ?? null,
     p_deadline_hours: deadlineHours ?? null,
+    p_shortfall_amount: shortfallAmount ?? null,
   });
   if (error) throw error;
 }
 
-// Called when the seller confirms a short payment. Fires reviewPayment with
-// "verified" so the server sums all verified payments for the order; when
-// the running total is still less than the order amount the DB sets the order
-// status to `insufficient_payment` and the buyer can top up the balance.
+// Called when the seller rejects a short payment. The payment stays rejected
+// (never verified), its stored shortfall drives the buyer's top-up amount, and
+// the order moves to `insufficient_payment` — shown as Pending + Insufficient.
 export async function markInsufficientPayment(
   paymentId: string,
+  shortfallAmount: number,
   groupOrderId?: string,
 ) {
+  const reason = `Insufficient payment — ₱${shortfallAmount.toLocaleString()} short`
   return groupOrderId
-    ? reviewGroupPayment(paymentId, "verified")
-    : reviewPayment(paymentId, "verified")
+    ? reviewGroupPayment(paymentId, "rejected", reason, 24, shortfallAmount)
+    : reviewPayment(paymentId, "rejected", reason, 24, undefined, shortfallAmount)
 }
 
 export async function notifyPaymentResubmission(paymentId: string) {
@@ -3439,6 +3485,8 @@ export const kargoApi = {
   joinWaitlist,
 
   loadSellerReceiveMethods,
+
+  loadSellerMemberSince,
 
   loadOwnPaymentMethods,
 

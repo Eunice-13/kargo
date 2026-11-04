@@ -1,10 +1,4 @@
-import {
-  CircleHelp,
-  FilePenLine,
-  ScanSearch,
-  TriangleAlert,
-  X,
-} from "lucide-react"
+import { X } from "lucide-react"
 import {
   useCallback,
   useEffect,
@@ -31,13 +25,6 @@ function inferVariant(title: string): ModalVariant {
   return "form"
 }
 
-const VARIANT_ICONS = {
-  form: FilePenLine,
-  confirm: CircleHelp,
-  danger: TriangleAlert,
-  detail: ScanSearch,
-} satisfies Record<ModalVariant, typeof FilePenLine>
-
 export function useDialogA11y(onClose: () => void) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
@@ -53,7 +40,7 @@ export function useDialogA11y(onClose: () => void) {
     document.body.style.overflow = "hidden"
     const dialog = dialogRef.current
     const firstFocusable = dialog?.querySelector<HTMLElement>(FOCUSABLE)
-    ;(firstFocusable || dialog)?.focus()
+      ; (firstFocusable || dialog)?.focus()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -103,9 +90,9 @@ export default function Modal({
   topOffset = HEADER_HEIGHT,
   variant,
   showTitle = true,
-  showTitleIcon = true,
   className = "",
   overlayClassName = "",
+  mobileTopOffset,
 }: {
   title: string
   onClose: () => void
@@ -118,6 +105,7 @@ export default function Modal({
   showTitleIcon?: boolean
   className?: string
   overlayClassName?: string
+  mobileTopOffset?: number
 }) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
@@ -125,7 +113,6 @@ export default function Modal({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isClosing, setIsClosing] = useState(false)
   const resolvedVariant = variant ?? inferVariant(title)
-  const VariantIcon = VARIANT_ICONS[resolvedVariant]
 
   const requestClose = useCallback(() => {
     if (closeTimerRef.current) return
@@ -156,7 +143,7 @@ export default function Modal({
     const node = dialogRef.current
     if (!node) return
     const firstFocusable = node.querySelector<HTMLElement>(FOCUSABLE)
-    ;(firstFocusable || node).focus()
+      ; (firstFocusable || node).focus()
   }, [])
 
   useEffect(() => {
@@ -198,9 +185,14 @@ export default function Modal({
       // The backdrop covers the whole screen, header included. The padding keeps the
       // dialog centred in the space below the header, exactly as before.
       style={{
+
         top: 0,
         paddingTop: `calc(${topOffset}px + clamp(12px, 2.4vw, 28px))`,
-      }}
+     ,
+        ...(mobileTopOffset === undefined
+          ? {}
+          : { "--kargo-modal-mobile-top": `${mobileTopOffset}px` }),
+      } as React.CSSProperties}
       onClick={(event) => {
         if (event.target === event.currentTarget) requestClose()
       }}
@@ -223,11 +215,6 @@ export default function Modal({
         >
           {showTitle ? (
             <div className="kargo-modal__title-group">
-              {title && showTitleIcon && (
-                <span className="kargo-modal__title-icon" aria-hidden="true">
-                  <VariantIcon size={18} />
-                </span>
-              )}
               {title ? (
                 <h3 id={titleId}>{title}</h3>
               ) : (

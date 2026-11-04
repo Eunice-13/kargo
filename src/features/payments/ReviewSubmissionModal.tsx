@@ -69,7 +69,13 @@ export default function ReviewSubmissionModal({
   };
   return (
     <>
-      <Modal title="Payment Submission Details" onClose={() => setReviewTarget(null)} width={520}>
+      <Modal
+        title="Payment Submission Details"
+        onClose={() => setReviewTarget(null)}
+        width={520}
+        showTitleIcon={false}
+        className="payment-submission-detail-modal"
+      >
         <div className="space-y-4">
           {/* Buyer + product header */}
           <div

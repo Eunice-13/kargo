@@ -4,6 +4,7 @@ import type { ClaimRow } from "@/types";
 import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
 import Card from "@/components/shared/Card";
 import Countdown from "@/components/shared/Countdown";
+import InsufficientPaymentNotice from "@/components/shared/InsufficientPaymentNotice";
 import ProductThumb from "@/components/shared/ProductThumb";
 import "./pendingPayments.css";
 
@@ -67,6 +68,9 @@ export default function PendingPaymentCard({
               <span className="pending-product-card__secondary">
                 {item.status === "Pending" ? "Awaiting payment" : item.status}
               </span>
+              {item.status === "Insufficient Payment" && (
+                <InsufficientPaymentNotice shortfall={item.shortfallAmount} compact />
+              )}
               <Countdown
                 id={item.id}
                 hours={item.hours}

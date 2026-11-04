@@ -1,8 +1,8 @@
 import { productAvailability } from "./productAvailability";
-import { batchCardClosed } from "./batchAvailability";
+import { batchCardClosed, batchOrderDeadline } from "./batchAvailability";
 import ClosedBatchBadge from "./ClosedBatchBadge";
-import { Fragment, useEffect, useState } from "react";
-import { MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { ChevronDown, MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react";
 import type { BatchType, Role, UserInfo } from "@/types";
 import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme";
 import { Card, Avatar, PrimaryBtn, ContactModal, PaymentIcon } from "@/components/shared";
@@ -11,7 +11,7 @@ import { kargoApi, type SellerReceiveMethod } from "@/services";
 import { sortSoldOutLast } from "./batchSort";
 
 // Dedicated seller storefront page (replaces the old popup modal). Laid out like
-// a Shopee shop: a gradient header with avatar/name/online + Follow/Chat and a
+// a Shopee shop: a gradient header with avatar/name/join year + Follow/Chat and a
 // stats row, a tab/category nav, then a grid of the seller's active batches
 // using the same cover-image batch card the Home page shows. Built entirely with
 // the existing KARGO design system (INDIGO/Josefin, Card, shared buttons).
@@ -43,6 +43,26 @@ export default function SellerShopPage({
     sellerBatches.find((batch) => batch.sellerShopName?.trim())?.sellerShopName?.trim() || seller;
   const [paymentMethods, setPaymentMethods] = useState<SellerReceiveMethod[]>([]);
   const [methodsLoading, setMethodsLoading] = useState(false);
+  // The seller's public join date, shown as "Seller since <year>". Fetched for
+  // shops other than the viewer's; falls back to the profile we already hold.
+  const [fetchedMemberSince, setFetchedMemberSince] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !sellerId) return;
+    let active = true;
+    setFetchedMemberSince(null);
+    kargoApi
+      .loadSellerMemberSince(String(sellerId))
+      .then((value) => {
+        if (active) setFetchedMemberSince(value);
+      })
+      .catch(() => {
+        if (active) setFetchedMemberSince(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [sellerId]);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !sellerId) return;
@@ -64,6 +84,15 @@ export default function SellerShopPage({
     };
   }, [sellerId]);
 
+  // Join date for the header, preferring the fetched public profile.
+  const sellerMemberSince = fetchedMemberSince ?? profileData?.memberSince ?? null;
+  const sellerJoinedLabel = sellerMemberSince
+    ? new Date(sellerMemberSince).toLocaleDateString("en-PH", {
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
   // ── Stats (row under the header) ────────────────────────────────────────────
   const totalProducts = sellerBatches.reduce((s, b) => s + b.products.length, 0);
   const totalClaimed = sellerBatches.reduce((s, b) => s + b.claimed, 0);
@@ -84,9 +113,31 @@ export default function SellerShopPage({
   const TABS = ["All Batches", ...categories] as const;
   const [tab, setTab] = useState<string>("All Batches");
   const [sortBy, setSortBy] = useState("Newest");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!sortOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!sortRef.current?.contains(event.target as Node)) setSortOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSortOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [sortOpen]);
 
   // Which batches the current tab shows.
   const catFilter = tab === "All Batches" ? "All" : tab;
+  // "Ending Soonest" ranks by the Philippine end date: the batch closest to
+  // today (earliest `endsOn`) first. Batches without an end date sort last.
+  const endDeadline = (batch: BatchType) =>
+    batchOrderDeadline(batch.endsOn) ?? Number.POSITIVE_INFINITY;
   const visibleBatches = sortSoldOutLast(
     sellerBatches
       .filter((b) => catFilter === "All" || b.category === catFilter)
@@ -94,7 +145,7 @@ export default function SellerShopPage({
         sortBy === "Most Claimed"
           ? b_.claimed - a.claimed
           : sortBy === "Ending Soonest"
-            ? a.id - b_.id
+            ? endDeadline(a) - endDeadline(b_)
             : b_.id - a.id,
       ),
   );
@@ -109,8 +160,9 @@ export default function SellerShopPage({
   return (
     <div className="space-y-5 seller-shop-page">
       {/* ── Storefront header ──────────────────────────────────────────────── */}
-      <Card style={{ overflow: "hidden", padding: 0 }}>
+      <Card className="seller-shop-header-card" style={{ overflow: "hidden", padding: 0 }}>
         <div
+          className="seller-shop-header-banner"
           style={{
             background: `linear-gradient(135deg, ${INDIGO} 0%, #3548BD 100%)`,
             padding: "24px 24px",
@@ -133,8 +185,9 @@ export default function SellerShopPage({
           >
             <Avatar name={sellerDisplay} size={72} imageUrl={profileData?.avatarUrl} />
           </span>
-          <div style={{ flex: 1, minWidth: 200 }}>
+          <div className="seller-shop-identity" style={{ flex: 1, minWidth: 200 }}>
             <div
+              className="seller-shop-name"
               style={{
                 fontFamily: "'Josefin Sans',sans-serif",
                 fontSize: 22,
@@ -147,29 +200,23 @@ export default function SellerShopPage({
             >
               {sellerDisplay}
             </div>
-            <div
-              style={{
-                fontSize: 12,
-                color: "rgba(255,255,255,0.9)",
-                marginTop: 4,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <span
+            {sellerJoinedLabel && (
+              <div
                 style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  background: "#4ADE80",
-                  boxShadow: "0 0 0 3px rgba(74,222,128,0.3)",
+                  fontSize: 12,
+                  color: "rgba(255,255,255,0.9)",
+                  marginTop: 4,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
                 }}
-              />
-              Online now
-            </div>
+              >
+                <CalendarDays size={12} aria-hidden="true" />
+                Seller since {sellerJoinedLabel}
+              </div>
+            )}
           </div>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div className="seller-shop-contact" style={{ display: "flex", gap: 10 }}>
             <button
               type="button"
               onClick={() => setShowChat(true)}
@@ -196,6 +243,7 @@ export default function SellerShopPage({
 
         {/* Stats row */}
         <div
+          className="seller-shop-stats"
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${stats.length}, 1fr)`,
@@ -245,6 +293,7 @@ export default function SellerShopPage({
 
       {/* ── Tab / category nav ─────────────────────────────────────────────── */}
       <div
+        className="seller-shop-tabs"
         style={{
           display: "flex",
           gap: 6,
@@ -300,23 +349,44 @@ export default function SellerShopPage({
             >
               {`${visibleBatches.length} batch${visibleBatches.length !== 1 ? "es" : ""}`}
             </div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{
-                fontSize: 12,
-                border: "1px solid #E5E7EB",
-                borderRadius: 6,
-                padding: "6px 10px",
-                background: "#fff",
-                outline: "none",
-                color: "#374151",
-              }}
+            <div
+              ref={sortRef}
+              className={`payment-history-date-sort seller-shop-date-sort${sortOpen ? " is-open" : ""}`}
             >
-              {["Newest", "Most Claimed", "Ending Soonest"].map((o) => (
-                <option key={o}>{o}</option>
-              ))}
-            </select>
+              <button
+                type="button"
+                className="payment-history-date-sort__trigger"
+                aria-label="Sort batches"
+                aria-haspopup="listbox"
+                aria-expanded={sortOpen}
+                onClick={() => setSortOpen((current) => !current)}
+              >
+                <span>{sortBy}</span>
+                <ChevronDown size={16} aria-hidden="true" />
+              </button>
+              {sortOpen && (
+                <div
+                  className="payment-history-date-sort__options"
+                  role="listbox"
+                  aria-label="Sort batches"
+                >
+                  {["Newest", "Most Claimed", "Ending Soonest"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      role="option"
+                      aria-selected={sortBy === option}
+                      onClick={() => {
+                        setSortBy(option);
+                        setSortOpen(false);
+                      }}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {gridBatches.length === 0 ? (

@@ -17,7 +17,7 @@ import {
   FileText,
 } from "lucide-react";
 
-import type { ClaimStatus, PayHistRow, Tab, SharedState } from "@/types";
+import type { ClaimRow, ClaimStatus, FulfillmentOrder, PayHistRow, Tab, SharedState } from "@/types";
 
 import { navIntent } from "@/state/navIntent";
 
@@ -33,6 +33,7 @@ import {
   Avatar,
   ProductThumb,
   StatusBadge,
+  InsufficientPaymentNotice,
   Countdown,
   BuyerProfileModal,
 } from "@/components/shared";
@@ -46,6 +47,7 @@ import {
   FulfillmentLiveRegion,
   FulfillmentBoard,
 } from "@/features/fulfillment";
+import { combinedRequestHasOpenPayment } from "@/features/combined-delivery";
 import { OrderDetailsModal } from "@/features/orders";
 import SalesReportModal from "./SalesReportModal";
 
@@ -59,7 +61,23 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 
 import { kargoApi } from "@/services";
 
-import { claimIsPayable, deadlineHasPassed } from "@/features/claims/claimExpiry";
+import {
+  claimBelongsToPendingPayments,
+  claimIsPayable,
+  deadlineHasPassed,
+} from "@/features/claims/claimExpiry";
+import {
+  claimShortfall,
+  displayClaimStatus,
+  reconcileRejectedClaim,
+} from "@/features/claims/claimPaymentState";
+import { claimPreview } from "./dashboardClaimRows";
+import type { BuyerDeliveryRequestsState } from "@/features/combined-delivery/useBuyerDeliveryRequests";
+import {
+  buildClaimsListRows,
+  getToPayTotal,
+  isOpenPaymentStatus,
+} from "@/features/claims/claimListRows";
 
 export default function Dashboard({
   batches,
@@ -97,7 +115,8 @@ export default function Dashboard({
   setUser,
 
   refreshData,
-}: SharedState) {
+  combinedDelivery,
+}: SharedState & { combinedDelivery: BuyerDeliveryRequestsState }) {
   const [showPayAll, setShowPayAll] = useState(false);
 
   const [isPhone, setIsPhone] = useState(false);
@@ -226,11 +245,98 @@ export default function Dashboard({
     );
   };
 
-  const activeClaims = claims
-
-    .filter((c) => c.status === "Pending")
-
-    .sort((a, b) => Number(b.id) - Number(a.id));
+  const dashboardCombinedRequests = combinedDelivery.available
+    ? combinedDelivery.requests.filter(
+        (request) => request.payment && request.status === "shipping_fee_set",
+      )
+    : [];
+  const reconciledDashboardClaims = claims.map((claim) =>
+    reconcileRejectedClaim(claim, payHistory),
+  );
+  const activeClaimRows = combinedDelivery.ready
+    ? buildClaimsListRows(
+        reconciledDashboardClaims,
+        "All",
+        dashboardCombinedRequests,
+      ).filter(
+        (row) =>
+          isOpenPaymentStatus(row.status) &&
+          (!("type" in row) || combinedRequestHasOpenPayment(row.request)),
+      )
+    : [];
+  const activeClaims: ClaimRow[] = activeClaimRows.flatMap((row) => {
+    if (!("type" in row)) return [row];
+    const memberClaims = reconciledDashboardClaims.filter((claim) =>
+      row.request.members.some((member) => member.order_id === String(claim.id)),
+    );
+    const representative = memberClaims[0];
+    return representative
+      ? [
+          {
+            ...representative,
+            status: row.status,
+            amount: row.request.payment?.total ?? representative.amount,
+            combinedDeliveryGroupId: row.request.id,
+            combinedItemCount: row.request.members.length,
+          },
+        ]
+      : [];
+  });
+  const pendingPaymentRows = activeClaimRows.filter((row) =>
+    "type" in row
+      ? combinedRequestHasOpenPayment(row.request) &&
+        row.request.payment?.status !== "pending_review"
+      : claimBelongsToPendingPayments(row),
+  );
+  const buyerPendingPaymentOrders: FulfillmentOrder[] = pendingPaymentRows.flatMap((row) => {
+    if ("type" in row) {
+      const representative = reconciledDashboardClaims.find((claim) =>
+        row.request.members.some((member) => member.order_id === String(claim.id)),
+      );
+      if (!representative) return [];
+      return [
+        {
+          id: `combined-${row.request.id}`,
+          dbId: String(representative.id),
+          col: "Pending Payment",
+          perspective: "buyer",
+          buyer: user.name,
+          seller: representative.seller,
+          product: `Combined Delivery · ${row.request.members.length} ${
+            row.request.members.length === 1 ? "item" : "items"
+          }`,
+          qty: row.request.members.reduce(
+            (total, member) => total + (member.order?.quantity ?? 1),
+            0,
+          ),
+          amount: row.request.payment?.total ?? representative.amount,
+        },
+      ];
+    }
+    return [
+      {
+        id: String(row.id),
+        dbId: String(row.id),
+        col: "Pending Payment",
+        perspective: "buyer",
+        buyer: row.buyer || user.name,
+        seller: row.seller,
+        product: row.product,
+        qty: row.qty,
+        amount: row.amount,
+        fulfillmentStage: row.fulfillmentStage,
+      },
+    ];
+  });
+  const dashboardFulfillment =
+    role === "Seller"
+      ? fulfillment
+      : [
+          ...fulfillment.filter(
+            (order) => order.perspective !== "buyer" || order.col !== "Pending Payment",
+          ),
+          ...buyerPendingPaymentOrders,
+        ];
 
   // Recent Claims preview: a fixed number of the most recent claims, shown in
 
@@ -251,13 +357,9 @@ export default function Dashboard({
     return [...urgent, ...remaining].slice(0, PHONE_CLAIMS_PREVIEW);
   };
 
-  const recentClaims = claims
-
-    .slice()
-
-    .sort((a, b) => Number(b.id) - Number(a.id))
-
-    .slice(0, RECENT_CLAIMS_PREVIEW);
+  // Combined Delivery collapses into one row per combined group; actionable
+  // Pending / Insufficient rows lead so an outstanding balance is never hidden.
+  const recentClaims = claimPreview(claims, payHistory).slice(0, RECENT_CLAIMS_PREVIEW);
 
   const visibleRecentClaims = recentClaims;
 
@@ -269,7 +371,7 @@ export default function Dashboard({
       !deadlineHasPassed(item),
   );
 
-  const pendingTotal = payableToPay.reduce((s, t) => s + t.amount, 0);
+  const pendingTotal = getToPayTotal(reconciledDashboardClaims.filter(claimIsPayable));
 
   // "Completed Orders" must mean genuinely delivered/completed orders so the
   // stat agrees with the Fulfillment Board's Delivered column. The old source
@@ -290,9 +392,11 @@ export default function Dashboard({
 
   const mySellerOrders = claims.filter((claim) => claim.seller === user.name);
 
+  const collapsedSellerOrders = claimPreview(mySellerOrders, payHistory);
+
   const visibleSellerOrders = isPhone
-    ? urgentPhonePreview(mySellerOrders)
-    : mySellerOrders.slice(0, RECENT_CLAIMS_PREVIEW);
+    ? urgentPhonePreview(collapsedSellerOrders)
+    : collapsedSellerOrders.slice(0, RECENT_CLAIMS_PREVIEW);
 
   // Only submitted proofs await seller verification. `payment_pending` means
 
@@ -344,14 +448,15 @@ export default function Dashboard({
     {
       label: "Active Claims",
 
-      value: String(activeClaims.length),
+      value: combinedDelivery.ready ? String(activeClaims.length) : "—",
 
       icon: PackagePlus,
 
-      sub:
-        activeClaims.length === 0
+      sub: combinedDelivery.ready
+        ? activeClaims.length === 0
           ? "No active claims"
-          : `${activeClaims.length} awaiting payment or reservation`,
+          : `${activeClaims.length} awaiting payment or reservation`
+        : "Checking active claims",
 
       sc: GREEN,
 
@@ -361,11 +466,13 @@ export default function Dashboard({
     {
       label: "Pending Payment",
 
-      value: `₱${pendingTotal.toLocaleString()}`,
+      value: combinedDelivery.ready ? `₱${pendingTotal.toLocaleString()}` : "—",
 
       icon: CreditCard,
 
-      sub: `${payableToPay.length} items due soon`,
+      sub: combinedDelivery.ready
+        ? `${activeClaims.filter((claim) => claimIsPayable(claim)).length} items due soon`
+        : "— items due soon",
 
       sc: AMBER,
 
@@ -669,7 +776,21 @@ export default function Dashboard({
                         <td>
                           <div className="seller-product-cell">
                             <ProductThumb name={claim.product} />
-                            <span>{claim.product}</span>
+                            <span>
+                              {claim.product}
+                              {claim.combinedItemCount ? (
+                                <small
+                                  style={{
+                                    display: "block",
+                                    color: "#6B7280",
+                                    fontSize: 10,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  Combined Delivery · {claim.combinedItemCount} items
+                                </small>
+                              ) : null}
+                            </span>
                           </div>
                         </td>
                         <td>{claim.batch}</td>
@@ -681,7 +802,11 @@ export default function Dashboard({
                         </td>
                         <td className="seller-order-amount">₱{claim.amount.toLocaleString()}</td>
                         <td>
-                          <StatusBadge status={claim.status} />
+                          <StatusBadge status={displayClaimStatus(claim.status)} />
+                          <InsufficientPaymentNotice
+                            shortfall={claimShortfall(claim)}
+                            compact
+                          />
                         </td>
                         <td
                           className={
@@ -987,7 +1112,11 @@ export default function Dashboard({
                       ₱{c.amount.toLocaleString()}
                     </td>
                     <td className="py-2.5 pr-3">
-                      <StatusBadge status={c.status} />
+                      <StatusBadge status={displayClaimStatus(c.status)} />
+                      <InsufficientPaymentNotice
+                        shortfall={claimShortfall(c)}
+                        compact
+                      />
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
@@ -1160,7 +1289,21 @@ export default function Dashboard({
                       <td>
                         <div className="bdash-cell-product">
                           <ProductThumb name={c.product} />
-                          <span>{c.product}</span>
+                          <span>
+                            {c.product}
+                            {c.combinedItemCount ? (
+                              <small
+                                style={{
+                                  display: "block",
+                                  color: "#6B7280",
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Combined Delivery · {c.combinedItemCount} items
+                              </small>
+                            ) : null}
+                          </span>
                         </div>
                       </td>
                       <td>
@@ -1176,7 +1319,11 @@ export default function Dashboard({
                         <span className="bdash-cell-amount">₱{c.amount.toLocaleString()}</span>
                       </td>
                       <td>
-                        <StatusBadge status={c.status} />
+                        <StatusBadge status={displayClaimStatus(c.status)} />
+                        <InsufficientPaymentNotice
+                          shortfall={claimShortfall(c)}
+                          compact
+                        />
                       </td>
                       <td>
                         {c.status === "Pending" && c.hours > 0 ? (
@@ -1263,10 +1410,26 @@ export default function Dashboard({
             </button>
           </div>
         </div>
+        {combinedDelivery.error && !combinedDelivery.loading && (
+          <div
+            role="alert"
+            className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+          >
+            <span>{combinedDelivery.error}</span>
+            <button
+              type="button"
+              className="min-h-11 px-2 font-semibold underline"
+              onClick={() => void combinedDelivery.reload()}
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <FulfillmentBoard
-          fulfillment={fulfillment}
+          fulfillment={dashboardFulfillment}
           role="buyer"
           board={board}
+          loading={!combinedDelivery.ready}
           onExpand={() => setBoardExpanded(true)}
           onViewOrder={(order) => setBuyerOrderDetailsId(order.dbId || order.id)}
         />
@@ -1294,10 +1457,11 @@ export default function Dashboard({
               <div className="seller-board-dialog__body">
                 <div className="seller-board-dialog__columns">
                   <FulfillmentBoard
-                    fulfillment={fulfillment}
+                    fulfillment={dashboardFulfillment}
                     role="buyer"
                     board={board}
                     expanded
+                    loading={!combinedDelivery.ready}
                     onViewOrder={(order) => setBuyerOrderDetailsId(order.dbId || order.id)}
                   />
                 </div>

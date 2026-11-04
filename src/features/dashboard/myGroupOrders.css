@@ -556,14 +556,18 @@
   margin: 0;
 }
 .group-orders-stat {
-  display: grid;
-  align-content: start;
-  gap: 2px;
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
   min-width: 0;
-  padding: 24px 18px;
+  padding: 14px 18px;
   border: 1px solid var(--kargo-line);
   border-radius: 12px;
   background: color-mix(in srgb, var(--kargo-navy) 3%, var(--kargo-surface));
+  text-align: left;
 }
 .group-orders-stat dd {
   margin: 0;
@@ -576,10 +580,16 @@
   font-variant-numeric: tabular-nums;
 }
 .group-orders-stat dt {
+  overflow: visible;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
   color: var(--kargo-muted);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  text-align: left;
+  text-orientation: mixed;
   text-transform: uppercase;
 }
 .group-orders-modal .group-shortcut-refresh {
@@ -598,6 +608,8 @@
   text-transform: uppercase;
 }
 .group-orders-modal__quiet {
+  box-sizing: border-box;
+  width: 100%;
   margin: 0;
   padding: 14px 16px;
   border: 1px dashed var(--kargo-line);
@@ -618,11 +630,6 @@
 }
 .group-orders-modal .group-shortcut-summary {
   padding: 14px 16px;
-}
-/* Override any lower-specificity stat padding so numbers have room. */
-.group-orders-modal .group-orders-stat {
-  padding: 24px 18px;
-  align-content: start;
 }
 .group-orders-modal .group-shortcut-icon {
   width: 42px;
@@ -693,13 +700,14 @@
   width: 100%;
 }
 .group-orders-modal__past-toggle {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   width: 100%;
   min-height: 48px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid var(--kargo-line);
   border-radius: 12px;
   background: color-mix(in srgb, var(--kargo-navy) 3%, var(--kargo-surface));
@@ -775,21 +783,143 @@
   line-height: 1.5;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 767px) {
   .group-orders-modal__summary {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .group-orders-modal .group-shortcut-refresh {
     width: 100%;
   }
-  .group-orders-stat {
-    padding: 20px 16px;
+  .group-orders-modal__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
   }
-  .group-orders-stat dd {
+  .group-orders-modal .group-orders-stat {
+    min-height: auto;
+    overflow: visible;
+    padding: 10px 12px;
+  }
+  .group-orders-modal .group-orders-stat dd {
+    order: -1;
     font-size: 20px;
+    font-weight: 800;
+    text-align: left;
   }
-  .group-orders-stat dt {
-    font-size: 10px;
+  .group-orders-modal .group-orders-stat dt {
+    display: block;
+    width: 100%;
+    overflow: visible;
+    overflow-wrap: normal;
+    white-space: nowrap;
+    writing-mode: horizontal-tb;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    text-align: left;
+    text-orientation: mixed;
+  }
+  .group-orders-modal .group-shortcut-refresh {
+    grid-column: 1 / -1;
+    justify-self: end;
+    align-self: start;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border-radius: 12px;
+  }
+  .group-orders-modal__quiet,
+  .group-orders-modal .group-shortcut-empty,
+  .group-orders-modal .group-orders-empty,
+  .group-orders-modal__past-toggle {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-align: left;
+  }
+  .group-orders-modal__quiet {
+    min-height: 44px;
+  }
+  .group-orders-modal .group-shortcut-empty {
+    align-items: flex-start;
+  }
+  .group-orders-modal .group-orders-empty {
+    justify-items: start;
+    gap: 10px;
+    border: 1px solid var(--kargo-line);
+    background: var(--kargo-surface);
+  }
+  .group-orders-modal .group-orders-empty p {
+    max-width: 100%;
+  }
+  .group-orders-modal__past-toggle {
+    min-height: 44px;
+    justify-content: space-between;
+  }
+  .group-orders-modal__past-toggle > span {
+    align-items: center;
+  }
+  .group-orders-modal .group-shortcut-list,
+  .group-orders-modal .group-shortcut-card,
+  .group-orders-modal .group-shortcut-summary {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+  .group-orders-modal .group-shortcut-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .group-orders-modal .group-shortcut-name,
+  .group-orders-modal .group-shortcut-name h3,
+  .group-orders-modal .group-shortcut-name p,
+  .group-orders-modal .group-shortcut-amount {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .group-orders-modal .group-shortcut-actions > button {
+    min-height: 44px;
+    white-space: normal;
+  }
+  .kargo-modal.group-orders-modal-dialog {
+    width: 100% !important;
+    max-width: 420px !important;
+    max-height: calc(100vh - 24px) !important;
+    overflow: hidden !important;
+  }
+  .kargo-modal.group-orders-modal-dialog .kargo-modal__header {
+    position: sticky;
+    top: 0;
+  }
+  .kargo-modal.group-orders-modal-dialog .kargo-modal__close {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex: 0 0 44px !important;
+  }
+  .kargo-modal.group-orders-modal-dialog .kargo-modal__body {
+    min-height: 0;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+  .kargo-modal-overlay.group-orders-modal-overlay {
+    z-index: 10000 !important;
+    padding: max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left)) !important;
+  }
+  @supports (height: 100dvh) {
+    .kargo-modal.group-orders-modal-dialog {
+      max-height: calc(100dvh - 24px) !important;
+    }
+  }
+}
+
+@media (max-width: 380px) {
+  .group-orders-modal .group-orders-stat:nth-child(2) dt {
+    white-space: normal;
   }
 }
 
@@ -800,4 +930,3 @@
     transition: none;
   }
 }
-

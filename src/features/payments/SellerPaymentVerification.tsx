@@ -11,13 +11,14 @@ import {
   StatusBadge,
   recordKeys,
 } from "@/components/shared"
-import { Pencil, Plus, Search, Trash2, Upload } from "lucide-react"
+import { ChevronDown, Pencil, Plus, Search, Trash2, Upload } from "lucide-react"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
 import { kargoApi } from "@/services"
 import { verificationDisplayStatus, type VerifyItem } from "./verifyTypes"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
 import RejectPaymentModal from "./RejectPaymentModal"
+import PaymentHistoryDateSort from "./PaymentHistoryDateSort"
 import type { SellerPaymentMethod } from "@/services"
 
 const LOCAL_PAYMENT_METHODS_KEY = "kargo.localSellerPaymentMethods"
@@ -261,13 +262,6 @@ export default function SellerPaymentVerification({
             decision = "verified"
           if (item.status !== before.status && item.status === "Rejected")
             decision = "rejected"
-          if (
-            item.status === "Pending" &&
-            item.rejectReason?.startsWith("Short") &&
-            item.rejectReason !== before.rejectReason
-          ) {
-            decision = "verified"
-          }
           if (decision) {
             const deadlineHours = item.rejectionDeadline
               ? Math.max(
@@ -715,15 +709,10 @@ export default function SellerPaymentVerification({
               aria-label="Search payment history by buyer or order details"
             />
           </label>
-          <select
-            className="payment-history-date-sort"
+          <PaymentHistoryDateSort
             value={historyDateOrder}
-            onChange={(event) => setHistoryDateOrder(event.target.value as "newest" | "oldest")}
-            aria-label="Sort transactions by date"
-          >
-            <option value="newest">Latest transactions</option>
-            <option value="oldest">Oldest transactions</option>
-          </select>
+            onChange={setHistoryDateOrder}
+          />
         </div>
         {renderTable(
           historyItems,
@@ -739,13 +728,23 @@ export default function SellerPaymentVerification({
           title={methodEditor === "new" ? "Add Payment Method" : "Edit Payment Method"}
           onClose={() => !savingMethod && setMethodEditor(null)}
           width={440}
+          showTitleIcon={false}
+          className="payment-method-editor-modal"
         >
           <div className="space-y-4">
             <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
               Method
-              <select value={methodType} onChange={(event) => setMethodType(event.target.value)} style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", background: "#fff" }}>
-                {["GCash", "Maya", "Bank Transfer", "Cash on Meetup", "Cash on Delivery", "Others"].map((option) => <option key={option}>{option}</option>)}
-              </select>
+              <span className="payment-method-select-wrap">
+                <select
+                  className="payment-method-select"
+                  value={methodType}
+                  onChange={(event) => setMethodType(event.target.value)}
+                  style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", background: "#fff" }}
+                >
+                  {["GCash", "Maya", "Bank Transfer", "Cash on Meetup", "Cash on Delivery", "Others"].map((option) => <option key={option}>{option}</option>)}
+                </select>
+                <ChevronDown size={14} aria-hidden="true" />
+              </span>
             </label>
             <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
               Account Name
@@ -833,6 +832,46 @@ export default function SellerPaymentVerification({
           insuffAmtPaid={insuffAmtPaid}
           setInsuffAmtPaid={setInsuffAmtPaid}
           setVerifyItems={updateVerifyItems}
+          onConfirm={(_paidAmt, shortAmt) => {
+            const item = insuffTarget
+
+            if (!isSupabaseConfigured) {
+              setVerifyItems((items) =>
+                items.map((candidate) =>
+                  candidate.id === item.id
+                    ? {
+                        ...candidate,
+                        status: "Rejected" as const,
+                        shortfallAmount: shortAmt,
+                        rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
+                      }
+                    : candidate,
+                ),
+              )
+              return
+            }
+
+            void kargoApi
+              .markInsufficientPayment(String(item.id), shortAmt, item.groupOrderId)
+              .then(() => {
+                void refreshData?.().catch(() => {})
+                kargoApi
+                  .loadSellerPaymentSubmissions()
+                  .then(setVerifyItems)
+                  .catch(() => {})
+              })
+              .catch((error) => {
+                alert(
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to mark payment as insufficient.",
+                )
+                kargoApi
+                  .loadSellerPaymentSubmissions()
+                  .then(setVerifyItems)
+                  .catch(() => {})
+              })
+          }}
         />
       )}
 

@@ -183,18 +183,25 @@ export default function InsufficientPaymentModal({
           <button
             disabled={!isValid}
             onClick={() => {
-              setVerifyItems((p) =>
-                p.map((v) =>
-                  v.id === insuffTarget.id
-                    ? {
-                        ...v,
-                        status: "Pending" as const,
-                        amountPaid: String(paidAmt),
-                        rejectReason: `Short ₱${shortAmt.toLocaleString()} — buyer notified.`,
-                      }
-                    : v,
-                ),
-              )
+              if (onConfirm) {
+                // The server owns the transition: reject-with-shortfall, never
+                // a verified payment. Do not optimistically verify here.
+                onConfirm(paidAmt, shortAmt)
+              } else {
+                setVerifyItems((p) =>
+                  p.map((v) =>
+                    v.id === insuffTarget.id
+                      ? {
+                          ...v,
+                          status: "Rejected" as const,
+                          amountPaid: String(paidAmt),
+                          shortfallAmount: shortAmt,
+                          rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
+                        }
+                      : v,
+                  ),
+                )
+              }
               setInsuffTarget(null)
             }}
             style={{

@@ -20,7 +20,13 @@ export default function ContactModal({
   onClose: () => void
 }) {
   return (
-    <Modal title="Contact" onClose={onClose} width={420}>
+    <Modal
+      title="Contact"
+      onClose={onClose}
+      width={420}
+      showTitleIcon={false}
+      className="contact-modal"
+    >
       <div className="space-y-4">
         <div
           style={{
