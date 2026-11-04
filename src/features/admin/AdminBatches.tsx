@@ -8,6 +8,7 @@ import type { AdminBatchFilters, AdminBatchRow } from "./adminTypes";
 
 import { toneForStatus } from "@/constants/admin";
 import { useAdminResource } from "./useAdminResource";
+import { appendPage } from "./appendPage";
 import {
   AdminPageHeader,
   AdminFilterBar,
@@ -59,7 +60,7 @@ export default function AdminBatches() {
 
   useEffect(() => {
     if (!data) return;
-    setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;

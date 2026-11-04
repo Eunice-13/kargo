@@ -9,6 +9,7 @@ import { consumeAdminIntent, navIntent, subscribeNavIntent } from "@/state/navIn
 import type { AdminAuditRow, AdminTeamMember } from "./adminTypes";
 
 import { useAdminResource } from "./useAdminResource";
+import { appendPage } from "./appendPage";
 import {
   AdminPageHeader,
   AdminFilterBar,
@@ -298,7 +299,7 @@ function AuditSection() {
     [filters.search, filters.days, offset],
   );
   useEffect(() => {
-    if (data) setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    if (data) setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;

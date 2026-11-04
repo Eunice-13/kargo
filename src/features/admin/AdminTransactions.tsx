@@ -8,6 +8,7 @@ import { consumeAdminIntent } from "@/state/navIntent";
 import type { AdminCombinedPaymentRow, AdminOrderRow, AdminPaymentRow } from "./adminTypes";
 
 import { useAdminResource } from "./useAdminResource";
+import { appendPage } from "./appendPage";
 import { ORDER_STATUS_OPTIONS, toneForStatus } from "@/constants/admin";
 import {
   AdminPageHeader,
@@ -186,7 +187,7 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
     [filters.search, filters.status, filters.days, offset],
   );
   useEffect(() => {
-    if (data) setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    if (data) setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;
@@ -495,7 +496,7 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
     [filters.search, filters.status, filters.days, offset],
   );
   useEffect(() => {
-    if (data) setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    if (data) setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;
@@ -810,7 +811,7 @@ function CombinedSection() {
     [filters.search, offset],
   );
   useEffect(() => {
-    if (data) setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    if (data) setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   if (!loading && data && !data.available) {

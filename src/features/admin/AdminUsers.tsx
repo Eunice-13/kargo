@@ -8,6 +8,7 @@ import { consumeAdminIntent } from "@/state/navIntent";
 import type { AdminUserFilters, AdminUserRow } from "./adminTypes";
 
 import { useAdminResource } from "./useAdminResource";
+import { appendPage } from "./appendPage";
 import {
   AdminPageHeader,
   AdminFilterBar,
@@ -61,7 +62,7 @@ export default function AdminUsers() {
   // Append pages; replace on first page.
   useEffect(() => {
     if (!data) return;
-    setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;
