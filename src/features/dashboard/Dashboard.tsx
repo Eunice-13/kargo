@@ -17,7 +17,14 @@ import {
   FileText,
 } from "lucide-react";
 
-import type { ClaimRow, ClaimStatus, FulfillmentOrder, PayHistRow, Tab, SharedState } from "@/types";
+import type {
+  ClaimRow,
+  ClaimStatus,
+  FulfillmentOrder,
+  PayHistRow,
+  Tab,
+  SharedState,
+} from "@/types";
 
 import { navIntent } from "@/state/navIntent";
 
@@ -301,11 +308,7 @@ export default function Dashboard({
     reconcileRejectedClaim(claim, payHistory),
   );
   const activeClaimRows = combinedDelivery.ready
-    ? buildClaimsListRows(
-        reconciledDashboardClaims,
-        "All",
-        dashboardCombinedRequests,
-      ).filter(
+    ? buildClaimsListRows(reconciledDashboardClaims, "All", dashboardCombinedRequests).filter(
         (row) =>
           isOpenPaymentStatus(row.status) &&
           (!("type" in row) || combinedRequestHasOpenPayment(row.request)),
@@ -789,15 +792,15 @@ export default function Dashboard({
                 View All
               </button>
             </div>
-            <div className="seller-orders-table-wrap">
-              <table className="seller-orders-table">
+            <div className="seller-recent-orders__wrap">
+              <table className="seller-recent-orders__table">
                 <colgroup>
-                  <col />
-                  <col />
-                  <col />
-                  <col />
-                  <col />
-                  <col />
+                  <col className="seller-recent-orders__col-product" />
+                  <col className="seller-recent-orders__col-batch" />
+                  <col className="seller-recent-orders__col-buyer" />
+                  <col className="seller-recent-orders__col-amount" />
+                  <col className="seller-recent-orders__col-status" />
+                  <col className="seller-recent-orders__col-deadline" />
                 </colgroup>
                 <thead>
                   <tr>
@@ -828,6 +831,7 @@ export default function Dashboard({
                           <div className="seller-product-cell">
                             <ProductThumb name={claim.product} />
                             <span
+                              className="seller-recent-orders__product-name"
                               title={
                                 claim.combinedItemCount
                                   ? `${claim.product} · Combined Delivery · ${claim.combinedItemCount} items`
@@ -858,12 +862,15 @@ export default function Dashboard({
                           </div>
                         </td>
                         <td className="seller-order-amount">₱{claim.amount.toLocaleString()}</td>
-                        <td>
-                          <StatusBadge status={displayClaimStatus(claim.status)} />
-                          <InsufficientPaymentNotice
-                            shortfall={claimShortfall(claim)}
-                            compact
-                          />
+                        <td className="seller-recent-orders__status-cell">
+                          <div className="seller-recent-orders__status-group">
+                            <StatusBadge status={displayClaimStatus(claim.status)} />
+                            <InsufficientPaymentNotice
+                              shortfall={claimShortfall(claim)}
+                              compact
+                              table
+                            />
+                          </div>
                         </td>
                         <td
                           title={
@@ -873,11 +880,13 @@ export default function Dashboard({
                                 ? `${claim.hours} hours remaining`
                                 : "—"
                           }
-                          className={`seller-dashboard-deadline${claim.hours > 0 && claim.hours < 6
-                            ? " is-urgent"
-                            : index === 1
-                              ? " is-warning"
-                              : ""}`}
+                          className={`seller-dashboard-deadline${
+                            claim.hours > 0 && claim.hours < 6
+                              ? " is-urgent"
+                              : index === 1
+                                ? " is-warning"
+                                : ""
+                          }`}
                         >
                           {claim.status === "Pending" && claim.hours > 0 ? (
                             <Countdown
@@ -895,6 +904,103 @@ export default function Dashboard({
                   })}
                 </tbody>
               </table>
+            </div>
+            <div className="seller-recent-orders__mobile-cards seller-orders-page">
+              <div className="seller-orders-received-wrap">
+                <div className="seller-orders-received-scroll">
+                  <table className="seller-orders-received-table">
+                  <tbody>
+                    {visibleSellerOrders.map((claim, index) => {
+                      const buyerName = claim.buyer || claim.seller;
+
+                      return (
+                        <tr
+                          key={claim.id}
+                          className={
+                            index % 2
+                              ? "seller-orders-row seller-orders-row--alt"
+                              : "seller-orders-row"
+                          }
+                          onClick={() => setTab("My Claims")}
+                        >
+                          <td className="seller-orders-received-card-row row">
+                            <div className="seller-product-cell">
+                              <ProductThumb name={claim.product} />
+                              <span
+                                className="seller-recent-orders__mobile-product-name"
+                                title={claim.product}
+                              >
+                                {claim.product}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="seller-orders-received-card-row row">
+                            <span
+                              className="seller-recent-orders__mobile-name"
+                              title={claim.batch}
+                            >
+                              {claim.batch}
+                            </span>
+                          </td>
+                          <td className="seller-orders-received-card-row row">
+                            <div className="seller-buyer-cell">
+                              <Avatar name={buyerName} size={24} />
+                              <span
+                                className="seller-recent-orders__mobile-name"
+                                title={buyerName}
+                              >
+                                {buyerName}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="seller-orders-amount seller-orders-received-card-row row">
+                            ₱{claim.amount.toLocaleString()}
+                          </td>
+                          <td className="seller-orders-received-card-row row">
+                            <div className="seller-orders-received-status-group">
+                              <StatusBadge status={displayClaimStatus(claim.status)} />
+                              <InsufficientPaymentNotice
+                                shortfall={claimShortfall(claim)}
+                                compact
+                                table
+                                wrap
+                              />
+                            </div>
+                          </td>
+                          <td
+                            className={`seller-orders-received-card-row row seller-recent-orders__mobile-deadline${
+                              claim.hours > 0 && claim.hours < 6
+                                ? " is-urgent"
+                                : index === 1
+                                  ? " is-warning"
+                                  : ""
+                            }`}
+                            title={
+                              claim.deadlinePausedAt
+                                ? "Paused — waiting for seller"
+                                : claim.status === "Pending" && claim.hours > 0
+                                  ? `${claim.hours} hours remaining`
+                                  : "—"
+                            }
+                          >
+                            {claim.status === "Pending" && claim.hours > 0 ? (
+                              <Countdown
+                                hours={claim.hours}
+                                id={claim.id}
+                                expiresAt={claim.expiresAt}
+                                paused={Boolean(claim.deadlinePausedAt)}
+                              />
+                            ) : (
+                              <span className="seller-recent-orders-dash">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -1175,10 +1281,7 @@ export default function Dashboard({
                     </td>
                     <td className="py-2.5 pr-3">
                       <StatusBadge status={displayClaimStatus(c.status)} />
-                      <InsufficientPaymentNotice
-                        shortfall={claimShortfall(c)}
-                        compact
-                      />
+                      <InsufficientPaymentNotice shortfall={claimShortfall(c)} compact />
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
@@ -1382,10 +1485,7 @@ export default function Dashboard({
                       </td>
                       <td>
                         <StatusBadge status={displayClaimStatus(c.status)} />
-                        <InsufficientPaymentNotice
-                          shortfall={claimShortfall(c)}
-                          compact
-                        />
+                        <InsufficientPaymentNotice shortfall={claimShortfall(c)} compact />
                       </td>
                       <td>
                         {c.status === "Pending" && c.hours > 0 ? (
