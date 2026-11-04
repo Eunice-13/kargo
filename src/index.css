@@ -7007,12 +7007,20 @@ textarea::placeholder {
   margin: 0;
   color: #101c35;
   font-family: "Quicksand", "DM Sans", sans-serif;
-  font-size: 22px;
+  font-size: 28px !important;
   font-weight: 700;
 }
 
+.seller-payments-page .seller-payment-methods-instructions {
+  max-width: 680px;
+  margin: 3px 0 0;
+  color: #858b96;
+  font-size: 20px;
+  line-height: 1.45;
+}
+
 .seller-payments-page .seller-payment-history-subtitle {
-  margin: 3px 0 12px;
+  margin: 3px 0 24px;
   color: #858b96;
   font-size: 13px;
 }
@@ -7261,6 +7269,30 @@ textarea::placeholder {
   cursor: pointer;
 }
 
+.seller-orders-buyer-cell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  text-align: left;
+}
+
+.seller-orders-buyer-cell > :first-child {
+  flex: 0 0 24px;
+}
+
+.seller-orders-buyer-cell .seller-orders-buyer {
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+  margin: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .seller-orders-buyer:hover {
   color: #2e3192;
   text-decoration: underline;
@@ -7454,6 +7486,11 @@ textarea::placeholder {
   white-space: nowrap;
 }
 
+.seller-batches-mobile-hint,
+.seller-batches-mobile-fab {
+  display: none;
+}
+
 .seller-batches-add:hover {
   background: #252979;
 }
@@ -7624,6 +7661,18 @@ textarea::placeholder {
 
 .contact-modal .kargo-modal__title-group {
   margin-left: 0;
+}
+
+.group-order-dialog .kargo-modal__title-group {
+  margin-left: 10px;
+}
+
+.review-claim-modal .kargo-modal__title-group {
+  margin-left: 10px;
+}
+
+.lock-batch-modal .kargo-modal__title-group {
+  margin-left: 10px;
 }
 
 .seller-batch-select-icon {
@@ -7920,6 +7969,14 @@ textarea::placeholder {
 .seller-orders-row--alt,
 .seller-orders-row--alt td {
   background: var(--seller-row);
+}
+
+@media (max-width: 767px) {
+  .seller-orders-page .seller-orders-received-table tbody tr,
+  .seller-orders-page .seller-orders-received-table tbody tr:hover,
+  .seller-orders-page .seller-orders-received-table tbody tr td {
+    background: #fff !important;
+  }
 }
 
 .seller-orders-row b,
@@ -8671,6 +8728,44 @@ textarea::placeholder {
 
   .seller-batches-heading {
     align-items: flex-start;
+  }
+
+  .seller-batches-heading > div:first-child {
+    padding-inline: 6px;
+  }
+
+  .seller-batches-page .seller-batches-add--desktop {
+    display: none !important;
+  }
+
+  .seller-batches-page .seller-batches-mobile-hint {
+    display: block;
+    width: 100%;
+    margin: 18px 0 16px;
+    color: #667085;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .seller-batches-page .seller-batches-mobile-fab {
+    position: fixed;
+    right: 20px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 85;
+    display: grid;
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    min-height: 54px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--seller-primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgb(17 24 39 / 24%);
+    cursor: pointer;
   }
 
   .seller-batch-filter-bar {
@@ -10977,9 +11072,15 @@ textarea::placeholder {
 }
 
 .seller-batches-page .seller-batch-cover-badges .seller-batch-group-icon {
+  display: inline-flex;
   width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border-radius: 50%;
+  line-height: 1;
 }
 
 .seller-batches-page .seller-batch-cover-badges .seller-batch-group-icon svg {
@@ -16229,17 +16330,160 @@ textarea::placeholder {
     padding: 24px 16px 32px;
   }
 
+  .seller-batches-page,
+  .seller-payments-page {
+    padding: 18px 12px 28px !important;
+  }
+
   .seller-batches-heading {
+    margin: 28px 0 28px !important;
     align-items: flex-start;
+  }
+
+  .seller-batches-page .seller-batches-heading h1 {
+    font-size: 24px !important;
+  }
+
+  .seller-batches-page .seller-batches-heading p {
+    font-size: 18px !important;
+  }
+
+  .seller-payments-page > section:first-child {
+    margin-top: 28px !important;
+  }
+
+  .seller-payments-page .seller-payment-section-heading {
+    font-size: 24px !important;
+  }
+
+  .seller-payments-page .seller-payment-history-subtitle {
+    font-size: 18px !important;
+  }
+
+  .seller-payments-page .seller-payment-methods-instructions {
+    font-size: 18px !important;
+  }
+
+  .seller-payments-page .seller-payment-methods-heading-row {
+    padding-bottom: 8px;
+  }
+
+  .seller-batches-page .seller-batches-add--desktop {
+    display: none !important;
+  }
+
+  .seller-batches-page .seller-batches-mobile-hint {
+    display: block;
+    width: 100%;
+    margin: 18px 0 16px;
+    color: #667085;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .seller-batches-page .seller-batches-mobile-fab {
+    position: fixed;
+    right: 20px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    z-index: 85;
+    display: grid;
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    min-height: 54px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--seller-primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgb(17 24 39 / 24%);
+    cursor: pointer;
   }
 
   .seller-batch-filter-bar {
     padding: 12px !important;
   }
 
-  .seller-batches-grid {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 16px !important;
+  .seller-batches-page .seller-batches-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .seller-batches-grid > .fi {
+    min-width: 0;
+  }
+
+  .seller-batches-page .seller-batch-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .seller-batches-page button.seller-batch-lock {
+    position: absolute;
+    display: grid !important;
+    box-sizing: border-box !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    flex: 0 0 28px !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    clip-path: none !important;
+  }
+
+  .seller-batches-page button.seller-batch-lock::before {
+    position: absolute;
+    inset: 0;
+    width: 28px;
+    height: 28px;
+    margin: auto;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 6px rgb(17 24 39 / 28%), 0 0 0 1px rgb(17 24 39 / 6%);
+    content: "";
+  }
+
+  .seller-batches-page button.seller-batch-lock.is-open::before {
+    box-shadow: 0 2px 6px rgb(17 24 39 / 28%), inset 0 0 0 1.5px #0e7490;
+  }
+
+  .seller-batches-page button.seller-batch-lock.is-locked::before {
+    box-shadow: 0 2px 6px rgb(17 24 39 / 28%), inset 0 0 0 1.5px #b91c1c;
+  }
+
+  .seller-batches-page .seller-batch-lock svg {
+    position: relative;
+    z-index: 1;
+    width: 13px;
+    height: 13px;
+  }
+
+  .seller-batches-page .seller-batch-actions > .kargo-primary,
+  .seller-batches-page .seller-batch-actions > .kargo-secondary,
+  .seller-batches-page .seller-batch-actions > button[aria-label^="Share"] {
+    height: 30px !important;
+    min-height: 30px !important;
+  }
+
+  .seller-batches-page .seller-batch-actions > .kargo-primary {
+    padding: 2px 6px !important;
+  }
+
+  .seller-batches-page .seller-batch-actions > .kargo-secondary,
+  .seller-batches-page .seller-batch-actions > button[aria-label^="Share"] {
+    width: 30px !important;
+    min-width: 30px !important;
+    flex: 0 0 30px !important;
+    padding: 4px !important;
   }
 }
 
@@ -17194,12 +17438,37 @@ tr.record-focus {
   }
   .seller-orders-page .seller-orders-split__main {
     flex: 0 0 auto;
-    min-width: 62px;
-    padding-inline: 12px;
+    min-width: 0;
+    width: 64px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 6px !important;
     white-space: nowrap;
   }
   .seller-orders-page .seller-orders-split .seller-orders-review {
-    min-height: 44px;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 6px !important;
+  }
+  .seller-orders-page .seller-orders-split__toggle {
+    width: 36px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 6px !important;
+  }
+  .seller-orders-page .seller-orders-deadline__fee {
+    justify-items: end;
+  }
+  .seller-orders-page .seller-orders-row td.seller-orders-deadline {
+    padding-inline: 0 !important;
+  }
+  .seller-orders-page .seller-orders-deadline__fee .seller-orders-review {
+    width: max-content !important;
+    min-width: 124px;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 4px !important;
+    white-space: nowrap;
   }
   .seller-orders-menu button {
     min-height: 44px;
@@ -17385,14 +17654,11 @@ tr.record-focus {
    POVs without disappearing: the photo desaturates, the title quiets, and the
    card stops lifting on hover. The seller keeps the Re-open action on the
    card, so the state is visible but reversible. */
-/* The gray has to be unmistakable: a mid-gray surface (not near-white), and a
-   photo that is desaturated AND darkened. Grayscale alone on a white card is
-   barely noticeable, which is what the first pass looked like. Text stays dark
-   enough to read, so "closed" never costs legibility. */
+/* Keep closed batch details on a white card; the closed banner and muted photo
+   communicate the state without tinting the full card body. */
 .batch-card.is-closed {
-  border-color: #c3c9d2;
-  /* The card sets its own background inline, so this has to outrank it. */
-  background: #e1e4e9 !important;
+  border-color: #dce1e8;
+  background: #fff !important;
 }
 
 .batch-card.is-closed img {

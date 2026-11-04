@@ -715,6 +715,8 @@ export default function Batches({
           title={lockConfirm.locked ? "Unlock this batch?" : "Lock this batch?"}
           onClose={() => setLockConfirm(null)}
           width={420}
+          showTitleIcon={false}
+          className="lock-batch-modal"
         >
           <p style={{ fontSize: 13, color: "#374151", marginBottom: 16 }}>
             {lockConfirm.locked ? (
@@ -1148,6 +1150,20 @@ export default function Batches({
                                   <button
                                     type="button"
                                     className={`seller-batch-lock${takingOrders ? " is-open" : " is-locked"}`}
+                                    style={{
+                                      boxSizing: "border-box",
+                                      width: 28,
+                                      height: 28,
+                                      minWidth: 28,
+                                      minHeight: 28,
+                                      maxWidth: 28,
+                                      maxHeight: 28,
+                                      flex: "0 0 28px",
+                                      aspectRatio: "1 / 1",
+                                      padding: 0,
+                                      borderRadius: "50%",
+                                      lineHeight: 0,
+                                    }}
                                     aria-label={label}
                                     title={label}
                                     onClick={(e) => {
@@ -1708,10 +1724,23 @@ export default function Batches({
             <h1>My Batches</h1>
             <p>Manage your pasabuy batches. Toggle lock to pause new orders.</p>
           </div>
-          <button type="button" className="seller-batches-add" onClick={onNewBatch}>
+          <button
+            type="button"
+            className="seller-batches-add seller-batches-add--desktop"
+            onClick={onNewBatch}
+          >
             <Plus size={16} aria-hidden="true" /> Add batch
           </button>
         </header>
+        <button
+          type="button"
+          className="seller-batches-mobile-fab"
+          aria-label="Add batch"
+          title="Add batch"
+          onClick={onNewBatch}
+        >
+          <Plus size={24} aria-hidden="true" />
+        </button>
         <FilterBar />
         {myBatches.length === 0 ? (
           <Card style={{ textAlign: "center", padding: "32px 24px" }}>
@@ -1722,6 +1751,9 @@ export default function Batches({
         ) : (
           <BatchGrid batchList={myFiltered} />
         )}
+        <p className="seller-batches-mobile-hint">
+          Use the + button to add batches.
+        </p>
         {/* Seller request pop-ups (opened from the header buttons above) */}
         {showExtReqModal && (
           <Modal

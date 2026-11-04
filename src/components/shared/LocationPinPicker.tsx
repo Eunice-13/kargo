@@ -407,9 +407,9 @@ export default function LocationPinPicker({
                   setActiveResultIndex(-1)
                 }
               }}
-              placeholder="Start typing a barangay, street, or landmark"
+              placeholder="Search address"
               autoComplete="off"
-              className="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-10 text-sm"
+              className="kargo-location-search w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-10 text-sm"
             />
             {searching && (
               <LoaderCircle

@@ -8436,10 +8436,30 @@ body> :not(#root) * {
     text-align: right;
   }
 
+  .seller-orders-page .seller-orders-received-table tbody td:first-child > .seller-orders-buyer-cell {
+    width: auto !important;
+    max-width: 100% !important;
+    justify-content: flex-start !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td:first-child > .seller-orders-buyer-cell .seller-orders-buyer {
+    width: auto !important;
+    max-width: calc(100% - 32px) !important;
+    flex: 0 1 auto !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
   .seller-orders-page .seller-orders-received-table tbody td:nth-child(3) > div {
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td:nth-child(3) > div > img {
+    display: none !important;
   }
 
   .seller-orders-page .seller-orders-received-table tbody td:nth-child(3) > div > span {
@@ -8899,4 +8919,144 @@ body> :not(#root) * {
   .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody td:nth-child(6) span {
     font-size: 11px !important;
   }
+}
+
+/* Keep seller Payments typography in lockstep with the Orders page heading. */
+@media (min-width: 1025px) {
+  .claims-to-pay-table-header span:nth-child(1),
+  .claims-to-pay-table-header span:nth-child(2),
+  .claims-to-pay-table-header span:nth-child(4) {
+    justify-self: stretch;
+    text-align: left;
+  }
+
+  .claims-to-pay-table tbody td:nth-child(2),
+  .claims-to-pay-table tbody td:nth-child(4) {
+    text-align: left;
+  }
+
+  .claims-to-pay-table tbody td:nth-child(2) .claims-to-pay-seller {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .claims-to-pay-table tbody td:nth-child(4) .claims-to-pay-amount {
+    text-align: left;
+  }
+}
+
+@media (min-width: 768px) {
+  .seller-orders-page,
+  .seller-batches-page,
+  .seller-payments-page {
+    padding: 32px clamp(16px, 4vw, 64px) 48px !important;
+  }
+
+  .seller-orders-page .seller-orders-heading {
+    margin: 0 0 24px !important;
+  }
+
+  .seller-payments-page > section + section {
+    margin-top: 24px !important;
+  }
+
+  .seller-orders-page .seller-orders-heading h1,
+  .seller-batches-page .seller-batches-heading h1,
+  .seller-payments-page .seller-payment-section-heading {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .seller-orders-page .seller-orders-heading p,
+  .seller-batches-page .seller-batches-heading p,
+  .seller-payments-page .seller-payment-methods-instructions,
+  .seller-payments-page .seller-payment-history-subtitle {
+    font-size: 18px !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .claim-actions-split {
+    margin-left: auto;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges {
+    right: 10px;
+    gap: 3px;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges > span {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-badge {
+    display: inline-flex !important;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-full,
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-short {
+    display: none !important;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-icon {
+    display: inline-flex !important;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    line-height: 1;
+  }
+
+  .seller-orders-page .seller-orders-heading h1,
+  .seller-batches-page .seller-batches-heading h1,
+  .seller-payments-page .seller-payment-section-heading {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .seller-orders-page .seller-orders-heading p,
+  .seller-batches-page .seller-batches-heading p,
+  .seller-payments-page .seller-payment-methods-instructions,
+  .seller-payments-page .seller-payment-history-subtitle {
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+  }
+}
+
+html body .kargo-modal button.item-claim-quantity-step {
+  box-sizing: border-box !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  flex: 0 0 28px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+}
+
+body .kargo-modal .kargo-modal__content input.kargo-location-search:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]) {
+  padding-left: 40px !important;
+  padding-right: 40px !important;
 }
