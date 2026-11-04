@@ -827,7 +827,13 @@ export default function Dashboard({
                         <td>
                           <div className="seller-product-cell">
                             <ProductThumb name={claim.product} />
-                            <span>
+                            <span
+                              title={
+                                claim.combinedItemCount
+                                  ? `${claim.product} · Combined Delivery · ${claim.combinedItemCount} items`
+                                  : claim.product
+                              }
+                            >
                               {claim.product}
                               {claim.combinedItemCount ? (
                                 <small
@@ -844,11 +850,11 @@ export default function Dashboard({
                             </span>
                           </div>
                         </td>
-                        <td>{claim.batch}</td>
+                        <td title={claim.batch}>{claim.batch}</td>
                         <td>
                           <div className="seller-buyer-cell">
                             <Avatar name={buyerName} size={21} />
-                            <span>{buyerName}</span>
+                            <span title={buyerName}>{buyerName}</span>
                           </div>
                         </td>
                         <td className="seller-order-amount">₱{claim.amount.toLocaleString()}</td>
@@ -860,13 +866,18 @@ export default function Dashboard({
                           />
                         </td>
                         <td
-                          className={
-                            claim.hours > 0 && claim.hours < 6
-                              ? "is-urgent"
-                              : index === 1
-                                ? "is-warning"
-                                : ""
+                          title={
+                            claim.deadlinePausedAt
+                              ? "Paused — waiting for seller"
+                              : claim.status === "Pending" && claim.hours > 0
+                                ? `${claim.hours} hours remaining`
+                                : "—"
                           }
+                          className={`seller-dashboard-deadline${claim.hours > 0 && claim.hours < 6
+                            ? " is-urgent"
+                            : index === 1
+                              ? " is-warning"
+                              : ""}`}
                         >
                           {claim.status === "Pending" && claim.hours > 0 ? (
                             <Countdown

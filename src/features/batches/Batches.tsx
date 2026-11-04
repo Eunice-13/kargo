@@ -1036,7 +1036,13 @@ export default function Batches({
                                   : "Per Piece"}
                             </span>
                             {b.groupOrdersEnabled && (
-                              <span className="is-group">Group Order Available</span>
+                              <span
+                                className="is-group"
+                                title="Group Order Available"
+                                aria-label="Group Order Available"
+                              >
+                                <span>Group Order</span>
+                              </span>
                             )}
                           </div>
                           {/* Closed batches get the same big label buyers see,
