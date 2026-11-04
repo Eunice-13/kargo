@@ -748,6 +748,14 @@ export default function Dashboard({
             </div>
             <div className="seller-orders-table-wrap">
               <table className="seller-orders-table">
+                <colgroup>
+                  <col />
+                  <col />
+                  <col />
+                  <col />
+                  <col />
+                  <col />
+                </colgroup>
                 <thead>
                   <tr>
                     {[
@@ -825,7 +833,7 @@ export default function Dashboard({
                               paused={Boolean(claim.deadlinePausedAt)}
                             />
                           ) : (
-                            <span>—</span>
+                            <span className="seller-recent-orders-dash">—</span>
                           )}
                         </td>
                       </tr>

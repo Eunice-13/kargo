@@ -1,11 +1,34 @@
 import type React from "react";
 import { useState } from "react";
-import { CreditCard, Paperclip, Check, X, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { CreditCard, Check, X, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { INDIGO, CREAM } from "@/constants/theme";
 import { Modal, Avatar, SecondaryBtn } from "@/components/shared";
 import type { VerifyItem } from "./verifyTypes";
 import { confirmPaymentCopy } from "./confirmPaymentWarning";
 import { kargoApi } from "@/services";
+
+function ReceiptFileIcon({ size = 14, className }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M11 21H8a2 2 0 0 1-2-2V9l5-6h5a2 2 0 0 1 2 2v3" />
+      <path d="M6 9h3a2 2 0 0 0 2-2V3" />
+      <path d="M9 14h2" />
+      <path d="M9 17h2" />
+      <path d="M20 10v7a3 3 0 0 1-6 0V9.5a1.75 1.75 0 0 1 3.5 0V16" />
+    </svg>
+  );
+}
 
 export default function ReviewSubmissionModal({
   reviewTarget,
@@ -236,11 +259,8 @@ export default function ReviewSubmissionModal({
             ))}
             {/* Contact link row */}
             <div
+              className="payment-review-detail-row"
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "10px 14px",
                 borderBottom: "1px solid #F3F4F6",
               }}
             >
@@ -250,23 +270,9 @@ export default function ReviewSubmissionModal({
                   href={reviewTarget.contact}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    fontSize: 11,
-                    color: "#fff",
-                    background: INDIGO,
-                    border: "none",
-                    borderRadius: 6,
-                    padding: "4px 10px",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    fontFamily: "'Josefin Sans',sans-serif",
-                    textDecoration: "none",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
+                  className="payment-review-action-button"
                 >
-                  <ExternalLink size={12} aria-hidden="true" /> Open Facebook profile
+                  <ExternalLink size={14} aria-hidden="true" /> Open Facebook profile
                 </a>
               ) : (
                 <span style={{ fontSize: 12, color: "#9CA3AF" }}>—</span>
@@ -274,62 +280,28 @@ export default function ReviewSubmissionModal({
             </div>
             {/* Receipt row */}
             <div
+              className="payment-review-detail-row payment-review-receipt-row"
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "10px 14px",
+                borderBottom: "1px solid #F3F4F6",
               }}
             >
-              <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>Receipt File</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={openReceipt}
-                  disabled={receiptLoading || !reviewTarget.receiptPath}
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: INDIGO,
-                    border: 0,
-                    background: "transparent",
-                    cursor: reviewTarget.receiptPath ? "pointer" : "default",
-                    padding: 0,
-                  }}
-                >
-                  <Paperclip
-                    size={12}
-                    aria-hidden="true"
-                    style={{
-                      display: "inline",
-                      verticalAlign: -1,
-                      marginRight: 3,
-                    }}
-                  />
-                  {reviewTarget.receipt}
-                </button>
-                <button
-                  onClick={openReceipt}
-                  aria-expanded={showReceipt}
-                  disabled={receiptLoading || !reviewTarget.receiptPath}
-                  style={{
-                    fontSize: 11,
-                    color: "#fff",
-                    background: INDIGO,
-                    border: "none",
-                    borderRadius: 6,
-                    padding: "3px 10px",
-                    cursor: "pointer",
-                    fontWeight: 600,
-                    fontFamily: "'Josefin Sans',sans-serif",
-                  }}
-                >
-                  {receiptLoading ? "Opening…" : "View"}
-                </button>
-              </div>
+              <span className="payment-review-receipt-label" style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>Receipt File</span>
+              <button
+                type="button"
+                className="payment-review-action-button"
+                onClick={reviewTarget.receiptPath ? openReceipt : undefined}
+                aria-label="View receipt"
+                title="View receipt"
+                aria-expanded={showReceipt}
+                disabled={receiptLoading || !reviewTarget.receiptPath}
+              >
+                <ReceiptFileIcon size={14} />
+                {receiptLoading ? "Opening…" : reviewTarget.receiptPath ? "View" : "No receipt"}
+              </button>
             </div>
             {receiptError && (
               <div
+                className="payment-review-reminder"
                 style={{
                   padding: "8px 14px",
                   background: "#FEF2F2",
@@ -394,19 +366,6 @@ export default function ReviewSubmissionModal({
             };
             return (
               <div className="kargo-modal-actions">
-                <button
-                  onClick={() => setReviewTarget(null)}
-                  style={{
-                    ...btnBase,
-                    justifyContent: "center",
-                    display: "flex",
-                    background: "#fff",
-                    color: "#374151",
-                    borderColor: "#E5E7EB",
-                  }}
-                >
-                  Close
-                </button>
                 {reviewTarget.status === "Pending" && (
                   <>
                     {isShort && (

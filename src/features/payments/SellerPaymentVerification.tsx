@@ -368,7 +368,9 @@ export default function SellerPaymentVerification({
       return historyDateOrder === "newest" ? safeRight - safeLeft : safeLeft - safeRight
     })
   const renderTable = (items: VerifyItem[], showAmountPaid: boolean, emptyMessage?: string) => (
-    <Card className="!p-0 overflow-hidden seller-payment-table mobile-data-page">
+    <Card
+      className={`!p-0 overflow-hidden seller-payment-table mobile-data-page${showAmountPaid ? "" : " seller-payment-table--history"}`}
+    >
       <div style={{ overflowX: "auto" }}>
         <table className="w-full text-[13px]">
           <thead style={{ background: "#6892D5" }}>
@@ -515,6 +517,7 @@ export default function SellerPaymentVerification({
                   <td style={{ padding: "12px 14px" }}>
                     <button
                       type="button"
+                      className="seller-payment-details-button"
                       onClick={() => setReviewTarget(item)}
                       style={{
                         border: "1px solid #D1D5DB",
