@@ -363,6 +363,25 @@ export default function Dashboard({
 
   const visibleRecentClaims = recentClaims;
 
+  const productImagesById = useMemo(() => {
+    const images = new Map<string, string>();
+    for (const product of batches.flatMap((batch) => batch.products)) {
+      if (product.dbId && product.imageUrl) images.set(product.dbId, product.imageUrl);
+    }
+    return images;
+  }, [batches]);
+
+  const claimImageUrl = (claim: ClaimRow): string | undefined => {
+    if (claim.groupOrderId || claim.combinedDeliveryGroupId) return undefined;
+
+    const imageUrl = claim.productId ? productImagesById.get(claim.productId) : undefined;
+    if (imageUrl) return imageUrl;
+
+    return batches
+      .find((batch) => batch.title === claim.batch && batch.seller === claim.seller)
+      ?.products.find((product) => product.name === claim.product)?.imageUrl;
+  };
+
   const payableToPay = toPay.filter(
     (item) =>
       !item.deadlinePausedAt &&
@@ -1288,7 +1307,7 @@ export default function Dashboard({
                     <tr key={c.id} className="cursor-pointer" onClick={() => setTab("My Claims")}>
                       <td>
                         <div className="bdash-cell-product">
-                          <ProductThumb name={c.product} />
+                          <ProductThumb name={c.product} imageUrl={claimImageUrl(c)} />
                           <span>
                             {c.product}
                             {c.combinedItemCount ? (

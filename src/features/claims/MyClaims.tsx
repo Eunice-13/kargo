@@ -1,7 +1,7 @@
 import { OrderDetailsModal } from "@/features/orders";
 import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combined-delivery";
 
-import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 
 import { List, LayoutGrid, AlertTriangle, Link2, MessageCircle, Truck } from "lucide-react";
 
@@ -579,6 +579,25 @@ export default function MyClaims({
 
   const payableClaims = claimsToPay.filter(claimIsPayable);
   const totalDue = getToPayTotal(payableClaims);
+
+  const productImagesById = useMemo(() => {
+    const images = new Map<string, string>();
+    for (const product of batches.flatMap((batch) => batch.products)) {
+      if (product.dbId && product.imageUrl) images.set(product.dbId, product.imageUrl);
+    }
+    return images;
+  }, [batches]);
+
+  const claimImageUrl = (claim: ClaimRow): string | undefined => {
+    if (claim.groupOrderId) return undefined;
+
+    const imageUrl = claim.productId ? productImagesById.get(claim.productId) : undefined;
+    if (imageUrl) return imageUrl;
+
+    return batches
+      .find((batch) => batch.title === claim.batch && batch.seller === claim.seller)
+      ?.products.find((product) => product.name === claim.product)?.imageUrl;
+  };
 
   const itemPreviewBatch = itemPreview
     ? batches.find(
@@ -2388,7 +2407,7 @@ export default function MyClaims({
                     aria-label={`View ${c.product} details`}
                     onClick={() => setItemPreview(c)}
                   >
-                    <ProductThumb name={c.product} />
+                    <ProductThumb name={c.product} imageUrl={claimImageUrl(c)} />
                   </button>
                   <div className="claims-card__info min-w-0 flex-1">
                     <div
@@ -2704,7 +2723,7 @@ export default function MyClaims({
                           aria-label={`View ${c.product} details`}
                           onClick={() => setItemPreview(c)}
                         >
-                          <ProductThumb name={c.product} />
+                          <ProductThumb name={c.product} imageUrl={claimImageUrl(c)} />
                         </button>
                         <button
                           type="button"
@@ -2957,7 +2976,11 @@ export default function MyClaims({
           <div className="buyer-claim-item-preview">
             <div className="buyer-claim-item-preview__photo">
               <img
-                src={itemPreviewProduct?.imageUrl ?? productImageUrl(itemPreview.product, 900)}
+                src={
+                  claimImageUrl(itemPreview) ??
+                  itemPreviewProduct?.imageUrl ??
+                  productImageUrl(itemPreview.product, 900)
+                }
                 alt={itemPreview.product}
               />
             </div>
