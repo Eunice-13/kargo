@@ -190,21 +190,21 @@ export default function GroupOrderModal({
 
   if (loading) {
     return (
-      <Modal title="Group Order" onClose={onClose} width={620}>
+      <Modal title="Group Order" onClose={onClose} width={620} showTitleIcon={false} className="group-order-dialog">
         <p className="group-order-loading">Loading group order…</p>
       </Modal>
     )
   }
 
   if (groupOrderId && !group) {
-    return <Modal title="Group Order" onClose={onClose} width={620}>
+    return <Modal title="Group Order" onClose={onClose} width={620} showTitleIcon={false} className="group-order-dialog">
       <p role="alert">{error || "This group is unavailable or you no longer have leader access."}</p>
       <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
     </Modal>
   }
 
   return (
-    <Modal title="Group Order" onClose={onClose} width={680}>
+    <Modal title="Group Order" onClose={onClose} width={680} showTitleIcon={false} className="group-order-dialog">
       <div className="group-order-modal">
         {!group ? (
           <div className="group-order-entry">

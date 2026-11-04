@@ -563,6 +563,20 @@ export default function BatchPage({
     const currentProduct = b.products.find((p) =>
       product.dbId ? p.dbId === product.dbId : p.name === product.name,
     );
+    const buyerClaimedQty = claims
+      .filter(
+        (claim) =>
+          claim.status !== "Cancelled" &&
+          claim.status !== "Expired" &&
+          (product.dbId && claim.productId
+            ? claim.productId === product.dbId
+            : claim.batch === b.title && claim.product === product.name),
+      )
+      .reduce((total, claim) => total + claim.qty, 0);
+    const buyerLimit =
+      currentProduct?.limitPerUser && currentProduct.limitPerUser > 0
+        ? currentProduct.limitPerUser
+        : 5;
 
     if (
       role !== "Buyer" ||
@@ -574,6 +588,8 @@ export default function BatchPage({
 
       return false;
     }
+
+    if (buyerClaimedQty + claimQty > buyerLimit) return false;
 
     if (isSupabaseConfigured) {
       if (!product.dbId) {
@@ -1017,6 +1033,25 @@ export default function BatchPage({
 
               const left = p.qty - p.claimed;
 
+              const buyerClaimedQty = claims
+                .filter(
+                  (claim) =>
+                    claim.status !== "Cancelled" &&
+                    claim.status !== "Expired" &&
+                    (p.dbId && claim.productId
+                      ? claim.productId === p.dbId
+                      : claim.batch === batch.title && claim.product === p.name),
+                )
+                .reduce((total, claim) => total + claim.qty, 0);
+
+              const buyerLimit =
+                p.limitPerUser && p.limitPerUser > 0 ? p.limitPerUser : 5;
+
+              const buyerLimitReached =
+                role === "Buyer" && buyerClaimedQty >= buyerLimit;
+
+              const remainingBuyerLimit = Math.max(0, buyerLimit - buyerClaimedQty);
+
               const availability = productAvailability(p, ordersClosed);
 
               const soldOut = availability.claimsFull;
@@ -1299,6 +1334,13 @@ export default function BatchPage({
                               ? "Locked · Waitlist full"
                               : "Locked"}
                         </>
+                      </span>
+                    ) : buyerLimitReached ? (
+                      <span
+                        role="status"
+                        style={{ fontSize: 11, color: "#6B7280", fontWeight: 600 }}
+                      >
+                        You have claimed the maximum amount for this batch item.
                       </span>
                     ) : isClaimed ? (
                       <span
@@ -1619,6 +1661,28 @@ export default function BatchPage({
               claimTarget.p.dbId ? p.dbId === claimTarget.p.dbId : p.name === claimTarget.p.name,
             ) ?? claimTarget.p
           }
+          remainingBuyerLimit={(() => {
+            const product = batch.products.find((p) =>
+              claimTarget.p.dbId
+                ? p.dbId === claimTarget.p.dbId
+                : p.name === claimTarget.p.name,
+            ) ?? claimTarget.p;
+            const buyerLimit =
+              product.limitPerUser && product.limitPerUser > 0
+                ? product.limitPerUser
+                : 5;
+            const claimedQty = claims
+              .filter(
+                (claim) =>
+                  claim.status !== "Cancelled" &&
+                  claim.status !== "Expired" &&
+                  (product.dbId && claim.productId
+                    ? claim.productId === product.dbId
+                    : claim.batch === batch.title && claim.product === product.name),
+              )
+              .reduce((total, claim) => total + claim.qty, 0);
+            return Math.max(0, buyerLimit - claimedQty);
+          })()}
           onConfirm={async (reservation) => {
             const claimed = await handleClaim(
               claimTarget.key,

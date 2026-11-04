@@ -8290,6 +8290,124 @@ body> :not(#root) * {
 }
 
 @media (max-width: 767px) {
+  /* Render the dashboard preview as labeled cards on phones instead of
+     squeezing its six desktop columns into the narrow viewport. */
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__wrap {
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table colgroup,
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table thead {
+    display: none !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody tr {
+    display: grid !important;
+    min-width: 0 !important;
+    height: auto !important;
+    gap: 9px !important;
+    padding: 14px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    box-shadow: 0 3px 10px rgba(18, 30, 71, 0.08) !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody tr td {
+    display: flex !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    color: #40506a !important;
+    font-size: 12px !important;
+    text-align: right !important;
+    white-space: normal !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody tr td:nth-child(n) {
+    display: flex !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody tr td::before {
+    flex: 0 0 74px;
+    color: #40506a;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody td:nth-child(1)::before {
+    content: "Product";
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody td:nth-child(2)::before {
+    content: "Batch";
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody td:nth-child(3)::before {
+    content: "Buyer";
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody td:nth-child(4)::before {
+    content: "Amount";
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody td:nth-child(5)::before {
+    content: "Status";
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody td:nth-child(6)::before {
+    content: "Deadline";
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table .seller-product-cell,
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table .seller-buyer-cell {
+    justify-content: flex-end !important;
+    flex: 1 1 auto;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table .seller-recent-orders__status-group {
+    justify-content: flex-end !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody tr td.seller-recent-orders__empty {
+    display: block !important;
+    padding: 24px 14px !important;
+    color: #64748b !important;
+    text-align: center !important;
+  }
+
+  .seller-dashboard .seller-recent-orders .seller-recent-orders__table tbody tr td.seller-recent-orders__empty::before {
+    content: none !important;
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
   .kargo-modal.payment-submission-detail-modal:not(.admin-record-modal):not(.admin-confirm-modal)
     > .kargo-modal__body {
     min-height: 0;
@@ -8429,10 +8547,30 @@ body> :not(#root) * {
     text-align: right;
   }
 
+  .seller-orders-page .seller-orders-received-table tbody td:first-child > .seller-orders-buyer-cell {
+    width: auto !important;
+    max-width: 100% !important;
+    justify-content: flex-start !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td:first-child > .seller-orders-buyer-cell .seller-orders-buyer {
+    width: auto !important;
+    max-width: calc(100% - 32px) !important;
+    flex: 0 1 auto !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
   .seller-orders-page .seller-orders-received-table tbody td:nth-child(3) > div {
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td:nth-child(3) > div > img {
+    display: none !important;
   }
 
   .seller-orders-page .seller-orders-received-table tbody td:nth-child(3) > div > span {
@@ -8892,4 +9030,144 @@ body> :not(#root) * {
   .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody td:nth-child(6) span {
     font-size: 11px !important;
   }
+}
+
+/* Keep seller Payments typography in lockstep with the Orders page heading. */
+@media (min-width: 1025px) {
+  .claims-to-pay-table-header span:nth-child(1),
+  .claims-to-pay-table-header span:nth-child(2),
+  .claims-to-pay-table-header span:nth-child(4) {
+    justify-self: stretch;
+    text-align: left;
+  }
+
+  .claims-to-pay-table tbody td:nth-child(2),
+  .claims-to-pay-table tbody td:nth-child(4) {
+    text-align: left;
+  }
+
+  .claims-to-pay-table tbody td:nth-child(2) .claims-to-pay-seller {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .claims-to-pay-table tbody td:nth-child(4) .claims-to-pay-amount {
+    text-align: left;
+  }
+}
+
+@media (min-width: 768px) {
+  .seller-orders-page,
+  .seller-batches-page,
+  .seller-payments-page {
+    padding: 32px clamp(16px, 4vw, 64px) 48px !important;
+  }
+
+  .seller-orders-page .seller-orders-heading {
+    margin: 0 0 24px !important;
+  }
+
+  .seller-payments-page > section + section {
+    margin-top: 24px !important;
+  }
+
+  .seller-orders-page .seller-orders-heading h1,
+  .seller-batches-page .seller-batches-heading h1,
+  .seller-payments-page .seller-payment-section-heading {
+    font-size: 26px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .seller-orders-page .seller-orders-heading p,
+  .seller-batches-page .seller-batches-heading p,
+  .seller-payments-page .seller-payment-methods-instructions,
+  .seller-payments-page .seller-payment-history-subtitle {
+    font-size: 18px !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+
+  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .claim-actions-split {
+    margin-left: auto;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges {
+    right: 10px;
+    gap: 3px;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges > span {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-badge {
+    display: inline-flex !important;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-full,
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-short {
+    display: none !important;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-icon {
+    display: inline-flex !important;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    line-height: 1;
+  }
+
+  .seller-orders-page .seller-orders-heading h1,
+  .seller-batches-page .seller-batches-heading h1,
+  .seller-payments-page .seller-payment-section-heading {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .seller-orders-page .seller-orders-heading p,
+  .seller-batches-page .seller-batches-heading p,
+  .seller-payments-page .seller-payment-methods-instructions,
+  .seller-payments-page .seller-payment-history-subtitle {
+    font-size: 16px !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+  }
+}
+
+html body .kargo-modal button.item-claim-quantity-step {
+  box-sizing: border-box !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  flex: 0 0 28px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+}
+
+body .kargo-modal .kargo-modal__content input.kargo-location-search:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]) {
+  padding-left: 40px !important;
+  padding-right: 40px !important;
 }

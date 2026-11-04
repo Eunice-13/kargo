@@ -571,12 +571,13 @@ export default function SellerPaymentVerification({
       {view === "history" && (
       <>
       <section>
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2
-            className="seller-payment-section-heading"
-          >
-            Payment Methods
-          </h2>
+        <div className="seller-payment-methods-heading-row mb-4 flex items-center justify-between gap-3">
+          <div className="seller-payment-methods-heading-copy">
+            <h2 className="seller-payment-section-heading">Payment Methods</h2>
+            <p className="seller-payment-methods-instructions">
+              Add payment methods so buyers know where to send payment.
+            </p>
+          </div>
           <PrimaryBtn
             size="sm"
             onClick={() => openMethodEditor()}
@@ -668,7 +669,7 @@ export default function SellerPaymentVerification({
 
       <section>
         <h2
-          className="seller-payment-section-heading mb-4"
+          className="seller-payment-section-heading"
         >
           Payment History
         </h2>

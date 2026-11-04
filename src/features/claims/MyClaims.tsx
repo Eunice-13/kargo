@@ -1234,8 +1234,8 @@ export default function MyClaims({
                           }
                         >
                           <td>
-                            <div className="flex items-center gap-2">
-                              <Avatar name={c.buyer || c.seller} size={22} />
+                            <div className="seller-orders-buyer-cell">
+                              <Avatar name={c.buyer || c.seller} size={24} />
                               <button
                                 onClick={() => openBuyerProfile(c)}
                                 className="seller-orders-buyer"
