@@ -200,10 +200,7 @@ export default function MyClaims({
   const [combinedListRequests, setCombinedListRequests] = useState<CombinedDeliveryRequest[]>([]);
   const [combinedRequestsLoaded, setCombinedRequestsLoaded] = useState(false);
   const handleCombinedRequestsChange = useCallback(
-    (
-      requests: CombinedDeliveryRequest[],
-      loaded: boolean,
-    ) => {
+    (requests: CombinedDeliveryRequest[], loaded: boolean) => {
       setCombinedListRequests((current) => {
         const sameRequests =
           current.length === requests.length &&
@@ -223,7 +220,9 @@ export default function MyClaims({
     [],
   );
 
-  const [ongoingFilter, setOngoingFilter] = useState<"All" | "Pending" | "Awaiting Verification">("All");
+  const [ongoingFilter, setOngoingFilter] = useState<"All" | "Pending" | "Awaiting Verification">(
+    "All",
+  );
   const [orderFilter, setOrderFilter] = useState<OrderReceivedFilter>(() => {
     // The dashboard can ask for "Pending". Those orders now sit in Ongoing
     // Orders at the top of the page, which is always visible, so start on All.
@@ -890,16 +889,17 @@ export default function MyClaims({
     // These must never show as separate rows — the primary order represents them.
     const isCombinedDeliverySecondary = (claim: ClaimRow) => {
       const payment = paymentForOrder(claim);
-      return (
-        !!payment?.combinedDeliveryGroupId &&
-        String(payment.orderId) !== String(claim.id)
-      );
+      return !!payment?.combinedDeliveryGroupId && String(payment.orderId) !== String(claim.id);
     };
 
-    const ongoingOrdersRaw = claims.filter(isOngoing).filter((claim) => {
-      const s = statusForOrder(claim);
-      return s === "Pending" || s === "Awaiting Verification";
-    }).sort(orderReceivedSort);    const ongoingOrders = ongoingOrdersRaw.filter((claim) => {
+    const ongoingOrdersRaw = claims
+      .filter(isOngoing)
+      .filter((claim) => {
+        const s = statusForOrder(claim);
+        return s === "Pending" || s === "Awaiting Verification";
+      })
+      .sort(orderReceivedSort);
+    const ongoingOrders = ongoingOrdersRaw.filter((claim) => {
       if (ongoingFilter === "All") return true;
       const s = statusForOrder(claim);
       return s === ongoingFilter;
@@ -936,12 +936,7 @@ export default function MyClaims({
       },
     ];
 
-    const orderFilters: OrderReceivedFilter[] = [
-      "All",
-      "Verified",
-      "Expired",
-      "Cancelled",
-    ];
+    const orderFilters: OrderReceivedFilter[] = ["All", "Verified", "Expired", "Cancelled"];
 
     return (
       <div className="seller-orders-page mobile-data-page">
@@ -1000,40 +995,42 @@ export default function MyClaims({
           <section key={section.key} className="seller-orders-section" aria-label={section.label}>
             {section.key === "ongoing" ? (
               <>
-              <SH
-                title="Ongoing Orders"
-                action={
-                  <span className="seller-orders-section__count">{section.rows.length} {section.rows.length === 1 ? "order" : "orders"}</span>
-                }
-              />
-              <div
-                className="seller-orders-filters"
-                role="group"
-                aria-label="Filter ongoing orders by status"
-                style={{ marginBottom: 12 }}
-              >
-                {["All", "Pending", "Awaiting Verification"].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setOngoingFilter(f as any)}
-                    aria-pressed={ongoingFilter === f}
-                    style={{
-                      background: ongoingFilter === f ? INDIGO : "#fff",
-                      color: ongoingFilter === f ? "#fff" : "#6B7280",
-                      border: `1px solid ${ongoingFilter === f ? INDIGO : "#E5E7EB"}`,
-                      borderRadius: 999,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      padding: "5px 14px",
-                      transition: "all 0.15s",
-                      fontFamily: "'Quicksand',sans-serif",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
+                <SH
+                  title="Ongoing Orders"
+                  action={
+                    <span className="seller-orders-section__count">
+                      {section.rows.length} {section.rows.length === 1 ? "order" : "orders"}
+                    </span>
+                  }
+                />
+                <div
+                  className="seller-orders-filters"
+                  role="group"
+                  aria-label="Filter ongoing orders by status"
+                  style={{ marginBottom: 12 }}
+                >
+                  {["All", "Pending", "Awaiting Verification"].map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setOngoingFilter(f as any)}
+                      aria-pressed={ongoingFilter === f}
+                      style={{
+                        background: ongoingFilter === f ? INDIGO : "#fff",
+                        color: ongoingFilter === f ? "#fff" : "#6B7280",
+                        border: `1px solid ${ongoingFilter === f ? INDIGO : "#E5E7EB"}`,
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        padding: "5px 14px",
+                        transition: "all 0.15s",
+                        fontFamily: "'Quicksand',sans-serif",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
               </>
             ) : (
               <>
@@ -1076,9 +1073,9 @@ export default function MyClaims({
                 </div>
               </>
             )}
-            <div className="seller-orders-table-wrap">
-              <div className="seller-orders-table-scroll">
-                <table className="seller-orders-table">
+            <div className="seller-orders-received-wrap">
+              <div className="seller-orders-received-scroll">
+                <table className="seller-orders-received-table">
                   <colgroup>
                     <col className="seller-orders-col-buyer" />
                     <col className="seller-orders-col-ordered" />
@@ -1223,6 +1220,7 @@ export default function MyClaims({
                               <button
                                 onClick={() => openBuyerProfile(c)}
                                 className="seller-orders-buyer"
+                                title={c.buyer || c.seller}
                               >
                                 {c.buyer || c.seller}
                               </button>
@@ -1240,7 +1238,7 @@ export default function MyClaims({
                           <td>
                             <div className="flex items-center gap-2">
                               <ProductThumb name={c.product} />
-                              <span>
+                              <span title={c.product}>
                                 {c.product}
                                 {c.groupOrderId && (
                                   <small className="seller-orders-group-meta">
@@ -1296,20 +1294,22 @@ export default function MyClaims({
                             )}
                           </td>
                           <td className="seller-orders-status-cell">
-                            <span
-                              className="seller-orders-status"
-                              style={{
-                                background: badge.background,
+                            <div className="seller-orders-received-status-group">
+                              <span
+                                className="seller-orders-status"
+                                style={{
+                                  background: badge.background,
 
-                                color: badge.color,
+                                  color: badge.color,
 
-                                borderColor: badge.borderColor,
-                              }}
-                            >
-                              <span style={{ background: badge.dot }} />
-                              <span className="seller-orders-status__label">{status}</span>
-                            </span>
-                            <InsufficientPaymentNotice shortfall={shortfall} compact />
+                                  borderColor: badge.borderColor,
+                                }}
+                              >
+                                <span style={{ background: badge.dot }} />
+                                <span className="seller-orders-status__label">{status}</span>
+                              </span>
+                              <InsufficientPaymentNotice shortfall={shortfall} status={c.status} compact table />
+                            </div>
                           </td>
                           <td>
                             <div className="seller-orders-actions">
@@ -1850,9 +1850,7 @@ export default function MyClaims({
     if (!isSupabaseConfigured)
       setClaims((prev) =>
         prev.map((c) =>
-          c.id === target.id
-            ? { ...c, status: "Awaiting Verification" as ClaimStatus }
-            : c,
+          c.id === target.id ? { ...c, status: "Awaiting Verification" as ClaimStatus } : c,
         ),
       );
 
@@ -2035,13 +2033,30 @@ export default function MyClaims({
                                       {item.status !== "Pending" && (
                                         <span className="claims-to-pay-deadline__status">
                                           {item.status}
-                                          {item.status === "Insufficient Payment" && (() => {
-                                            const last = payHistory.filter(
-                                              (p) => String(p.orderId ?? p.id) === String(item.id),
-                                            ).sort((a, b) => (b.submittedAt ? new Date(b.submittedAt).getTime() : 0) - (a.submittedAt ? new Date(a.submittedAt).getTime() : 0))[0];
-                                            const paid = last ? Number(last.amount) : 0;
-                                            return paid > 0 && paid < item.amount ? <span style={{ color: "#92400E", fontWeight: 600 }}> · Short ₱{(item.amount - paid).toLocaleString()}</span> : null;
-                                          })()}
+                                          {item.status === "Insufficient Payment" &&
+                                            (() => {
+                                              const last = payHistory
+                                                .filter(
+                                                  (p) =>
+                                                    String(p.orderId ?? p.id) === String(item.id),
+                                                )
+                                                .sort(
+                                                  (a, b) =>
+                                                    (b.submittedAt
+                                                      ? new Date(b.submittedAt).getTime()
+                                                      : 0) -
+                                                    (a.submittedAt
+                                                      ? new Date(a.submittedAt).getTime()
+                                                      : 0),
+                                                )[0];
+                                              const paid = last ? Number(last.amount) : 0;
+                                              return paid > 0 && paid < item.amount ? (
+                                                <span style={{ color: "#92400E", fontWeight: 600 }}>
+                                                  {" "}
+                                                  · Short ₱{(item.amount - paid).toLocaleString()}
+                                                </span>
+                                              ) : null;
+                                            })()}
                                         </span>
                                       )}
                                       <Countdown
@@ -2075,8 +2090,7 @@ export default function MyClaims({
                                       payable: claimIsPayable(item),
                                       waitingForShipping:
                                         item.shippingState === "waiting_for_seller",
-                                      sharedFeeSet:
-                                        deliveryRequest?.status === "shipping_fee_set",
+                                      sharedFeeSet: deliveryRequest?.status === "shipping_fee_set",
                                       showExtension:
                                         claimIsPayable(item) &&
                                         !item.extensionRequested &&
@@ -2240,9 +2254,7 @@ export default function MyClaims({
         onCombinedRequestsChange={handleCombinedRequestsChange}
         onRecovered={refreshData}
         imageForOrder={(id) => {
-          const productId = reconciledClaims.find(
-            (claim) => String(claim.id) === id,
-          )?.productId;
+          const productId = reconciledClaims.find((claim) => String(claim.id) === id)?.productId;
           return productId
             ? batches
                 .flatMap((batch) => batch.products)
@@ -2253,630 +2265,659 @@ export default function MyClaims({
         {({ requestForOrder, openRequest, combinedPaymentOrder, combinedRequests }) => {
           // Helper to get image for an order
           const getImageForOrder = (id: string) => {
-            const productId = reconciledClaims.find(
-              (claim) => String(claim.id) === id,
-            )?.productId;
+            const productId = reconciledClaims.find((claim) => String(claim.id) === id)?.productId;
             return productId
               ? batches
                   .flatMap((batch) => batch.products)
                   .find((product) => product.dbId === productId)?.imageUrl
               : undefined;
           };
-          
+
           // Create a unified list mixing regular claims and combined delivery placeholders
           const itemsToShow = combinedDelivery.ready
             ? buildClaimsListRows(claimsForList, filter, combinedRequests)
             : [];
-          
+
           return (
-          <>
-            {isMobile || viewMode === "card" ? (
-        <>
-          {combinedDelivery.ready && itemsToShow.length === 0 && (
-            <div
-              style={{
-                padding: "40px 0",
-
-                textAlign: "center",
-
-                color: "#9CA3AF",
-
-                fontSize: 13,
-              }}
-            >
-              No {filter.toLowerCase()} claims found.
-            </div>
-          )}
-          <div
-            className="grid gap-4 claims-card-grid"
-            style={{ gridTemplateColumns: "repeat(2,1fr)" }}
-          >
-            {itemsToShow.map((item) => {
-              if ("type" in item && item.type === "combined") {
-                const request = item.request;
-                const first = request.members[0];
-                const seller = reconciledClaims.find((claim) =>
-                  request.members.some((member) => member.order_id === String(claim.id)),
-                )?.seller ?? "Seller";
-                const account = request.payment;
-                const status = item.status;
-                
-                return (
-                  <Card
-                    key={`combined-${request.id}`}
-                    recordKeys={recordKeys({
-                      combinedGroupId: request.id,
-                      orderIds:                       request.members.map((member) => member.order_id),
-                    })}
-                  >
-                    <div className="claims-card__summary flex items-start gap-3">
-                      <button
-                        type="button"
-                        className="buyer-claim-item-preview-trigger"
-                        aria-label="View combined delivery details"
-                        onClick={() => openRequest(request)}
-                      >
-                        <ProductThumb
-                          name="Combined Delivery"
-                          imageUrl={first ? getImageForOrder(first.order_id) : undefined}
-                        />
-                      </button>
-                      <div className="claims-card__info min-w-0 flex-1">
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "#111827",
-                            fontFamily: "'Josefin Sans',sans-serif",
-                          }}
-                        >
-                          <button
-                            type="button"
-                            className="buyer-claim-item-preview-name"
-                            onClick={() => openRequest(request)}
-                          >
-                            Combined Delivery · {request.members.length} {request.members.length === 1 ? "item" : "items"}
-                          </button>
-                        </div>
-                        <div
-                          className="claims-card__seller"
-                          style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
-                        >
-                          Seller: {seller}
-                        </div>
-                      </div>
-                      <div className="claims-card__status">
-                        <StatusBadge status={displayClaimStatus(status as any)} />
-                      </div>
-                    </div>
+            <>
+              {isMobile || viewMode === "card" ? (
+                <>
+                  {combinedDelivery.ready && itemsToShow.length === 0 && (
                     <div
                       style={{
-                        marginTop: 10,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 800,
-                          color: "#111827",
-                          fontFamily: "'Josefin Sans',sans-serif",
-                        }}
-                      >
-                        {account?.total ? `₱${Number(account.total).toLocaleString()}` : "—"}
-                      </span>
-                      <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
-                        View Order
-                      </SecondaryBtn>
-                    </div>
-                  </Card>
-                );
-              }
-              
-              const c = item as ClaimRow;
-              return (
-              <Card
-                key={c.id}
-                recordKeys={recordKeys({ orderId: c.id, groupOrderId: c.groupOrderId })}
-              >
-                <div className="claims-card__summary flex items-start gap-3">
-                  <button
-                    type="button"
-                    className="buyer-claim-item-preview-trigger"
-                    aria-label={`View ${c.product} details`}
-                    onClick={() => setItemPreview(c)}
-                  >
-                    <ProductThumb name={c.product} />
-                  </button>
-                  <div className="claims-card__info min-w-0 flex-1">
-                    <div
-                      style={{
+                        padding: "40px 0",
+
+                        textAlign: "center",
+
+                        color: "#9CA3AF",
+
                         fontSize: 13,
-
-                        fontWeight: 700,
-
-                        color: "#111827",
-
-                        fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
-                      <button
-                        type="button"
-                        className="buyer-claim-item-preview-name"
-                        onClick={() => setItemPreview(c)}
-                      >
-                        {c.product}
-                      </button>
+                      No {filter.toLowerCase()} claims found.
                     </div>
-                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>{c.batch}</div>
-                    <div
-                      className="claims-card__seller"
-                      style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
-                    >
-                      Seller: {sellerLabel(c)}
-                    </div>
-                  </div>
-                  <div className="claims-card__status">
-                    <StatusBadge status={displayClaimStatus(c.status)} />
-                    <InsufficientPaymentNotice shortfall={claimShortfall(c)} compact />
-                  </div>
-                </div>
-                {c.status === "Pending" && c.hours > 0 && (
+                  )}
                   <div
-                    style={{
-                      marginTop: 10,
-
-                      padding: "8px 10px",
-
-                      background: CREAM,
-
-                      borderRadius: 7,
-
-                      display: "flex",
-
-                      alignItems: "center",
-
-                      justifyContent: "space-between",
-                    }}
+                    className="grid gap-4 claims-card-grid"
+                    style={{ gridTemplateColumns: "repeat(2,1fr)" }}
                   >
-                    <span
-                      style={{
-                        fontSize: 11,
+                    {itemsToShow.map((item) => {
+                      if ("type" in item && item.type === "combined") {
+                        const request = item.request;
+                        const first = request.members[0];
+                        const seller =
+                          reconciledClaims.find((claim) =>
+                            request.members.some((member) => member.order_id === String(claim.id)),
+                          )?.seller ?? "Seller";
+                        const account = request.payment;
+                        const status = item.status;
 
-                        color: "#6B7280",
+                        return (
+                          <Card
+                            key={`combined-${request.id}`}
+                            recordKeys={recordKeys({
+                              combinedGroupId: request.id,
+                              orderIds: request.members.map((member) => member.order_id),
+                            })}
+                          >
+                            <div className="claims-card__summary flex items-start gap-3">
+                              <button
+                                type="button"
+                                className="buyer-claim-item-preview-trigger"
+                                aria-label="View combined delivery details"
+                                onClick={() => openRequest(request)}
+                              >
+                                <ProductThumb
+                                  name="Combined Delivery"
+                                  imageUrl={first ? getImageForOrder(first.order_id) : undefined}
+                                />
+                              </button>
+                              <div className="claims-card__info min-w-0 flex-1">
+                                <div
+                                  style={{
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    color: "#111827",
+                                    fontFamily: "'Josefin Sans',sans-serif",
+                                  }}
+                                >
+                                  <button
+                                    type="button"
+                                    className="buyer-claim-item-preview-name"
+                                    onClick={() => openRequest(request)}
+                                  >
+                                    Combined Delivery · {request.members.length}{" "}
+                                    {request.members.length === 1 ? "item" : "items"}
+                                  </button>
+                                </div>
+                                <div
+                                  className="claims-card__seller"
+                                  style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
+                                >
+                                  Seller: {seller}
+                                </div>
+                              </div>
+                              <div className="claims-card__status">
+                                <StatusBadge status={displayClaimStatus(status as any)} />
+                              </div>
+                            </div>
+                            <div
+                              style={{
+                                marginTop: 10,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 800,
+                                  color: "#111827",
+                                  fontFamily: "'Josefin Sans',sans-serif",
+                                }}
+                              >
+                                {account?.total
+                                  ? `₱${Number(account.total).toLocaleString()}`
+                                  : "—"}
+                              </span>
+                              <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
+                                View Order
+                              </SecondaryBtn>
+                            </div>
+                          </Card>
+                        );
+                      }
 
-                        fontWeight: 500,
-                      }}
-                    >
-                      Time remaining
-                    </span>
-                    <Countdown
-                      hours={c.hours}
-                      expiresAt={c.expiresAt}
-                      paused={Boolean(c.deadlinePausedAt)}
-                    />
-                  </div>
-                )}
-                <div
-                  style={{
-                    marginTop: 10,
-
-                    display: "flex",
-
-                    alignItems: "center",
-
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 14,
-
-                      fontWeight: 800,
-
-                      color: "#111827",
-
-                      fontFamily: "'Josefin Sans',sans-serif",
-                    }}
-                  >
-                    ₱{c.amount.toLocaleString()}
-                  </span>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {claimIsPayable(c) && (
-                      <PrimaryBtn size="sm" onClick={() => claimIsPayable(c) && setPayTarget(c)}>
-                        Pay Now
-                      </PrimaryBtn>
-                    )}
-                    {c.status === "Pending" && !c.extensionRequested && (
-                      <SecondaryBtn size="sm" onClick={() => setExtTarget(c)}>
-                        Extend
-                      </SecondaryBtn>
-                    )}
-                    {canCancelClaim(c) && (
-                      <SecondaryBtn size="sm" onClick={() => setCancelTarget(c)}>
-                        Cancel
-                      </SecondaryBtn>
-                    )}
-                    {c.extensionRequested && (
-                      <span
-                        style={{
-                          fontSize: 10,
-
-                          background: "#EEF0FF",
-
-                          color: INDIGO,
-
-                          fontWeight: 600,
-
-                          padding: "3px 8px",
-
-                          borderRadius: 999,
-                        }}
-                      >
-                        Extension Requested
-                      </span>
-                    )}
-                    {c.status === "Paid and Reserved" && (
-                      <SecondaryBtn
-                        size="sm"
-                        onClick={() => {
-                          const o = orders.find((o) =>
-                            o.dbId
-                              ? o.dbId === String(c.id)
-                              : o.id === String(c.id) ||
-                                (!isSupabaseConfigured &&
-                                  o.product === c.product &&
-                                  o.batch === c.batch &&
-                                  o.seller === c.seller),
-                          ) || {
-                            id: String(c.id),
-
-                            dbId: isSupabaseConfigured ? String(c.id) : undefined,
-
-                            product: c.product,
-
-                            batch: c.batch,
-
-                            seller: c.seller,
-
-                            amount: c.amount,
-
-                            step: 3,
-
-                            rated: false,
-                          };
-
-                          setViewOrder(o);
-                        }}
-                      >
-                        View Order
-                      </SecondaryBtn>
-                    )}
-                  </div>
-                </div>
-              </Card>
-              );
-            })}
-          </div>
-        </>
-      ) : (
-        <Card className="!p-0 overflow-hidden claims-history-table">
-          <div style={{ overflowX: "auto" }}>
-            <table className="w-full text-[13px]">
-              <thead style={{ background: "#6892D5" }}>
-                <tr>
-                  {[
-                    "Product",
-
-                    "Batch",
-
-                    "Seller",
-
-                    "Qty",
-
-                    "Amount",
-
-                    "Status",
-
-                    "Deadline",
-
-                    "Actions",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        color: "#fff",
-
-                        fontWeight: 600,
-
-                        fontSize: 11,
-
-                        padding: "10px 14px",
-
-                        textAlign: "left",
-
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {itemsToShow.map((item, i) => {
-                  if ("type" in item && item.type === "combined") {
-                    const request = item.request;
-                    const first = request.members[0];
-                    const seller = reconciledClaims.find((claim) =>
-                      request.members.some((member) => member.order_id === String(claim.id)),
-                    )?.seller ?? "Seller";
-                    const account = request.payment;
-                    const status = item.status;
-                    
-                    return (
-                      <tr
-                        key={`combined-${request.id}`}
-                        data-record-keys={recordKeys({
-                          combinedGroupId: request.id,
-                          orderIds: request.members.map((member) => member.order_id),
-                        })}
-                        style={{
-                          borderTop: "1px solid #F3F4F6",
-                          background: i % 2 ? "#FAFAFA" : "#fff",
-                        }}
-                        className="hover:bg-blue-50 transition-colors cursor-pointer"
-                      >
-                        <td style={{ padding: "10px 14px" }}>
-                          <div className="flex items-center gap-2.5">
+                      const c = item as ClaimRow;
+                      return (
+                        <Card
+                          key={c.id}
+                          recordKeys={recordKeys({ orderId: c.id, groupOrderId: c.groupOrderId })}
+                        >
+                          <div className="claims-card__summary flex items-start gap-3">
                             <button
                               type="button"
                               className="buyer-claim-item-preview-trigger"
-                              aria-label="View combined delivery details"
-                              onClick={() => openRequest(request)}
+                              aria-label={`View ${c.product} details`}
+                              onClick={() => setItemPreview(c)}
                             >
-                              <ProductThumb
-                                name="Combined Delivery"
-                                imageUrl={first ? getImageForOrder(first.order_id) : undefined}
+                              <ProductThumb name={c.product} />
+                            </button>
+                            <div className="claims-card__info min-w-0 flex-1">
+                              <div
+                                style={{
+                                  fontSize: 13,
+
+                                  fontWeight: 700,
+
+                                  color: "#111827",
+
+                                  fontFamily: "'Josefin Sans',sans-serif",
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  className="buyer-claim-item-preview-name"
+                                  onClick={() => setItemPreview(c)}
+                                >
+                                  {c.product}
+                                </button>
+                              </div>
+                              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>
+                                {c.batch}
+                              </div>
+                              <div
+                                className="claims-card__seller"
+                                style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}
+                              >
+                                Seller: {sellerLabel(c)}
+                              </div>
+                            </div>
+                            <div className="claims-card__status">
+                              <StatusBadge status={displayClaimStatus(c.status)} />
+                              <InsufficientPaymentNotice shortfall={claimShortfall(c)} status={c.status} compact />
+                            </div>
+                          </div>
+                          {c.status === "Pending" && c.hours > 0 && (
+                            <div
+                              style={{
+                                marginTop: 10,
+
+                                padding: "8px 10px",
+
+                                background: CREAM,
+
+                                borderRadius: 7,
+
+                                display: "flex",
+
+                                alignItems: "center",
+
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontSize: 11,
+
+                                  color: "#6B7280",
+
+                                  fontWeight: 500,
+                                }}
+                              >
+                                Time remaining
+                              </span>
+                              <Countdown
+                                hours={c.hours}
+                                expiresAt={c.expiresAt}
+                                paused={Boolean(c.deadlinePausedAt)}
                               />
-                            </button>
-                            <button
-                              type="button"
-                              className="buyer-claim-item-preview-name"
-                              onClick={() => openRequest(request)}
-                            >
-                              Combined Delivery · {request.members.length} {request.members.length === 1 ? "item" : "items"}
-                            </button>
-                          </div>
-                        </td>
-                        <td style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}>
-                          {first?.order?.batches?.title ?? "—"}
-                        </td>
-                        <td style={{ padding: "10px 14px" }}>
-                          <div className="flex items-center gap-1.5">
-                            <Avatar name={seller} size={20} />
-                            <span style={{ fontSize: 12, color: "#374151" }}>{seller}</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: "10px 14px", color: "#374151", fontSize: 12 }}>
-                          {request.members.length}
-                        </td>
-                        <td style={{ padding: "10px 14px", fontWeight: 700, color: "#111827" }}>
-                          {account?.total ? `₱${Number(account.total).toLocaleString()}` : "—"}
-                        </td>
-                        <td style={{ padding: "10px 14px" }}>
-                          <StatusBadge status={displayClaimStatus(status as any)} />
-                        </td>
-                        <td style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}>
-                          —
-                        </td>
-                        <td style={{ padding: "10px 14px" }}>
-                          <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
-                            View Order
-                          </SecondaryBtn>
-                        </td>
-                      </tr>
-                    );
-                  }
-                  
-                  const c = item as ClaimRow;
-                  return (
-                  <tr
-                    key={c.id}
-                    data-record-keys={recordKeys({
-                      orderId: c.id,
-                      groupOrderId: c.groupOrderId,
-                    })}
-                    style={{
-                      borderTop: "1px solid #F3F4F6",
+                            </div>
+                          )}
+                          <div
+                            style={{
+                              marginTop: 10,
 
-                      background: i % 2 ? "#FAFAFA" : "#fff",
-                    }}
-                    className="hover:bg-blue-50 transition-colors cursor-pointer"
-                  >
-                    <td style={{ padding: "10px 14px" }}>
-                      <div className="flex items-center gap-2.5">
-                        <button
-                          type="button"
-                          className="buyer-claim-item-preview-trigger"
-                          aria-label={`View ${c.product} details`}
-                          onClick={() => setItemPreview(c)}
-                        >
-                          <ProductThumb name={c.product} />
-                        </button>
-                        <button
-                          type="button"
-                          className="buyer-claim-item-preview-name"
-                          onClick={() => setItemPreview(c)}
-                        >
-                          {c.product}
-                        </button>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 14px",
+                              display: "flex",
 
-                        color: "#6B7280",
+                              alignItems: "center",
 
-                        fontSize: 12,
-                      }}
-                    >
-                      {c.batch}
-                    </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <div className="flex items-center gap-1.5">
-                        <Avatar name={sellerLabel(c)} size={20} />
-                        <span style={{ fontSize: 12, color: "#374151" }}>{sellerLabel(c)}</span>
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 14px",
-
-                        color: "#374151",
-
-                        fontSize: 12,
-                      }}
-                    >
-                      ×{c.qty}
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px 14px",
-
-                        fontWeight: 700,
-
-                        color: "#111827",
-
-                        fontFamily: "'Josefin Sans',sans-serif",
-                      }}
-                    >
-                      ₱{c.amount.toLocaleString()}
-                    </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <StatusBadge status={displayClaimStatus(c.status)} />
-                      <InsufficientPaymentNotice shortfall={claimShortfall(c)} compact />
-                    </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      {c.status === "Pending" && c.hours > 0 ? (
-                        <Countdown
-                          hours={c.hours}
-                          expiresAt={c.expiresAt}
-                          paused={Boolean(c.deadlinePausedAt)}
-                        />
-                      ) : (
-                        <span style={{ color: "#D1D5DB" }}>—</span>
-                      )}
-                    </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <div
-                        className={`flex items-center gap-1.5 flex-wrap ${
-                          c.status === "Pending" ? "justify-end" : ""
-                        }`}
-                      >
-                        {claimIsPayable(c) && (
-                          <PrimaryBtn
-                            size="sm"
-                            onClick={() => claimIsPayable(c) && setPayTarget(c)}
+                              justifyContent: "space-between",
+                            }}
                           >
-                            Pay Now
-                          </PrimaryBtn>
-                        )}
-                        {c.status === "Pending" &&
-                          (c.extensionRequested ? (
                             <span
                               style={{
-                                background: "#FEF3C7",
+                                fontSize: 14,
 
-                                color: "#92400E",
+                                fontWeight: 800,
 
-                                fontSize: 10,
+                                color: "#111827",
+
+                                fontFamily: "'Josefin Sans',sans-serif",
+                              }}
+                            >
+                              ₱{c.amount.toLocaleString()}
+                            </span>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              {claimIsPayable(c) && (
+                                <PrimaryBtn
+                                  size="sm"
+                                  onClick={() => claimIsPayable(c) && setPayTarget(c)}
+                                >
+                                  Pay Now
+                                </PrimaryBtn>
+                              )}
+                              {c.status === "Pending" && !c.extensionRequested && (
+                                <SecondaryBtn size="sm" onClick={() => setExtTarget(c)}>
+                                  Extend
+                                </SecondaryBtn>
+                              )}
+                              {canCancelClaim(c) && (
+                                <SecondaryBtn size="sm" onClick={() => setCancelTarget(c)}>
+                                  Cancel
+                                </SecondaryBtn>
+                              )}
+                              {c.extensionRequested && (
+                                <span
+                                  style={{
+                                    fontSize: 10,
+
+                                    background: "#EEF0FF",
+
+                                    color: INDIGO,
+
+                                    fontWeight: 600,
+
+                                    padding: "3px 8px",
+
+                                    borderRadius: 999,
+                                  }}
+                                >
+                                  Extension Requested
+                                </span>
+                              )}
+                              {c.status === "Paid and Reserved" && (
+                                <SecondaryBtn
+                                  size="sm"
+                                  onClick={() => {
+                                    const o = orders.find((o) =>
+                                      o.dbId
+                                        ? o.dbId === String(c.id)
+                                        : o.id === String(c.id) ||
+                                          (!isSupabaseConfigured &&
+                                            o.product === c.product &&
+                                            o.batch === c.batch &&
+                                            o.seller === c.seller),
+                                    ) || {
+                                      id: String(c.id),
+
+                                      dbId: isSupabaseConfigured ? String(c.id) : undefined,
+
+                                      product: c.product,
+
+                                      batch: c.batch,
+
+                                      seller: c.seller,
+
+                                      amount: c.amount,
+
+                                      step: 3,
+
+                                      rated: false,
+                                    };
+
+                                    setViewOrder(o);
+                                  }}
+                                >
+                                  View Order
+                                </SecondaryBtn>
+                              )}
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <Card className="!p-0 overflow-hidden claims-history-table">
+                  <div style={{ overflowX: "auto" }}>
+                    <table className="w-full text-[13px]">
+                      <thead style={{ background: "#6892D5" }}>
+                        <tr>
+                          {[
+                            "Product",
+
+                            "Batch",
+
+                            "Seller",
+
+                            "Qty",
+
+                            "Amount",
+
+                            "Status",
+
+                            "Deadline",
+
+                            "Actions",
+                          ].map((h) => (
+                            <th
+                              key={h}
+                              style={{
+                                color: "#fff",
 
                                 fontWeight: 600,
 
-                                padding: "3px 8px",
+                                fontSize: 11,
 
-                                borderRadius: 999,
+                                padding: "10px 14px",
+
+                                textAlign: "left",
+
+                                whiteSpace: "nowrap",
                               }}
                             >
-                              Requested
-                            </span>
-                          ) : (
-                            <SecondaryBtn size="sm" onClick={() => setExtTarget(c)}>
-                              Request Extension
-                            </SecondaryBtn>
+                              {h}
+                            </th>
                           ))}
-                        {canCancelClaim(c) && (
-                          <SecondaryBtn size="sm" onClick={() => setCancelTarget(c)}>
-                            Cancel
-                          </SecondaryBtn>
-                        )}
-                        {c.status === "Paid and Reserved" && (
-                          <SecondaryBtn
-                            size="sm"
-                            onClick={() => {
-                              const o = orders.find((o) =>
-                                o.dbId
-                                  ? o.dbId === String(c.id)
-                                  : o.id === String(c.id) ||
-                                    (!isSupabaseConfigured &&
-                                      o.product === c.product &&
-                                      o.batch === c.batch &&
-                                      o.seller === c.seller),
-                              ) || {
-                                id: String(c.id),
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {itemsToShow.map((item, i) => {
+                          if ("type" in item && item.type === "combined") {
+                            const request = item.request;
+                            const first = request.members[0];
+                            const seller =
+                              reconciledClaims.find((claim) =>
+                                request.members.some(
+                                  (member) => member.order_id === String(claim.id),
+                                ),
+                              )?.seller ?? "Seller";
+                            const account = request.payment;
+                            const status = item.status;
 
-                                dbId: isSupabaseConfigured ? String(c.id) : undefined,
+                            return (
+                              <tr
+                                key={`combined-${request.id}`}
+                                data-record-keys={recordKeys({
+                                  combinedGroupId: request.id,
+                                  orderIds: request.members.map((member) => member.order_id),
+                                })}
+                                style={{
+                                  borderTop: "1px solid #F3F4F6",
+                                  background: i % 2 ? "#FAFAFA" : "#fff",
+                                }}
+                                className="hover:bg-blue-50 transition-colors cursor-pointer"
+                              >
+                                <td style={{ padding: "10px 14px" }}>
+                                  <div className="flex items-center gap-2.5">
+                                    <button
+                                      type="button"
+                                      className="buyer-claim-item-preview-trigger"
+                                      aria-label="View combined delivery details"
+                                      onClick={() => openRequest(request)}
+                                    >
+                                      <ProductThumb
+                                        name="Combined Delivery"
+                                        imageUrl={
+                                          first ? getImageForOrder(first.order_id) : undefined
+                                        }
+                                      />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="buyer-claim-item-preview-name"
+                                      onClick={() => openRequest(request)}
+                                    >
+                                      Combined Delivery · {request.members.length}{" "}
+                                      {request.members.length === 1 ? "item" : "items"}
+                                    </button>
+                                  </div>
+                                </td>
+                                <td
+                                  style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}
+                                >
+                                  {first?.order?.batches?.title ?? "—"}
+                                </td>
+                                <td style={{ padding: "10px 14px" }}>
+                                  <div className="flex items-center gap-1.5">
+                                    <Avatar name={seller} size={20} />
+                                    <span style={{ fontSize: 12, color: "#374151" }}>{seller}</span>
+                                  </div>
+                                </td>
+                                <td
+                                  style={{ padding: "10px 14px", color: "#374151", fontSize: 12 }}
+                                >
+                                  {request.members.length}
+                                </td>
+                                <td
+                                  style={{
+                                    padding: "10px 14px",
+                                    fontWeight: 700,
+                                    color: "#111827",
+                                  }}
+                                >
+                                  {account?.total
+                                    ? `₱${Number(account.total).toLocaleString()}`
+                                    : "—"}
+                                </td>
+                                <td style={{ padding: "10px 14px" }}>
+                                  <StatusBadge status={displayClaimStatus(status as any)} />
+                                </td>
+                                <td
+                                  style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}
+                                >
+                                  —
+                                </td>
+                                <td style={{ padding: "10px 14px" }}>
+                                  <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
+                                    View Order
+                                  </SecondaryBtn>
+                                </td>
+                              </tr>
+                            );
+                          }
 
-                                product: c.product,
+                          const c = item as ClaimRow;
+                          return (
+                            <tr
+                              key={c.id}
+                              data-record-keys={recordKeys({
+                                orderId: c.id,
+                                groupOrderId: c.groupOrderId,
+                              })}
+                              style={{
+                                borderTop: "1px solid #F3F4F6",
 
-                                batch: c.batch,
+                                background: i % 2 ? "#FAFAFA" : "#fff",
+                              }}
+                              className="hover:bg-blue-50 transition-colors cursor-pointer"
+                            >
+                              <td style={{ padding: "10px 14px" }}>
+                                <div className="flex items-center gap-2.5">
+                                  <button
+                                    type="button"
+                                    className="buyer-claim-item-preview-trigger"
+                                    aria-label={`View ${c.product} details`}
+                                    onClick={() => setItemPreview(c)}
+                                  >
+                                    <ProductThumb name={c.product} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="buyer-claim-item-preview-name"
+                                    onClick={() => setItemPreview(c)}
+                                  >
+                                    {c.product}
+                                  </button>
+                                </div>
+                              </td>
+                              <td
+                                style={{
+                                  padding: "10px 14px",
 
-                                seller: c.seller,
+                                  color: "#6B7280",
 
-                                amount: c.amount,
+                                  fontSize: 12,
+                                }}
+                              >
+                                {c.batch}
+                              </td>
+                              <td style={{ padding: "10px 14px" }}>
+                                <div className="flex items-center gap-1.5">
+                                  <Avatar name={sellerLabel(c)} size={20} />
+                                  <span style={{ fontSize: 12, color: "#374151" }}>
+                                    {sellerLabel(c)}
+                                  </span>
+                                </div>
+                              </td>
+                              <td
+                                style={{
+                                  padding: "10px 14px",
 
-                                step: 3,
+                                  color: "#374151",
 
-                                rated: false,
-                              };
+                                  fontSize: 12,
+                                }}
+                              >
+                                ×{c.qty}
+                              </td>
+                              <td
+                                style={{
+                                  padding: "10px 14px",
 
-                              setViewOrder(o);
-                            }}
-                          >
-                            View Order
-                          </SecondaryBtn>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {combinedDelivery.ready && itemsToShow.length === 0 && (
-            <div
-              style={{
-                padding: "40px 0",
+                                  fontWeight: 700,
 
-                textAlign: "center",
+                                  color: "#111827",
 
-                color: "#9CA3AF",
+                                  fontFamily: "'Josefin Sans',sans-serif",
+                                }}
+                              >
+                                ₱{c.amount.toLocaleString()}
+                              </td>
+                              <td style={{ padding: "10px 14px" }}>
+                                <StatusBadge status={displayClaimStatus(c.status)} />
+                                <InsufficientPaymentNotice shortfall={claimShortfall(c)} status={c.status} compact />
+                              </td>
+                              <td style={{ padding: "10px 14px" }}>
+                                {c.status === "Pending" && c.hours > 0 ? (
+                                  <Countdown
+                                    hours={c.hours}
+                                    expiresAt={c.expiresAt}
+                                    paused={Boolean(c.deadlinePausedAt)}
+                                  />
+                                ) : (
+                                  <span style={{ color: "#D1D5DB" }}>—</span>
+                                )}
+                              </td>
+                              <td style={{ padding: "10px 14px" }}>
+                                <div
+                                  className={`flex items-center gap-1.5 flex-wrap ${
+                                    c.status === "Pending" ? "justify-end" : ""
+                                  }`}
+                                >
+                                  {claimIsPayable(c) && (
+                                    <PrimaryBtn
+                                      size="sm"
+                                      onClick={() => claimIsPayable(c) && setPayTarget(c)}
+                                    >
+                                      Pay Now
+                                    </PrimaryBtn>
+                                  )}
+                                  {c.status === "Pending" &&
+                                    (c.extensionRequested ? (
+                                      <span
+                                        style={{
+                                          background: "#FEF3C7",
 
-                fontSize: 13,
-              }}
-            >
-              No {filter.toLowerCase()} claims found.
-            </div>
-          )}
-        </Card>
-            )}
-          </>
-        );
+                                          color: "#92400E",
+
+                                          fontSize: 10,
+
+                                          fontWeight: 600,
+
+                                          padding: "3px 8px",
+
+                                          borderRadius: 999,
+                                        }}
+                                      >
+                                        Requested
+                                      </span>
+                                    ) : (
+                                      <SecondaryBtn size="sm" onClick={() => setExtTarget(c)}>
+                                        Request Extension
+                                      </SecondaryBtn>
+                                    ))}
+                                  {canCancelClaim(c) && (
+                                    <SecondaryBtn size="sm" onClick={() => setCancelTarget(c)}>
+                                      Cancel
+                                    </SecondaryBtn>
+                                  )}
+                                  {c.status === "Paid and Reserved" && (
+                                    <SecondaryBtn
+                                      size="sm"
+                                      onClick={() => {
+                                        const o = orders.find((o) =>
+                                          o.dbId
+                                            ? o.dbId === String(c.id)
+                                            : o.id === String(c.id) ||
+                                              (!isSupabaseConfigured &&
+                                                o.product === c.product &&
+                                                o.batch === c.batch &&
+                                                o.seller === c.seller),
+                                        ) || {
+                                          id: String(c.id),
+
+                                          dbId: isSupabaseConfigured ? String(c.id) : undefined,
+
+                                          product: c.product,
+
+                                          batch: c.batch,
+
+                                          seller: c.seller,
+
+                                          amount: c.amount,
+
+                                          step: 3,
+
+                                          rated: false,
+                                        };
+
+                                        setViewOrder(o);
+                                      }}
+                                    >
+                                      View Order
+                                    </SecondaryBtn>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {combinedDelivery.ready && itemsToShow.length === 0 && (
+                    <div
+                      style={{
+                        padding: "40px 0",
+
+                        textAlign: "center",
+
+                        color: "#9CA3AF",
+
+                        fontSize: 13,
+                      }}
+                    >
+                      No {filter.toLowerCase()} claims found.
+                    </div>
+                  )}
+                </Card>
+              )}
+            </>
+          );
         }}
       </BuyerCombinedDelivery>
       {showBatchCheckout && (

@@ -1,4 +1,4 @@
-﻿/* Responsive-only overrides. Nothing in this file applies above 1024px. */
+/* Responsive-only overrides. Nothing in this file applies above 1024px. */
 .seller-board-column__mobile-toggle {
   display: none;
 }
@@ -359,7 +359,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 14px;
+  margin: 0 0 27px;
 }
 
 .payment-history-search {
@@ -367,10 +367,10 @@
   align-items: center;
   gap: 8px;
   width: min(100%, 420px);
-  min-height: 40px;
+  min-height: 32px;
   padding: 0 12px;
   border: 1px solid #d1d5db;
-  border-radius: 9px;
+  border-radius: 999px;
   background: #fff;
   color: #748391;
   box-sizing: border-box;
@@ -391,7 +391,7 @@
   background: transparent;
   color: #1f2937;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .payment-history-date-sort {
@@ -413,17 +413,17 @@
   display: flex;
   width: 100%;
   min-width: 0;
-  min-height: 40px;
+  min-height: 32px;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 0 12px;
   border: 1px solid #d1d5db;
-  border-radius: 9px;
+  border-radius: 999px;
   background: #fff;
   color: #374151;
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   text-align: left;
   cursor: pointer;
 }
@@ -610,24 +610,34 @@
     overflow: visible !important;
   }
 
-  :is(.mobile-data-page, .seller-dashboard, .bdash) table,
-  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody {
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table),
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    tbody {
     display: block !important;
     width: 100% !important;
     min-width: 0 !important;
   }
 
-  :is(.mobile-data-page, .seller-dashboard, .bdash) thead {
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    thead {
     display: none !important;
   }
 
-  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody {
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    tbody {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
   }
 
-  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody tr {
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    tbody
+    tr {
     display: grid !important;
     min-width: 0;
     gap: 8px;
@@ -638,7 +648,10 @@
     box-shadow: 0 3px 10px rgba(18, 30, 71, 0.1);
   }
 
-  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td {
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    tbody
+    td {
     display: flex !important;
     min-width: 0;
     align-items: center;
@@ -650,7 +663,10 @@
     white-space: normal !important;
   }
 
-  :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td::before {
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    tbody
+    td::before {
     min-width: 82px;
     flex: 0 0 auto;
     color: #6b7280;
@@ -658,7 +674,6 @@
     text-align: left;
   }
 
-  .seller-dashboard .seller-orders-table td:nth-child(1)::before,
   .bdash-table td:nth-child(1)::before {
     content: "Product";
   }
@@ -722,25 +737,6 @@
 
   .seller-orders-page td:nth-child(9)::before {
     content: "Actions";
-  }
-
-  /* On mobile the status cell is display:flex which ignores the table-layout
-     max-width:0 trick from index.css. Reset it so the badge + note wrap. */
-  .seller-orders-page .seller-orders-status-cell {
-    max-width: none;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 8px;
-  }
-
-  .seller-orders-page .seller-orders-status-cell .seller-orders-status {
-    max-width: 100%;
-    white-space: nowrap;
-  }
-
-  .seller-orders-page .seller-orders-status-cell small {
-    flex: 1 1 100%;
-    white-space: normal;
   }
 
   .claims-to-pay-table td:nth-child(2)::before {
@@ -2645,90 +2641,92 @@
     text-align: center;
   }
 
-  /* My Batches filters: reset desktop flex-basis values, which become tall
-     vertical dimensions after the filter bar changes to a column. */
+  .seller-batches-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  .seller-batches-heading > div:first-child {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .seller-batches-page .seller-batches-add {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px !important;
+    height: 44px;
+    margin: 12px 0;
+    padding: 0 16px !important;
+    font-size: 14px !important;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .seller-batches-page .seller-batches-add > svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+  }
+
   .seller-batch-filter-bar {
-    min-height: 0 !important;
-    gap: 12px !important;
-    padding: 12px !important;
-    margin-bottom: 24px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start !important;
+    gap: 0 !important;
+    padding: 12px 12px 14px !important;
+    margin-top: 0;
   }
 
   .seller-batch-filter-label {
-    margin: 0;
-    line-height: 1.2;
+    grid-column: 1;
+    color: #fff !important;
+    font-size: 16px !important;
+    text-align: left;
   }
 
-  .seller-batch-filter-bar .seller-batch-select-wrap,
-  .seller-batch-filter-bar .seller-batch-select-wrap:first-of-type,
-  .seller-batch-filter-bar .seller-batch-select-wrap:nth-of-type(2),
-  .seller-batch-filter-bar .seller-batch-select-wrap:nth-of-type(3) {
-    position: relative;
+  .seller-batches-page .seller-batch-filter-controls {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .seller-batches-page .seller-batch-filter-controls .seller-batch-select-wrap {
+    box-sizing: border-box;
     width: 100% !important;
     min-width: 0 !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    flex: 0 0 44px !important;
+    height: 44px;
+    min-height: 44px;
+    flex: initial !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
   .seller-batches-page .seller-batch-filter-select {
-    display: block;
+    box-sizing: border-box;
     width: 100% !important;
+    min-width: 0 !important;
     height: 44px !important;
     min-height: 44px !important;
     margin: 0 !important;
-    padding: 0 38px 0 12px !important;
-    line-height: 44px;
-  }
-
-  /* The custom category/month dropdown is a flex trigger button, not a native
-     select; keep the label left and the circular chevron badge on the right
-     instead of letting the block display drop the icon below the label. */
-  .seller-batch-filter-bar .seller-batch-filter-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 12px !important;
+    padding: 0 8px 0 12px !important;
+    font-size: 14px !important;
     line-height: 1.2;
   }
 
-  .seller-batch-filter-bar .seller-batch-select-icon {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    bottom: auto;
-    left: auto;
-    margin: 0;
-    pointer-events: none;
-    transform: translateY(-50%);
-  }
-
-  .seller-batch-filter-bar .seller-batch-quick-action {
-    width: 100%;
-    margin: 0;
-  }
-
-  /* Orders Received table-cards: neutralize desktop zebra-striping and give
-     every label/value row the same padding and divider treatment. */
-  .seller-orders-page .seller-orders-table tbody tr,
-  .seller-orders-page .seller-orders-row,
-  .seller-orders-page .seller-orders-row--alt {
-    gap: 0 !important;
-    overflow: hidden;
-    background: #fff !important;
-  }
-
-  .seller-orders-page .seller-orders-table tbody td,
-  .seller-orders-page .seller-orders-row td,
-  .seller-orders-page .seller-orders-row--alt td {
-    min-height: 44px;
+  .seller-batches-page .seller-batch-filter-trigger {
+    display: flex;
     align-items: center;
-    padding: 10px 0 !important;
-    border: 0 !important;
-    border-bottom: 1px solid #e5e7eb !important;
-    background: #fff !important;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 0 8px 0 12px !important;
+    text-align: left;
   }
 
   .seller-orders-page .seller-orders-table tbody td:last-child,
@@ -2744,13 +2742,49 @@
 
   .seller-orders-page .seller-orders-table tbody td>* {
     min-width: 0;
-    max-width: calc(100% - 104px);
-    margin-left: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .seller-orders-page .seller-orders-table tbody td> :is(div, span) {
     justify-content: flex-end;
     text-align: right;
+  }
+
+  .seller-batches-page .seller-batch-filter-trigger > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seller-batches-page .seller-batch-filter-trigger > svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+  }
+
+  .seller-batches-page .seller-batch-quick-action {
+    display: inline-flex;
+    width: 100%;
+    min-width: 0 !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    margin: 8px 0 0 !important;
+    padding: 0 12px !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 14px !important;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 360px) {
+    .seller-batches-page .seller-batch-quick-action__label {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
   }
 
   .seller-orders-page .seller-orders-actions {
@@ -2776,6 +2810,186 @@
 
   .seller-orders-page .seller-orders-split>.seller-orders-review {
     width: auto !important;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-payment-history-table,
+  .seller-payments-page .seller-payment-table--history .seller-payment-history-table tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-payment-history-table thead {
+    display: none;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-payment-history-table tbody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-payment-history-table tbody tr {
+    display: grid;
+    min-width: 0;
+    gap: 0;
+    padding: 14px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(18, 30, 71, 0.1);
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-payment-history-table tbody td {
+    display: flex;
+    min-width: 0;
+    min-height: 44px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border: 0;
+    background: #fff;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    .seller-payment-history-card-row
+    + .seller-payment-history-card-row {
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    tbody
+    td::before {
+    min-width: 92px;
+    flex: 0 0 auto;
+    align-self: center;
+    color: #6b7280;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-payment-history-table tbody td > * {
+    min-width: 0;
+    max-width: calc(100% - 104px);
+    margin-left: auto;
+  }
+
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    tbody
+    td
+    > :is(div, span) {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-buyer-cell {
+    width: calc(100% - 104px);
+    gap: 8px;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-buyer-cell > span {
+    min-width: 0;
+    overflow: hidden;
+    color: #20242a !important;
+    font-size: 13px;
+    font-weight: 600 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-product-cell > img {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+  }
+
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    tbody
+    td:first-child
+    > div,
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    tbody
+    td:nth-child(2)
+    > div {
+    justify-content: flex-end;
+  }
+
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    .seller-product-cell
+    > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    tbody
+    td:nth-child(4),
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    tbody
+    td:nth-child(5) {
+    white-space: nowrap;
+  }
+
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    .seller-orders-method,
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-table
+    .seller-payment-history-date {
+    color: #20242a !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-payment-history-status {
+    max-width: calc(100% - 104px);
+    white-space: nowrap;
+  }
+
+  .seller-payments-page
+    .seller-payment-table--history
+    .seller-payment-history-status
+    [role="status"] {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-payment-details-button {
+    box-sizing: border-box;
+    width: auto !important;
+    min-width: 0;
+    min-height: 44px !important;
+    height: auto;
+    margin-left: auto;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
   }
 
   /* Footer: compact link rhythm, flush edge, and a flex shell that keeps the
@@ -2929,6 +3143,50 @@
 
 /* ===== Mobile interaction and overlay fixes ===== */
 @media (max-width: 767px) {
+  .seller-recent-orders > .seller-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: nowrap;
+  }
+
+  .seller-recent-orders > .seller-section-heading h2 {
+    min-width: 0;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .seller-recent-orders > .seller-section-heading > button {
+    box-sizing: border-box;
+    width: auto;
+    min-width: 0;
+    min-height: 40px !important;
+    height: 40px;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0 16px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .payment-submission-detail-modal .payment-review-receipt-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .payment-submission-detail-modal .payment-review-receipt-label {
+    flex: 0 0 auto;
+  }
+
+  .seller-payments-page .seller-payment-table--history {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
 
   /* Keep every order-status filter visible without a secondary scroll area. */
   .seller-orders-filters {
@@ -4561,7 +4819,7 @@
     justify-content: flex-end;
   }
 
-  .batch-cover-badges>span {
+  .batch-cover-badges:not(.seller-batch-cover-badges) > span {
     display: inline-flex;
     min-height: 28px;
     flex: 0 0 auto;
@@ -7741,5 +7999,897 @@ body> :not(#root) * {
 
   .kargo-modal__content .admin-batch :is(p, li) {
     max-width: none;
+  }
+}
+
+/* Buyer-facing storefront only. Keep tablet/desktop and shared cards untouched. */
+@media (max-width: 640px) {
+  .kargo-original-app:has(.seller-shop-view) {
+    --seller-shop-header-height: calc(56px + env(safe-area-inset-top));
+    --seller-shop-chrome: linear-gradient(90deg, #1719b4 0%, #3852bd 49%, #6995d7 100%);
+  }
+
+  .kargo-original-app:has(.seller-shop-view) .kargo-header {
+    height: var(--seller-shop-header-height) !important;
+    min-height: var(--seller-shop-header-height) !important;
+    padding-inline: 12px !important;
+    border: 0 !important;
+    background: var(--seller-shop-chrome) !important;
+    box-shadow: none !important;
+  }
+
+  .seller-shop-view .seller-shop-breadcrumb {
+    top: var(--seller-shop-header-height, calc(56px + env(safe-area-inset-top))) !important;
+    width: 100%;
+    min-width: 0;
+    min-height: 52px;
+    padding: 4px 12px !important;
+    background: var(--seller-shop-chrome) !important;
+    border-bottom: 0 !important;
+    box-shadow: 0 3px 8px rgba(23, 25, 180, 0.12);
+  }
+
+  .seller-shop-view .seller-shop-breadcrumb > button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 8px 0;
+    color: #fff !important;
+    white-space: nowrap;
+  }
+
+  .seller-shop-view .seller-shop-breadcrumb > span:first-of-type {
+    flex: 0 0 auto;
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  .seller-shop-view .seller-shop-breadcrumb > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    color: #fff !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kargo-original-app main .seller-shop-view > .seller-shop-content {
+    padding: 16px !important;
+  }
+
+  .seller-shop-view .seller-shop-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .seller-shop-view .seller-shop-page > * {
+    margin-block: 0 !important;
+  }
+
+  /* Extra specificity is intentional: shared card padding is !important. */
+  .kargo-original-app main .seller-shop-view .seller-shop-header-card {
+    padding: 0 !important;
+    overflow: hidden;
+    border-radius: 14px !important;
+  }
+
+  .seller-shop-view .seller-shop-header-banner {
+    padding: 20px !important;
+    gap: 16px 14px !important;
+  }
+
+  .seller-shop-view .seller-shop-identity {
+    min-width: 0 !important;
+  }
+
+  .seller-shop-view .seller-shop-name {
+    font-size: 21px !important;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .seller-shop-view .seller-shop-identity > div + div {
+    margin-top: 8px !important;
+    line-height: 1.5;
+  }
+
+  .seller-shop-view .seller-shop-contact {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+
+  .seller-shop-view .seller-shop-contact > button {
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 18px !important;
+    line-height: 1.4;
+  }
+
+  .seller-shop-view .seller-shop-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    border-color: #e5e7eb !important;
+  }
+
+  .seller-shop-view .seller-shop-stats > div {
+    min-width: 0;
+    padding: 16px 6px !important;
+    border-color: #e5e7eb !important;
+  }
+
+  .seller-shop-view .seller-shop-stats > div > div:first-child {
+    font-size: 17px !important;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .seller-shop-view .seller-shop-stats > div > div:last-child {
+    margin-top: 5px !important;
+    font-size: 12px !important;
+    line-height: 1.4;
+    color: #6b7280 !important;
+  }
+
+  .seller-shop-view .seller-shop-stats svg {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+  }
+
+  .seller-shop-view .seller-shop-tabs {
+    min-width: 0;
+    max-width: 100%;
+    gap: 4px !important;
+    padding-bottom: 0 !important;
+    background:
+      linear-gradient(to right, var(--kargo-canvas) 30%, transparent) left / 24px 100% local,
+      linear-gradient(to left, var(--kargo-canvas) 30%, transparent) right / 24px 100% local,
+      radial-gradient(farthest-side at 0 50%, rgba(25, 27, 169, 0.18), transparent) left / 8px 100%
+        scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(25, 27, 169, 0.18), transparent) right / 8px
+        100% scroll;
+    background-repeat: no-repeat;
+  }
+
+  .seller-shop-view .seller-shop-tabs > button {
+    flex: 0 0 auto;
+    min-height: 48px !important;
+    padding: 12px 14px !important;
+    line-height: 1.4;
+  }
+
+  .seller-shop-view .seller-shop-tabs > button[aria-current="page"] {
+    border-bottom-width: 3px !important;
+  }
+}
+
+/* Sellers (and any header without the marketplace search) have room for the
+   KARGO wordmark in the phone header, so bring it back instead of hiding it. */
+@media (max-width: 767px) {
+  /* Let the brand column size to the logo + wordmark so both stay on screen. */
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-lockup {
+    width: auto !important;
+    grid-column: 1;
+    justify-self: start;
+    gap: 10px !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-mark {
+    display: grid !important;
+    width: 40px !important;
+    height: 40px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-name {
+    display: inline-block !important;
+    font-size: 17px !important;
+  }
+}
+
+/* Seller batch item cards on phones: the desktop three-column row squeezes the
+   product name to a sliver (one character per line) and turns the availability
+   controls into a tall, cluttered column. Reflow into an identity row plus a
+   full-width control toolbar. */
+@media (max-width: 700px) {
+  .batch-product-card {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start !important;
+    gap: 14px 12px !important;
+  }
+
+  .batch-product-card .batch-product-photo-control {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .batch-product-card > .flex-1 {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  /* The price + controls wrapper dissolves so the price can sit in the identity
+     row and the controls can span the full width below it. */
+  .batch-product-card .batch-product-side {
+    display: contents;
+  }
+
+  .batch-product-card .batch-product-price {
+    grid-column: 3;
+    grid-row: 1;
+    margin-bottom: 0 !important;
+  }
+
+  .batch-product-card .batch-product-controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center !important;
+    gap: 8px 12px !important;
+    padding-top: 12px;
+    border-top: 1px solid #eef1f5;
+  }
+
+  /* "Waitlist max [input] Save" takes its own line under the status + toggle. */
+  .batch-product-card .batch-product-controls > div {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  /* Buyer action ("Claim this item" / status) tucks into the card's lower-right,
+     matching the design, instead of wrapping to the lower-left. */
+  .batch-product-card
+    .batch-product-side
+    > :not(.batch-product-price):not(.batch-product-controls) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: end;
+    text-align: right;
+  }
+
+  /* Keep the claim button a smaller, tighter control on phones. */
+  .batch-product-card .batch-product-side > button.kargo-primary {
+    min-height: 34px !important;
+    padding: 5px 12px !important;
+    font-size: 11px !important;
+  }
+
+  /* A slightly larger product photo anchors the mobile item card. */
+  .batch-product-card .batch-product-photo-control img {
+    width: 56px !important;
+    height: 56px !important;
+  }
+}
+
+/* Buyer home: keep every batch card the same height by holding the title to
+   two lines across the multi-column breakpoints, so a longer title cannot make
+   one card taller than its neighbour. */
+@media (max-width: 800px) {
+  .kargo-original-app main .buyer-batch-card__body h3 {
+    display: -webkit-box;
+    min-height: 2.4em;
+    overflow: hidden;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  /* Keep seller and date to a single line so a long shop name cannot push the
+     date/claimed rows down and make one card taller than its neighbour. */
+  .kargo-original-app main .buyer-batch-card__seller span,
+  .kargo-original-app main .buyer-batch-card__date span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  .kargo-modal.payment-submission-detail-modal:not(.admin-record-modal):not(.admin-confirm-modal)
+    > .kargo-modal__body {
+    min-height: 0;
+    max-height: calc(90dvh - 64px);
+    flex: 0 1 auto;
+    overflow-y: auto;
+    padding: 16px !important;
+  }
+
+  .payment-submission-detail-modal .payment-review-detail-row {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .payment-submission-detail-modal .payment-review-action-button {
+    box-sizing: border-box;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    height: 30px;
+    flex: 0 0 auto;
+    gap: 5px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .payment-submission-detail-modal .payment-review-action-button > svg {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+  }
+
+  .payment-submission-detail-modal .payment-review-reminder {
+    margin-bottom: 0;
+  }
+
+  .payment-submission-detail-modal .space-y-4 > .kargo-modal-actions:empty {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .payment-submission-detail-modal a.payment-review-action-button {
+    padding-right: 8px;
+    padding-left: 8px;
+    font-size: 11.5px;
+  }
+}
+
+@media (max-width: 767px) {
+  .seller-orders-page .seller-orders-received-wrap {
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .seller-orders-page .seller-orders-received-scroll {
+    width: 100%;
+    min-width: 0;
+    overflow: visible;
+  }
+
+  .seller-orders-page .seller-orders-received-table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .seller-orders-page .seller-orders-received-table thead {
+    display: none;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody tr {
+    display: grid;
+    min-width: 0;
+    gap: 0;
+    padding: 14px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(18, 30, 71, 0.1);
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border: 0;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    text-align: right;
+    vertical-align: middle;
+    white-space: normal;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td::before {
+    min-width: 92px;
+    flex: 0 0 auto;
+    align-self: center;
+    color: #6b7280;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td > * {
+    min-width: 0;
+    max-width: calc(100% - 104px);
+    margin-left: auto;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td > :is(div, span) {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td:nth-child(3) > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .seller-orders-page .seller-orders-received-table tbody td:nth-child(3) > div > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seller-orders-page .seller-orders-received-status-group {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px 8px;
+  }
+
+  .seller-orders-page .seller-orders-received-status-group [data-insufficient-payment] {
+    margin: 0;
+    white-space: nowrap;
+  }
+}
+
+/* Empty state for the seller dashboard Recent Orders table. */
+.seller-recent-orders__empty {
+  padding: 24px 14px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Seller dashboard Recent Orders: the table design only exists from 768px up,
+   so phones get the same compact Product / Status / Deadline table as the
+   buyer dashboard. */
+@media (max-width: 767px) {
+  .seller-dashboard .seller-recent-orders__wrap {
+    overflow: hidden !important;
+    border-radius: 9px !important;
+    box-shadow: 0 1px 4px rgba(18, 30, 71, 0.12) !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__wrap,
+  .seller-dashboard .seller-recent-orders__table {
+    display: revert !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table {
+    table-layout: fixed !important;
+    border: 0 !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    font-size: 12px !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table colgroup {
+    display: none !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table thead {
+    display: table-header-group !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody {
+    display: table-row-group !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody tr {
+    display: table-row !important;
+    height: 48px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #eef1f5 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody tr:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody td {
+    display: table-cell !important;
+    padding: 9px 10px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    color: #374151 !important;
+    font-size: 12px !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody td::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+    display: none !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table :is(th, td):nth-child(1) {
+    width: auto;
+  }
+
+  .seller-dashboard .seller-recent-orders__table :is(th, td):nth-child(5) {
+    width: 96px;
+  }
+
+  .seller-dashboard .seller-recent-orders__table :is(th, td):nth-child(6) {
+    width: 78px;
+  }
+
+  .seller-dashboard .seller-recent-orders__table :is(th, td):is(:nth-child(5), :nth-child(6)) {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table thead th {
+    display: table-cell !important;
+    height: 32px;
+    padding: 9px 10px !important;
+    border: 0 !important;
+    background: #6995d7 !important;
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    text-align: left !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table .seller-product-cell {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .seller-dashboard .seller-recent-orders__table .seller-product-cell > img {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border-radius: 6px;
+  }
+
+  .seller-dashboard .seller-recent-orders__table .seller-product-cell > span,
+  .seller-dashboard .seller-recent-orders__table .seller-recent-orders__product-name {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: #171717 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seller-dashboard .seller-recent-orders__table .seller-product-cell small {
+    display: none !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table .seller-recent-orders__status-group {
+    display: flex;
+    min-width: 0;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  /* Long labels (e.g. "Awaiting Verification") must not get chopped mid-word
+     by the column edge: let the pill shrink and ellipsize instead. */
+  .seller-dashboard .seller-recent-orders__table .seller-recent-orders__status-group > [role="status"] {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    padding-right: 6px !important;
+    padding-left: 6px !important;
+    overflow: hidden;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  .seller-dashboard .seller-recent-orders__table .seller-recent-orders__status-group > [role="status"] > span:first-child {
+    flex: 0 0 auto;
+  }
+
+  .seller-dashboard .seller-recent-orders__table .seller-recent-orders__status-group > [role="status"] > .status-badge__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Keep the row height steady: the full "Insufficient · ₱X short" pill is
+     replaced on phones by a small red urgency dot beside the status pill.
+     Screen readers still get the full text from the element itself. */
+  .seller-dashboard .seller-recent-orders__table [data-insufficient-payment] {
+    width: 12px;
+    min-width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: #ef4444 !important;
+    color: #fff !important;
+    font-size: 0 !important;
+    line-height: 1;
+    white-space: nowrap !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table [data-insufficient-payment]::before {
+    content: "!";
+    display: block;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody td:nth-child(6) {
+    color: #858585 !important;
+    font-size: 11px !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody td.is-urgent,
+  .seller-dashboard .seller-recent-orders__table tbody td.is-urgent * {
+    color: #ff4545 !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody td.is-warning,
+  .seller-dashboard .seller-recent-orders__table tbody td.is-warning * {
+    color: #efa81d !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody td.seller-recent-orders__empty {
+    padding: 24px 14px !important;
+    color: #6b7280 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  .seller-dashboard .seller-recent-orders__table tbody td:nth-child(6) span {
+    font-size: 11px !important;
+  }
+
+  /* Buyer dashboard Recent Claims: mirror the seller Recent Orders compact
+     table so both dashboards read the same on phones. */
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table-wrap {
+    display: revert !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    border-radius: 9px !important;
+    box-shadow: 0 1px 4px rgba(18, 30, 71, 0.12) !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table {
+    display: revert !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border: 0 !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    font-size: 12px !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table colgroup {
+    display: none !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table thead {
+    display: table-header-group !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody {
+    display: table-row-group !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody tr {
+    display: table-row !important;
+    height: 48px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #eef1f5 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody tr:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody td {
+    display: table-cell !important;
+    padding: 9px 10px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    color: #374151 !important;
+    font-size: 12px !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody td::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+    display: none !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table :is(th, td):nth-child(1) {
+    width: auto;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table :is(th, td):nth-child(5) {
+    width: 96px !important;
+    min-width: 0 !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table :is(th, td):nth-child(6) {
+    width: 78px !important;
+    min-width: 0 !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table :is(th, td):is(:nth-child(5), :nth-child(6)) {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table thead th {
+    display: table-cell !important;
+    height: 32px;
+    padding: 9px 10px !important;
+    border: 0 !important;
+    background: #6995d7 !important;
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    text-align: left !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-cell-product {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-cell-product > img {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border-radius: 6px;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-cell-product > span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: #171717 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-cell-product small {
+    display: none !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-status-group {
+    display: flex;
+    min-width: 0;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-status-group > [role="status"] {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    padding-right: 6px !important;
+    padding-left: 6px !important;
+    overflow: hidden;
+    font-size: 10px !important;
+    white-space: nowrap;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-status-group > [role="status"] > span:first-child {
+    flex: 0 0 auto;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-status-group > [role="status"] > .status-badge__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* A shortfall on a phone is the red "!" beside the status, not a long pill. */
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table [data-insufficient-payment] {
+    width: 12px;
+    min-width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: #ef4444 !important;
+    color: #fff !important;
+    font-size: 0 !important;
+    line-height: 1;
+    white-space: nowrap !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table [data-insufficient-payment]::before {
+    content: "!";
+    display: block;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody td:nth-child(6) {
+    color: #858585 !important;
+    font-size: 11px !important;
+  }
+
+  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table tbody td:nth-child(6) span {
+    font-size: 11px !important;
   }
 }

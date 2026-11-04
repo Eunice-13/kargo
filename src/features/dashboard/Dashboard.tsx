@@ -17,7 +17,14 @@ import {
   FileText,
 } from "lucide-react";
 
-import type { ClaimRow, ClaimStatus, FulfillmentOrder, PayHistRow, Tab, SharedState } from "@/types";
+import type {
+  ClaimRow,
+  ClaimStatus,
+  FulfillmentOrder,
+  PayHistRow,
+  Tab,
+  SharedState,
+} from "@/types";
 
 import { navIntent } from "@/state/navIntent";
 
@@ -60,6 +67,10 @@ import PopularBatchesCard from "./PopularBatchesCard";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 import { kargoApi } from "@/services";
+import {
+  countPendingExtensionRequests,
+  createDemoSellerExtensionRequests,
+} from "@/services/extensionRequests";
 
 import {
   claimBelongsToPendingPayments,
@@ -118,6 +129,9 @@ export default function Dashboard({
   combinedDelivery,
 }: SharedState & { combinedDelivery: BuyerDeliveryRequestsState }) {
   const [showPayAll, setShowPayAll] = useState(false);
+  const [pendingExtensionRequestCount, setPendingExtensionRequestCount] = useState(() =>
+    isSupabaseConfigured ? 0 : countPendingExtensionRequests(createDemoSellerExtensionRequests()),
+  );
 
   const [isPhone, setIsPhone] = useState(false);
 
@@ -139,6 +153,46 @@ export default function Dashboard({
   const [activeWaitlistId, setActiveWaitlistId] = useState<string | null>(null);
 
   const board = useFulfillmentBoard(setFulfillment);
+
+  const extensionRequestsRevision = useMemo(
+    () =>
+      claims
+        .filter((claim) => claim.extensionRequested || claim.extensionStatus !== "none")
+        .map((claim) => `${claim.id}:${claim.extensionStatus ?? "unknown"}`)
+        .sort()
+        .join("|"),
+    [claims],
+  );
+
+  useEffect(() => {
+    if (role !== "Seller") return;
+    let active = true;
+
+    const refreshExtensionRequestCount = async () => {
+      if (!isSupabaseConfigured) {
+        setPendingExtensionRequestCount(
+          countPendingExtensionRequests(createDemoSellerExtensionRequests()),
+        );
+        return;
+      }
+
+      try {
+        const { extensions } = await kargoApi.loadSellerExtensionRequests();
+        if (active) {
+          setPendingExtensionRequestCount(countPendingExtensionRequests(extensions));
+        }
+      } catch (error) {
+        console.error("Unable to refresh seller extension request count.", error);
+      }
+    };
+
+    void refreshExtensionRequestCount();
+    window.addEventListener("focus", refreshExtensionRequestCount);
+    return () => {
+      active = false;
+      window.removeEventListener("focus", refreshExtensionRequestCount);
+    };
+  }, [extensionRequestsRevision, role, user.id]);
 
   useEffect(() => {
     const phoneQuery = window.matchMedia("(max-width: 620px)");
@@ -254,11 +308,7 @@ export default function Dashboard({
     reconcileRejectedClaim(claim, payHistory),
   );
   const activeClaimRows = combinedDelivery.ready
-    ? buildClaimsListRows(
-        reconciledDashboardClaims,
-        "All",
-        dashboardCombinedRequests,
-      ).filter(
+    ? buildClaimsListRows(reconciledDashboardClaims, "All", dashboardCombinedRequests).filter(
         (row) =>
           isOpenPaymentStatus(row.status) &&
           (!("type" in row) || combinedRequestHasOpenPayment(row.request)),
@@ -430,10 +480,6 @@ export default function Dashboard({
 
   // that requested an extension and are still pending a decision.
 
-  const pendingExtensions = claims.filter(
-    (c) => c.extensionRequested && c.status === "Pending" && c.seller === user.name,
-  );
-
   // Orders fulfilled = orders moved to the board's "Delivered" column.
 
   const ordersFulfilled = fulfillment.filter((o) => o.col === "Delivered");
@@ -540,7 +586,7 @@ export default function Dashboard({
     {
       label: "Extension Requests",
 
-      value: String(pendingExtensions.length),
+      value: String(pendingExtensionRequestCount),
 
       icon: ClipboardList,
 
@@ -746,8 +792,16 @@ export default function Dashboard({
                 View All
               </button>
             </div>
-            <div className="seller-orders-table-wrap">
-              <table className="seller-orders-table">
+            <div className="seller-recent-orders__wrap">
+              <table className="seller-recent-orders__table">
+                <colgroup>
+                  <col className="seller-recent-orders__col-product" />
+                  <col className="seller-recent-orders__col-batch" />
+                  <col className="seller-recent-orders__col-buyer" />
+                  <col className="seller-recent-orders__col-amount" />
+                  <col className="seller-recent-orders__col-status" />
+                  <col className="seller-recent-orders__col-deadline" />
+                </colgroup>
                 <thead>
                   <tr>
                     {[
@@ -776,7 +830,14 @@ export default function Dashboard({
                         <td>
                           <div className="seller-product-cell">
                             <ProductThumb name={claim.product} />
-                            <span>
+                            <span
+                              className="seller-recent-orders__product-name"
+                              title={
+                                claim.combinedItemCount
+                                  ? `${claim.product} · Combined Delivery · ${claim.combinedItemCount} items`
+                                  : claim.product
+                              }
+                            >
                               {claim.product}
                               {claim.combinedItemCount ? (
                                 <small
@@ -793,29 +854,40 @@ export default function Dashboard({
                             </span>
                           </div>
                         </td>
-                        <td>{claim.batch}</td>
+                        <td title={claim.batch}>{claim.batch}</td>
                         <td>
                           <div className="seller-buyer-cell">
                             <Avatar name={buyerName} size={21} />
-                            <span>{buyerName}</span>
+                            <span title={buyerName}>{buyerName}</span>
                           </div>
                         </td>
                         <td className="seller-order-amount">₱{claim.amount.toLocaleString()}</td>
-                        <td>
-                          <StatusBadge status={displayClaimStatus(claim.status)} />
-                          <InsufficientPaymentNotice
-                            shortfall={claimShortfall(claim)}
-                            compact
-                          />
+                        <td className="seller-recent-orders__status-cell">
+                          <div className="seller-recent-orders__status-group">
+                            <StatusBadge status={displayClaimStatus(claim.status)} />
+                            <InsufficientPaymentNotice
+                              shortfall={claimShortfall(claim)}
+                              status={claim.status}
+                              compact
+                              table
+                            />
+                          </div>
                         </td>
                         <td
-                          className={
-                            claim.hours > 0 && claim.hours < 6
-                              ? "is-urgent"
-                              : index === 1
-                                ? "is-warning"
-                                : ""
+                          title={
+                            claim.deadlinePausedAt
+                              ? "Paused — waiting for seller"
+                              : claim.status === "Pending" && claim.hours > 0
+                                ? `${claim.hours} hours remaining`
+                                : "—"
                           }
+                          className={`seller-dashboard-deadline${
+                            claim.hours > 0 && claim.hours < 6
+                              ? " is-urgent"
+                              : index === 1
+                                ? " is-warning"
+                                : ""
+                          }`}
                         >
                           {claim.status === "Pending" && claim.hours > 0 ? (
                             <Countdown
@@ -825,12 +897,19 @@ export default function Dashboard({
                               paused={Boolean(claim.deadlinePausedAt)}
                             />
                           ) : (
-                            <span>—</span>
+                            <span className="seller-recent-orders-dash">—</span>
                           )}
                         </td>
                       </tr>
                     );
                   })}
+                  {visibleSellerOrders.length === 0 && (
+                    <tr>
+                      <td className="seller-recent-orders__empty" colSpan={6}>
+                        No recent orders yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -855,7 +934,7 @@ export default function Dashboard({
 
                   label: "Extension Requests",
 
-                  count: pendingExtensions.length,
+                  count: pendingExtensionRequestCount,
 
                   tab: "Batches" as Tab,
                 },
@@ -1113,10 +1192,7 @@ export default function Dashboard({
                     </td>
                     <td className="py-2.5 pr-3">
                       <StatusBadge status={displayClaimStatus(c.status)} />
-                      <InsufficientPaymentNotice
-                        shortfall={claimShortfall(c)}
-                        compact
-                      />
+                      <InsufficientPaymentNotice shortfall={claimShortfall(c)} status={c.status} compact />
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
@@ -1154,7 +1230,7 @@ export default function Dashboard({
 
                   label: "Extension Requests",
 
-                  count: pendingExtensions.length,
+                  count: pendingExtensionRequestCount,
 
                   tab: "Batches" as Tab,
                 },
@@ -1319,11 +1395,10 @@ export default function Dashboard({
                         <span className="bdash-cell-amount">₱{c.amount.toLocaleString()}</span>
                       </td>
                       <td>
-                        <StatusBadge status={displayClaimStatus(c.status)} />
-                        <InsufficientPaymentNotice
-                          shortfall={claimShortfall(c)}
-                          compact
-                        />
+                        <div className="bdash-status-group">
+                          <StatusBadge status={displayClaimStatus(c.status)} />
+                          <InsufficientPaymentNotice shortfall={claimShortfall(c)} status={c.status} compact />
+                        </div>
                       </td>
                       <td>
                         {c.status === "Pending" && c.hours > 0 ? (

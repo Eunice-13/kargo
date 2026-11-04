@@ -66,7 +66,7 @@ export default function Orders({
                   </span>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={displayClaimStatus(claim.status)} />
-                    <InsufficientPaymentNotice shortfall={claimShortfall(claim)} />
+                    <InsufficientPaymentNotice shortfall={claimShortfall(claim)} status={claim.status} />
                   </div>
                 </div>
               ))}
@@ -121,7 +121,7 @@ export default function Orders({
               {claim && (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <StatusBadge status={displayClaimStatus(claim.status)} />
-                  <InsufficientPaymentNotice shortfall={claimShortfall(claim)} />
+                  <InsufficientPaymentNotice shortfall={claimShortfall(claim)} status={claim.status} />
                 </div>
               )}
             </div>

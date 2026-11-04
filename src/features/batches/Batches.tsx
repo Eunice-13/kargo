@@ -24,9 +24,11 @@ import {
   ArrowRight,
   ArrowLeft,
   Plus,
+  CalendarClock,
+  Users,
 } from "lucide-react";
 
-import type { ClaimRow, BatchType, SharedState, EntityId, ClaimReservationInput } from "@/types";
+import type { ClaimRow, BatchType, SharedState, ClaimReservationInput } from "@/types";
 import { INDIGO, CORAL, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme";
 
 import { navIntent, subscribeNavIntent } from "@/state/navIntent";
@@ -67,6 +69,36 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { kargoApi } from "@/services";
 
 import { formatBatchDateRange } from "@/services/batchDates";
+import {
+  countPendingExtensionRequests,
+  createDemoSellerExtensionRequests,
+  type SellerExtensionRequest,
+} from "@/services/extensionRequests";
+
+function ExtensionRequestsButton({
+  pendingCount,
+  onClick,
+}: {
+  pendingCount: number;
+  onClick: () => void;
+}) {
+  const accessibleLabel =
+    pendingCount > 0 ? `Extension requests, ${pendingCount} pending` : "Extension requests";
+
+  return (
+    <button
+      type="button"
+      className={`seller-batch-quick-action${pendingCount > 0 ? " seller-batch-quick-action--pending" : ""}`}
+      onClick={onClick}
+      aria-label={accessibleLabel}
+      title={accessibleLabel}
+    >
+      <CalendarClock size={18} aria-hidden="true" />
+      <span className="seller-batch-quick-action__label">Extension Requests</span>
+      {pendingCount > 0 && <span className="seller-batch-quick-action__count">{pendingCount}</span>}
+    </button>
+  );
+}
 
 export const COLS = 3;
 
@@ -253,54 +285,8 @@ export default function Batches({
 
   // Seller-only state
 
-  type ExtReq = {
-    id: EntityId;
-
-    buyer: string;
-
-    product: string;
-
-    batch: string;
-
-    requestedAt: string;
-
-    reason?: string;
-
-    status: "pending" | "approved" | "denied";
-  };
-
-  const [extensionRequests, setExtensionRequests] = useState<ExtReq[]>(
-    isSupabaseConfigured
-      ? []
-      : [
-          {
-            id: 1,
-
-            buyer: "Carlo Reyes",
-
-            product: "Laneige Lip Mask",
-
-            batch: "Korea Haul",
-
-            requestedAt: "Sep 9, 2026",
-
-            status: "pending",
-          },
-
-          {
-            id: 2,
-
-            buyer: "Mia Santos",
-
-            product: "SK-II Essence",
-
-            batch: "Singapore Haul",
-
-            requestedAt: "Sep 10, 2026",
-
-            status: "pending",
-          },
-        ],
+  const [extensionRequests, setExtensionRequests] = useState<SellerExtensionRequest[]>(
+    isSupabaseConfigured ? [] : createDemoSellerExtensionRequests(),
   );
 
   // Seller request pop-ups (moved from inline bottom cards to top-of-tab buttons).
@@ -332,7 +318,7 @@ export default function Batches({
   // Confirmation target for extension approve/deny (#16)
 
   const [extConfirm, setExtConfirm] = useState<{
-    req: ExtReq;
+    req: SellerExtensionRequest;
 
     action: "approved" | "denied";
   } | null>(null);
@@ -951,6 +937,20 @@ export default function Batches({
                   const closedByDate = batchClosedByDate(b);
 
                   const grad = CAT_GRAD[b.category] || CAT_GRAD["Mixed"];
+                  const unitLabel =
+                    new Set(
+                      b.products.map((product) =>
+                        product.sellingUnit === "box" ? "box" : "piece",
+                      ),
+                    ).size > 1
+                      ? "Mixed"
+                      : b.products[0]?.sellingUnit === "box"
+                        ? "Per Box"
+                        : "Per Piece";
+                  const hiddenBadgeLabels = [
+                    unitLabel,
+                    ...(b.groupOrdersEnabled ? ["Group Order Available"] : []),
+                  ];
 
                   return (
                     <div
@@ -961,7 +961,7 @@ export default function Batches({
                       }}
                     >
                       <div
-                        className={`batch-card${closed ? " is-closed" : ""}`}
+                        className={`batch-card seller-batch-card${closed ? " is-closed" : ""}`}
                         style={{
                           background: closed ? "#F7F8F9" : "#fff",
 
@@ -1027,21 +1027,53 @@ export default function Batches({
                               color="rgba(255,255,255,.78)"
                             />
                           )}
-                          <div className="batch-cover-badges">
-                            <span>
-                              {new Set(
-                                b.products.map((product) =>
-                                  product.sellingUnit === "box" ? "box" : "piece",
-                                ),
-                              ).size > 1
-                                ? "Mixed"
-                                : b.products[0]?.sellingUnit === "box"
-                                  ? "Per Box"
-                                  : "Per Piece"}
+                          <div
+                            className={
+                              role === "Seller"
+                                ? "batch-cover-badges seller-batch-cover-badges"
+                                : "batch-cover-badges"
+                            }
+                          >
+                            {role === "Seller" && (
+                              <>
+                                <span
+                                  className="seller-batch-category-badge"
+                                  title={b.category.toUpperCase()}
+                                  aria-label={b.category.toUpperCase()}
+                                >
+                                  {b.category.toUpperCase()}
+                                </span>
+                              </>
+                            )}
+                            <span
+                              className="seller-batch-unit-badge"
+                              title={unitLabel}
+                              aria-label={unitLabel}
+                            >
+                              {unitLabel}
                             </span>
                             {b.groupOrdersEnabled && (
-                              <span className="is-group">Group Order Available</span>
+                              <span
+                                className="is-group seller-batch-group-badge"
+                                title="Group Order Available"
+                                aria-label="Group Order Available"
+                              >
+                                <span className="seller-batch-group-full">
+                                  Group Order Available
+                                </span>
+                                <span className="seller-batch-group-short">Group Order</span>
+                                <span className="seller-batch-group-icon">
+                                  <Users size={12} aria-hidden="true" />
+                                </span>
+                              </span>
                             )}
+                            <span
+                              className="seller-batch-more-badge"
+                              title={`Hidden badges: ${hiddenBadgeLabels.join(", ")}`}
+                              aria-label={`${hiddenBadgeLabels.length} hidden badges: ${hiddenBadgeLabels.join(", ")}`}
+                            >
+                              +{hiddenBadgeLabels.length}
+                            </span>
                           </div>
                           {/* Closed batches get the same big label buyers see,
                               plus (for the seller) how to take orders again.
@@ -1063,43 +1095,44 @@ export default function Batches({
                               }
                             />
                           )}
-                          {role === "Seller" ? (
-                            // Open vs locked, in the bottom-right of the photo.
-                            // The icon states what the batch IS now (open
-                            // padlock = taking orders, closed padlock =
-                            // locked); the label says what tapping it does.
-                            (() => {
-                              const takingOrders = !closedByDate && !b.locked;
-                              const label = closedByDate
-                                ? "Re-open batch"
-                                : b.locked
-                                  ? "Unlock batch to accept orders"
-                                  : "Lock batch to stop orders";
-                              return (
-                                <button
-                                  type="button"
-                                  className={`seller-batch-lock${takingOrders ? " is-open" : " is-locked"}`}
-                                  aria-label={label}
-                                  title={label}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (closedByDate) {
-                                      setReopenDate(defaultReopenEndDate());
-                                      setReopenTarget(b);
-                                      return;
-                                    }
-                                    setLockConfirm(b);
-                                  }}
-                                >
-                                  {takingOrders ? (
-                                    <Unlock size={16} aria-hidden="true" />
-                                  ) : (
-                                    <Lock size={16} aria-hidden="true" />
-                                  )}
-                                </button>
-                              );
-                            })()
-                          ) : closed ? (
+                          {role === "Seller"
+                            ? // Open vs locked, in the bottom-right of the photo.
+                              // The icon states what the batch IS now (open
+                              // padlock = taking orders, closed padlock =
+                              // locked); the label says what tapping it does.
+                              (() => {
+                                const takingOrders = !closedByDate && !b.locked;
+                                const label = closedByDate
+                                  ? "Re-open batch"
+                                  : b.locked
+                                    ? "Unlock batch to accept orders"
+                                    : "Lock batch to stop orders";
+                                return (
+                                  <button
+                                    type="button"
+                                    className={`seller-batch-lock${takingOrders ? " is-open" : " is-locked"}`}
+                                    aria-label={label}
+                                    title={label}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (closedByDate) {
+                                        setReopenDate(defaultReopenEndDate());
+                                        setReopenTarget(b);
+                                        return;
+                                      }
+                                      setLockConfirm(b);
+                                    }}
+                                  >
+                                    {takingOrders ? (
+                                      <Unlock size={16} aria-hidden="true" />
+                                    ) : (
+                                      <Lock size={16} aria-hidden="true" />
+                                    )}
+                                  </button>
+                                );
+                              })()
+                            : null}
+                          {role === "Buyer" && closed && (
                             <span
                               title={
                                 closedByDate
@@ -1108,83 +1141,34 @@ export default function Batches({
                               }
                               style={{
                                 position: "absolute",
-
                                 top: 10,
-
                                 left: 10,
-
                                 background: "#FEE2E2",
-
                                 color: "#991B1B",
-
                                 fontSize: 9,
-
                                 fontWeight: 700,
-
                                 padding: "3px 8px",
-
                                 borderRadius: 999,
-
                                 letterSpacing: 0.5,
                               }}
                             >
-                              <>
-                                <Lock size={13} aria-hidden="true" />{" "}
-                                {closedByDate ? "CLOSED" : "LOCKED"}
-                              </>
-                            </span>
-                          ) : (
-                            <span
-                              style={{
-                                position: "absolute",
-
-                                top: 10,
-
-                                left: 10,
-
-                                background: "rgba(255,255,255,0.9)",
-
-                                backdropFilter: "blur(4px)",
-
-                                color: "#374151",
-
-                                fontSize: 9,
-
-                                fontWeight: 700,
-
-                                padding: "3px 8px",
-
-                                borderRadius: 999,
-
-                                letterSpacing: 0.5,
-                              }}
-                            >
-                              {b.category.toUpperCase()}
+                              <Lock size={13} aria-hidden="true" />{" "}
+                              {closedByDate ? "CLOSED" : "LOCKED"}
                             </span>
                           )}
-                          {role === "Seller" && (
+                          {role === "Buyer" && !closed && (
                             <span
                               style={{
                                 position: "absolute",
-
                                 top: 10,
-
                                 left: 10,
-
                                 background: "rgba(255,255,255,0.9)",
-
                                 backdropFilter: "blur(4px)",
-
                                 color: "#374151",
-
                                 fontSize: 9,
-
                                 fontWeight: 700,
-
                                 padding: "3px 8px",
-
                                 borderRadius: 999,
-
                                 letterSpacing: 0.5,
                               }}
                             >
@@ -1472,9 +1456,7 @@ export default function Batches({
     );
   };
 
-  const pendingExtCount = extensionRequests.filter(
-    (request) => request.status === "pending",
-  ).length;
+  const pendingExtCount = countPendingExtensionRequests(extensionRequests);
 
   const FilterBar = () => (
     <div
@@ -1504,107 +1486,114 @@ export default function Batches({
         Filter:
       </span>
       {role === "Seller" ? (
-        <SellerBatchFilterSelect
-          label="Category"
-          value={catFilter}
-          options={["All", ...BATCH_CATEGORIES]}
-          onChange={setCatFilter}
-        />
-      ) : <div>
-        <select
-          value={catFilter}
-          onChange={(e) => {
-            setCatFilter(e.target.value);
-          }}
-          style={{
-            fontSize: 12,
-
-            color: "#374151",
-
-            border: "1px solid #E5E7EB",
-
-            borderRadius: 6,
-
-            padding: "5px 8px",
-
-            background: "#fff",
-
-            outline: "none",
-
-            cursor: "pointer",
-          }}
-        >
-          {["All", ...BATCH_CATEGORIES].map((o) => (
-            <option key={o} value={o}>
-              {o === "All" ? "All categories" : o}
-            </option>
-          ))}
-        </select>
-      </div>}
-      {role === "Seller" ? (
-        <SellerBatchFilterSelect
-          label="Month"
-          value={dateFilter}
-          options={["All", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026"]}
-          onChange={setDateFilter}
-        />
-      ) : <div>
-        <select
-          value={dateFilter}
-          onChange={(e) => {
-            setDateFilter(e.target.value);
-          }}
-          style={{
-            fontSize: 12,
-
-            color: "#374151",
-
-            border: "1px solid #E5E7EB",
-
-            borderRadius: 6,
-
-            padding: "5px 8px",
-
-            background: "#fff",
-
-            outline: "none",
-
-            cursor: "pointer",
-          }}
-        >
-          {[
-            "All",
-
-            "May 2026",
-
-            "Jun 2026",
-
-            "Jul 2026",
-
-            "Aug 2026",
-
-            "Sep 2026",
-
-            "Oct 2026",
-          ].map((o) => (
-            <option key={o} value={o}>
-              {o === "All" ? "All months" : o}
-            </option>
-          ))}
-        </select>
-      </div>}
-      <div className="flex-1" />
-      {role === "Seller" && (
+        <div className="seller-batch-filter-controls">
+          <SellerBatchFilterSelect
+            label="Category"
+            value={catFilter}
+            options={["All", ...BATCH_CATEGORIES]}
+            onChange={setCatFilter}
+          />
+          <SellerBatchFilterSelect
+            label="Month"
+            value={dateFilter}
+            options={[
+              "All",
+              "May 2026",
+              "Jun 2026",
+              "Jul 2026",
+              "Aug 2026",
+              "Sep 2026",
+              "Oct 2026",
+            ]}
+            onChange={setDateFilter}
+          />
+        </div>
+      ) : (
         <>
-          <button
-            type="button"
-            className="seller-batch-quick-action"
-            onClick={() => setShowExtReqModal(true)}
-          >
-            Extension Requests
-            {pendingExtCount > 0 && <span>{pendingExtCount}</span>}
-          </button>
+          <div>
+            <select
+              value={catFilter}
+              onChange={(e) => {
+                setCatFilter(e.target.value);
+              }}
+              style={{
+                fontSize: 12,
+
+                color: "#374151",
+
+                border: "1px solid #E5E7EB",
+
+                borderRadius: 6,
+
+                padding: "5px 8px",
+
+                background: "#fff",
+
+                outline: "none",
+
+                cursor: "pointer",
+              }}
+            >
+              {["All", ...BATCH_CATEGORIES].map((o) => (
+                <option key={o} value={o}>
+                  {o === "All" ? "All categories" : o}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <select
+              value={dateFilter}
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+              }}
+              style={{
+                fontSize: 12,
+
+                color: "#374151",
+
+                border: "1px solid #E5E7EB",
+
+                borderRadius: 6,
+
+                padding: "5px 8px",
+
+                background: "#fff",
+
+                outline: "none",
+
+                cursor: "pointer",
+              }}
+            >
+              {[
+                "All",
+
+                "May 2026",
+
+                "Jun 2026",
+
+                "Jul 2026",
+
+                "Aug 2026",
+
+                "Sep 2026",
+
+                "Oct 2026",
+              ].map((o) => (
+                <option key={o} value={o}>
+                  {o === "All" ? "All months" : o}
+                </option>
+              ))}
+            </select>
+          </div>
         </>
+      )}
+      {role === "Buyer" && <div className="flex-1" />}
+      {role === "Seller" && (
+        <ExtensionRequestsButton
+          pendingCount={pendingExtCount}
+          onClick={() => setShowExtReqModal(true)}
+        />
       )}
       {role === "Buyer" && (
         <SecondaryBtn onClick={() => setSellerDir(true)}>
@@ -1680,7 +1669,7 @@ export default function Batches({
             <p>Manage your pasabuy batches. Toggle lock to pause new orders.</p>
           </div>
           <button type="button" className="seller-batches-add" onClick={onNewBatch}>
-            <Plus size={14} aria-hidden="true" /> Add batch
+            <Plus size={16} aria-hidden="true" /> Add batch
           </button>
         </header>
         <FilterBar />
