@@ -6969,6 +6969,34 @@ textarea::placeholder {
   font-size: 13px;
 }
 
+.seller-payments-page {
+  --seller-blue: #6a90d6;
+  --seller-row: #ececec;
+}
+
+.seller-payments-page .seller-payment-methods-panel {
+  border-color: rgb(86, 124, 194) !important;
+  background: rgb(106, 144, 214) !important;
+}
+
+.seller-payments-page .seller-payment-methods-empty {
+  color: #fff !important;
+}
+
+.seller-payments-page .seller-payment-section-heading {
+  margin: 0;
+  color: #101c35;
+  font-family: "Quicksand", "DM Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.seller-payments-page .seller-payment-history-subtitle {
+  margin: 3px 0 12px;
+  color: #858b96;
+  font-size: 13px;
+}
+
 .seller-orders-filters {
   display: flex;
   flex-wrap: wrap;
@@ -7870,21 +7898,123 @@ textarea::placeholder {
   margin-bottom: 55px;
 }
 
-.seller-orders-page .seller-orders-table {
+.seller-orders-page .seller-orders-table,
+.seller-payments-page .seller-payment-history-table {
   table-layout: fixed;
   font-size: 13px;
 }
 
-.seller-orders-page .seller-orders-table th {
-  padding: 16px 12px;
-  font-size: 18px;
+.seller-orders-page .seller-orders-table th,
+.seller-payments-page .seller-payment-history-table th {
+  height: 38px;
+  padding: 10px 12px;
+  font-size: 11px;
+}
+
+.seller-payments-page .seller-payment-table--history {
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 13px rgba(18, 30, 71, 0.17);
+}
+
+.seller-payments-page .seller-payment-history-table {
+  width: 100%;
+  min-width: 0;
+  border-collapse: collapse;
+}
+
+.seller-payments-page .seller-payment-history-table thead,
+.seller-payments-page .seller-payment-history-table th {
+  background: var(--seller-blue);
+  color: #fff;
+  font-weight: 700;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.seller-payments-page .seller-payment-history-table tbody tr {
+  border-top: 1px solid #f0f1f3;
+  background: #fff;
+}
+
+.seller-payments-page .seller-payment-history-table tbody tr:nth-child(even) {
+  background: var(--seller-row);
+}
+
+.seller-payments-page .seller-payment-history-table tbody td {
+  height: auto;
+  padding: 11px 12px;
+  color: #20242a;
+  font-size: 13px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.seller-payments-page .seller-payment-history-table .seller-orders-amount {
+  font-family: "Josefin Sans", sans-serif;
+  white-space: nowrap;
+}
+
+.seller-payments-page .seller-payment-history-table .seller-payment-history-date {
+  color: #748391;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.seller-payments-page .seller-payment-history-status {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.seller-payments-page .seller-payment-history-status [role="status"] {
+  display: inline-flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid rgba(31, 41, 55, 0.12);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.seller-payments-page .seller-payment-history-status [role="status"] > span:first-child {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
 }
 
 /* Header and cell padding stay equal so labels line up with their column. 12px
    (down from 18px) gives the Actions column room for its buttons in one row. */
-.seller-orders-page .seller-orders-row td {
+.seller-orders-page .seller-orders-row td,
+.seller-payments-page .seller-payment-history-table .seller-orders-row td {
   height: auto;
   padding: 11px 12px;
+}
+
+.seller-payments-page .seller-payment-history-table tbody td:first-child,
+.seller-payments-page .seller-payment-history-table tbody td:nth-child(2) {
+  min-width: 112px;
+}
+
+.seller-payments-page .seller-payment-history-table .seller-buyer-cell {
+  min-width: 0;
+  gap: 8px;
+}
+
+.seller-payments-page .seller-payment-history-table .seller-buyer-cell > span {
+  min-width: 0;
+  overflow: hidden;
+  color: #20242a !important;
+  font-size: 13px;
+  font-weight: 600 !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .seller-orders-page .seller-orders-col-buyer {
@@ -7945,7 +8075,8 @@ textarea::placeholder {
    matches the rest so the row reads as one set of actions. These override the
    older per-button colors above, which were declared !important. */
 .seller-orders-page .seller-orders-review,
-.seller-orders-page .seller-orders-contact {
+.seller-orders-page .seller-orders-contact,
+.seller-payments-page .seller-payment-history-table .seller-orders-review {
   min-height: 32px;
   padding: 5px 11px;
   border: 1px solid #d5dae3 !important;
@@ -7963,13 +8094,15 @@ textarea::placeholder {
     box-shadow 140ms ease;
 }
 .seller-orders-page .seller-orders-review:hover,
-.seller-orders-page .seller-orders-contact:hover {
+.seller-orders-page .seller-orders-contact:hover,
+.seller-payments-page .seller-payment-history-table .seller-orders-review:hover {
   border-color: #aeb8c8 !important;
   background: #f6f8fb !important;
   box-shadow: 0 2px 6px rgb(17 24 39 / 10%);
 }
 .seller-orders-page .seller-orders-review:focus-visible,
-.seller-orders-page .seller-orders-contact:focus-visible {
+.seller-orders-page .seller-orders-contact:focus-visible,
+.seller-payments-page .seller-payment-history-table .seller-orders-review:focus-visible {
   outline: 3px solid var(--kargo-focus);
   outline-offset: 2px;
 }

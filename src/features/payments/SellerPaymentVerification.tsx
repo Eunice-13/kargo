@@ -369,11 +369,13 @@ export default function SellerPaymentVerification({
     })
   const renderTable = (items: VerifyItem[], showAmountPaid: boolean, emptyMessage?: string) => (
     <Card
-      className={`!p-0 overflow-hidden seller-payment-table mobile-data-page${showAmountPaid ? "" : " seller-payment-table--history"}`}
+      className={`!p-0 overflow-hidden seller-payment-table${showAmountPaid ? " mobile-data-page" : " seller-payment-table--history"}`}
     >
-      <div style={{ overflowX: "auto" }}>
-        <table className="w-full text-[13px]">
-          <thead style={{ background: "#6892D5" }}>
+      <div className={showAmountPaid ? "" : "seller-orders-table-scroll"}>
+        <table
+          className={`w-full text-[13px]${showAmountPaid ? "" : " seller-orders-table seller-payment-history-table"}`}
+        >
+          <thead style={showAmountPaid ? { background: "#6892D5" } : undefined}>
             <tr>
               {[
                 "Product",
@@ -387,7 +389,7 @@ export default function SellerPaymentVerification({
               ].map((heading) => (
                 <th
                   key={heading}
-                  style={{
+                  style={showAmountPaid ? {
                     color: "#fff",
                     fontWeight: 700,
                     fontSize: 11,
@@ -396,7 +398,7 @@ export default function SellerPaymentVerification({
                     whiteSpace: "nowrap",
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
-                  }}
+                  } : undefined}
                 >
                   {heading}
                 </th>
@@ -418,45 +420,35 @@ export default function SellerPaymentVerification({
                     groupOrderId: item.groupOrderId,
                     combinedGroupId: item.combinedDeliveryGroupId,
                   })}
-                  className="transition-colors hover:bg-gray-50"
-                  style={{
+                  className={`${showAmountPaid ? "" : `seller-orders-row${index % 2 ? " seller-orders-row--alt" : ""}`} transition-colors hover:bg-gray-50`}
+                  style={showAmountPaid ? {
                     borderTop: "1px solid #E5E7EB",
                     background: index % 2 ? "#FAFAFA" : "#fff",
-                  }}
+                  } : undefined}
                 >
-                  <td style={{ padding: "12px 14px" }}>
-                    <div className="flex items-center gap-2">
+                  <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
+                    <div className={showAmountPaid ? "flex items-center gap-2" : "seller-product-cell"}>
                       <ProductThumb name={item.product} />
-                      <span style={{ color: "#374151" }}>{item.product}</span>
+                      <span>{item.product}</span>
                     </div>
                   </td>
-                  <td style={{ padding: "12px 14px" }}>
-                    <div className="flex items-center gap-2">
-                      <Avatar name={item.buyer} size={22} />
-                      <span style={{ fontWeight: 500, color: "#111827" }}>
-                        {item.buyer}
-                      </span>
+                  <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
+                    <div className={showAmountPaid ? "flex items-center gap-2" : "seller-buyer-cell"}>
+                      <Avatar name={item.buyer} size={showAmountPaid ? 22 : 24} />
+                      <span>{item.buyer}</span>
                     </div>
                   </td>
-                  <td style={{ padding: "12px 14px" }}>
-                    <span className="inline-flex items-center gap-1 text-[12px]">
+                  <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
+                    <span className={`inline-flex items-center gap-1 text-[12px]${showAmountPaid ? "" : " seller-orders-method"}`}>
                       {showAmountPaid && <PaymentIcon method={item.method} size={15} />}
                       {item.method}
                     </span>
                   </td>
-                  <td
-                    style={{
-                      padding: "12px 14px",
-                      fontWeight: 700,
-                      color: "#111827",
-                      fontFamily: "'Josefin Sans',sans-serif",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <td className={`seller-orders-amount${showAmountPaid ? "" : " seller-payment-history-card-row"}`}>
                     ₱{item.amount.toLocaleString()}
                   </td>
                   {showAmountPaid && (
-                    <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                    <td style={{ whiteSpace: "nowrap" }}>
                       {item.method === "Cash on Meetup" ? (
                         <span style={{ color: "#9CA3AF" }}>Not applicable</span>
                       ) : paidAmount == null ? (
@@ -487,20 +479,13 @@ export default function SellerPaymentVerification({
                       )}
                     </td>
                   )}
-                  <td
-                    style={{
-                      padding: "12px 14px",
-                      color: "#748391",
-                      fontSize: 12,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <td className={`seller-payment-history-date${showAmountPaid ? "" : " seller-payment-history-card-row"}`}>
                     {item.date}
                   </td>
-                  <td style={{ padding: "12px 14px" }}>
-                    <StatusBadge
-                      status={displayStatus}
-                    />
+                  <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
+                    <div className={showAmountPaid ? "" : "seller-payment-history-status"}>
+                      <StatusBadge status={displayStatus} />
+                    </div>
                     {item.status === "Pending" && isShort && (
                       <div
                         style={{
@@ -514,12 +499,12 @@ export default function SellerPaymentVerification({
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: "12px 14px" }}>
+                  <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
                     <button
                       type="button"
-                      className="seller-payment-details-button"
+                      className={`seller-payment-details-button${showAmountPaid ? "" : " seller-orders-review"}`}
                       onClick={() => setReviewTarget(item)}
-                      style={{
+                      style={showAmountPaid ? {
                         border: "1px solid #D1D5DB",
                         borderRadius: 8,
                         background: "#fff",
@@ -529,7 +514,7 @@ export default function SellerPaymentVerification({
                         fontWeight: 600,
                         whiteSpace: "nowrap",
                         cursor: "pointer",
-                      }}
+                      } : undefined}
                     >
                       View Details
                     </button>
@@ -588,12 +573,7 @@ export default function SellerPaymentVerification({
       <section>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2
-            style={{
-              fontFamily: "'Josefin Sans',sans-serif",
-              fontSize: 18,
-              fontWeight: 800,
-              color: "#111827",
-            }}
+            className="seller-payment-section-heading"
           >
             Payment Methods
           </h2>
@@ -615,7 +595,7 @@ export default function SellerPaymentVerification({
             <Plus size={14} aria-hidden="true" /> Add Payment Method
           </PrimaryBtn>
         </div>
-        <Card>
+        <Card className="seller-payment-methods-panel">
           {paymentMethods.length > 0 ? (
             <div
               className="grid gap-3"
@@ -679,7 +659,7 @@ export default function SellerPaymentVerification({
               ))}
             </div>
           ) : (
-            <div style={{ color: "#748391", fontSize: 12 }}>
+            <div className="seller-payment-methods-empty" style={{ fontSize: 12 }}>
               No payment methods are configured in seller settings.
             </div>
           )}
@@ -688,17 +668,11 @@ export default function SellerPaymentVerification({
 
       <section>
         <h2
-          className="mb-4"
-          style={{
-            fontFamily: "'Josefin Sans',sans-serif",
-            fontSize: 18,
-            fontWeight: 800,
-            color: "#111827",
-          }}
+          className="seller-payment-section-heading mb-4"
         >
           Payment History
         </h2>
-        <p style={{ marginTop: -8, marginBottom: 12, color: "#748391", fontSize: 12 }}>
+        <p className="seller-payment-history-subtitle">
           Verified payments for paid and reserved orders.
         </p>
         <div className="payment-history-controls">

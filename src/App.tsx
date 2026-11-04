@@ -773,7 +773,7 @@ export default function App() {
           <div
             className={`kargo-original-app${role === "Admin" ? " admin-app" : ""}`}
             style={{
-              background: CREAM,
+              background: role === "Seller" ? "#fff" : CREAM,
 
               minHeight: "100vh",
 
