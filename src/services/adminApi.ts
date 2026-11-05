@@ -15,6 +15,7 @@ import type {
   AdminBatchFilters,
   AdminBatchRow,
   AdminCombinedListResult,
+  AdminCombinedPaymentDetail,
   AdminDashboardData,
   AdminInvite,
   AdminListResult,
@@ -45,6 +46,7 @@ import {
   demoGrantAdmin,
   demoListAudit,
   demoListBatches,
+  demoGetCombinedPayment,
   demoListCombinedPayments,
   demoListOrders,
   demoListPayments,
@@ -330,6 +332,11 @@ export const adminApi = {
       p_limit: limit,
       p_offset: offset,
     });
+  },
+
+  async getCombinedPayment(groupId: string): Promise<AdminCombinedPaymentDetail> {
+    if (demoMode) return demoGetCombinedPayment(groupId);
+    return callAdmin("admin_get_combined_payment", { p_group_id: groupId });
   },
 
   // ─── Team ─────────────────────────────────────────────────────────────────

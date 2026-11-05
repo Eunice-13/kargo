@@ -245,6 +245,35 @@ export type AdminCombinedPaymentRow = {
   memberCount: number;
 };
 
+export type AdminCombinedPaymentDetail = {
+  available: boolean;
+  id: string;
+  status: string;
+  shipping_fee: number | null;
+  createdAt?: string;
+  created_at?: string;
+  buyerName: string | null;
+  sellerName: string | null;
+  batchName: string | null;
+  destination: { pin_lat: number; pin_lng: number; address_text: string } | null;
+  payment: {
+    items_subtotal: number;
+    shipping_fee: number;
+    total: number;
+    deadline: string;
+    status: string;
+  } | null;
+  members: Array<{
+    order_id: string;
+    order_number: string;
+    item_subtotal: number;
+    released_at: string | null;
+    quantity: number;
+    product: string;
+    status: string;
+  }>;
+};
+
 export type AdminCombinedListResult = {
   available: boolean;
   rows: AdminCombinedPaymentRow[];

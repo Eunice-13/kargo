@@ -699,10 +699,52 @@ export function demoListCombinedPayments(
   return { available: true, rows: page, total: rows.length, nextOffset: offset + offsetLimit };
 }
 
+export function demoGetCombinedPayment(groupId: string): AdminCombinedPaymentDetail {
+  return {
+    available: true,
+    id: groupId,
+    status: "shipping_fee_set",
+    shipping_fee: 150,
+    createdAt: iso(1),
+    buyerName: "Jollo Dela Cruz",
+    sellerName: "Maria Santos",
+    batchName: "Japan Trip — March 2026",
+    destination: { pin_lat: 14.55, pin_lng: 121.02, address_text: "123 Demo St, Manila" },
+    payment: {
+      items_subtotal: 2255,
+      shipping_fee: 150,
+      total: 2405,
+      deadline: iso(-1),
+      status: "ready",
+    },
+    members: [
+      {
+        order_id: "demo-o-1",
+        order_number: "ORD-2026-0199",
+        item_subtotal: 1775,
+        released_at: null,
+        quantity: 2,
+        product: "Tokyo Banana",
+        status: "payment_confirmed",
+      },
+      {
+        order_id: "demo-o-2",
+        order_number: "ORD-2026-0184",
+        item_subtotal: 480,
+        released_at: null,
+        quantity: 1,
+        product: "KitKat Sakura",
+        status: "payment_submitted",
+      },
+    ],
+  };
+}
+
 // ─── Phase 4 demo: team + audit ─────────────────────────────────────────────
 
 import type {
   AdminAuditFilters,
+  AdminCombinedPaymentDetail,
   AdminAuditRow,
   AdminInvite,
   AdminTeamMember,

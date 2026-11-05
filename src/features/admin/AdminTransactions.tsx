@@ -22,6 +22,7 @@ import {
 import { AdminErrorState } from "./components/AdminStates";
 import AdminOrderDetailModal from "./components/AdminOrderDetailModal";
 import AdminPaymentDetailModal from "./components/AdminPaymentDetailModal";
+import AdminCombinedPaymentModal from "./components/AdminCombinedPaymentModal";
 
 type Section = "Orders" | "Payments" | "Combined";
 const PAGE = 25;
@@ -775,6 +776,7 @@ function CombinedSection() {
   const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminCombinedPaymentRow[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const filters = useMemo(() => ({ search: search.trim() || undefined }), [search]);
   useEffect(() => {
@@ -827,7 +829,19 @@ function CombinedSection() {
         <Card className="!p-0 overflow-hidden">
           <div className="admin-orders-cards">
             {rows.map((c) => (
-              <article key={c.id} className="admin-ocard admin-ocard--static">
+              <article
+                key={c.id}
+                className="admin-ocard"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelected(c.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(c.id);
+                  }
+                }}
+              >
                 <div className="admin-ocard__top">
                   <span className="admin-ocard__icon" aria-hidden="true">
                     <Layers size={22} />
@@ -877,7 +891,19 @@ function CombinedSection() {
               </thead>
               <tbody>
                 {rows.map((c) => (
-                  <tr key={c.id} style={{ borderTop: "1px solid #F3F4F6" }}>
+                  <tr
+                    key={c.id}
+                    onClick={() => setSelected(c.id)}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelected(c.id);
+                      }
+                    }}
+                    style={{ borderTop: "1px solid #F3F4F6", cursor: "pointer" }}
+                    className="admin-clickable-row"
+                  >
                     <td
                       data-label="Group"
                       style={{
@@ -941,6 +967,10 @@ function CombinedSection() {
             onClick={() => setOffset(rows.length)}
           />
         </Card>
+      )}
+
+      {selected && (
+        <AdminCombinedPaymentModal groupId={selected} onClose={() => setSelected(null)} />
       )}
     </>
   );

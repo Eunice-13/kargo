@@ -8255,3 +8255,259 @@ body > :not(#root) * {
     min-width: 0;
   }
 }
+
+/* Orders cards: tall thumbnail on the left, status + date, title, parties + amount.
+   Scoped to Orders (cards that carry __body) so Payments/Combined keep their layout. */
+.admin-ocard:has(.admin-ocard__body) {
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  padding: 16px;
+  border-radius: 22px;
+}
+.admin-ocard__body {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.admin-ocard:has(.admin-ocard__body) .admin-ocard__thumb {
+  flex: 0 0 auto;
+}
+.admin-ocard:has(.admin-ocard__body) .admin-ocard__thumb img {
+  width: 150px !important;
+  height: 100% !important;
+  min-height: 130px;
+  border-radius: 18px !important;
+  object-fit: cover;
+  background: #ead9bf;
+}
+.admin-ocard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.admin-ocard__head .admin-badge {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.admin-ocard:has(.admin-ocard__body) .admin-ocard__date {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+  white-space: nowrap;
+}
+.admin-ocard:has(.admin-ocard__body) .admin-ocard__who {
+  display: grid;
+  gap: 2px;
+}
+.admin-ocard:has(.admin-ocard__body) .admin-ocard__product {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #17212b;
+  overflow-wrap: anywhere;
+}
+.admin-ocard:has(.admin-ocard__body) .admin-ocard__num {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-ocard:has(.admin-ocard__body) .admin-ocard__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 0;
+  border-top: 0;
+}
+.admin-ocard__parties {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-ocard__avatars {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+.admin-ocard__avatars > :last-child {
+  margin-left: -10px;
+}
+.admin-ocard__names {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+  overflow-wrap: anywhere;
+}
+.admin-ocard__names strong {
+  font-weight: 800;
+  color: #17212b;
+}
+.admin-ocard:has(.admin-ocard__body) .admin-ocard__price {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: #1d2a9e;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* The reference is the full-width card layout; keep it on narrow screens too,
+   dropping the big thumbnail when there's no room. */
+@media (max-width: 519px) {
+  .admin-ocard:has(.admin-ocard__body) .admin-ocard__thumb img {
+    width: 84px !important;
+    min-height: 84px;
+  }
+  .admin-ocard:has(.admin-ocard__body) .admin-ocard__product {
+    font-size: 19px;
+  }
+  .admin-ocard:has(.admin-ocard__body) .admin-ocard__foot {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .admin-ocard__names {
+    font-size: 14px;
+  }
+}
+
+/* Combined payment detail modal. */
+@media (min-width: 768px) {
+  .admin-combined-modal > .kargo-modal__body {
+    padding: 0 !important;
+    background: #eef0f7;
+  }
+  .admin-combined {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+    gap: 20px;
+    padding: 24px;
+  }
+  .admin-combined__col {
+    display: grid;
+    gap: 20px;
+    min-width: 0;
+  }
+}
+.admin-combined {
+  display: grid;
+  gap: 16px;
+}
+.admin-combined__col {
+  display: grid;
+  gap: 16px;
+}
+.admin-combined__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.admin-combined__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: #eef2fb;
+  color: #3b4bb8;
+}
+.admin-combined__head > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.admin-combined__head strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: #17212b;
+  overflow-wrap: anywhere;
+}
+.admin-combined__head span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-combined__members {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-combined__members li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #eef0f6;
+}
+.admin-combined__members li > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.admin-combined__members strong {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #17212b;
+  overflow-wrap: anywhere;
+}
+.admin-combined__members li > div span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-combined__members li > strong {
+  text-align: right;
+}
+.admin-combined__totals {
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid #e9ecf5;
+  display: grid;
+  gap: 8px;
+}
+.admin-combined__totals > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.admin-combined__totals dt {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-combined__totals dd {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #17212b;
+}
+.admin-combined__grand dt,
+.admin-combined__grand dd {
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  color: #17212b !important;
+}
+.admin-combined__retry {
+  margin-top: 12px;
+  align-self: start;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--kargo-line);
+  border-radius: 10px;
+  background: #fff;
+  color: #3b4bb8;
+  font-weight: 700;
+  cursor: pointer;
+}
