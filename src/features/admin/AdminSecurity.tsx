@@ -404,18 +404,6 @@ function AuditSection() {
                       })}
                     </div>
                   </div>
-                  <span className="admin-ucard__toggle" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 16 16">
-                      <path
-                        d="M6 3l5 5-5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
                 </div>
                 <div className="admin-acard__meta">
                   <AdminBadge tone="info" label={ADMIN_ACTION_LABELS[a.action] ?? a.action} />

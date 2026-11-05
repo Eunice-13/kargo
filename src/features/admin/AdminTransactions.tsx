@@ -307,18 +307,6 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
                     <div className="admin-ocard__num">{o.orderNumber}</div>
                     <div className="admin-ocard__product">{o.product}</div>
                   </div>
-                  <span className="admin-ucard__toggle" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 16 16">
-                      <path
-                        d="M6 3l5 5-5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
                 </div>
                 <div className="admin-ocard__meta">
                   <AdminBadge tone={toneForStatus(o.status)} label={o.status.replace(/_/g, " ")} />
@@ -618,18 +606,6 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
                       {p.referenceNumber ? ` · ${p.referenceNumber}` : ""}
                     </div>
                   </div>
-                  <span className="admin-ucard__toggle" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 16 16">
-                      <path
-                        d="M6 3l5 5-5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
                 </div>
                 <div className="admin-ocard__meta">
                   <span className="admin-ocard__badges">

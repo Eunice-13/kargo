@@ -185,18 +185,6 @@ export default function AdminUsers() {
                     <strong>{u.gmv30 > 0 ? peso(u.gmv30) : "—"}</strong>
                     <span>{u.gmvRole === "seller" ? "GMV · 30d" : "Spend · 30d"}</span>
                   </div>
-                  <span className="admin-ucard__toggle" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 16 16">
-                      <path
-                        d="M6 3l5 5-5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
                 </div>
                 <div className="admin-ucard__meta">
                   <div className="admin-ucard__badges">
