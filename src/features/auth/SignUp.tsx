@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { Camera, MapPin, Plane, Search, ShoppingBasket } from "lucide-react";
+import { Camera, ChevronDown, MapPin, Plane, Search, ShoppingBasket } from "lucide-react";
 import type { Role, UserInfo } from "@/types";
 
 // Signup can only ever create a Buyer or Seller; Admin is granted out-of-band.
@@ -44,7 +44,8 @@ export default function SignUp({
   const [addressPin, setAddressPin] = useState<LocationPinValue>({});
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [draftPin, setDraftPin] = useState<LocationPinValue>({});
-  const [paymentType, setPaymentType] = useState("GCash");
+  const [paymentType, setPaymentType] = useState("");
+  const [paymentMenuOpen, setPaymentMenuOpen] = useState(false);
   const [paymentName, setPaymentName] = useState("");
   const [paymentNumber, setPaymentNumber] = useState("");
 
@@ -73,6 +74,7 @@ export default function SignUp({
     }
     if (role === "Seller") {
       if (!shopName.trim()) e.shopName = "Shop name is required.";
+      if (!paymentType) e.paymentType = "Choose a payment method.";
       if (!paymentName.trim()) e.paymentName = "Enter the account name for your payment method.";
       if (!paymentNumber.trim()) e.paymentNumber = "Enter the account number or payout details.";
       if (!terms) e.terms = "You must agree to the Terms and Privacy Policy.";
@@ -187,69 +189,39 @@ export default function SignUp({
     <AuthLayout page="signup">
       <div className="auth-content auth-signup-content">
         <header className="auth-heading auth-heading--start">
-          <h1>Start your Pasabuy Journey!</h1>
+          <h1>Create your account</h1>
           <p>Join Kargo to buy or sell pasabuy items</p>
         </header>
 
         <div className="auth-signup-fields">
-          <div className="auth-role-field">
-            <span className="auth-section-label" id="signup-role-label">
-              I want to join as a...
-            </span>
-            <div className="auth-role-options" role="group" aria-labelledby="signup-role-label">
-              {(["Buyer", "Seller"] as SignupRole[]).map((option) => (
-                <button
-                  type="button"
-                  key={option}
-                  className={role === option ? "is-selected" : ""}
-                  onClick={() => setRole(option)}
-                  aria-pressed={role === option}
-                >
-                  <strong>
-                    {option === "Buyer" ? (
-                      <ShoppingBasket size={17} aria-hidden="true" />
-                    ) : (
-                      <Plane size={17} aria-hidden="true" />
-                    )}
-                    {option}
-                  </strong>
-                  <small>
-                    {option === "Buyer" ? "Claim items from batches" : "Run pasabuy batches"}
-                  </small>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="auth-signup-grid">
             <div className="auth-signup-col auth-signup-col--main">
-              {role === "Buyer" && (
-                <div className="auth-photo-field">
-                  <button
-                    type="button"
-                    className="auth-photo-button"
-                    aria-label="Upload profile photo"
-                    onClick={() => photoRef.current?.click()}
-                  >
-                    {photo ? <span>{photo}</span> : <b>＋</b>}
-                  </button>
-                  <label>
-                    Profile Photo <span>(optional)</span>
-                  </label>
-                  <input
-                    ref={photoRef}
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(event) => {
-                      if (event.target.files?.[0]) setPhoto(event.target.files[0].name);
-                    }}
-                  />
-                </div>
-              )}
+              <div className="auth-photo-field">
+                <button
+                  type="button"
+                  className="auth-photo-button"
+                  aria-label="Upload profile photo"
+                  onClick={() => photoRef.current?.click()}
+                >
+                  {photo ? <span>{photo}</span> : <b>＋</b>}
+                </button>
+                <label>
+                  Profile Photo <span>(optional)</span>
+                </label>
+                <input
+                  ref={photoRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(event) => {
+                    if (event.target.files?.[0]) setPhoto(event.target.files[0].name);
+                  }}
+                />
+              </div>
 
               <AuthInput
                 label="Full Name"
+                required
                 value={name}
                 onChange={setName}
                 error={errs.name}
@@ -258,6 +230,7 @@ export default function SignUp({
               <AuthInput
                 label="Email address"
                 type="email"
+                required
                 value={email}
                 onChange={setEmail}
                 error={errs.email}
@@ -266,6 +239,7 @@ export default function SignUp({
               <AuthInput
                 label="Password"
                 type="password"
+                required
                 value={password}
                 onChange={setPassword}
                 error={errs.password}
@@ -275,6 +249,7 @@ export default function SignUp({
               {role === "Seller" && (
                 <AuthInput
                   label="Shop Name"
+                  required
                   value={shopName}
                   onChange={setShopName}
                   error={errs.shopName}
@@ -288,7 +263,9 @@ export default function SignUp({
                 <div
                   className={`auth-field auth-address-field${errs.address ? " auth-field--error" : ""}`}
                 >
-                  <label htmlFor="signup-address-trigger">Delivery address</label>
+                  <label htmlFor="signup-address-trigger">
+                    Delivery address <span className="auth-required-mark" aria-hidden="true">*</span>
+                  </label>
                   <button
                     type="button"
                     id="signup-address-trigger"
@@ -324,22 +301,99 @@ export default function SignUp({
                   </div>
                   <div className="auth-payment-grid">
                     <div className="auth-field">
-                      <label htmlFor="signup-payment-type">Method</label>
-                      <div className="auth-input-shell">
-                        <select
+                      <label htmlFor="signup-payment-type">
+                        Method <span className="auth-required-mark" aria-hidden="true">*</span>
+                      </label>
+                      <div className="auth-payment-select">
+                        <button
                           id="signup-payment-type"
-                          className="auth-select"
-                          value={paymentType}
-                          onChange={(event) => setPaymentType(event.target.value)}
+                          type="button"
+                          className="auth-payment-select__trigger"
+                          aria-haspopup="listbox"
+                          aria-expanded={paymentMenuOpen}
+                          aria-controls="signup-payment-options"
+                          aria-invalid={Boolean(errs.paymentType)}
+                          onClick={() => setPaymentMenuOpen((open) => !open)}
+                          onKeyDown={(event) => {
+                            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                              event.preventDefault();
+                              setPaymentMenuOpen(true);
+                              requestAnimationFrame(() => {
+                                document
+                                  .querySelector<HTMLButtonElement>(
+                                    "#signup-payment-options button.is-selected",
+                                  )
+                                  ?.focus();
+                              });
+                            } else if (event.key === "Escape") {
+                              setPaymentMenuOpen(false);
+                            }
+                          }}
                         >
-                          <option value="GCash">GCash</option>
-                          <option value="Maya">Maya</option>
-                          <option value="Bank Transfer">Bank Transfer</option>
-                        </select>
+                          <span className={paymentType ? "" : "is-placeholder"}>
+                            {paymentType || "Choose payment method"}
+                          </span>
+                          <ChevronDown
+                            size={17}
+                            aria-hidden="true"
+                            className={paymentMenuOpen ? "is-open" : ""}
+                          />
+                        </button>
+                        {paymentMenuOpen && (
+                          <div
+                            id="signup-payment-options"
+                            className="auth-payment-select__options"
+                            role="listbox"
+                            aria-labelledby="signup-payment-type"
+                            onKeyDown={(event) => {
+                              const options = Array.from(
+                                event.currentTarget.querySelectorAll<HTMLButtonElement>("button"),
+                              );
+                              const currentIndex = options.indexOf(
+                                document.activeElement as HTMLButtonElement,
+                              );
+                              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                                event.preventDefault();
+                                const direction = event.key === "ArrowDown" ? 1 : -1;
+                                options[(currentIndex + direction + options.length) % options.length]?.focus();
+                              } else if (event.key === "Home") {
+                                event.preventDefault();
+                                options[0]?.focus();
+                              } else if (event.key === "End") {
+                                event.preventDefault();
+                                options.at(-1)?.focus();
+                              } else if (event.key === "Escape") {
+                                event.preventDefault();
+                                setPaymentMenuOpen(false);
+                                document.getElementById("signup-payment-type")?.focus();
+                              }
+                            }}
+                          >
+                            {["GCash", "Maya", "Bank Transfer"].map((method) => (
+                              <button
+                                key={method}
+                                type="button"
+                                role="option"
+                                aria-selected={paymentType === method}
+                                className={paymentType === method ? "is-selected" : ""}
+                                onClick={() => {
+                                  setPaymentType(method);
+                                  setPaymentMenuOpen(false);
+                                }}
+                              >
+                                {method}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
+                      {errs.paymentType && (
+                        <p className="auth-error fi">{errs.paymentType}</p>
+                      )}
                     </div>
                     <AuthInput
                       label="Account name"
+                      required
                       value={paymentName}
                       onChange={setPaymentName}
                       error={errs.paymentName}
@@ -347,6 +401,7 @@ export default function SignUp({
                     />
                     <AuthInput
                       label="Account number"
+                      required
                       value={paymentNumber}
                       onChange={setPaymentNumber}
                       error={errs.paymentNumber}
@@ -359,6 +414,7 @@ export default function SignUp({
               <div className="auth-socials">
                 <label className="auth-section-label">
                   Contact &amp; Social Links <span>(at least one required)</span>
+                  <span className="auth-required-mark" aria-hidden="true">*</span>
                 </label>
                 {fromBatchLink && role === "Buyer" && (
                   <p className="auth-social-note">
@@ -406,6 +462,35 @@ export default function SignUp({
             </div>
           </div>
 
+          <div className="auth-role-field">
+            <span className="auth-section-label" id="signup-role-label">
+              I want to join as a...
+            </span>
+            <div className="auth-role-options" role="group" aria-labelledby="signup-role-label">
+              {(["Buyer", "Seller"] as SignupRole[]).map((option) => (
+                <button
+                  type="button"
+                  key={option}
+                  className={role === option ? "is-selected" : ""}
+                  onClick={() => setRole(option)}
+                  aria-pressed={role === option}
+                >
+                  <strong>
+                    {option === "Buyer" ? (
+                      <ShoppingBasket size={17} aria-hidden="true" />
+                    ) : (
+                      <Plane size={17} aria-hidden="true" />
+                    )}
+                    {option}
+                  </strong>
+                  <small>
+                    {option === "Buyer" ? "Claim items from batches" : "Run pasabuy batches"}
+                  </small>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {role === "Seller" && (
             <div className="auth-terms-field">
               <label className="auth-terms">
@@ -415,6 +500,7 @@ export default function SignUp({
                   onChange={(event) => setTerms(event.target.checked)}
                 />
                 <span>
+                  <span className="auth-required-mark" aria-hidden="true">*</span>{" "}
                   I agree to the <em>Terms of Service</em> and <em>Privacy Policy</em>. Linked
                   accounts are reference indicators only and are not automatically verified by
                   Kargo.
@@ -481,6 +567,7 @@ export default function SignUp({
           width={520}
           topOffset={0}
           variant="form"
+          showTitleIcon={false}
           className="auth-address-modal"
         >
           <div className="auth-address-modal__fields">
