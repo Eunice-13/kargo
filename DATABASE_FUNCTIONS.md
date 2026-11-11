@@ -139,6 +139,12 @@ Two further locations are **deployment copies, not separate schema**:
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `202611110001_signup_required_address_payment` | Requires a buyer delivery address + map pin, one seller payment method, and at least one social account at signup; saves the buyer address to `buyer_addresses` and inserts the seller method from auth metadata. |
 
+### Manual insufficient review (2026-11-11)
+
+| Migration                                    | Purpose                                                                                                                                                                                       |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `202611110002_manual_insufficient_amount`    | Lets a seller mark a submitted payment insufficient with the amount actually received, correcting `payments.amount` and storing the recomputed shortfall (`p_amount_paid` on both review RPCs). |
+
 ### Deployment copies
 
 | Path                                                            | Purpose                                                              |

@@ -13,7 +13,7 @@ import {
 } from "@/components/shared"
 import { ChevronDown, Pencil, Plus, Search, Trash2, Upload } from "lucide-react"
 import { isSupabaseConfigured, supabase } from "@/lib/supabase"
-import { kargoApi } from "@/services"
+import { kargoApi, errorMessage } from "@/services"
 import { verificationDisplayStatus, type VerifyItem } from "./verifyTypes"
 import ReviewSubmissionModal from "./ReviewSubmissionModal"
 import InsufficientPaymentModal from "./InsufficientPaymentModal"
@@ -810,7 +810,7 @@ export default function SellerPaymentVerification({
           insuffAmtPaid={insuffAmtPaid}
           setInsuffAmtPaid={setInsuffAmtPaid}
           setVerifyItems={updateVerifyItems}
-          onConfirm={(_paidAmt, shortAmt) => {
+          onConfirm={(paidAmt, shortAmt) => {
             const item = insuffTarget
 
             if (!isSupabaseConfigured) {
@@ -820,6 +820,7 @@ export default function SellerPaymentVerification({
                     ? {
                         ...candidate,
                         status: "Rejected" as const,
+                        amountPaid: String(paidAmt),
                         shortfallAmount: shortAmt,
                         rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
                       }
@@ -830,7 +831,12 @@ export default function SellerPaymentVerification({
             }
 
             void kargoApi
-              .markInsufficientPayment(String(item.id), shortAmt, item.groupOrderId)
+              .markInsufficientPayment(
+                String(item.id),
+                paidAmt,
+                shortAmt,
+                item.groupOrderId,
+              )
               .then(() => {
                 void refreshData?.().catch(() => {})
                 kargoApi
@@ -840,9 +846,10 @@ export default function SellerPaymentVerification({
               })
               .catch((error) => {
                 alert(
-                  error instanceof Error
-                    ? error.message
-                    : "Unable to mark payment as insufficient.",
+                  errorMessage(
+                    error,
+                    "Unable to mark payment as insufficient.",
+                  ),
                 )
                 kargoApi
                   .loadSellerPaymentSubmissions()

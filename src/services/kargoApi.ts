@@ -32,6 +32,18 @@ import { resolveContactUrl } from "@/components/shared/contactLink";
 
 import { effectiveOrderPaymentStatus, orderStatusToClaimLabel } from "./orderPaymentState";
 
+// Supabase rejects RPCs with PostgrestError objects, which are not `Error`
+// instances. Read their `message` so database rules are never hidden behind a
+// generic fallback.
+export function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 type DbProfile = {
   id: string;
 
@@ -3005,6 +3017,7 @@ export async function reviewPayment(
   deadlineHours?: number,
   combinedDeliveryGroupId?: string,
   shortfallAmount?: number,
+  amountPaid?: number,
 ) {
   const combined = Boolean(combinedDeliveryGroupId);
 
@@ -3020,7 +3033,12 @@ export async function reviewPayment(
       p_deadline_hours: deadlineHours ?? null,
 
       // Combined delivery payments have no per-order shortfall workflow.
-      ...(combined ? {} : { p_shortfall_amount: shortfallAmount ?? null }),
+      ...(combined
+        ? {}
+        : {
+            p_shortfall_amount: shortfallAmount ?? null,
+            p_amount_paid: amountPaid ?? null,
+          }),
     },
   );
 
@@ -3033,6 +3051,7 @@ export async function reviewGroupPayment(
   reason?: string,
   deadlineHours?: number,
   shortfallAmount?: number,
+  amountPaid?: number,
 ) {
   const { error } = await requireSupabase().rpc("review_group_order_payment", {
     p_payment_id: paymentId,
@@ -3040,22 +3059,26 @@ export async function reviewGroupPayment(
     p_reason: reason ?? null,
     p_deadline_hours: deadlineHours ?? null,
     p_shortfall_amount: shortfallAmount ?? null,
+    p_amount_paid: amountPaid ?? null,
   });
   if (error) throw error;
 }
 
 // Called when the seller rejects a short payment. The payment stays rejected
-// (never verified), its stored shortfall drives the buyer's top-up amount, and
-// the order moves to `insufficient_payment` — shown as Pending + Insufficient.
+// (never verified), its recorded amount is corrected to what was actually
+// received (`amountPaid`), and the stored shortfall drives the buyer's top-up
+// amount. The order moves to `insufficient_payment` — shown as Pending +
+// Insufficient.
 export async function markInsufficientPayment(
   paymentId: string,
+  amountPaid: number,
   shortfallAmount: number,
   groupOrderId?: string,
 ) {
   const reason = `Insufficient payment — ₱${shortfallAmount.toLocaleString()} short`;
   return groupOrderId
-    ? reviewGroupPayment(paymentId, "rejected", reason, 24, shortfallAmount)
-    : reviewPayment(paymentId, "rejected", reason, 24, undefined, shortfallAmount);
+    ? reviewGroupPayment(paymentId, "rejected", reason, 24, shortfallAmount, amountPaid)
+    : reviewPayment(paymentId, "rejected", reason, 24, undefined, shortfallAmount, amountPaid);
 }
 
 export async function notifyPaymentResubmission(paymentId: string) {

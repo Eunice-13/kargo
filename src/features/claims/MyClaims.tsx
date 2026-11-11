@@ -51,7 +51,7 @@ import {
 
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
-import { kargoApi } from "@/services";
+import { kargoApi, errorMessage } from "@/services";
 
 import { claimBelongsToPendingPayments, claimIsPayable } from "./claimExpiry";
 
@@ -1463,7 +1463,7 @@ export default function MyClaims({
             insuffAmtPaid={insufficientAmount}
             setInsuffAmtPaid={setInsufficientAmount}
             setVerifyItems={updateSellerPayments}
-            onConfirm={(_paidAmt, shortAmt) => {
+            onConfirm={(paidAmt, shortAmt) => {
               const item = insufficientTarget;
               // The payment is rejected with a stored shortfall, never verified.
               // Use setSellerPayments directly so the review diff cannot fire a
@@ -1474,6 +1474,7 @@ export default function MyClaims({
                     ? {
                         ...v,
                         status: "Rejected" as const,
+                        amountPaid: String(paidAmt),
                         shortfallAmount: shortAmt,
                         rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
                       }
@@ -1482,7 +1483,7 @@ export default function MyClaims({
               );
               if (isSupabaseConfigured) {
                 void kargoApi
-                  .markInsufficientPayment(String(item.id), shortAmt, item.groupOrderId)
+                  .markInsufficientPayment(String(item.id), paidAmt, shortAmt, item.groupOrderId)
                   .then(() => {
                     void refreshData().catch(() => {});
                     kargoApi
@@ -1491,11 +1492,7 @@ export default function MyClaims({
                       .catch(() => {});
                   })
                   .catch((error) => {
-                    alert(
-                      error instanceof Error
-                        ? error.message
-                        : "Unable to mark payment as insufficient.",
-                    );
+                    alert(errorMessage(error, "Unable to mark payment as insufficient."));
                     // Roll back the optimistic update.
                     void kargoApi
                       .loadSellerPaymentSubmissions()

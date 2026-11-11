@@ -1,4 +1,4 @@
-export { kargoApi } from "./kargoApi"
+export { kargoApi, errorMessage } from "./kargoApi"
 export { adminApi, setAdminDemoMode, AdminAccessError } from "./adminApi"
 export type {
   FinancialSummary,

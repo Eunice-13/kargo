@@ -72,6 +72,30 @@ const coversDueMigration = readFileSync(
   "utf8",
 )
 
+const manualAmountMigration = readFileSync(
+  new URL(
+    "../supabase/migrations/202611110002_manual_insufficient_amount.sql",
+    import.meta.url,
+  ),
+  "utf8",
+)
+
+test("marking a full submission insufficient records the amount actually paid", () => {
+  assert.match(manualAmountMigration, /p_amount_paid numeric default null/);
+  assert.match(
+    manualAmountMigration,
+    /amount = case when is_insufficient then actual_paid/,
+  );
+  assert.match(
+    manualAmountMigration,
+    /computed_shortfall := round\(amount_due - total_paid - actual_paid, 2\)/,
+  );
+  assert.match(
+    manualAmountMigration,
+    /Amount actually paid cannot exceed the submitted amount/,
+  );
+})
+
 test("a short payment can never be verified at the same time as being insufficient", () => {
   assert.match(coversDueMigration, /guard_verified_payment_covers_due/)
   assert.match(
