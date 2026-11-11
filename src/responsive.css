@@ -8511,3 +8511,78 @@ body > :not(#root) * {
   font-weight: 700;
   cursor: pointer;
 }
+
+/* Amount still owed on an insufficient-payment order. */
+.admin-order__owed {
+  display: grid;
+  gap: 2px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #f0c9a0;
+  border-radius: 14px;
+  background: #fdf3e7;
+}
+.admin-order__owed span {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #92400e;
+}
+.admin-order__owed strong {
+  font-size: 22px;
+  font-weight: 800;
+  color: #b4690e;
+  line-height: 1.1;
+}
+.admin-order__owed small {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+}
+.admin-order__payment + .admin-order__payment {
+  margin-top: 10px;
+}
+/* The li is a block so the receipt stacks under the row (the generic
+   .admin-order__payments li rule is a 3-column grid). */
+.admin-order__payments li.admin-order__payment {
+  display: block;
+}
+.admin-order__payments li.admin-order__payment > .admin-order__payment-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+}
+.admin-order__payment-row > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.admin-order__payment-row > div span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--kargo-muted);
+  overflow-wrap: anywhere;
+}
+.admin-order__payment-row > strong {
+  text-align: right;
+}
+.admin-order__payment .admin-receipt img {
+  max-height: 320px;
+  width: auto;
+  object-fit: contain;
+}
+/* Receipt thumbnail reused from the payment modal styles (.admin-receipt). */
+.admin-order__payment .admin-receipt,
+.admin-order-payments .admin-receipt {
+  margin-top: 10px;
+}
+
+/* PDF receipts have no preview image; show a compact link button instead. */
+.admin-receipt--pdf {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f5f6ff;
+}

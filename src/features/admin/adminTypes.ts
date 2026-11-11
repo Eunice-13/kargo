@@ -193,12 +193,17 @@ export type AdminOrderDetail = {
   paymentConfirmedAt: string | null;
   completedAt: string | null;
   createdAt: string;
+  /** Total the buyer must pay (item total + shipping). */
+  amountDue?: number;
+  /** Sum of verified payments on the order; amountDue - amountPaid is what is still owed. */
+  amountPaid?: number;
   payments: {
     id: string;
     status: string;
     method: string;
     amount: number;
     referenceNumber: string | null;
+    receiptPath: string | null;
     submittedAt: string;
   }[];
 };

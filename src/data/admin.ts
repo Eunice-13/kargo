@@ -556,13 +556,16 @@ export function demoGetOrder(orderId: string): AdminOrderDetail {
     paymentConfirmedAt: o.status === "payment_confirmed" ? iso(1) : null,
     completedAt: o.status === "completed" ? iso(3) : null,
     createdAt: o.createdAt,
+    amountDue: o.amount,
+    amountPaid: o.status === "insufficient_payment" ? Math.round(o.amount * 0.6) : o.amount,
     payments: [
       {
         id: "demo-pay-1",
-        status: "verified",
+        status: o.status === "payment_submitted" ? "pending_review" : "verified",
         method: "GCash",
         amount: o.amount,
         referenceNumber: "GC123456",
+        receiptPath: null,
         submittedAt: iso(2),
       },
     ],
