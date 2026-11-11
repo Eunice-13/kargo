@@ -10,7 +10,6 @@ import {
   Lock,
   LockOpen,
   RotateCcw,
-  UserCheck,
   UserMinus,
   X,
   type LucideIcon,
@@ -24,7 +23,6 @@ export type AdminActionKind =
   | "suspend"
   | "revokeSeller"
   | "revokeAccess"
-  | "grantSeller"
   | "restoreAccount"
   | "lock"
   | "unlock"
@@ -77,7 +75,6 @@ const ACTIONS: Record<AdminActionKind, { tone: AdminActionTone; icon: LucideIcon
   suspend: { tone: "danger", icon: Ban },
   revokeSeller: { tone: "warning", icon: UserMinus },
   revokeAccess: { tone: "danger", icon: UserMinus },
-  grantSeller: { tone: "success", icon: UserCheck },
   restoreAccount: { tone: "accent", icon: RotateCcw },
   lock: { tone: "neutral", icon: Lock },
   unlock: { tone: "accent", icon: LockOpen },
