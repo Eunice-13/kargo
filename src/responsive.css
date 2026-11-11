@@ -5841,6 +5841,9 @@ body > :not(#root) * {
   padding: 12px 0;
 }
 
+.admin-user-stats--two {
+  grid-template-columns: 1fr 1fr;
+}
 .admin-user-stats > div {
   display: grid;
   align-content: start;
@@ -6289,7 +6292,7 @@ body > :not(#root) * {
 }
 
 .admin-batch-stats {
-  grid-template-columns: 1fr 1.2fr 1fr;
+  grid-template-columns: 1fr 1fr;
 }
 
 .admin-batch-products {

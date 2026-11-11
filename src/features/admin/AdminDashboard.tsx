@@ -15,7 +15,6 @@ import { AdminPageHeader, AdminPanelHeader } from "./components";
 import { AdminEmptyText } from "./components/AdminFacts";
 import { AdminErrorState } from "./components/AdminStates";
 
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
 
 const relativeTime = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
@@ -164,7 +163,6 @@ export default function AdminDashboard({ setTab }: SharedState) {
                         <strong className="admin-seller-row__orders">
                           {s.orders.toLocaleString()} {s.orders === 1 ? "order" : "orders"}
                         </strong>
-                        <span className="admin-seller-row__gmv">{peso(s.gmv)}</span>
                       </button>
                     </li>
                   ))}
