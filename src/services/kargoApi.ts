@@ -30,10 +30,7 @@ import { requireSupabase } from "@/lib/supabase";
 
 import { resolveContactUrl } from "@/components/shared/contactLink";
 
-import {
-  effectiveOrderPaymentStatus,
-  orderStatusToClaimLabel,
-} from "./orderPaymentState";
+import { effectiveOrderPaymentStatus, orderStatusToClaimLabel } from "./orderPaymentState";
 
 type DbProfile = {
   id: string;
@@ -139,7 +136,6 @@ function statusToStep(status: string, fulfillmentStage?: string | null) {
       cancelled: 0,
 
       expired: 0,
-
     }[status] ?? 1
   );
 }
@@ -166,8 +162,7 @@ function statusToColumn(
   if (["payment_pending", "payment_submitted", "insufficient_payment"].includes(status))
     return role === "buyer" ? "Pending Payment" : null;
 
-  if (["cancelled", "expired"].includes(status))
-    return role === "seller" ? "Cancelled" : null;
+  if (["cancelled", "expired"].includes(status)) return role === "seller" ? "Cancelled" : null;
 
   return null;
 }
@@ -288,6 +283,18 @@ export async function signUp(input: {
   socials?: Record<string, { on: boolean; url: string }>;
 
   role?: "Buyer" | "Seller";
+
+  buyerAddress?: {
+    addressText: string;
+    lat: number;
+    lng: number;
+  };
+
+  sellerPaymentMethod?: {
+    methodType: string;
+    accountName: string;
+    accountNumber: string;
+  };
 }) {
   const client = requireSupabase();
 
@@ -339,6 +346,15 @@ export async function signUp(input: {
         social_visibility: Object.fromEntries(Object.keys(links).map((key) => [key, true])),
 
         can_sell: input.role === "Seller",
+
+        // Marks metadata produced by the signup form, so the database trigger
+        // enforces the signup contract only for real signups (admin-created
+        // users and imports are exempt).
+        signup_flow: "kargo_app",
+
+        buyer_address: input.role === "Buyer" ? (input.buyerAddress ?? null) : null,
+
+        seller_payment_method: input.role === "Seller" ? (input.sellerPaymentMethod ?? null) : null,
       },
     },
   });
@@ -615,16 +631,16 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         rejection_deadline: string | null;
       }) => [
-          row.order_id as string,
+        row.order_id as string,
 
-          {
-            effectiveStatus: row.effective_status as string,
+        {
+          effectiveStatus: row.effective_status as string,
 
-            latestPaymentStatus: row.latest_payment_status as string | null,
+          latestPaymentStatus: row.latest_payment_status as string | null,
 
-            rejectionDeadline: row.rejection_deadline as string | null,
-          },
-        ],
+          rejectionDeadline: row.rejection_deadline as string | null,
+        },
+      ],
     ),
   );
 
@@ -894,12 +910,10 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
       .filter(
         (payment: { status: string; shortfall_amount?: number | string | null }) =>
           payment.status === "verified" ||
-          (payment.status === "rejected" &&
-            Number(payment.shortfall_amount ?? 0) > 0),
+          (payment.status === "rejected" && Number(payment.shortfall_amount ?? 0) > 0),
       )
       .reduce(
-        (sum: number, payment: { amount: number | string }) =>
-          sum + Number(payment.amount),
+        (sum: number, payment: { amount: number | string }) => sum + Number(payment.amount),
         0,
       );
 
@@ -916,18 +930,18 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
     const groupFields = groupOrder
       ? {
-        groupOrderId: groupOrder.id as string,
-        groupOrderCode: groupOrder.referral_code as string,
-        groupItemCount: groupCommitments.reduce(
-          (sum, commitment) => sum + Number(commitment.quantity),
-          0,
-        ),
-        groupMemberCount: (groupOrder.group_order_members ?? []).filter(
-          (member: { status: string }) => member.status === "active",
-        ).length,
-        groupRegularSubtotal: Number(groupOrder.regular_subtotal ?? 0),
-        groupDiscountAmount: Number(groupOrder.discount_amount ?? 0),
-      }
+          groupOrderId: groupOrder.id as string,
+          groupOrderCode: groupOrder.referral_code as string,
+          groupItemCount: groupCommitments.reduce(
+            (sum, commitment) => sum + Number(commitment.quantity),
+            0,
+          ),
+          groupMemberCount: (groupOrder.group_order_members ?? []).filter(
+            (member: { status: string }) => member.status === "active",
+          ).length,
+          groupRegularSubtotal: Number(groupOrder.regular_subtotal ?? 0),
+          groupDiscountAmount: Number(groupOrder.discount_amount ?? 0),
+        }
       : {};
 
     if (isBuyer) {
@@ -974,7 +988,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         extensionRequested: row.extension_status === "pending",
         extensionRequestCount: Number(
           row.extension_request_count ??
-          (row.extension_status && row.extension_status !== "none" ? 1 : 0),
+            (row.extension_status && row.extension_status !== "none" ? 1 : 0),
         ),
         extensionRequestedHours: row.extension_requested_hours ?? undefined,
         extensionDecidedAt: row.extension_decided_at ?? undefined,
@@ -1079,7 +1093,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
         extensionRequested: row.extension_status === "pending",
         extensionRequestCount: Number(
           row.extension_request_count ??
-          (row.extension_status && row.extension_status !== "none" ? 1 : 0),
+            (row.extension_status && row.extension_status !== "none" ? 1 : 0),
         ),
         extensionRequestedHours: row.extension_requested_hours ?? undefined,
         extensionDecidedAt: row.extension_decided_at ?? undefined,
@@ -1211,9 +1225,7 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
               : "Pending",
 
         shortfallAmount:
-          payment.shortfall_amount == null
-            ? undefined
-            : Number(payment.shortfall_amount),
+          payment.shortfall_amount == null ? undefined : Number(payment.shortfall_amount),
 
         referenceNumber: payment.reference_number ?? undefined,
 
@@ -1651,12 +1663,12 @@ export async function createBatch(batch: {
     batch.products.map((product, index) =>
       product.imageFile
         ? uploadBatchMediaFile(
-          client,
-          auth.user.id,
-          created.id,
-          `product-${index + 1}`,
-          product.imageFile,
-        )
+            client,
+            auth.user.id,
+            created.id,
+            `product-${index + 1}`,
+            product.imageFile,
+          )
         : Promise.resolve(null),
     ),
   );
@@ -2945,7 +2957,7 @@ export async function loadSellerPaymentSubmissions() {
       ? Number(row.amount)
       : row.orders.group_order_id
         ? Number(row.orders.group_orders?.final_subtotal ?? 0) +
-        Number(row.orders.group_orders?.shipping_fee ?? 0)
+          Number(row.orders.group_orders?.shipping_fee ?? 0)
         : Number(row.orders.total_amount) + Number(row.orders.shipping_fee ?? 0),
 
     ref: row.reference_number ?? "—",
@@ -2977,8 +2989,7 @@ export async function loadSellerPaymentSubmissions() {
 
     amountPaid: String(row.amount),
 
-    shortfallAmount:
-      row.shortfall_amount == null ? undefined : Number(row.shortfall_amount),
+    shortfallAmount: row.shortfall_amount == null ? undefined : Number(row.shortfall_amount),
 
     contact: row.buyer_contact_url ?? undefined,
   }));
@@ -3041,10 +3052,10 @@ export async function markInsufficientPayment(
   shortfallAmount: number,
   groupOrderId?: string,
 ) {
-  const reason = `Insufficient payment — ₱${shortfallAmount.toLocaleString()} short`
+  const reason = `Insufficient payment — ₱${shortfallAmount.toLocaleString()} short`;
   return groupOrderId
     ? reviewGroupPayment(paymentId, "rejected", reason, 24, shortfallAmount)
-    : reviewPayment(paymentId, "rejected", reason, 24, undefined, shortfallAmount)
+    : reviewPayment(paymentId, "rejected", reason, 24, undefined, shortfallAmount);
 }
 
 export async function notifyPaymentResubmission(paymentId: string) {

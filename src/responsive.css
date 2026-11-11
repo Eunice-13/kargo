@@ -42,7 +42,7 @@
 /* Admin tables become readable labeled cards on phones, matching the seller
    and buyer mobile data views instead of forcing horizontal table scrolling. */
 @media (max-width: 620px) {
-  .admin-tabbar>div:first-child>button {
+  .admin-tabbar > div:first-child > button {
     flex: 1 1 20% !important;
     padding-inline: 1px !important;
   }
@@ -64,14 +64,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  .admin-tabbar>div:first-child {
+  .admin-tabbar > div:first-child {
     display: grid !important;
     width: 100%;
     min-width: 0;
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  .admin-tabbar>div:first-child>button {
+  .admin-tabbar > div:first-child > button {
     width: 100%;
     min-width: 0 !important;
     height: 60px !important;
@@ -82,7 +82,7 @@
     box-sizing: border-box;
   }
 
-  .admin-tabbar>div:first-child>button>svg {
+  .admin-tabbar > div:first-child > button > svg {
     width: 22px;
     height: 22px;
     flex-basis: 22px;
@@ -102,7 +102,7 @@
   }
 
   .admin-page-header,
-  .admin-page-header>div,
+  .admin-page-header > div,
   .admin-stats,
   .admin-grid,
   .admin-grid--wide {
@@ -137,7 +137,7 @@
     height: 6px;
   }
 
-  .admin-stat>svg {
+  .admin-stat > svg {
     top: 12px;
     right: 12px;
     width: 18px;
@@ -178,8 +178,8 @@
     min-width: 0;
   }
 
-  .admin-page .admin-filter-bar>select,
-  .admin-page .admin-filter-bar>button {
+  .admin-page .admin-filter-bar > select,
+  .admin-page .admin-filter-bar > button {
     min-width: 0;
   }
 }
@@ -269,14 +269,14 @@
     text-align: left;
   }
 
-  .admin-page table:not(.sr-only) tbody td>* {
+  .admin-page table:not(.sr-only) tbody td > * {
     min-width: 0;
     max-width: calc(100% - 104px);
     margin-left: auto;
     overflow-wrap: anywhere;
   }
 
-  .admin-page table:not(.sr-only) tbody td> :is(div, span) {
+  .admin-page table:not(.sr-only) tbody td > :is(div, span) {
     justify-content: flex-end;
     text-align: right;
   }
@@ -428,14 +428,14 @@
   cursor: pointer;
 }
 
-.payment-history-date-sort__trigger>span {
+.payment-history-date-sort__trigger > span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.payment-history-date-sort__trigger>svg {
+.payment-history-date-sort__trigger > svg {
   flex: 0 0 auto;
 }
 
@@ -504,7 +504,7 @@
 
 /* Use the same labeled icon navigation on desktop as on mobile. */
 @media (min-width: 621px) {
-  .icon-tabbar>div:first-child>button {
+  .icon-tabbar > div:first-child > button {
     display: flex !important;
     flex-direction: column;
     align-items: center;
@@ -524,7 +524,6 @@
 }
 
 @media (max-width: 1024px) {
-
   html,
   body,
   #root,
@@ -535,7 +534,7 @@
 
   .kargo-original-app *,
   .auth-page *,
-  body>.fi * {
+  body > .fi * {
     box-sizing: border-box;
   }
 
@@ -549,7 +548,7 @@
     outline-offset: 2px;
   }
 
-  .kargo-header-actions>div>button,
+  .kargo-header-actions > div > button,
   .kargo-mobile-search-toggle {
     min-width: 44px !important;
     min-height: 44px !important;
@@ -590,30 +589,37 @@
     grid-template-columns: minmax(0, 1fr) 260px !important;
   }
 
-  .settings-layout>*,
-  .batch-page-layout>*,
-  .seller-shop-layout>* {
+  .settings-layout > *,
+  .batch-page-layout > *,
+  .seller-shop-layout > * {
     min-width: 0;
   }
 
   .kargo-original-app main img,
-  body>.fi img {
+  body > .fi img {
     max-width: 100%;
   }
 
   /* Convert wide operational tables to cards before they overflow tablets. */
-  :is(.mobile-data-page, .seller-dashboard, .bdash) :is(.seller-orders-table-wrap,
-    .seller-orders-table-scroll,
-    .bdash-table-wrap,
-    [style*="overflow-x"],
-    [style*="overflowX"]) {
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    :is(
+      .seller-orders-table-wrap,
+      .seller-orders-table-scroll,
+      .bdash-table-wrap,
+      [style*="overflow-x"],
+      [style*="overflowX"]
+    ) {
     overflow: visible !important;
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table),
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    ),
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody {
     display: block !important;
     width: 100% !important;
@@ -621,13 +627,17 @@
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     thead {
     display: none !important;
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -635,7 +645,9 @@
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     tr {
     display: grid !important;
@@ -649,7 +661,9 @@
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     td {
     display: flex !important;
@@ -664,7 +678,9 @@
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     td::before {
     min-width: 82px;
@@ -794,12 +810,12 @@
     justify-content: flex-end;
   }
 
-  .claims-to-pay-table .claims-to-pay-product>.buyer-claim-item-preview-trigger {
+  .claims-to-pay-table .claims-to-pay-product > .buyer-claim-item-preview-trigger {
     width: 80px !important;
     height: 80px !important;
   }
 
-  .claims-to-pay-table .claims-to-pay-product>.buyer-claim-item-preview-trigger>img {
+  .claims-to-pay-table .claims-to-pay-product > .buyer-claim-item-preview-trigger > img {
     width: 80px !important;
     height: 80px !important;
     max-width: none !important;
@@ -954,7 +970,6 @@
 }
 
 @media (max-width: 900px) {
-
   .settings-layout,
   .batch-page-layout,
   .seller-shop-layout {
@@ -973,7 +988,7 @@
     gap: 4px;
   }
 
-  .settings-nav>div:first-child {
+  .settings-nav > div:first-child {
     display: none;
   }
 
@@ -1000,7 +1015,6 @@
 }
 
 @media (max-width: 620px) {
-
   html,
   body,
   #root {
@@ -1026,7 +1040,7 @@
   }
 
   .kargo-header.is-mobile-search-open .kargo-brand-lockup,
-  .kargo-header.is-mobile-search-open .kargo-header-actions>div {
+  .kargo-header.is-mobile-search-open .kargo-header-actions > div {
     display: none !important;
   }
 
@@ -1109,7 +1123,7 @@
     box-shadow: 0 3px 12px rgba(24, 50, 74, 0.09);
   }
 
-  .buyer-home-filter>strong {
+  .buyer-home-filter > strong {
     display: none;
   }
 
@@ -1237,7 +1251,7 @@
     margin-top: 4px;
   }
 
-  .buyer-batch-card__seller> :first-child {
+  .buyer-batch-card__seller > :first-child {
     display: none;
   }
 
@@ -1663,7 +1677,7 @@
     padding: 18px 12px 28px !important;
   }
 
-  .kargo-original-app main .seller-dashboard-sidebar>.kargo-card,
+  .kargo-original-app main .seller-dashboard-sidebar > .kargo-card,
   .kargo-original-app main .seller-side-card {
     padding: 14px !important;
   }
@@ -1678,12 +1692,12 @@
     flex-wrap: wrap;
   }
 
-  .kargo-original-app main .flex.items-start.gap-3>* {
+  .kargo-original-app main .flex.items-start.gap-3 > * {
     min-width: 0;
   }
 
   .kargo-original-app main .flex-1,
-  .kargo-original-app main .flex-1>div {
+  .kargo-original-app main .flex-1 > div {
     min-width: 0;
     max-width: 100%;
     overflow-wrap: anywhere;
@@ -1712,7 +1726,7 @@
     font-size: 12px;
   }
 
-  .kargo-footer>p {
+  .kargo-footer > p {
     margin-top: 16px;
     font-size: 11px;
   }
@@ -1735,12 +1749,12 @@
     gap: 8px;
   }
 
-  .pending-payment-card__actions>.kargo-primary {
+  .pending-payment-card__actions > .kargo-primary {
     flex: 1 1 auto;
     padding-inline: 14px !important;
   }
 
-  .pending-payment-card__actions>.kargo-secondary {
+  .pending-payment-card__actions > .kargo-secondary {
     flex: 0 0 auto;
     padding-inline: 10px !important;
     border: 1px solid #c7d4dc !important;
@@ -1748,7 +1762,7 @@
     color: #246b8f !important;
   }
 
-  .pending-payment-card__actions>.kargo-secondary:hover {
+  .pending-payment-card__actions > .kargo-secondary:hover {
     background: #eef6fa !important;
   }
 
@@ -1763,7 +1777,7 @@
     margin-bottom: 16px !important;
   }
 
-  .claims-filter-row>button {
+  .claims-filter-row > button {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr);
     place-content: center;
@@ -1781,7 +1795,7 @@
 
   /* The count keeps its own line under the label so every chip reads the same
      way, whether the status name wraps or not. */
-  .claims-filter-row>button>span {
+  .claims-filter-row > button > span {
     margin-left: 0 !important;
     padding: 0 5px !important;
     font-size: 9px !important;
@@ -1790,7 +1804,7 @@
   }
 
   /* On the selected chip the count sits on the fill, not on white. */
-  .claims-filter-row>button[style*="25, 27, 169"]>span {
+  .claims-filter-row > button[style*="25, 27, 169"] > span {
     color: #ffffff !important;
   }
 
@@ -1855,7 +1869,9 @@
     content: none !important;
   }
 
-  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+  :is(.bdash, .seller-dashboard)
+    :is(.bdash-table, .seller-orders-table)
+    :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
     display: none !important;
   }
 
@@ -2016,13 +2032,13 @@
     grid-template-columns: minmax(0, 1fr) auto !important;
   }
 
-  .settings-linked-row>input {
+  .settings-linked-row > input {
     grid-column: 1 / -1;
     grid-row: 2;
     width: 100% !important;
   }
 
-  .settings-linked-row>button:last-child {
+  .settings-linked-row > button:last-child {
     grid-column: 2;
     grid-row: 1;
   }
@@ -2080,8 +2096,8 @@
     flex-wrap: wrap;
   }
 
-  .si .flex.gap-3>button,
-  .si .no-print>button {
+  .si .flex.gap-3 > button,
+  .si .no-print > button {
     min-width: 100%;
     flex: 1 1 100%;
   }
@@ -2140,7 +2156,7 @@
     min-height: 44px;
   }
 
-  .auth-social-row>input {
+  .auth-social-row > input {
     width: 100%;
     flex: 1 1 100%;
   }
@@ -2166,7 +2182,7 @@
     height: 36px !important;
   }
 
-  .icon-tabbar>div:first-child>button {
+  .icon-tabbar > div:first-child > button {
     padding-right: 1px !important;
     padding-left: 1px !important;
   }
@@ -2181,7 +2197,6 @@
    They only adapt tablet/phone layouts and leave the approved desktop cascade
    (1024px and wider) untouched. */
 @media (max-width: 1023px) {
-
   html,
   body,
   #root,
@@ -2202,7 +2217,7 @@
     content: "Buyer";
   }
 
-  .seller-dashboard .seller-board-dialog__columns>.fulfillment-board,
+  .seller-dashboard .seller-board-dialog__columns > .fulfillment-board,
   .seller-dashboard .fulfillment-board.is-expanded,
   .orders-page--seller .fulfillment-board.is-expanded {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2253,7 +2268,7 @@
     place-items: center;
   }
 
-  .kargo-header-actions>div>button,
+  .kargo-header-actions > div > button,
   .kargo-mobile-search-toggle,
   .kargo-modal__close,
   .fulfillment-board__collapse {
@@ -2266,7 +2281,7 @@
   }
 
   .kargo-header.is-mobile-search-open .kargo-brand-lockup,
-  .kargo-header.is-mobile-search-open .kargo-header-actions>div {
+  .kargo-header.is-mobile-search-open .kargo-header-actions > div {
     display: none !important;
   }
 
@@ -2285,7 +2300,7 @@
     height: 56px !important;
   }
 
-  .icon-tabbar>div:first-child>button {
+  .icon-tabbar > div:first-child > button {
     display: flex !important;
     min-width: 0 !important;
     min-height: 48px;
@@ -2299,7 +2314,7 @@
     overflow: visible !important;
   }
 
-  .icon-tabbar>div:first-child>button>svg {
+  .icon-tabbar > div:first-child > button > svg {
     width: 20px;
     height: 20px;
     flex: 0 0 20px;
@@ -2331,7 +2346,7 @@
   }
 
   .buyer-home-filter select,
-  .batch-filter-bar>div,
+  .batch-filter-bar > div,
   .batch-filter-bar select,
   .seller-batch-select-wrap,
   .seller-batch-filter-select {
@@ -2339,11 +2354,11 @@
     min-width: 0 !important;
   }
 
-  .batch-filter-bar>.flex-1 {
+  .batch-filter-bar > .flex-1 {
     display: none;
   }
 
-  .batch-filter-bar>button,
+  .batch-filter-bar > button,
   .seller-batches-add,
   .buyer-home-filter__request {
     width: 100%;
@@ -2361,7 +2376,7 @@
     white-space: nowrap;
   }
 
-  .seller-orders-filters>button {
+  .seller-orders-filters > button {
     flex: 0 0 auto;
   }
 
@@ -2387,14 +2402,17 @@
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td:last-child :is(button, a),
-  .seller-orders-actions>button,
+  .seller-orders-actions > button,
   .claims-card-grid .kargo-primary,
   .claims-card-grid .kargo-secondary {
     width: 100%;
     min-height: 44px;
   }
 
-  .kargo-original-app main form :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  .kargo-original-app
+    main
+    form
+    :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
     width: 100%;
     max-width: 100%;
     min-height: 44px;
@@ -2425,7 +2443,7 @@
 
   .fulfillment-board,
   .fulfillment-board.is-expanded,
-  .seller-dashboard .seller-board-dialog__columns>.fulfillment-board,
+  .seller-dashboard .seller-board-dialog__columns > .fulfillment-board,
   .seller-dashboard .fulfillment-board.is-expanded,
   .orders-page--seller .fulfillment-board.is-expanded {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -2449,7 +2467,7 @@
     overflow-y: visible !important;
   }
 
-  body>.admin-tabbar {
+  body > .admin-tabbar {
     position: fixed !important;
     inset: auto 0 0 !important;
     z-index: 99999 !important;
@@ -2463,14 +2481,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  body>.admin-tabbar>div:first-child {
+  body > .admin-tabbar > div:first-child {
     display: grid !important;
     width: 100% !important;
     max-width: none !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 
-  body>.admin-tabbar>div:first-child>button {
+  body > .admin-tabbar > div:first-child > button {
     width: 100% !important;
     min-width: 0 !important;
     height: 60px !important;
@@ -2487,7 +2505,7 @@
   }
 
   body.admin-mobile-nav .kargo-original-app main,
-  body.admin-mobile-nav .kargo-original-app main>div,
+  body.admin-mobile-nav .kargo-original-app main > div,
   body.admin-mobile-nav .kargo-original-app .admin-page {
     width: 100% !important;
     min-width: 0 !important;
@@ -2507,10 +2525,9 @@
 /* Admin mobile layout overrides come after the shared four-tab navigation
    rules because the admin console has five destinations. */
 @media (max-width: 767px) {
-
   .kargo-original-app main,
-  .kargo-original-app main>.fi,
-  .kargo-original-app main>.pl,
+  .kargo-original-app main > .fi,
+  .kargo-original-app main > .pl,
   .admin-page {
     width: 100% !important;
     min-width: 0 !important;
@@ -2542,14 +2559,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  .admin-tabbar>div:first-child {
+  .admin-tabbar > div:first-child {
     display: grid !important;
     width: 100% !important;
     min-width: 0 !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 
-  .admin-tabbar>div:first-child>button {
+  .admin-tabbar > div:first-child > button {
     width: 100% !important;
     min-width: 0 !important;
     height: 60px !important;
@@ -2560,7 +2577,6 @@
 }
 
 @media (max-width: 480px) {
-
   .seller-stats,
   .bdash-stats {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -2582,7 +2598,6 @@
 /* ===== Targeted mobile visual bug fixes =====
    Keep this block last so it only resolves mobile cascade collisions. */
 @media (max-width: 767px) {
-
   /* Carousel navigation: square geometry prevents the global mobile button
      height from turning these controls into vertical pills. */
   .buyer-home-section__heading {
@@ -2618,7 +2633,7 @@
     display: none;
   }
 
-  .buyer-carousel-controls button>svg {
+  .buyer-carousel-controls button > svg {
     display: block;
     width: 20px;
     height: 20px;
@@ -2740,14 +2755,14 @@
     align-self: center;
   }
 
-  .seller-orders-page .seller-orders-table tbody td>* {
+  .seller-orders-page .seller-orders-table tbody td > * {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .seller-orders-page .seller-orders-table tbody td> :is(div, span) {
+  .seller-orders-page .seller-orders-table tbody td > :is(div, span) {
     justify-content: flex-end;
     text-align: right;
   }
@@ -2793,7 +2808,7 @@
     gap: 8px;
   }
 
-  .seller-orders-page .seller-orders-actions>button {
+  .seller-orders-page .seller-orders-actions > button {
     width: 100%;
     min-height: 44px;
     margin: 0;
@@ -2808,7 +2823,7 @@
     max-width: 100%;
   }
 
-  .seller-orders-page .seller-orders-split>.seller-orders-review {
+  .seller-orders-page .seller-orders-split > .seller-orders-review {
     width: auto !important;
   }
 
@@ -3046,16 +3061,16 @@
     gap: 6px;
   }
 
-  .kargo-footer__grid>section:nth-child(3) {
+  .kargo-footer__grid > section:nth-child(3) {
     grid-column: 1 / -1;
     grid-row: 1;
   }
 
-  .kargo-footer__grid>section:not(:nth-child(3)) {
+  .kargo-footer__grid > section:not(:nth-child(3)) {
     grid-column: 1 / -1;
   }
 
-  .kargo-footer__grid>section:not(:nth-child(3)) nav {
+  .kargo-footer__grid > section:not(:nth-child(3)) nav {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -3063,7 +3078,7 @@
     gap: 6px 8px;
   }
 
-  .kargo-footer__grid>section:nth-child(3) nav {
+  .kargo-footer__grid > section:nth-child(3) nav {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -3078,25 +3093,25 @@
     text-decoration: none;
   }
 
-  .kargo-footer__grid>section:not(:nth-child(3)) nav a {
+  .kargo-footer__grid > section:not(:nth-child(3)) nav a {
     font-size: 10px;
     text-align: center;
   }
 
-  .kargo-footer__grid>section:not(:nth-child(3)) nav a:not(:last-child)::after {
+  .kargo-footer__grid > section:not(:nth-child(3)) nav a:not(:last-child)::after {
     margin-left: 8px;
     color: rgb(255 255 255 / 75%);
     content: "|";
   }
 
-  .kargo-footer__grid>section:nth-child(3) nav a {
+  .kargo-footer__grid > section:nth-child(3) nav a {
     display: flex;
     width: 36px;
     justify-content: center;
     font-size: 0;
   }
 
-  .kargo-footer__grid>section:nth-child(3) .kargo-footer__social-mark {
+  .kargo-footer__grid > section:nth-child(3) .kargo-footer__social-mark {
     display: grid;
     width: 26px;
     height: 26px;
@@ -3108,11 +3123,11 @@
     line-height: 1;
   }
 
-  .kargo-footer__grid>section:nth-child(3) .kargo-footer__social-mark--instagram {
+  .kargo-footer__grid > section:nth-child(3) .kargo-footer__social-mark--instagram {
     background: transparent;
   }
 
-  .kargo-footer__grid>section:nth-child(3) .kargo-footer__social-mark svg {
+  .kargo-footer__grid > section:nth-child(3) .kargo-footer__social-mark svg {
     width: 24px;
     height: 24px;
     overflow: visible;
@@ -3134,7 +3149,7 @@
     flex: 0 0 15px;
   }
 
-  .kargo-footer>p {
+  .kargo-footer > p {
     margin: 14px 0 0;
     padding: 0;
     color: #fff;
@@ -3208,7 +3223,7 @@
     height: 0;
   }
 
-  .seller-orders-filters>button {
+  .seller-orders-filters > button {
     width: auto;
     min-width: 0;
     min-height: 44px !important;
@@ -3313,7 +3328,7 @@
   }
 
   .kargo-modal__content,
-  .kargo-modal__content>* {
+  .kargo-modal__content > * {
     min-width: 0;
     max-width: 100%;
   }
@@ -3331,21 +3346,21 @@
   }
 
   .kargo-modal-actions,
-  .kargo-modal__content> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-3> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-4> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-5> :last-child:is(.flex) {
+  .kargo-modal__content > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-3 > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-4 > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) {
     width: 100%;
     flex-direction: column !important;
     align-items: stretch;
     gap: 10px !important;
   }
 
-  .kargo-modal-actions> :is(button, a),
-  .kargo-modal__content> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-3> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-4> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-5> :last-child:is(.flex)> :is(button, a) {
+  .kargo-modal-actions > :is(button, a),
+  .kargo-modal__content > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > :is(button, a) {
     width: 100% !important;
     min-height: 44px !important;
     flex: 0 0 auto !important;
@@ -3381,7 +3396,7 @@
   }
 
   .kargo-header.is-mobile-search-open .kargo-brand-lockup,
-  .kargo-header.is-mobile-search-open .kargo-header-actions>div {
+  .kargo-header.is-mobile-search-open .kargo-header-actions > div {
     display: none !important;
   }
 
@@ -3445,7 +3460,7 @@
     margin: 0 !important;
   }
 
-  .kargo-search-wrap>div {
+  .kargo-search-wrap > div {
     right: 0 !important;
     left: 0 !important;
     width: auto !important;
@@ -3463,12 +3478,12 @@
     text-align: center;
   }
 
-  .seller-payments-page section>.mb-4.flex {
+  .seller-payments-page section > .mb-4.flex {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .seller-payments-page section>.mb-4.flex>button {
+  .seller-payments-page section > .mb-4.flex > button {
     width: 100%;
     min-width: 0;
     flex: 0 0 auto;
@@ -3502,8 +3517,8 @@
     border-radius: 0 0 56px 56px;
   }
 
-  .auth-brand>*,
-  .auth-brand>.auth-logo {
+  .auth-brand > *,
+  .auth-brand > .auth-logo {
     width: min(42vw, 150px);
     max-width: 150px;
     transform: none;
@@ -3546,8 +3561,8 @@
     border-radius: 0 0 44px 44px;
   }
 
-  .auth-brand>*,
-  .auth-brand>.auth-logo {
+  .auth-brand > *,
+  .auth-brand > .auth-logo {
     width: min(40vw, 128px);
     max-width: 128px;
   }
@@ -3559,7 +3574,6 @@
 
 /* ===== Centered mobile modal and overlay contract ===== */
 @media (max-width: 767px) {
-
   body:has(.kargo-modal-overlay),
   body:has(.seller-board-dialog) {
     overflow: hidden !important;
@@ -3578,7 +3592,8 @@
     align-items: center !important;
     justify-content: center !important;
     overflow: hidden !important;
-    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
     background: rgb(0 0 0 / 50%) !important;
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px) !important;
@@ -3610,7 +3625,6 @@
   }
 
   @supports (height: 100dvh) {
-
     .kargo-modal,
     .kargo-legacy-modal,
     .sales-report-sheet,
@@ -3667,7 +3681,7 @@
   }
 
   .kargo-modal__content,
-  .kargo-modal__content>* {
+  .kargo-modal__content > * {
     min-width: 0;
     max-width: 100%;
   }
@@ -3682,21 +3696,21 @@
   }
 
   .kargo-modal-actions,
-  .kargo-modal__content> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-3> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-4> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-5> :last-child:is(.flex) {
+  .kargo-modal__content > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-3 > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-4 > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) {
     width: 100%;
     flex-direction: column !important;
     align-items: stretch;
     gap: 10px !important;
   }
 
-  .kargo-modal-actions> :is(button, a),
-  .kargo-modal__content> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-3> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-4> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-5> :last-child:is(.flex)> :is(button, a) {
+  .kargo-modal-actions > :is(button, a),
+  .kargo-modal__content > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > :is(button, a) {
     width: 100% !important;
     min-height: 44px !important;
     flex: 0 0 auto !important;
@@ -3737,7 +3751,7 @@
     pointer-events: auto;
   }
 
-  .seller-board-dialog>header {
+  .seller-board-dialog > header {
     display: flex !important;
     min-height: 0;
     flex: 0 0 auto;
@@ -3749,7 +3763,7 @@
     background: #fff !important;
   }
 
-  .seller-board-dialog>header>div {
+  .seller-board-dialog > header > div {
     display: flex !important;
     width: 100%;
     min-width: 0;
@@ -3757,7 +3771,7 @@
     gap: 10px;
   }
 
-  .seller-board-dialog>header button {
+  .seller-board-dialog > header button {
     display: grid !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -3772,12 +3786,12 @@
     line-height: 0;
   }
 
-  .seller-board-dialog>header button>svg {
+  .seller-board-dialog > header button > svg {
     width: 20px;
     height: 20px;
   }
 
-  .seller-board-dialog>header h2 {
+  .seller-board-dialog > header h2 {
     min-width: 0;
     flex: 1 1 auto;
     margin: 0;
@@ -3785,7 +3799,7 @@
     text-align: left;
   }
 
-  .seller-board-dialog>header>span {
+  .seller-board-dialog > header > span {
     display: block;
     min-width: 0;
     margin-left: 54px;
@@ -3809,19 +3823,25 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  body:has(.kargo-modal-overlay) :is(.kargo-header.is-mobile-search-open .kargo-search-wrap,
-    .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
-    .kargo-search-wrap > div,
-    .kargo-notifications-popover,
-    .kargo-user-popover) {
+  body:has(.kargo-modal-overlay)
+    :is(
+      .kargo-header.is-mobile-search-open .kargo-search-wrap,
+      .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
+      .kargo-search-wrap > div,
+      .kargo-notifications-popover,
+      .kargo-user-popover
+    ) {
     display: none !important;
   }
 
-  body:has(.seller-board-dialog) :is(.kargo-header.is-mobile-search-open .kargo-search-wrap,
-    .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
-    .kargo-search-wrap > div,
-    .kargo-notifications-popover,
-    .kargo-user-popover) {
+  body:has(.seller-board-dialog)
+    :is(
+      .kargo-header.is-mobile-search-open .kargo-search-wrap,
+      .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
+      .kargo-search-wrap > div,
+      .kargo-notifications-popover,
+      .kargo-user-popover
+    ) {
     display: none !important;
   }
 
@@ -3885,42 +3905,55 @@
     text-align: left;
   }
 
-  .kargo-modal__content>*,
+  .kargo-modal__content > *,
   .kargo-modal__content :is(form, fieldset, section, article, dl, div) {
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
   }
 
-  .kargo-modal__content :is(.space-y-2, .space-y-3, .space-y-4, .space-y-5)>*+* {
+  .kargo-modal__content :is(.space-y-2, .space-y-3, .space-y-4, .space-y-5) > * + * {
     margin-top: 14px !important;
   }
 
-  .kargo-modal__content :is(.grid,
-    .batch-meta-grid,
-    .batch-group-discount-fields,
-    .batch-product-unit-row,
-    .batch-group-settings-product,
-    .group-order-choice,
-    [style*="display: grid"],
-    [style*="grid-template-columns"]) {
+  .kargo-modal__content
+    :is(
+      .grid,
+      .batch-meta-grid,
+      .batch-group-discount-fields,
+      .batch-product-unit-row,
+      .batch-group-settings-product,
+      .group-order-choice,
+      [style*="display: grid"],
+      [style*="grid-template-columns"]
+    ) {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  .kargo-modal__content label:not(.batch-image-upload,
-    .batch-hero-photo-action,
-    .batch-group-config__toggle,
-    .group-order-ack) {
+  .kargo-modal__content
+    label:not(
+      .batch-image-upload,
+      .batch-hero-photo-action,
+      .batch-group-config__toggle,
+      .group-order-ack
+    ) {
     max-width: 100%;
     text-align: left;
   }
 
-  .kargo-modal__content label:not(:has(input[type="checkbox"], input[type="radio"]))> :is(input, select, textarea) {
+  .kargo-modal__content
+    label:not(:has(input[type="checkbox"], input[type="radio"]))
+    > :is(input, select, textarea) {
     margin-top: 5px;
   }
 
-  .kargo-modal .kargo-modal__content :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]),
-  .kargo-legacy-modal :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+  .kargo-modal
+    .kargo-modal__content
+    :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+      [type="button"]
+    ):not([type="submit"]),
+  .kargo-legacy-modal
+    :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
     width: 100% !important;
     max-width: 100%;
     min-width: 0;
@@ -3952,15 +3985,16 @@
   }
 
   .kargo-modal__content :is([role="alert"], .text-red-600, .text-red-700),
-  .kargo-modal__content label+ :is(p, small),
-  .kargo-modal__content :is(input, select, textarea)+ :is(p, small) {
+  .kargo-modal__content label + :is(p, small),
+  .kargo-modal__content :is(input, select, textarea) + :is(p, small) {
     display: block;
     margin-top: 5px !important;
     line-height: 1.4;
     text-align: left;
   }
 
-  .kargo-modal__content label:not(.batch-group-config__toggle):has(input[type="checkbox"], input[type="radio"]),
+  .kargo-modal__content
+    label:not(.batch-group-config__toggle):has(input[type="checkbox"], input[type="radio"]),
   .kargo-modal__content .group-order-ack {
     display: flex !important;
     width: 100%;
@@ -3985,8 +4019,8 @@
     padding: 0 !important;
   }
 
-  .kargo-modal__content label:has(input[type="checkbox"], input[type="radio"])> :is(span, div),
-  .kargo-modal__content .group-order-ack>span {
+  .kargo-modal__content label:has(input[type="checkbox"], input[type="radio"]) > :is(span, div),
+  .kargo-modal__content .group-order-ack > span {
     min-width: 0;
     flex: 1 1 auto;
     margin: 0;
@@ -4000,19 +4034,20 @@
     gap: 10px !important;
   }
 
-  .kargo-modal__content .batch-group-config__toggle>input {
+  .kargo-modal__content .batch-group-config__toggle > input {
     grid-column: 1;
     grid-row: 1;
   }
 
-  .kargo-modal__content .batch-group-config__toggle>span {
+  .kargo-modal__content .batch-group-config__toggle > span {
     grid-column: 2;
     grid-row: 1;
     min-width: 0;
     margin: 0;
   }
 
-  .kargo-modal__content :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label) {
+  .kargo-modal__content
+    :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label) {
     display: flex !important;
     width: 100% !important;
     min-height: 46px;
@@ -4024,7 +4059,9 @@
     text-align: center;
   }
 
-  .kargo-modal__content :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label)> :is(svg, img) {
+  .kargo-modal__content
+    :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label)
+    > :is(svg, img) {
     flex: 0 0 auto;
   }
 
@@ -4037,24 +4074,24 @@
     min-height: 44px;
   }
 
-  .sales-report-sheet>.no-print:first-child {
+  .sales-report-sheet > .no-print:first-child {
     width: 100%;
     align-items: stretch !important;
     padding: 16px !important;
   }
 
-  .sales-report-sheet>.no-print:first-child>div {
+  .sales-report-sheet > .no-print:first-child > div {
     width: 100%;
     min-width: 0 !important;
   }
 
-  .sales-report-sheet>.no-print:first-child>div:first-child>div {
+  .sales-report-sheet > .no-print:first-child > div:first-child > div {
     display: flex !important;
     max-width: 100%;
     flex-wrap: wrap !important;
   }
 
-  .sales-report-sheet>div:not(.no-print) {
+  .sales-report-sheet > div:not(.no-print) {
     padding: 20px !important;
   }
 
@@ -4064,7 +4101,7 @@
     box-sizing: border-box;
   }
 
-  .kargo-legacy-modal .kargo-modal-actions> :is(button, a) {
+  .kargo-legacy-modal .kargo-modal-actions > :is(button, a) {
     width: 100% !important;
     min-height: 46px !important;
   }
@@ -4077,7 +4114,10 @@
     flex: 0 0 auto;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl>div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    > div {
     display: grid !important;
     grid-template-columns: minmax(82px, 0.8fr) minmax(0, 1.2fr) !important;
     align-items: start;
@@ -4086,21 +4126,27 @@
     padding: 10px 0;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl :is(dt, dd) {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal)
+    .kargo-modal__content
+    dl
+    :is(dt, dd) {
     min-width: 0;
     margin: 0;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl dd {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    dd {
     text-align: right;
     overflow-wrap: anywhere;
   }
 
   .kargo-modal-actions,
-  .kargo-modal__content> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-3> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-4> :last-child:is(.flex),
-  .kargo-modal__content>.space-y-5> :last-child:is(.flex) {
+  .kargo-modal__content > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-3 > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-4 > :last-child:is(.flex),
+  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) {
     position: sticky;
     bottom: -16px;
     z-index: 2;
@@ -4113,11 +4159,11 @@
     background: #fff;
   }
 
-  .kargo-modal-actions> :is(button, a),
-  .kargo-modal__content> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-3> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-4> :last-child:is(.flex)> :is(button, a),
-  .kargo-modal__content>.space-y-5> :last-child:is(.flex)> :is(button, a) {
+  .kargo-modal-actions > :is(button, a),
+  .kargo-modal__content > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > :is(button, a),
+  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > :is(button, a) {
     width: 100% !important;
     min-height: 46px !important;
     flex: 0 0 auto !important;
@@ -4128,19 +4174,19 @@
     white-space: normal;
   }
 
-  .kargo-modal-actions>.kargo-secondary,
-  .kargo-modal__content> :last-child:is(.flex)>.kargo-secondary,
-  .kargo-modal__content>.space-y-3> :last-child:is(.flex)>.kargo-secondary,
-  .kargo-modal__content>.space-y-4> :last-child:is(.flex)>.kargo-secondary,
-  .kargo-modal__content>.space-y-5> :last-child:is(.flex)>.kargo-secondary {
+  .kargo-modal-actions > .kargo-secondary,
+  .kargo-modal__content > :last-child:is(.flex) > .kargo-secondary,
+  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > .kargo-secondary,
+  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > .kargo-secondary,
+  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > .kargo-secondary {
     order: 1;
   }
 
-  .kargo-modal-actions>.kargo-primary,
-  .kargo-modal__content> :last-child:is(.flex)>.kargo-primary,
-  .kargo-modal__content>.space-y-3> :last-child:is(.flex)>.kargo-primary,
-  .kargo-modal__content>.space-y-4> :last-child:is(.flex)>.kargo-primary,
-  .kargo-modal__content>.space-y-5> :last-child:is(.flex)>.kargo-primary {
+  .kargo-modal-actions > .kargo-primary,
+  .kargo-modal__content > :last-child:is(.flex) > .kargo-primary,
+  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > .kargo-primary,
+  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > .kargo-primary,
+  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > .kargo-primary {
     order: 2;
   }
 
@@ -4156,7 +4202,10 @@
 }
 
 @media (max-width: 480px) {
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl>div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    > div {
     grid-template-columns: minmax(72px, 0.75fr) minmax(0, 1.25fr) !important;
   }
 }
@@ -4227,7 +4276,7 @@
     text-align: center;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero>.rounded-full {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero > .rounded-full {
     display: grid !important;
     width: 56px !important;
     min-width: 56px !important;
@@ -4240,14 +4289,14 @@
     aspect-ratio: 1 / 1;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero>div {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero > div {
     width: 100%;
     margin-top: 0 !important;
     overflow-wrap: anywhere;
     text-align: center;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero+.grid {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero + .grid {
     display: grid !important;
     width: 100%;
     grid-template-columns: minmax(0, 1fr) !important;
@@ -4255,7 +4304,7 @@
     margin: 0 !important;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero+.grid>div {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero + .grid > div {
     display: grid;
     width: 100%;
     min-height: 64px;
@@ -4268,7 +4317,7 @@
     text-align: center;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero+.grid+div {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero + .grid + div {
     width: 100%;
     min-width: 0;
     margin: 0 !important;
@@ -4297,7 +4346,7 @@
     box-sizing: border-box;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__social-link>span {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__social-link > span {
     min-width: 0;
     flex: 1 1 auto;
   }
@@ -4309,7 +4358,7 @@
     overflow-wrap: anywhere;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__social-link>svg {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__social-link > svg {
     flex: 0 0 auto;
   }
 }
@@ -4318,7 +4367,6 @@
    A real backdrop sibling avoids mobile browser compositing bugs caused by
    applying backdrop-filter to a generated body pseudo-element. */
 @media (max-width: 767px) {
-
   html:has(.seller-board-dialog),
   body:has(.seller-board-dialog) {
     overflow: hidden !important;
@@ -4366,7 +4414,6 @@
   }
 
   @supports (height: 100dvh) {
-
     .seller-board-dialog-backdrop.hidden,
     .seller-board-dialog {
       height: 100dvh !important;
@@ -4374,7 +4421,7 @@
     }
   }
 
-  .seller-board-dialog>header {
+  .seller-board-dialog > header {
     position: sticky;
     top: 0;
     z-index: 3;
@@ -4396,8 +4443,8 @@
   }
 
   .seller-board-dialog__columns,
-  .seller-board-dialog__columns>.fulfillment-board,
-  .seller-dashboard .seller-board-dialog__columns>.fulfillment-board {
+  .seller-board-dialog__columns > .fulfillment-board,
+  .seller-dashboard .seller-board-dialog__columns > .fulfillment-board {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -4416,8 +4463,8 @@
     box-sizing: border-box;
   }
 
-  .seller-board-dialog .fulfillment-board__card-trigger>strong,
-  .seller-board-dialog .fulfillment-board__identity>span,
+  .seller-board-dialog .fulfillment-board__card-trigger > strong,
+  .seller-board-dialog .fulfillment-board__identity > span,
   .seller-board-dialog .fulfillment-board__tracking dd {
     overflow: visible;
     text-overflow: clip;
@@ -4425,18 +4472,20 @@
     overflow-wrap: anywhere;
   }
 
-  .seller-board-dialog :is(.fulfillment-board__card-trigger,
-    .fulfillment-board__profile-link,
-    .fulfillment-board__more,
-    .fulfillment-board__actions button,
-    .fulfillment-board__actions a) {
+  .seller-board-dialog
+    :is(
+      .fulfillment-board__card-trigger,
+      .fulfillment-board__profile-link,
+      .fulfillment-board__more,
+      .fulfillment-board__actions button,
+      .fulfillment-board__actions a
+    ) {
     min-height: 44px !important;
   }
 }
 
 /* ===== Scoped mobile control repairs ===== */
 @media (max-width: 767px) {
-
   /* Bottom tab navigation: four equal columns with complete labels. */
   .kargo-original-app:not(.admin-app) {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
@@ -4458,14 +4507,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  .icon-tabbar>div:first-child {
+  .icon-tabbar > div:first-child {
     display: grid !important;
     width: 100%;
     min-width: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .icon-tabbar>div:first-child>button {
+  .icon-tabbar > div:first-child > button {
     width: 100%;
     min-width: 0 !important;
     height: 60px !important;
@@ -4476,7 +4525,7 @@
     box-sizing: border-box;
   }
 
-  .icon-tabbar>div:first-child>button>svg {
+  .icon-tabbar > div:first-child > button > svg {
     width: 22px;
     height: 22px;
     flex: 0 0 22px;
@@ -4505,10 +4554,10 @@
     gap: 10px !important;
   }
 
-  .auth-terms>input[type="checkbox"],
-  .kargo-modal__content .item-claim-shipping-ack>input[type="checkbox"],
-  .kargo-modal__content .group-order-ack>input[type="checkbox"],
-  .kargo-modal__content .batch-group-config__toggle>input[type="checkbox"] {
+  .auth-terms > input[type="checkbox"],
+  .kargo-modal__content .item-claim-shipping-ack > input[type="checkbox"],
+  .kargo-modal__content .group-order-ack > input[type="checkbox"],
+  .kargo-modal__content .batch-group-config__toggle > input[type="checkbox"] {
     order: -1;
     width: 20px !important;
     min-width: 20px !important;
@@ -4518,10 +4567,10 @@
     margin: 2px 0 0 !important;
   }
 
-  .auth-terms>span,
-  .kargo-modal__content .item-claim-shipping-ack>span,
-  .kargo-modal__content .group-order-ack>span,
-  .kargo-modal__content .batch-group-config__toggle>span {
+  .auth-terms > span,
+  .kargo-modal__content .item-claim-shipping-ack > span,
+  .kargo-modal__content .group-order-ack > span,
+  .kargo-modal__content .batch-group-config__toggle > span {
     min-width: 0;
     flex: 1 1 auto;
     margin: 0;
@@ -4559,8 +4608,8 @@
     line-height: 1;
   }
 
-  .seller-batch-actions>.kargo-secondary,
-  .seller-batch-actions>.kargo-share-button--compact {
+  .seller-batch-actions > .kargo-secondary,
+  .seller-batch-actions > .kargo-share-button--compact {
     display: inline-flex !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -4573,11 +4622,11 @@
     line-height: 1;
   }
 
-  .kargo-modal__close>svg,
-  .kargo-mobile-search-toggle>svg,
-  .kargo-search-submit>svg,
-  .seller-batch-actions>.kargo-secondary>svg,
-  .seller-batch-actions>.kargo-share-button--compact>svg {
+  .kargo-modal__close > svg,
+  .kargo-mobile-search-toggle > svg,
+  .kargo-search-submit > svg,
+  .seller-batch-actions > .kargo-secondary > svg,
+  .seller-batch-actions > .kargo-share-button--compact > svg {
     display: block;
     width: 18px;
     height: 18px;
@@ -4585,7 +4634,7 @@
   }
 
   /* Circular controls retain equal axes even inside stretching flex rows. */
-  .buyer-carousel-controls>button {
+  .buyer-carousel-controls > button {
     display: inline-flex !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -4601,7 +4650,7 @@
     box-sizing: border-box;
   }
 
-  .buyer-carousel-controls>button>svg {
+  .buyer-carousel-controls > button > svg {
     display: block;
     width: 20px;
     height: 20px;
@@ -4610,7 +4659,7 @@
   }
 
   /* Expanded and inline Fulfillment Board icon/glyph controls. */
-  .seller-board-dialog>header button {
+  .seller-board-dialog > header button {
     display: inline-flex !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -4624,7 +4673,7 @@
     line-height: 1;
   }
 
-  .seller-board-dialog>header button>svg {
+  .seller-board-dialog > header button > svg {
     display: block;
     width: 20px;
     height: 20px;
@@ -4669,8 +4718,8 @@
     white-space: normal;
   }
 
-  .kargo-original-app .seller-orders-filters>button,
-  .kargo-original-app .claims-filter-row>button {
+  .kargo-original-app .seller-orders-filters > button,
+  .kargo-original-app .claims-filter-row > button {
     display: inline-flex !important;
     width: auto;
     min-width: 0;
@@ -4688,7 +4737,7 @@
     white-space: nowrap !important;
   }
 
-  .claims-filter-row>button>span {
+  .claims-filter-row > button > span {
     display: inline-flex;
     min-width: 18px;
     min-height: 18px;
@@ -4706,7 +4755,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .settings-nav>button {
+  .settings-nav > button {
     display: inline-flex !important;
     width: 100% !important;
     min-width: 0;
@@ -4719,7 +4768,7 @@
     text-align: center;
   }
 
-  .settings-nav>button>svg {
+  .settings-nav > button > svg {
     width: 16px;
     height: 16px;
     flex: 0 0 16px;
@@ -4738,16 +4787,16 @@
     border-radius: 999px !important;
   }
 
-  .kargo-original-app button.kargo-toggle>div,
-  .auth-page button.kargo-toggle>div {
+  .kargo-original-app button.kargo-toggle > div,
+  .auth-page button.kargo-toggle > div {
     top: 3px !important;
     left: 3px !important;
     width: 18px !important;
     height: 18px !important;
   }
 
-  .kargo-original-app button.kargo-toggle[aria-checked="true"]>div,
-  .auth-page button.kargo-toggle[aria-checked="true"]>div {
+  .kargo-original-app button.kargo-toggle[aria-checked="true"] > div,
+  .auth-page button.kargo-toggle[aria-checked="true"] > div {
     left: 23px !important;
   }
 
@@ -4760,16 +4809,16 @@
     flex-basis: 40px;
   }
 
-  .kargo-original-app button.kargo-toggle--compact>div,
-  .auth-page button.kargo-toggle--compact>div {
+  .kargo-original-app button.kargo-toggle--compact > div,
+  .auth-page button.kargo-toggle--compact > div {
     top: 3px !important;
     left: 3px !important;
     width: 16px !important;
     height: 16px !important;
   }
 
-  .kargo-original-app button.kargo-toggle--compact[aria-checked="true"]>div,
-  .auth-page button.kargo-toggle--compact[aria-checked="true"]>div {
+  .kargo-original-app button.kargo-toggle--compact[aria-checked="true"] > div,
+  .auth-page button.kargo-toggle--compact[aria-checked="true"] > div {
     left: 21px !important;
   }
 
@@ -4802,8 +4851,8 @@
     top: 56px;
   }
 
-  .batch-hero-photo-action>svg,
-  .batch-group-settings-action>svg {
+  .batch-hero-photo-action > svg,
+  .batch-group-settings-action > svg {
     width: 16px;
     height: 16px;
     flex: 0 0 16px;
@@ -4840,7 +4889,7 @@
     padding-bottom: 70px;
   }
 
-  .batch-hero-meta>span {
+  .batch-hero-meta > span {
     min-width: 0;
     max-width: 100%;
   }
@@ -4848,8 +4897,8 @@
   /* Text controls are scoped to inspected action regions, not every button. */
   .kargo-modal__content .kargo-primary,
   .kargo-modal__content .kargo-secondary,
-  .auth-login-fields>.kargo-primary,
-  .auth-signup-fields>.kargo-primary,
+  .auth-login-fields > .kargo-primary,
+  .auth-signup-fields > .kargo-primary,
   .seller-orders-review,
   .seller-orders-contact,
   .seller-batches-add,
@@ -4870,8 +4919,8 @@
     gap: 10px;
   }
 
-  .kargo-modal-actions>.kargo-primary,
-  .kargo-modal-actions>.kargo-secondary {
+  .kargo-modal-actions > .kargo-primary,
+  .kargo-modal-actions > .kargo-secondary {
     width: 100%;
   }
 }
@@ -4915,7 +4964,7 @@
     margin: 0 !important;
   }
 
-  .kargo-header .kargo-header-actions>div>button {
+  .kargo-header .kargo-header-actions > div > button {
     width: 36px !important;
     min-width: 36px !important;
     height: 36px !important;
@@ -4930,7 +4979,7 @@
     box-shadow: none !important;
   }
 
-  .kargo-header .kargo-notification-trigger>svg path {
+  .kargo-header .kargo-notification-trigger > svg path {
     fill: #fff !important;
   }
 
@@ -4939,7 +4988,7 @@
     border: 0 !important;
   }
 
-  .kargo-header .kargo-notification-trigger[aria-expanded="true"]>svg path {
+  .kargo-header .kargo-notification-trigger[aria-expanded="true"] > svg path {
     fill: #191ba9 !important;
   }
 
@@ -4962,22 +5011,22 @@
   }
 
   .kargo-header .kargo-user-menu__avatar-wrap,
-  .kargo-header .kargo-user-menu__avatar-wrap>span {
+  .kargo-header .kargo-user-menu__avatar-wrap > span {
     outline: none !important;
     box-shadow: none !important;
   }
 
   .kargo-original-app .kargo-header .kargo-user-menu__trigger,
   .kargo-original-app .kargo-header .kargo-user-menu__avatar-wrap,
-  .kargo-original-app .kargo-header .kargo-user-menu__avatar-wrap>span {
+  .kargo-original-app .kargo-header .kargo-user-menu__avatar-wrap > span {
     border: 0 !important;
     outline: 0 !important;
     box-shadow: none !important;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .kargo-header .kargo-user-menu__trigger>span:nth-child(2),
-  .kargo-header .kargo-user-menu__trigger>svg {
+  .kargo-header .kargo-user-menu__trigger > span:nth-child(2),
+  .kargo-header .kargo-user-menu__trigger > svg {
     display: none !important;
   }
 
@@ -4991,7 +5040,7 @@
     border-radius: 50%;
   }
 
-  .kargo-header .kargo-user-menu__avatar-wrap>span {
+  .kargo-header .kargo-user-menu__avatar-wrap > span {
     display: flex !important;
     width: 32px !important;
     height: 32px !important;
@@ -5125,7 +5174,7 @@
     place-items: center;
   }
 
-  .mobile-data-page .claims-card-grid .buyer-claim-item-preview-trigger>img {
+  .mobile-data-page .claims-card-grid .buyer-claim-item-preview-trigger > img {
     width: 88px;
     height: 88px;
   }
@@ -5137,7 +5186,7 @@
     gap: 8px;
   }
 
-  .seller-dashboard .seller-board-heading>div {
+  .seller-dashboard .seller-board-heading > div {
     flex: 0 0 auto;
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -5172,7 +5221,9 @@
     background: transparent;
   }
 
-  .fulfillment-board--seller .fulfillment-board__column.is-collapsed .fulfillment-board__column-head {
+  .fulfillment-board--seller
+    .fulfillment-board__column.is-collapsed
+    .fulfillment-board__column-head {
     border-radius: 9px;
   }
 }
@@ -5191,7 +5242,7 @@
     white-space: nowrap;
   }
 
-  .seller-fulfillment-section .seller-board-heading>div {
+  .seller-fulfillment-section .seller-board-heading > div {
     flex: 0 0 auto;
     flex-wrap: nowrap !important;
     gap: 4px !important;
@@ -5204,7 +5255,7 @@
     white-space: nowrap;
   }
 
-  .seller-fulfillment-section .seller-board-heading>div>button:nth-child(2) {
+  .seller-fulfillment-section .seller-board-heading > div > button:nth-child(2) {
     display: none !important;
   }
 
@@ -5231,7 +5282,6 @@
 /* Final admin mobile sizing: keep grid tracks within the phone viewport and
    render all five admin destinations in the bottom navigation. */
 @media (max-width: 767px) {
-
   html.admin-mobile-nav,
   body.admin-mobile-nav {
     overflow-x: clip !important;
@@ -5244,7 +5294,7 @@
   }
 
   .kargo-original-app main,
-  .kargo-original-app main>div,
+  .kargo-original-app main > div,
   .kargo-original-app .admin-page {
     width: 100% !important;
     min-width: 0 !important;
@@ -5252,16 +5302,16 @@
     box-sizing: border-box !important;
   }
 
-  .kargo-original-app .admin-page>.admin-stats,
-  .kargo-original-app .admin-page>.admin-grid {
+  .kargo-original-app .admin-page > .admin-stats,
+  .kargo-original-app .admin-page > .admin-grid {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  .kargo-original-app .admin-page>.admin-stats>*,
-  .kargo-original-app .admin-page>.admin-grid>* {
+  .kargo-original-app .admin-page > .admin-stats > *,
+  .kargo-original-app .admin-page > .admin-grid > * {
     min-width: 0 !important;
     max-width: 100% !important;
   }
@@ -5271,7 +5321,7 @@
   #root,
   .kargo-original-app,
   .kargo-original-app main,
-  .kargo-original-app main>div,
+  .kargo-original-app main > div,
   .admin-page {
     width: 100%;
     min-width: 0 !important;
@@ -5304,14 +5354,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  .admin-tabbar>div:first-child {
+  .admin-tabbar > div:first-child {
     display: grid !important;
     width: 100% !important;
     min-width: 0 !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 
-  .admin-tabbar>div:first-child>button {
+  .admin-tabbar > div:first-child > button {
     width: 100% !important;
     min-width: 0 !important;
     height: 60px !important;
@@ -5323,11 +5373,10 @@
 
 /* Keep the admin dashboard's actual layout box no wider than the mobile app. */
 @media (max-width: 767px) {
-
   body.admin-mobile-nav #root,
   body.admin-mobile-nav .kargo-original-app,
   body.admin-mobile-nav .kargo-original-app main,
-  body.admin-mobile-nav .kargo-original-app main>div,
+  body.admin-mobile-nav .kargo-original-app main > div,
   body.admin-mobile-nav .kargo-original-app .admin-page {
     width: 100vw !important;
     min-width: 0 !important;
@@ -5341,7 +5390,7 @@
   }
 
   body.admin-mobile-nav .kargo-original-app .admin-page-header,
-  body.admin-mobile-nav .kargo-original-app .admin-page-header>div,
+  body.admin-mobile-nav .kargo-original-app .admin-page-header > div,
   body.admin-mobile-nav .kargo-original-app .admin-stats,
   body.admin-mobile-nav .kargo-original-app .admin-grid,
   body.admin-mobile-nav .kargo-original-app .admin-grid--wide {
@@ -5383,7 +5432,6 @@
 
 /* Admin dashboard phone presentation; the shared dashboard styles stay intact. */
 @media (max-width: 767px) {
-
   /* Match the shell-qualified legacy overrides without affecting other tabs. */
   .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) {
     padding: 18px 12px 28px !important;
@@ -5399,11 +5447,11 @@
     margin-bottom: 16px;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-page-header>div {
+  .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-page-header > div {
     width: auto !important;
   }
 
-  .admin-page--dashboard .admin-page-header>div:first-child>div {
+  .admin-page--dashboard .admin-page-header > div:first-child > div {
     margin-bottom: 5px;
   }
 
@@ -5429,13 +5477,15 @@
     gap: 6px;
   }
 
-  .admin-page--dashboard .admin-page-header__actions>span {
+  .admin-page--dashboard .admin-page-header__actions > span {
     color: #748391 !important;
     font-size: 10px !important;
     white-space: nowrap;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-page-header__actions>button {
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page)
+    .admin-page-header__actions
+    > button {
     flex: 0 0 auto;
     width: auto;
     min-height: 40px !important;
@@ -5474,7 +5524,7 @@
     line-height: 1.05;
   }
 
-  .admin-page--dashboard .admin-stat>span {
+  .admin-page--dashboard .admin-stat > span {
     margin-top: 0;
     color: #4b5563;
     font-size: 13.5px;
@@ -5497,20 +5547,23 @@
     justify-self: stretch;
   }
 
-  .admin-page--dashboard>.admin-grid {
+  .admin-page--dashboard > .admin-grid {
     gap: 16px;
     margin-bottom: 16px;
   }
 
-  .admin-page--dashboard>.admin-grid:last-child {
+  .admin-page--dashboard > .admin-grid:last-child {
     margin-bottom: 0;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) :is(.admin-queue-card,
-    .admin-chart-card,
-    .admin-pipeline-card,
-    .admin-activity-card,
-    .admin-seller-card) {
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page)
+    :is(
+      .admin-queue-card,
+      .admin-chart-card,
+      .admin-pipeline-card,
+      .admin-activity-card,
+      .admin-seller-card
+    ) {
     min-width: 0;
     padding: 14px !important;
     border: 1px solid #e4e9ee !important;
@@ -5523,7 +5576,7 @@
     margin-bottom: 12px;
   }
 
-  .admin-page--dashboard .admin-chart-head>div {
+  .admin-page--dashboard .admin-chart-head > div {
     min-width: 0;
   }
 
@@ -5559,11 +5612,14 @@
     border-radius: 9px;
   }
 
-  .admin-page--dashboard :is(.admin-queue-row__title,
-    .admin-queue-row__desc,
-    .admin-activity-row__main,
-    .admin-activity-row__main strong,
-    .admin-pipeline__labels > span:first-child) {
+  .admin-page--dashboard
+    :is(
+      .admin-queue-row__title,
+      .admin-queue-row__desc,
+      .admin-activity-row__main,
+      .admin-activity-row__main strong,
+      .admin-pipeline__labels > span:first-child
+    ) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -5593,7 +5649,8 @@
     font-size: 12px;
   }
 
-  .admin-page--dashboard :is(.admin-activity-row__target, .admin-activity-row__time, .admin-seller-row__orders) {
+  .admin-page--dashboard
+    :is(.admin-activity-row__target, .admin-activity-row__time, .admin-seller-row__orders) {
     color: #748391;
     font-size: 11px;
   }
@@ -5605,7 +5662,7 @@
   }
 
   .admin-page--dashboard .admin-seller-row__rank,
-  .admin-page--dashboard .admin-seller-row> :nth-child(2) {
+  .admin-page--dashboard .admin-seller-row > :nth-child(2) {
     grid-row: 1 / 3;
   }
 
@@ -5642,11 +5699,11 @@
     border-bottom: 0;
   }
 
-  .admin-page--dashboard .admin-pipeline__labels>span {
+  .admin-page--dashboard .admin-pipeline__labels > span {
     min-width: 0;
   }
 
-  .admin-page--dashboard .admin-pipeline__labels>span:last-child {
+  .admin-page--dashboard .admin-pipeline__labels > span:last-child {
     flex: 0 0 auto;
     color: #748391;
   }
@@ -5660,7 +5717,7 @@
   }
 
   /* Keep the accessible table out of the visual layout despite legacy table sizing. */
-  .admin-page--dashboard .admin-chart-card>table.sr-only {
+  .admin-page--dashboard .admin-chart-card > table.sr-only {
     width: 1px !important;
     min-width: 0 !important;
     height: 1px;
@@ -5668,7 +5725,7 @@
     clip-path: inset(50%);
   }
 
-  .admin-page--dashboard .admin-chart-summary>div {
+  .admin-page--dashboard .admin-chart-summary > div {
     display: flex;
     min-width: 0;
     flex-direction: column;
@@ -5738,7 +5795,7 @@
   }
 
   /* Keep the mobile admin tab state on the desktop admin palette. */
-  .admin-tabbar>div:first-child>button[aria-current="page"] {
+  .admin-tabbar > div:first-child > button[aria-current="page"] {
     color: var(--kargo-navy) !important;
     border-bottom-color: var(--kargo-navy) !important;
   }
@@ -5755,8 +5812,8 @@ body,
 html,
 #root,
 #root *,
-body> :not(#root),
-body> :not(#root) * {
+body > :not(#root),
+body > :not(#root) * {
   font-family: "Quicksand", "DM Sans", sans-serif !important;
 }
 
@@ -5783,29 +5840,28 @@ body> :not(#root) * {
     align-items: center;
   }
 
-  .admin-page--dashboard .admin-seller-row__open>.admin-seller-row__rank,
-  .admin-page--dashboard .admin-seller-row__open> :nth-child(2) {
+  .admin-page--dashboard .admin-seller-row__open > .admin-seller-row__rank,
+  .admin-page--dashboard .admin-seller-row__open > :nth-child(2) {
     grid-row: 1 / 3;
   }
 
-  .admin-page--dashboard .admin-seller-row__open>.admin-seller-row__shop {
+  .admin-page--dashboard .admin-seller-row__open > .admin-seller-row__shop {
     grid-column: 3;
     grid-row: 1;
   }
 
-  .admin-page--dashboard .admin-seller-row__open>.admin-seller-row__orders {
+  .admin-page--dashboard .admin-seller-row__open > .admin-seller-row__orders {
     grid-column: 3;
     grid-row: 2;
   }
 
-  .admin-page--dashboard .admin-seller-row__open>.admin-seller-row__gmv {
+  .admin-page--dashboard .admin-seller-row__open > .admin-seller-row__gmv {
     grid-column: 4;
     grid-row: 1 / 3;
   }
 }
 
 @media (max-width: 767px) {
-
   /* The bottom nav already names the tab; drop the big page title on mobile. */
   .admin-page--dashboard .admin-page-header h2,
   .admin-page:not(.admin-page--dashboard) .admin-page-header h2 {
@@ -5838,36 +5894,36 @@ body> :not(#root) * {
     background: #fff;
   }
 
-  .admin-users-table tbody tr.admin-users-row>td {
+  .admin-users-table tbody tr.admin-users-row > td {
     display: none;
     min-width: 0;
     padding: 0 !important;
     border: 0;
   }
 
-  .admin-users-table tbody tr.admin-users-row>td:first-child,
-  .admin-users-table tbody tr.admin-users-row>td:nth-child(2),
-  .admin-users-table tbody tr.admin-users-row>td:nth-child(4),
-  .admin-users-table tbody tr.admin-users-row>td:last-child {
+  .admin-users-table tbody tr.admin-users-row > td:first-child,
+  .admin-users-table tbody tr.admin-users-row > td:nth-child(2),
+  .admin-users-table tbody tr.admin-users-row > td:nth-child(4),
+  .admin-users-table tbody tr.admin-users-row > td:last-child {
     display: block;
   }
 
-  .admin-users-table tbody tr.admin-users-row>td:first-child {
+  .admin-users-table tbody tr.admin-users-row > td:first-child {
     grid-column: 1;
     grid-row: 1 / 3;
   }
 
-  .admin-users-table tbody tr.admin-users-row>td:nth-child(2) {
+  .admin-users-table tbody tr.admin-users-row > td:nth-child(2) {
     grid-column: 2;
     grid-row: 1;
   }
 
-  .admin-users-table tbody tr.admin-users-row>td:nth-child(4) {
+  .admin-users-table tbody tr.admin-users-row > td:nth-child(4) {
     grid-column: 2;
     grid-row: 2;
   }
 
-  .admin-users-table tbody tr.admin-users-row>td:last-child {
+  .admin-users-table tbody tr.admin-users-row > td:last-child {
     grid-column: 3;
     grid-row: 1 / 3;
     align-self: center;
@@ -5876,7 +5932,6 @@ body> :not(#root) * {
 }
 
 @media (max-width: 767px) {
-
   /* The <li> must not be a grid: its only child is the row button, which was
      being squeezed into the 20px rank column and left the shop name 0px wide. */
   .admin-page--dashboard .admin-seller-row {
@@ -6022,7 +6077,7 @@ body> :not(#root) * {
     overflow-wrap: anywhere;
   }
 
-  .admin-ucard__shop>span {
+  .admin-ucard__shop > span {
     color: var(--kargo-muted);
     flex: 0 0 auto;
   }
@@ -6059,7 +6114,7 @@ body> :not(#root) * {
   padding: 12px 0;
 }
 
-.admin-user-stats>div {
+.admin-user-stats > div {
   display: grid;
   align-content: start;
   gap: 2px;
@@ -6067,7 +6122,7 @@ body> :not(#root) * {
   padding: 0 12px;
 }
 
-.admin-user-stats>div+div {
+.admin-user-stats > div + div {
   border-left: 1px solid #d6ddf0;
 }
 
@@ -6078,7 +6133,7 @@ body> :not(#root) * {
   white-space: nowrap;
 }
 
-.admin-user-stats>div:nth-child(-n + 2) strong {
+.admin-user-stats > div:nth-child(-n + 2) strong {
   color: #3b4bb8;
 }
 
@@ -6093,7 +6148,7 @@ body> :not(#root) * {
   border-top: 1px solid var(--kargo-line);
 }
 
-.admin-user-rows>div {
+.admin-user-rows > div {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -6156,15 +6211,13 @@ body> :not(#root) * {
 }
 
 @media (max-width: 767px) {
-
   /* Scroll the whole record; keep the last row clear of the sticky footer. */
-  .admin-record-modal>.kargo-modal__body {
+  .admin-record-modal > .kargo-modal__body {
     padding-bottom: 20px !important;
   }
 }
 
 @media (max-width: 767px) {
-
   /* Keep the whole record modal (incl. sticky action footer) above the bottom nav. */
   .admin-modal-overlay.admin-record-modal-overlay {
     align-items: center !important;
@@ -6173,7 +6226,9 @@ body> :not(#root) * {
   }
 
   .admin-record-modal {
-    max-height: calc(100dvh - 12px - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    max-height: calc(
+      100dvh - 12px - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    ) !important;
   }
 }
 
@@ -6250,7 +6305,7 @@ body> :not(#root) * {
     color: var(--kargo-muted);
   }
 
-  .admin-bcard__seller>span {
+  .admin-bcard__seller > span {
     min-width: 0;
     overflow-wrap: anywhere;
   }
@@ -6305,7 +6360,7 @@ body> :not(#root) * {
     overflow: hidden;
   }
 
-  .admin-bcard__bar>span {
+  .admin-bcard__bar > span {
     display: block;
     height: 100%;
     background: #3b4bb8;
@@ -6475,7 +6530,7 @@ body> :not(#root) * {
   min-width: 0;
 }
 
-.admin-batch-seller>span {
+.admin-batch-seller > span {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -6517,7 +6572,7 @@ body> :not(#root) * {
   display: grid;
 }
 
-.admin-batch-products>li {
+.admin-batch-products > li {
   display: grid;
   gap: 6px;
   padding: 10px 0;
@@ -6558,13 +6613,13 @@ body> :not(#root) * {
 }
 
 @media (max-width: 767px) {
-  .admin-record-modal.admin-batch-modal>.admin-modal-footer {
+  .admin-record-modal.admin-batch-modal > .admin-modal-footer {
     grid-template-columns: none;
     grid-auto-flow: column;
     grid-auto-columns: minmax(0, 1fr);
   }
 
-  .admin-batch-modal>.admin-modal-footer>.admin-action-button {
+  .admin-batch-modal > .admin-modal-footer > .admin-action-button {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -6601,7 +6656,7 @@ body> :not(#root) * {
   padding: 10px 0;
 }
 
-.admin-order-parties>div {
+.admin-order-parties > div {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -6609,7 +6664,7 @@ body> :not(#root) * {
   padding: 0 12px;
 }
 
-.admin-order-parties>div+div {
+.admin-order-parties > div + div {
   border-left: 1px solid #d6ddf0;
 }
 
@@ -6874,7 +6929,7 @@ body> :not(#root) * {
     gap: 10px;
   }
 
-  .admin-filter-bar--sheet>.admin-filter-search {
+  .admin-filter-bar--sheet > .admin-filter-search {
     flex: 1 1 0;
     width: auto;
     min-width: 0;
@@ -6918,11 +6973,12 @@ body> :not(#root) * {
   }
 
   /* Everything except search, the filter button and the export button moves into the sheet. */
-  .admin-filter-bar--sheet> :not(.admin-filter-search):not(.admin-filter-sheet-btn):not(.admin-action-primary) {
+  .admin-filter-bar--sheet
+    > :not(.admin-filter-search):not(.admin-filter-sheet-btn):not(.admin-action-primary) {
     display: none !important;
   }
 
-  .admin-filter-bar--sheet>.admin-action-primary {
+  .admin-filter-bar--sheet > .admin-action-primary {
     flex: 1 1 100%;
   }
 
@@ -7072,7 +7128,7 @@ body> :not(#root) * {
 }
 
 @media (max-width: 767px) {
-  .admin-filter-bar--sheet>.admin-filter-search {
+  .admin-filter-bar--sheet > .admin-filter-search {
     padding-right: 12px !important;
     font-size: 14px !important;
     text-overflow: ellipsis;
@@ -7226,7 +7282,7 @@ body> :not(#root) * {
   padding: 10px 0;
 }
 
-.admin-audit-change+.admin-audit-change {
+.admin-audit-change + .admin-audit-change {
   border-top: 1px solid #d6ddf0;
 }
 
@@ -7462,7 +7518,7 @@ body> :not(#root) * {
   margin-bottom: 12px;
 }
 
-.admin-team-actions>button {
+.admin-team-actions > button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -7478,7 +7534,7 @@ body> :not(#root) * {
     padding: 12px 14px;
   }
 
-  .admin-team-actions>button {
+  .admin-team-actions > button {
     min-height: 48px;
     padding: 0 18px;
     border-radius: 14px;
@@ -7535,7 +7591,7 @@ body> :not(#root) * {
 
 /* Account details (desktop): profile on the left, activity on the right. */
 @media (min-width: 768px) {
-  .admin-account-modal>.kargo-modal__body {
+  .admin-account-modal > .kargo-modal__body {
     padding: 0 !important;
   }
 
@@ -7579,7 +7635,7 @@ body> :not(#root) * {
     margin: 20px 0 0;
   }
 
-  .admin-account__facts>div {
+  .admin-account__facts > div {
     padding: 12px 0;
     border-top: 1px solid #e9ecf5;
   }
@@ -7641,7 +7697,7 @@ body> :not(#root) * {
     border-radius: 16px;
   }
 
-  .admin-account__stats>div {
+  .admin-account__stats > div {
     display: grid;
     align-content: start;
     gap: 4px;
@@ -7649,7 +7705,7 @@ body> :not(#root) * {
     min-width: 0;
   }
 
-  .admin-account__stats>div+div {
+  .admin-account__stats > div + div {
     border-left: 1px solid #d6ddf0;
   }
 
@@ -7725,7 +7781,7 @@ body> :not(#root) * {
     color: #17212b;
   }
 
-  .admin-account__orders li>span {
+  .admin-account__orders li > span {
     text-align: right;
     font-size: 15px;
     font-weight: 800;
@@ -7799,7 +7855,7 @@ body> :not(#root) * {
 
 /* Batch details (desktop): cover and identity on the left, summary and products on the right. */
 @media (min-width: 768px) {
-  .admin-batch-modal>.kargo-modal__body {
+  .admin-batch-modal > .kargo-modal__body {
     padding: 0 !important;
   }
 
@@ -7958,14 +8014,14 @@ body> :not(#root) * {
     overflow: hidden;
   }
 
-  .admin-batch__claimed .admin-bcard__bar>span {
+  .admin-batch__claimed .admin-bcard__bar > span {
     display: block;
     height: 100%;
     border-radius: 999px;
     background: #6f77d6;
   }
 
-  .admin-batch__claimed>span:last-child {
+  .admin-batch__claimed > span:last-child {
     flex: 0 0 auto;
     min-width: 78px;
   }
@@ -7978,14 +8034,14 @@ body> :not(#root) * {
   }
 
   /* Footer: moderation actions on the left, Close batch pushed to the right. */
-  .admin-batch-modal>.admin-modal-footer {
+  .admin-batch-modal > .admin-modal-footer {
     justify-content: flex-start;
     gap: 12px;
     padding: 16px 28px 20px;
     background: #fff;
   }
 
-  .admin-batch-modal>.admin-modal-footer .admin-action-button {
+  .admin-batch-modal > .admin-modal-footer .admin-action-button {
     min-height: 46px;
     padding: 0 20px;
     border-radius: 12px;
@@ -7993,7 +8049,7 @@ body> :not(#root) * {
     font-weight: 700;
   }
 
-  .admin-batch-modal>.admin-modal-footer .admin-action-button--danger:last-child {
+  .admin-batch-modal > .admin-modal-footer .admin-action-button--danger:last-child {
     margin-left: auto;
   }
 
@@ -8436,7 +8492,11 @@ body> :not(#root) * {
     text-align: right;
   }
 
-  .seller-orders-page .seller-orders-received-table tbody td:first-child > .seller-orders-buyer-cell {
+  .seller-orders-page
+    .seller-orders-received-table
+    tbody
+    td:first-child
+    > .seller-orders-buyer-cell {
     width: auto !important;
     max-width: 100% !important;
     justify-content: flex-start !important;
@@ -8444,7 +8504,12 @@ body> :not(#root) * {
     text-align: left !important;
   }
 
-  .seller-orders-page .seller-orders-received-table tbody td:first-child > .seller-orders-buyer-cell .seller-orders-buyer {
+  .seller-orders-page
+    .seller-orders-received-table
+    tbody
+    td:first-child
+    > .seller-orders-buyer-cell
+    .seller-orders-buyer {
     width: auto !important;
     max-width: calc(100% - 32px) !important;
     flex: 0 1 auto !important;
@@ -8561,7 +8626,9 @@ body> :not(#root) * {
     content: none !important;
   }
 
-  .seller-dashboard .seller-recent-orders__table :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+  .seller-dashboard
+    .seller-recent-orders__table
+    :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
     display: none !important;
   }
 
@@ -8639,7 +8706,10 @@ body> :not(#root) * {
 
   /* Long labels (e.g. "Awaiting Verification") must not get chopped mid-word
      by the column edge: let the pill shrink and ellipsize instead. */
-  .seller-dashboard .seller-recent-orders__table .seller-recent-orders__status-group > [role="status"] {
+  .seller-dashboard
+    .seller-recent-orders__table
+    .seller-recent-orders__status-group
+    > [role="status"] {
     flex: 0 1 auto;
     min-width: 0;
     max-width: 100%;
@@ -8650,11 +8720,19 @@ body> :not(#root) * {
     white-space: nowrap;
   }
 
-  .seller-dashboard .seller-recent-orders__table .seller-recent-orders__status-group > [role="status"] > span:first-child {
+  .seller-dashboard
+    .seller-recent-orders__table
+    .seller-recent-orders__status-group
+    > [role="status"]
+    > span:first-child {
     flex: 0 0 auto;
   }
 
-  .seller-dashboard .seller-recent-orders__table .seller-recent-orders__status-group > [role="status"] > .status-badge__label {
+  .seller-dashboard
+    .seller-recent-orders__table
+    .seller-recent-orders__status-group
+    > [role="status"]
+    > .status-badge__label {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -8784,7 +8862,12 @@ body> :not(#root) * {
     content: none !important;
   }
 
-  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+  .kargo-original-app
+    .bdash
+    .bdash-main
+    .bdash-card
+    .bdash-table
+    :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
     display: none !important;
   }
 
@@ -8802,7 +8885,12 @@ body> :not(#root) * {
     min-width: 0 !important;
   }
 
-  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table :is(th, td):is(:nth-child(5), :nth-child(6)) {
+  .kargo-original-app
+    .bdash
+    .bdash-main
+    .bdash-card
+    .bdash-table
+    :is(th, td):is(:nth-child(5), :nth-child(6)) {
     padding-right: 8px !important;
     padding-left: 8px !important;
   }
@@ -8872,11 +8960,23 @@ body> :not(#root) * {
     white-space: nowrap;
   }
 
-  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-status-group > [role="status"] > span:first-child {
+  .kargo-original-app
+    .bdash
+    .bdash-main
+    .bdash-card
+    .bdash-status-group
+    > [role="status"]
+    > span:first-child {
     flex: 0 0 auto;
   }
 
-  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-status-group > [role="status"] > .status-badge__label {
+  .kargo-original-app
+    .bdash
+    .bdash-main
+    .bdash-card
+    .bdash-status-group
+    > [role="status"]
+    > .status-badge__label {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -8902,7 +9002,12 @@ body> :not(#root) * {
     white-space: nowrap !important;
   }
 
-  .kargo-original-app .bdash .bdash-main .bdash-card .bdash-table [data-insufficient-payment]::before {
+  .kargo-original-app
+    .bdash
+    .bdash-main
+    .bdash-card
+    .bdash-table
+    [data-insufficient-payment]::before {
     content: "!";
     display: block;
     color: #fff;
@@ -9056,7 +9161,81 @@ html body .kargo-modal button.item-claim-quantity-step {
   aspect-ratio: 1 / 1;
 }
 
-body .kargo-modal .kargo-modal__content input.kargo-location-search:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]) {
+body
+  .kargo-modal
+  .kargo-modal__content
+  input.kargo-location-search:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+    [type="button"]
+  ):not([type="submit"]) {
   padding-left: 40px !important;
   padding-right: 40px !important;
+}
+
+/* ===== Signup mobile polish ===== */
+@media (max-width: 767px) {
+  .auth-page--signup .auth-brand {
+    height: 140px;
+    min-height: 140px;
+    flex-basis: 140px;
+    border-radius: 0 0 40px 40px;
+  }
+
+  .auth-page--signup .auth-form-pane {
+    padding: 24px 20px max(36px, env(safe-area-inset-bottom));
+  }
+
+  .auth-page--signup .auth-heading {
+    margin-bottom: 22px;
+  }
+
+  .auth-page--signup .auth-signup-fields,
+  .auth-page--signup .auth-signup-grid,
+  .auth-page--signup .auth-signup-col {
+    gap: 22px;
+  }
+
+  .auth-page--signup .auth-role-field {
+    gap: 8px;
+  }
+
+  .auth-page--signup .auth-role-options button {
+    min-height: 56px;
+  }
+
+  .auth-page--signup .auth-address-trigger,
+  .auth-page--signup .auth-select {
+    min-height: 48px;
+    font-size: 16px !important;
+  }
+
+  .auth-page--signup .auth-address-trigger {
+    height: 48px;
+  }
+
+  .auth-page--signup .auth-social-row {
+    flex-wrap: wrap;
+  }
+
+  .auth-page--signup .auth-social-row > input {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .auth-address-modal .kargo-location-map {
+    height: min(38dvh, 250px);
+    min-height: 210px;
+  }
+
+  .auth-address-modal .auth-address-input {
+    min-height: 88px;
+    font-size: 16px;
+  }
+
+  .auth-page--signup .auth-payment-grid {
+    gap: 14px;
+  }
+
+  .auth-page--signup .auth-signup-switch {
+    margin-top: 18px;
+  }
 }

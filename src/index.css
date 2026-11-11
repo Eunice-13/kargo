@@ -1454,9 +1454,13 @@ button {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table),
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    ),
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody {
     display: block;
     width: 100% !important;
@@ -1464,13 +1468,17 @@ button {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     thead {
     display: none;
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1478,7 +1486,9 @@ button {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     tr {
     display: grid;
@@ -1492,7 +1502,9 @@ button {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     td {
     display: flex;
@@ -1507,7 +1519,9 @@ button {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     td::before {
     min-width: 82px;
@@ -6063,9 +6077,13 @@ textarea::placeholder {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table),
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    ),
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody {
     display: block;
     width: 100% !important;
@@ -6073,20 +6091,26 @@ textarea::placeholder {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     thead {
     display: none;
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody {
     display: grid;
     gap: 12px;
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     tr {
     display: grid;
@@ -6103,7 +6127,9 @@ textarea::placeholder {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     td {
     display: flex;
@@ -6122,7 +6148,9 @@ textarea::placeholder {
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash)
-    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(.seller-payment-history-table)
+    table:not(.seller-recent-orders__table):not(.seller-orders-received-table):not(
+      .seller-payment-history-table
+    )
     tbody
     td::before {
     min-width: 72px;
@@ -7034,209 +7062,209 @@ textarea::placeholder {
 
 @media (min-width: 768px) {
   .seller-recent-orders .seller-recent-orders__wrap {
-  width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 8px 18px rgba(26, 39, 68, 0.11);
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 18px rgba(26, 39, 68, 0.11);
   }
 
   .seller-recent-orders .seller-recent-orders__table {
-  width: 100%;
-  min-width: 0;
-  border-collapse: collapse;
-  table-layout: auto;
-  font-size: 12px;
+    width: 100%;
+    min-width: 0;
+    border-collapse: collapse;
+    table-layout: auto;
+    font-size: 12px;
   }
 
   .seller-recent-orders .seller-recent-orders__table thead {
-  background: #6995d7;
-  color: #fff;
+    background: #6995d7;
+    color: #fff;
   }
 
   .seller-recent-orders .seller-recent-orders__table th {
-  height: 44px;
-  padding: 10px 14px;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-align: left;
-  text-transform: uppercase;
-  white-space: nowrap;
+    height: 44px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .seller-recent-orders .seller-recent-orders__table td {
-  min-width: 0;
-  height: 60px;
-  padding: 12px 14px;
-  color: #858585;
-  font-weight: 500;
-  text-align: left;
-  vertical-align: middle;
+    min-width: 0;
+    height: 60px;
+    padding: 12px 14px;
+    color: #858585;
+    font-weight: 500;
+    text-align: left;
+    vertical-align: middle;
   }
 
   .seller-recent-orders .seller-recent-orders__table :is(th, td):first-child {
-  padding-left: 16px;
+    padding-left: 16px;
   }
 
   .seller-recent-orders .seller-recent-orders__table :is(th, td):last-child {
-  padding-right: 16px;
+    padding-right: 16px;
   }
 
   .seller-recent-orders .seller-recent-orders__table tbody tr {
-  min-height: 60px;
-  border-top: 1px solid #f0f1f3;
-  background: #fff;
-  cursor: pointer;
+    min-height: 60px;
+    border-top: 1px solid #f0f1f3;
+    background: #fff;
+    cursor: pointer;
   }
 
   .seller-recent-orders .seller-recent-orders__table tbody tr:nth-child(odd) {
-  background: #eeeeee;
+    background: #eeeeee;
   }
 
   .seller-recent-orders .seller-recent-orders__table tbody tr:hover {
-  background: #e4ebf7;
+    background: #e4ebf7;
   }
 
   .seller-recent-orders .seller-recent-orders__col-product {
-  min-width: 180px;
+    min-width: 180px;
   }
 
   .seller-recent-orders .seller-recent-orders__col-batch {
-  min-width: 140px;
+    min-width: 140px;
   }
 
   .seller-recent-orders .seller-recent-orders__col-buyer {
-  min-width: 130px;
+    min-width: 130px;
   }
 
   .seller-recent-orders .seller-recent-orders__col-amount {
-  min-width: 90px;
+    min-width: 90px;
   }
 
   .seller-recent-orders .seller-recent-orders__col-status {
-  min-width: 190px;
+    min-width: 190px;
   }
 
   .seller-recent-orders .seller-recent-orders__col-deadline {
-  min-width: 120px;
+    min-width: 120px;
   }
 
   .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(1) {
-  min-width: 180px;
+    min-width: 180px;
   }
 
   .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(2) {
-  min-width: 140px;
+    min-width: 140px;
   }
 
   .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(3) {
-  min-width: 130px;
+    min-width: 130px;
   }
 
   .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(4) {
-  min-width: 90px;
+    min-width: 90px;
   }
 
   .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(5) {
-  min-width: 190px;
+    min-width: 190px;
   }
 
   .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(6) {
-  min-width: 120px;
+    min-width: 120px;
   }
 
   .seller-recent-orders .seller-product-cell,
-.seller-recent-orders .seller-buyer-cell {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 9px;
+  .seller-recent-orders .seller-buyer-cell {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 9px;
   }
 
   .seller-recent-orders .seller-product-cell > img,
-.seller-recent-orders .seller-buyer-cell > :first-child {
-  flex: 0 0 auto;
+  .seller-recent-orders .seller-buyer-cell > :first-child {
+    flex: 0 0 auto;
   }
 
   .seller-recent-orders .seller-product-cell > .seller-recent-orders__product-name,
-.seller-recent-orders .seller-buyer-cell > span,
-.seller-recent-orders__table td:nth-child(2) {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  .seller-recent-orders .seller-buyer-cell > span,
+  .seller-recent-orders__table td:nth-child(2) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .seller-recent-orders .seller-product-cell > .seller-recent-orders__product-name,
-.seller-recent-orders .seller-buyer-cell > span {
-  max-width: 100%;
+  .seller-recent-orders .seller-buyer-cell > span {
+    max-width: 100%;
   }
 
   .seller-recent-orders__table td:nth-child(2) {
-  max-width: 240px;
+    max-width: 240px;
   }
 
   .seller-recent-orders .seller-product-cell > .seller-recent-orders__product-name {
-  color: #171717;
-  font-size: 13px;
-  font-weight: 600;
+    color: #171717;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   .seller-recent-orders .seller-buyer-cell > span,
-.seller-recent-orders .seller-order-amount {
-  color: #171717;
-  font-weight: 700;
+  .seller-recent-orders .seller-order-amount {
+    color: #171717;
+    font-weight: 700;
   }
 
   .seller-recent-orders .seller-recent-orders__status-group {
-  --insufficient-payment-font-size: 11px;
-  --insufficient-payment-margin-top: 0;
-  --insufficient-payment-padding: 3px 8px;
-  display: flex;
-  min-width: 0;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 6px;
+    --insufficient-payment-font-size: 11px;
+    --insufficient-payment-margin-top: 0;
+    --insufficient-payment-padding: 3px 8px;
+    display: flex;
+    min-width: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
   }
 
   .seller-recent-orders .seller-recent-orders__status-group > [role="status"] {
-  flex: 0 0 auto;
-  white-space: nowrap;
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .seller-recent-orders .seller-recent-orders__status-group > [data-insufficient-payment] {
-  flex: 0 0 auto;
-  border-radius: 999px;
-  white-space: nowrap;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    white-space: nowrap;
   }
 
   .seller-recent-orders .seller-recent-orders__table td:nth-child(6) {
-  font-size: 13px;
-  line-height: 1.3;
-  white-space: normal;
+    font-size: 13px;
+    line-height: 1.3;
+    white-space: normal;
   }
 
   .seller-recent-orders .seller-recent-orders__table td:nth-child(6) > * {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  line-height: 1.3;
-  white-space: normal;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    line-height: 1.3;
+    white-space: normal;
   }
 
   .seller-recent-orders .seller-recent-orders__table td.is-urgent,
-.seller-recent-orders .seller-recent-orders__table td.is-urgent * {
-  color: #ff4545;
-}
+  .seller-recent-orders .seller-recent-orders__table td.is-urgent * {
+    color: #ff4545;
+  }
 
-.seller-recent-orders .seller-recent-orders__table td.is-warning,
-.seller-recent-orders .seller-recent-orders__table td.is-warning * {
-  color: #efa81d;
-}
+  .seller-recent-orders .seller-recent-orders__table td.is-warning,
+  .seller-recent-orders .seller-recent-orders__table td.is-warning * {
+    color: #efa81d;
+  }
 }
 
 .seller-orders-row {
@@ -16448,16 +16476,22 @@ textarea::placeholder {
     margin: auto;
     border-radius: 50%;
     background: #fff;
-    box-shadow: 0 2px 6px rgb(17 24 39 / 28%), 0 0 0 1px rgb(17 24 39 / 6%);
+    box-shadow:
+      0 2px 6px rgb(17 24 39 / 28%),
+      0 0 0 1px rgb(17 24 39 / 6%);
     content: "";
   }
 
   .seller-batches-page button.seller-batch-lock.is-open::before {
-    box-shadow: 0 2px 6px rgb(17 24 39 / 28%), inset 0 0 0 1.5px #0e7490;
+    box-shadow:
+      0 2px 6px rgb(17 24 39 / 28%),
+      inset 0 0 0 1.5px #0e7490;
   }
 
   .seller-batches-page button.seller-batch-lock.is-locked::before {
-    box-shadow: 0 2px 6px rgb(17 24 39 / 28%), inset 0 0 0 1.5px #b91c1c;
+    box-shadow:
+      0 2px 6px rgb(17 24 39 / 28%),
+      inset 0 0 0 1.5px #b91c1c;
   }
 
   .seller-batches-page .seller-batch-lock svg {
@@ -17843,4 +17877,525 @@ tr.record-focus {
   color: #b91c1c;
   font-size: 11px;
   font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------
+   Signup
+   Mobile stacks one column. Desktop splits identity fields from delivery /
+   payout extras, both columns ending on the same line, and the whole screen
+   fits inside the viewport without a page scrollbar.
+--------------------------------------------------------------------------- */
+
+.auth-heading--start {
+  text-align: left;
+}
+
+.auth-signup-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.auth-signup-fields {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.auth-signup-grid,
+.auth-signup-col {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-role-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-role-field .auth-section-label {
+  margin: 0;
+  color: #515a68;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.auth-address-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+/* Signup opens the map picker in its own dialog so the form stays compact and
+   nothing has to be squeezed into the aside column. */
+.auth-address-trigger {
+  display: flex;
+  width: 100%;
+  height: 2.9rem;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+  box-sizing: border-box;
+  padding: 0 0.9rem;
+  border: 2px solid transparent;
+  border-radius: 0.65rem;
+  outline: none;
+  background: #ededed;
+  color: #222;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+}
+
+.auth-address-trigger:hover {
+  background: #e7e7e7;
+}
+
+.auth-address-trigger:focus-visible {
+  border-color: #668fd3;
+  background: #f3f3f3;
+  box-shadow: 0 0 0 4px rgba(102, 143, 211, 0.13);
+}
+
+.auth-address-trigger__icon {
+  flex: 0 0 auto;
+  color: #6b7280;
+}
+
+.auth-address-trigger__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-address-trigger__text.is-placeholder {
+  color: #6b7280;
+}
+
+.auth-address-trigger__pin {
+  flex: 0 0 auto;
+  color: #191ba9;
+  opacity: 0.8;
+}
+
+.auth-field--error .auth-address-trigger {
+  border-color: #ef4444;
+}
+
+.auth-address-modal .kargo-location-map {
+  height: 210px;
+  min-height: 210px;
+}
+
+/* The dialog's textarea already shows the chosen address, so the picker's
+   duplicate summary card stays hidden. */
+.auth-address-modal .space-y-3 > .rounded-lg.border-gray-200.bg-gray-50 {
+  display: none;
+}
+
+.auth-address-modal .kargo-location-search {
+  height: 2.9rem;
+  border-color: #e5e7eb;
+  background: #fff;
+  font-size: 0.95rem;
+}
+
+.auth-address-modal .kargo-location-search:focus-visible {
+  border-color: #668fd3;
+  box-shadow: 0 0 0 4px rgba(102, 143, 211, 0.13);
+  outline: none;
+}
+
+.auth-address-modal__fields {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.auth-address-modal .auth-address-input {
+  min-height: 5.25rem;
+}
+
+.auth-page--signup .auth-hint {
+  color: #6b7280;
+}
+
+.auth-address-complete {
+  display: block;
+  margin-top: 0.1rem;
+  color: #1f2530;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.auth-address-complete .auth-address-input {
+  margin-top: 0.35rem;
+}
+
+.auth-hint {
+  margin: 0.3rem 0 0;
+  color: #8a929e;
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.auth-error--inline {
+  position: static;
+  margin-top: 0.25rem;
+}
+
+.auth-address-input {
+  width: 100%;
+  min-height: 4.75rem;
+  box-sizing: border-box;
+  padding: 0.7rem 0.9rem;
+  border: 2px solid transparent;
+  border-radius: 0.65rem;
+  outline: none;
+  background: #ededed;
+  color: #222;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+  resize: vertical;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+}
+
+.auth-address-input::placeholder {
+  color: #969696;
+  opacity: 1;
+}
+
+.auth-address-input:focus {
+  border-color: #668fd3;
+  background: #f3f3f3;
+  box-shadow: 0 0 0 4px rgba(102, 143, 211, 0.13);
+}
+
+.auth-field--error .auth-address-input {
+  border-color: #ef4444;
+}
+
+.auth-payment-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-payment-grid {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.auth-payment-grid .auth-error,
+.auth-seller-fields .auth-error {
+  position: static;
+  margin-top: 0.2rem;
+}
+
+.auth-select {
+  width: 100%;
+  height: 2.9rem;
+  box-sizing: border-box;
+  padding: 0 2.4rem 0 0.9rem;
+  border: 2px solid transparent;
+  border-radius: 0.65rem;
+  outline: none;
+  background: #ededed;
+  color: #222;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.auth-select:focus {
+  border-color: #668fd3;
+  background: #f3f3f3;
+  box-shadow: 0 0 0 4px rgba(102, 143, 211, 0.13);
+}
+
+.auth-social-note {
+  margin: 0 0 0.35rem;
+  color: #6b7280;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.auth-terms-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.auth-signup-switch {
+  margin-top: 0.85rem;
+  text-align: left;
+}
+
+.auth-legal-copy {
+  margin: 0.35rem 0 0;
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .auth-page--signup {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .auth-page--signup .auth-form-pane {
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: clamp(1rem, 4dvh, 3.5rem) clamp(1.5rem, 3vw, 3.5rem);
+  }
+
+  .auth-page--signup .auth-form-wrap,
+  .auth-page--signup .auth-content {
+    width: 100%;
+    max-width: min(47vw, 46rem);
+    max-height: 100%;
+  }
+
+  .auth-page--signup .auth-signup-content {
+    padding: 0;
+  }
+
+  .auth-page--signup .auth-heading {
+    margin-bottom: clamp(0.9rem, 2.4dvh, 1.6rem);
+  }
+
+  .auth-page--signup .auth-heading h1 {
+    font-size: clamp(1.75rem, 3.6dvh, 2.4rem);
+    line-height: 1.12;
+  }
+
+  .auth-page--signup .auth-heading p {
+    margin-top: 0.3rem;
+    font-size: clamp(0.72rem, 1.15dvh, 0.95rem);
+  }
+
+  .auth-page--signup .auth-signup-fields {
+    gap: clamp(0.75rem, 1.9dvh, 1.25rem);
+  }
+
+  .auth-page--signup .auth-field label,
+  .auth-page--signup .auth-photo-field > label,
+  .auth-page--signup .auth-section-label {
+    margin-bottom: clamp(0.28rem, 0.7dvh, 0.45rem);
+    color: #1f2530;
+    font-size: clamp(0.72rem, 1.15dvh, 0.82rem);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .auth-page--signup .auth-role-field .auth-section-label {
+    margin-bottom: 0;
+    color: #515a68;
+  }
+
+  .auth-page--signup .auth-input-shell input,
+  .auth-page--signup .auth-select {
+    height: clamp(2.55rem, 4.8dvh, 2.9rem);
+    border-radius: 0.65rem;
+    font-size: clamp(0.78rem, 1.2dvh, 0.95rem);
+  }
+
+  .auth-page--signup .auth-address-input {
+    min-height: 6rem;
+    border-radius: 0.65rem;
+    font-size: clamp(0.78rem, 1.2dvh, 0.95rem);
+  }
+
+  .auth-page--signup .auth-role-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .auth-page--signup .auth-role-options button {
+    display: flex;
+    min-height: clamp(2.65rem, 5dvh, 3.4rem);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 0.65rem;
+  }
+
+  .auth-page--signup .auth-role-options button:hover {
+    transform: none;
+    background: #e4e4e4;
+  }
+
+  .auth-page--signup .auth-role-options button.is-selected {
+    background: #6995d7;
+    box-shadow: 0 0 0 3px rgba(105, 149, 215, 0.18);
+  }
+
+  .auth-page--signup .auth-role-options strong {
+    gap: 0.4rem;
+    font-size: clamp(0.8rem, 1.35dvh, 0.95rem);
+    font-weight: 600;
+  }
+
+  .auth-page--signup .auth-role-options small {
+    margin-top: 0.1rem;
+    font-size: clamp(0.62rem, 1dvh, 0.75rem);
+    opacity: 0.9;
+  }
+
+  .auth-page--signup .auth-photo-field {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.85rem;
+  }
+
+  .auth-page--signup .auth-photo-button {
+    width: clamp(2.85rem, 6dvh, 3.6rem);
+    height: clamp(2.85rem, 6dvh, 3.6rem);
+    flex: 0 0 auto;
+  }
+
+  .auth-page--signup .auth-photo-button b {
+    font-size: clamp(1.1rem, 1.6dvh, 1.4rem);
+  }
+
+  .auth-page--signup .auth-photo-field > label {
+    margin: 0;
+    text-align: left;
+  }
+
+  .auth-page--signup .auth-signup-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: clamp(1rem, 2.6dvh, 2rem);
+  }
+
+  .auth-page--signup .auth-signup-col {
+    height: 100%;
+    gap: clamp(0.6rem, 1.6dvh, 1.1rem);
+  }
+
+  .auth-page--signup .auth-address-field {
+    flex: 0 0 auto;
+  }
+
+  .auth-page--signup .auth-hint {
+    font-size: clamp(0.62rem, 1dvh, 0.72rem);
+  }
+
+  .auth-page--signup .auth-payment-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.45rem, 1.3dvh, 0.8rem);
+  }
+
+  .auth-page--signup .auth-payment-grid > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .auth-page--signup .auth-social-list {
+    gap: clamp(0.15rem, 0.6dvh, 0.45rem);
+  }
+
+  .auth-page--signup .auth-social-row {
+    min-height: clamp(1.55rem, 2.6dvh, 2rem);
+    gap: clamp(0.45rem, 0.9dvh, 0.7rem);
+  }
+
+  .auth-page--signup .auth-social-icon {
+    width: clamp(1.5rem, 2.6dvh, 1.9rem);
+    height: clamp(1.5rem, 2.6dvh, 1.9rem);
+    flex-basis: clamp(1.5rem, 2.6dvh, 1.9rem);
+    border-radius: 0.3rem;
+    font-size: clamp(0.9rem, 1.6dvh, 1.15rem);
+  }
+
+  .auth-page--signup .auth-social-icon--tiktok {
+    font-size: clamp(0.75rem, 1.3dvh, 0.95rem);
+  }
+
+  .auth-page--signup .auth-social-name {
+    min-width: 0;
+    max-width: 42%;
+    flex: 0 0 auto;
+    overflow: hidden;
+    font-size: clamp(0.72rem, 1.15dvh, 0.85rem);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .auth-page--signup .auth-social-row > input {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 0;
+    height: clamp(1.55rem, 2.6dvh, 2rem);
+    font-size: clamp(0.62rem, 0.95dvh, 0.75rem);
+  }
+
+  .auth-page--signup .auth-terms {
+    font-size: clamp(0.66rem, 1.05dvh, 0.78rem);
+    line-height: 1.45;
+  }
+
+  .auth-page--signup .auth-content .kargo-primary {
+    min-height: clamp(2.6rem, 4.8dvh, 3.1rem);
+    border-radius: 0.65rem !important;
+    font-size: clamp(0.8rem, 1.25dvh, 0.95rem) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em;
+  }
+
+  .auth-page--signup .auth-signup-switch {
+    margin-top: clamp(0.55rem, 1.5dvh, 1rem);
+    font-size: clamp(0.7rem, 1.1dvh, 0.85rem);
+  }
+
+  .auth-page--signup .auth-legal-copy {
+    margin-top: 0.3rem;
+    font-size: clamp(0.6rem, 0.9dvh, 0.72rem);
+  }
+}
+
+/* Short desktop windows: pull the type scale down before resorting to a zoom
+   transform, so the submit button stays visible without page scrolling. */
+@media (min-width: 768px) and (max-height: 44rem) {
+  .auth-page--signup .auth-form-wrap {
+    zoom: 0.9;
+  }
+}
+
+@media (min-width: 768px) and (max-height: 37.5rem) {
+  .auth-page--signup .auth-form-wrap {
+    zoom: 0.8;
+  }
 }
