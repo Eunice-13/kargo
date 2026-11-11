@@ -51,9 +51,11 @@ function readFileAsDataUrl(file: File): Promise<string> {
 export default function SellerPaymentVerification({
   view = "history",
   refreshData,
+  sellerName,
 }: {
   view?: "pending" | "history"
   refreshData?: () => Promise<void>
+  sellerName?: string
 }) {
   const localPaymentMode =
     !isSupabaseConfigured ||
@@ -761,6 +763,7 @@ export default function SellerPaymentVerification({
       {reviewTarget && (
         <ReviewSubmissionModal
           reviewTarget={reviewTarget}
+          sellerName={sellerName}
           setReviewTarget={setReviewTarget}
           setVerifyItems={updateVerifyItems}
           setRejectTarget={setRejectTarget}

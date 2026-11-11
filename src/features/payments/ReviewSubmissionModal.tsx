@@ -1,10 +1,11 @@
 import type React from "react";
 import { useState } from "react";
-import { CreditCard, Check, X, ExternalLink, Image as ImageIcon } from "lucide-react";
+import { CreditCard, Check, X, ExternalLink, Image as ImageIcon, Printer } from "lucide-react";
 import { INDIGO, CREAM } from "@/constants/theme";
 import { Modal, Avatar, SecondaryBtn } from "@/components/shared";
 import type { VerifyItem } from "./verifyTypes";
 import { confirmPaymentCopy } from "./confirmPaymentWarning";
+import { printPaymentInvoice } from "./paymentInvoice";
 import { kargoApi } from "@/services";
 
 function ReceiptFileIcon({ size = 14, className }: { size?: number; className?: string }) {
@@ -39,8 +40,10 @@ export default function ReviewSubmissionModal({
   setRejectCustom,
   onNotifyBuyer,
   onMarkPaid,
+  sellerName = "My Shop",
 }: {
   reviewTarget: VerifyItem;
+  sellerName?: string;
   setReviewTarget: (v: VerifyItem | null) => void;
   setVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>>;
   setRejectTarget: (v: VerifyItem | null) => void;
@@ -366,6 +369,23 @@ export default function ReviewSubmissionModal({
             };
             return (
               <div className="kargo-modal-actions">
+                {reviewTarget.status === "Verified" && (
+                  <button
+                    onClick={() => printPaymentInvoice(reviewTarget, sellerName)}
+                    style={{
+                      ...btnBase,
+                      justifyContent: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: INDIGO,
+                      color: "#fff",
+                      borderColor: INDIGO,
+                    }}
+                  >
+                    <Printer size={13} aria-hidden="true" /> Print Invoice
+                  </button>
+                )}
                 {reviewTarget.status === "Pending" && (
                   <>
                     {isShort && (

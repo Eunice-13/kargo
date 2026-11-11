@@ -94,7 +94,13 @@ export default function Payments({
   }, [refreshData, role, user.id])
 
   if (role === "Seller")
-    return <SellerPaymentVerification view="history" refreshData={refreshData} />
+    return (
+      <SellerPaymentVerification
+        view="history"
+        refreshData={refreshData}
+        sellerName={user.shopName || user.name}
+      />
+    )
 
   return (
     <div className="p-6 space-y-6 payments-page mobile-data-page">
