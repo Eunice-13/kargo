@@ -56,6 +56,7 @@ import { kargoApi, errorMessage } from "@/services";
 import { claimBelongsToPendingPayments, claimIsPayable } from "./claimExpiry";
 
 import {
+  claimAmountDue,
   claimShortfall,
   displayClaimStatus,
   reconcileRejectedClaim,
@@ -2091,8 +2092,10 @@ export default function MyClaims({
                               </td>
                               <td>
                                 <div className="claims-to-pay-amount">
-                                  ₱{item.amount.toLocaleString()}
-                                  {deliveryRequest?.status === "shipping_fee_set" ? (
+                                  ₱{claimAmountDue(item).toLocaleString()}
+                                  {item.status === "Insufficient Payment" ? (
+                                    <span>Remaining balance</span>
+                                  ) : deliveryRequest?.status === "shipping_fee_set" ? (
                                     <span>Item subtotal · shared fee in request</span>
                                   ) : item.shippingState === "waiting_for_seller" ? (
                                     <span>Shipping fee pending</span>
@@ -2945,6 +2948,8 @@ export default function MyClaims({
           items={payableClaims.map((claim) => ({
             ...claim,
             orderId: String(claim.id),
+            // Repaying an insufficient claim owes only the remaining shortfall.
+            amount: claimAmountDue(claim),
           }))}
           contactPrefill={user.fb || ""}
           onSubmit={async (item, method, refNo, receipt, details) => {
@@ -2976,7 +2981,7 @@ export default function MyClaims({
 
             qty: payTarget.qty,
 
-            amount: payTarget.amount,
+            amount: claimAmountDue(payTarget),
 
             hours: payTarget.hours,
 

@@ -21,6 +21,14 @@ export function claimShortfall(claim: Pick<ClaimRow, "shortfallAmount">) {
     : undefined
 }
 
+// What the buyer still owes. An insufficient payment leaves only its stored
+// shortfall payable; otherwise the full order amount is due.
+export function claimAmountDue(
+  claim: Pick<ClaimRow, "amount" | "shortfallAmount">,
+) {
+  return claimShortfall(claim) ?? claim.amount
+}
+
 export function sellerOrderReceivedStatus(
   claimStatus: ClaimStatus,
   paymentStatus?: SellerPaymentReviewStatus,

@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { reconcileRejectedClaim } from "../src/features/claims/claimPaymentState.ts"
+import { claimAmountDue, reconcileRejectedClaim } from "../src/features/claims/claimPaymentState.ts"
 import type { ClaimRow, PayHistRow } from "../src/types/index.ts"
 
 const claim: ClaimRow = {
@@ -65,4 +65,15 @@ test("a newer resubmission remains awaiting verification", () => {
   ])
 
   assert.equal(result.status, "Awaiting Verification")
+})
+
+test("an insufficient claim owes only its remaining shortfall", () => {
+  const insufficient: ClaimRow = {
+    ...claim,
+    status: "Insufficient Payment",
+    shortfallAmount: 1200,
+  }
+
+  assert.equal(claimAmountDue(insufficient), 1200)
+  assert.equal(claimAmountDue(claim), 4800)
 })

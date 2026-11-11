@@ -1,9 +1,12 @@
 import type { ClaimRow, ClaimStatus } from "@/types";
 import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
 import { combinedRequestStatus } from "@/features/combined-delivery";
+import { claimAmountDue } from "./claimPaymentState";
 
-export function getToPayTotal(claims: Pick<ClaimRow, "amount">[]) {
-  return claims.reduce((sum, claim) => sum + claim.amount, 0);
+export function getToPayTotal(
+  claims: Pick<ClaimRow, "amount" | "shortfallAmount">[],
+) {
+  return claims.reduce((sum, claim) => sum + claimAmountDue(claim), 0);
 }
 
 export type CombinedClaimListRow = {
