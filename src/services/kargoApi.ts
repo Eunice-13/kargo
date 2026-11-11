@@ -1555,193 +1555,179 @@ export async function claimProduct(
 
 export async function createBatch(batch: {
   title: string;
-
   category: string;
-
   startsOn: string;
-
   endsOn: string;
-
   reservationHours: number;
-
   notes?: string;
-
   coverFile?: File;
-
   galleryFiles?: File[];
-
   groupOrdersEnabled?: boolean;
-
   groupDiscountType?: GroupDiscountType;
-
   groupDiscountValue?: number;
-
   groupDiscountMinSubtotal?: number;
-
   products: Array<{
     name: string;
-
     basePrice: number;
-
     markup: number;
-
     quantity: number;
-
     limitPerUser?: number;
-
     waitlistLimit?: number;
-
     imageFile?: File;
-
     sellingUnit?: SellingUnit;
-
     piecesPerBox?: number;
   }>;
 }) {
   const client = requireSupabase();
-
   const { data: auth } = await client.auth.getUser();
-
   if (!auth.user) throw new Error("Authentication required");
+  const userId = auth.user.id;
 
   const { data: created, error } = await client
-
     .from("batches")
-
     .insert({
-      seller_id: auth.user.id,
-
+      seller_id: userId,
       title: batch.title,
-
       status: "live",
-
       starts_on: batch.startsOn,
-
       ends_on: batch.endsOn,
-
       category: batch.category,
-
       reservation_hours: batch.reservationHours,
-
       notes: batch.notes ?? null,
-
       group_orders_enabled: Boolean(batch.groupOrdersEnabled),
-
       group_discount_type:
         batch.groupOrdersEnabled && batch.groupDiscountType ? batch.groupDiscountType : null,
-
       group_discount_value:
         batch.groupOrdersEnabled && batch.groupDiscountType
           ? (batch.groupDiscountValue ?? null)
           : null,
-
       group_discount_min_subtotal:
         batch.groupOrdersEnabled && batch.groupDiscountType
           ? (batch.groupDiscountMinSubtotal ?? null)
           : null,
     })
-
     .select("id")
-
     .single();
 
   if (error) throw error;
+  const batchId = created.id as string;
 
-  let coverPath: string | null = null;
-  if (batch.coverFile) {
-    coverPath = await uploadBatchMediaFile(
-      client,
-      auth.user.id,
-      created.id,
-      "cover",
-      batch.coverFile,
+  // The batch row exists before its photos and products do. If any later step
+  // fails, remove the row and everything uploaded for it, so pressing "Create
+  // Batch" again cannot leave behind empty live batches with the same title.
+  const uploadedPaths: string[] = [];
+  const upload = async (slot: string, file: File) => {
+    const path = await uploadBatchMediaFile(client, userId, batchId, slot, file);
+    uploadedPaths.push(path);
+    return path;
+  };
+
+  try {
+    let coverPath: string | null = null;
+    if (batch.coverFile) {
+      coverPath = await upload("cover", batch.coverFile);
+
+      const { error: coverError } = await client
+        .from("batches")
+        .update({ cover_path: coverPath })
+        .eq("id", batchId);
+
+      if (coverError) throw coverError;
+    }
+
+    const uploadedGalleryPaths = await allOrThrow(
+      (batch.galleryFiles ?? []).map((file, index) => upload(`gallery-${index + 1}`, file)),
     );
 
-    const { error: coverError } = await client
+    const productImagePaths = await allOrThrow(
+      batch.products.map((product, index) =>
+        product.imageFile ? upload(`product-${index + 1}`, product.imageFile) : Promise.resolve(null),
+      ),
+    );
+
+    const { data: createdProducts, error: productsError } = await client
+      .from("batch_products")
+      .insert(
+        batch.products.map((product, index) => ({
+          batch_id: batchId,
+          name: product.name,
+          base_price: product.basePrice,
+          markup: product.markup,
+          quantity_total: product.quantity,
+          image_path: productImagePaths[index],
+          selling_unit: product.sellingUnit ?? "piece",
+          pieces_per_box: product.sellingUnit === "box" ? (product.piecesPerBox ?? null) : null,
+          limit_per_user:
+            product.limitPerUser && product.limitPerUser > 0 ? product.limitPerUser : null,
+          waitlist_limit:
+            product.waitlistLimit != null && Number(product.waitlistLimit) > 0
+              ? Number(product.waitlistLimit)
+              : null,
+        })),
+      )
+      .select("id");
+
+    if (productsError) throw productsError;
+
+    // The catalog gallery always leads with the batch photo, then the item
+    // photos in product order. Seller-added gallery photos are extras after them.
+    const galleryPaths = [
+      ...(coverPath ? [coverPath] : []),
+      ...productImagePaths.filter((path): path is string => Boolean(path)),
+      ...uploadedGalleryPaths,
+    ].filter((path, index, all) => all.indexOf(path) === index);
+
+    const { error: galleryError } = await client
       .from("batches")
-      .update({ cover_path: coverPath })
-      .eq("id", created.id);
+      .update({ gallery_paths: galleryPaths })
+      .eq("id", batchId);
+    if (galleryError) throw galleryError;
 
-    if (coverError) throw coverError;
+    return {
+      id: batchId,
+      coverImage: batchMediaUrl(coverPath),
+      galleryImages: galleryPaths
+        .map((path) => batchMediaUrl(path))
+        .filter((url): url is string => Boolean(url)),
+      productImages: (createdProducts ?? []).map((_, index) =>
+        batchMediaUrl(productImagePaths[index]),
+      ),
+    };
+  } catch (failure) {
+    await discardUnfinishedBatch(client, batchId, uploadedPaths);
+    throw failure;
   }
+}
 
-  const uploadedGalleryPaths = await Promise.all(
-    (batch.galleryFiles ?? []).map((file, index) =>
-      uploadBatchMediaFile(client, auth.user.id, created.id, `gallery-${index + 1}`, file),
-    ),
-  );
+// Waits for every task to settle before failing, so no upload is still running
+// (and untracked) when the caller starts cleaning up.
+async function allOrThrow<T>(tasks: Promise<T>[]): Promise<T[]> {
+  const results = await Promise.allSettled(tasks);
+  const failed = results.find((r): r is PromiseRejectedResult => r.status === "rejected");
+  if (failed) throw failed.reason;
+  return results.map((r) => (r as PromiseFulfilledResult<T>).value);
+}
 
-  const productImagePaths = await Promise.all(
-    batch.products.map((product, index) =>
-      product.imageFile
-        ? uploadBatchMediaFile(
-            client,
-            auth.user.id,
-            created.id,
-            `product-${index + 1}`,
-            product.imageFile,
-          )
-        : Promise.resolve(null),
-    ),
-  );
-
-  const { data: createdProducts, error: productsError } = await client
-    .from("batch_products")
-    .insert(
-      batch.products.map((product, index) => ({
-        batch_id: created.id,
-
-        name: product.name,
-
-        base_price: product.basePrice,
-
-        markup: product.markup,
-
-        quantity_total: product.quantity,
-
-        image_path: productImagePaths[index],
-
-        selling_unit: product.sellingUnit ?? "piece",
-
-        pieces_per_box: product.sellingUnit === "box" ? (product.piecesPerBox ?? null) : null,
-
-        limit_per_user:
-          product.limitPerUser && product.limitPerUser > 0 ? product.limitPerUser : null,
-
-        waitlist_limit:
-          product.waitlistLimit != null && Number(product.waitlistLimit) > 0
-            ? Number(product.waitlistLimit)
-            : null,
-      })),
-    )
-    .select("id");
-
-  if (productsError) throw productsError;
-
-  // The catalog gallery always leads with the batch photo, then the item
-  // photos in product order. Seller-added gallery photos are extras after them.
-  const galleryPaths = [
-    ...(coverPath ? [coverPath] : []),
-    ...productImagePaths.filter((path): path is string => Boolean(path)),
-    ...uploadedGalleryPaths,
-  ].filter((path, index, all) => all.indexOf(path) === index);
-
-  const { error: galleryError } = await client
+// Best effort: the caller needs to see the original error, not a cleanup error.
+async function discardUnfinishedBatch(
+  client: ReturnType<typeof requireSupabase>,
+  batchId: string,
+  uploadedPaths: string[],
+) {
+  if (uploadedPaths.length > 0) {
+    await client.storage
+      .from(BATCH_MEDIA_BUCKET)
+      .remove(uploadedPaths)
+      .catch(() => undefined);
+  }
+  await client
     .from("batches")
-    .update({ gallery_paths: galleryPaths })
-    .eq("id", created.id);
-  if (galleryError) throw galleryError;
-
-  return {
-    id: created.id as string,
-    coverImage: batchMediaUrl(coverPath),
-    galleryImages: galleryPaths
-      .map((path) => batchMediaUrl(path))
-      .filter((url): url is string => Boolean(url)),
-    productImages: (createdProducts ?? []).map((_, index) =>
-      batchMediaUrl(productImagePaths[index]),
-    ),
-  };
+    .delete()
+    .eq("id", batchId)
+    .then(
+      () => undefined,
+      () => undefined,
+    );
 }
 
 const BATCH_MEDIA_BUCKET = "batch-media";

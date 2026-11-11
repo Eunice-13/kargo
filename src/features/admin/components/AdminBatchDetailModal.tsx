@@ -28,7 +28,6 @@ function DesktopBody({ data }: { data: AdminBatchDetail }) {
   const ModIcon = MOD_ICON[data.moderationStatus] ?? Eye;
   const stats = [
     { value: String(data.orderCount), label: "Orders" },
-    { value: peso(data.confirmedGmv), label: "Confirmed GMV" },
     { value: String(data.products.length), label: "Products" },
   ];
   return (
@@ -79,7 +78,7 @@ function DesktopBody({ data }: { data: AdminBatchDetail }) {
       <div className="admin-batch__main">
         <section aria-label="Batch summary">
           <p className="admin-account__eyebrow">Batch summary</p>
-          <div className="admin-account__stats" style={{ ["--stat-cols" as string]: 3 }}>
+          <div className="admin-account__stats" style={{ ["--stat-cols" as string]: stats.length }}>
             {stats.map((stat) => (
               <div key={stat.label}>
                 <strong>{stat.value}</strong>
@@ -277,10 +276,6 @@ export default function AdminBatchDetailModal({
                 <div>
                   <strong>{data.orderCount}</strong>
                   <span>Orders</span>
-                </div>
-                <div>
-                  <strong>{peso(data.confirmedGmv)}</strong>
-                  <span>Confirmed GMV</span>
                 </div>
                 <div>
                   <strong>{data.products.length}</strong>

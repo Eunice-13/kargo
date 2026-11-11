@@ -193,12 +193,17 @@ export type AdminOrderDetail = {
   paymentConfirmedAt: string | null;
   completedAt: string | null;
   createdAt: string;
+  /** Total the buyer must pay (item total + shipping). */
+  amountDue?: number;
+  /** Sum of verified payments on the order; amountDue - amountPaid is what is still owed. */
+  amountPaid?: number;
   payments: {
     id: string;
     status: string;
     method: string;
     amount: number;
     referenceNumber: string | null;
+    receiptPath: string | null;
     submittedAt: string;
   }[];
 };
@@ -243,6 +248,35 @@ export type AdminCombinedPaymentRow = {
   status: string;
   createdAt: string;
   memberCount: number;
+};
+
+export type AdminCombinedPaymentDetail = {
+  available: boolean;
+  id: string;
+  status: string;
+  shipping_fee: number | null;
+  createdAt?: string;
+  created_at?: string;
+  buyerName: string | null;
+  sellerName: string | null;
+  batchName: string | null;
+  destination: { pin_lat: number; pin_lng: number; address_text: string } | null;
+  payment: {
+    items_subtotal: number;
+    shipping_fee: number;
+    total: number;
+    deadline: string;
+    status: string;
+  } | null;
+  members: Array<{
+    order_id: string;
+    order_number: string;
+    item_subtotal: number;
+    released_at: string | null;
+    quantity: number;
+    product: string;
+    status: string;
+  }>;
 };
 
 export type AdminCombinedListResult = {

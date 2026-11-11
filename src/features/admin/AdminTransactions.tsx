@@ -8,6 +8,7 @@ import { consumeAdminIntent } from "@/state/navIntent";
 import type { AdminCombinedPaymentRow, AdminOrderRow, AdminPaymentRow } from "./adminTypes";
 
 import { useAdminResource } from "./useAdminResource";
+import { appendPage } from "./appendPage";
 import { ORDER_STATUS_OPTIONS, toneForStatus } from "@/constants/admin";
 import {
   AdminPageHeader,
@@ -21,6 +22,7 @@ import {
 import { AdminErrorState } from "./components/AdminStates";
 import AdminOrderDetailModal from "./components/AdminOrderDetailModal";
 import AdminPaymentDetailModal from "./components/AdminPaymentDetailModal";
+import AdminCombinedPaymentModal from "./components/AdminCombinedPaymentModal";
 
 type Section = "Orders" | "Payments" | "Combined";
 const PAGE = 25;
@@ -186,7 +188,7 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
     [filters.search, filters.status, filters.days, offset],
   );
   useEffect(() => {
-    if (data) setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    if (data) setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;
@@ -306,18 +308,6 @@ function OrdersSection({ initialStatus }: { initialStatus: string }) {
                     <div className="admin-ocard__num">{o.orderNumber}</div>
                     <div className="admin-ocard__product">{o.product}</div>
                   </div>
-                  <span className="admin-ucard__toggle" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 16 16">
-                      <path
-                        d="M6 3l5 5-5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
                 </div>
                 <div className="admin-ocard__meta">
                   <AdminBadge tone={toneForStatus(o.status)} label={o.status.replace(/_/g, " ")} />
@@ -495,7 +485,7 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
     [filters.search, filters.status, filters.days, offset],
   );
   useEffect(() => {
-    if (data) setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    if (data) setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;
@@ -617,18 +607,6 @@ function PaymentsSection({ initialStatus }: { initialStatus: string }) {
                       {p.referenceNumber ? ` · ${p.referenceNumber}` : ""}
                     </div>
                   </div>
-                  <span className="admin-ucard__toggle" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 16 16">
-                      <path
-                        d="M6 3l5 5-5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
                 </div>
                 <div className="admin-ocard__meta">
                   <span className="admin-ocard__badges">
@@ -798,6 +776,7 @@ function CombinedSection() {
   const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminCombinedPaymentRow[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const filters = useMemo(() => ({ search: search.trim() || undefined }), [search]);
   useEffect(() => {
@@ -810,7 +789,7 @@ function CombinedSection() {
     [filters.search, offset],
   );
   useEffect(() => {
-    if (data) setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    if (data) setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   if (!loading && data && !data.available) {
@@ -850,7 +829,19 @@ function CombinedSection() {
         <Card className="!p-0 overflow-hidden">
           <div className="admin-orders-cards">
             {rows.map((c) => (
-              <article key={c.id} className="admin-ocard admin-ocard--static">
+              <article
+                key={c.id}
+                className="admin-ocard"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelected(c.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelected(c.id);
+                  }
+                }}
+              >
                 <div className="admin-ocard__top">
                   <span className="admin-ocard__icon" aria-hidden="true">
                     <Layers size={22} />
@@ -900,7 +891,19 @@ function CombinedSection() {
               </thead>
               <tbody>
                 {rows.map((c) => (
-                  <tr key={c.id} style={{ borderTop: "1px solid #F3F4F6" }}>
+                  <tr
+                    key={c.id}
+                    onClick={() => setSelected(c.id)}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelected(c.id);
+                      }
+                    }}
+                    style={{ borderTop: "1px solid #F3F4F6", cursor: "pointer" }}
+                    className="admin-clickable-row"
+                  >
                     <td
                       data-label="Group"
                       style={{
@@ -964,6 +967,10 @@ function CombinedSection() {
             onClick={() => setOffset(rows.length)}
           />
         </Card>
+      )}
+
+      {selected && (
+        <AdminCombinedPaymentModal groupId={selected} onClose={() => setSelected(null)} />
       )}
     </>
   );

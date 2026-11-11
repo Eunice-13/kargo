@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { ImageUp, Plus, X } from "lucide-react"
 
 import type { BatchType, GroupDiscountType, SellingUnit } from "@/types"
@@ -90,6 +90,9 @@ export default function NewBatchModal({
   const [discountMinimum, setDiscountMinimum] = useState("")
 
   const [loading, setLoading] = useState(false)
+  // State updates land after a re-render, so a fast double-click could start a
+  // second creation. The ref flips immediately.
+  const submittingRef = useRef(false)
 
   const [error, setError] = useState("")
 
@@ -275,7 +278,12 @@ export default function NewBatchModal({
       return
     }
 
+    if (submittingRef.current) return
+
+    submittingRef.current = true
+
     setError("")
+
 
     setLoading(true)
 
@@ -427,10 +435,14 @@ export default function NewBatchModal({
         reserveHours,
       })
 
+      submittingRef.current = false
+
       setLoading(false)
 
       onClose()
     } catch (caught) {
+      submittingRef.current = false
+
       setLoading(false)
 
       const msg =

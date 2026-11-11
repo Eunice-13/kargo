@@ -106,6 +106,8 @@ export default function Modal({
   showTitleIcon = true,
   className = "",
   overlayClassName = "",
+  titleAside,
+  headerAside,
 }: {
   title: string
   onClose: () => void
@@ -118,6 +120,10 @@ export default function Modal({
   showTitleIcon?: boolean
   className?: string
   overlayClassName?: string
+  /** Extra content right after the title, e.g. a status pill. */
+  titleAside?: React.ReactNode
+  /** Extra content on the right of the header, before the close button. */
+  headerAside?: React.ReactNode
 }) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
@@ -235,20 +241,35 @@ export default function Modal({
                   Dialog
                 </span>
               )}
+              {titleAside}
             </div>
           ) : (
             <span id={titleId} className="sr-only">
               {title || "Dialog"}
             </span>
           )}
-          <button
-            type="button"
-            className="kargo-modal__close"
-            aria-label={title ? `Close ${title}` : "Close dialog"}
-            onClick={requestClose}
-          >
-            <X size={18} aria-hidden="true" />
-          </button>
+          {headerAside ? (
+            <div className="kargo-modal__header-end">
+              {headerAside}
+              <button
+                type="button"
+                className="kargo-modal__close"
+                aria-label={title ? `Close ${title}` : "Close dialog"}
+                onClick={requestClose}
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="kargo-modal__close"
+              aria-label={title ? `Close ${title}` : "Close dialog"}
+              onClick={requestClose}
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+          )}
         </header>
         <div className="kargo-modal__body">
           <div className="kargo-modal__content">{children}</div>

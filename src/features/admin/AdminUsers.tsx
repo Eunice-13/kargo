@@ -8,6 +8,7 @@ import { consumeAdminIntent } from "@/state/navIntent";
 import type { AdminUserFilters, AdminUserRow } from "./adminTypes";
 
 import { useAdminResource } from "./useAdminResource";
+import { appendPage } from "./appendPage";
 import {
   AdminPageHeader,
   AdminFilterBar,
@@ -61,7 +62,7 @@ export default function AdminUsers() {
   // Append pages; replace on first page.
   useEffect(() => {
     if (!data) return;
-    setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;
@@ -180,22 +181,12 @@ export default function AdminUsers() {
                     <div className="admin-ucard__name">{u.name || "—"}</div>
                     <div className="admin-ucard__email">{u.email ?? u.id}</div>
                   </div>
-                  <div className="admin-ucard__gmv">
-                    <strong>{u.gmv30 > 0 ? peso(u.gmv30) : "—"}</strong>
-                    <span>{u.gmvRole === "seller" ? "GMV · 30d" : "Spend · 30d"}</span>
-                  </div>
-                  <span className="admin-ucard__toggle" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 16 16">
-                      <path
-                        d="M6 3l5 5-5 5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
+                  {u.gmvRole === "buyer" && (
+                    <div className="admin-ucard__gmv">
+                      <strong>{u.gmv30 > 0 ? peso(u.gmv30) : "—"}</strong>
+                      <span>Spend · 30d</span>
+                    </div>
+                  )}
                 </div>
                 <div className="admin-ucard__meta">
                   <div className="admin-ucard__badges">
@@ -247,7 +238,7 @@ export default function AdminUsers() {
                     "Status",
                     "Last sign-in",
                     "Orders",
-                    "Spend / GMV 30d",
+                    "Spend 30d",
                     "",
                   ].map((h) => (
                     <th
@@ -336,7 +327,7 @@ export default function AdminUsers() {
                       {u.orders}
                     </td>
                     <td
-                      data-label="Spend / GMV 30d"
+                      data-label="Spend 30d"
                       style={{
                         padding: "10px 14px",
                         fontSize: 13,
@@ -344,7 +335,7 @@ export default function AdminUsers() {
                         color: "var(--kargo-ink)",
                       }}
                     >
-                      {u.gmv30 > 0 ? peso(u.gmv30) : "—"}
+                      {u.gmvRole === "buyer" && u.gmv30 > 0 ? peso(u.gmv30) : "—"}
                     </td>
                     <td
                       className="admin-card-detail-cell"

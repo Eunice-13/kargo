@@ -40,7 +40,6 @@ function DesktopBody({
   const stats = seller
     ? [
         { value: String(data.sellerOrders), label: "Orders · all-time" },
-        { value: peso(data.sellerGmv30), label: "GMV · 30d" },
         { value: String(data.sellerBuyers), label: "Buyers · all-time" },
         { value: String(data.liveBatches), label: "Live batches" },
       ]
@@ -285,15 +284,17 @@ export default function AdminUserDetailModal({
               </div>
             )}
 
-            <div className="admin-user-stats">
+            <div className={`admin-user-stats${data.canSell ? " admin-user-stats--two" : ""}`}>
               <div>
                 <strong>{data.canSell ? data.sellerOrders : data.buyerOrders}</strong>
                 <span>Orders · all-time</span>
               </div>
-              <div>
-                <strong>{peso(data.canSell ? data.sellerGmv30 : data.buyerSpend30)}</strong>
-                <span>{data.canSell ? "GMV · 30d" : "Spend · 30d"}</span>
-              </div>
+              {!data.canSell && (
+                <div>
+                  <strong>{peso(data.buyerSpend30)}</strong>
+                  <span>Spend · 30d</span>
+                </div>
+              )}
               <div>
                 <strong>{data.lastSignInAt ? fmtDate(data.lastSignInAt) : "Never"}</strong>
                 <span>Last sign-in</span>

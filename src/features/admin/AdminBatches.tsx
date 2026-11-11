@@ -8,6 +8,7 @@ import type { AdminBatchFilters, AdminBatchRow } from "./adminTypes";
 
 import { toneForStatus } from "@/constants/admin";
 import { useAdminResource } from "./useAdminResource";
+import { appendPage } from "./appendPage";
 import {
   AdminPageHeader,
   AdminFilterBar,
@@ -29,7 +30,6 @@ export default function AdminBatches() {
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<AdminBatchRow[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     const intent = consumeAdminIntent();
@@ -59,7 +59,7 @@ export default function AdminBatches() {
 
   useEffect(() => {
     if (!data) return;
-    setRows((prev) => (offset === 0 ? data.rows : [...prev, ...data.rows]));
+    setRows((prev) => appendPage(prev, data.rows, offset));
   }, [data, offset]);
 
   const total = data?.total ?? 0;
@@ -149,7 +149,6 @@ export default function AdminBatches() {
         <Card className="!p-0 overflow-hidden">
           <div className="admin-batches-cards">
             {rows.map((b) => {
-              const open = expanded === b.id;
               const pct = b.totalQty > 0 ? Math.min(100, (b.claimedQty / b.totalQty) * 100) : 0;
               const claimed = (
                 <span className="admin-bcard__claimed">
@@ -162,7 +161,19 @@ export default function AdminBatches() {
                 </span>
               );
               return (
-                <article key={b.id} className={`admin-bcard${open ? " is-open" : ""}`}>
+                <article
+                  key={b.id}
+                  className="admin-bcard"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelected(b.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelected(b.id);
+                    }
+                  }}
+                >
                   <div className="admin-bcard__top">
                     {b.coverPath ? (
                       <BatchMedia
@@ -190,78 +201,18 @@ export default function AdminBatches() {
                         </span>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="admin-ucard__toggle"
-                      aria-expanded={open}
-                      aria-label={open ? `Collapse ${b.title}` : `Expand ${b.title}`}
-                      onClick={() => setExpanded(open ? null : b.id)}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                        <path
-                          d={open ? "M3 10l5-5 5 5" : "M3 6l5 5 5-5"}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
                   </div>
 
-                  {!open && (
-                    <div className="admin-bcard__meta">
-                      <div className="admin-bcard__badges">
-                        <AdminBadge tone={toneForStatus(b.status)} label={b.status} />
-                        <AdminBadge
-                          tone={MOD_TONE[b.moderationStatus]}
-                          label={b.moderationStatus}
-                        />
-                      </div>
-                      <span className="admin-bcard__summary">
-                        {claimed}
-                        <span>claimed</span>
-                      </span>
+                  <div className="admin-bcard__meta">
+                    <div className="admin-bcard__badges">
+                      <AdminBadge tone={toneForStatus(b.status)} label={b.status} />
+                      <AdminBadge tone={MOD_TONE[b.moderationStatus]} label={b.moderationStatus} />
                     </div>
-                  )}
-
-                  {open && (
-                    <div className="admin-bcard__body">
-                      <dl className="admin-bcard__panel">
-                        <div>
-                          <dt>Category</dt>
-                          <dd>{b.category}</dd>
-                        </div>
-                        <div>
-                          <dt>Claimed</dt>
-                          <dd>{claimed}</dd>
-                        </div>
-                        <div>
-                          <dt>Status</dt>
-                          <dd>
-                            <AdminBadge tone={toneForStatus(b.status)} label={b.status} />
-                          </dd>
-                        </div>
-                        <div>
-                          <dt>Moderation</dt>
-                          <dd>
-                            <AdminBadge
-                              tone={MOD_TONE[b.moderationStatus]}
-                              label={b.moderationStatus}
-                            />
-                          </dd>
-                        </div>
-                      </dl>
-                      <button
-                        type="button"
-                        className="admin-ucard__details"
-                        onClick={() => setSelected(b.id)}
-                      >
-                        View details ›
-                      </button>
-                    </div>
-                  )}
+                    <span className="admin-bcard__summary">
+                      {claimed}
+                      <span>claimed</span>
+                    </span>
+                  </div>
                 </article>
               );
             })}
