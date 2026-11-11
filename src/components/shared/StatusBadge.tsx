@@ -14,7 +14,7 @@ export default function StatusBadge({ status }: { status: PaymentHistoryStatus }
         style={{ background: c.dot }}
         className="w-1.5 h-1.5 rounded-full"
       />
-      {status}
+      <span className="status-badge__label">{status}</span>
     </span>
   )
 }

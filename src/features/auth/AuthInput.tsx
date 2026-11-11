@@ -8,6 +8,7 @@ export default function AuthInput({
   onChange,
   error,
   placeholder,
+  required = false,
 }: {
   label: string
   type?: string
@@ -15,6 +16,7 @@ export default function AuthInput({
   onChange: (v: string) => void
   error?: string
   placeholder?: string
+  required?: boolean
 }) {
   const [showPassword, setShowPassword] = useState(false)
   const isPassword = type === "password"
@@ -23,7 +25,10 @@ export default function AuthInput({
 
   return (
     <div className={`auth-field${error ? " auth-field--error" : ""}`}>
-      <label>{label}</label>
+      <label>
+        {label}
+        {required && <span className="auth-required-mark" aria-hidden="true">*</span>}
+      </label>
       <div className="auth-input-shell">
         <input
           type={isPassword && showPassword ? "text" : type}

@@ -4,6 +4,7 @@ import { deliveryFailureMessage, unavailableDeliveryBackend } from "./availabili
 import { useCallback, useEffect, useRef, useState } from "react";
 import Modal from "@/components/shared/Modal";
 import Card from "@/components/shared/Card";
+import ProductThumb from "@/components/shared/ProductThumb";
 import { recordKeys } from "@/components/shared/useRecordFocus";
 import PrimaryBtn from "@/components/shared/PrimaryBtn";
 import SecondaryBtn from "@/components/shared/SecondaryBtn";
@@ -47,12 +48,14 @@ export function SellerDeliveryDialog({
   onUpdated,
   actionsDisabled = false,
   onBackendUnavailable,
+  imageForOrder,
 }: {
   request: SellerDeliveryRequest;
   onClose: () => void;
   onUpdated: (request: SellerDeliveryRequest) => void;
   actionsDisabled?: boolean;
   onBackendUnavailable?: (failure: unknown) => void;
+  imageForOrder?: (id: string) => string | undefined;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -118,7 +121,11 @@ export function SellerDeliveryDialog({
         <ul className="divide-y divide-[var(--kargo-line)]">
           {request.members.map((member) => (
             <li key={member.order_id} className="flex min-w-0 justify-between gap-3 py-2 text-xs">
-              <div className="min-w-0">
+              <ProductThumb
+                name={member.order?.batch_products?.name || "Reserved product"}
+                imageUrl={imageForOrder?.(member.order_id)}
+              />
+              <div className="min-w-0 flex-1">
                 <p className="break-words font-semibold">
                   {member.order?.batch_products?.name || "Reserved product"}
                 </p>
@@ -255,11 +262,13 @@ export function SellerDeliveryDialog({
 // request cards live in a modal so the page itself stays about orders.
 export default function SellerCombinedDelivery({
   sellerId,
+  imageForOrder,
   onRecovered,
   focusRequestId,
   onFocusHandled,
 }: {
   sellerId: string | undefined;
+  imageForOrder?: (id: string) => string | undefined;
   onRecovered?: () => Promise<void>;
   // A notification points at one request: open the list so its card is on
   // screen and can be highlighted.
@@ -412,6 +421,7 @@ export default function SellerCombinedDelivery({
         <SellerDeliveryDialog
           key={selected.id}
           request={selected}
+          imageForOrder={imageForOrder}
           actionsDisabled={loading}
           onBackendUnavailable={(failure) => {
             setUnavailable(true);

@@ -169,12 +169,7 @@ function DesktopBody({
   );
 }
 
-type PendingAction =
-  | { kind: "suspend" }
-  | { kind: "restore" }
-  | { kind: "grant" }
-  | { kind: "revoke" }
-  | null;
+type PendingAction = { kind: "suspend" } | { kind: "restore" } | { kind: "revoke" } | null;
 
 export default function AdminUserDetailModal({
   userId,
@@ -231,21 +226,13 @@ export default function AdminUserDetailModal({
                   Restore account
                 </AdminActionButton>
               )}
-              {data.canSell ? (
+              {data.canSell && (
                 <AdminActionButton
                   action="revokeSeller"
                   size="sm"
                   onClick={() => setPending({ kind: "revoke" })}
                 >
                   Revoke seller access
-                </AdminActionButton>
-              ) : (
-                <AdminActionButton
-                  action="grantSeller"
-                  size="sm"
-                  onClick={() => setPending({ kind: "grant" })}
-                >
-                  Grant seller access
                 </AdminActionButton>
               )}
             </div>
@@ -411,36 +398,28 @@ export default function AdminUserDetailModal({
               ? "Suspend account"
               : pending.kind === "restore"
                 ? "Restore account"
-                : pending.kind === "grant"
-                  ? "Grant seller access"
-                  : "Revoke seller access"
+                : "Revoke seller access"
           }
           consequence={
             pending.kind === "suspend"
               ? "The account will be locked out of KARGO immediately and shown the suspended screen. They keep their data."
               : pending.kind === "restore"
                 ? "The account regains access to KARGO."
-                : pending.kind === "grant"
-                  ? "The account will be able to publish batches and sell. Reflected at their next sign-in."
-                  : "The account loses the ability to publish batches and sell. Existing orders are unaffected."
+                : "The account loses the ability to publish batches and sell. Existing orders are unaffected."
           }
           confirmLabel={
             pending.kind === "suspend"
               ? "Suspend"
               : pending.kind === "restore"
                 ? "Restore"
-                : pending.kind === "grant"
-                  ? "Grant access"
-                  : "Revoke access"
+                : "Revoke access"
           }
           action={
             pending.kind === "suspend"
               ? "suspend"
               : pending.kind === "restore"
                 ? "restoreAccount"
-                : pending.kind === "grant"
-                  ? "grantSeller"
-                  : "revokeSeller"
+                : "revokeSeller"
           }
           // Suspend/revoke are the destructive ones — require typing the name.
           confirmWord={
@@ -451,8 +430,6 @@ export default function AdminUserDetailModal({
               await adminApi.setAccountStatus(userId, "suspended", reason);
             } else if (pending.kind === "restore") {
               await adminApi.setAccountStatus(userId, "active", reason);
-            } else if (pending.kind === "grant") {
-              await adminApi.setSellerAccess(userId, true, reason);
             } else {
               await adminApi.setSellerAccess(userId, false, reason);
             }

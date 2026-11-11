@@ -25,6 +25,17 @@ before(async () => {
 after(async () => {
   await server?.close();
 });
+test("seller extension loader reads deadlines and preserves expired orders for the Expired section", async () => {
+  const requests = fixture.configureAppDataFixture("Seller");
+  await api.loadSellerExtensionRequests();
+  const orders = requests.find((request) => request.pathname.endsWith("/orders"));
+  assert.equal(orders.searchParams.get("seller_id"), "eq.user");
+  assert.equal(orders.searchParams.get("extension_status"), "eq.pending");
+  assert.equal(orders.searchParams.get("status"), null);
+  for (const field of ["status", "reservation_expires_at", "deadline_paused_at", "shipping_state"]) {
+    assert.ok(orders.searchParams.get("select").split(",").includes(field));
+  }
+});
 for (const role of ["Buyer", "Seller"]) {
   for (const error of [
     undefined,

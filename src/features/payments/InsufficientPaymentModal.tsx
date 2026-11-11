@@ -20,8 +20,12 @@ export default function InsufficientPaymentModal({
   onConfirm?: (paidAmt: number, shortAmt: number) => void
 }) {
   const paidAmt = Number(insuffAmtPaid) || 0
+  const submittedAmt = Number(insuffTarget.amountPaid) || insuffTarget.amount
   const shortAmt = insuffTarget.amount - paidAmt
-  const isValid = paidAmt > 0 && shortAmt > 0
+  // The seller is correcting the received amount downward; it cannot exceed
+  // what the buyer submitted. The review RPC enforces the same rule.
+  const exceedsSubmitted = paidAmt > submittedAmt
+  const isValid = paidAmt > 0 && shortAmt > 0 && !exceedsSubmitted
   return (
     <Modal
       title="Insufficient Payment"

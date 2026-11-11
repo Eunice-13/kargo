@@ -30,6 +30,8 @@ export default function ItemClaimModal({
 
   product,
 
+  remainingBuyerLimit,
+
   onConfirm,
 
   onClose,
@@ -53,6 +55,8 @@ export default function ItemClaimModal({
 
     limitPerUser?: number
   }
+
+  remainingBuyerLimit?: number
 
   onConfirm: (reservation: ClaimReservationInput) => void | Promise<void>
   onClose: () => void
@@ -100,7 +104,7 @@ export default function ItemClaimModal({
   const perUser =
     product.limitPerUser && product.limitPerUser > 0 ? product.limitPerUser : 5
 
-  const maxQty = Math.max(1, Math.min(left, perUser))
+  const maxQty = Math.max(1, Math.min(left, perUser, remainingBuyerLimit ?? perUser))
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -152,11 +156,18 @@ export default function ItemClaimModal({
     (!shippingApplies ||
       (hasLocation && !pin.isResolvingAddress && acceptedShipping)) &&
     productAvailability(product, batchOrdersClosed(batch)).canClaim &&
-    qty <= left
+    qty <= left &&
+    qty <= (remainingBuyerLimit ?? perUser)
 
   return (
     <>
-    <Modal title="Review Claim" onClose={onClose} width={480}>
+    <Modal
+      title="Review Claim"
+      onClose={onClose}
+      width={480}
+      showTitleIcon={false}
+      className="review-claim-modal"
+    >
       <div className="space-y-4">
         <section className="kargo-summary-block" aria-label={product.name}>
           <button
@@ -265,6 +276,7 @@ export default function ItemClaimModal({
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
+              className="item-claim-quantity-step"
               onClick={() => setQty((q) => Math.max(1, q - 1))}
               style={{
                 width: 28,
@@ -308,6 +320,7 @@ export default function ItemClaimModal({
               {qty}
             </span>
             <button
+              className="item-claim-quantity-step"
               onClick={() => setQty((q) => Math.min(maxQty, q + 1))}
               style={{
                 width: 28,

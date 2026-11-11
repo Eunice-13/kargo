@@ -8,6 +8,7 @@ export type VerifyItem = {
   reservationIds?: string[]
   buyer: string
   product: string
+  imageUrl?: string
   amount: number
   ref: string
   date: string

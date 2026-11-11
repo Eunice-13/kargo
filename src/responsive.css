@@ -1,4 +1,4 @@
-﻿/* Responsive-only overrides. Nothing in this file applies above 1024px. */
+/* Responsive-only overrides. Nothing in this file applies above 1024px. */
 .seller-board-column__mobile-toggle {
   display: none;
 }
@@ -42,7 +42,7 @@
 /* Admin tables become readable labeled cards on phones, matching the seller
    and buyer mobile data views instead of forcing horizontal table scrolling. */
 @media (max-width: 620px) {
-  .admin-tabbar > div:first-child > button {
+  .admin-tabbar>div:first-child>button {
     flex: 1 1 20% !important;
     padding-inline: 1px !important;
   }
@@ -64,14 +64,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  .admin-tabbar > div:first-child {
+  .admin-tabbar>div:first-child {
     display: grid !important;
     width: 100%;
     min-width: 0;
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  .admin-tabbar > div:first-child > button {
+  .admin-tabbar>div:first-child>button {
     width: 100%;
     min-width: 0 !important;
     height: 60px !important;
@@ -82,7 +82,7 @@
     box-sizing: border-box;
   }
 
-  .admin-tabbar > div:first-child > button > svg {
+  .admin-tabbar>div:first-child>button>svg {
     width: 22px;
     height: 22px;
     flex-basis: 22px;
@@ -102,7 +102,7 @@
   }
 
   .admin-page-header,
-  .admin-page-header > div,
+  .admin-page-header>div,
   .admin-stats,
   .admin-grid,
   .admin-grid--wide {
@@ -137,7 +137,7 @@
     height: 6px;
   }
 
-  .admin-stat > svg {
+  .admin-stat>svg {
     top: 12px;
     right: 12px;
     width: 18px;
@@ -178,8 +178,8 @@
     min-width: 0;
   }
 
-  .admin-page .admin-filter-bar > select,
-  .admin-page .admin-filter-bar > button {
+  .admin-page .admin-filter-bar>select,
+  .admin-page .admin-filter-bar>button {
     min-width: 0;
   }
 }
@@ -269,14 +269,14 @@
     text-align: left;
   }
 
-  .admin-page table:not(.sr-only) tbody td > * {
+  .admin-page table:not(.sr-only) tbody td>* {
     min-width: 0;
     max-width: calc(100% - 104px);
     margin-left: auto;
     overflow-wrap: anywhere;
   }
 
-  .admin-page table:not(.sr-only) tbody td > :is(div, span) {
+  .admin-page table:not(.sr-only) tbody td> :is(div, span) {
     justify-content: flex-end;
     text-align: right;
   }
@@ -395,32 +395,16 @@
 }
 
 .payment-history-date-sort {
-  position: relative;
-  width: 220px;
-  min-width: 0;
-  flex: 0 0 auto;
-}
-
-.seller-shop-date-sort {
-  z-index: 1;
-}
-
-.seller-shop-date-sort.is-open {
-  z-index: 90;
-}
-
-.payment-history-date-sort__trigger {
-  display: flex;
-  width: 100%;
-  min-width: 0;
+  appearance: none;
   min-height: 40px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 0 12px;
+  padding: 0 36px 0 12px;
   border: 1px solid #d1d5db;
   border-radius: 9px;
   background: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
   color: #374151;
   font: inherit;
   font-size: 13px;
@@ -428,14 +412,14 @@
   cursor: pointer;
 }
 
-.payment-history-date-sort__trigger > span {
+.payment-history-date-sort__trigger>span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.payment-history-date-sort__trigger > svg {
+.payment-history-date-sort__trigger>svg {
   flex: 0 0 auto;
 }
 
@@ -490,21 +474,15 @@
   .payment-history-date-sort {
     width: 100%;
     max-width: none;
-    flex: 0 0 auto;
-  }
-
-  .seller-shop-date-sort {
-    max-width: min(220px, 100%);
-  }
-
-  .payment-history-date-sort__trigger {
-    min-height: 40px;
+    padding-right: 36px;
+    padding-left: 12px;
+    font-size: 13px;
   }
 }
 
 /* Use the same labeled icon navigation on desktop as on mobile. */
 @media (min-width: 621px) {
-  .icon-tabbar > div:first-child > button {
+  .icon-tabbar>div:first-child>button {
     display: flex !important;
     flex-direction: column;
     align-items: center;
@@ -524,6 +502,7 @@
 }
 
 @media (max-width: 1024px) {
+
   html,
   body,
   #root,
@@ -534,7 +513,7 @@
 
   .kargo-original-app *,
   .auth-page *,
-  body > .fi * {
+  body>.fi * {
     box-sizing: border-box;
   }
 
@@ -548,7 +527,7 @@
     outline-offset: 2px;
   }
 
-  .kargo-header-actions > div > button,
+  .kargo-header-actions>div>button,
   .kargo-mobile-search-toggle {
     min-width: 44px !important;
     min-height: 44px !important;
@@ -589,26 +568,23 @@
     grid-template-columns: minmax(0, 1fr) 260px !important;
   }
 
-  .settings-layout > *,
-  .batch-page-layout > *,
-  .seller-shop-layout > * {
+  .settings-layout>*,
+  .batch-page-layout>*,
+  .seller-shop-layout>* {
     min-width: 0;
   }
 
   .kargo-original-app main img,
-  body > .fi img {
+  body>.fi img {
     max-width: 100%;
   }
 
   /* Convert wide operational tables to cards before they overflow tablets. */
-  :is(.mobile-data-page, .seller-dashboard, .bdash)
-    :is(
-      .seller-orders-table-wrap,
-      .seller-orders-table-scroll,
-      .bdash-table-wrap,
-      [style*="overflow-x"],
-      [style*="overflowX"]
-    ) {
+  :is(.mobile-data-page, .seller-dashboard, .bdash) :is(.seller-orders-table-wrap,
+    .seller-orders-table-scroll,
+    .bdash-table-wrap,
+    [style*="overflow-x"],
+    [style*="overflowX"]) {
     overflow: visible !important;
   }
 
@@ -726,25 +702,6 @@
     content: "Actions";
   }
 
-  /* On mobile the status cell is display:flex which ignores the table-layout
-     max-width:0 trick from index.css. Reset it so the badge + note wrap. */
-  .seller-orders-page .seller-orders-status-cell {
-    max-width: none;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 8px;
-  }
-
-  .seller-orders-page .seller-orders-status-cell .seller-orders-status {
-    max-width: 100%;
-    white-space: nowrap;
-  }
-
-  .seller-orders-page .seller-orders-status-cell small {
-    flex: 1 1 100%;
-    white-space: normal;
-  }
-
   .claims-to-pay-table td:nth-child(2)::before {
     content: "Seller";
   }
@@ -765,11 +722,6 @@
     align-items: start;
     column-gap: 14px;
     row-gap: 8px;
-    padding: 14px;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 10px;
-    background: #fff !important;
-    box-shadow: 0 3px 10px rgba(18, 30, 71, 0.1);
   }
 
   .claims-to-pay-table td:nth-child(1) {
@@ -800,12 +752,12 @@
     justify-content: flex-end;
   }
 
-  .claims-to-pay-table .claims-to-pay-product > .buyer-claim-item-preview-trigger {
+  .claims-to-pay-table .claims-to-pay-product>.buyer-claim-item-preview-trigger {
     width: 80px !important;
     height: 80px !important;
   }
 
-  .claims-to-pay-table .claims-to-pay-product > .buyer-claim-item-preview-trigger > img {
+  .claims-to-pay-table .claims-to-pay-product>.buyer-claim-item-preview-trigger>img {
     width: 80px !important;
     height: 80px !important;
     max-width: none !important;
@@ -825,30 +777,15 @@
 
   .claims-to-pay-table td:nth-child(5) {
     grid-column: 1 / -1;
-    display: flex !important;
-    justify-content: flex-end;
+    display: block !important;
+    justify-content: flex-start;
   }
 
   .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions {
-    display: flex !important;
-    justify-content: flex-end;
-    width: auto;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
     gap: 8px;
-  }
-
-  /* Keep "Manage" a compact control pinned to the right (matches the design);
-     the cell-wide button rule would otherwise stretch it to the full width. */
-  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .claim-actions-split {
-    width: auto !important;
-  }
-
-  .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .claim-actions-manage {
-    width: auto !important;
-    min-width: 0 !important;
-    min-height: 32px !important;
-    padding: 0 14px !important;
-    font-size: 12px !important;
-    white-space: nowrap;
   }
 
   .claims-to-pay-table td:nth-child(5) .claims-to-pay-actions .kargo-primary,
@@ -960,6 +897,7 @@
 }
 
 @media (max-width: 900px) {
+
   .settings-layout,
   .batch-page-layout,
   .seller-shop-layout {
@@ -978,7 +916,7 @@
     gap: 4px;
   }
 
-  .settings-nav > div:first-child {
+  .settings-nav>div:first-child {
     display: none;
   }
 
@@ -1005,6 +943,7 @@
 }
 
 @media (max-width: 620px) {
+
   html,
   body,
   #root {
@@ -1030,7 +969,7 @@
   }
 
   .kargo-header.is-mobile-search-open .kargo-brand-lockup,
-  .kargo-header.is-mobile-search-open .kargo-header-actions > div {
+  .kargo-header.is-mobile-search-open .kargo-header-actions>div {
     display: none !important;
   }
 
@@ -1113,28 +1052,8 @@
     box-shadow: 0 3px 12px rgba(24, 50, 74, 0.09);
   }
 
-  .buyer-home-filter > strong {
+  .buyer-home-filter>strong {
     display: none;
-  }
-
-  /* Each dropdown wrapper fills its grid cell and looks like a pill. */
-  .buyer-home-filter__dropdown {
-    width: 100% !important;
-    min-width: 0;
-  }
-
-  .buyer-home-filter__trigger {
-    width: 100% !important;
-    min-width: 0;
-    min-height: 36px;
-    padding: 0 10px 0 10px !important;
-    border: 1px solid #e4e9ef !important;
-    border-radius: 8px !important;
-    background: #f6f8fa !important;
-    color: #253545 !important;
-    font-size: 12px !important;
-    font-weight: 650 !important;
-    justify-content: space-between;
   }
 
   .buyer-home-filter select {
@@ -1241,7 +1160,7 @@
     margin-top: 4px;
   }
 
-  .buyer-batch-card__seller > :first-child {
+  .buyer-batch-card__seller> :first-child {
     display: none;
   }
 
@@ -1667,7 +1586,7 @@
     padding: 18px 12px 28px !important;
   }
 
-  .kargo-original-app main .seller-dashboard-sidebar > .kargo-card,
+  .kargo-original-app main .seller-dashboard-sidebar>.kargo-card,
   .kargo-original-app main .seller-side-card {
     padding: 14px !important;
   }
@@ -1682,12 +1601,12 @@
     flex-wrap: wrap;
   }
 
-  .kargo-original-app main .flex.items-start.gap-3 > * {
+  .kargo-original-app main .flex.items-start.gap-3>* {
     min-width: 0;
   }
 
   .kargo-original-app main .flex-1,
-  .kargo-original-app main .flex-1 > div {
+  .kargo-original-app main .flex-1>div {
     min-width: 0;
     max-width: 100%;
     overflow-wrap: anywhere;
@@ -1716,7 +1635,7 @@
     font-size: 12px;
   }
 
-  .kargo-footer > p {
+  .kargo-footer>p {
     margin-top: 16px;
     font-size: 11px;
   }
@@ -1739,12 +1658,12 @@
     gap: 8px;
   }
 
-  .pending-payment-card__actions > .kargo-primary {
+  .pending-payment-card__actions>.kargo-primary {
     flex: 1 1 auto;
     padding-inline: 14px !important;
   }
 
-  .pending-payment-card__actions > .kargo-secondary {
+  .pending-payment-card__actions>.kargo-secondary {
     flex: 0 0 auto;
     padding-inline: 10px !important;
     border: 1px solid #c7d4dc !important;
@@ -1752,13 +1671,13 @@
     color: #246b8f !important;
   }
 
-  .pending-payment-card__actions > .kargo-secondary:hover {
+  .pending-payment-card__actions>.kargo-secondary:hover {
     background: #eef6fa !important;
   }
 
   /* Status filters are one row on a phone. Five chips cannot each hold a full
      status name, so the longest names wrap inside their own chip and the grid
-     stretches every chip to the tallest ΓÇö one row, no sideways scrolling. */
+     stretches every chip to the tallest — one row, no sideways scrolling. */
   .claims-filter-row {
     display: grid !important;
     grid-template-columns: auto repeat(4, minmax(0, 1fr));
@@ -1767,7 +1686,7 @@
     margin-bottom: 16px !important;
   }
 
-  .claims-filter-row > button {
+  .claims-filter-row>button {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr);
     place-content: center;
@@ -1785,7 +1704,7 @@
 
   /* The count keeps its own line under the label so every chip reads the same
      way, whether the status name wraps or not. */
-  .claims-filter-row > button > span {
+  .claims-filter-row>button>span {
     margin-left: 0 !important;
     padding: 0 5px !important;
     font-size: 9px !important;
@@ -1794,7 +1713,7 @@
   }
 
   /* On the selected chip the count sits on the fill, not on white. */
-  .claims-filter-row > button[style*="25, 27, 169"] > span {
+  .claims-filter-row>button[style*="25, 27, 169"]>span {
     color: #ffffff !important;
   }
 
@@ -1859,9 +1778,7 @@
     content: none !important;
   }
 
-  :is(.bdash, .seller-dashboard)
-    :is(.bdash-table, .seller-orders-table)
-    :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
     display: none !important;
   }
 
@@ -2022,13 +1939,13 @@
     grid-template-columns: minmax(0, 1fr) auto !important;
   }
 
-  .settings-linked-row > input {
+  .settings-linked-row>input {
     grid-column: 1 / -1;
     grid-row: 2;
     width: 100% !important;
   }
 
-  .settings-linked-row > button:last-child {
+  .settings-linked-row>button:last-child {
     grid-column: 2;
     grid-row: 1;
   }
@@ -2086,8 +2003,8 @@
     flex-wrap: wrap;
   }
 
-  .si .flex.gap-3 > button,
-  .si .no-print > button {
+  .si .flex.gap-3>button,
+  .si .no-print>button {
     min-width: 100%;
     flex: 1 1 100%;
   }
@@ -2146,7 +2063,7 @@
     min-height: 44px;
   }
 
-  .auth-social-row > input {
+  .auth-social-row>input {
     width: 100%;
     flex: 1 1 100%;
   }
@@ -2172,7 +2089,7 @@
     height: 36px !important;
   }
 
-  .icon-tabbar > div:first-child > button {
+  .icon-tabbar>div:first-child>button {
     padding-right: 1px !important;
     padding-left: 1px !important;
   }
@@ -2187,6 +2104,7 @@
    They only adapt tablet/phone layouts and leave the approved desktop cascade
    (1024px and wider) untouched. */
 @media (max-width: 1023px) {
+
   html,
   body,
   #root,
@@ -2207,7 +2125,7 @@
     content: "Buyer";
   }
 
-  .seller-dashboard .seller-board-dialog__columns > .fulfillment-board,
+  .seller-dashboard .seller-board-dialog__columns>.fulfillment-board,
   .seller-dashboard .fulfillment-board.is-expanded,
   .orders-page--seller .fulfillment-board.is-expanded {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2258,7 +2176,7 @@
     place-items: center;
   }
 
-  .kargo-header-actions > div > button,
+  .kargo-header-actions>div>button,
   .kargo-mobile-search-toggle,
   .kargo-modal__close,
   .fulfillment-board__collapse {
@@ -2271,7 +2189,7 @@
   }
 
   .kargo-header.is-mobile-search-open .kargo-brand-lockup,
-  .kargo-header.is-mobile-search-open .kargo-header-actions > div {
+  .kargo-header.is-mobile-search-open .kargo-header-actions>div {
     display: none !important;
   }
 
@@ -2290,7 +2208,7 @@
     height: 56px !important;
   }
 
-  .icon-tabbar > div:first-child > button {
+  .icon-tabbar>div:first-child>button {
     display: flex !important;
     min-width: 0 !important;
     min-height: 48px;
@@ -2304,7 +2222,7 @@
     overflow: visible !important;
   }
 
-  .icon-tabbar > div:first-child > button > svg {
+  .icon-tabbar>div:first-child>button>svg {
     width: 20px;
     height: 20px;
     flex: 0 0 20px;
@@ -2336,7 +2254,7 @@
   }
 
   .buyer-home-filter select,
-  .batch-filter-bar > div,
+  .batch-filter-bar>div,
   .batch-filter-bar select,
   .seller-batch-select-wrap,
   .seller-batch-filter-select {
@@ -2344,11 +2262,11 @@
     min-width: 0 !important;
   }
 
-  .batch-filter-bar > .flex-1 {
+  .batch-filter-bar>.flex-1 {
     display: none;
   }
 
-  .batch-filter-bar > button,
+  .batch-filter-bar>button,
   .seller-batches-add,
   .buyer-home-filter__request {
     width: 100%;
@@ -2366,7 +2284,7 @@
     white-space: nowrap;
   }
 
-  .seller-orders-filters > button {
+  .seller-orders-filters>button {
     flex: 0 0 auto;
   }
 
@@ -2392,17 +2310,14 @@
   }
 
   :is(.mobile-data-page, .seller-dashboard, .bdash) tbody td:last-child :is(button, a),
-  .seller-orders-actions > button,
+  .seller-orders-actions>button,
   .claims-card-grid .kargo-primary,
   .claims-card-grid .kargo-secondary {
     width: 100%;
     min-height: 44px;
   }
 
-  .kargo-original-app
-    main
-    form
-    :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  .kargo-original-app main form :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
     width: 100%;
     max-width: 100%;
     min-height: 44px;
@@ -2433,7 +2348,7 @@
 
   .fulfillment-board,
   .fulfillment-board.is-expanded,
-  .seller-dashboard .seller-board-dialog__columns > .fulfillment-board,
+  .seller-dashboard .seller-board-dialog__columns>.fulfillment-board,
   .seller-dashboard .fulfillment-board.is-expanded,
   .orders-page--seller .fulfillment-board.is-expanded {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -2457,7 +2372,7 @@
     overflow-y: visible !important;
   }
 
-  body > .admin-tabbar {
+  body>.admin-tabbar {
     position: fixed !important;
     inset: auto 0 0 !important;
     z-index: 99999 !important;
@@ -2471,14 +2386,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  body > .admin-tabbar > div:first-child {
+  body>.admin-tabbar>div:first-child {
     display: grid !important;
     width: 100% !important;
     max-width: none !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 
-  body > .admin-tabbar > div:first-child > button {
+  body>.admin-tabbar>div:first-child>button {
     width: 100% !important;
     min-width: 0 !important;
     height: 60px !important;
@@ -2495,7 +2410,7 @@
   }
 
   body.admin-mobile-nav .kargo-original-app main,
-  body.admin-mobile-nav .kargo-original-app main > div,
+  body.admin-mobile-nav .kargo-original-app main>div,
   body.admin-mobile-nav .kargo-original-app .admin-page {
     width: 100% !important;
     min-width: 0 !important;
@@ -2515,9 +2430,10 @@
 /* Admin mobile layout overrides come after the shared four-tab navigation
    rules because the admin console has five destinations. */
 @media (max-width: 767px) {
+
   .kargo-original-app main,
-  .kargo-original-app main > .fi,
-  .kargo-original-app main > .pl,
+  .kargo-original-app main>.fi,
+  .kargo-original-app main>.pl,
   .admin-page {
     width: 100% !important;
     min-width: 0 !important;
@@ -2549,14 +2465,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  .admin-tabbar > div:first-child {
+  .admin-tabbar>div:first-child {
     display: grid !important;
     width: 100% !important;
     min-width: 0 !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 
-  .admin-tabbar > div:first-child > button {
+  .admin-tabbar>div:first-child>button {
     width: 100% !important;
     min-width: 0 !important;
     height: 60px !important;
@@ -2567,6 +2483,7 @@
 }
 
 @media (max-width: 480px) {
+
   .seller-stats,
   .bdash-stats {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -2588,6 +2505,7 @@
 /* ===== Targeted mobile visual bug fixes =====
    Keep this block last so it only resolves mobile cascade collisions. */
 @media (max-width: 767px) {
+
   /* Carousel navigation: square geometry prevents the global mobile button
      height from turning these controls into vertical pills. */
   .buyer-home-section__heading {
@@ -2623,7 +2541,7 @@
     display: none;
   }
 
-  .buyer-carousel-controls button > svg {
+  .buyer-carousel-controls button>svg {
     display: block;
     width: 20px;
     height: 20px;
@@ -2684,17 +2602,6 @@
     line-height: 44px;
   }
 
-  /* The custom category/month dropdown is a flex trigger button, not a native
-     select; keep the label left and the circular chevron badge on the right
-     instead of letting the block display drop the icon below the label. */
-  .seller-batch-filter-bar .seller-batch-filter-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 12px !important;
-    line-height: 1.2;
-  }
-
   .seller-batch-filter-bar .seller-batch-select-icon {
     position: absolute;
     top: 50%;
@@ -2743,13 +2650,13 @@
     align-self: center;
   }
 
-  .seller-orders-page .seller-orders-table tbody td > * {
+  .seller-orders-page .seller-orders-table tbody td>* {
     min-width: 0;
     max-width: calc(100% - 104px);
     margin-left: auto;
   }
 
-  .seller-orders-page .seller-orders-table tbody td > :is(div, span) {
+  .seller-orders-page .seller-orders-table tbody td> :is(div, span) {
     justify-content: flex-end;
     text-align: right;
   }
@@ -2760,7 +2667,7 @@
     gap: 8px;
   }
 
-  .seller-orders-page .seller-orders-actions > button {
+  .seller-orders-page .seller-orders-actions>button {
     width: 100%;
     min-height: 44px;
     margin: 0;
@@ -2775,7 +2682,7 @@
     max-width: 100%;
   }
 
-  .seller-orders-page .seller-orders-split > .seller-orders-review {
+  .seller-orders-page .seller-orders-split>.seller-orders-review {
     width: auto !important;
   }
 
@@ -2833,16 +2740,16 @@
     gap: 6px;
   }
 
-  .kargo-footer__grid > section:nth-child(3) {
+  .kargo-footer__grid>section:nth-child(3) {
     grid-column: 1 / -1;
     grid-row: 1;
   }
 
-  .kargo-footer__grid > section:not(:nth-child(3)) {
+  .kargo-footer__grid>section:not(:nth-child(3)) {
     grid-column: 1 / -1;
   }
 
-  .kargo-footer__grid > section:not(:nth-child(3)) nav {
+  .kargo-footer__grid>section:not(:nth-child(3)) nav {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -2850,7 +2757,7 @@
     gap: 6px 8px;
   }
 
-  .kargo-footer__grid > section:nth-child(3) nav {
+  .kargo-footer__grid>section:nth-child(3) nav {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -2865,25 +2772,25 @@
     text-decoration: none;
   }
 
-  .kargo-footer__grid > section:not(:nth-child(3)) nav a {
+  .kargo-footer__grid>section:not(:nth-child(3)) nav a {
     font-size: 10px;
     text-align: center;
   }
 
-  .kargo-footer__grid > section:not(:nth-child(3)) nav a:not(:last-child)::after {
+  .kargo-footer__grid>section:not(:nth-child(3)) nav a:not(:last-child)::after {
     margin-left: 8px;
     color: rgb(255 255 255 / 75%);
     content: "|";
   }
 
-  .kargo-footer__grid > section:nth-child(3) nav a {
+  .kargo-footer__grid>section:nth-child(3) nav a {
     display: flex;
     width: 36px;
     justify-content: center;
     font-size: 0;
   }
 
-  .kargo-footer__grid > section:nth-child(3) .kargo-footer__social-mark {
+  .kargo-footer__grid>section:nth-child(3) .kargo-footer__social-mark {
     display: grid;
     width: 26px;
     height: 26px;
@@ -2895,11 +2802,11 @@
     line-height: 1;
   }
 
-  .kargo-footer__grid > section:nth-child(3) .kargo-footer__social-mark--instagram {
+  .kargo-footer__grid>section:nth-child(3) .kargo-footer__social-mark--instagram {
     background: transparent;
   }
 
-  .kargo-footer__grid > section:nth-child(3) .kargo-footer__social-mark svg {
+  .kargo-footer__grid>section:nth-child(3) .kargo-footer__social-mark svg {
     width: 24px;
     height: 24px;
     overflow: visible;
@@ -2921,7 +2828,7 @@
     flex: 0 0 15px;
   }
 
-  .kargo-footer > p {
+  .kargo-footer>p {
     margin: 14px 0 0;
     padding: 0;
     color: #fff;
@@ -2930,6 +2837,7 @@
 
 /* ===== Mobile interaction and overlay fixes ===== */
 @media (max-width: 767px) {
+
   /* Keep every order-status filter visible without a secondary scroll area. */
   .seller-orders-filters {
     display: flex;
@@ -2950,7 +2858,7 @@
     height: 0;
   }
 
-  .seller-orders-filters > button {
+  .seller-orders-filters>button {
     width: auto;
     min-width: 0;
     min-height: 44px !important;
@@ -3055,7 +2963,7 @@
   }
 
   .kargo-modal__content,
-  .kargo-modal__content > * {
+  .kargo-modal__content>* {
     min-width: 0;
     max-width: 100%;
   }
@@ -3073,21 +2981,21 @@
   }
 
   .kargo-modal-actions,
-  .kargo-modal__content > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-3 > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-4 > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) {
+  .kargo-modal__content> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-3> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-4> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-5> :last-child:is(.flex) {
     width: 100%;
     flex-direction: column !important;
     align-items: stretch;
     gap: 10px !important;
   }
 
-  .kargo-modal-actions > :is(button, a),
-  .kargo-modal__content > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > :is(button, a) {
+  .kargo-modal-actions> :is(button, a),
+  .kargo-modal__content> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-3> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-4> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-5> :last-child:is(.flex)> :is(button, a) {
     width: 100% !important;
     min-height: 44px !important;
     flex: 0 0 auto !important;
@@ -3123,7 +3031,7 @@
   }
 
   .kargo-header.is-mobile-search-open .kargo-brand-lockup,
-  .kargo-header.is-mobile-search-open .kargo-header-actions > div {
+  .kargo-header.is-mobile-search-open .kargo-header-actions>div {
     display: none !important;
   }
 
@@ -3187,7 +3095,7 @@
     margin: 0 !important;
   }
 
-  .kargo-search-wrap > div {
+  .kargo-search-wrap>div {
     right: 0 !important;
     left: 0 !important;
     width: auto !important;
@@ -3205,12 +3113,12 @@
     text-align: center;
   }
 
-  .seller-payments-page section > .mb-4.flex {
+  .seller-payments-page section>.mb-4.flex {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .seller-payments-page section > .mb-4.flex > button {
+  .seller-payments-page section>.mb-4.flex>button {
     width: 100%;
     min-width: 0;
     flex: 0 0 auto;
@@ -3244,8 +3152,8 @@
     border-radius: 0 0 56px 56px;
   }
 
-  .auth-brand > *,
-  .auth-brand > .auth-logo {
+  .auth-brand>*,
+  .auth-brand>.auth-logo {
     width: min(42vw, 150px);
     max-width: 150px;
     transform: none;
@@ -3288,8 +3196,8 @@
     border-radius: 0 0 44px 44px;
   }
 
-  .auth-brand > *,
-  .auth-brand > .auth-logo {
+  .auth-brand>*,
+  .auth-brand>.auth-logo {
     width: min(40vw, 128px);
     max-width: 128px;
   }
@@ -3301,6 +3209,7 @@
 
 /* ===== Centered mobile modal and overlay contract ===== */
 @media (max-width: 767px) {
+
   body:has(.kargo-modal-overlay),
   body:has(.seller-board-dialog) {
     overflow: hidden !important;
@@ -3319,8 +3228,7 @@
     align-items: center !important;
     justify-content: center !important;
     overflow: hidden !important;
-    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-      max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
     background: rgb(0 0 0 / 50%) !important;
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px) !important;
@@ -3352,6 +3260,7 @@
   }
 
   @supports (height: 100dvh) {
+
     .kargo-modal,
     .kargo-legacy-modal,
     .sales-report-sheet,
@@ -3408,7 +3317,7 @@
   }
 
   .kargo-modal__content,
-  .kargo-modal__content > * {
+  .kargo-modal__content>* {
     min-width: 0;
     max-width: 100%;
   }
@@ -3423,21 +3332,21 @@
   }
 
   .kargo-modal-actions,
-  .kargo-modal__content > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-3 > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-4 > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) {
+  .kargo-modal__content> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-3> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-4> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-5> :last-child:is(.flex) {
     width: 100%;
     flex-direction: column !important;
     align-items: stretch;
     gap: 10px !important;
   }
 
-  .kargo-modal-actions > :is(button, a),
-  .kargo-modal__content > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > :is(button, a) {
+  .kargo-modal-actions> :is(button, a),
+  .kargo-modal__content> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-3> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-4> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-5> :last-child:is(.flex)> :is(button, a) {
     width: 100% !important;
     min-height: 44px !important;
     flex: 0 0 auto !important;
@@ -3478,7 +3387,7 @@
     pointer-events: auto;
   }
 
-  .seller-board-dialog > header {
+  .seller-board-dialog>header {
     display: flex !important;
     min-height: 0;
     flex: 0 0 auto;
@@ -3490,7 +3399,7 @@
     background: #fff !important;
   }
 
-  .seller-board-dialog > header > div {
+  .seller-board-dialog>header>div {
     display: flex !important;
     width: 100%;
     min-width: 0;
@@ -3498,7 +3407,7 @@
     gap: 10px;
   }
 
-  .seller-board-dialog > header button {
+  .seller-board-dialog>header button {
     display: grid !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -3513,12 +3422,12 @@
     line-height: 0;
   }
 
-  .seller-board-dialog > header button > svg {
+  .seller-board-dialog>header button>svg {
     width: 20px;
     height: 20px;
   }
 
-  .seller-board-dialog > header h2 {
+  .seller-board-dialog>header h2 {
     min-width: 0;
     flex: 1 1 auto;
     margin: 0;
@@ -3526,7 +3435,7 @@
     text-align: left;
   }
 
-  .seller-board-dialog > header > span {
+  .seller-board-dialog>header>span {
     display: block;
     min-width: 0;
     margin-left: 54px;
@@ -3550,25 +3459,19 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  body:has(.kargo-modal-overlay)
-    :is(
-      .kargo-header.is-mobile-search-open .kargo-search-wrap,
-      .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
-      .kargo-search-wrap > div,
-      .kargo-notifications-popover,
-      .kargo-user-popover
-    ) {
+  body:has(.kargo-modal-overlay) :is(.kargo-header.is-mobile-search-open .kargo-search-wrap,
+    .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
+    .kargo-search-wrap > div,
+    .kargo-notifications-popover,
+    .kargo-user-popover) {
     display: none !important;
   }
 
-  body:has(.seller-board-dialog)
-    :is(
-      .kargo-header.is-mobile-search-open .kargo-search-wrap,
-      .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
-      .kargo-search-wrap > div,
-      .kargo-notifications-popover,
-      .kargo-user-popover
-    ) {
+  body:has(.seller-board-dialog) :is(.kargo-header.is-mobile-search-open .kargo-search-wrap,
+    .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
+    .kargo-search-wrap > div,
+    .kargo-notifications-popover,
+    .kargo-user-popover) {
     display: none !important;
   }
 
@@ -3632,55 +3535,42 @@
     text-align: left;
   }
 
-  .kargo-modal__content > *,
+  .kargo-modal__content>*,
   .kargo-modal__content :is(form, fieldset, section, article, dl, div) {
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
   }
 
-  .kargo-modal__content :is(.space-y-2, .space-y-3, .space-y-4, .space-y-5) > * + * {
+  .kargo-modal__content :is(.space-y-2, .space-y-3, .space-y-4, .space-y-5)>*+* {
     margin-top: 14px !important;
   }
 
-  .kargo-modal__content
-    :is(
-      .grid,
-      .batch-meta-grid,
-      .batch-group-discount-fields,
-      .batch-product-unit-row,
-      .batch-group-settings-product,
-      .group-order-choice,
-      [style*="display: grid"],
-      [style*="grid-template-columns"]
-    ) {
+  .kargo-modal__content :is(.grid,
+    .batch-meta-grid,
+    .batch-group-discount-fields,
+    .batch-product-unit-row,
+    .batch-group-settings-product,
+    .group-order-choice,
+    [style*="display: grid"],
+    [style*="grid-template-columns"]) {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  .kargo-modal__content
-    label:not(
-      .batch-image-upload,
-      .batch-hero-photo-action,
-      .batch-group-config__toggle,
-      .group-order-ack
-    ) {
+  .kargo-modal__content label:not(.batch-image-upload,
+    .batch-hero-photo-action,
+    .batch-group-config__toggle,
+    .group-order-ack) {
     max-width: 100%;
     text-align: left;
   }
 
-  .kargo-modal__content
-    label:not(:has(input[type="checkbox"], input[type="radio"]))
-    > :is(input, select, textarea) {
+  .kargo-modal__content label:not(:has(input[type="checkbox"], input[type="radio"]))> :is(input, select, textarea) {
     margin-top: 5px;
   }
 
-  .kargo-modal
-    .kargo-modal__content
-    :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
-      [type="button"]
-    ):not([type="submit"]),
-  .kargo-legacy-modal
-    :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+  .kargo-modal .kargo-modal__content :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]),
+  .kargo-legacy-modal :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
     width: 100% !important;
     max-width: 100%;
     min-width: 0;
@@ -3712,16 +3602,15 @@
   }
 
   .kargo-modal__content :is([role="alert"], .text-red-600, .text-red-700),
-  .kargo-modal__content label + :is(p, small),
-  .kargo-modal__content :is(input, select, textarea) + :is(p, small) {
+  .kargo-modal__content label+ :is(p, small),
+  .kargo-modal__content :is(input, select, textarea)+ :is(p, small) {
     display: block;
     margin-top: 5px !important;
     line-height: 1.4;
     text-align: left;
   }
 
-  .kargo-modal__content
-    label:not(.batch-group-config__toggle):has(input[type="checkbox"], input[type="radio"]),
+  .kargo-modal__content label:not(.batch-group-config__toggle):has(input[type="checkbox"], input[type="radio"]),
   .kargo-modal__content .group-order-ack {
     display: flex !important;
     width: 100%;
@@ -3746,8 +3635,8 @@
     padding: 0 !important;
   }
 
-  .kargo-modal__content label:has(input[type="checkbox"], input[type="radio"]) > :is(span, div),
-  .kargo-modal__content .group-order-ack > span {
+  .kargo-modal__content label:has(input[type="checkbox"], input[type="radio"])> :is(span, div),
+  .kargo-modal__content .group-order-ack>span {
     min-width: 0;
     flex: 1 1 auto;
     margin: 0;
@@ -3761,20 +3650,19 @@
     gap: 10px !important;
   }
 
-  .kargo-modal__content .batch-group-config__toggle > input {
+  .kargo-modal__content .batch-group-config__toggle>input {
     grid-column: 1;
     grid-row: 1;
   }
 
-  .kargo-modal__content .batch-group-config__toggle > span {
+  .kargo-modal__content .batch-group-config__toggle>span {
     grid-column: 2;
     grid-row: 1;
     min-width: 0;
     margin: 0;
   }
 
-  .kargo-modal__content
-    :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label) {
+  .kargo-modal__content :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label) {
     display: flex !important;
     width: 100% !important;
     min-height: 46px;
@@ -3786,9 +3674,7 @@
     text-align: center;
   }
 
-  .kargo-modal__content
-    :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label)
-    > :is(svg, img) {
+  .kargo-modal__content :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label)> :is(svg, img) {
     flex: 0 0 auto;
   }
 
@@ -3801,24 +3687,24 @@
     min-height: 44px;
   }
 
-  .sales-report-sheet > .no-print:first-child {
+  .sales-report-sheet>.no-print:first-child {
     width: 100%;
     align-items: stretch !important;
     padding: 16px !important;
   }
 
-  .sales-report-sheet > .no-print:first-child > div {
+  .sales-report-sheet>.no-print:first-child>div {
     width: 100%;
     min-width: 0 !important;
   }
 
-  .sales-report-sheet > .no-print:first-child > div:first-child > div {
+  .sales-report-sheet>.no-print:first-child>div:first-child>div {
     display: flex !important;
     max-width: 100%;
     flex-wrap: wrap !important;
   }
 
-  .sales-report-sheet > div:not(.no-print) {
+  .sales-report-sheet>div:not(.no-print) {
     padding: 20px !important;
   }
 
@@ -3828,7 +3714,7 @@
     box-sizing: border-box;
   }
 
-  .kargo-legacy-modal .kargo-modal-actions > :is(button, a) {
+  .kargo-legacy-modal .kargo-modal-actions> :is(button, a) {
     width: 100% !important;
     min-height: 46px !important;
   }
@@ -3841,10 +3727,7 @@
     flex: 0 0 auto;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
-    .kargo-modal__content
-    dl
-    > div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl>div {
     display: grid !important;
     grid-template-columns: minmax(82px, 0.8fr) minmax(0, 1.2fr) !important;
     align-items: start;
@@ -3853,27 +3736,21 @@
     padding: 10px 0;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal)
-    .kargo-modal__content
-    dl
-    :is(dt, dd) {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl :is(dt, dd) {
     min-width: 0;
     margin: 0;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
-    .kargo-modal__content
-    dl
-    dd {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl dd {
     text-align: right;
     overflow-wrap: anywhere;
   }
 
   .kargo-modal-actions,
-  .kargo-modal__content > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-3 > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-4 > :last-child:is(.flex),
-  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) {
+  .kargo-modal__content> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-3> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-4> :last-child:is(.flex),
+  .kargo-modal__content>.space-y-5> :last-child:is(.flex) {
     position: sticky;
     bottom: -16px;
     z-index: 2;
@@ -3886,11 +3763,11 @@
     background: #fff;
   }
 
-  .kargo-modal-actions > :is(button, a),
-  .kargo-modal__content > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > :is(button, a),
-  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > :is(button, a) {
+  .kargo-modal-actions> :is(button, a),
+  .kargo-modal__content> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-3> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-4> :last-child:is(.flex)> :is(button, a),
+  .kargo-modal__content>.space-y-5> :last-child:is(.flex)> :is(button, a) {
     width: 100% !important;
     min-height: 46px !important;
     flex: 0 0 auto !important;
@@ -3901,19 +3778,19 @@
     white-space: normal;
   }
 
-  .kargo-modal-actions > .kargo-secondary,
-  .kargo-modal__content > :last-child:is(.flex) > .kargo-secondary,
-  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > .kargo-secondary,
-  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > .kargo-secondary,
-  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > .kargo-secondary {
+  .kargo-modal-actions>.kargo-secondary,
+  .kargo-modal__content> :last-child:is(.flex)>.kargo-secondary,
+  .kargo-modal__content>.space-y-3> :last-child:is(.flex)>.kargo-secondary,
+  .kargo-modal__content>.space-y-4> :last-child:is(.flex)>.kargo-secondary,
+  .kargo-modal__content>.space-y-5> :last-child:is(.flex)>.kargo-secondary {
     order: 1;
   }
 
-  .kargo-modal-actions > .kargo-primary,
-  .kargo-modal__content > :last-child:is(.flex) > .kargo-primary,
-  .kargo-modal__content > .space-y-3 > :last-child:is(.flex) > .kargo-primary,
-  .kargo-modal__content > .space-y-4 > :last-child:is(.flex) > .kargo-primary,
-  .kargo-modal__content > .space-y-5 > :last-child:is(.flex) > .kargo-primary {
+  .kargo-modal-actions>.kargo-primary,
+  .kargo-modal__content> :last-child:is(.flex)>.kargo-primary,
+  .kargo-modal__content>.space-y-3> :last-child:is(.flex)>.kargo-primary,
+  .kargo-modal__content>.space-y-4> :last-child:is(.flex)>.kargo-primary,
+  .kargo-modal__content>.space-y-5> :last-child:is(.flex)>.kargo-primary {
     order: 2;
   }
 
@@ -3929,10 +3806,7 @@
 }
 
 @media (max-width: 480px) {
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
-    .kargo-modal__content
-    dl
-    > div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl>div {
     grid-template-columns: minmax(72px, 0.75fr) minmax(0, 1.25fr) !important;
   }
 }
@@ -4003,7 +3877,7 @@
     text-align: center;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero > .rounded-full {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero>.rounded-full {
     display: grid !important;
     width: 56px !important;
     min-width: 56px !important;
@@ -4016,14 +3890,14 @@
     aspect-ratio: 1 / 1;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero > div {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero>div {
     width: 100%;
     margin-top: 0 !important;
     overflow-wrap: anywhere;
     text-align: center;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero + .grid {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero+.grid {
     display: grid !important;
     width: 100%;
     grid-template-columns: minmax(0, 1fr) !important;
@@ -4031,7 +3905,7 @@
     margin: 0 !important;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero + .grid > div {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero+.grid>div {
     display: grid;
     width: 100%;
     min-height: 64px;
@@ -4044,7 +3918,7 @@
     text-align: center;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero + .grid + div {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__hero+.grid+div {
     width: 100%;
     min-width: 0;
     margin: 0 !important;
@@ -4073,7 +3947,7 @@
     box-sizing: border-box;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__social-link > span {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__social-link>span {
     min-width: 0;
     flex: 1 1 auto;
   }
@@ -4085,7 +3959,7 @@
     overflow-wrap: anywhere;
   }
 
-  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__social-link > svg {
+  .kargo-modal:has(.buyer-profile-modal__hero) .buyer-profile-modal__social-link>svg {
     flex: 0 0 auto;
   }
 }
@@ -4094,6 +3968,7 @@
    A real backdrop sibling avoids mobile browser compositing bugs caused by
    applying backdrop-filter to a generated body pseudo-element. */
 @media (max-width: 767px) {
+
   html:has(.seller-board-dialog),
   body:has(.seller-board-dialog) {
     overflow: hidden !important;
@@ -4141,6 +4016,7 @@
   }
 
   @supports (height: 100dvh) {
+
     .seller-board-dialog-backdrop.hidden,
     .seller-board-dialog {
       height: 100dvh !important;
@@ -4148,7 +4024,7 @@
     }
   }
 
-  .seller-board-dialog > header {
+  .seller-board-dialog>header {
     position: sticky;
     top: 0;
     z-index: 3;
@@ -4170,8 +4046,8 @@
   }
 
   .seller-board-dialog__columns,
-  .seller-board-dialog__columns > .fulfillment-board,
-  .seller-dashboard .seller-board-dialog__columns > .fulfillment-board {
+  .seller-board-dialog__columns>.fulfillment-board,
+  .seller-dashboard .seller-board-dialog__columns>.fulfillment-board {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -4190,8 +4066,8 @@
     box-sizing: border-box;
   }
 
-  .seller-board-dialog .fulfillment-board__card-trigger > strong,
-  .seller-board-dialog .fulfillment-board__identity > span,
+  .seller-board-dialog .fulfillment-board__card-trigger>strong,
+  .seller-board-dialog .fulfillment-board__identity>span,
   .seller-board-dialog .fulfillment-board__tracking dd {
     overflow: visible;
     text-overflow: clip;
@@ -4199,20 +4075,18 @@
     overflow-wrap: anywhere;
   }
 
-  .seller-board-dialog
-    :is(
-      .fulfillment-board__card-trigger,
-      .fulfillment-board__profile-link,
-      .fulfillment-board__more,
-      .fulfillment-board__actions button,
-      .fulfillment-board__actions a
-    ) {
+  .seller-board-dialog :is(.fulfillment-board__card-trigger,
+    .fulfillment-board__profile-link,
+    .fulfillment-board__more,
+    .fulfillment-board__actions button,
+    .fulfillment-board__actions a) {
     min-height: 44px !important;
   }
 }
 
 /* ===== Scoped mobile control repairs ===== */
 @media (max-width: 767px) {
+
   /* Bottom tab navigation: four equal columns with complete labels. */
   .kargo-original-app:not(.admin-app) {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
@@ -4234,14 +4108,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  .icon-tabbar > div:first-child {
+  .icon-tabbar>div:first-child {
     display: grid !important;
     width: 100%;
     min-width: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .icon-tabbar > div:first-child > button {
+  .icon-tabbar>div:first-child>button {
     width: 100%;
     min-width: 0 !important;
     height: 60px !important;
@@ -4252,7 +4126,7 @@
     box-sizing: border-box;
   }
 
-  .icon-tabbar > div:first-child > button > svg {
+  .icon-tabbar>div:first-child>button>svg {
     width: 22px;
     height: 22px;
     flex: 0 0 22px;
@@ -4281,10 +4155,10 @@
     gap: 10px !important;
   }
 
-  .auth-terms > input[type="checkbox"],
-  .kargo-modal__content .item-claim-shipping-ack > input[type="checkbox"],
-  .kargo-modal__content .group-order-ack > input[type="checkbox"],
-  .kargo-modal__content .batch-group-config__toggle > input[type="checkbox"] {
+  .auth-terms>input[type="checkbox"],
+  .kargo-modal__content .item-claim-shipping-ack>input[type="checkbox"],
+  .kargo-modal__content .group-order-ack>input[type="checkbox"],
+  .kargo-modal__content .batch-group-config__toggle>input[type="checkbox"] {
     order: -1;
     width: 20px !important;
     min-width: 20px !important;
@@ -4294,10 +4168,10 @@
     margin: 2px 0 0 !important;
   }
 
-  .auth-terms > span,
-  .kargo-modal__content .item-claim-shipping-ack > span,
-  .kargo-modal__content .group-order-ack > span,
-  .kargo-modal__content .batch-group-config__toggle > span {
+  .auth-terms>span,
+  .kargo-modal__content .item-claim-shipping-ack>span,
+  .kargo-modal__content .group-order-ack>span,
+  .kargo-modal__content .batch-group-config__toggle>span {
     min-width: 0;
     flex: 1 1 auto;
     margin: 0;
@@ -4335,8 +4209,8 @@
     line-height: 1;
   }
 
-  .seller-batch-actions > .kargo-secondary,
-  .seller-batch-actions > .kargo-share-button--compact {
+  .seller-batch-actions>.kargo-secondary,
+  .seller-batch-actions>.kargo-share-button--compact {
     display: inline-flex !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -4349,11 +4223,11 @@
     line-height: 1;
   }
 
-  .kargo-modal__close > svg,
-  .kargo-mobile-search-toggle > svg,
-  .kargo-search-submit > svg,
-  .seller-batch-actions > .kargo-secondary > svg,
-  .seller-batch-actions > .kargo-share-button--compact > svg {
+  .kargo-modal__close>svg,
+  .kargo-mobile-search-toggle>svg,
+  .kargo-search-submit>svg,
+  .seller-batch-actions>.kargo-secondary>svg,
+  .seller-batch-actions>.kargo-share-button--compact>svg {
     display: block;
     width: 18px;
     height: 18px;
@@ -4361,7 +4235,7 @@
   }
 
   /* Circular controls retain equal axes even inside stretching flex rows. */
-  .buyer-carousel-controls > button {
+  .buyer-carousel-controls>button {
     display: inline-flex !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -4377,7 +4251,7 @@
     box-sizing: border-box;
   }
 
-  .buyer-carousel-controls > button > svg {
+  .buyer-carousel-controls>button>svg {
     display: block;
     width: 20px;
     height: 20px;
@@ -4386,7 +4260,7 @@
   }
 
   /* Expanded and inline Fulfillment Board icon/glyph controls. */
-  .seller-board-dialog > header button {
+  .seller-board-dialog>header button {
     display: inline-flex !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -4400,7 +4274,7 @@
     line-height: 1;
   }
 
-  .seller-board-dialog > header button > svg {
+  .seller-board-dialog>header button>svg {
     display: block;
     width: 20px;
     height: 20px;
@@ -4445,8 +4319,8 @@
     white-space: normal;
   }
 
-  .kargo-original-app .seller-orders-filters > button,
-  .kargo-original-app .claims-filter-row > button {
+  .kargo-original-app .seller-orders-filters>button,
+  .kargo-original-app .claims-filter-row>button {
     display: inline-flex !important;
     width: auto;
     min-width: 0;
@@ -4464,7 +4338,7 @@
     white-space: nowrap !important;
   }
 
-  .claims-filter-row > button > span {
+  .claims-filter-row>button>span {
     display: inline-flex;
     min-width: 18px;
     min-height: 18px;
@@ -4482,7 +4356,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .settings-nav > button {
+  .settings-nav>button {
     display: inline-flex !important;
     width: 100% !important;
     min-width: 0;
@@ -4495,7 +4369,7 @@
     text-align: center;
   }
 
-  .settings-nav > button > svg {
+  .settings-nav>button>svg {
     width: 16px;
     height: 16px;
     flex: 0 0 16px;
@@ -4514,16 +4388,16 @@
     border-radius: 999px !important;
   }
 
-  .kargo-original-app button.kargo-toggle > div,
-  .auth-page button.kargo-toggle > div {
+  .kargo-original-app button.kargo-toggle>div,
+  .auth-page button.kargo-toggle>div {
     top: 3px !important;
     left: 3px !important;
     width: 18px !important;
     height: 18px !important;
   }
 
-  .kargo-original-app button.kargo-toggle[aria-checked="true"] > div,
-  .auth-page button.kargo-toggle[aria-checked="true"] > div {
+  .kargo-original-app button.kargo-toggle[aria-checked="true"]>div,
+  .auth-page button.kargo-toggle[aria-checked="true"]>div {
     left: 23px !important;
   }
 
@@ -4536,16 +4410,16 @@
     flex-basis: 40px;
   }
 
-  .kargo-original-app button.kargo-toggle--compact > div,
-  .auth-page button.kargo-toggle--compact > div {
+  .kargo-original-app button.kargo-toggle--compact>div,
+  .auth-page button.kargo-toggle--compact>div {
     top: 3px !important;
     left: 3px !important;
     width: 16px !important;
     height: 16px !important;
   }
 
-  .kargo-original-app button.kargo-toggle--compact[aria-checked="true"] > div,
-  .auth-page button.kargo-toggle--compact[aria-checked="true"] > div {
+  .kargo-original-app button.kargo-toggle--compact[aria-checked="true"]>div,
+  .auth-page button.kargo-toggle--compact[aria-checked="true"]>div {
     left: 21px !important;
   }
 
@@ -4578,8 +4452,8 @@
     top: 56px;
   }
 
-  .batch-hero-photo-action > svg,
-  .batch-group-settings-action > svg {
+  .batch-hero-photo-action>svg,
+  .batch-group-settings-action>svg {
     width: 16px;
     height: 16px;
     flex: 0 0 16px;
@@ -4595,7 +4469,7 @@
     justify-content: flex-end;
   }
 
-  .batch-cover-badges > span {
+  .batch-cover-badges>span {
     display: inline-flex;
     min-height: 28px;
     flex: 0 0 auto;
@@ -4616,7 +4490,7 @@
     padding-bottom: 70px;
   }
 
-  .batch-hero-meta > span {
+  .batch-hero-meta>span {
     min-width: 0;
     max-width: 100%;
   }
@@ -4624,8 +4498,8 @@
   /* Text controls are scoped to inspected action regions, not every button. */
   .kargo-modal__content .kargo-primary,
   .kargo-modal__content .kargo-secondary,
-  .auth-login-fields > .kargo-primary,
-  .auth-signup-fields > .kargo-primary,
+  .auth-login-fields>.kargo-primary,
+  .auth-signup-fields>.kargo-primary,
   .seller-orders-review,
   .seller-orders-contact,
   .seller-batches-add,
@@ -4646,8 +4520,8 @@
     gap: 10px;
   }
 
-  .kargo-modal-actions > .kargo-primary,
-  .kargo-modal-actions > .kargo-secondary {
+  .kargo-modal-actions>.kargo-primary,
+  .kargo-modal-actions>.kargo-secondary {
     width: 100%;
   }
 }
@@ -4691,7 +4565,7 @@
     margin: 0 !important;
   }
 
-  .kargo-header .kargo-header-actions > div > button {
+  .kargo-header .kargo-header-actions>div>button {
     width: 36px !important;
     min-width: 36px !important;
     height: 36px !important;
@@ -4706,7 +4580,7 @@
     box-shadow: none !important;
   }
 
-  .kargo-header .kargo-notification-trigger > svg path {
+  .kargo-header .kargo-notification-trigger>svg path {
     fill: #fff !important;
   }
 
@@ -4715,7 +4589,7 @@
     border: 0 !important;
   }
 
-  .kargo-header .kargo-notification-trigger[aria-expanded="true"] > svg path {
+  .kargo-header .kargo-notification-trigger[aria-expanded="true"]>svg path {
     fill: #191ba9 !important;
   }
 
@@ -4738,22 +4612,22 @@
   }
 
   .kargo-header .kargo-user-menu__avatar-wrap,
-  .kargo-header .kargo-user-menu__avatar-wrap > span {
+  .kargo-header .kargo-user-menu__avatar-wrap>span {
     outline: none !important;
     box-shadow: none !important;
   }
 
   .kargo-original-app .kargo-header .kargo-user-menu__trigger,
   .kargo-original-app .kargo-header .kargo-user-menu__avatar-wrap,
-  .kargo-original-app .kargo-header .kargo-user-menu__avatar-wrap > span {
+  .kargo-original-app .kargo-header .kargo-user-menu__avatar-wrap>span {
     border: 0 !important;
     outline: 0 !important;
     box-shadow: none !important;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .kargo-header .kargo-user-menu__trigger > span:nth-child(2),
-  .kargo-header .kargo-user-menu__trigger > svg {
+  .kargo-header .kargo-user-menu__trigger>span:nth-child(2),
+  .kargo-header .kargo-user-menu__trigger>svg {
     display: none !important;
   }
 
@@ -4767,7 +4641,7 @@
     border-radius: 50%;
   }
 
-  .kargo-header .kargo-user-menu__avatar-wrap > span {
+  .kargo-header .kargo-user-menu__avatar-wrap>span {
     display: flex !important;
     width: 32px !important;
     height: 32px !important;
@@ -4901,7 +4775,7 @@
     place-items: center;
   }
 
-  .mobile-data-page .claims-card-grid .buyer-claim-item-preview-trigger > img {
+  .mobile-data-page .claims-card-grid .buyer-claim-item-preview-trigger>img {
     width: 88px;
     height: 88px;
   }
@@ -4913,7 +4787,7 @@
     gap: 8px;
   }
 
-  .seller-dashboard .seller-board-heading > div {
+  .seller-dashboard .seller-board-heading>div {
     flex: 0 0 auto;
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -4948,9 +4822,7 @@
     background: transparent;
   }
 
-  .fulfillment-board--seller
-    .fulfillment-board__column.is-collapsed
-    .fulfillment-board__column-head {
+  .fulfillment-board--seller .fulfillment-board__column.is-collapsed .fulfillment-board__column-head {
     border-radius: 9px;
   }
 }
@@ -4969,7 +4841,7 @@
     white-space: nowrap;
   }
 
-  .seller-fulfillment-section .seller-board-heading > div {
+  .seller-fulfillment-section .seller-board-heading>div {
     flex: 0 0 auto;
     flex-wrap: nowrap !important;
     gap: 4px !important;
@@ -4982,7 +4854,7 @@
     white-space: nowrap;
   }
 
-  .seller-fulfillment-section .seller-board-heading > div > button:nth-child(2) {
+  .seller-fulfillment-section .seller-board-heading>div>button:nth-child(2) {
     display: none !important;
   }
 
@@ -5009,6 +4881,7 @@
 /* Final admin mobile sizing: keep grid tracks within the phone viewport and
    render all five admin destinations in the bottom navigation. */
 @media (max-width: 767px) {
+
   html.admin-mobile-nav,
   body.admin-mobile-nav {
     overflow-x: clip !important;
@@ -5021,7 +4894,7 @@
   }
 
   .kargo-original-app main,
-  .kargo-original-app main > div,
+  .kargo-original-app main>div,
   .kargo-original-app .admin-page {
     width: 100% !important;
     min-width: 0 !important;
@@ -5029,16 +4902,16 @@
     box-sizing: border-box !important;
   }
 
-  .kargo-original-app .admin-page > .admin-stats,
-  .kargo-original-app .admin-page > .admin-grid {
+  .kargo-original-app .admin-page>.admin-stats,
+  .kargo-original-app .admin-page>.admin-grid {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  .kargo-original-app .admin-page > .admin-stats > *,
-  .kargo-original-app .admin-page > .admin-grid > * {
+  .kargo-original-app .admin-page>.admin-stats>*,
+  .kargo-original-app .admin-page>.admin-grid>* {
     min-width: 0 !important;
     max-width: 100% !important;
   }
@@ -5048,7 +4921,7 @@
   #root,
   .kargo-original-app,
   .kargo-original-app main,
-  .kargo-original-app main > div,
+  .kargo-original-app main>div,
   .admin-page {
     width: 100%;
     min-width: 0 !important;
@@ -5081,14 +4954,14 @@
     box-shadow: 0 -4px 14px rgba(30, 39, 91, 0.12) !important;
   }
 
-  .admin-tabbar > div:first-child {
+  .admin-tabbar>div:first-child {
     display: grid !important;
     width: 100% !important;
     min-width: 0 !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 
-  .admin-tabbar > div:first-child > button {
+  .admin-tabbar>div:first-child>button {
     width: 100% !important;
     min-width: 0 !important;
     height: 60px !important;
@@ -5100,10 +4973,11 @@
 
 /* Keep the admin dashboard's actual layout box no wider than the mobile app. */
 @media (max-width: 767px) {
+
   body.admin-mobile-nav #root,
   body.admin-mobile-nav .kargo-original-app,
   body.admin-mobile-nav .kargo-original-app main,
-  body.admin-mobile-nav .kargo-original-app main > div,
+  body.admin-mobile-nav .kargo-original-app main>div,
   body.admin-mobile-nav .kargo-original-app .admin-page {
     width: 100vw !important;
     min-width: 0 !important;
@@ -5117,7 +4991,7 @@
   }
 
   body.admin-mobile-nav .kargo-original-app .admin-page-header,
-  body.admin-mobile-nav .kargo-original-app .admin-page-header > div,
+  body.admin-mobile-nav .kargo-original-app .admin-page-header>div,
   body.admin-mobile-nav .kargo-original-app .admin-stats,
   body.admin-mobile-nav .kargo-original-app .admin-grid,
   body.admin-mobile-nav .kargo-original-app .admin-grid--wide {
@@ -5159,6 +5033,7 @@
 
 /* Admin dashboard phone presentation; the shared dashboard styles stay intact. */
 @media (max-width: 767px) {
+
   /* Match the shell-qualified legacy overrides without affecting other tabs. */
   .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) {
     padding: 18px 12px 28px !important;
@@ -5174,11 +5049,11 @@
     margin-bottom: 16px;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-page-header > div {
+  .admin-page--dashboard:is(.kargo-original-app .admin-page) .admin-page-header>div {
     width: auto !important;
   }
 
-  .admin-page--dashboard .admin-page-header > div:first-child > div {
+  .admin-page--dashboard .admin-page-header>div:first-child>div {
     margin-bottom: 5px;
   }
 
@@ -5204,15 +5079,13 @@
     gap: 6px;
   }
 
-  .admin-page--dashboard .admin-page-header__actions > span {
+  .admin-page--dashboard .admin-page-header__actions>span {
     color: #748391 !important;
     font-size: 10px !important;
     white-space: nowrap;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page)
-    .admin-page-header__actions
-    > button {
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-page-header__actions>button {
     flex: 0 0 auto;
     width: auto;
     min-height: 40px !important;
@@ -5251,7 +5124,7 @@
     line-height: 1.05;
   }
 
-  .admin-page--dashboard .admin-stat > span {
+  .admin-page--dashboard .admin-stat>span {
     margin-top: 0;
     color: #4b5563;
     font-size: 13.5px;
@@ -5274,23 +5147,20 @@
     justify-self: stretch;
   }
 
-  .admin-page--dashboard > .admin-grid {
+  .admin-page--dashboard>.admin-grid {
     gap: 16px;
     margin-bottom: 16px;
   }
 
-  .admin-page--dashboard > .admin-grid:last-child {
+  .admin-page--dashboard>.admin-grid:last-child {
     margin-bottom: 0;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page)
-    :is(
-      .admin-queue-card,
-      .admin-chart-card,
-      .admin-pipeline-card,
-      .admin-activity-card,
-      .admin-seller-card
-    ) {
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) :is(.admin-queue-card,
+    .admin-chart-card,
+    .admin-pipeline-card,
+    .admin-activity-card,
+    .admin-seller-card) {
     min-width: 0;
     padding: 14px !important;
     border: 1px solid #e4e9ee !important;
@@ -5303,7 +5173,7 @@
     margin-bottom: 12px;
   }
 
-  .admin-page--dashboard .admin-chart-head > div {
+  .admin-page--dashboard .admin-chart-head>div {
     min-width: 0;
   }
 
@@ -5339,14 +5209,11 @@
     border-radius: 9px;
   }
 
-  .admin-page--dashboard
-    :is(
-      .admin-queue-row__title,
-      .admin-queue-row__desc,
-      .admin-activity-row__main,
-      .admin-activity-row__main strong,
-      .admin-pipeline__labels > span:first-child
-    ) {
+  .admin-page--dashboard :is(.admin-queue-row__title,
+    .admin-queue-row__desc,
+    .admin-activity-row__main,
+    .admin-activity-row__main strong,
+    .admin-pipeline__labels > span:first-child) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -5376,8 +5243,7 @@
     font-size: 12px;
   }
 
-  .admin-page--dashboard
-    :is(.admin-activity-row__target, .admin-activity-row__time, .admin-seller-row__orders) {
+  .admin-page--dashboard :is(.admin-activity-row__target, .admin-activity-row__time, .admin-seller-row__orders) {
     color: #748391;
     font-size: 11px;
   }
@@ -5389,7 +5255,7 @@
   }
 
   .admin-page--dashboard .admin-seller-row__rank,
-  .admin-page--dashboard .admin-seller-row > :nth-child(2) {
+  .admin-page--dashboard .admin-seller-row> :nth-child(2) {
     grid-row: 1 / 3;
   }
 
@@ -5426,11 +5292,11 @@
     border-bottom: 0;
   }
 
-  .admin-page--dashboard .admin-pipeline__labels > span {
+  .admin-page--dashboard .admin-pipeline__labels>span {
     min-width: 0;
   }
 
-  .admin-page--dashboard .admin-pipeline__labels > span:last-child {
+  .admin-page--dashboard .admin-pipeline__labels>span:last-child {
     flex: 0 0 auto;
     color: #748391;
   }
@@ -5444,7 +5310,7 @@
   }
 
   /* Keep the accessible table out of the visual layout despite legacy table sizing. */
-  .admin-page--dashboard .admin-chart-card > table.sr-only {
+  .admin-page--dashboard .admin-chart-card>table.sr-only {
     width: 1px !important;
     min-width: 0 !important;
     height: 1px;
@@ -5452,7 +5318,7 @@
     clip-path: inset(50%);
   }
 
-  .admin-page--dashboard .admin-chart-summary > div {
+  .admin-page--dashboard .admin-chart-summary>div {
     display: flex;
     min-width: 0;
     flex-direction: column;
@@ -5522,13 +5388,13 @@
   }
 
   /* Keep the mobile admin tab state on the desktop admin palette. */
-  .admin-tabbar > div:first-child > button[aria-current="page"] {
+  .admin-tabbar>div:first-child>button[aria-current="page"] {
     color: var(--kargo-navy) !important;
     border-bottom-color: var(--kargo-navy) !important;
   }
 }
 
-/* ΓöÇΓöÇΓöÇ System typeface ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+/* ─── System typeface ─────────────────────────────────────────────────────────
    Quicksand is the single face for the whole product. Older screens still carry
    inline font-family declarations (Josefin Sans, Manrope, DM Sans) and a few
    `!important` heading rules from previous passes. Rather than editing every
@@ -5539,8 +5405,8 @@ body,
 html,
 #root,
 #root *,
-body > :not(#root),
-body > :not(#root) * {
+body> :not(#root),
+body> :not(#root) * {
   font-family: "Quicksand", "DM Sans", sans-serif !important;
 }
 
@@ -5567,28 +5433,29 @@ body > :not(#root) * {
     align-items: center;
   }
 
-  .admin-page--dashboard .admin-seller-row__open > .admin-seller-row__rank,
-  .admin-page--dashboard .admin-seller-row__open > :nth-child(2) {
+  .admin-page--dashboard .admin-seller-row__open>.admin-seller-row__rank,
+  .admin-page--dashboard .admin-seller-row__open> :nth-child(2) {
     grid-row: 1 / 3;
   }
 
-  .admin-page--dashboard .admin-seller-row__open > .admin-seller-row__shop {
+  .admin-page--dashboard .admin-seller-row__open>.admin-seller-row__shop {
     grid-column: 3;
     grid-row: 1;
   }
 
-  .admin-page--dashboard .admin-seller-row__open > .admin-seller-row__orders {
+  .admin-page--dashboard .admin-seller-row__open>.admin-seller-row__orders {
     grid-column: 3;
     grid-row: 2;
   }
 
-  .admin-page--dashboard .admin-seller-row__open > .admin-seller-row__gmv {
+  .admin-page--dashboard .admin-seller-row__open>.admin-seller-row__gmv {
     grid-column: 4;
     grid-row: 1 / 3;
   }
 }
 
 @media (max-width: 767px) {
+
   /* The bottom nav already names the tab; drop the big page title on mobile. */
   .admin-page--dashboard .admin-page-header h2,
   .admin-page:not(.admin-page--dashboard) .admin-page-header h2 {
@@ -5621,36 +5488,36 @@ body > :not(#root) * {
     background: #fff;
   }
 
-  .admin-users-table tbody tr.admin-users-row > td {
+  .admin-users-table tbody tr.admin-users-row>td {
     display: none;
     min-width: 0;
     padding: 0 !important;
     border: 0;
   }
 
-  .admin-users-table tbody tr.admin-users-row > td:first-child,
-  .admin-users-table tbody tr.admin-users-row > td:nth-child(2),
-  .admin-users-table tbody tr.admin-users-row > td:nth-child(4),
-  .admin-users-table tbody tr.admin-users-row > td:last-child {
+  .admin-users-table tbody tr.admin-users-row>td:first-child,
+  .admin-users-table tbody tr.admin-users-row>td:nth-child(2),
+  .admin-users-table tbody tr.admin-users-row>td:nth-child(4),
+  .admin-users-table tbody tr.admin-users-row>td:last-child {
     display: block;
   }
 
-  .admin-users-table tbody tr.admin-users-row > td:first-child {
+  .admin-users-table tbody tr.admin-users-row>td:first-child {
     grid-column: 1;
     grid-row: 1 / 3;
   }
 
-  .admin-users-table tbody tr.admin-users-row > td:nth-child(2) {
+  .admin-users-table tbody tr.admin-users-row>td:nth-child(2) {
     grid-column: 2;
     grid-row: 1;
   }
 
-  .admin-users-table tbody tr.admin-users-row > td:nth-child(4) {
+  .admin-users-table tbody tr.admin-users-row>td:nth-child(4) {
     grid-column: 2;
     grid-row: 2;
   }
 
-  .admin-users-table tbody tr.admin-users-row > td:last-child {
+  .admin-users-table tbody tr.admin-users-row>td:last-child {
     grid-column: 3;
     grid-row: 1 / 3;
     align-self: center;
@@ -5659,6 +5526,7 @@ body > :not(#root) * {
 }
 
 @media (max-width: 767px) {
+
   /* The <li> must not be a grid: its only child is the row button, which was
      being squeezed into the 20px rank column and left the shop name 0px wide. */
   .admin-page--dashboard .admin-seller-row {
@@ -5804,7 +5672,7 @@ body > :not(#root) * {
     overflow-wrap: anywhere;
   }
 
-  .admin-ucard__shop > span {
+  .admin-ucard__shop>span {
     color: var(--kargo-muted);
     flex: 0 0 auto;
   }
@@ -5841,10 +5709,7 @@ body > :not(#root) * {
   padding: 12px 0;
 }
 
-.admin-user-stats--two {
-  grid-template-columns: 1fr 1fr;
-}
-.admin-user-stats > div {
+.admin-user-stats>div {
   display: grid;
   align-content: start;
   gap: 2px;
@@ -5852,7 +5717,7 @@ body > :not(#root) * {
   padding: 0 12px;
 }
 
-.admin-user-stats > div + div {
+.admin-user-stats>div+div {
   border-left: 1px solid #d6ddf0;
 }
 
@@ -5863,7 +5728,7 @@ body > :not(#root) * {
   white-space: nowrap;
 }
 
-.admin-user-stats > div:nth-child(-n + 2) strong {
+.admin-user-stats>div:nth-child(-n + 2) strong {
   color: #3b4bb8;
 }
 
@@ -5878,7 +5743,7 @@ body > :not(#root) * {
   border-top: 1px solid var(--kargo-line);
 }
 
-.admin-user-rows > div {
+.admin-user-rows>div {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5941,13 +5806,15 @@ body > :not(#root) * {
 }
 
 @media (max-width: 767px) {
+
   /* Scroll the whole record; keep the last row clear of the sticky footer. */
-  .admin-record-modal > .kargo-modal__body {
+  .admin-record-modal>.kargo-modal__body {
     padding-bottom: 20px !important;
   }
 }
 
 @media (max-width: 767px) {
+
   /* Keep the whole record modal (incl. sticky action footer) above the bottom nav. */
   .admin-modal-overlay.admin-record-modal-overlay {
     align-items: center !important;
@@ -5956,9 +5823,7 @@ body > :not(#root) * {
   }
 
   .admin-record-modal {
-    max-height: calc(
-      100dvh - 12px - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
-    ) !important;
+    max-height: calc(100dvh - 12px - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
   }
 }
 
@@ -6035,7 +5900,7 @@ body > :not(#root) * {
     color: var(--kargo-muted);
   }
 
-  .admin-bcard__seller > span {
+  .admin-bcard__seller>span {
     min-width: 0;
     overflow-wrap: anywhere;
   }
@@ -6090,7 +5955,7 @@ body > :not(#root) * {
     overflow: hidden;
   }
 
-  .admin-bcard__bar > span {
+  .admin-bcard__bar>span {
     display: block;
     height: 100%;
     background: #3b4bb8;
@@ -6260,7 +6125,7 @@ body > :not(#root) * {
   min-width: 0;
 }
 
-.admin-batch-seller > span {
+.admin-batch-seller>span {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -6292,7 +6157,7 @@ body > :not(#root) * {
 }
 
 .admin-batch-stats {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1.2fr 1fr;
 }
 
 .admin-batch-products {
@@ -6302,7 +6167,7 @@ body > :not(#root) * {
   display: grid;
 }
 
-.admin-batch-products > li {
+.admin-batch-products>li {
   display: grid;
   gap: 6px;
   padding: 10px 0;
@@ -6343,13 +6208,13 @@ body > :not(#root) * {
 }
 
 @media (max-width: 767px) {
-  .admin-record-modal.admin-batch-modal > .admin-modal-footer {
+  .admin-record-modal.admin-batch-modal>.admin-modal-footer {
     grid-template-columns: none;
     grid-auto-flow: column;
     grid-auto-columns: minmax(0, 1fr);
   }
 
-  .admin-batch-modal > .admin-modal-footer > .admin-action-button {
+  .admin-batch-modal>.admin-modal-footer>.admin-action-button {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -6386,7 +6251,7 @@ body > :not(#root) * {
   padding: 10px 0;
 }
 
-.admin-order-parties > div {
+.admin-order-parties>div {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -6394,7 +6259,7 @@ body > :not(#root) * {
   padding: 0 12px;
 }
 
-.admin-order-parties > div + div {
+.admin-order-parties>div+div {
   border-left: 1px solid #d6ddf0;
 }
 
@@ -6659,7 +6524,7 @@ body > :not(#root) * {
     gap: 10px;
   }
 
-  .admin-filter-bar--sheet > .admin-filter-search {
+  .admin-filter-bar--sheet>.admin-filter-search {
     flex: 1 1 0;
     width: auto;
     min-width: 0;
@@ -6703,12 +6568,11 @@ body > :not(#root) * {
   }
 
   /* Everything except search, the filter button and the export button moves into the sheet. */
-  .admin-filter-bar--sheet
-    > :not(.admin-filter-search):not(.admin-filter-sheet-btn):not(.admin-action-primary) {
+  .admin-filter-bar--sheet> :not(.admin-filter-search):not(.admin-filter-sheet-btn):not(.admin-action-primary) {
     display: none !important;
   }
 
-  .admin-filter-bar--sheet > .admin-action-primary {
+  .admin-filter-bar--sheet>.admin-action-primary {
     flex: 1 1 100%;
   }
 
@@ -6858,7 +6722,7 @@ body > :not(#root) * {
 }
 
 @media (max-width: 767px) {
-  .admin-filter-bar--sheet > .admin-filter-search {
+  .admin-filter-bar--sheet>.admin-filter-search {
     padding-right: 12px !important;
     font-size: 14px !important;
     text-overflow: ellipsis;
@@ -7012,7 +6876,7 @@ body > :not(#root) * {
   padding: 10px 0;
 }
 
-.admin-audit-change + .admin-audit-change {
+.admin-audit-change+.admin-audit-change {
   border-top: 1px solid #d6ddf0;
 }
 
@@ -7248,7 +7112,7 @@ body > :not(#root) * {
   margin-bottom: 12px;
 }
 
-.admin-team-actions > button {
+.admin-team-actions>button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -7264,7 +7128,7 @@ body > :not(#root) * {
     padding: 12px 14px;
   }
 
-  .admin-team-actions > button {
+  .admin-team-actions>button {
     min-height: 48px;
     padding: 0 18px;
     border-radius: 14px;
@@ -7321,7 +7185,7 @@ body > :not(#root) * {
 
 /* Account details (desktop): profile on the left, activity on the right. */
 @media (min-width: 768px) {
-  .admin-account-modal > .kargo-modal__body {
+  .admin-account-modal>.kargo-modal__body {
     padding: 0 !important;
   }
 
@@ -7365,7 +7229,7 @@ body > :not(#root) * {
     margin: 20px 0 0;
   }
 
-  .admin-account__facts > div {
+  .admin-account__facts>div {
     padding: 12px 0;
     border-top: 1px solid #e9ecf5;
   }
@@ -7427,7 +7291,7 @@ body > :not(#root) * {
     border-radius: 16px;
   }
 
-  .admin-account__stats > div {
+  .admin-account__stats>div {
     display: grid;
     align-content: start;
     gap: 4px;
@@ -7435,7 +7299,7 @@ body > :not(#root) * {
     min-width: 0;
   }
 
-  .admin-account__stats > div + div {
+  .admin-account__stats>div+div {
     border-left: 1px solid #d6ddf0;
   }
 
@@ -7511,7 +7375,7 @@ body > :not(#root) * {
     color: #17212b;
   }
 
-  .admin-account__orders li > span {
+  .admin-account__orders li>span {
     text-align: right;
     font-size: 15px;
     font-weight: 800;
@@ -7585,7 +7449,7 @@ body > :not(#root) * {
 
 /* Batch details (desktop): cover and identity on the left, summary and products on the right. */
 @media (min-width: 768px) {
-  .admin-batch-modal > .kargo-modal__body {
+  .admin-batch-modal>.kargo-modal__body {
     padding: 0 !important;
   }
 
@@ -7744,14 +7608,14 @@ body > :not(#root) * {
     overflow: hidden;
   }
 
-  .admin-batch__claimed .admin-bcard__bar > span {
+  .admin-batch__claimed .admin-bcard__bar>span {
     display: block;
     height: 100%;
     border-radius: 999px;
     background: #6f77d6;
   }
 
-  .admin-batch__claimed > span:last-child {
+  .admin-batch__claimed>span:last-child {
     flex: 0 0 auto;
     min-width: 78px;
   }
@@ -7764,14 +7628,14 @@ body > :not(#root) * {
   }
 
   /* Footer: moderation actions on the left, Close batch pushed to the right. */
-  .admin-batch-modal > .admin-modal-footer {
+  .admin-batch-modal>.admin-modal-footer {
     justify-content: flex-start;
     gap: 12px;
     padding: 16px 28px 20px;
     background: #fff;
   }
 
-  .admin-batch-modal > .admin-modal-footer .admin-action-button {
+  .admin-batch-modal>.admin-modal-footer .admin-action-button {
     min-height: 46px;
     padding: 0 20px;
     border-radius: 12px;
@@ -7779,7 +7643,7 @@ body > :not(#root) * {
     font-weight: 700;
   }
 
-  .admin-batch-modal > .admin-modal-footer .admin-action-button--danger:last-child {
+  .admin-batch-modal>.admin-modal-footer .admin-action-button--danger:last-child {
     margin-left: auto;
   }
 
@@ -7787,805 +7651,288 @@ body > :not(#root) * {
     max-width: none;
   }
 }
-/* Order details (desktop): progress and payments on the left, product and people on the right. */
-.kargo-modal__header-end {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-@media (min-width: 768px) {
-  .admin-order-modal > .kargo-modal__header .kargo-modal__title-group {
-    gap: 12px;
+
+
+/* Buyer-facing storefront only. Keep tablet/desktop and shared cards untouched. */
+@media (max-width: 640px) {
+  .kargo-original-app:has(.seller-shop-view) {
+    --seller-shop-header-height: calc(56px + env(safe-area-inset-top));
+    --seller-shop-chrome: linear-gradient(90deg, #1719b4 0%, #3852bd 49%, #6995d7 100%);
   }
-  .admin-order-modal > .kargo-modal__header h3 {
-    font-size: 19px;
-    font-weight: 800;
+
+  .kargo-original-app:has(.seller-shop-view) .kargo-header {
+    height: var(--seller-shop-header-height) !important;
+    min-height: var(--seller-shop-header-height) !important;
+    padding-inline: 12px !important;
+    border: 0 !important;
+    background: var(--seller-shop-chrome) !important;
+    box-shadow: none !important;
   }
-  .admin-order__placed {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--kargo-muted);
+
+  .seller-shop-view .seller-shop-breadcrumb {
+    top: var(--seller-shop-header-height, calc(56px + env(safe-area-inset-top))) !important;
+    width: 100%;
+    min-width: 0;
+    min-height: 52px;
+    padding: 4px 12px !important;
+    background: var(--seller-shop-chrome) !important;
+    border-bottom: 0 !important;
+    box-shadow: 0 3px 8px rgba(23, 25, 180, 0.12);
+  }
+
+  .seller-shop-view .seller-shop-breadcrumb>button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 8px 0;
+    color: #fff !important;
     white-space: nowrap;
   }
-  .admin-order-modal > .kargo-modal__body {
+
+  .seller-shop-view .seller-shop-breadcrumb>span:first-of-type {
+    flex: 0 0 auto;
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  .seller-shop-view .seller-shop-breadcrumb>span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    color: #fff !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .kargo-original-app main .seller-shop-view>.seller-shop-content {
+    padding: 16px !important;
+  }
+
+  .seller-shop-view .seller-shop-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .seller-shop-view .seller-shop-page>* {
+    margin-block: 0 !important;
+  }
+
+  /* Extra specificity is intentional: shared card padding is !important. */
+  .kargo-original-app main .seller-shop-view .seller-shop-header-card {
     padding: 0 !important;
-    background: #eef0f7;
-  }
-  .admin-order {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    align-items: start;
-    gap: 20px;
-    padding: 28px;
-  }
-  .admin-order__col {
-    display: grid;
-    gap: 20px;
-    min-width: 0;
-  }
-  .admin-order__card {
-    padding: 20px 22px;
-    background: #fff;
-    border: 1px solid #e6e9f2;
-    border-radius: 18px;
-  }
-  .admin-order__eyebrow {
-    margin: 0;
-    font-size: 11.5px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--kargo-muted);
-  }
-  .admin-order__head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .admin-order__head span {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--kargo-muted);
+    overflow: hidden;
+    border-radius: 14px !important;
   }
 
-  /* Progress stepper */
-  .admin-order__steps {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin: 18px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .admin-order__steps li {
-    position: relative;
-    display: grid;
-    justify-items: start;
-    gap: 4px;
-  }
-  .admin-order__dot {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    border: 2px solid #c9cfe6;
-    border-radius: 50%;
-    background: #fff;
-    color: #fff;
-  }
-  .admin-order__steps li:not(:last-child)::before {
-    content: "";
-    position: absolute;
-    top: 11px;
-    left: 30px;
-    right: 6px;
-    height: 2px;
-    background: #d6dbee;
-  }
-  .admin-order__steps li.is-done:not(:last-child)::before {
-    background: #3b4bb8;
-  }
-  .admin-order__steps li.is-done .admin-order__dot {
-    border-color: #3b4bb8;
-    background: #3b4bb8;
-  }
-  .admin-order__steps li.is-current .admin-order__dot {
-    border-color: #3b4bb8;
-  }
-  .admin-order__steps strong {
-    margin-top: 6px;
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--kargo-muted);
-  }
-  .admin-order__steps li.is-done strong {
-    color: #17212b;
-  }
-  .admin-order__steps li.is-current strong {
-    color: #3b4bb8;
-  }
-  .admin-order__steps small {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--kargo-muted);
+  .seller-shop-view .seller-shop-header-banner {
+    padding: 20px !important;
+    gap: 16px 14px !important;
   }
 
-  /* Payments */
-  .admin-order__empty {
-    display: grid;
-    gap: 4px;
-    margin-top: 14px;
-    padding: 28px 20px;
-    text-align: center;
-    border: 1.5px dashed #cfd5ea;
-    border-radius: 16px;
+  .seller-shop-view .seller-shop-identity {
+    min-width: 0 !important;
   }
-  .admin-order__empty strong {
-    font-size: 15px;
-    font-weight: 800;
-    color: #17212b;
-  }
-  .admin-order__empty p {
-    margin: 0;
-    font-size: 13.5px;
-    font-weight: 500;
-    color: var(--kargo-muted);
-  }
-  .admin-order__payments {
-    margin: 10px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .admin-order__payments li {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto 96px;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 0;
-    border-top: 1px solid #eef0f6;
-  }
-  .admin-order__payments li > div {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-  }
-  .admin-order__payments li > div span {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--kargo-muted);
+
+  .seller-shop-view .seller-shop-name {
+    font-size: 21px !important;
+    line-height: 1.3;
     overflow-wrap: anywhere;
   }
-  .admin-order__payments li > strong {
+
+  .seller-shop-view .seller-shop-identity>div+div {
+    margin-top: 8px !important;
+    line-height: 1.5;
+  }
+
+  .seller-shop-view .seller-shop-contact {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+
+  .seller-shop-view .seller-shop-contact>button {
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 18px !important;
+    line-height: 1.4;
+  }
+
+  .seller-shop-view .seller-shop-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    border-color: #e5e7eb !important;
+  }
+
+  .seller-shop-view .seller-shop-stats>div {
+    min-width: 0;
+    padding: 16px 6px !important;
+    border-color: #e5e7eb !important;
+  }
+
+  .seller-shop-view .seller-shop-stats>div>div:first-child {
+    font-size: 17px !important;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  .seller-shop-view .seller-shop-stats>div>div:last-child {
+    margin-top: 5px !important;
+    font-size: 12px !important;
+    line-height: 1.4;
+    color: #6b7280 !important;
+  }
+
+  .seller-shop-view .seller-shop-stats svg {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+  }
+
+  .seller-shop-view .seller-shop-tabs {
+    min-width: 0;
+    max-width: 100%;
+    gap: 4px !important;
+    padding-bottom: 0 !important;
+    background:
+      linear-gradient(to right, var(--kargo-canvas) 30%, transparent) left / 24px 100% local,
+      linear-gradient(to left, var(--kargo-canvas) 30%, transparent) right / 24px 100% local,
+      radial-gradient(farthest-side at 0 50%, rgba(25, 27, 169, 0.18), transparent) left / 8px 100% scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(25, 27, 169, 0.18), transparent) right / 8px 100% scroll;
+    background-repeat: no-repeat;
+  }
+
+  .seller-shop-view .seller-shop-tabs>button {
+    flex: 0 0 auto;
+    min-height: 48px !important;
+    padding: 12px 14px !important;
+    line-height: 1.4;
+  }
+
+  .seller-shop-view .seller-shop-tabs>button[aria-current="page"] {
+    border-bottom-width: 3px !important;
+  }
+}
+
+/* Sellers (and any header without the marketplace search) have room for the
+   KARGO wordmark in the phone header, so bring it back instead of hiding it. */
+@media (max-width: 767px) {
+
+  /* Let the brand column size to the logo + wordmark so both stay on screen. */
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-lockup {
+    width: auto !important;
+    grid-column: 1;
+    justify-self: start;
+    gap: 10px !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-mark {
+    display: grid !important;
+    width: 40px !important;
+    height: 40px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) .kargo-brand-name {
+    display: inline-block !important;
+    font-size: 17px !important;
+  }
+}
+
+/* Seller batch item cards on phones: the desktop three-column row squeezes the
+   product name to a sliver (one character per line) and turns the availability
+   controls into a tall, cluttered column. Reflow into an identity row plus a
+   full-width control toolbar. */
+@media (max-width: 700px) {
+  .batch-product-card {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start !important;
+    gap: 14px 12px !important;
+  }
+
+  .batch-product-card .batch-product-photo-control {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .batch-product-card>.flex-1 {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  /* The price + controls wrapper dissolves so the price can sit in the identity
+     row and the controls can span the full width below it. */
+  .batch-product-card .batch-product-side {
+    display: contents;
+  }
+
+  .batch-product-card .batch-product-price {
+    grid-column: 3;
+    grid-row: 1;
+    margin-bottom: 0 !important;
+  }
+
+  .batch-product-card .batch-product-controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center !important;
+    gap: 8px 12px !important;
+    padding-top: 12px;
+    border-top: 1px solid #eef1f5;
+  }
+
+  /* "Waitlist max [input] Save" takes its own line under the status + toggle. */
+  .batch-product-card .batch-product-controls>div {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+  }
+
+  /* Buyer action ("Claim this item" / status) tucks into the card's lower-right,
+     matching the design, instead of wrapping to the lower-left. */
+  .batch-product-card .batch-product-side> :not(.batch-product-price):not(.batch-product-controls) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: end;
     text-align: right;
   }
-  .admin-order__payments strong {
-    font-size: 15px;
-    font-weight: 800;
-    color: #17212b;
+
+  /* Keep the claim button a smaller, tighter control on phones. */
+  .batch-product-card .batch-product-side>button.kargo-primary {
+    min-height: 34px !important;
+    padding: 5px 12px !important;
+    font-size: 11px !important;
   }
 
-  /* Product + total */
-  .admin-order__product {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .admin-order__product > div {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-  }
-  .admin-order__product strong {
-    font-size: 16px;
-    font-weight: 800;
-    color: #17212b;
-    overflow-wrap: anywhere;
-  }
-  .admin-order__product span {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--kargo-muted);
-  }
-  .admin-order__thumb {
-    flex: 0 0 auto;
-  }
-  .admin-order__thumb img {
-    width: 64px !important;
-    height: 64px !important;
-    border-radius: 14px !important;
-    background: #ebe0d3;
-  }
-  .admin-order__total {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px solid #e9ecf5;
-  }
-  .admin-order__total span {
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--kargo-muted);
-  }
-  .admin-order__total strong {
-    font-size: 24px;
-    font-weight: 800;
-    color: #17212b;
-  }
-
-  /* People + delivery */
-  .admin-order__person {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .admin-order__person + .admin-order__person {
-    margin-top: 14px;
-  }
-  .admin-order__person div,
-  .admin-order__deliver span {
-    display: grid;
-    gap: 1px;
-    min-width: 0;
-  }
-  .admin-order__person strong {
-    font-size: 15px;
-    font-weight: 800;
-    color: #17212b;
-    overflow-wrap: anywhere;
-  }
-  .admin-order small {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--kargo-muted);
-  }
-  .admin-order__deliver {
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px solid #e9ecf5;
-  }
-  .admin-order__deliver p {
-    margin: 4px 0 0;
-    font-size: 14.5px;
-    font-weight: 700;
-    line-height: 1.5;
-    color: #17212b;
-    overflow-wrap: anywhere;
-  }
-  .admin-order__deliver > div {
-    display: flex;
-    gap: 28px;
-    margin-top: 14px;
-  }
-  .admin-order__deliver strong {
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--kargo-muted);
-  }
-
-  /* Footer: white bar, cancel on the left like the reference. */
-  .admin-order-modal > .admin-modal-footer {
-    justify-content: flex-start;
-    padding: 16px 28px 20px;
-    background: #fff;
-  }
-  .admin-order-modal > .admin-modal-footer .admin-action-button {
-    min-height: 46px;
-    padding: 0 22px;
-    border-radius: 12px;
-    border-color: #e5e7ec;
-    background: #fff;
-    color: #b42318;
-    font-size: 15px;
-    font-weight: 700;
-  }
-  .admin-order-modal .admin-footer-note {
-    margin: 0;
-  }
-  .kargo-modal__content .admin-order :is(p, li) {
-    max-width: none;
+  /* A slightly larger product photo anchors the mobile item card. */
+  .batch-product-card .batch-product-photo-control img {
+    width: 56px !important;
+    height: 56px !important;
   }
 }
 
-/* Small phones: card lists must never be wider than the screen.
-   Grid items default to min-width:auto, so one unbreakable row (pills, a shop name)
-   used to stretch every card past the edge and get clipped. */
-@media (max-width: 767px) {
-  .admin-users-cards,
-  .admin-batches-cards,
-  .admin-orders-cards,
-  .admin-audit-cards,
-  .admin-team-cards {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .admin-ucard,
-  .admin-bcard,
-  .admin-ocard,
-  .admin-acard,
-  .admin-tcard {
-    min-width: 0;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  .admin-ucard__top > *,
-  .admin-bcard__top > *,
-  .admin-ocard__top > *,
-  .admin-acard__top > *,
-  .admin-tcard__top > * {
-    min-width: 0;
-  }
-}
-
-/* Under ~360px there is no room for side-by-side rows, so let them wrap. */
-@media (max-width: 359px) {
-  .admin-ucard,
-  .admin-bcard,
-  .admin-ocard,
-  .admin-acard,
-  .admin-tcard {
-    padding: 10px;
-    border-radius: 14px;
-  }
-  .admin-users-cards,
-  .admin-batches-cards,
-  .admin-orders-cards,
-  .admin-audit-cards,
-  .admin-team-cards {
-    padding: 6px;
-  }
-
-  /* Users */
-  .admin-ucard__top {
-    flex-wrap: wrap;
-    row-gap: 6px;
-  }
-  .admin-ucard__gmv {
-    order: 5;
-    flex: 1 1 100%;
-    display: flex;
-    align-items: baseline;
-    justify-content: flex-start;
-    gap: 6px;
-    text-align: left;
-  }
-  .admin-ucard__meta {
-    flex-wrap: wrap;
-    row-gap: 6px;
-  }
-  .admin-ucard__badges {
-    flex-wrap: wrap;
-  }
-  .admin-ucard__shop {
-    flex: 1 1 100%;
-    justify-content: flex-start;
-  }
-  .admin-ucard__shop strong {
+/* Buyer home: keep every batch card the same height by holding the title to
+   two lines across the multi-column breakpoints, so a longer title cannot make
+   one card taller than its neighbour. */
+@media (max-width: 800px) {
+  .kargo-original-app main .buyer-batch-card__body h3 {
+    display: -webkit-box;
+    min-height: 2.4em;
+    overflow: hidden;
     white-space: normal;
-    overflow-wrap: anywhere;
-  }
-  .admin-ucard__foot {
-    flex-wrap: wrap;
-    row-gap: 2px;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
-  /* Batches */
-  .admin-bcard__meta {
-    flex-wrap: wrap;
-    row-gap: 6px;
-  }
-  .admin-bcard__summary {
-    flex: 1 1 100%;
-    justify-content: flex-start;
-  }
-  .admin-bcard__panel {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  /* Orders */
-  .admin-ocard__meta {
-    flex-wrap: wrap;
-    row-gap: 6px;
-  }
-  .admin-ocard__foot {
-    flex-wrap: wrap;
-    row-gap: 4px;
-  }
-
-  /* Audit log */
-  .admin-acard__meta {
-    flex-wrap: wrap;
-    row-gap: 6px;
-  }
-  .admin-acard__target {
-    flex: 1 1 100%;
-    text-align: left;
-  }
-
-  /* Team */
-  .admin-tcard__top {
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-  .admin-tcard__revoke {
-    flex: 1 1 100%;
-    justify-content: center;
-  }
-  .admin-tcard__foot {
-    flex-wrap: wrap;
-    row-gap: 4px;
-  }
-}
-
-/* Very small phones. */
-@media (max-width: 359px) {
-  /* Avatar, name and arrow stay on one row; only the amount drops to its own line.
-     A zero flex-basis stops the long email from forcing the arrow onto a new row. */
-  .admin-ucard__who,
-  .admin-bcard__who,
-  .admin-ocard__who,
-  .admin-acard__who,
-  .admin-tcard__who {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-  .admin-ucard__email,
-  .admin-tcard__email {
+  /* Keep seller and date to a single line so a long shop name cannot push the
+     date/claimed rows down and make one card taller than its neighbour. */
+  .kargo-original-app main .buyer-batch-card__seller span,
+  .kargo-original-app main .buyer-batch-card__date span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
-  /* Bottom nav: five labels in under 300px must not run into each other. */
-  .admin-tabbar .kargo-tab-label {
-    max-width: 100%;
-    overflow: hidden;
-    font-size: 9px;
-    letter-spacing: -0.02em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .admin-tabbar__item {
-    padding-right: 1px !important;
-    padding-left: 1px !important;
-  }
-
-  /* Header: let the "Admin console" pill shrink instead of pushing the avatar away. */
-  .admin-shell-header .kargo-admin-badge,
-  .admin-shell-header [class*="admin-console"] {
-    min-width: 0;
-  }
-}
-
-/* Orders cards: tall thumbnail on the left, status + date, title, parties + amount.
-   Scoped to Orders (cards that carry __body) so Payments/Combined keep their layout. */
-.admin-ocard:has(.admin-ocard__body) {
-  display: flex;
-  align-items: stretch;
-  gap: 18px;
-  padding: 16px;
-  border-radius: 22px;
-}
-.admin-ocard__body {
-  display: grid;
-  align-content: center;
-  gap: 12px;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-.admin-ocard:has(.admin-ocard__body) .admin-ocard__thumb {
-  flex: 0 0 auto;
-}
-.admin-ocard:has(.admin-ocard__body) .admin-ocard__thumb img {
-  width: 150px !important;
-  height: 100% !important;
-  min-height: 130px;
-  border-radius: 18px !important;
-  object-fit: cover;
-  background: #ead9bf;
-}
-.admin-ocard__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.admin-ocard__head .admin-badge {
-  padding: 6px 14px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.admin-ocard:has(.admin-ocard__body) .admin-ocard__date {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--kargo-muted);
-  white-space: nowrap;
-}
-.admin-ocard:has(.admin-ocard__body) .admin-ocard__who {
-  display: grid;
-  gap: 2px;
-}
-.admin-ocard:has(.admin-ocard__body) .admin-ocard__product {
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1.15;
-  color: #17212b;
-  overflow-wrap: anywhere;
-}
-.admin-ocard:has(.admin-ocard__body) .admin-ocard__num {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--kargo-muted);
-}
-.admin-ocard:has(.admin-ocard__body) .admin-ocard__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding-top: 0;
-  border-top: 0;
-}
-.admin-ocard__parties {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.admin-ocard__avatars {
-  display: inline-flex;
-  flex: 0 0 auto;
-}
-.admin-ocard__avatars > :last-child {
-  margin-left: -10px;
-}
-.admin-ocard__names {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--kargo-muted);
-  overflow-wrap: anywhere;
-}
-.admin-ocard__names strong {
-  font-weight: 800;
-  color: #17212b;
-}
-.admin-ocard:has(.admin-ocard__body) .admin-ocard__price {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  padding: 10px 22px;
-  border-radius: 999px;
-  background: #1d2a9e;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-/* The reference is the full-width card layout; keep it on narrow screens too,
-   dropping the big thumbnail when there's no room. */
-@media (max-width: 519px) {
-  .admin-ocard:has(.admin-ocard__body) .admin-ocard__thumb img {
-    width: 84px !important;
-    min-height: 84px;
-  }
-  .admin-ocard:has(.admin-ocard__body) .admin-ocard__product {
-    font-size: 19px;
-  }
-  .admin-ocard:has(.admin-ocard__body) .admin-ocard__foot {
-    flex-wrap: wrap;
-    row-gap: 10px;
-  }
-  .admin-ocard__names {
-    font-size: 14px;
-  }
-}
-
-/* Combined payment detail modal. */
-@media (min-width: 768px) {
-  .admin-combined-modal > .kargo-modal__body {
-    padding: 0 !important;
-    background: #eef0f7;
-  }
-  .admin-combined {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    align-items: start;
-    gap: 20px;
-    padding: 24px;
-  }
-  .admin-combined__col {
-    display: grid;
-    gap: 20px;
-    min-width: 0;
-  }
-}
-.admin-combined {
-  display: grid;
-  gap: 16px;
-}
-.admin-combined__col {
-  display: grid;
-  gap: 16px;
-}
-.admin-combined__head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.admin-combined__icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 auto;
-  border-radius: 12px;
-  background: #eef2fb;
-  color: #3b4bb8;
-}
-.admin-combined__head > div {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.admin-combined__head strong {
-  font-size: 16px;
-  font-weight: 800;
-  color: #17212b;
-  overflow-wrap: anywhere;
-}
-.admin-combined__head span {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--kargo-muted);
-}
-.admin-combined__members {
-  margin: 16px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.admin-combined__members li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  border-top: 1px solid #eef0f6;
-}
-.admin-combined__members li > div {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.admin-combined__members strong {
-  font-size: 14.5px;
-  font-weight: 800;
-  color: #17212b;
-  overflow-wrap: anywhere;
-}
-.admin-combined__members li > div span {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--kargo-muted);
-}
-.admin-combined__members li > strong {
-  text-align: right;
-}
-.admin-combined__totals {
-  margin: 14px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid #e9ecf5;
-  display: grid;
-  gap: 8px;
-}
-.admin-combined__totals > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-.admin-combined__totals dt {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--kargo-muted);
-}
-.admin-combined__totals dd {
-  margin: 0;
-  font-size: 14.5px;
-  font-weight: 700;
-  color: #17212b;
-}
-.admin-combined__grand dt,
-.admin-combined__grand dd {
-  font-size: 18px !important;
-  font-weight: 800 !important;
-  color: #17212b !important;
-}
-.admin-combined__retry {
-  margin-top: 12px;
-  align-self: start;
-  min-height: 40px;
-  padding: 8px 16px;
-  border: 1px solid var(--kargo-line);
-  border-radius: 10px;
-  background: #fff;
-  color: #3b4bb8;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-/* Amount still owed on an insufficient-payment order. */
-.admin-order__owed {
-  display: grid;
-  gap: 2px;
-  margin-top: 12px;
-  padding: 12px 14px;
-  border: 1px solid #f0c9a0;
-  border-radius: 14px;
-  background: #fdf3e7;
-}
-.admin-order__owed span {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #92400e;
-}
-.admin-order__owed strong {
-  font-size: 22px;
-  font-weight: 800;
-  color: #b4690e;
-  line-height: 1.1;
-}
-.admin-order__owed small {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--kargo-muted);
-}
-.admin-order__payment + .admin-order__payment {
-  margin-top: 10px;
-}
-/* The li is a block so the receipt stacks under the row (the generic
-   .admin-order__payments li rule is a 3-column grid). */
-.admin-order__payments li.admin-order__payment {
-  display: block;
-}
-.admin-order__payments li.admin-order__payment > .admin-order__payment-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 14px;
-}
-.admin-order__payment-row > div {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.admin-order__payment-row > div span {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--kargo-muted);
-  overflow-wrap: anywhere;
-}
-.admin-order__payment-row > strong {
-  text-align: right;
-}
-.admin-order__payment .admin-receipt img {
-  max-height: 320px;
-  width: auto;
-  object-fit: contain;
-}
-/* Receipt thumbnail reused from the payment modal styles (.admin-receipt). */
-.admin-order__payment .admin-receipt,
-.admin-order-payments .admin-receipt {
-  margin-top: 10px;
-}
-
-/* PDF receipts have no preview image; show a compact link button instead. */
-.admin-receipt--pdf {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #f5f6ff;
 }

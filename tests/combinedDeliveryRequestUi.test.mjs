@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
-let server, Dialog, Card, SellerDialog, CombinedCard, AvailabilityNotice, PaymentForm;
+let server, Dialog, Card, SellerDialog, CombinedCard, AvailabilityNotice, PaymentForm, Details;
 before(async () => {
   server = await createServer({
     configFile: false,
@@ -33,6 +33,9 @@ before(async () => {
   });
   Dialog = (
     await server.ssrLoadModule("/src/features/combined-delivery/CombinedDeliveryRequestDialog.tsx")
+  ).default;
+  Details = (
+    await server.ssrLoadModule("/src/features/dashboard/CombinedDeliveryDetailsModal.tsx")
   ).default;
   SellerDialog = (
     await server.ssrLoadModule("/src/features/combined-delivery/SellerCombinedDelivery.tsx")
@@ -187,6 +190,31 @@ const sellerRequest = {
   payment_method: "GCash",
 };
 const sellerProps = { onClose() {}, onUpdated() {} };
+test("dashboard combined details show every product with its own uploaded image and quantity", () => {
+  const html = renderToStaticMarkup(createElement(Details, {
+    items: [first, second].map((item) => ({ ...item, batch: item.batchName })),
+    imageForClaim: (item) => `https://example.com/${item.id}.jpg`,
+    onClose() {},
+  }));
+  assert.match(html, /Combined delivery details/);
+  assert.match(html, /src="https:\/\/example.com\/a.jpg" alt="Product A"/);
+  assert.match(html, /src="https:\/\/example.com\/b.jpg" alt="Product B"/);
+  assert.match(html, /Qty: 1/);
+  assert.match(html, /Qty: 2/);
+  assert.match(html, /Batch A/);
+  assert.match(html, />Close<\/button>/);
+});
+test("seller combined details show separate images for different products", () => {
+  const html = renderToStaticMarkup(createElement(SellerDialog, {
+    ...sellerProps,
+    request: sellerRequest,
+    imageForOrder: (id) => `https://example.com/${id}.jpg`,
+  }));
+  assert.match(html, /src="https:\/\/example.com\/a.jpg" alt="Product A"/);
+  assert.match(html, /src="https:\/\/example.com\/b.jpg" alt="Product B"/);
+  assert.match(html, /Qty: 1/);
+  assert.match(html, /Qty: 2/);
+});
 test("seller review shows existing products and confirmed destination with separate approve/reject actions", () => {
   const html = renderToStaticMarkup(
     createElement(SellerDialog, { ...sellerProps, request: sellerRequest }),

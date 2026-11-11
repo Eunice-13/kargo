@@ -6,6 +6,7 @@ import Card from "@/components/shared/Card";
 import Countdown from "@/components/shared/Countdown";
 import InsufficientPaymentNotice from "@/components/shared/InsufficientPaymentNotice";
 import ProductThumb from "@/components/shared/ProductThumb";
+import { claimAmountDue } from "./claimPaymentState";
 import "./pendingPayments.css";
 
 /** Render each existing payment record independently; actions stay with their claim. */
@@ -91,8 +92,10 @@ export default function PendingPaymentCard({
         )}
       </div>
       <div className="pending-product-card__amount">
-        ₱{item.amount.toLocaleString()}
-        {deliveryRequest?.status === "shipping_fee_set" ? (
+        ₱{claimAmountDue(item).toLocaleString()}
+        {item.status === "Insufficient Payment" ? (
+          <span className="pending-product-card__note">Remaining balance</span>
+        ) : deliveryRequest?.status === "shipping_fee_set" ? (
           <span className="pending-product-card__note">
             Item subtotal · View shared fee in request
           </span>
