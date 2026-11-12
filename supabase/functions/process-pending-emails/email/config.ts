@@ -12,6 +12,8 @@ export type EnvReader = (name: string) => string | undefined
 export const DEFAULT_EMAIL_LOGO_URL =
   "https://kargo-psi.vercel.app/kargo-logo-head.png?v=2750d019"
 
+export const DEFAULT_APP_URL = "https://kargo-psi.vercel.app"
+
 /**
  * Both providers deliberately use this exact versioned asset. Keeping the URL
  * out of deployment-specific environment variables prevents Auth and queued
@@ -22,7 +24,7 @@ export function brandingFrom(env: EnvReader): Branding {
     safeUrl(env("KARGO_APP_URL")) ??
     safeUrl(env("APP_URL")) ??
     safeUrl(env("SITE_URL")) ??
-    null
+    DEFAULT_APP_URL
 
   return { appUrl, logoUrl: DEFAULT_EMAIL_LOGO_URL, productName: "KARGO" }
 }

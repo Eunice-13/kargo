@@ -4,6 +4,7 @@ import { membershipError, resolveGroupMembership } from "./groupMembership";
 import { loadPaymentCompatibleRows } from "./paymentReadCompatibility";
 import { combinedDeliveryMutationError } from "./combinedDeliveryErrors";
 import { PASSWORD_RESET_PATH } from "@/constants/auth";
+import { authRedirectOrigin } from "@/constants/appUrl";
 
 import { normalizeBatchCategory } from "@/constants/categories";
 
@@ -346,7 +347,7 @@ export async function signUp(input: {
 
       // local development server would land on the deployed site instead.
 
-      emailRedirectTo: `${window.location.origin}/`,
+      emailRedirectTo: `${authRedirectOrigin()}/`,
 
       data: {
         display_name: input.name,
@@ -409,7 +410,7 @@ export async function resendConfirmation(email: string) {
 
     email: email.trim(),
 
-    options: { emailRedirectTo: `${window.location.origin}/` },
+    options: { emailRedirectTo: `${authRedirectOrigin()}/` },
   });
 
   if (error) throw error;
@@ -418,7 +419,7 @@ export async function resendConfirmation(email: string) {
 export async function requestPasswordReset(email: string) {
   const client = requireSupabase();
 
-  const redirectTo = `${window.location.origin}${PASSWORD_RESET_PATH}`;
+  const redirectTo = `${authRedirectOrigin()}${PASSWORD_RESET_PATH}`;
 
   const { error } = await client.auth.resetPasswordForEmail(email, {
     redirectTo,
