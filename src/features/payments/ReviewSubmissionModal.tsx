@@ -4,6 +4,7 @@ import { CreditCard, Check, X, ExternalLink, Image as ImageIcon, Printer } from 
 import { INDIGO, CREAM } from "@/constants/theme";
 import { Modal, Avatar, SecondaryBtn } from "@/components/shared";
 import type { VerifyItem } from "./verifyTypes";
+import { rejectionDeadlineHasPassed } from "./verifyTypes";
 import { confirmPaymentCopy } from "./confirmPaymentWarning";
 import { printPaymentInvoice } from "./paymentInvoice";
 import { kargoApi } from "@/services";
@@ -463,6 +464,7 @@ export default function ReviewSubmissionModal({
                 )}
                 {reviewTarget.status === "Rejected" &&
                   reviewTarget.rejectionDeadline &&
+                  !rejectionDeadlineHasPassed(reviewTarget) &&
                   (buyerNotified ? (
                     <span
                       style={{

@@ -524,7 +524,6 @@
 }
 
 @media (max-width: 1024px) {
-
   html,
   body,
   #root,
@@ -602,11 +601,14 @@
   }
 
   /* Convert wide operational tables to cards before they overflow tablets. */
-  :is(.mobile-data-page, .seller-dashboard, .bdash) :is(.seller-orders-table-wrap,
+  :is(.mobile-data-page, .seller-dashboard, .bdash)
+    :is(
+      .seller-orders-table-wrap,
     .seller-orders-table-scroll,
     .bdash-table-wrap,
     [style*="overflow-x"],
-    [style*="overflowX"]) {
+      [style*="overflowX"]
+    ) {
     overflow: visible !important;
   }
 
@@ -919,7 +921,6 @@
 }
 
 @media (max-width: 900px) {
-
   .settings-layout,
   .batch-page-layout,
   .seller-shop-layout {
@@ -965,7 +966,6 @@
 }
 
 @media (max-width: 620px) {
-
   html,
   body,
   #root {
@@ -1699,7 +1699,7 @@
 
   /* Status filters are one row on a phone. Five chips cannot each hold a full
      status name, so the longest names wrap inside their own chip and the grid
-     stretches every chip to the tallest — one row, no sideways scrolling. */
+     stretches every chip to the tallest â€” one row, no sideways scrolling. */
   .claims-filter-row {
     display: grid !important;
     grid-template-columns: auto repeat(4, minmax(0, 1fr));
@@ -1800,7 +1800,9 @@
     content: none !important;
   }
 
-  :is(.bdash, .seller-dashboard) :is(.bdash-table, .seller-orders-table) :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
+  :is(.bdash, .seller-dashboard)
+    :is(.bdash-table, .seller-orders-table)
+    :is(th, td):is(:nth-child(2), :nth-child(3), :nth-child(4)) {
     display: none !important;
   }
 
@@ -2126,7 +2128,6 @@
    They only adapt tablet/phone layouts and leave the approved desktop cascade
    (1024px and wider) untouched. */
 @media (max-width: 1023px) {
-
   html,
   body,
   #root,
@@ -2339,7 +2340,10 @@
     min-height: 44px;
   }
 
-  .kargo-original-app main form :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  .kargo-original-app
+    main
+    form
+    :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
     width: 100%;
     max-width: 100%;
     min-height: 44px;
@@ -2505,7 +2509,6 @@
 }
 
 @media (max-width: 480px) {
-
   .seller-stats,
   .bdash-stats {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -2527,7 +2530,6 @@
 /* ===== Targeted mobile visual bug fixes =====
    Keep this block last so it only resolves mobile cascade collisions. */
 @media (max-width: 767px) {
-
   /* Carousel navigation: square geometry prevents the global mobile button
      height from turning these controls into vertical pills. */
   .buyer-home-section__heading {
@@ -2686,7 +2688,13 @@
   .seller-orders-page .seller-orders-actions {
     display: grid;
     width: min(100%, 180px);
+    justify-items: end;
     gap: 8px;
+  }
+
+  /* Keep the action control flush with the right edge of its card row. */
+  .seller-orders-page .seller-orders-actions>.seller-orders-split {
+    justify-self: end;
   }
 
   .seller-orders-page .seller-orders-actions>button {
@@ -2859,7 +2867,6 @@
 
 /* ===== Mobile interaction and overlay fixes ===== */
 @media (max-width: 767px) {
-
   /* Keep every order-status filter visible without a secondary scroll area. */
   .seller-orders-filters {
     display: flex;
@@ -3231,7 +3238,6 @@
 
 /* ===== Centered mobile modal and overlay contract ===== */
 @media (max-width: 767px) {
-
   body:has(.kargo-modal-overlay),
   body:has(.seller-board-dialog) {
     overflow: hidden !important;
@@ -3250,7 +3256,8 @@
     align-items: center !important;
     justify-content: center !important;
     overflow: hidden !important;
-    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+      max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
     background: rgb(0 0 0 / 50%) !important;
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px) !important;
@@ -3282,7 +3289,6 @@
   }
 
   @supports (height: 100dvh) {
-
     .kargo-modal,
     .kargo-legacy-modal,
     .sales-report-sheet,
@@ -3481,19 +3487,25 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  body:has(.kargo-modal-overlay) :is(.kargo-header.is-mobile-search-open .kargo-search-wrap,
+  body:has(.kargo-modal-overlay)
+    :is(
+      .kargo-header.is-mobile-search-open .kargo-search-wrap,
     .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
     .kargo-search-wrap > div,
     .kargo-notifications-popover,
-    .kargo-user-popover) {
+      .kargo-user-popover
+    ) {
     display: none !important;
   }
 
-  body:has(.seller-board-dialog) :is(.kargo-header.is-mobile-search-open .kargo-search-wrap,
+  body:has(.seller-board-dialog)
+    :is(
+      .kargo-header.is-mobile-search-open .kargo-search-wrap,
     .kargo-header.is-mobile-search-open .kargo-mobile-search-toggle,
     .kargo-search-wrap > div,
     .kargo-notifications-popover,
-    .kargo-user-popover) {
+      .kargo-user-popover
+    ) {
     display: none !important;
   }
 
@@ -3568,31 +3580,44 @@
     margin-top: 14px !important;
   }
 
-  .kargo-modal__content :is(.grid,
+  .kargo-modal__content
+    :is(
+      .grid,
     .batch-meta-grid,
     .batch-group-discount-fields,
     .batch-product-unit-row,
     .batch-group-settings-product,
     .group-order-choice,
     [style*="display: grid"],
-    [style*="grid-template-columns"]) {
+      [style*="grid-template-columns"]
+    ) {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  .kargo-modal__content label:not(.batch-image-upload,
+  .kargo-modal__content
+    label:not(
+      .batch-image-upload,
     .batch-hero-photo-action,
     .batch-group-config__toggle,
-    .group-order-ack) {
+      .group-order-ack
+    ) {
     max-width: 100%;
     text-align: left;
   }
 
-  .kargo-modal__content label:not(:has(input[type="checkbox"], input[type="radio"]))> :is(input, select, textarea) {
+  .kargo-modal__content
+    label:not(:has(input[type="checkbox"], input[type="radio"]))
+    > :is(input, select, textarea) {
     margin-top: 5px;
   }
 
-  .kargo-modal .kargo-modal__content :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="button"]):not([type="submit"]),
-  .kargo-legacy-modal :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+  .kargo-modal
+    .kargo-modal__content
+    :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+      [type="button"]
+    ):not([type="submit"]),
+  .kargo-legacy-modal
+    :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
     width: 100% !important;
     max-width: 100%;
     min-width: 0;
@@ -3632,7 +3657,8 @@
     text-align: left;
   }
 
-  .kargo-modal__content label:not(.batch-group-config__toggle):has(input[type="checkbox"], input[type="radio"]),
+  .kargo-modal__content
+    label:not(.batch-group-config__toggle):has(input[type="checkbox"], input[type="radio"]),
   .kargo-modal__content .group-order-ack {
     display: flex !important;
     width: 100%;
@@ -3684,7 +3710,8 @@
     margin: 0;
   }
 
-  .kargo-modal__content :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label) {
+  .kargo-modal__content
+    :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label) {
     display: flex !important;
     width: 100% !important;
     min-height: 46px;
@@ -3696,7 +3723,9 @@
     text-align: center;
   }
 
-  .kargo-modal__content :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label)> :is(svg, img) {
+  .kargo-modal__content
+    :is(.batch-image-upload, .batch-hero-photo-action, .batch-product-photo-control > label)
+    > :is(svg, img) {
     flex: 0 0 auto;
   }
 
@@ -3749,7 +3778,10 @@
     flex: 0 0 auto;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl>div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    > div {
     display: grid !important;
     grid-template-columns: minmax(82px, 0.8fr) minmax(0, 1.2fr) !important;
     align-items: start;
@@ -3758,12 +3790,18 @@
     padding: 10px 0;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal) .kargo-modal__content dl :is(dt, dd) {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal)
+    .kargo-modal__content
+    dl
+    :is(dt, dd) {
     min-width: 0;
     margin: 0;
   }
 
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl dd {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    dd {
     text-align: right;
     overflow-wrap: anywhere;
   }
@@ -3828,7 +3866,10 @@
 }
 
 @media (max-width: 480px) {
-  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal)) .kargo-modal__content dl>div {
+  .kargo-modal[data-variant="detail"]:not(.admin-record-modal):not(:has(.group-orders-modal))
+    .kargo-modal__content
+    dl
+    > div {
     grid-template-columns: minmax(72px, 0.75fr) minmax(0, 1.25fr) !important;
   }
 }
@@ -3990,7 +4031,6 @@
    A real backdrop sibling avoids mobile browser compositing bugs caused by
    applying backdrop-filter to a generated body pseudo-element. */
 @media (max-width: 767px) {
-
   html:has(.seller-board-dialog),
   body:has(.seller-board-dialog) {
     overflow: hidden !important;
@@ -4038,7 +4078,6 @@
   }
 
   @supports (height: 100dvh) {
-
     .seller-board-dialog-backdrop.hidden,
     .seller-board-dialog {
       height: 100dvh !important;
@@ -4097,18 +4136,20 @@
     overflow-wrap: anywhere;
   }
 
-  .seller-board-dialog :is(.fulfillment-board__card-trigger,
+  .seller-board-dialog
+    :is(
+      .fulfillment-board__card-trigger,
     .fulfillment-board__profile-link,
     .fulfillment-board__more,
     .fulfillment-board__actions button,
-    .fulfillment-board__actions a) {
+      .fulfillment-board__actions a
+    ) {
     min-height: 44px !important;
   }
 }
 
 /* ===== Scoped mobile control repairs ===== */
 @media (max-width: 767px) {
-
   /* Bottom tab navigation: four equal columns with complete labels. */
   .kargo-original-app:not(.admin-app) {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
@@ -4844,7 +4885,9 @@
     background: transparent;
   }
 
-  .fulfillment-board--seller .fulfillment-board__column.is-collapsed .fulfillment-board__column-head {
+  .fulfillment-board--seller
+    .fulfillment-board__column.is-collapsed
+    .fulfillment-board__column-head {
     border-radius: 9px;
   }
 }
@@ -4903,7 +4946,6 @@
 /* Final admin mobile sizing: keep grid tracks within the phone viewport and
    render all five admin destinations in the bottom navigation. */
 @media (max-width: 767px) {
-
   html.admin-mobile-nav,
   body.admin-mobile-nav {
     overflow-x: clip !important;
@@ -4995,7 +5037,6 @@
 
 /* Keep the admin dashboard's actual layout box no wider than the mobile app. */
 @media (max-width: 767px) {
-
   body.admin-mobile-nav #root,
   body.admin-mobile-nav .kargo-original-app,
   body.admin-mobile-nav .kargo-original-app main,
@@ -5055,7 +5096,6 @@
 
 /* Admin dashboard phone presentation; the shared dashboard styles stay intact. */
 @media (max-width: 767px) {
-
   /* Match the shell-qualified legacy overrides without affecting other tabs. */
   .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) {
     padding: 18px 12px 28px !important;
@@ -5107,7 +5147,9 @@
     white-space: nowrap;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) .admin-page-header__actions>button {
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page)
+    .admin-page-header__actions
+    > button {
     flex: 0 0 auto;
     width: auto;
     min-height: 40px !important;
@@ -5178,11 +5220,14 @@
     margin-bottom: 0;
   }
 
-  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page) :is(.admin-queue-card,
+  .admin-page--dashboard:is(.kargo-original-app.admin-app .admin-page)
+    :is(
+      .admin-queue-card,
     .admin-chart-card,
     .admin-pipeline-card,
     .admin-activity-card,
-    .admin-seller-card) {
+      .admin-seller-card
+    ) {
     min-width: 0;
     padding: 14px !important;
     border: 1px solid #e4e9ee !important;
@@ -5231,11 +5276,14 @@
     border-radius: 9px;
   }
 
-  .admin-page--dashboard :is(.admin-queue-row__title,
+  .admin-page--dashboard
+    :is(
+      .admin-queue-row__title,
     .admin-queue-row__desc,
     .admin-activity-row__main,
     .admin-activity-row__main strong,
-    .admin-pipeline__labels > span:first-child) {
+      .admin-pipeline__labels > span:first-child
+    ) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -5265,7 +5313,8 @@
     font-size: 12px;
   }
 
-  .admin-page--dashboard :is(.admin-activity-row__target, .admin-activity-row__time, .admin-seller-row__orders) {
+  .admin-page--dashboard
+    :is(.admin-activity-row__target, .admin-activity-row__time, .admin-seller-row__orders) {
     color: #748391;
     font-size: 11px;
   }
@@ -5416,7 +5465,7 @@
   }
 }
 
-/* ─── System typeface ─────────────────────────────────────────────────────────
+/* â”€â”€â”€ System typeface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Quicksand is the single face for the whole product. Older screens still carry
    inline font-family declarations (Josefin Sans, Manrope, DM Sans) and a few
    `!important` heading rules from previous passes. Rather than editing every
@@ -5477,7 +5526,6 @@ body> :not(#root) * {
 }
 
 @media (max-width: 767px) {
-
   /* The bottom nav already names the tab; drop the big page title on mobile. */
   .admin-page--dashboard .admin-page-header h2,
   .admin-page:not(.admin-page--dashboard) .admin-page-header h2 {
@@ -5548,7 +5596,6 @@ body> :not(#root) * {
 }
 
 @media (max-width: 767px) {
-
   /* The <li> must not be a grid: its only child is the row button, which was
      being squeezed into the 20px rank column and left the shop name 0px wide. */
   .admin-page--dashboard .admin-seller-row {
@@ -5836,7 +5883,6 @@ body> :not(#root) * {
 }
 
 @media (max-width: 767px) {
-
   /* Keep the whole record modal (incl. sticky action footer) above the bottom nav. */
   .admin-modal-overlay.admin-record-modal-overlay {
     align-items: center !important;
@@ -5845,7 +5891,9 @@ body> :not(#root) * {
   }
 
   .admin-record-modal {
-    max-height: calc(100dvh - 12px - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    max-height: calc(
+      100dvh - 12px - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    ) !important;
   }
 }
 
@@ -6604,7 +6652,8 @@ body> :not(#root) * {
   }
 
   /* Everything except search, the filter button and the export button moves into the sheet. */
-  .admin-filter-bar--sheet> :not(.admin-filter-search):not(.admin-filter-sheet-btn):not(.admin-action-primary) {
+  .admin-filter-bar--sheet
+    > :not(.admin-filter-search):not(.admin-filter-sheet-btn):not(.admin-action-primary) {
     display: none !important;
   }
 
@@ -7692,7 +7741,6 @@ body> :not(#root) * {
   }
 }
 
-
 /* Buyer-facing storefront only. Keep tablet/desktop and shared cards untouched. */
 @media (max-width: 640px) {
   .kargo-original-app:has(.seller-shop-view) {
@@ -7833,8 +7881,10 @@ body> :not(#root) * {
     background:
       linear-gradient(to right, var(--kargo-canvas) 30%, transparent) left / 24px 100% local,
       linear-gradient(to left, var(--kargo-canvas) 30%, transparent) right / 24px 100% local,
-      radial-gradient(farthest-side at 0 50%, rgba(25, 27, 169, 0.18), transparent) left / 8px 100% scroll,
-      radial-gradient(farthest-side at 100% 50%, rgba(25, 27, 169, 0.18), transparent) right / 8px 100% scroll;
+      radial-gradient(farthest-side at 0 50%, rgba(25, 27, 169, 0.18), transparent) left / 8px 100%
+        scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(25, 27, 169, 0.18), transparent) right / 8px
+        100% scroll;
     background-repeat: no-repeat;
   }
 
@@ -7853,7 +7903,6 @@ body> :not(#root) * {
 /* Sellers (and any header without the marketplace search) have room for the
    KARGO wordmark in the phone header, so bring it back instead of hiding it. */
 @media (max-width: 767px) {
-
   /* Let the brand column size to the logo + wordmark so both stay on screen. */
   .kargo-header:not(:has(.kargo-search-wrap)):not(.admin-shell-header) {
     grid-template-columns: auto minmax(0, 1fr) auto !important;
@@ -7933,7 +7982,9 @@ body> :not(#root) * {
 
   /* Buyer action ("Claim this item" / status) tucks into the card's lower-right,
      matching the design, instead of wrapping to the lower-left. */
-  .batch-product-card .batch-product-side> :not(.batch-product-price):not(.batch-product-controls) {
+  .batch-product-card
+    .batch-product-side
+    > :not(.batch-product-price):not(.batch-product-controls) {
     grid-column: 1 / -1;
     grid-row: 2;
     justify-self: end;
@@ -8183,6 +8234,36 @@ body> :not(#root) * {
     font-size: 9px;
   }
 
+  /* Two-up cards leave the "Batch closed" banner very little room, and the
+     seller's lock toggle sits in its bottom-right corner. Shrink the banner,
+     clear the badge row, and reserve that corner so the date and the re-open
+     note are never clipped. */
+  .seller-batches-page .closed-batch-banner {
+    gap: 2px;
+    padding: 40px 8px 36px;
+  }
+
+  /* The lock state is already shown by the toggle in the bottom-right corner;
+     hiding the banner's duplicate icon keeps the date and note legible. */
+  .seller-batches-page .closed-batch-banner > svg {
+    display: none;
+  }
+
+  .seller-batches-page .closed-batch-banner strong {
+    font-size: 18px;
+    letter-spacing: 0.03em;
+  }
+
+  .seller-batches-page .closed-batch-banner small {
+    font-size: 9.5px;
+  }
+
+  .seller-batches-page .closed-batch-banner__note {
+    max-width: 16ch;
+    font-size: 9px;
+    line-height: 1.25;
+  }
+
   .seller-batches-page .seller-batch-filter-bar {
     box-sizing: border-box;
     width: 100%;
@@ -8216,6 +8297,39 @@ body> :not(#root) * {
 
   .seller-payments-page > section:first-child {
     margin-top: 0 !important;
+  }
+}
+
+/* Two-up seller cards can get very narrow on a 320px phone. At that size the
+   action row has no room for the "View Item" arrow, so drop it, tighten the
+   controls, and collapse the selling-unit pill into the overflow count. */
+@container batch-card (max-width: 150px) {
+  .seller-batches-page .seller-batch-actions {
+    gap: 3px !important;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-unit-badge {
+    display: none !important;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-more-badge {
+    display: inline-flex !important;
+  }
+
+  .seller-batches-page .seller-batch-actions > .kargo-primary {
+    padding-inline: 4px !important;
+    font-size: 10px !important;
+  }
+
+  .seller-batches-page .seller-batch-actions > .kargo-primary svg {
+    display: none;
+  }
+
+  .seller-batches-page .seller-batch-actions > .kargo-secondary,
+  .seller-batches-page .seller-batch-actions > button[aria-label^="Share"] {
+    width: 28px !important;
+    min-width: 28px !important;
+    flex: 0 0 28px !important;
   }
 }
 
@@ -8478,5 +8592,211 @@ body> :not(#root) * {
 
   .admin-order__total {
     border-top-style: solid;
+  }
+}
+
+/* Seller Dashboard: compact Recent Orders table on phones --------------------
+   The generic <=1024 table-to-card conversion turns this preview into tall
+   stacked cards. On a phone it should stay a table: Products, Status and
+   Deadline only, with the same blue header as the other seller tables. */
+@media (max-width: 620px) {
+  .seller-recent-orders .seller-recent-orders__wrap {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(18, 30, 71, 0.08);
+  }
+
+  .seller-recent-orders .seller-recent-orders__table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: collapse !important;
+    table-layout: fixed;
+    font-size: 12px;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table thead {
+    display: table-header-group !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table tbody {
+    display: table-row-group !important;
+    width: auto !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table tbody tr {
+    display: table-row !important;
+    height: 52px;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    cursor: pointer;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table tbody tr:nth-child(odd) {
+    background: #fff !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table tbody tr + tr td {
+    border-top: 1px solid #eef1f5;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table th {
+    display: table-cell !important;
+    height: 34px;
+    padding: 7px 10px !important;
+    background: #6995d7 !important;
+    color: #fff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    text-align: left !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table td {
+    display: table-cell !important;
+    height: 52px;
+    min-width: 0;
+    padding: 7px 10px !important;
+    overflow: hidden !important;
+    color: #374151 !important;
+    font-size: 12px !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table td::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* Only Products, Status and Deadline stay visible. */
+  .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(2),
+  .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(3),
+  .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(4),
+  .seller-recent-orders .seller-recent-orders__col-batch,
+  .seller-recent-orders .seller-recent-orders__col-buyer,
+  .seller-recent-orders .seller-recent-orders__col-amount {
+    display: none !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(5) {
+    width: 86px;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table :is(th, td):nth-child(6) {
+    width: 76px;
+  }
+
+  .seller-recent-orders .seller-product-cell {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .seller-recent-orders .seller-product-cell > img {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px;
+    border-radius: 6px;
+  }
+
+  .seller-recent-orders .seller-product-cell > .seller-recent-orders__product-name {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: #171717 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Secondary lines would make the row taller than the inspiration; the
+     combined-delivery link stays reachable from the order itself. */
+  .seller-recent-orders .seller-recent-orders__product-name > small,
+  .seller-recent-orders .seller-recent-orders__product-name > button {
+    display: none !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__status-group {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .seller-recent-orders .seller-recent-orders__status-group > [role="status"] {
+    padding: 3px 8px !important;
+    font-size: 10px !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__status-group > [data-insufficient-payment],
+  .seller-orders-received-status-group > [data-insufficient-payment] {
+    display: none !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table td:nth-child(6) {
+    color: #6b7280 !important;
+    font-size: 11px !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table td:nth-child(6) > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table td.is-urgent,
+  .seller-recent-orders .seller-recent-orders__table td.is-urgent * {
+    color: #d97706 !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__table td.is-warning,
+  .seller-recent-orders .seller-recent-orders__table td.is-warning * {
+    color: #c98f00 !important;
+  }
+
+  .seller-recent-orders .seller-recent-orders__empty {
+    display: table-cell !important;
+    padding: 18px 10px !important;
+    color: #9ca3af !important;
+    font-size: 12px !important;
+    text-align: center !important;
+  }
+}
+
+/* Insufficient payments read as "Pending !" on a phone. The full shortfall tag
+   stays on desktop; the exclamation is hidden there. */
+.status-badge__alert,
+.seller-orders-status > .seller-orders-status__alert {
+  display: none;
+}
+
+@media (max-width: 620px) {
+  .status-badge__alert,
+  .seller-orders-status > .seller-orders-status__alert {
+    display: inline-grid;
+    width: 13px;
+    height: 13px;
+    flex: 0 0 13px;
+    place-items: center;
+    margin-left: 1px;
+    border-radius: 50%;
+    background: #c2410c;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
   }
 }

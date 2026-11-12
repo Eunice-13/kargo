@@ -1364,6 +1364,11 @@ export default function MyClaims({
                               >
                                 <span style={{ background: badge.dot }} />
                                 <span className="seller-orders-status__label">{status}</span>
+                                {shortfall != null && status === "Pending" ? (
+                                  <span className="seller-orders-status__alert" aria-hidden="true">
+                                    !
+                                  </span>
+                                ) : null}
                               </span>
                               <InsufficientPaymentNotice shortfall={shortfall} status={c.status} compact table />
                             </div>
@@ -1372,9 +1377,11 @@ export default function MyClaims({
                             <div className="seller-orders-actions">
                               <SellerOrderActions
                                 onReview={() =>
-                                  submission
-                                    ? setPaymentReviewTarget(submission)
-                                    : setOrderDetailTarget(c)
+                                  c.status === "Expired" ||
+                                  c.status === "Cancelled" ||
+                                  !submission
+                                    ? setOrderDetailTarget(c)
+                                    : setPaymentReviewTarget(submission)
                                 }
                                 items={menuItemsFor(c)}
                               />

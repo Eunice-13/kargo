@@ -914,7 +914,14 @@ export default function Dashboard({
                         <td className="seller-order-amount">₱{claim.amount.toLocaleString()}</td>
                         <td className="seller-recent-orders__status-cell">
                           <div className="seller-recent-orders__status-group">
-                            <StatusBadge status={displayClaimStatus(claim.status)} />
+                            <StatusBadge
+                              status={displayClaimStatus(claim.status)}
+                              alert={
+                                Boolean(claimShortfall(claim)) &&
+                                (claim.status === "Pending" ||
+                                  claim.status === "Insufficient Payment")
+                              }
+                            />
                             <InsufficientPaymentNotice
                               shortfall={claimShortfall(claim)}
                               status={claim.status}

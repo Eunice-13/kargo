@@ -6580,10 +6580,17 @@ textarea::placeholder {
     gap: 14px !important;
   }
 
-  .seller-batch-image,
-  .seller-batch-photo {
+  .seller-batch-image {
     height: 100px !important;
     aspect-ratio: auto !important;
+  }
+
+  /* The photo is absolutely positioned inside `.seller-batch-image`; it must
+     fill that box. Sizing it to the same 100px as the (mobile) container used
+     to leave the gradient visible under the photo once the container became
+     square, which read as a cropped cover. */
+  .seller-batch-photo {
+    height: 100% !important;
     object-fit: cover;
   }
 
@@ -11056,9 +11063,11 @@ textarea::placeholder {
   left: 10px;
   z-index: 4;
   display: flex;
-  height: 22px;
+  min-height: 22px;
+  max-height: 60px;
   min-width: 0;
-  align-items: center;
+  align-items: flex-start;
+  align-content: flex-start;
   flex-wrap: wrap;
   gap: 4px;
   overflow: hidden;
