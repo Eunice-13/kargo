@@ -77,6 +77,7 @@ import {
   claimIsPayable,
   deadlineHasPassed,
 } from "@/features/claims/claimExpiry";
+import { batchOrdersClosed } from "@/features/batches/batchAvailability";
 import {
   claimShortfall,
   displayClaimStatus,
@@ -487,7 +488,7 @@ export default function Dashboard({
 
   // Scope to the signed-in seller's own batches.
 
-  const myLiveBatches = batches.filter((b) => b.live && b.seller === user.name);
+  const myLiveBatches = batches.filter((b) => b.seller === user.name && !batchOrdersClosed(b));
 
   const mySellerOrders = claims.filter((claim) => claim.seller === user.name);
 
@@ -1250,7 +1251,11 @@ export default function Dashboard({
                     </td>
                     <td className="py-2.5 pr-3">
                       <StatusBadge status={displayClaimStatus(c.status)} />
-                      <InsufficientPaymentNotice shortfall={claimShortfall(c)} status={c.status} compact />
+                      <InsufficientPaymentNotice
+                        shortfall={claimShortfall(c)}
+                        status={c.status}
+                        compact
+                      />
                     </td>
                     <td className="py-2.5">
                       {c.status === "Pending" && c.hours > 0 ? (
@@ -1456,7 +1461,11 @@ export default function Dashboard({
                       <td>
                         <div className="bdash-status-group">
                           <StatusBadge status={displayClaimStatus(c.status)} />
-                          <InsufficientPaymentNotice shortfall={claimShortfall(c)} status={c.status} compact />
+                          <InsufficientPaymentNotice
+                            shortfall={claimShortfall(c)}
+                            status={c.status}
+                            compact
+                          />
                         </div>
                       </td>
                       <td>

@@ -3,7 +3,15 @@ import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combin
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 
-import { List, LayoutGrid, AlertTriangle, Link2, MessageCircle, Truck, ChevronDown } from "lucide-react";
+import {
+  List,
+  LayoutGrid,
+  AlertTriangle,
+  Link2,
+  MessageCircle,
+  Truck,
+  ChevronDown,
+} from "lucide-react";
 
 import type {
   ClaimRow,
@@ -934,20 +942,16 @@ export default function MyClaims({
         : otherOrders.filter((claim) => statusForOrder(claim) === orderFilter)
     ).sort(orderReceivedSort);
 
-    // The page renders one table per section, in this order. Ongoing Orders
-    // only appears when there is something in it.
+    // Keep Ongoing Orders mounted even when a filter has no matches. This
+    // preserves the status tabs and gives the seller a useful empty state.
     const hasOngoing = ongoingOrders.length > 0;
     const tableSections = [
-      ...(hasOngoing
-        ? [
-            {
-              key: "ongoing" as const,
-              label: "Ongoing orders",
-              rows: ongoingOrders,
-              emptyText: "",
-            },
-          ]
-        : []),
+      {
+        key: "ongoing" as const,
+        label: "Ongoing orders",
+        rows: ongoingOrders,
+        emptyText: "No ongoing orders found.",
+      },
       {
         key: "other" as const,
         label: hasOngoing ? "Other orders" : "Orders received",
@@ -1370,16 +1374,19 @@ export default function MyClaims({
                                   </span>
                                 ) : null}
                               </span>
-                              <InsufficientPaymentNotice shortfall={shortfall} status={c.status} compact table />
+                              <InsufficientPaymentNotice
+                                shortfall={shortfall}
+                                status={c.status}
+                                compact
+                                table
+                              />
                             </div>
                           </td>
                           <td>
                             <div className="seller-orders-actions">
                               <SellerOrderActions
                                 onReview={() =>
-                                  c.status === "Expired" ||
-                                  c.status === "Cancelled" ||
-                                  !submission
+                                  c.status === "Expired" || c.status === "Cancelled" || !submission
                                     ? setOrderDetailTarget(c)
                                     : setPaymentReviewTarget(submission)
                                 }
@@ -1390,9 +1397,12 @@ export default function MyClaims({
                         </tr>
                       );
                     })}
-                    {showLocalOrderPreviews && section.rows.length === 0 &&
+                    {showLocalOrderPreviews &&
+                      section.rows.length === 0 &&
                       localOrderPreviews
-                        .filter((preview) => orderFilter === "All" || preview.status === orderFilter)
+                        .filter(
+                          (preview) => orderFilter === "All" || preview.status === orderFilter,
+                        )
                         .map((preview, index) => {
                           const statusStyle =
                             preview.status === "Verified"
@@ -1457,9 +1467,10 @@ export default function MyClaims({
                   </tbody>
                 </table>
               </div>
-              {section.rows.length === 0 && !showLocalOrderPreviews && (
-                <div className="seller-orders-empty">{section.emptyText}</div>
-              )}
+              {section.rows.length === 0 &&
+                (section.key === "ongoing" || !showLocalOrderPreviews) && (
+                  <div className="seller-orders-empty">{section.emptyText}</div>
+                )}
             </div>
           </section>
         ))}
@@ -2563,7 +2574,11 @@ export default function MyClaims({
                             </div>
                             <div className="claims-card__status">
                               <StatusBadge status={displayClaimStatus(c.status)} />
-                              <InsufficientPaymentNotice shortfall={claimShortfall(c)} status={c.status} compact />
+                              <InsufficientPaymentNotice
+                                shortfall={claimShortfall(c)}
+                                status={c.status}
+                                compact
+                              />
                             </div>
                           </div>
                           {c.status === "Pending" && c.hours > 0 && (
@@ -2926,7 +2941,11 @@ export default function MyClaims({
                               </td>
                               <td style={{ padding: "10px 14px" }}>
                                 <StatusBadge status={displayClaimStatus(c.status)} />
-                                <InsufficientPaymentNotice shortfall={claimShortfall(c)} status={c.status} compact />
+                                <InsufficientPaymentNotice
+                                  shortfall={claimShortfall(c)}
+                                  status={c.status}
+                                  compact
+                                />
                               </td>
                               <td style={{ padding: "10px 14px" }}>
                                 {c.status === "Pending" && c.hours > 0 ? (
