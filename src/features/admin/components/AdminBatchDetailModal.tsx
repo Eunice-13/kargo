@@ -143,12 +143,36 @@ export default function AdminBatchDetailModal({
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const { data, loading, error, refresh } = useAdminResource(
-    () => adminApi.getBatch(batchId),
-    [batchId],
+  const {
+    data: fetchedData,
+    loading,
+    error,
+    refresh,
+  } = useAdminResource(() => adminApi.getBatch(batchId), [batchId]);
+  const { data: auditData, loading: auditLoading } = useAdminResource(
+    () => adminApi.listAudit({ days: 0 }, 100, 0),
+    [],
   );
   const [pending, setPending] = useState<BatchModerationAction | null>(null);
   const isDesktop = useIsDesktop();
+
+  const data =
+    fetchedData && !auditLoading && auditData
+      ? (() => {
+          const latestModerationRecord = auditData.rows.find(
+            (entry) =>
+              entry.targetType === "batch" &&
+              entry.targetLabel === fetchedData.title &&
+              ["batch_flag", "batch_hide", "batch_restore"].includes(entry.action),
+          );
+          const moderationIsActive =
+            latestModerationRecord &&
+            ["batch_flag", "batch_hide"].includes(latestModerationRecord.action);
+          return moderationIsActive || fetchedData.moderationStatus === "visible"
+            ? fetchedData
+            : { ...fetchedData, moderationStatus: "visible" as const, moderationReason: null };
+        })()
+      : fetchedData;
 
   const statusTone = data ? toneForStatus(data.status) : "info";
 
