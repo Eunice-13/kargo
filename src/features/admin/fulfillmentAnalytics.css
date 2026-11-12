@@ -1493,6 +1493,12 @@
   min-width: 0;
   flex-direction: column;
 }
+@media (min-width: 768px) {
+  .fulfillment-analytics .fulfillment-analytics__content-grid .fulfillment-analytics__summary {
+    grid-template-rows: repeat(var(--kpis), minmax(0, 1fr)) !important;
+    min-height: max(420px, calc(100vh - 620px)) !important;
+  }
+}
 .fulfillment-analytics__definition {
   display: none;
 }

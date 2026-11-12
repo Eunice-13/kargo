@@ -3,7 +3,7 @@ import { BuyerCombinedDelivery, SellerCombinedDelivery } from "@/features/combin
 
 import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 
-import { List, LayoutGrid, AlertTriangle, Link2, MessageCircle, Truck } from "lucide-react";
+import { List, LayoutGrid, AlertTriangle, Link2, MessageCircle, Truck, ChevronDown } from "lucide-react";
 
 import type {
   ClaimRow,
@@ -957,6 +957,39 @@ export default function MyClaims({
     ];
 
     const orderFilters: OrderReceivedFilter[] = ["All", "Verified", "Expired", "Cancelled"];
+    const localOrderPreviews = [
+      {
+        buyer: "Mimi Pap",
+        date: "Nov 10, 2026",
+        product: "Tokyo Banana",
+        method: "GCash",
+        amount: "₱1,775",
+        paid: "₱1,775",
+        deadline: "—",
+        status: "Verified" as const,
+      },
+      {
+        buyer: "Ana Reyes",
+        date: "Nov 8, 2026",
+        product: "Matcha Kit",
+        method: "Bank transfer",
+        amount: "₱2,400",
+        paid: "—",
+        deadline: "Nov 12, 2026",
+        status: "Expired" as const,
+      },
+      {
+        buyer: "Carlo Santos",
+        date: "Nov 6, 2026",
+        product: "Ceramic Tea Set",
+        method: "GCash",
+        amount: "₱1,250",
+        paid: "—",
+        deadline: "—",
+        status: "Cancelled" as const,
+      },
+    ];
+    const showLocalOrderPreviews = import.meta.env.DEV && !isSupabaseConfigured;
 
     return (
       <div className="seller-orders-page mobile-data-page">
@@ -1350,10 +1383,74 @@ export default function MyClaims({
                         </tr>
                       );
                     })}
+                    {showLocalOrderPreviews && section.rows.length === 0 &&
+                      localOrderPreviews
+                        .filter((preview) => orderFilter === "All" || preview.status === orderFilter)
+                        .map((preview, index) => {
+                          const statusStyle =
+                            preview.status === "Verified"
+                              ? { background: "#c8f5e4", color: "#0a8f6a", dot: "#2cc9a0" }
+                              : preview.status === "Expired"
+                                ? { background: "#ffe4e8", color: "#d9273f", dot: "#d9273f" }
+                                : { background: "#eeeef0", color: "#555", dot: "#777" };
+                          return (
+                            <tr
+                              key={`local-preview-${preview.status}`}
+                              className={
+                                index % 2
+                                  ? "seller-orders-row seller-orders-row--alt"
+                                  : "seller-orders-row"
+                              }
+                            >
+                              <td>
+                                <div className="seller-orders-buyer-cell">
+                                  <Avatar name={preview.buyer} size={24} />
+                                  <span className="seller-orders-buyer">{preview.buyer}</span>
+                                </div>
+                              </td>
+                              <td className="seller-orders-ordered">{preview.date}</td>
+                              <td>
+                                <div className="flex items-center gap-2">
+                                  <ProductThumb name={preview.product} />
+                                  <span>{preview.product}</span>
+                                </div>
+                              </td>
+                              <td className="seller-orders-method">{preview.method}</td>
+                              <td className="seller-orders-amount">{preview.amount}</td>
+                              <td className="seller-orders-paid">{preview.paid}</td>
+                              <td className="seller-orders-deadline">{preview.deadline}</td>
+                              <td className="seller-orders-status-cell">
+                                <span
+                                  className="seller-orders-status"
+                                  style={{
+                                    background: statusStyle.background,
+                                    color: statusStyle.color,
+                                    borderColor: statusStyle.color,
+                                  }}
+                                >
+                                  <span style={{ background: statusStyle.dot }} />
+                                  <span className="seller-orders-status__label">
+                                    {preview.status}
+                                  </span>
+                                </span>
+                              </td>
+                              <td>
+                                <div className="seller-orders-split" aria-hidden="true">
+                                  <span className="seller-orders-review seller-orders-split__main">
+                                    Review
+                                  </span>
+                                  <span className="seller-orders-review seller-orders-split__toggle">
+                                    <ChevronDown size={14} />
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                   </tbody>
                 </table>
               </div>
-              {section.rows.length === 0 && (
+              {section.rows.length === 0 && !showLocalOrderPreviews && (
                 <div className="seller-orders-empty">{section.emptyText}</div>
               )}
             </div>

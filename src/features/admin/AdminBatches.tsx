@@ -254,24 +254,9 @@ export default function AdminBatches() {
                     className="admin-clickable-row"
                   >
                     <td data-label="Batch" style={{ padding: "10px 14px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                        <BatchMedia
-                          src={b.coverPath ?? undefined}
-                          alt=""
-                          width={96}
-                          height={64}
-                          style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 8,
-                            objectFit: "cover",
-                            flex: "0 0 auto",
-                          }}
-                        />
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--kargo-ink)" }}>
-                          {b.title}
-                        </span>
-                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--kargo-ink)" }}>
+                        {b.title}
+                      </span>
                     </td>
                     <td data-label="Seller" style={{ padding: "10px 14px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -299,13 +284,7 @@ export default function AdminBatches() {
                     <td data-label="Moderation" style={{ padding: "10px 14px" }}>
                       <AdminBadge tone={MOD_TONE[b.moderationStatus]} label={b.moderationStatus} />
                     </td>
-                    <td
-                      className="admin-card-detail-cell"
-                      data-label=""
-                      style={{ padding: "10px 14px", color: "var(--kargo-muted)" }}
-                    >
-                      ›
-                    </td>
+                    <td className="admin-card-detail-cell" data-label="" aria-hidden="true" />
                   </tr>
                 ))}
               </tbody>

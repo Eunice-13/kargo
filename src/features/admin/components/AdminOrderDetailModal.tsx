@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Check, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Modal, Avatar, CardSkeleton, ProductThumb } from "@/components/shared";
 import { adminApi } from "@/services";
 import { ORDER_STATUS_LABELS, toneForStatus } from "@/constants/admin";
 
 import { useAdminResource } from "../useAdminResource";
-import useIsDesktop from "../useIsDesktop";
 import type { AdminOrderDetail } from "../adminTypes";
 import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
@@ -272,7 +271,6 @@ export default function AdminOrderDetailModal({
     [orderId],
   );
   const [confirming, setConfirming] = useState(false);
-  const isDesktop = useIsDesktop();
 
   // Once payment is confirmed, no one — including admins — may cancel the order,
   // regardless of fulfillment stage. paymentConfirmedAt is the stage-independent
@@ -295,20 +293,10 @@ export default function AdminOrderDetailModal({
   return (
     <>
       <Modal
-        title={isDesktop && data ? `Order ${data.orderNumber}` : "Order details"}
-        titleAside={
-          isDesktop && data ? (
-            <AdminBadge tone={statusTone} label={statusLabel(data.status)} />
-          ) : undefined
-        }
-        headerAside={
-          isDesktop && data ? (
-            <span className="admin-order__placed">Placed {placedStamp(data.createdAt)}</span>
-          ) : undefined
-        }
+        title="Order details"
         showTitleIcon={false}
         variant="detail"
-        width={isDesktop ? 980 : 640}
+        width={640}
         className="admin-modal admin-record-modal admin-order-modal"
         overlayClassName="admin-modal-overlay admin-record-modal-overlay"
         onClose={onClose}
@@ -340,8 +328,7 @@ export default function AdminOrderDetailModal({
             {error}
           </p>
         )}
-        {!loading && data && isDesktop && <DesktopBody data={data} />}
-        {!loading && data && !isDesktop && (
+        {!loading && data && (
           <div className="space-y-5">
             <div className="admin-detail-hero admin-order-hero">
               <span className="admin-order-hero__thumb">
@@ -394,7 +381,7 @@ export default function AdminOrderDetailModal({
               </ul>
             </AdminModalSection>
 
-            <AdminModalSection title="Delivery">
+            <AdminModalSection title="Delivery" divider>
               <div className="admin-order-delivery">
                 <div>
                   <span>Tracking</span>
@@ -413,6 +400,7 @@ export default function AdminOrderDetailModal({
 
             <AdminModalSection
               title="Payments"
+              divider
               hint={`${data.payments.length} submission${data.payments.length === 1 ? "" : "s"}`}
             >
               {(() => {

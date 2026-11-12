@@ -16,6 +16,7 @@ export default function AdminBadge({
   icon?: ReactNode;
 }) {
   const t = typeof tone === "string" ? (ADMIN_TONES[tone] ?? ADMIN_TONES.info) : tone;
+  const displayLabel = label ? `${label[0].toUpperCase()}${label.slice(1)}` : label;
   return (
     <span
       className="admin-badge"
@@ -45,7 +46,7 @@ export default function AdminBadge({
           }}
         />
       )}
-      {label}
+      {displayLabel}
     </span>
   );
 }

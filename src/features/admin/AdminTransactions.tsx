@@ -75,7 +75,7 @@ export default function AdminTransactions() {
     <div className="p-6 admin-page">
       <AdminPageHeader
         title="Transactions"
-        subtitle="Audit money and order state; help when a seller cannot act."
+        subtitle="Audit money and order state, help when a seller cannot act."
       />
       <AdminSectionTabs<Section>
         tabs={[

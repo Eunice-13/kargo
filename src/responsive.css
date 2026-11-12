@@ -6350,8 +6350,11 @@ body> :not(#root) * {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--kargo-line);
+  padding-top: 0;
+}
+
+.admin-order-delivery > div:last-child {
+  text-align: right;
 }
 
 .admin-order-delivery span {
@@ -6385,16 +6388,27 @@ body> :not(#root) * {
 }
 
 .admin-order-payments {
+  width: 100%;
+  box-sizing: border-box;
+  justify-self: stretch;
+  grid-template-columns: minmax(0, 1fr);
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
   gap: 10px;
-  border-top: 1px solid var(--kargo-line);
-  padding-top: 10px;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.admin-order-payments > li {
+  width: 100%;
+  min-width: 0;
 }
 
 .admin-order-payments__head {
+  width: calc(100% + 45px);
+  box-sizing: border-box;
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -6960,8 +6974,12 @@ body> :not(#root) * {
 }
 
 .admin-audit-changes__head span {
-  justify-self: start;
-  padding-left: 9px;
+  justify-self: center;
+  padding-left: 0;
+}
+
+.admin-audit-change .admin-badge {
+  justify-self: center;
 }
 
 /* Security > Team: info note, heading row and member cards on mobile. */
@@ -7956,5 +7974,509 @@ body> :not(#root) * {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+/* Keep admin tab headings aligned with the compact shared buyer/seller headers. */
+.kargo-original-app.admin-app .admin-page .admin-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kargo-original-app.admin-app .admin-page .admin-page-header > div:first-child > div {
+  margin: 0 0 4px !important;
+}
+
+.kargo-original-app.admin-app .admin-page .admin-page-header h2 {
+  display: block !important;
+  margin: 0 !important;
+  color: #111827 !important;
+  font-family: "Josefin Sans", "DM Sans", sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+}
+
+.seller-orders-heading h1,
+.seller-orders-page .seller-orders-heading h1,
+.seller-batches-heading h1,
+.seller-batches-page .seller-batches-heading h1,
+.seller-payments-page .seller-payment-section-heading,
+.seller-dashboard .seller-section-heading h2 {
+  font-size: 15px !important;
+  letter-spacing: normal !important;
+}
+
+@media (max-width: 767px) {
+  .seller-payments-page .seller-payment-table--history {
+    overflow: visible !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .seller-payments-page .seller-payment-table--history .seller-orders-table-scroll {
+    overflow: visible !important;
+  }
+
+  .seller-payments-page .seller-payment-history-table,
+  .seller-payments-page .seller-payment-history-table tbody {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .seller-payments-page .seller-payment-history-table thead {
+    display: none !important;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody {
+    display: grid !important;
+    gap: 12px;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 12px;
+    background: #fff !important;
+    box-shadow: 0 2px 8px rgb(17 24 39 / 7%);
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td {
+    display: flex !important;
+    min-width: 0 !important;
+    min-height: 40px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid #eef0f3 !important;
+    text-align: right;
+    white-space: normal;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td::before {
+    flex: 0 0 86px;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(1) {
+    order: 3;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(1)::before {
+    content: "Product";
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(2) {
+    order: 1;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(2)::before {
+    content: "Buyer";
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(3) {
+    order: 4;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(3)::before {
+    content: "Method";
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(4) {
+    order: 5;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(4)::before {
+    content: "Amount";
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(5) {
+    order: 2;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(5)::before {
+    content: "Ordered";
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(6) {
+    order: 6;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(6)::before {
+    content: "Status";
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(7) {
+    order: 7;
+    border-bottom: 0 !important;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td:nth-child(7)::before {
+    content: "Actions";
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td[colspan] {
+    display: block !important;
+    border: 0 !important;
+    text-align: center;
+  }
+
+  .seller-payments-page .seller-payment-history-table tbody tr > td[colspan]::before {
+    content: none;
+  }
+
+  .seller-batches-page .seller-batches-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .seller-batches-page .seller-batches-grid > .fi {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+  }
+
+  .seller-batches-page .seller-batch-image {
+    aspect-ratio: 1 / 1 !important;
+    height: auto !important;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-unit-badge {
+    display: inline-flex !important;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-full,
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-short,
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-more-badge {
+    display: none !important;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-badge {
+    display: inline-flex !important;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges .seller-batch-group-icon {
+    display: inline-flex !important;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges {
+    right: 10px;
+  }
+
+  .seller-batches-page .seller-batch-cover-badges > span {
+    padding-inline: 6px;
+    font-size: 9px;
+  }
+
+  .seller-batches-page .seller-batch-filter-bar {
+    box-sizing: border-box;
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .seller-batches-page .seller-batch-filter-controls {
+    display: grid !important;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .seller-batches-page .seller-batch-filter-controls .seller-batch-select-wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: none !important;
+  }
+
+  .seller-batches-page .seller-batch-filter-trigger {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 10px !important;
+  }
+
+  .seller-orders-page .seller-orders-heading,
+  .seller-batches-page .seller-batches-heading {
+    margin-top: 0 !important;
+  }
+
+  .seller-payments-page > section:first-child {
+    margin-top: 0 !important;
+  }
+}
+
+.seller-orders-heading p,
+.seller-orders-page .seller-orders-heading p,
+.seller-batches-heading p,
+.seller-batches-page .seller-batches-heading p,
+.seller-payments-page .seller-payment-methods-instructions,
+.seller-payments-page .seller-payment-history-subtitle {
+  font-size: 13px !important;
+  line-height: 1.45;
+}
+
+.seller-payments-page .seller-payment-history-subtitle {
+  margin: 3px 0 16px;
+}
+
+.kargo-original-app.admin-app .admin-page .admin-page-header__subtitle {
+  margin: 0 !important;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  .kargo-original-app.admin-app .admin-page--dashboard {
+    padding: 14px !important;
+  }
+
+  .kargo-original-app.admin-app .admin-page .admin-page-header {
+    margin-bottom: 16px;
+  }
+
+  .kargo-original-app.admin-app .admin-page .admin-page-header__subtitle {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .admin-order-modal > .kargo-modal__header {
+    flex-wrap: wrap;
+  }
+
+  .admin-order-modal .kargo-modal__header-end {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: auto;
+  }
+
+  .admin-order {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .admin-order__col {
+    display: grid;
+    align-content: start;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .admin-order__card {
+    min-width: 0;
+    padding: 14px 18px;
+    border: 1px solid #e7e9f2;
+    border-radius: 14px;
+    background: #fff;
+    text-align: right;
+  }
+
+  .admin-order__eyebrow {
+    margin: 0 0 12px;
+    color: #748091;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .admin-order__steps,
+  .admin-order__payments {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .admin-order__steps li {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 10px;
+    color: #374151;
+    text-align: right;
+  }
+
+  .admin-order__steps li strong {
+    font-size: 13px;
+  }
+
+  .admin-order__steps li small {
+    color: #748091;
+    font-size: 12px;
+  }
+
+  .admin-order__dot {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    flex: 0 0 20px;
+    place-items: center;
+    border: 1px solid #cbd2df;
+    border-radius: 50%;
+    color: #fff;
+  }
+
+  .admin-order__steps li.is-done .admin-order__dot {
+    border-color: #0b8c69;
+    background: #0b8c69;
+  }
+
+  .admin-order__head,
+  .admin-order__payment-row,
+  .admin-order__total {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row-reverse;
+    gap: 12px;
+  }
+
+  .admin-order__payment-row {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .admin-order__head > span {
+    color: #748091;
+    font-size: 12px;
+  }
+
+  .admin-order__payment-row > div {
+    display: grid;
+    gap: 4px;
+    margin-right: 0;
+    text-align: right;
+  }
+
+  .admin-order__payment-row > div > span,
+  .admin-order__total > span {
+    color: #748091;
+    font-size: 12px;
+  }
+
+  .admin-order__product,
+  .admin-order__person {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 12px;
+    text-align: right;
+  }
+
+  .admin-order__product > div,
+  .admin-order__person > div {
+    display: grid;
+    gap: 4px;
+  }
+
+  .admin-order__product > div > span,
+  .admin-order__person small,
+  .admin-order__deliver small {
+    color: #748091;
+    font-size: 12px;
+  }
+
+  .admin-order__total {
+    justify-content: flex-start;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #e7e9f2;
+  }
+
+  .admin-order__person + .admin-order__person {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e7e9f2;
+  }
+
+  .admin-order__deliver {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #e7e9f2;
+    text-align: right;
+  }
+
+  .admin-order__deliver > p {
+    margin: 6px 0 12px;
+    color: #374151;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-order__deliver > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .admin-order__deliver > div > span {
+    display: grid;
+    gap: 4px;
+    text-align: right;
+  }
+
+  .admin-order__deliver > div > span:last-child {
+    order: -1;
+  }
+
+  .admin-order__card,
+  .admin-order__card * {
+    text-align: right !important;
+  }
+
+  .admin-order {
+    grid-template-columns: minmax(0, 100%);
+    justify-content: center;
+    gap: 0;
+    padding: 8px 24px;
+    max-width: 480px;
+    border: 1px solid #e2e6ef;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  .admin-order__col {
+    display: contents;
+  }
+
+  .admin-order__card {
+    padding: 16px 0;
+    border: 0;
+    border-bottom: 1px solid #d9deea;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .admin-order__col:last-child .admin-order__card:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-order__eyebrow {
+    padding-bottom: 8px;
+    border-bottom: 1px solid #edf0f5;
+  }
+
+  .admin-order__total {
+    border-top-style: solid;
   }
 }
