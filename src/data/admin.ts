@@ -223,19 +223,38 @@ export function demoSetAccountStatus(
   u.accountStatus = status;
   u.accountStatusReason = status === "suspended" ? reason : null;
   u.updatedAt = iso(0);
+  recordDemoAudit(
+    status === "suspended" ? "suspend_account" : "activate_account",
+    "user",
+    u.name,
+    reason ||
+      (status === "suspended"
+        ? "Account suspended after a policy review."
+        : "Account reactivated after the account review was completed."),
+    { account_status: changed ? (status === "active" ? "suspended" : "active") : status },
+    { account_status: status },
+  );
   return { changed, status };
 }
 
 export function demoSetSellerAccess(
   userId: string,
   enabled: boolean,
-  _reason: string,
+  reason: string,
 ): { changed: boolean; canSell: boolean } {
   const u = DEMO_USERS.find((x) => x.id === userId);
   if (!u) throw new Error("User not found");
   const changed = u.canSell !== enabled;
   u.canSell = enabled;
   u.updatedAt = iso(0);
+  recordDemoAudit(
+    enabled ? "grant_seller" : "revoke_seller",
+    "user",
+    u.name,
+    reason || (enabled ? "Seller access approved after reviewing the shop profile." : "Seller access removed after an account review."),
+    { can_sell: !enabled },
+    { can_sell: enabled },
+  );
   return { changed, canSell: enabled };
 }
 
@@ -476,6 +495,15 @@ export function demoModerateBatch(
   } else if (action === "lock") b.status = "locked";
   else if (action === "unlock") b.status = "live";
   else if (action === "close") b.status = "closed";
+  recordDemoAudit(
+    `batch_${action}`,
+    "batch",
+    b.title,
+    reason ||
+      ({ flag: "Batch flagged for additional listing review.", hide: "Batch hidden while listing compliance is reviewed.", restore: "Batch restored after the listing review was completed.", lock: "Batch locked to prevent further orders.", unlock: "Batch unlocked after the seller issue was resolved.", close: "Batch closed because its ordering window has ended." } satisfies Record<BatchModerationAction, string>)[action],
+    null,
+    { moderation_action: action },
+  );
   return { changed: true };
 }
 
@@ -572,7 +600,7 @@ export function demoGetOrder(orderId: string): AdminOrderDetail {
   };
 }
 
-export function demoCancelOrder(orderId: string, _reason: string): { changed: boolean } {
+export function demoCancelOrder(orderId: string, reason: string): { changed: boolean } {
   const o = DEMO_ORDERS.find((x) => x.id === orderId);
   if (!o) throw new Error("Order not found");
   if (o.status === "completed") throw new Error("A completed order cannot be cancelled");
@@ -580,6 +608,7 @@ export function demoCancelOrder(orderId: string, _reason: string): { changed: bo
   if (["payment_confirmed", "preparing", "completed"].includes(o.status))
     throw new Error("A confirmed order cannot be cancelled");
   o.status = "cancelled";
+  recordDemoAudit("cancel_order", "order", o.orderNumber, reason || "Order cancelled after an admin review of the order issue.", { status: "previous" }, { status: "cancelled" });
   return { changed: true };
 }
 
@@ -678,6 +707,17 @@ export function demoReviewPayment(
   p.reviewedBy = "KARGO Admin";
   p.reviewedAt = iso(0);
   p.rejectionReason = decision === "rejected" ? reason : null;
+  recordDemoAudit(
+    decision === "verified" ? "verify_payment" : "reject_payment",
+    "payment",
+    p.orderNumber,
+    reason ||
+      (decision === "verified"
+        ? "Payment receipt and submitted amount verified by an admin."
+        : "Payment submission rejected after the receipt review."),
+    { status: "pending_review" },
+    { status: decision },
+  );
   return { changed: true, status: decision };
 }
 
@@ -791,6 +831,31 @@ const DEMO_AUDIT: AdminAuditRow[] = [
   },
 ];
 
+// Keep the admin preview honest as well as the real admin RPCs: every
+// state-changing action gets an audit entry, even when the caller leaves the
+// optional reason blank. The fallback text describes the operational reason;
+// it never exposes implementation/test wording in the audit trail.
+function recordDemoAudit(
+  action: string,
+  targetType: string,
+  targetLabel: string,
+  reason: string,
+  beforeState: Record<string, unknown> | null,
+  afterState: Record<string, unknown> | null,
+) {
+  DEMO_AUDIT.unshift({
+    id: `demo-audit-${Date.now()}-${DEMO_AUDIT.length}`,
+    actorName: "KARGO Admin",
+    action,
+    targetType,
+    targetLabel,
+    reason,
+    beforeState,
+    afterState,
+    createdAt: iso(0),
+  });
+}
+
 export function demoListTeam(): { rows: AdminTeamMember[] } {
   return { rows: DEMO_TEAM };
 }
@@ -809,6 +874,7 @@ export function demoGrantAdmin(userId: string, _reason: string): { changed: bool
     grantedBy: "KARGO Admin",
     accountStatus: u.accountStatus,
   });
+  recordDemoAudit("grant_admin", "user", u.name, _reason || "Administrative access granted after role approval.", { admin: false }, { admin: true });
   return { changed: true };
 }
 
@@ -820,7 +886,9 @@ export function demoRevokeAdmin(userId: string, _reason: string): { changed: boo
   if (userId === "demo-u-admin") throw new Error("You cannot revoke your own admin access");
   const index = DEMO_TEAM.findIndex((m) => m.id === userId);
   if (index < 0) return { changed: false };
+  const target = DEMO_TEAM[index];
   DEMO_TEAM.splice(index, 1);
+  recordDemoAudit("revoke_admin", "user", target.name, _reason || "Administrative access revoked after a role review.", { admin: true }, { admin: false });
   return { changed: true };
 }
 
@@ -832,6 +900,7 @@ export function demoGetMyInvite(): AdminInvite | null {
 }
 
 export function demoAcceptAdminInvite(): { accepted: boolean; changed: boolean } {
+  recordDemoAudit("accept_admin", "user", "KARGO Admin", "Admin invitation accepted by the account holder.", { accepted: false }, { accepted: true });
   return { accepted: true, changed: true };
 }
 
@@ -839,6 +908,7 @@ export function demoDeclineAdminInvite(_reason: string | null): {
   declined: boolean;
   changed: boolean;
 } {
+  recordDemoAudit("decline_admin", "user", "KARGO Admin", _reason || "Admin invitation declined by the account holder.", { pending: true }, { declined: true });
   return { declined: true, changed: true };
 }
 
