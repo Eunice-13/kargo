@@ -15,7 +15,6 @@ import { AdminPageHeader, AdminPanelHeader } from "./components";
 import { AdminEmptyText } from "./components/AdminFacts";
 import { AdminErrorState } from "./components/AdminStates";
 
-
 const relativeTime = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diff / 60000);
@@ -29,6 +28,13 @@ const relativeTime = (iso: string) => {
 export default function AdminDashboard({ setTab }: SharedState) {
   const { data, loading, error, accessDenied, refresh } = useAdminResource(
     () => adminApi.dashboard(),
+    [],
+  );
+  // Keep this card sourced from the audit endpoint itself. The dashboard RPC
+  // also returns a recentActivity snapshot, but that snapshot can be stale
+  // after audit rows are corrected or removed. The audit log is authoritative.
+  const { data: auditData, loading: auditLoading } = useAdminResource(
+    () => adminApi.listAudit({ days: 30 }, 8, 0),
     [],
   );
 
@@ -112,20 +118,22 @@ export default function AdminDashboard({ setTab }: SharedState) {
                 actionLabel="View all"
                 onAction={() => goto({ tab: "Security", subtab: "Audit log" })}
               />
-              {data.recentActivity.length === 0 ? (
+              {auditLoading ? (
+                <AdminEmptyText>Loading admin activity…</AdminEmptyText>
+              ) : !auditData || auditData.rows.length === 0 ? (
                 <AdminEmptyText>No admin activity yet.</AdminEmptyText>
               ) : (
                 <ul className="admin-activity-list">
-                  {data.recentActivity.map((a) => (
+                  {auditData.rows.map((a) => (
                     <li key={a.id} className="admin-activity-row">
                       <span className="admin-activity-row__main">
-                        <strong>{a.actor_name || "Admin"}</strong>{" "}
+                        <strong>{a.actorName || "Admin"}</strong>{" "}
                         {ADMIN_ACTION_LABELS[a.action] ?? a.action}
-                        {a.target_label ? (
-                          <span className="admin-activity-row__target"> · {a.target_label}</span>
+                        {a.targetLabel ? (
+                          <span className="admin-activity-row__target"> · {a.targetLabel}</span>
                         ) : null}
                       </span>
-                      <span className="admin-activity-row__time">{relativeTime(a.created_at)}</span>
+                      <span className="admin-activity-row__time">{relativeTime(a.createdAt)}</span>
                     </li>
                   ))}
                 </ul>
