@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 
 import { Card, CardSkeleton, Avatar, PrimaryBtn } from "@/components/shared";
 import { INDIGO } from "@/constants/theme";
@@ -342,7 +342,6 @@ export default function AdminUsers() {
                       data-label=""
                       style={{ padding: "10px 14px", color: "var(--kargo-muted)" }}
                     >
-                      ›
                     </td>
                   </tr>
                 ))}

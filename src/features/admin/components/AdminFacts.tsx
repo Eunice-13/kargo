@@ -28,15 +28,17 @@ export function AdminFact({
 export function AdminModalSection({
   title,
   hint,
+  divider = false,
   children,
 }: {
   title: string;
   hint?: string;
+  divider?: boolean;
   children: ReactNode;
 }) {
   return (
-    <section className="admin-modal-section">
-      <div className="admin-modal-section__head">
+    <section className={`admin-modal-section${divider ? " admin-modal-section--divider" : ""}`}>
+      <div className={`admin-modal-section__head${divider ? " admin-modal-section__head--divider" : ""}`}>
         <h3>{title}</h3>
         {hint && <span>{hint}</span>}
       </div>

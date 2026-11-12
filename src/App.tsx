@@ -777,6 +777,8 @@ export default function App() {
 
               minHeight: "100vh",
 
+              ...(role === "Admin" ? { display: "flex", flexDirection: "column" as const } : {}),
+
               fontFamily: "'Inter',sans-serif",
             }}
           >
@@ -806,7 +808,12 @@ export default function App() {
               }}
             />
             <TabBar active={tab} setActive={setTab} role={role} />
-            <main style={{ minHeight: "calc(100vh - 100px)" }}>
+            <main
+              style={{
+                minHeight: role === "Admin" ? "0" : "calc(100vh - 100px)",
+                ...(role === "Admin" ? { flex: 1 } : {}),
+              }}
+            >
               <TabContent
                 tab={tab}
                 shared={shared}

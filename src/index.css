@@ -10114,6 +10114,11 @@ textarea::placeholder {
   gap: 10px;
 }
 
+.admin-modal-section--divider .admin-modal-section__head {
+  border-top: 1px solid var(--kargo-line);
+  padding-top: 10px;
+}
+
 .admin-modal-section__head h3 {
   margin: 0;
   color: #17212b;
@@ -16639,6 +16644,74 @@ select.admin-filter-control {
   cursor: pointer;
 }
 
+.admin-select {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.admin-select__trigger {
+  display: flex;
+  min-width: 128px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-select__trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-select__trigger > svg {
+  flex: 0 0 auto;
+  color: #5f6b7a;
+  transition: transform 140ms ease;
+}
+
+.admin-select__trigger[aria-expanded="true"] > svg {
+  transform: rotate(180deg);
+}
+
+.admin-select__options {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 5px);
+  right: 0;
+  display: grid;
+  width: max(100%, 168px);
+  max-height: min(280px, calc(100dvh - 180px));
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid #dfe6ee;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(17 24 39 / 16%);
+}
+
+.admin-select__options button {
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff;
+  color: #253545;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-select__options button:hover,
+.admin-select__options button:focus-visible,
+.admin-select__options button[aria-selected="true"] {
+  background: #f1f4fa;
+  color: #191ba9;
+}
+
 .admin-filter-search {
   flex: 1 1 260px;
   min-width: 0;
@@ -16711,6 +16784,18 @@ select.admin-filter-control {
   tbody
   tr {
   transition: background-color 140ms ease;
+}
+
+.admin-page .admin-users-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.admin-page .admin-users-table thead th:first-child {
+  padding-left: 14px !important;
+}
+
+.admin-page .admin-batches-table thead th:first-child {
+  padding-left: 14px !important;
 }
 
 .admin-page
@@ -18606,3 +18691,38 @@ tr.record-focus {
 .auth-forgot-row .auth-link-button {
   font-size: clamp(0.75rem, 1.1dvh, 0.9rem);
 }
+
+.admin-page .admin-batches-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.admin-page :is(.admin-orders-table, .admin-payments-table, .admin-combined-table) tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.admin-page :is(.admin-team-table, .admin-audit-table) tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+
+@media (min-width: 768px) {
+  .seller-orders-page .seller-orders-heading {
+    margin-top: 0;
+  }
+
+  .seller-orders-heading h1,
+  .seller-batches-heading h1,
+  .seller-payments-page .seller-payment-section-heading,
+  .seller-dashboard .seller-section-heading h2 {
+    font-size: 15px !important;
+    letter-spacing: normal !important;
+  }
+
+  .seller-orders-heading p,
+  .seller-batches-heading p,
+  .seller-payments-page .seller-payment-methods-instructions {
+    font-size: 13px !important;
+  }
+}
+
+

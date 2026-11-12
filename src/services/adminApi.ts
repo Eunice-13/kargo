@@ -75,6 +75,117 @@ export function setAdminDemoMode(on: boolean) {
   demoMode = on;
 }
 
+const DEMO_ANALYTICS_STAGES: FulfillmentAnalyticsStage[] = [
+  "payment_pending", "payment_submitted", "insufficient_payment", "payment_confirmed",
+  "preparing", "shipped", "in_transit", "delivered", "cancelled", "expired",
+];
+const DEMO_CURRENT_STAGES: FulfillmentCurrentStatusStage[] = [
+  "payment_pending", "payment_submitted", "insufficient_payment", "payment_confirmed",
+  "preparing", "shipped", "delivered", "cancelled", "expired", "other",
+];
+
+function demoAnalyticsDates() {
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - 13);
+  return { start, end, generatedAt: end.toISOString() };
+}
+
+function demoAnalyticsChart<T extends string>(
+  stages: T[],
+  totals: Record<T, number>,
+) {
+  const { start, end } = demoAnalyticsDates();
+  return Array.from({ length: 14 }, (_, index) => {
+    const bucketStart = new Date(start);
+    bucketStart.setDate(start.getDate() + index);
+    const bucketEnd = new Date(bucketStart);
+    bucketEnd.setDate(bucketEnd.getDate() + 1);
+    const counts = Object.fromEntries(stages.map((stage) => {
+      const total = totals[stage];
+      const daily = Math.floor(total / 14);
+      const remainder = total % 14;
+      return [stage, daily + (index < remainder ? 1 : 0)];
+    })) as Record<T, number>;
+    return { bucketStart: bucketStart.toISOString(), bucketEnd: bucketEnd.toISOString(), counts };
+  }).map((bucket, index, rows) => index === rows.length - 1
+    ? { ...bucket, bucketEnd: end.toISOString() }
+    : bucket);
+}
+
+function demoFulfillmentAnalytics(filters: FulfillmentAnalyticsFilters): FulfillmentAnalytics {
+  const { start, end, generatedAt } = demoAnalyticsDates();
+  const stageTotals: Record<FulfillmentAnalyticsStage, number> = {
+    payment_pending: 120, payment_submitted: 96, insufficient_payment: 8,
+    payment_confirmed: 78, preparing: 70, shipped: 55, in_transit: 43,
+    delivered: 32, cancelled: 7, expired: 5,
+  };
+  return {
+    period: filters.period ?? "last_30_days", timezone: "Asia/Manila", startAt: start.toISOString(),
+    endAt: end.toISOString(), grouping: "day", generatedAt,
+    snapshot: generatedAt, captureStartedAt: start.toISOString(),
+    historicalCoverage: "full_recorded_history",
+    countingRule: "all_orders_reached_stages", totalEntries: 514, cohortSize: 120,
+    uniqueOrders: 120, stageTotals,
+    chart: demoAnalyticsChart(DEMO_ANALYTICS_STAGES, stageTotals),
+  };
+}
+
+function demoFulfillmentCurrentStatus(filters: FulfillmentAnalyticsFilters): FulfillmentCurrentStatus {
+  const { start, end, generatedAt } = demoAnalyticsDates();
+  const counts: Record<FulfillmentCurrentStatusStage, number> = {
+    payment_pending: 12, payment_submitted: 15, insufficient_payment: 4,
+    payment_confirmed: 10, preparing: 18, shipped: 18, delivered: 32,
+    cancelled: 7, expired: 4, other: 0,
+  };
+  return {
+    period: filters.period ?? "last_30_days", timezone: "Asia/Manila", startAt: start.toISOString(),
+    endAt: end.toISOString(), grouping: "day", cohortSize: 120, generatedAt,
+    counts, chart: demoAnalyticsChart(DEMO_CURRENT_STAGES, counts),
+  };
+}
+
+function demoFulfillmentOrdersPage(
+  stage: FulfillmentAnalyticsStage,
+  generatedAt: string,
+  limit: number,
+  offset: number,
+  current = false,
+): FulfillmentAnalyticsOrders {
+  const useDeliveredExample = stage === "delivered" || stage === "cancelled" || stage === "expired";
+  const order = useDeliveredExample
+    ? {
+        id: "demo-o-2",
+        number: "ORD-2026-0184",
+        status: "completed",
+        fulfillmentStage: "delivered",
+        daysAgo: 9,
+      }
+    : {
+        id: "demo-o-1",
+        number: "ORD-2026-0199",
+        status: "payment_confirmed",
+        fulfillmentStage: "payment_confirmed",
+        daysAgo: 2,
+      };
+  return {
+    generatedAt,
+    total: 1,
+    nextOffset: offset + limit,
+    rows: offset === 0
+      ? [{
+          order_id: order.id,
+          order_number: order.number,
+          stage,
+          occurred_at: new Date(Date.now() - order.daysAgo * 86_400_000).toISOString(),
+          source: current ? "current_status" : "transition",
+          current_status: order.status,
+          current_fulfillment_stage: order.fulfillmentStage,
+        }]
+      : [],
+  };
+}
+
 async function callAdmin<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   const { data, error } = await requireSupabase().rpc(fn, args);
   if (error) {
@@ -90,7 +201,7 @@ export const adminApi = {
   async fulfillmentAnalytics(
     filters: FulfillmentAnalyticsFilters = {},
   ): Promise<FulfillmentAnalytics> {
-    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode");
+    if (demoMode) return demoFulfillmentAnalytics(filters);
     return callAdmin("admin_fulfillment_analytics", {
       p_period: filters.period ?? "last_30_days",
       p_start: filters.start ?? null,
@@ -101,7 +212,7 @@ export const adminApi = {
   async fulfillmentCurrentStatus(
     filters: FulfillmentAnalyticsFilters = {},
   ): Promise<FulfillmentCurrentStatus> {
-    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode");
+    if (demoMode) return demoFulfillmentCurrentStatus(filters);
     return callAdmin("admin_fulfillment_current_status", {
       p_period: filters.period ?? "last_30_days",
       p_start: filters.start ?? null,
@@ -115,7 +226,11 @@ export const adminApi = {
     limit = 25,
     offset = 0,
   ): Promise<FulfillmentAnalyticsOrders> {
-    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode");
+    if (demoMode) {
+      const analyticsStage: FulfillmentAnalyticsStage =
+        stage === "other" ? "payment_confirmed" : stage as FulfillmentAnalyticsStage;
+      return demoFulfillmentOrdersPage(analyticsStage, new Date().toISOString(), limit, offset, true);
+    }
     return callAdmin("admin_fulfillment_current_status_orders", {
       p_period: filters.period ?? "last_30_days",
       p_start: filters.start ?? null,
@@ -137,7 +252,7 @@ export const adminApi = {
     limit = 25,
     offset = 0,
   ): Promise<FulfillmentAnalyticsOrders> {
-    if (demoMode) throw new Error("Fulfillment history is unavailable in demo mode");
+    if (demoMode) return demoFulfillmentOrdersPage(point.stage, point.generatedAt, limit, offset);
     return callAdmin("admin_fulfillment_orders", {
       p_period: filters.period ?? "last_30_days",
       p_start: filters.start ?? null,

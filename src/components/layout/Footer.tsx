@@ -32,6 +32,7 @@ export default function Footer({ role }: { role?: Role }) {
   // Admins get a slim internal footer, not the marketing one.
   if (role === "Admin") {
     return (
+      <>
       <footer
         className="kargo-footer kargo-footer--admin"
         style={{
@@ -53,9 +54,15 @@ export default function Footer({ role }: { role?: Role }) {
           kargoph2026@gmail.com
         </a>
       </footer>
+      <MarketplaceFooter />
+      </>
     );
   }
 
+  return <MarketplaceFooter />;
+}
+
+function MarketplaceFooter() {
   return (
     <footer className="kargo-footer">
       <div className="kargo-footer__grid">
