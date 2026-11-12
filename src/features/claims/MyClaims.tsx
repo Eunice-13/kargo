@@ -140,6 +140,10 @@ function needsShippingFee(claim: ClaimRow) {
 }
 
 function canCancelClaim(claim: ClaimRow) {
+  // A shipping-fee-pending claim is still an unpaid claim, so the buyer may
+  // cancel it. Once proof has been submitted the status becomes
+  // "Awaiting Verification"; a confirmed payment is "Paid and Reserved".
+  // Neither state is cancellable.
   return claim.status === "Pending" && !claim.groupOrderId;
 }
 
@@ -723,7 +727,7 @@ export default function MyClaims({
 
       if (isSupabaseConfigured) await refreshData();
 
-      alert("This claim is no longer pending and cannot be cancelled.");
+      alert("This payment can no longer be cancelled after it was submitted or reserved.");
 
       return;
     }
@@ -3190,8 +3194,9 @@ export default function MyClaims({
               "This item belongs to a Group Order and cannot be cancelled individually."
             ) : (
               <>
-                Cancel your claim for <strong>{cancelTarget.product}</strong>? This cannot be
-                undone, and the quantity will become available to other buyers.
+                Cancel your payment for <strong>{cancelTarget.product}</strong>? This is allowed
+                while the shipping fee is still pending. It cannot be undone, and the quantity
+                will become available to other buyers.
               </>
             )}
           </p>
