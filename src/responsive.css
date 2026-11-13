@@ -39,6 +39,108 @@
   }
 }
 
+/* Keep seller quick actions aligned with the two filter controls on phones. */
+@media (max-width: 767px) {
+  .seller-batches-page .seller-batch-filter-bar {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+
+  .seller-batches-page .seller-batch-filter-bar .seller-batch-filter-label,
+  .seller-batches-page .seller-batch-filter-bar .seller-batch-filter-controls {
+    grid-column: 1 / -1;
+  }
+
+  .seller-batches-page .seller-batch-filter-bar .seller-batch-quick-action {
+    box-sizing: border-box;
+    width: 100%;
+    flex: none;
+    min-height: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0 10px;
+    color: var(--kargo-ink) !important;
+    background: #eef6f7 !important;
+    border-color: #c7dfe0 !important;
+  }
+
+  .seller-batches-page .seller-batch-filter-bar .seller-batch-quick-action:hover {
+    background: #e3f0f1 !important;
+  }
+}
+
+/* Buying list becomes a readable, touch-friendly two-column list on phones. */
+@media (max-width: 640px) {
+  .kargo-modal:has(.buying-list-modal) {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  .buying-list-modal {
+    min-width: 0;
+  }
+
+  .buying-list-modal__toolbar {
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .buying-list-modal h2 {
+    font-size: 20px;
+  }
+
+  .buying-list-modal__filters {
+    gap: 8px;
+  }
+
+  .buying-list-modal__filters > label:first-child,
+  .buying-list-modal__filters select {
+    min-width: 0;
+  }
+
+  .buying-list-modal__filters select {
+    max-width: 100%;
+  }
+
+  .buying-list-modal__table-wrap {
+    overflow-x: hidden;
+  }
+
+  .buying-list-modal__table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .buying-list-modal__table th,
+  .buying-list-modal__table td {
+    padding: 10px 8px;
+  }
+
+  .buying-list-modal__table th:nth-child(1),
+  .buying-list-modal__table td:nth-child(1) {
+    width: 42px;
+  }
+
+  .buying-list-modal__table th:nth-child(2),
+  .buying-list-modal__table td:nth-child(2) {
+    width: 42%;
+  }
+
+  .buying-list-modal__table th:nth-child(4),
+  .buying-list-modal__table td:nth-child(4),
+  .buying-list-modal__table th:nth-child(5),
+  .buying-list-modal__table td:nth-child(5) {
+    display: none;
+  }
+
+  .buying-list-modal__table td:nth-child(2),
+  .buying-list-modal__table td:nth-child(3) {
+    overflow-wrap: anywhere;
+  }
+}
+
 /* Admin tables become readable labeled cards on phones, matching the seller
    and buyer mobile data views instead of forcing horizontal table scrolling. */
 @media (max-width: 620px) {
