@@ -38,8 +38,13 @@ export default function BatchGroupSettingsModal({
   )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const settingsLocked = batch.claimed > 0 || batch.products.some((product) => product.claimed > 0)
 
   const save = async () => {
+    if (settingsLocked) {
+      setError("Selling and group-order settings are locked after the first claim or commitment.")
+      return
+    }
     if (
       units.some(
         (unit) =>
@@ -110,7 +115,13 @@ export default function BatchGroupSettingsModal({
       })
       onClose()
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to save group settings.")
+      const message =
+        caught instanceof Error
+          ? caught.message
+          : caught && typeof caught === "object" && "message" in caught
+            ? String(caught.message)
+            : "Unable to save group settings."
+      setError(message)
     } finally {
       setSaving(false)
     }
@@ -119,6 +130,11 @@ export default function BatchGroupSettingsModal({
   return (
     <Modal title="Selling Units & Group Orders" onClose={onClose} width={620}>
       <div className="batch-group-settings-modal">
+        {settingsLocked && (
+          <p className="group-order-error" role="status">
+            Selling and group-order settings are locked after the first claim or commitment.
+          </p>
+        )}
         <section>
           <strong>Selling units</strong>
           {batch.products.map((product, index) => (
@@ -126,6 +142,7 @@ export default function BatchGroupSettingsModal({
               <span>{product.name}</span>
               <select
                 value={units[index].sellingUnit}
+                disabled={settingsLocked}
                 onChange={(event) =>
                   setUnits((current) =>
                     current.map((unit, unitIndex) =>
@@ -144,6 +161,7 @@ export default function BatchGroupSettingsModal({
                   type="number"
                   min="1"
                   value={units[index].piecesPerBox}
+                  disabled={settingsLocked}
                   onChange={(event) =>
                     setUnits((current) =>
                       current.map((unit, unitIndex) =>
@@ -162,23 +180,23 @@ export default function BatchGroupSettingsModal({
 
         <label className="batch-group-config__toggle">
           <span><strong>Allow Group Orders</strong><small>One group can combine any item in this batch.</small></span>
-          <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} />
+           <input disabled={settingsLocked} type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} />
         </label>
 
         {enabled && (
           <section>
             <label className="batch-group-config__toggle batch-group-config__toggle--nested">
               <span><strong>Offer a group discount</strong><small>Optional. Shipping stays full price.</small></span>
-              <input type="checkbox" checked={discountEnabled} onChange={(event) => setDiscountEnabled(event.target.checked)} />
+               <input disabled={settingsLocked} type="checkbox" checked={discountEnabled} onChange={(event) => setDiscountEnabled(event.target.checked)} />
             </label>
             {discountEnabled && (
               <div className="batch-group-discount-fields">
-                <select value={discountType} onChange={(event) => setDiscountType(event.target.value as GroupDiscountType)}>
+                 <select disabled={settingsLocked} value={discountType} onChange={(event) => setDiscountType(event.target.value as GroupDiscountType)}>
                   <option value="percentage">Percentage off</option>
                   <option value="fixed">Fixed amount off</option>
                 </select>
-                <input type="number" min="0.01" value={discountValue} onChange={(event) => setDiscountValue(event.target.value)} placeholder="Discount" />
-                <input type="number" min="0" value={minimum} onChange={(event) => setMinimum(event.target.value)} placeholder="Minimum subtotal" />
+                 <input disabled={settingsLocked} type="number" min="0.01" value={discountValue} onChange={(event) => setDiscountValue(event.target.value)} placeholder="Discount" />
+                 <input disabled={settingsLocked} type="number" min="0" value={minimum} onChange={(event) => setMinimum(event.target.value)} placeholder="Minimum subtotal" />
               </div>
             )}
           </section>
@@ -187,7 +205,7 @@ export default function BatchGroupSettingsModal({
         {error && <p className="group-order-error" role="alert">{error}</p>}
         <div className="kargo-modal-actions">
           <SecondaryBtn onClick={onClose}>Cancel</SecondaryBtn>
-          <PrimaryBtn loading={saving} onClick={save}>Save Settings</PrimaryBtn>
+          <PrimaryBtn disabled={settingsLocked} loading={saving} onClick={save}>Save Settings</PrimaryBtn>
         </div>
       </div>
     </Modal>
