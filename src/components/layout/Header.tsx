@@ -184,7 +184,7 @@ export default function Header({
             )}
           </button>
         )}
-        <NotificationsMenu onNavigate={onNavigate} />
+        {!isAdmin && <NotificationsMenu onNavigate={onNavigate} />}
         <UserMenu
           user={user}
           onSettings={onSettings}

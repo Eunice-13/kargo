@@ -5,8 +5,8 @@ import { Modal, PrimaryBtn, SecondaryBtn, Avatar } from "@/components/shared";
 import { adminApi } from "@/services";
 import type { AdminUserSearchResult } from "../adminTypes";
 
-// Search an existing account and grant it admin, with a required reason and a
-// typed-name confirmation. Never creates a new auth user.
+// Search an existing account and send it an admin invitation, with a required
+// reason and a typed-name confirmation. Never creates a new auth user.
 export default function AdminAddAdminModal({
   onClose,
   onAdded,
@@ -60,7 +60,7 @@ export default function AdminAddAdminModal({
 
   return (
     <Modal
-      title="Add admin"
+       title="Invite admin"
       variant="confirm"
       showTitleIcon={false}
       width={500}
@@ -197,7 +197,7 @@ export default function AdminAddAdminModal({
                 )}
               </div>
               <p className="admin-field__hint">
-                They get admin access only after they accept the invitation at their next sign-in.
+                 They get admin access only after they accept the invitation at their next sign-in.
                 Every admin can do everything, including managing the team. This is logged.
               </p>
             </div>
@@ -227,13 +227,13 @@ export default function AdminAddAdminModal({
               onAdded();
               onClose();
             } catch (err) {
-              setError(err instanceof Error ? err.message : "Could not add admin.");
+              setError(err instanceof Error ? err.message : "Could not send the admin invitation.");
             } finally {
               setSaving(false);
             }
           }}
         >
-          Add admin
+          Send invitation
         </PrimaryBtn>
       </div>
     </Modal>
