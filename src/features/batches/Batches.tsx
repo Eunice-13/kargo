@@ -26,6 +26,7 @@ import {
   Plus,
   CalendarClock,
   Users,
+  ClipboardList,
 } from "lucide-react";
 
 import type { ClaimRow, BatchType, SharedState, ClaimReservationInput } from "@/types";
@@ -54,6 +55,7 @@ import SellerBatchFilterSelect from "./SellerBatchFilterSelect";
 import SellerExtensionRequests from "./SellerExtensionRequests";
 
 import FinancialSummaryModal from "./FinancialSummaryModal";
+import BatchBuyingListModal from "./BatchBuyingListModal";
 
 import SellerDirectoryPage from "./SellerDirectoryPage";
 
@@ -273,6 +275,7 @@ export default function Batches({
   }, [batchPage, user, role, setTab]);
 
   const [financialBatch, setFinancialBatch] = useState<BatchType | null>(null);
+  const [buyingListBatch, setBuyingListBatch] = useState<BatchType | null>(null);
 
   // Confirmation targets for consequential seller actions (#16)
 
@@ -1643,13 +1646,26 @@ export default function Batches({
       )}
       {role === "Buyer" && <div className="flex-1" />}
       {role === "Seller" && (
-        <ExtensionRequestsButton
-          pendingCount={pendingExtCount}
-          onClick={() => {
-            setExtensionNow(Date.now());
-            setShowExtReqModal(true);
-          }}
-        />
+        <>
+          <ExtensionRequestsButton
+            pendingCount={pendingExtCount}
+            onClick={() => {
+              setExtensionNow(Date.now());
+              setShowExtReqModal(true);
+            }}
+          />
+          {batches.filter((batch) => batch.seller === user.name).length > 0 && (
+            <button
+              type="button"
+              className="seller-batch-quick-action"
+              onClick={() => setBuyingListBatch(batches.find((batch) => batch.seller === user.name) ?? null)}
+              aria-label="Open buying list"
+            >
+              <ClipboardList size={18} aria-hidden="true" />
+              <span className="seller-batch-quick-action__label">Buying List</span>
+            </button>
+          )}
+        </>
       )}
       {role === "Buyer" && (
         <SecondaryBtn onClick={() => setSellerDir(true)}>
@@ -1773,6 +1789,9 @@ export default function Batches({
         {financialBatch && (
           <FinancialSummaryModal batch={financialBatch} onClose={() => setFinancialBatch(null)} />
         )}
+        {buyingListBatch && (
+          <BatchBuyingListModal batches={batches.filter((batch) => batch.seller === user.name)} claims={claims} onClose={() => setBuyingListBatch(null)} />
+        )}
         {confirmModals}
       </div>
     );
@@ -1870,6 +1889,9 @@ export default function Batches({
       )}
       {financialBatch && (
         <FinancialSummaryModal batch={financialBatch} onClose={() => setFinancialBatch(null)} />
+      )}
+      {buyingListBatch && (
+        <BatchBuyingListModal batches={batches.filter((batch) => batch.seller === user.name)} claims={claims} onClose={() => setBuyingListBatch(null)} />
       )}
       {confirmModals}
     </div>

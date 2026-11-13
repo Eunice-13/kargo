@@ -2,6 +2,46 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+.buying-list-modal { color: #17212b; }
+.buying-list-modal__toolbar { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
+.buying-list-modal__eyebrow { margin: 0 0 4px; color: #748391; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.buying-list-modal h2 { margin: 0; font-size: 22px; }
+.buying-list-modal__toolbar p:last-child { margin: 5px 0 0; color: #748391; font-size: 12px; }
+.buying-list-modal__actions { display: flex; gap: 8px; }
+.buying-list-modal__actions button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #d9e1e5; background: #fff; border-radius: 7px; padding: 7px 10px; color: #18324a; cursor: pointer; font: inherit; font-size: 12px; }
+.buying-list-modal__search { display: flex; align-items: center; gap: 8px; border: 1px solid #d9e1e5; border-radius: 8px; padding: 9px 11px; margin-bottom: 12px; color: #748391; }
+.buying-list-modal__search input { width: 100%; border: 0; outline: 0; font: inherit; color: #17212b; }
+.buying-list-modal__filters { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.buying-list-modal__filters label:first-child { display: flex; align-items: center; gap: 7px; color: #748391; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.buying-list-modal__filters select { border: 1px solid #d9e1e5; border-radius: 7px; background: #fff; color: #18324a; padding: 8px; font: inherit; font-size: 12px; }
+.buying-list-modal__filters .buying-list-modal__search { flex: 1; margin: 0; }
+.buying-list-modal__history { display: inline-flex; align-items: center; gap: 6px; border: 0; background: #eef0ff; color: #18324a; border-radius: 7px; padding: 9px 10px; cursor: pointer; white-space: nowrap; font: inherit; font-size: 12px; }
+.buying-list-modal__table-wrap { overflow-x: auto; border: 1px solid #e5ebee; border-radius: 9px; }
+.buying-list-modal__table { width: 100%; border-collapse: collapse; min-width: 610px; font-size: 12px; }
+.buying-list-modal__table th { background: #f5f7f8; color: #748391; font-size: 10px; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+.buying-list-modal__table th, .buying-list-modal__table td { padding: 11px 12px; border-bottom: 1px solid #edf1f3; vertical-align: middle; }
+.buying-list-modal__table tr:last-child td { border-bottom: 0; }
+.buying-list-modal__table td strong { display: block; }
+.buying-list-modal__table td span { color: #748391; font-size: 11px; }
+.buying-list-modal__qty { color: #18324a; font-size: 18px; }
+.buying-list-modal__check { width: 27px; height: 27px; display: grid; place-items: center; border: 1px solid #b9c7ce; border-radius: 6px; background: #fff; color: transparent; cursor: pointer; }
+.buying-list-modal__check[aria-pressed="true"] { border-color: #0b7a59; background: #d4f5ea; color: #0b7a59; }
+.buying-list-modal__check.is-confirming { border-color: #0b7a59; background: #d4f5ea; color: #0b7a59; }
+.buying-list-modal__done { margin-top: 12px; border: 0; border-radius: 7px; padding: 9px 13px; background: #0b7a59; color: #fff; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; }
+.buying-list-modal__confirm p { margin: 0; color: #41515f; line-height: 1.5; }
+.buying-list-modal__confirm > div { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.buying-list-modal__confirm button { min-height: 38px; border: 1px solid #d9e1e5; border-radius: 8px; padding: 8px 16px; background: #fff; color: #18324a; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; }
+.buying-list-modal__confirm button:hover { border-color: #9fb1bb; background: #f5f7f8; }
+.buying-list-modal__confirm button.buying-list-modal__done { margin-top: 0; border-color: #0b7a59; background: #0b7a59; color: #fff; }
+.buying-list-modal__confirm button.buying-list-modal__done:hover { border-color: #086448; background: #086448; }
+.buying-list-modal__table tr.is-checked td { color: #748391; text-decoration: line-through; }
+.buying-list-modal__table tr.is-checked .buying-list-modal__qty { color: #0b7a59; }
+.buying-list-modal__empty { display: grid; place-items: center; gap: 6px; padding: 36px; color: #748391; }
+.buying-list-modal__empty strong { color: #17212b; }
+.buying-list-modal__note { margin: 12px 0 0; color: #748391; font-size: 11px; }
+@media print { .buying-list-modal__actions, .buying-list-modal__search, .buying-list-modal__note { display: none; } }
+@media (max-width: 640px) { .buying-list-modal__filters { align-items: stretch; flex-wrap: wrap; } .buying-list-modal__filters .buying-list-modal__search { order: 3; flex-basis: 100%; } }
+
 .claims-to-pay-invoice {
   display: flex;
   align-items: center;
@@ -7868,6 +7908,11 @@ textarea::placeholder {
     box-shadow 140ms ease,
     color 140ms ease;
 }
+
+/* Keep the seller's two utility actions together instead of pushing each one
+   to an opposite edge of the filter bar. */
+.seller-batch-filter-bar .seller-batch-quick-action { margin-left: 0; }
+.seller-batch-filter-bar .seller-batch-quick-action + .seller-batch-quick-action { margin-left: 8px; }
 .seller-batch-lock:hover {
   transform: translateY(-1px);
   box-shadow:
