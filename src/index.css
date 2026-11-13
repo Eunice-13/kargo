@@ -7911,7 +7911,7 @@ textarea::placeholder {
 
 /* Keep the seller's two utility actions together instead of pushing each one
    to an opposite edge of the filter bar. */
-.seller-batch-filter-bar .seller-batch-quick-action { margin-left: 0; }
+.seller-batch-filter-bar .seller-batch-quick-action { margin-left: auto; }
 .seller-batch-filter-bar .seller-batch-quick-action + .seller-batch-quick-action { margin-left: 8px; }
 .seller-batch-lock:hover {
   transform: translateY(-1px);
