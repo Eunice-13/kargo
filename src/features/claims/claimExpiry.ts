@@ -38,8 +38,9 @@ export function claimBelongsToPendingPayments(claim: ClaimRow, now = Date.now())
   return (
     claim.status !== "Awaiting Verification" &&
     (claimIsPayable(claim, now) ||
-      claim.shippingState === "waiting_for_seller" ||
-      claim.shippingState === "correction_requested")
+      ((claim.status === "Pending" || claim.status === "Insufficient Payment") &&
+        (claim.shippingState === "waiting_for_seller" ||
+          claim.shippingState === "correction_requested")))
   )
 }
 
