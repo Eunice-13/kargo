@@ -2,6 +2,56 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+.claims-to-pay-invoice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 14px 16px 0;
+  padding: 16px 18px;
+  border: 1px solid #dfe3ff;
+  border-radius: 12px;
+  background: #f8f9ff;
+}
+
+.claims-to-pay-invoice > div { display: grid; gap: 3px; }
+.claims-to-pay-invoice strong { color: #172554; font-size: 14px; }
+.claims-to-pay-invoice span,
+.claims-to-pay-invoice small { color: #6b7280; font-size: 11px; }
+.claims-to-pay-invoice__eyebrow {
+  color: #191ba9 !important;
+  font-size: 10px !important;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 620px) {
+  .claims-to-pay-invoice { align-items: stretch; flex-direction: column; margin-inline: 10px; }
+}
+
+.buyer-invoice { color: #172033; font-family: "DM Sans", sans-serif; }
+.buyer-invoice__heading, .buyer-invoice__people, .buyer-invoice__meta { display: flex; justify-content: space-between; gap: 18px; border-bottom: 1px dashed #d6dbe5; padding: 14px 0; }
+.buyer-invoice__heading h2 { margin: 3px 0 0; font-size: 18px; }
+.buyer-invoice__heading span, .buyer-invoice__people span, .buyer-invoice__item-head { color: #788398; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.buyer-invoice__heading b { display: block; color: #191ba9; font-size: 24px; text-align: right; }
+.buyer-invoice__heading small { color: #788398; font-size: 10px; }
+.buyer-invoice__people > div, .buyer-invoice__meta span { display: grid; gap: 4px; flex: 1; }
+.buyer-invoice__people strong, .buyer-invoice__meta b { font-size: 12px; }
+.buyer-invoice small { color: #788398; font-size: 10px; line-height: 1.5; }
+.buyer-invoice__meta { display: grid; grid-template-columns: 1fr 1.2fr 1fr; column-gap: 18px; align-items: start; }
+.buyer-invoice__meta span { min-width: 0; white-space: nowrap; font-size: 10px; }
+.buyer-invoice__meta b { display: block; margin-top: 4px; }
+.buyer-invoice__items { padding: 16px 0; border-bottom: 1px solid #172033; }
+.buyer-invoice__item-head, .buyer-invoice__item, .buyer-invoice__total { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; }
+.buyer-invoice__item div { display: grid; gap: 3px; }
+.buyer-invoice__total { margin-top: 10px; border-top: 1px solid #e5e7eb; padding-top: 12px; font-weight: 700; }
+.buyer-invoice__terms { display: grid; gap: 4px; padding-top: 14px; }
+
+@media print {
+  .kargo-modal-actions { display: none !important; }
+}
+
 .kargo-location-map {
   height: 230px;
   min-height: 230px;
@@ -18733,5 +18783,3 @@ tr.record-focus {
     font-size: 13px !important;
   }
 }
-
-

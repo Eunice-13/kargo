@@ -195,6 +195,10 @@ export default function MyClaims({
 
   const [payTarget, setPayTarget] = useState<ClaimRow | null>(null);
 
+  // Pay Now creates a pending invoice first. The buyer submits proof from the
+  // invoice instead of being taken straight into the payment form.
+  const [invoiceTarget, setInvoiceTarget] = useState<ClaimRow | null>(null);
+
   const [cancelTarget, setCancelTarget] = useState<ClaimRow | null>(null);
 
   const [cancelling, setCancelling] = useState(false);
@@ -2238,7 +2242,7 @@ export default function MyClaims({
                                         !item.extensionRequested &&
                                         item.extensionStatus !== "pending",
                                       showCancel: canCancelClaim(item),
-                                      onPay: () => setPayTarget(item),
+                                       onPay: () => setInvoiceTarget(item),
                                       onExtend: () => setExtTarget(item),
                                       onCancel: () => setCancelTarget(item),
                                     })}
@@ -3090,6 +3094,51 @@ export default function MyClaims({
           }}
           onClose={() => setShowBatchCheckout(false)}
         />
+      )}
+      {invoiceTarget && (
+        <Modal
+          title="Payment Details"
+          onClose={() => setInvoiceTarget(null)}
+          width={440}
+          showTitleIcon={false}
+        >
+          <div className="buyer-invoice" role="status">
+            <div className="buyer-invoice__heading">
+              <div><h2>{invoiceTarget.sellerShopName || invoiceTarget.seller}</h2></div>
+              <div><b>INVOICE</b><small>INV-{String(invoiceTarget.id).slice(-8).toUpperCase()}</small></div>
+            </div>
+            <div className="buyer-invoice__people">
+              <div><span>Seller</span><strong>{invoiceTarget.seller}</strong><small>Social media: {invoiceTarget.sellerFb || "Not provided"}</small></div>
+              <div><span>Bill To</span><strong>{user.name || "Buyer"}</strong><small>Social media: {invoiceTarget.buyerFb || user.fb || "Not provided"}</small></div>
+            </div>
+            <div className="buyer-invoice__meta">
+              <span>Date Issued<b>{new Date().toLocaleDateString()}</b></span>
+              <span>Service / Delivery Date<b>{invoiceTarget.createdAt ? new Date(invoiceTarget.createdAt).toLocaleDateString() : "To be arranged"}</b></span>
+              <span>Payment Due<b>{invoiceTarget.expiresAt ? new Date(invoiceTarget.expiresAt).toLocaleDateString() : "Upon reservation"}</b></span>
+            </div>
+            <div className="buyer-invoice__items">
+              <div className="buyer-invoice__item-head"><span>Description</span><span>Amount</span></div>
+              <div className="buyer-invoice__item"><div><strong>{invoiceTarget.product}</strong><small>{invoiceTarget.qty} × ₱{((invoiceTarget.amount - (invoiceTarget.shippingFee || 0)) / Math.max(invoiceTarget.qty, 1)).toLocaleString()}</small></div><b>₱{(invoiceTarget.amount - (invoiceTarget.shippingFee || 0)).toLocaleString()}</b></div>
+              {invoiceTarget.shippingFee !== undefined && invoiceTarget.shippingFee > 0 && (
+                <div className="buyer-invoice__item"><div><strong>Shipping fee</strong><small>Delivery / fulfillment charge</small></div><b>₱{invoiceTarget.shippingFee.toLocaleString()}</b></div>
+              )}
+              <div className="buyer-invoice__total"><span>Total Amount Due</span><strong>₱{claimAmountDue(invoiceTarget).toLocaleString()}</strong></div>
+            </div>
+            <div className="buyer-invoice__terms"><strong>Payment Terms</strong><span>Accepted method: {invoiceTarget.reservedPaymentMethod || "Bank transfer / online payment"}</span><small>Submit your payment reference, account name, mobile number, and receipt using the payment form.</small></div>
+          </div>
+          <div className="kargo-modal-actions">
+            <SecondaryBtn onClick={() => setInvoiceTarget(null)}>Close</SecondaryBtn>
+            <SecondaryBtn onClick={() => window.print()}>Print / Save as PDF</SecondaryBtn>
+            <PrimaryBtn
+              onClick={() => {
+                setPayTarget(invoiceTarget);
+                setInvoiceTarget(null);
+              }}
+            >
+              Submit Payment
+            </PrimaryBtn>
+          </div>
+        </Modal>
       )}
       {payTarget && (
         <PaymentSubmitModal
