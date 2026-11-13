@@ -113,7 +113,7 @@ function TeamSection() {
         </h3>
         <PrimaryBtn size="sm" onClick={() => setAdding(true)}>
           <Plus size={16} aria-hidden="true" className="admin-team-actions__plus" />
-          Invite admin
+          Add admin
         </PrimaryBtn>
       </div>
 

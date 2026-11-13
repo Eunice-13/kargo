@@ -874,7 +874,7 @@ export function demoGrantAdmin(userId: string, _reason: string): { changed: bool
     grantedBy: "KARGO Admin",
     accountStatus: u.accountStatus,
   });
-  recordDemoAudit("grant_admin", "user", u.name, _reason || "Admin invitation sent for the account holder to review.", { admin: false }, { admin: "pending" });
+  recordDemoAudit("grant_admin", "user", u.name, _reason || "Administrative access granted after role approval.", { admin: false }, { admin: true });
   return { changed: true };
 }
 

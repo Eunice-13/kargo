@@ -212,8 +212,8 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
   // Admin capability is a separate, binary membership row. A plain user can only
   // read their own row (admin_members_select_own), so this is safe for everyone.
   // `select("*")` is deliberate: it keeps working on a database where the
-  // invitation migration has not run yet. An unknown acceptance state must be
-  // treated as pending, never as an automatic admin grant.
+  // invitation migration has not run yet (accepted_at then comes back undefined,
+  // which we treat as already accepted).
   const { data: adminRow } = await client
     .from("admin_members")
     .select("*")
@@ -223,10 +223,10 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
 
   const membership = adminRow as { accepted_at?: string | null } | null;
 
-  // Only an explicit acceptance activates admin power. Null or undefined means
-  // the account still needs to review an invitation.
-  const adminInvitePending = Boolean(membership) && membership?.accepted_at !== null;
-  const adminEnabled = Boolean(membership) && membership?.accepted_at !== undefined && membership?.accepted_at !== null;
+  // null accepted_at means the grant is still an invitation, so the account has
+  // no admin power yet (is_admin() agrees). undefined means the column is absent.
+  const adminInvitePending = Boolean(membership) && membership?.accepted_at === null;
+  const adminEnabled = Boolean(membership) && !adminInvitePending;
   const accountStatus = profile.account_status ?? "active";
 
   const avatarUrl = profile.avatar_path

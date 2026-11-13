@@ -60,7 +60,7 @@ export default function AdminAddAdminModal({
 
   return (
     <Modal
-       title="Invite admin"
+       title="Add admin"
       variant="confirm"
       showTitleIcon={false}
       width={500}
@@ -227,13 +227,13 @@ export default function AdminAddAdminModal({
               onAdded();
               onClose();
             } catch (err) {
-              setError(err instanceof Error ? err.message : "Could not send the admin invitation.");
+              setError(err instanceof Error ? err.message : "Could not add admin.");
             } finally {
               setSaving(false);
             }
           }}
         >
-          Send invitation
+          Add admin
         </PrimaryBtn>
       </div>
     </Modal>
