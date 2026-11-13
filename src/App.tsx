@@ -857,12 +857,13 @@ export default function App() {
                   setInviteDismissedFor(null);
                   // The RPC already committed, so clear the pending flag locally
                   // and let the refresh reconcile the rest (role, tabs, data).
-                  setUser((current) => ({
-                    ...current,
-                    adminEnabled: accepted,
-                    adminInvitePending: false,
-                  }));
-                  if (isSupabaseConfigured && !anyPreview) {
+                   setUser((current) => ({
+                     ...current,
+                     adminEnabled: accepted,
+                     adminInvitePending: false,
+                   }));
+                   if (accepted) setTab("Dashboard");
+                   if (isSupabaseConfigured && !anyPreview) {
                     void refreshData().catch(() => {});
                   }
                 }}

@@ -212,8 +212,8 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
   // Admin capability is a separate, binary membership row. A plain user can only
   // read their own row (admin_members_select_own), so this is safe for everyone.
   // `select("*")` is deliberate: it keeps working on a database where the
-  // invitation migration has not run yet (accepted_at then comes back undefined,
-  // which we treat as already accepted).
+  // invitation migration has not run yet. An unknown acceptance state must be
+  // treated as pending, never as an automatic admin grant.
   const { data: adminRow } = await client
     .from("admin_members")
     .select("*")
@@ -223,10 +223,10 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
 
   const membership = adminRow as { accepted_at?: string | null } | null;
 
-  // null accepted_at means the grant is still an invitation, so the account has
-  // no admin power yet (is_admin() agrees). undefined means the column is absent.
-  const adminInvitePending = Boolean(membership) && membership?.accepted_at === null;
-  const adminEnabled = Boolean(membership) && !adminInvitePending;
+  // Only an explicit acceptance activates admin power. Null or undefined means
+  // the account still needs to review an invitation.
+  const adminInvitePending = Boolean(membership) && membership?.accepted_at !== null;
+  const adminEnabled = Boolean(membership) && membership?.accepted_at !== undefined && membership?.accepted_at !== null;
   const accountStatus = profile.account_status ?? "active";
 
   const avatarUrl = profile.avatar_path
@@ -2597,9 +2597,10 @@ export async function uploadProfileAvatar(file: File) {
 
   if (!userId) throw new Error("Authentication required");
 
-  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-
-  const objectPath = `${userId}/avatar.${extension}`;
+  // Keep one stable object per user. Using the selected filename extension
+  // leaves stale objects behind and can make the public URL/browser cache
+  // continue serving the previous image after an update.
+  const objectPath = `${userId}/avatar`;
 
   const { error: uploadError } = await client.storage
 
@@ -2623,7 +2624,8 @@ export async function uploadProfileAvatar(file: File) {
 
   if (profileError) throw profileError;
 
-  return client.storage.from("profile-avatars").getPublicUrl(objectPath).data.publicUrl;
+  const publicUrl = client.storage.from("profile-avatars").getPublicUrl(objectPath).data.publicUrl;
+  return `${publicUrl}?v=${Date.now()}`;
 }
 
 // Upload a seller's payment QR image to the public payment-qr bucket and return
