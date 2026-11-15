@@ -89,6 +89,8 @@ import { TrackingDetailsModal, type TrackingDetailsInput } from "@/features/fulf
 import type { BuyerDeliveryRequestsState } from "@/features/combined-delivery/useBuyerDeliveryRequests";
 import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
 import { buildClaimsListRows, getToPayTotal } from "./claimListRows";
+import { formatMoney } from "@/lib/format";
+import LogoMark from "@/features/auth/LogoMark";
 
 type OrderReceivedFilter = SellerOrderReceivedStatus | "All";
 
@@ -1313,7 +1315,7 @@ export default function MyClaims({
                                   <small className="seller-orders-group-meta">
                                     {c.groupMemberCount} members · Code {c.groupOrderCode}
                                     {c.groupDiscountAmount
-                                      ? ` · Discount ₱${c.groupDiscountAmount.toLocaleString()}`
+                                      ? ` · Discount ${formatMoney(c.groupDiscountAmount)}`
                                       : ""}
                                   </small>
                                 )}
@@ -1321,17 +1323,17 @@ export default function MyClaims({
                             </div>
                           </td>
                           <td className="seller-orders-method">{submission?.method || "—"}</td>
-                          <td className="seller-orders-amount">₱{c.amount.toLocaleString()}</td>
+                          <td className="seller-orders-amount">{formatMoney(c.amount)}</td>
                           <td className="seller-orders-paid">
                             {isCashOnMeetup ? (
                               <span className="seller-orders-dash">—</span>
                             ) : amountPaid > 0 ? (
                               <>
                                 <span className={underpaid ? "seller-orders-paid--short" : ""}>
-                                  ₱{amountPaid.toLocaleString()}
+                                  {formatMoney(amountPaid)}
                                 </span>
                                 {underpaid && (
-                                  <small>Short ₱{(c.amount - amountPaid).toLocaleString()}</small>
+                                  <small>Short {formatMoney(c.amount - amountPaid)}</small>
                                 )}
                               </>
                             ) : (
@@ -1513,7 +1515,7 @@ export default function MyClaims({
                 </div>
                 <div>
                   <dt>Amount</dt>
-                  <dd>₱{orderDetailTarget.amount.toLocaleString()}</dd>
+                  <dd>{formatMoney(orderDetailTarget.amount)}</dd>
                 </div>
                 <div>
                   <dt>Status</dt>
@@ -1537,6 +1539,8 @@ export default function MyClaims({
         {paymentReviewTarget && (
           <ReviewSubmissionModal
             reviewTarget={paymentReviewTarget}
+            sellerName={user.shopName || user.name}
+            sellerLogoUrl={user.avatarUrl}
             setReviewTarget={setPaymentReviewTarget}
             setVerifyItems={updateSellerPayments}
             setRejectTarget={setPaymentRejectTarget}
@@ -1600,7 +1604,7 @@ export default function MyClaims({
                         status: "Rejected" as const,
                         amountPaid: String(paidAmt),
                         shortfallAmount: shortAmt,
-                        rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
+                        rejectReason: `Insufficient payment — ${formatMoney(shortAmt)} short`,
                       }
                     : v,
                 ),
@@ -2197,7 +2201,7 @@ export default function MyClaims({
                                               return paid > 0 && paid < item.amount ? (
                                                 <span style={{ color: "#92400E", fontWeight: 600 }}>
                                                   {" "}
-                                                  · Short ₱{(item.amount - paid).toLocaleString()}
+                                                  · Short {formatMoney(item.amount - paid)}
                                                 </span>
                                               ) : null;
                                             })()}
@@ -2215,7 +2219,7 @@ export default function MyClaims({
                               </td>
                               <td>
                                 <div className="claims-to-pay-amount">
-                                  ₱{claimAmountDue(item).toLocaleString()}
+                                  {formatMoney(claimAmountDue(item))}
                                   {item.status === "Insufficient Payment" ? (
                                     <span>Remaining balance</span>
                                   ) : deliveryRequest?.status === "shipping_fee_set" ? (
@@ -2223,9 +2227,7 @@ export default function MyClaims({
                                   ) : item.shippingState === "waiting_for_seller" ? (
                                     <span>Shipping fee pending</span>
                                   ) : item.shippingFee !== undefined ? (
-                                    <span>
-                                      Includes ₱{item.shippingFee.toLocaleString()} shipping
-                                    </span>
+                                    <span>Includes {formatMoney(item.shippingFee)} shipping</span>
                                   ) : null}
                                 </div>
                               </td>
@@ -2242,7 +2244,7 @@ export default function MyClaims({
                                         !item.extensionRequested &&
                                         item.extensionStatus !== "pending",
                                       showCancel: canCancelClaim(item),
-                                       onPay: () => setInvoiceTarget(item),
+                                      onPay: () => setInvoiceTarget(item),
                                       onExtend: () => setExtTarget(item),
                                       onCancel: () => setCancelTarget(item),
                                     })}
@@ -2279,7 +2281,7 @@ export default function MyClaims({
         <div className="claims-to-pay-total-bar">
           <div className="claims-to-pay-total">
             <span>Total Due:</span>
-            <strong>₱{totalDue.toLocaleString()}</strong>
+            <strong>{formatMoney(totalDue)}</strong>
           </div>
           <PrimaryBtn
             disabled={payableClaims.length === 0}
@@ -2523,9 +2525,7 @@ export default function MyClaims({
                                   fontFamily: "'Josefin Sans',sans-serif",
                                 }}
                               >
-                                {account?.total
-                                  ? `₱${Number(account.total).toLocaleString()}`
-                                  : "—"}
+                                {account?.total ? `${formatMoney(Number(account.total))}` : "—"}
                               </span>
                               <SecondaryBtn size="sm" onClick={() => openRequest(request)}>
                                 View Order
@@ -2647,7 +2647,7 @@ export default function MyClaims({
                                 fontFamily: "'Josefin Sans',sans-serif",
                               }}
                             >
-                              ₱{c.amount.toLocaleString()}
+                              {formatMoney(c.amount)}
                             </span>
                             <div style={{ display: "flex", gap: 6 }}>
                               {claimIsPayable(c) && (
@@ -2829,7 +2829,8 @@ export default function MyClaims({
                                 <td
                                   style={{ padding: "10px 14px", color: "#6B7280", fontSize: 12 }}
                                 >
-                                  {first?.order?.batches?.title ?? "—"}
+                                  {(first?.order as { batches?: { title?: string } } | undefined)
+                                    ?.batches?.title ?? "—"}
                                 </td>
                                 <td style={{ padding: "10px 14px" }}>
                                   <div className="flex items-center gap-1.5">
@@ -2849,9 +2850,7 @@ export default function MyClaims({
                                     color: "#111827",
                                   }}
                                 >
-                                  {account?.total
-                                    ? `₱${Number(account.total).toLocaleString()}`
-                                    : "—"}
+                                  {account?.total ? `${formatMoney(Number(account.total))}` : "—"}
                                 </td>
                                 <td style={{ padding: "10px 14px" }}>
                                   <StatusBadge status={displayClaimStatus(status as any)} />
@@ -2945,7 +2944,7 @@ export default function MyClaims({
                                   fontFamily: "'Josefin Sans',sans-serif",
                                 }}
                               >
-                                ₱{c.amount.toLocaleString()}
+                                {formatMoney(c.amount)}
                               </td>
                               <td style={{ padding: "10px 14px" }}>
                                 <StatusBadge status={displayClaimStatus(c.status)} />
@@ -3104,27 +3103,94 @@ export default function MyClaims({
         >
           <div className="buyer-invoice" role="status">
             <div className="buyer-invoice__heading">
-              <div><h2>{invoiceTarget.sellerShopName || invoiceTarget.seller}</h2></div>
-              <div><b>INVOICE</b><small>INV-{String(invoiceTarget.id).slice(-8).toUpperCase()}</small></div>
+              <div className="buyer-invoice__brand">
+                <Avatar name={invoiceTarget.seller} size={42} />
+                <div>
+                  <h2>{invoiceTarget.sellerShopName || invoiceTarget.seller}</h2>
+                </div>
+              </div>
+              <div>
+                <LogoMark size={44} />
+                <b>INVOICE</b>
+                <small>INV-{String(invoiceTarget.id).slice(-8).toUpperCase()}</small>
+              </div>
             </div>
             <div className="buyer-invoice__people">
-              <div><span>Seller</span><strong>{invoiceTarget.seller}</strong><small>Social media: {invoiceTarget.sellerFb || "Not provided"}</small></div>
-              <div><span>Bill To</span><strong>{user.name || "Buyer"}</strong><small>Social media: {invoiceTarget.buyerFb || user.fb || "Not provided"}</small></div>
+              <div>
+                <span>Seller</span>
+                <strong>{invoiceTarget.seller}</strong>
+                <small>Social media: {invoiceTarget.sellerFb || "Not provided"}</small>
+              </div>
+              <div>
+                <span>Bill To</span>
+                <strong>{user.name || "Buyer"}</strong>
+                <small>Social media: {invoiceTarget.buyerFb || user.fb || "Not provided"}</small>
+              </div>
             </div>
             <div className="buyer-invoice__meta">
-              <span>Date Issued<b>{new Date().toLocaleDateString()}</b></span>
-              <span>Service / Delivery Date<b>{invoiceTarget.createdAt ? new Date(invoiceTarget.createdAt).toLocaleDateString() : "To be arranged"}</b></span>
-              <span>Payment Due<b>{invoiceTarget.expiresAt ? new Date(invoiceTarget.expiresAt).toLocaleDateString() : "Upon reservation"}</b></span>
+              <span>
+                Date Issued<b>{new Date().toLocaleDateString()}</b>
+              </span>
+              <span>
+                Service / Delivery Date
+                <b>
+                  {invoiceTarget.createdAt
+                    ? new Date(invoiceTarget.createdAt).toLocaleDateString()
+                    : "To be arranged"}
+                </b>
+              </span>
+              <span>
+                Payment Due
+                <b>
+                  {invoiceTarget.expiresAt
+                    ? new Date(invoiceTarget.expiresAt).toLocaleDateString()
+                    : "Upon reservation"}
+                </b>
+              </span>
             </div>
             <div className="buyer-invoice__items">
-              <div className="buyer-invoice__item-head"><span>Description</span><span>Amount</span></div>
-              <div className="buyer-invoice__item"><div><strong>{invoiceTarget.product}</strong><small>{invoiceTarget.qty} × ₱{((invoiceTarget.amount - (invoiceTarget.shippingFee || 0)) / Math.max(invoiceTarget.qty, 1)).toLocaleString()}</small></div><b>₱{(invoiceTarget.amount - (invoiceTarget.shippingFee || 0)).toLocaleString()}</b></div>
+              <div className="buyer-invoice__item-head">
+                <span>Description</span>
+                <span>Amount</span>
+              </div>
+              <div className="buyer-invoice__item">
+                <div>
+                  <strong>{invoiceTarget.product}</strong>
+                  <small>
+                    {invoiceTarget.qty} ×{" "}
+                    {formatMoney(
+                      (invoiceTarget.amount - (invoiceTarget.shippingFee || 0)) /
+                        Math.max(invoiceTarget.qty, 1),
+                    )}
+                  </small>
+                </div>
+                <b>{formatMoney(invoiceTarget.amount - (invoiceTarget.shippingFee || 0))}</b>
+              </div>
               {invoiceTarget.shippingFee !== undefined && invoiceTarget.shippingFee > 0 && (
-                <div className="buyer-invoice__item"><div><strong>Shipping fee</strong><small>Delivery / fulfillment charge</small></div><b>₱{invoiceTarget.shippingFee.toLocaleString()}</b></div>
+                <div className="buyer-invoice__item">
+                  <div>
+                    <strong>Shipping fee</strong>
+                    <small>Delivery / fulfillment charge</small>
+                  </div>
+                  <b>{formatMoney(invoiceTarget.shippingFee)}</b>
+                </div>
               )}
-              <div className="buyer-invoice__total"><span>Total Amount Due</span><strong>₱{claimAmountDue(invoiceTarget).toLocaleString()}</strong></div>
+              <div className="buyer-invoice__total">
+                <span>Total Amount Due</span>
+                <strong>{formatMoney(claimAmountDue(invoiceTarget))}</strong>
+              </div>
             </div>
-            <div className="buyer-invoice__terms"><strong>Payment Terms</strong><span>Accepted method: {invoiceTarget.reservedPaymentMethod || "Bank transfer / online payment"}</span><small>Submit your payment reference, account name, mobile number, and receipt using the payment form.</small></div>
+            <div className="buyer-invoice__terms">
+              <strong>Payment Terms</strong>
+              <span>
+                Accepted method:{" "}
+                {invoiceTarget.reservedPaymentMethod || "Bank transfer / online payment"}
+              </span>
+              <small>
+                Submit your payment reference, account name, mobile number, and receipt using the
+                payment form.
+              </small>
+            </div>
           </div>
           <div className="kargo-modal-actions">
             <SecondaryBtn onClick={() => setInvoiceTarget(null)}>Close</SecondaryBtn>
@@ -3210,7 +3276,7 @@ export default function MyClaims({
               {itemPreviewProduct && (
                 <>
                   <strong>
-                    ₱{itemPreviewProduct.price.toLocaleString()} /{" "}
+                    {formatMoney(itemPreviewProduct.price)} /{" "}
                     {itemPreviewProduct.sellingUnit ?? "piece"}
                   </strong>
                   {itemPreviewProduct.sellingUnit === "box" && (
@@ -3219,7 +3285,7 @@ export default function MyClaims({
                 </>
               )}
               <p>Claim quantity: {itemPreview.qty}</p>
-              <p>Claim total: ₱{itemPreview.amount.toLocaleString()}</p>
+              <p>Claim total: {formatMoney(itemPreview.amount)}</p>
             </div>
           </div>
         </Modal>
@@ -3244,8 +3310,8 @@ export default function MyClaims({
             ) : (
               <>
                 Cancel your payment for <strong>{cancelTarget.product}</strong>? This is allowed
-                while the shipping fee is still pending. It cannot be undone, and the quantity
-                will become available to other buyers.
+                while the shipping fee is still pending. It cannot be undone, and the quantity will
+                become available to other buyers.
               </>
             )}
           </p>

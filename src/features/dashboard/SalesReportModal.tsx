@@ -1,30 +1,31 @@
-import { useEffect, useMemo, useState } from "react"
-import { createPortal } from "react-dom"
-import { Printer, X } from "lucide-react"
-import type { BatchType, FulfillmentOrder } from "@/types"
-import { INDIGO, CREAM, TODAY } from "@/constants/theme"
-import { PrimaryBtn, SecondaryBtn, useDialogA11y } from "@/components/shared"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { kargoApi } from "@/services"
-import type { PeriodOrder } from "@/services"
-import { localExpenseStore } from "@/features/batches/expenseStore"
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { Printer, X } from "lucide-react";
+import type { BatchType, FulfillmentOrder } from "@/types";
+import { INDIGO, CREAM, TODAY } from "@/constants/theme";
+import { PrimaryBtn, SecondaryBtn, useDialogA11y } from "@/components/shared";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { kargoApi } from "@/services";
+import type { PeriodOrder } from "@/services";
+import { localExpenseStore } from "@/features/batches/expenseStore";
+import { formatMoney } from "@/lib/format";
 
-type Period = "Day" | "Week" | "Month" | "Year"
+type Period = "Day" | "Week" | "Month" | "Year";
 
-const MS_DAY = 86_400_000
+const MS_DAY = 86_400_000;
 
 function parseToday(): Date {
-  const d = new Date(TODAY)
-  return isNaN(d.getTime()) ? new Date() : d
+  const d = new Date(TODAY);
+  return isNaN(d.getTime()) ? new Date() : d;
 }
 function fmtDate(d: Date) {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 function startOfWeek(d: Date) {
-  const x = new Date(d)
-  x.setHours(0, 0, 0, 0)
-  x.setDate(x.getDate() - x.getDay())
-  return x
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  x.setDate(x.getDate() - x.getDay());
+  return x;
 }
 export default function SalesReportModal({
   batches,
@@ -32,98 +33,115 @@ export default function SalesReportModal({
   shopName,
   onClose,
 }: {
-  batches: BatchType[]
-  fulfillment: FulfillmentOrder[]
-  shopName: string
-  onClose: () => void
+  batches: BatchType[];
+  fulfillment: FulfillmentOrder[];
+  shopName: string;
+  onClose: () => void;
 }) {
-  const dialogRef = useDialogA11y(onClose)
-  const today = useMemo(parseToday, [])
-  const [period, setPeriod] = useState<Period>("Month")
-  const [anchorDay, setAnchorDay] = useState(() => today.toISOString().slice(0, 10))
-  const [anchorMonth, setAnchorMonth] = useState(() => today.toISOString().slice(0, 7))
-  const [anchorYear, setAnchorYear] = useState(() => String(today.getFullYear()))
+  const dialogRef = useDialogA11y(onClose);
+  const today = useMemo(parseToday, []);
+  const [period, setPeriod] = useState<Period>("Month");
+  const [anchorDay, setAnchorDay] = useState(() => today.toISOString().slice(0, 10));
+  const [anchorMonth, setAnchorMonth] = useState(() => today.toISOString().slice(0, 7));
+  const [anchorYear, setAnchorYear] = useState(() => String(today.getFullYear()));
 
-  const [dbOrders, setDbOrders] = useState<PeriodOrder[]>([])
-  const [dbExpenses, setDbExpenses] = useState(0)
-  const [loading, setLoading] = useState(false)
+  const [dbOrders, setDbOrders] = useState<PeriodOrder[]>([]);
+  const [dbExpenses, setDbExpenses] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   // Resolve the selected period into a [from, to) range + a printed label.
   const { from, to, periodLabel } = useMemo(() => {
     if (period === "Day") {
-      const f = new Date(`${anchorDay}T00:00:00`)
-      return { from: f, to: new Date(f.getTime() + MS_DAY), periodLabel: fmtDate(f) }
+      const f = new Date(`${anchorDay}T00:00:00`);
+      return { from: f, to: new Date(f.getTime() + MS_DAY), periodLabel: fmtDate(f) };
     }
     if (period === "Week") {
-      const f = startOfWeek(new Date(`${anchorDay}T00:00:00`))
-      const t = new Date(f.getTime() + 7 * MS_DAY)
-      return { from: f, to: t, periodLabel: `${fmtDate(f)} – ${fmtDate(new Date(t.getTime() - MS_DAY))}` }
+      const f = startOfWeek(new Date(`${anchorDay}T00:00:00`));
+      const t = new Date(f.getTime() + 7 * MS_DAY);
+      return {
+        from: f,
+        to: t,
+        periodLabel: `${fmtDate(f)} – ${fmtDate(new Date(t.getTime() - MS_DAY))}`,
+      };
     }
     if (period === "Month") {
-      const [y, m] = anchorMonth.split("-").map(Number)
+      const [y, m] = anchorMonth.split("-").map(Number);
       return {
         from: new Date(y, m - 1, 1),
         to: new Date(y, m, 1),
-        periodLabel: new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-      }
+        periodLabel: new Date(y, m - 1, 1).toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        }),
+      };
     }
-    const y = Number(anchorYear)
-    return { from: new Date(y, 0, 1), to: new Date(y + 1, 0, 1), periodLabel: String(y) }
-  }, [period, anchorDay, anchorMonth, anchorYear])
+    const y = Number(anchorYear);
+    return { from: new Date(y, 0, 1), to: new Date(y + 1, 0, 1), periodLabel: String(y) };
+  }, [period, anchorDay, anchorMonth, anchorYear]);
 
   // Supabase mode: fetch the period's orders + recorded expenses.
   useEffect(() => {
-    if (!isSupabaseConfigured) return
-    setLoading(true)
+    if (!isSupabaseConfigured) return;
+    setLoading(true);
     Promise.all([
       kargoApi.getPeriodOrders(from, to),
       kargoApi.getRecordedExpensesForPeriod(from, to),
     ])
       .then(([orders, expenses]) => {
-        setDbOrders(orders)
-        setDbExpenses(expenses)
+        setDbOrders(orders);
+        setDbExpenses(expenses);
       })
       .catch((error) => {
-        setDbOrders([])
-        setDbExpenses(0)
-        alert(error instanceof Error ? error.message : "Unable to load sales report.")
+        setDbOrders([]);
+        setDbExpenses(0);
+        alert(error instanceof Error ? error.message : "Unable to load sales report.");
       })
-      .finally(() => setLoading(false))
-  }, [from, to])
+      .finally(() => setLoading(false));
+  }, [from, to]);
 
   // Demo mode: current board orders + recorded expenses from the local store.
   const demoOrders = useMemo(() => {
-    if (isSupabaseConfigured) return []
+    if (isSupabaseConfigured) return [];
     return fulfillment
-      .filter((o) =>
-        ["Payment Confirmed", "Preparing", "Shipped", "Delivered"].includes(o.col),
-      )
-      .map((o) => ({ id: o.id, buyer: o.buyer, purchase: o.product, qty: o.qty, amount: o.amount }))
-  }, [fulfillment])
+      .filter((o) => ["Payment Confirmed", "Preparing", "Shipped", "Delivered"].includes(o.col))
+      .map((o) => ({
+        id: o.id,
+        buyer: o.buyer,
+        purchase: o.product,
+        qty: o.qty,
+        amount: o.amount,
+      }));
+  }, [fulfillment]);
   const demoExpenses = useMemo(() => {
-    if (isSupabaseConfigured) return 0
-    let sum = 0
-    for (const b of batches) sum += localExpenseStore.get(b.id)?.total ?? 0
-    return sum
-  }, [batches])
+    if (isSupabaseConfigured) return 0;
+    let sum = 0;
+    for (const b of batches) sum += localExpenseStore.get(b.id)?.total ?? 0;
+    return sum;
+  }, [batches]);
 
-  const orders = isSupabaseConfigured ? dbOrders : demoOrders
-  const revenue = orders.reduce((s, o) => s + o.amount, 0)
-  const expenses = isSupabaseConfigured ? dbExpenses : demoExpenses
-  const kita = revenue - expenses
+  const orders = isSupabaseConfigured ? dbOrders : demoOrders;
+  const revenue = orders.reduce((s, o) => s + o.amount, 0);
+  const expenses = isSupabaseConfigured ? dbExpenses : demoExpenses;
+  const kita = revenue - expenses;
 
   const handlePrint = () => {
-    document.body.classList.add("printing-report")
+    document.body.classList.add("printing-report");
     const cleanup = () => {
-      document.body.classList.remove("printing-report")
-      window.removeEventListener("afterprint", cleanup)
-    }
-    window.addEventListener("afterprint", cleanup)
-    window.print()
-    setTimeout(cleanup, 1500)
-  }
+      document.body.classList.remove("printing-report");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+    setTimeout(cleanup, 1500);
+  };
 
-  const label = { fontSize: 12, fontWeight: 600 as const, color: "#374151", display: "block" as const, marginBottom: 5 }
+  const label = {
+    fontSize: 12,
+    fontWeight: 600 as const,
+    color: "#374151",
+    display: "block" as const,
+    marginBottom: 5,
+  };
   const field = {
     width: "100%",
     fontSize: 13,
@@ -134,8 +152,8 @@ export default function SalesReportModal({
     color: "#374151",
     fontFamily: "inherit",
     boxSizing: "border-box" as const,
-  }
-  const dashed = "1px dashed #D1D5DB"
+  };
+  const dashed = "1px dashed #D1D5DB";
 
   return createPortal(
     <div
@@ -218,11 +236,26 @@ export default function SalesReportModal({
               {period === "Year" ? "Year" : period === "Month" ? "Month" : "Date"}
             </label>
             {period === "Year" ? (
-              <input type="number" value={anchorYear} onChange={(e) => setAnchorYear(e.target.value)} style={field} />
+              <input
+                type="number"
+                value={anchorYear}
+                onChange={(e) => setAnchorYear(e.target.value)}
+                style={field}
+              />
             ) : period === "Month" ? (
-              <input type="month" value={anchorMonth} onChange={(e) => setAnchorMonth(e.target.value)} style={field} />
+              <input
+                type="month"
+                value={anchorMonth}
+                onChange={(e) => setAnchorMonth(e.target.value)}
+                style={field}
+              />
             ) : (
-              <input type="date" value={anchorDay} onChange={(e) => setAnchorDay(e.target.value)} style={field} />
+              <input
+                type="date"
+                value={anchorDay}
+                onChange={(e) => setAnchorDay(e.target.value)}
+                style={field}
+              />
             )}
           </div>
         </div>
@@ -292,7 +325,12 @@ export default function SalesReportModal({
               {orders.map((o) => (
                 <div
                   key={o.id}
-                  style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    fontSize: 13,
+                  }}
                 >
                   <span style={{ color: "#111827", fontWeight: 600 }}>{o.buyer}</span>
                   <span style={{ color: "#374151", textAlign: "right" }}>
@@ -307,14 +345,24 @@ export default function SalesReportModal({
           <div style={{ borderTop: dashed, margin: "14px 0" }} />
 
           {/* Revenue / expenses breakdown */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: 12, color: "#6B7280" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 5,
+              fontSize: 12,
+              color: "#6B7280",
+            }}
+          >
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span>Revenue ({orders.length} order{orders.length === 1 ? "" : "s"})</span>
-              <span style={{ color: "#374151", fontWeight: 600 }}>₱{revenue.toLocaleString()}</span>
+              <span>
+                Revenue ({orders.length} order{orders.length === 1 ? "" : "s"})
+              </span>
+              <span style={{ color: "#374151", fontWeight: 600 }}>{formatMoney(revenue)}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span>Less: Recorded Expenses</span>
-              <span style={{ color: "#374151", fontWeight: 600 }}>−₱{expenses.toLocaleString()}</span>
+              <span style={{ color: "#374151", fontWeight: 600 }}>−{formatMoney(expenses)}</span>
             </div>
           </div>
 
@@ -331,7 +379,9 @@ export default function SalesReportModal({
               padding: "12px 14px",
             }}
           >
-            <span style={{ fontSize: 14, fontWeight: 800, color: kita >= 0 ? "#065F46" : "#991B1B" }}>
+            <span
+              style={{ fontSize: 14, fontWeight: 800, color: kita >= 0 ? "#065F46" : "#991B1B" }}
+            >
               KITA
             </span>
             <span
@@ -342,22 +392,26 @@ export default function SalesReportModal({
                 fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
-              ₱{kita.toLocaleString()}
+              {formatMoney(kita)}
             </span>
           </div>
 
-          <p style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic", textAlign: "center", margin: "12px 0 0" }}>
+          <p
+            style={{
+              fontSize: 10,
+              color: "#9CA3AF",
+              fontStyle: "italic",
+              textAlign: "center",
+              margin: "12px 0 0",
+            }}
+          >
             Net earnings = revenue in period − expenses recorded in period.
           </p>
         </div>
 
         {/* Actions — not printed */}
         <div className="no-print kargo-modal-actions" style={{ padding: "0 24px 20px" }}>
-          <SecondaryBtn
-            onClick={onClose}
-          >
-            Close
-          </SecondaryBtn>
+          <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
           <PrimaryBtn
             onClick={handlePrint}
             style={{ display: "flex", alignItems: "center", gap: 7 }}
@@ -389,5 +443,5 @@ export default function SalesReportModal({
       </div>
     </div>,
     document.body,
-  )
+  );
 }

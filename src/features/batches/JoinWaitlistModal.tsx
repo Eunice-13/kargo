@@ -1,7 +1,8 @@
-import { useState } from "react"
-import { Users, Info } from "lucide-react"
-import { INDIGO, CREAM } from "@/constants/theme"
-import { Modal, PrimaryBtn, SecondaryBtn, ProductThumb } from "@/components/shared"
+import { useState } from "react";
+import { Users, Info } from "lucide-react";
+import { INDIGO, CREAM } from "@/constants/theme";
+import { Modal, PrimaryBtn, SecondaryBtn, ProductThumb } from "@/components/shared";
+import { formatMoney } from "@/lib/format";
 
 // Buyers pick how many units they want before joining a waitlist. The desired
 // quantity is stored on their entry. When stock later frees up, the available
@@ -14,17 +15,17 @@ export default function JoinWaitlistModal({
   onConfirm,
   onClose,
 }: {
-  productName: string
-  batchTitle: string
-  price: number
-  limitPerUser?: number
-  onConfirm: (quantity: number) => void
-  onClose: () => void
+  productName: string;
+  batchTitle: string;
+  price: number;
+  limitPerUser?: number;
+  onConfirm: (quantity: number) => void;
+  onClose: () => void;
 }) {
-  const [qty, setQty] = useState(1)
+  const [qty, setQty] = useState(1);
   // Waitlists are for sold-out items, so we don't know how much will free up.
   // Cap the request at a sensible ceiling to keep expectations realistic.
-  const maxQty = Math.max(1, Math.min(10, limitPerUser ?? 10))
+  const maxQty = Math.max(1, Math.min(10, limitPerUser ?? 10));
 
   return (
     <Modal title="Join the waitlist" onClose={onClose} width={440}>
@@ -51,9 +52,7 @@ export default function JoinWaitlistModal({
             >
               {productName}
             </div>
-            <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
-              from {batchTitle}
-            </div>
+            <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>from {batchTitle}</div>
           </div>
           <div
             style={{
@@ -63,7 +62,7 @@ export default function JoinWaitlistModal({
               fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
-            ₱{price.toLocaleString()}
+            {formatMoney(price)}
           </div>
         </div>
 
@@ -116,12 +115,15 @@ export default function JoinWaitlistModal({
             alignItems: "flex-start",
           }}
         >
-          <Info size={16} aria-hidden="true" style={{ color: "#2563EB", flexShrink: 0, marginTop: 1 }} />
+          <Info
+            size={16}
+            aria-hidden="true"
+            style={{ color: "#2563EB", flexShrink: 0, marginTop: 1 }}
+          />
           <div style={{ fontSize: 11, color: "#1E40AF", lineHeight: 1.6 }}>
-            If stock becomes available, up to your requested quantity will be
-            added to My Claims automatically. If fewer units are released, the
-            available amount will still be claimed for you, and you can cancel
-            it later from My Claims if needed.
+            If stock becomes available, up to your requested quantity will be added to My Claims
+            automatically. If fewer units are released, the available amount will still be claimed
+            for you, and you can cancel it later from My Claims if needed.
           </div>
         </div>
 
@@ -142,7 +144,7 @@ export default function JoinWaitlistModal({
         </div>
       </div>
     </Modal>
-  )
+  );
 }
 
 const stepBtn: React.CSSProperties = {
@@ -157,4 +159,4 @@ const stepBtn: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   color: "#374151",
-}
+};

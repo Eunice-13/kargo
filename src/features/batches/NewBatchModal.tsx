@@ -1,41 +1,42 @@
-import { useState, useRef } from "react"
-import { ImageUp, Plus, X } from "lucide-react"
+import { useState, useRef } from "react";
+import { ImageUp, Plus, X } from "lucide-react";
 
-import type { BatchType, GroupDiscountType, SellingUnit } from "@/types"
+import type { BatchType, GroupDiscountType, SellingUnit } from "@/types";
 
-import { INDIGO } from "@/constants/theme"
-import { BATCH_CATEGORIES } from "@/constants/categories"
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared"
+import { INDIGO } from "@/constants/theme";
+import { BATCH_CATEGORIES } from "@/constants/categories";
+import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared";
 
-import { isSupabaseConfigured } from "@/lib/supabase"
+import { isSupabaseConfigured } from "@/lib/supabase";
 
-import { kargoApi } from "@/services"
+import { kargoApi } from "@/services";
+import { formatMoney } from "@/lib/format";
 
 export type BatchProduct = {
-  name: string
+  name: string;
 
-  basePrice: string
+  basePrice: string;
 
-  markup: string
+  markup: string;
 
-  qty: string
+  qty: string;
 
   // Optional per-buyer claim limit. Empty string = no limit.
 
-  limit: string
+  limit: string;
 
   // Optional maximum number of buyers allowed in the queue.
 
-  waitlistLimit: string
+  waitlistLimit: string;
 
-  imageFile?: File
+  imageFile?: File;
 
-  imagePreview?: string
+  imagePreview?: string;
 
-  sellingUnit: SellingUnit
+  sellingUnit: SellingUnit;
 
-  piecesPerBox: string
-}
+  piecesPerBox: string;
+};
 
 export default function NewBatchModal({
   onCreate,
@@ -44,140 +45,155 @@ export default function NewBatchModal({
 
   sellerName,
 }: {
-  onCreate: (b: BatchType) => void
+  onCreate: (b: BatchType) => void;
 
-  onClose: () => void
+  onClose: () => void;
 
-  sellerName?: string
+  sellerName?: string;
 }) {
-  const [title, setTitle] = useState("")
+  const [title, setTitle] = useState("");
 
-  const [desc, setDesc] = useState("")
+  const [desc, setDesc] = useState("");
 
-  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverFile, setCoverFile] = useState<File | null>(null);
 
-  const [coverPreview, setCoverPreview] = useState("")
+  const [coverPreview, setCoverPreview] = useState("");
 
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([])
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
 
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([])
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
 
-  const [cat, setCat] = useState("Food")
+  const [cat, setCat] = useState("Food");
 
-  const [startDate, setStartDate] = useState("")
+  const [startDate, setStartDate] = useState("");
 
-  const [endDate, setEndDate] = useState("")
+  const [endDate, setEndDate] = useState("");
 
-  const [timerUnit, setTimerUnit] = useState<"hours" | "days">("hours")
+  const [timerUnit, setTimerUnit] = useState<"hours" | "days">("hours");
 
-  const [timerVal, setTimerVal] = useState("48")
+  const [timerVal, setTimerVal] = useState("48");
 
-  const [timerPreset, setTimerPreset] = useState("48h")
+  const [timerPreset, setTimerPreset] = useState("48h");
 
   const [products, setProducts] = useState<BatchProduct[]>([
-    { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "0", sellingUnit: "piece", piecesPerBox: "" },
-  ])
+    {
+      name: "",
+      basePrice: "0.00",
+      markup: "0.00",
+      qty: "",
+      limit: "",
+      waitlistLimit: "0",
+      sellingUnit: "piece",
+      piecesPerBox: "",
+    },
+  ]);
 
-  const [groupOrdersEnabled, setGroupOrdersEnabled] = useState(false)
+  const [groupOrdersEnabled, setGroupOrdersEnabled] = useState(false);
 
-  const [discountEnabled, setDiscountEnabled] = useState(false)
+  const [discountEnabled, setDiscountEnabled] = useState(false);
 
-  const [discountType, setDiscountType] =
-    useState<GroupDiscountType>("percentage")
+  const [discountType, setDiscountType] = useState<GroupDiscountType>("percentage");
 
-  const [discountValue, setDiscountValue] = useState("")
+  const [discountValue, setDiscountValue] = useState("");
 
-  const [discountMinimum, setDiscountMinimum] = useState("")
+  const [discountMinimum, setDiscountMinimum] = useState("");
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   // State updates land after a re-render, so a fast double-click could start a
   // second creation. The ref flips immediately.
-  const submittingRef = useRef(false)
+  const submittingRef = useRef(false);
 
-  const [error, setError] = useState("")
+  const [error, setError] = useState("");
 
   const addProduct = () =>
     setProducts((p) => [
       ...p,
-      { name: "", basePrice: "", markup: "", qty: "", limit: "", waitlistLimit: "0", sellingUnit: "piece", piecesPerBox: "" },
-    ])
+      {
+        name: "",
+        basePrice: "0.00",
+        markup: "0.00",
+        qty: "",
+        limit: "",
+        waitlistLimit: "0",
+        sellingUnit: "piece",
+        piecesPerBox: "",
+      },
+    ]);
 
   const removeProduct = (i: number) =>
     setProducts((p) => {
-      if (p[i]?.imagePreview) URL.revokeObjectURL(p[i].imagePreview)
-      return p.filter((_, idx) => idx !== i)
-    })
+      if (p[i]?.imagePreview) URL.revokeObjectURL(p[i].imagePreview);
+      return p.filter((_, idx) => idx !== i);
+    });
 
   const updateProduct = (i: number, k: keyof BatchProduct, v: string) =>
-    setProducts((p) =>
-      p.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)),
-    );
+    setProducts((p) => p.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
 
   const chooseProductImage = (i: number, file?: File) => {
-    if (!file) return
+    if (!file) return;
     if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
-      setError("Choose an image file that is 5 MB or smaller.")
-      return
+      setError("Choose an image file that is 5 MB or smaller.");
+      return;
     }
 
-    setError("")
+    setError("");
     setProducts((current) =>
       current.map((product, index) => {
-        if (index !== i) return product
-        if (product.imagePreview) URL.revokeObjectURL(product.imagePreview)
+        if (index !== i) return product;
+        if (product.imagePreview) URL.revokeObjectURL(product.imagePreview);
         return {
           ...product,
           imageFile: file,
           imagePreview: URL.createObjectURL(file),
-        }
+        };
       }),
-    )
-  }
+    );
+  };
 
   const chooseCoverImage = (file?: File) => {
-    if (!file) return
+    if (!file) return;
     if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
-      setError("Choose an image file that is 5 MB or smaller.")
-      return
+      setError("Choose an image file that is 5 MB or smaller.");
+      return;
     }
 
-    if (coverPreview) URL.revokeObjectURL(coverPreview)
-    setError("")
-    setCoverFile(file)
-    setCoverPreview(URL.createObjectURL(file))
-  }
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+    setError("");
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+  };
 
   const chooseGalleryImages = (files: FileList | null) => {
-    const selected = Array.from(files ?? [])
-    if (!selected.length) return
+    const selected = Array.from(files ?? []);
+    if (!selected.length) return;
     if (selected.some((file) => !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024)) {
-      setError("Choose image files that are each 5 MB or smaller.")
-      return
+      setError("Choose image files that are each 5 MB or smaller.");
+      return;
     }
 
-    setError("")
-    setGalleryFiles((current) => [...current, ...selected])
+    setError("");
+    setGalleryFiles((current) => [...current, ...selected]);
     setGalleryPreviews((current) => [
       ...current,
       ...selected.map((file) => URL.createObjectURL(file)),
-    ])
-  }
+    ]);
+  };
 
   const removeGalleryImage = (index: number) => {
     setGalleryPreviews((current) => {
-      const preview = current[index]
-      if (preview) URL.revokeObjectURL(preview)
-      return current.filter((_, currentIndex) => currentIndex !== index)
-    })
-    setGalleryFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))
-  }
+      const preview = current[index];
+      if (preview) URL.revokeObjectURL(preview);
+      return current.filter((_, currentIndex) => currentIndex !== index);
+    });
+    setGalleryFiles((current) => current.filter((_, currentIndex) => currentIndex !== index));
+  };
 
   const formatDateRange = (s: string, e: string) => {
-    if (!s) return "TBD"
+    if (!s) return "TBD";
 
-    const start = new Date(s + "T00:00:00")
+    const start = new Date(s + "T00:00:00");
 
-    const end = e ? new Date(e + "T00:00:00") : null
+    const end = e ? new Date(e + "T00:00:00") : null;
 
     const months = [
       "Jan",
@@ -203,52 +219,62 @@ export default function NewBatchModal({
       "Nov",
 
       "Dec",
-    ]
+    ];
 
-    const sm = months[start.getMonth()]
+    const sm = months[start.getMonth()];
 
-    const sd = start.getDate()
+    const sd = start.getDate();
 
-    const sy = start.getFullYear()
+    const sy = start.getFullYear();
 
-    if (!end) return `${sm} ${sd}, ${sy}`
+    if (!end) return `${sm} ${sd}, ${sy}`;
 
-    const em = months[end.getMonth()]
+    const em = months[end.getMonth()];
 
-    const ed = end.getDate()
+    const ed = end.getDate();
 
-    const ey = end.getFullYear()
+    const ey = end.getFullYear();
 
-    if (sm === em && sy === ey) return `${sm} ${sd}–${ed}, ${sy}`
+    if (sm === em && sy === ey) return `${sm} ${sd}–${ed}, ${sy}`;
 
-    if (sy === ey) return `${sm} ${sd} – ${em} ${ed}, ${sy}`
+    if (sy === ey) return `${sm} ${sd} – ${em} ${ed}, ${sy}`;
 
-    return `${sm} ${sd}, ${sy} – ${em} ${ed}, ${ey}`
-  }
+    return `${sm} ${sd}, ${sy} – ${em} ${ed}, ${ey}`;
+  };
 
   const submit = async () => {
     const validProds = products.filter(
-      (p) =>
-        p.name.trim() &&
-        Number(p.basePrice) + Number(p.markup) > 0 &&
-        Number(p.qty) > 0,
-    )
+      (p) => p.name.trim() && Number(p.basePrice) + Number(p.markup) > 0 && Number(p.qty) > 0,
+    );
 
     if (!title.trim()) {
-      setError("Add a batch title before publishing.")
+      setError("Add a batch title before publishing.");
 
-      return
+      return;
+    }
+
+    // ₱0.00 is the starting value, not a publishable price.
+    const unpriced = products.find(
+      (p) => p.name.trim() && Number(p.basePrice || 0) + Number(p.markup || 0) <= 0,
+    );
+    if (unpriced) {
+      setError(`Set a selling price above ₱0.00 for "${unpriced.name.trim()}".`);
+      return;
     }
 
     if (validProds.length === 0) {
-      setError("Add at least one product with a name, price, and quantity.")
+      setError("Add at least one product with a name, price, and quantity.");
 
-      return
+      return;
     }
 
-    if (validProds.some((p) => !Number.isInteger(Number(p.waitlistLimit)) || Number(p.waitlistLimit) < 0)) {
-      setError("Waitlist slots must be a whole number of 0 or more.")
-      return
+    if (
+      validProds.some(
+        (p) => !Number.isInteger(Number(p.waitlistLimit)) || Number(p.waitlistLimit) < 0,
+      )
+    ) {
+      setError("Waitlist slots must be a whole number of 0 or more.");
+      return;
     }
 
     if (
@@ -258,34 +284,32 @@ export default function NewBatchModal({
           (!Number.isInteger(Number(p.piecesPerBox)) || Number(p.piecesPerBox) < 1),
       )
     ) {
-      setError("Enter the number of pieces included in every box item.")
-      return
+      setError("Enter the number of pieces included in every box item.");
+      return;
     }
 
     if (
       groupOrdersEnabled &&
       discountEnabled &&
-      (Number(discountValue) <= 0 ||
-        (discountType === "percentage" && Number(discountValue) > 100))
+      (Number(discountValue) <= 0 || (discountType === "percentage" && Number(discountValue) > 100))
     ) {
-      setError("Enter a valid group discount.")
-      return
+      setError("Enter a valid group discount.");
+      return;
     }
 
     if (isSupabaseConfigured && (!startDate || !endDate)) {
-      setError("Choose both the start and end date before publishing.")
+      setError("Choose both the start and end date before publishing.");
 
-      return
+      return;
     }
 
-    if (submittingRef.current) return
+    if (submittingRef.current) return;
 
-    submittingRef.current = true
+    submittingRef.current = true;
 
-    setError("")
+    setError("");
 
-
-    setLoading(true)
+    setLoading(true);
 
     try {
       const prods = validProds.map((p) => ({
@@ -307,25 +331,22 @@ export default function NewBatchModal({
 
         limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
 
-        waitlistLimit:
-          Number(p.waitlistLimit),
+        waitlistLimit: Number(p.waitlistLimit),
 
         sellingUnit: p.sellingUnit,
 
-        piecesPerBox:
-          p.sellingUnit === "box" ? Number(p.piecesPerBox) : undefined,
-      }))
+        piecesPerBox: p.sellingUnit === "box" ? Number(p.piecesPerBox) : undefined,
+      }));
 
-      const reserveHours =
-        timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal)
+      const reserveHours = timerUnit === "days" ? Number(timerVal) * 24 : Number(timerVal);
 
       let uploadedMedia:
         | {
-            coverImage?: string
-            galleryImages: string[]
-            productImages: Array<string | undefined>
+            coverImage?: string;
+            galleryImages: string[];
+            productImages: Array<string | undefined>;
           }
-        | undefined
+        | undefined;
 
       if (isSupabaseConfigured) {
         uploadedMedia = await kargoApi.createBatch({
@@ -347,13 +368,10 @@ export default function NewBatchModal({
 
           groupOrdersEnabled,
 
-          groupDiscountType:
-            groupOrdersEnabled && discountEnabled ? discountType : undefined,
+          groupDiscountType: groupOrdersEnabled && discountEnabled ? discountType : undefined,
 
           groupDiscountValue:
-            groupOrdersEnabled && discountEnabled
-              ? Number(discountValue)
-              : undefined,
+            groupOrdersEnabled && discountEnabled ? Number(discountValue) : undefined,
 
           groupDiscountMinSubtotal:
             groupOrdersEnabled && discountEnabled && Number(discountMinimum) > 0
@@ -371,24 +389,21 @@ export default function NewBatchModal({
 
             limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
 
-            waitlistLimit:
-              Number(p.waitlistLimit),
+            waitlistLimit: Number(p.waitlistLimit),
 
             imageFile: p.imageFile,
 
             sellingUnit: p.sellingUnit,
 
-            piecesPerBox:
-              p.sellingUnit === "box" ? Number(p.piecesPerBox) : undefined,
+            piecesPerBox: p.sellingUnit === "box" ? Number(p.piecesPerBox) : undefined,
           })),
         });
       }
 
       const visibleProducts = prods.map((product, index) => ({
         ...product,
-        imageUrl:
-          uploadedMedia?.productImages[index] ?? validProds[index].imagePreview,
-      }))
+        imageUrl: uploadedMedia?.productImages[index] ?? validProds[index].imagePreview,
+      }));
 
       onCreate({
         id: Date.now(),
@@ -417,13 +432,10 @@ export default function NewBatchModal({
 
         groupOrdersEnabled,
 
-        groupDiscountType:
-          groupOrdersEnabled && discountEnabled ? discountType : undefined,
+        groupDiscountType: groupOrdersEnabled && discountEnabled ? discountType : undefined,
 
         groupDiscountValue:
-          groupOrdersEnabled && discountEnabled
-            ? Number(discountValue)
-            : undefined,
+          groupOrdersEnabled && discountEnabled ? Number(discountValue) : undefined,
 
         groupDiscountMinSubtotal:
           groupOrdersEnabled && discountEnabled && Number(discountMinimum) > 0
@@ -433,29 +445,32 @@ export default function NewBatchModal({
         products: visibleProducts,
 
         reserveHours,
-      })
+      });
 
-      submittingRef.current = false
+      submittingRef.current = false;
 
-      setLoading(false)
+      setLoading(false);
 
-      onClose()
+      onClose();
     } catch (caught) {
-      submittingRef.current = false
+      submittingRef.current = false;
 
-      setLoading(false)
+      setLoading(false);
 
       const msg =
         caught instanceof Error
           ? caught.message
-          : typeof caught === "object" && caught && typeof caught.message === "string"
+          : typeof caught === "object" &&
+              caught &&
+              "message" in caught &&
+              typeof caught.message === "string"
             ? caught.message
             : typeof caught === "object"
               ? JSON.stringify(caught)
-              : String(caught)
-      setError(msg)
+              : String(caught);
+      setError(msg);
     }
-  }
+  };
 
   return (
     <Modal
@@ -538,9 +553,7 @@ export default function NewBatchModal({
                   <select
                     aria-label="Group discount type"
                     value={discountType}
-                    onChange={(event) =>
-                      setDiscountType(event.target.value as GroupDiscountType)
-                    }
+                    onChange={(event) => setDiscountType(event.target.value as GroupDiscountType)}
                   >
                     <option value="percentage">Percentage off</option>
                     <option value="fixed">Fixed amount off</option>
@@ -620,8 +633,7 @@ export default function NewBatchModal({
               marginBottom: 5,
             }}
           >
-            Cover Photo{" "}
-            <span style={{ color: "#9CA3AF", fontWeight: 500 }}>(optional)</span>
+            Cover Photo <span style={{ color: "#9CA3AF", fontWeight: 500 }}>(optional)</span>
           </label>
           {/* Live preview — the exact banner buyers see on the Home card and the
               batch detail hero. Empty falls back to the category gradient + icon. */}
@@ -646,14 +658,18 @@ export default function NewBatchModal({
             </span>
             <label className="batch-image-upload batch-image-upload--gallery">
               <ImageUp size={16} aria-hidden="true" />
-              <span>{galleryFiles.length ? `Add more photos (${galleryFiles.length} selected)` : "Add batch photos"}</span>
+              <span>
+                {galleryFiles.length
+                  ? `Add more photos (${galleryFiles.length} selected)`
+                  : "Add batch photos"}
+              </span>
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 multiple
                 onChange={(event) => {
-                  chooseGalleryImages(event.currentTarget.files)
-                  event.currentTarget.value = ""
+                  chooseGalleryImages(event.currentTarget.files);
+                  event.currentTarget.value = "";
                 }}
               />
             </label>
@@ -799,14 +815,14 @@ export default function NewBatchModal({
               <button
                 key={p}
                 onClick={() => {
-                  setTimerPreset(p)
+                  setTimerPreset(p);
 
                   if (p !== "Custom") {
-                    const isDay = p.endsWith("d")
+                    const isDay = p.endsWith("d");
 
-                    setTimerUnit(isDay ? "days" : "hours")
+                    setTimerUnit(isDay ? "days" : "hours");
 
-                    setTimerVal(p.replace(/[hd]/, ""))
+                    setTimerVal(p.replace(/[hd]/, ""));
                   }
                 }}
                 style={{
@@ -859,9 +875,7 @@ export default function NewBatchModal({
               />
               <select
                 value={timerUnit}
-                onChange={(e) =>
-                  setTimerUnit(e.target.value as "hours" | "days")
-                }
+                onChange={(e) => setTimerUnit(e.target.value as "hours" | "days")}
                 style={{
                   fontSize: 13,
 
@@ -884,8 +898,7 @@ export default function NewBatchModal({
             </div>
           )}
           <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
-            Buyers must pay within {timerVal} {timerUnit} of claiming, or the
-            reservation expires.
+            Buyers must pay within {timerVal} {timerUnit} of claiming, or the reservation expires.
           </div>
         </div>
         <div>
@@ -906,7 +919,7 @@ export default function NewBatchModal({
           </label>
           <div className="space-y-3">
             {products.map((p, i) => {
-              const selling = Number(p.basePrice || 0) + Number(p.markup || 0)
+              const selling = Number(p.basePrice || 0) + Number(p.markup || 0);
 
               const fieldLabel = {
                 fontSize: 10,
@@ -918,7 +931,7 @@ export default function NewBatchModal({
                 display: "block" as const,
 
                 marginBottom: 3,
-              }
+              };
 
               const numInput = {
                 width: "100%",
@@ -938,7 +951,7 @@ export default function NewBatchModal({
                 fontFamily: "inherit",
 
                 boxSizing: "border-box" as const,
-              }
+              };
 
               return (
                 <div
@@ -963,9 +976,7 @@ export default function NewBatchModal({
                         marginBottom: 3,
                       }}
                     >
-                      <label style={{ ...fieldLabel, marginBottom: 0 }}>
-                        Product Name
-                      </label>
+                      <label style={{ ...fieldLabel, marginBottom: 0 }}>Product Name</label>
                       {products.length > 1 && (
                         <button
                           type="button"
@@ -1012,18 +1023,14 @@ export default function NewBatchModal({
                     />
                   </div>
                   <div className="batch-product-image-row">
-                    {p.imagePreview && (
-                      <img src={p.imagePreview} alt="" aria-hidden="true" />
-                    )}
+                    {p.imagePreview && <img src={p.imagePreview} alt="" aria-hidden="true" />}
                     <label className="batch-image-upload batch-image-upload--compact">
                       <ImageUp size={14} aria-hidden="true" />
                       <span>{p.imageFile ? "Change item photo" : "Upload item photo"}</span>
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp,image/gif"
-                        onChange={(event) =>
-                          chooseProductImage(i, event.target.files?.[0])
-                        }
+                        onChange={(event) => chooseProductImage(i, event.target.files?.[0])}
                       />
                     </label>
                   </div>
@@ -1032,9 +1039,7 @@ export default function NewBatchModal({
                       <span>Selling unit</span>
                       <select
                         value={p.sellingUnit}
-                        onChange={(event) =>
-                          updateProduct(i, "sellingUnit", event.target.value)
-                        }
+                        onChange={(event) => updateProduct(i, "sellingUnit", event.target.value)}
                       >
                         <option value="piece">Per Piece</option>
                         <option value="box">Per Box</option>
@@ -1048,9 +1053,7 @@ export default function NewBatchModal({
                           min="1"
                           inputMode="numeric"
                           value={p.piecesPerBox}
-                          onChange={(event) =>
-                            updateProduct(i, "piecesPerBox", event.target.value)
-                          }
+                          onChange={(event) => updateProduct(i, "piecesPerBox", event.target.value)}
                           placeholder="e.g. 12"
                         />
                       </label>
@@ -1061,8 +1064,7 @@ export default function NewBatchModal({
                     style={{
                       display: "grid",
 
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(78px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(78px, 1fr))",
 
                       gap: 8,
                     }}
@@ -1073,10 +1075,14 @@ export default function NewBatchModal({
                         type="number"
                         inputMode="decimal"
                         value={p.basePrice}
-                        onChange={(e) =>
-                          updateProduct(i, "basePrice", e.target.value)
+                        onChange={(e) => updateProduct(i, "basePrice", e.target.value)}
+                        onFocus={(e) => e.currentTarget.select()}
+                        onBlur={(e) =>
+                          updateProduct(i, "basePrice", (Number(e.target.value) || 0).toFixed(2))
                         }
-                        placeholder="0"
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
                         style={numInput}
                         className="placeholder:text-gray-400"
                       />
@@ -1087,10 +1093,14 @@ export default function NewBatchModal({
                         type="number"
                         inputMode="decimal"
                         value={p.markup}
-                        onChange={(e) =>
-                          updateProduct(i, "markup", e.target.value)
+                        onChange={(e) => updateProduct(i, "markup", e.target.value)}
+                        onFocus={(e) => e.currentTarget.select()}
+                        onBlur={(e) =>
+                          updateProduct(i, "markup", (Number(e.target.value) || 0).toFixed(2))
                         }
-                        placeholder="0"
+                        placeholder="0.00"
+                        min="0"
+                        step="0.01"
                         style={numInput}
                         className="placeholder:text-gray-400"
                       />
@@ -1118,7 +1128,7 @@ export default function NewBatchModal({
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {selling > 0 ? `₱${selling.toLocaleString()}` : "—"}
+                        {formatMoney(selling)}
                       </div>
                     </div>
                     <div>
@@ -1127,9 +1137,7 @@ export default function NewBatchModal({
                         type="number"
                         inputMode="numeric"
                         value={p.qty}
-                        onChange={(e) =>
-                          updateProduct(i, "qty", e.target.value)
-                        }
+                        onChange={(e) => updateProduct(i, "qty", e.target.value)}
                         placeholder="qty"
                         style={numInput}
                         className="placeholder:text-gray-400"
@@ -1142,9 +1150,7 @@ export default function NewBatchModal({
                         inputMode="numeric"
                         min="1"
                         value={p.limit}
-                        onChange={(e) =>
-                          updateProduct(i, "limit", e.target.value)
-                        }
+                        onChange={(e) => updateProduct(i, "limit", e.target.value)}
                         placeholder="optional"
                         style={numInput}
                         className="placeholder:text-gray-400"
@@ -1157,9 +1163,7 @@ export default function NewBatchModal({
                         inputMode="numeric"
                         min="0"
                         value={p.waitlistLimit}
-                        onChange={(e) =>
-                          updateProduct(i, "waitlistLimit", e.target.value)
-                        }
+                        onChange={(e) => updateProduct(i, "waitlistLimit", e.target.value)}
                         placeholder="0"
                         style={numInput}
                         className="placeholder:text-gray-400"
@@ -1213,16 +1217,8 @@ export default function NewBatchModal({
           </div>
         )}
         <div className="flex gap-3 pt-1">
-          <SecondaryBtn
-            onClick={onClose}
-          >
-            Cancel
-          </SecondaryBtn>
-          <PrimaryBtn
-            onClick={submit}
-            loading={loading}
-            disabled={!title.trim()}
-          >
+          <SecondaryBtn onClick={onClose}>Cancel</SecondaryBtn>
+          <PrimaryBtn onClick={submit} loading={loading} disabled={!title.trim()}>
             {loading ? "Creating…" : "Create Batch"}
           </PrimaryBtn>
         </div>

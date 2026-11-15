@@ -251,7 +251,10 @@ export function demoSetSellerAccess(
     enabled ? "grant_seller" : "revoke_seller",
     "user",
     u.name,
-    reason || (enabled ? "Seller access approved after reviewing the shop profile." : "Seller access removed after an account review."),
+    reason ||
+      (enabled
+        ? "Seller access approved after reviewing the shop profile."
+        : "Seller access removed after an account review."),
     { can_sell: !enabled },
     { can_sell: enabled },
   );
@@ -500,7 +503,16 @@ export function demoModerateBatch(
     "batch",
     b.title,
     reason ||
-      ({ flag: "Batch flagged for additional listing review.", hide: "Batch hidden while listing compliance is reviewed.", restore: "Batch restored after the listing review was completed.", lock: "Batch locked to prevent further orders.", unlock: "Batch unlocked after the seller issue was resolved.", close: "Batch closed because its ordering window has ended." } satisfies Record<BatchModerationAction, string>)[action],
+      (
+        {
+          flag: "Batch flagged for additional listing review.",
+          hide: "Batch hidden while listing compliance is reviewed.",
+          restore: "Batch restored after the listing review was completed.",
+          lock: "Batch locked to prevent further orders.",
+          unlock: "Batch unlocked after the seller issue was resolved.",
+          close: "Batch closed because its ordering window has ended.",
+        } satisfies Record<BatchModerationAction, string>
+      )[action],
     null,
     { moderation_action: action },
   );
@@ -608,7 +620,14 @@ export function demoCancelOrder(orderId: string, reason: string): { changed: boo
   if (["payment_confirmed", "preparing", "completed"].includes(o.status))
     throw new Error("A confirmed order cannot be cancelled");
   o.status = "cancelled";
-  recordDemoAudit("cancel_order", "order", o.orderNumber, reason || "Order cancelled after an admin review of the order issue.", { status: "previous" }, { status: "cancelled" });
+  recordDemoAudit(
+    "cancel_order",
+    "order",
+    o.orderNumber,
+    reason || "Order cancelled after an admin review of the order issue.",
+    { status: "previous" },
+    { status: "cancelled" },
+  );
   return { changed: true };
 }
 
@@ -790,6 +809,7 @@ import type {
   AdminCombinedPaymentDetail,
   AdminAuditRow,
   AdminInvite,
+  AdminSignupRequest,
   AdminTeamMember,
 } from "@/features/admin/adminTypes";
 
@@ -803,6 +823,25 @@ const DEMO_TEAM: AdminTeamMember[] = [
     acceptedAt: iso(200),
     grantedBy: null,
     accountStatus: "active",
+  },
+];
+
+const DEMO_SIGNUP_REQUESTS: AdminSignupRequest[] = [
+  {
+    id: "demo-admin-request-1",
+    userId: "demo-u-request-1",
+    displayName: "Rina Mae Bautista",
+    username: "rinamae",
+    email: "rina.bautista@kargo.demo",
+    requestedAt: iso(1),
+  },
+  {
+    id: "demo-admin-request-2",
+    userId: "demo-u-request-2",
+    displayName: "Paolo Reyes",
+    username: "paoloreyes",
+    email: "paolo.reyes@kargo.demo",
+    requestedAt: iso(2),
   },
 ];
 
@@ -860,6 +899,53 @@ export function demoListTeam(): { rows: AdminTeamMember[] } {
   return { rows: DEMO_TEAM };
 }
 
+export function demoListSignupRequests(): { rows: AdminSignupRequest[] } {
+  return { rows: DEMO_SIGNUP_REQUESTS };
+}
+
+export function demoApproveSignupRequest(requestId: string, reason: string): { changed: boolean } {
+  const index = DEMO_SIGNUP_REQUESTS.findIndex((r) => r.id === requestId);
+  if (index < 0) return { changed: false };
+  const request = DEMO_SIGNUP_REQUESTS[index];
+  DEMO_SIGNUP_REQUESTS.splice(index, 1);
+  if (!DEMO_TEAM.some((m) => m.id === request.userId)) {
+    DEMO_TEAM.push({
+      id: request.userId,
+      name: request.displayName,
+      email: request.email,
+      avatarPath: null,
+      grantedAt: iso(0),
+      acceptedAt: null,
+      grantedBy: "KARGO Admin",
+      accountStatus: "active",
+    });
+  }
+  recordDemoAudit(
+    "grant_admin",
+    "user",
+    request.displayName,
+    reason || "Approved admin signup request.",
+    { admin: false },
+    { admin: "invited" },
+  );
+  return { changed: true };
+}
+
+export function demoRejectSignupRequest(requestId: string, reason: string): { changed: boolean } {
+  const index = DEMO_SIGNUP_REQUESTS.findIndex((r) => r.id === requestId);
+  if (index < 0) return { changed: false };
+  const [request] = DEMO_SIGNUP_REQUESTS.splice(index, 1);
+  recordDemoAudit(
+    "reject_admin_signup",
+    "user",
+    request.displayName,
+    reason || "Rejected admin signup request.",
+    { admin: false },
+    { admin: false },
+  );
+  return { changed: true };
+}
+
 export function demoGrantAdmin(userId: string, _reason: string): { changed: boolean } {
   if (DEMO_TEAM.some((m) => m.id === userId)) return { changed: false };
   const u = DEMO_USERS.find((x) => x.id === userId);
@@ -874,7 +960,14 @@ export function demoGrantAdmin(userId: string, _reason: string): { changed: bool
     grantedBy: "KARGO Admin",
     accountStatus: u.accountStatus,
   });
-  recordDemoAudit("grant_admin", "user", u.name, _reason || "Administrative access granted after role approval.", { admin: false }, { admin: true });
+  recordDemoAudit(
+    "grant_admin",
+    "user",
+    u.name,
+    _reason || "Administrative access granted after role approval.",
+    { admin: false },
+    { admin: true },
+  );
   return { changed: true };
 }
 
@@ -888,7 +981,14 @@ export function demoRevokeAdmin(userId: string, _reason: string): { changed: boo
   if (index < 0) return { changed: false };
   const target = DEMO_TEAM[index];
   DEMO_TEAM.splice(index, 1);
-  recordDemoAudit("revoke_admin", "user", target.name, _reason || "Administrative access revoked after a role review.", { admin: true }, { admin: false });
+  recordDemoAudit(
+    "revoke_admin",
+    "user",
+    target.name,
+    _reason || "Administrative access revoked after a role review.",
+    { admin: true },
+    { admin: false },
+  );
   return { changed: true };
 }
 
@@ -900,7 +1000,14 @@ export function demoGetMyInvite(): AdminInvite | null {
 }
 
 export function demoAcceptAdminInvite(): { accepted: boolean; changed: boolean } {
-  recordDemoAudit("accept_admin", "user", "KARGO Admin", "Admin invitation accepted by the account holder.", { accepted: false }, { accepted: true });
+  recordDemoAudit(
+    "accept_admin",
+    "user",
+    "KARGO Admin",
+    "Admin invitation accepted by the account holder.",
+    { accepted: false },
+    { accepted: true },
+  );
   return { accepted: true, changed: true };
 }
 
@@ -908,7 +1015,14 @@ export function demoDeclineAdminInvite(_reason: string | null): {
   declined: boolean;
   changed: boolean;
 } {
-  recordDemoAudit("decline_admin", "user", "KARGO Admin", _reason || "Admin invitation declined by the account holder.", { pending: true }, { declined: true });
+  recordDemoAudit(
+    "decline_admin",
+    "user",
+    "KARGO Admin",
+    _reason || "Admin invitation declined by the account holder.",
+    { pending: true },
+    { declined: true },
+  );
   return { declined: true, changed: true };
 }
 

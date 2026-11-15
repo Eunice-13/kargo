@@ -29,9 +29,12 @@ import type {
 
 import { requireSupabase } from "@/lib/supabase";
 
+import { normalizeUsername } from "@/lib/username";
+
 import { resolveContactUrl } from "@/components/shared/contactLink";
 
 import { effectiveOrderPaymentStatus, orderStatusToClaimLabel } from "./orderPaymentState";
+import { formatMoney } from "@/lib/format";
 
 // Supabase rejects RPCs with PostgrestError objects, which are not `Error`
 // instances. Read their `message` so database rules are never hidden behind a
@@ -49,6 +52,9 @@ type DbProfile = {
   id: string;
 
   display_name: string;
+
+  /** Public handle. Null on accounts created before usernames existed. */
+  username: string | null;
 
   shop_name: string | null;
 
@@ -198,7 +204,7 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     .from("user_profiles")
 
     .select(
-      "id,display_name,shop_name,bio,social_links,social_visibility,avatar_path,can_sell,account_status,account_status_reason,notification_preferences,created_at",
+      "id,display_name,username,shop_name,bio,social_links,social_visibility,avatar_path,can_sell,account_status,account_status_reason,notification_preferences,created_at",
     )
 
     .eq("id", id)
@@ -237,6 +243,8 @@ async function profileFor(id: string, email: string): Promise<UserInfo> {
     id,
 
     name: profile.display_name,
+
+    username: profile.username ?? undefined,
 
     shopName: profile.shop_name ?? undefined,
 
@@ -287,6 +295,9 @@ export async function signIn(email: string, password: string) {
 export async function signUp(input: {
   name: string;
 
+  /** Public handle. Required for app signups; normalised inside the trigger too. */
+  username?: string;
+
   email: string;
 
   password: string;
@@ -295,7 +306,7 @@ export async function signUp(input: {
 
   socials?: Record<string, { on: boolean; url: string }>;
 
-  role?: "Buyer" | "Seller";
+  role?: "Buyer" | "Seller" | "Admin";
 
   buyerAddress?: {
     addressText: string;
@@ -352,6 +363,8 @@ export async function signUp(input: {
       data: {
         display_name: input.name,
 
+        username: input.username ?? null,
+
         shop_name: input.shopName || null,
 
         social_links: links,
@@ -359,6 +372,10 @@ export async function signUp(input: {
         social_visibility: Object.fromEntries(Object.keys(links).map((key) => [key, true])),
 
         can_sell: input.role === "Seller",
+
+        // Admin is an approval request, never a direct grant: the trigger turns
+        // this into a row in admin_signup_requests and grants nothing.
+        requested_role: input.role === "Admin" ? "admin" : null,
 
         // Marks metadata produced by the signup form, so the database trigger
         // enforces the signup contract only for real signups (admin-created
@@ -1642,7 +1659,9 @@ export async function createBatch(batch: {
 
     const productImagePaths = await allOrThrow(
       batch.products.map((product, index) =>
-        product.imageFile ? upload(`product-${index + 1}`, product.imageFile) : Promise.resolve(null),
+        product.imageFile
+          ? upload(`product-${index + 1}`, product.imageFile)
+          : Promise.resolve(null),
       ),
     );
 
@@ -2454,8 +2473,26 @@ export async function setOrderTracking(
   if (error) throw error;
 }
 
+/** True when no profile has claimed the handle. The unique index is the authority. */
+export async function isUsernameAvailable(username: string): Promise<boolean> {
+  const handle = normalizeUsername(username);
+  if (!handle) return false;
+
+  const { data, error } = await requireSupabase()
+    .from("user_profiles")
+    .select("id")
+    .eq("username", handle)
+    .limit(1);
+
+  if (error) throw error;
+
+  return (data ?? []).length === 0;
+}
+
 export async function updateProfile(values: {
   displayName?: string;
+
+  username?: string;
 
   bio?: string;
 
@@ -2480,6 +2517,8 @@ export async function updateProfile(values: {
   const payload: Record<string, unknown> = {};
 
   if (values.displayName !== undefined) payload.display_name = values.displayName;
+
+  if (values.username !== undefined) payload.username = normalizeUsername(values.username);
 
   if (values.bio !== undefined) payload.bio = values.bio;
 
@@ -2518,7 +2557,10 @@ export async function updateProfile(values: {
 
     .single();
 
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23505") throw new Error("That username is taken.");
+    throw error;
+  }
 
   if (!data) throw new Error("Profile update did not affect an account");
 }
@@ -2764,6 +2806,23 @@ export async function loadSellerMemberSince(sellerId: string): Promise<string | 
   if (error) throw error;
 
   return (data?.created_at as string | undefined) ?? null;
+}
+
+export async function loadSellerPublicProfile(
+  sellerId: string,
+): Promise<{ createdAt: string | null; username: string | null }> {
+  const { data, error } = await requireSupabase()
+    .from("public_profiles")
+    .select("created_at,username")
+    .eq("id", sellerId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return {
+    createdAt: (data?.created_at as string | undefined) ?? null,
+    username: (data?.username as string | undefined) ?? null,
+  };
 }
 
 export async function addPaymentMethod(
@@ -3064,7 +3123,7 @@ export async function markInsufficientPayment(
   shortfallAmount: number,
   groupOrderId?: string,
 ) {
-  const reason = `Insufficient payment — ₱${shortfallAmount.toLocaleString()} short`;
+  const reason = `Insufficient payment — ${formatMoney(shortfallAmount)} short`;
   return groupOrderId
     ? reviewGroupPayment(paymentId, "rejected", reason, 24, shortfallAmount, amountPaid)
     : reviewPayment(paymentId, "rejected", reason, 24, undefined, shortfallAmount, amountPaid);
@@ -3447,6 +3506,8 @@ export const kargoApi = {
 
   signUp,
 
+  isUsernameAvailable,
+
   resendConfirmation,
 
   signOut,
@@ -3521,6 +3582,7 @@ export const kargoApi = {
   loadSellerReceiveMethods,
 
   loadSellerMemberSince,
+  loadSellerPublicProfile,
 
   loadOwnPaymentMethods,
 

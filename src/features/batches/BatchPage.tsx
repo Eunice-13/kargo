@@ -13,12 +13,12 @@ import {
   ArrowRight,
   Plane,
   Check,
-  Link2,
   ImageUp,
   Users,
   Tag,
   CalendarDays,
   Clock,
+  MessageCircle,
   ChevronDown,
   Settings2,
 } from "lucide-react";
@@ -63,6 +63,37 @@ import { isSupabaseConfigured } from "@/lib/supabase";
 import { navIntent, subscribeNavIntent } from "@/state/navIntent";
 
 import { kargoApi } from "@/services";
+import { formatMoney } from "@/lib/format";
+import "./batchEditorial.css";
+
+export function getRelatedBatches(
+  batchId: number,
+  options: { limit?: number; source: BatchType[] },
+): BatchType[] {
+  const { limit = 5, source } = options;
+  const current = source.find((candidate) => candidate.id === batchId);
+  if (!current) return [];
+
+  return source
+    .filter(
+      (candidate) =>
+        candidate.id !== batchId &&
+        candidate.live &&
+        !batchOrdersClosed(candidate) &&
+        candidate.claimed < candidate.items,
+    )
+    .map((candidate) => ({
+      candidate,
+      score:
+        (candidate.category === current.category ? 1000 : 0) +
+        (candidate.sellerId && candidate.sellerId === current.sellerId ? 500 : 0) +
+        (candidate.title.toLowerCase().includes(current.title.toLowerCase()) ? 250 : 0) +
+        Math.round((candidate.claimed / Math.max(1, candidate.items)) * 100),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(({ candidate }) => candidate);
+}
 
 export default function BatchPage({
   batch: batchProp,
@@ -219,6 +250,22 @@ export default function BatchPage({
   const [photoPreview, setPhotoPreview] = useState<(typeof batch.products)[number] | null>(null);
 
   const [galleryZoomOpen, setGalleryZoomOpen] = useState(false);
+  const [galleryAspect, setGalleryAspect] = useState(1);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const groupOrderButtonRef = useRef<HTMLButtonElement>(null);
+  const [showMobileGroupBar, setShowMobileGroupBar] = useState(false);
+  const relatedBatches = getRelatedBatches(batch.id, { limit: 5, source: batches });
+
+  useEffect(() => {
+    const button = groupOrderButtonRef.current;
+    if (!button || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowMobileGroupBar(!entry.isIntersecting),
+      { threshold: 0.3 },
+    );
+    observer.observe(button);
+    return () => observer.disconnect();
+  }, []);
 
   // Display-only category correction for the PLM thrift batch (its DB record
   // still reads "Food"). Visual only — does not touch the stored category.
@@ -715,6 +762,7 @@ export default function BatchPage({
     <div className="p-6 fi batch-page">
       {/* Breadcrumb + share */}
       <div
+        className="batch-detail-nav"
         style={{
           display: "flex",
 
@@ -751,13 +799,22 @@ export default function BatchPage({
             fontFamily: "'Josefin Sans',sans-serif",
           }}
         >
-          <ArrowLeft size={14} aria-hidden="true" /> {backLabel}
+          <ArrowLeft size={14} aria-hidden="true" /> Back to Shop
         </button>
-        <ShareButton batchId={batch.id} title={batch.title} label="Share batch" />
+        <ShareButton batchId={batch.id} title={batch.title} label="Share" />
       </div>
 
       <section className="batch-gallery" aria-label={`${batch.title} photos`}>
-        <div className="batch-gallery__main">
+        <div
+          className="batch-gallery__main"
+          style={{ "--gallery-aspect": String(galleryAspect) } as React.CSSProperties}
+        >
+          <img
+            className="batch-gallery__ambient"
+            src={selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)}
+            alt=""
+            aria-hidden="true"
+          />
           {role === "Buyer" ? (
             <button
               type="button"
@@ -766,18 +823,31 @@ export default function BatchPage({
               onClick={() => setGalleryZoomOpen(true)}
             >
               <img
+                className="batch-gallery__foreground"
                 src={
                   selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)
                 }
                 alt={selectedGalleryItem?.name ?? `${batch.title} cover`}
+                onLoad={(event) => {
+                  if (selectedProductIndex !== 0) return;
+                  const image = event.currentTarget;
+                  if (!image.naturalWidth || !image.naturalHeight) return;
+                  setGalleryAspect(
+                    Math.min(4 / 3, Math.max(3 / 4, image.naturalWidth / image.naturalHeight)),
+                  );
+                }}
               />
             </button>
           ) : (
             <img
+              className="batch-gallery__foreground"
               src={selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)}
               alt={selectedGalleryItem?.name ?? `${batch.title} cover`}
             />
           )}
+          <span className="batch-gallery__counter">
+            {selectedProductIndex + 1}/{galleryItems.length}
+          </span>
           {galleryItems.length > 1 && (
             <>
               <button
@@ -804,42 +874,6 @@ export default function BatchPage({
               </button>
             </>
           )}
-        </div>
-        <div className="batch-gallery__side">
-          <h1>{batch.title}</h1>
-          {ordersClosed && role === "Buyer" && (
-            <span className="batch-gallery__status">
-              <Lock size={14} aria-hidden="true" /> Not Accepting Orders
-              {closedByDate && (
-                <span className="batch-gallery__status-date">
-                  Closed {formatBatchEndDate(batch.endsOn)}
-                </span>
-              )}
-            </span>
-          )}
-          <div className="batch-gallery__meta">
-            <span className="batch-chip batch-chip--category">
-              <Tag size={13} aria-hidden="true" />
-              <span className="batch-chip__text">
-                <span className="batch-chip__label">Category</span>
-                <span className="batch-chip__value">{displayCategory}</span>
-              </span>
-            </span>
-            <span className="batch-chip batch-chip--trip">
-              <CalendarDays size={13} aria-hidden="true" />
-              <span className="batch-chip__text">
-                <span className="batch-chip__label">Trip dates</span>
-                <span className="batch-chip__value">{batch.trips}</span>
-              </span>
-            </span>
-            <span className="batch-chip batch-chip--window">
-              <Clock size={13} aria-hidden="true" />
-              <span className="batch-chip__text">
-                <span className="batch-chip__label">Reservation</span>
-                <span className="batch-chip__value">48h window</span>
-              </span>
-            </span>
-          </div>
           <div className="batch-gallery__thumbnails" aria-label="Batch photos and item photos">
             {galleryItems.map((item, index) => (
               <button
@@ -855,6 +889,172 @@ export default function BatchPage({
               </button>
             ))}
           </div>
+          <div className="batch-gallery__dots" aria-label="Choose photo">
+            {galleryItems.map((item, index) => (
+              <button
+                key={`${item.key}-dot`}
+                type="button"
+                className={index === selectedProductIndex ? "is-active" : ""}
+                onClick={() => setSelectedProductIndex(index)}
+                aria-label={`Show photo ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="batch-gallery__side">
+          <h1>{batch.title}</h1>
+          {ordersClosed && role === "Buyer" && (
+            <span className="batch-gallery__status">
+              <Lock size={14} aria-hidden="true" /> Not Accepting Orders
+              {closedByDate && (
+                <span className="batch-gallery__status-date">
+                  Closed {formatBatchEndDate(batch.endsOn)}
+                </span>
+              )}
+            </span>
+          )}
+          <div className="batch-editorial-meta">
+            <div>
+              <Tag size={16} aria-hidden="true" />
+              <span>
+                <small>Category</small>
+                <strong>{displayCategory}</strong>
+              </span>
+            </div>
+            <div>
+              <CalendarDays size={16} aria-hidden="true" />
+              <span>
+                <small>Trip dates</small>
+                <strong>{batch.trips}</strong>
+              </span>
+            </div>
+            <div
+              title={`Reserve within ${batch.reserveHours || 48}h of claiming`}
+              className={(batch.reserveHours || 48) < 6 ? "is-closing" : ""}
+              tabIndex={0}
+              data-tooltip={`Reserve within ${batch.reserveHours || 48}h of claiming`}
+            >
+              <Clock size={16} aria-hidden="true" />
+              <span>
+                <small>Reservation</small>
+                <strong>{batch.reserveHours || 48}h</strong>
+              </span>
+            </div>
+          </div>
+          <div className="batch-editorial-seller">
+            <button type="button" onClick={() => onSellerClick(batch.seller)}>
+              <Avatar name={sellerLabel(batch)} size={28} />
+              by {sellerLabel(batch)}
+            </button>
+          </div>
+          {batch.notes && (
+            <div className={`batch-detail-description${descriptionExpanded ? " is-expanded" : ""}`}>
+              <p>{batch.notes}</p>
+              {batch.notes.length > 140 && (
+                <button type="button" onClick={() => setDescriptionExpanded((value) => !value)}>
+                  {descriptionExpanded ? "Show less" : "Read more"}
+                </button>
+              )}
+            </div>
+          )}
+          <div className="batch-gallery__summary">
+            <div className="batch-gallery__price">
+              <span>From</span>
+              {formatMoney(
+                Math.min(...batch.products.map((product) => Number(product.price) || 0)),
+              )}
+              <small>per slot</small>
+            </div>
+            <div className="batch-continuous-progress" aria-hidden="true">
+              <span style={{ width: `${pct}%` }} />
+            </div>
+            <div className="batch-gallery__claim-summary">
+              {batch.claimed === 0 ? (
+                <span>
+                  {batch.items} of {batch.items} slots open
+                </span>
+              ) : (
+                <span>
+                  {batch.claimed} of {batch.items} claimed ·{" "}
+                  <b>{Math.max(0, batch.items - batch.claimed)} left</b>
+                </span>
+              )}
+            </div>
+          </div>
+          {role === "Buyer" && (
+            <>
+              <section className="batch-detail-section">
+                <h2>In this batch ({batch.products.length})</h2>
+                <div className="batch-detail-items">
+                  {batch.products.map((product, index) => (
+                    <div className="batch-detail-item" key={`${product.name}-${index}`}>
+                      <button type="button" onClick={() => setSelectedProductIndex(index + 1)}>
+                        <ProductThumb name={product.name} imageUrl={product.imageUrl} />
+                        <span>
+                          <strong>{product.name}</strong>
+                          <small>{formatMoney(product.price)}</small>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="batch-detail-item__claim"
+                        disabled={ordersClosed || product.qty - product.claimed <= 0}
+                        onClick={() => setClaimTarget({ p: product, key: `${batch.id}-${index}` })}
+                      >
+                        {product.qty - product.claimed <= 0 ? "Sold out" : "Claim"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <div className="batch-panel-actions">
+                <button
+                  ref={groupOrderButtonRef}
+                  type="button"
+                  className="batch-panel-primary"
+                  disabled={ordersClosed}
+                  onClick={() => {
+                    setGroupOrderProductId(null);
+                    setGroupOrderOpen(true);
+                  }}
+                >
+                  <Users size={16} aria-hidden="true" />
+                  {ordersClosed ? "Join waitlist" : "Group Order"}
+                </button>
+                <button
+                  type="button"
+                  className="batch-panel-message"
+                  onClick={() => setContact(true)}
+                >
+                  Message seller
+                </button>
+              </div>
+              {showMobileGroupBar && (
+                <div className="batch-mobile-actions">
+                  <button
+                    type="button"
+                    className="batch-panel-primary"
+                    disabled={ordersClosed}
+                    onClick={() => {
+                      setGroupOrderProductId(null);
+                      setGroupOrderOpen(true);
+                    }}
+                  >
+                    <Users size={16} aria-hidden="true" />
+                    {ordersClosed ? "Join waitlist" : "Group Order"}
+                  </button>
+                  <button
+                    type="button"
+                    className="batch-mobile-message"
+                    onClick={() => setContact(true)}
+                    aria-label="Message seller"
+                  >
+                    <MessageCircle size={18} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
           <div className="batch-gallery__actions">
             {canEdit && (
               <div className="batch-gallery-settings" ref={gallerySettingsRef}>
@@ -886,7 +1086,9 @@ export default function BatchPage({
                       }}
                     >
                       <ImageUp size={15} aria-hidden="true" />
-                      <span>{uploadingPhoto === "gallery" ? "Uploading…" : "Add batch photos"}</span>
+                      <span>
+                        {uploadingPhoto === "gallery" ? "Uploading…" : "Add batch photos"}
+                      </span>
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp,image/gif"
@@ -936,66 +1138,12 @@ export default function BatchPage({
                 )}
               </div>
             )}
-            {role === "Buyer" && batch.groupOrdersEnabled && !ordersClosed && (
-              <button
-                type="button"
-                className="batch-group-order-action"
-                onClick={() => {
-                  setGroupOrderProductId(null);
-                  setGroupOrderOpen(true);
-                }}
-              >
-                <Users size={15} aria-hidden="true" /> Group Order
-              </button>
-            )}
           </div>
         </div>
       </section>
 
-      {batch.notes && (
-        <div
-          style={{
-            background: "#fff",
-
-            border: "1px solid #E5E7EB",
-
-            borderRadius: 12,
-
-            padding: "16px 18px",
-
-            marginBottom: 24,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-
-              fontWeight: 700,
-
-              color: "#9CA3AF",
-
-              letterSpacing: 0.8,
-
-              marginBottom: 8,
-            }}
-          >
-            DESCRIPTION
-          </div>
-          <p
-            style={{
-              fontSize: 13,
-              color: "#374151",
-              lineHeight: 1.6,
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {batch.notes}
-          </p>
-        </div>
-      )}
-
       <div
-        className="batch-page-layout"
+        className={`batch-page-layout${role === "Buyer" ? " batch-page-layout--buyer-gallery" : ""}`}
         style={{
           display: "grid",
 
@@ -1013,7 +1161,9 @@ export default function BatchPage({
             action={
               <div className="flex items-center gap-2">
                 {canEdit && (
-                  <SecondaryBtn size="sm" onClick={() => setAddItemsOpen(true)}>Add Item</SecondaryBtn>
+                  <SecondaryBtn size="sm" onClick={() => setAddItemsOpen(true)}>
+                    Add Item
+                  </SecondaryBtn>
                 )}
                 {role === "Buyer" ? (
                   <SecondaryBtn onClick={() => setContact(true)}>Contact Seller</SecondaryBtn>
@@ -1044,11 +1194,9 @@ export default function BatchPage({
                 )
                 .reduce((total, claim) => total + claim.qty, 0);
 
-              const buyerLimit =
-                p.limitPerUser && p.limitPerUser > 0 ? p.limitPerUser : 5;
+              const buyerLimit = p.limitPerUser && p.limitPerUser > 0 ? p.limitPerUser : 5;
 
-              const buyerLimitReached =
-                role === "Buyer" && buyerClaimedQty >= buyerLimit;
+              const buyerLimitReached = role === "Buyer" && buyerClaimedQty >= buyerLimit;
 
               const remainingBuyerLimit = Math.max(0, buyerLimit - buyerClaimedQty);
 
@@ -1120,8 +1268,8 @@ export default function BatchPage({
                     </div>
                     <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
                       {p.sellingUnit === "box"
-                        ? `₱${p.price.toLocaleString()} / box · ${p.piecesPerBox ?? 1} pieces · `
-                        : `₱${p.price.toLocaleString()} / piece · `}
+                        ? `${formatMoney(p.price)} / box · ${p.piecesPerBox ?? 1} pieces · `
+                        : `${formatMoney(p.price)} / piece · `}
                       {p.claimed}/{p.qty} claimed
                       {p.waitlist > 0
                         ? p.waitlistLimit !== undefined
@@ -1227,7 +1375,10 @@ export default function BatchPage({
                       )}
                     </div>
                   </div>
-                  <div className="batch-product-side" style={{ textAlign: "right" as const, flexShrink: 0 }}>
+                  <div
+                    className="batch-product-side"
+                    style={{ textAlign: "right" as const, flexShrink: 0 }}
+                  >
                     <div
                       className="batch-product-price"
                       style={{
@@ -1242,7 +1393,7 @@ export default function BatchPage({
                         marginBottom: 8,
                       }}
                     >
-                      ₱{p.price.toLocaleString()}
+                      {formatMoney(p.price)}
                     </div>
                     {canEdit ? (
                       <div
@@ -1494,38 +1645,6 @@ export default function BatchPage({
                 </div>
               </div>
             </div>
-            <div
-              style={{
-                marginTop: 12,
-
-                padding: "10px 12px",
-
-                background: "#EEF0FF",
-
-                borderRadius: 8,
-
-                display: "flex",
-
-                gap: 8,
-              }}
-            >
-              <Link2
-                size={16}
-                aria-hidden="true"
-                style={{ color: INDIGO, flexShrink: 0, marginTop: 1 }}
-              />
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>
-                  Linked Facebook account
-                </div>
-                <div style={{ fontSize: 11, color: INDIGO }}>
-                  facebook.com/{batch.seller.toLowerCase().replace(" ", ".")}
-                </div>
-                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
-                  Credibility reference only — not a payment guarantee.
-                </div>
-              </div>
-            </div>
           </Card>
           <Card>
             <div
@@ -1619,6 +1738,60 @@ export default function BatchPage({
         </div>
       </div>
 
+      {relatedBatches.length >= 2 && (
+        <section className="batch-related" aria-labelledby="related-batches-title">
+          <div className="batch-related__header">
+            <h2 id="related-batches-title">You might like</h2>
+            <button type="button" onClick={onBack}>
+              See all
+            </button>
+          </div>
+          <div className="batch-related__grid">
+            {relatedBatches.map((related) => {
+              const remaining = Math.max(0, related.items - related.claimed);
+              const startingPrice = Math.min(
+                ...related.products.map((product) => Number(product.price) || 0),
+              );
+              return (
+                <button
+                  type="button"
+                  className="batch-related__card"
+                  key={related.id}
+                  onClick={() => {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set("batch", String(related.id));
+                    window.location.assign(url);
+                  }}
+                >
+                  <span className="batch-related__image">
+                    <img
+                      src={batchCoverSrc(related.coverImage, related.category)}
+                      alt={`${related.title} batch`}
+                    />
+                    <small>{remaining} left</small>
+                  </span>
+                  <span className="batch-related__body">
+                    <strong>{related.title}</strong>
+                    <small>{sellerLabel(related)}</small>
+                    <b>From {formatMoney(startingPrice)}</b>
+                    <span className="batch-related__progress">
+                      <i
+                        style={{
+                          width: `${Math.min(100, (related.claimed / Math.max(1, related.items)) * 100)}%`,
+                        }}
+                      />
+                    </span>
+                    <em>
+                      {related.claimed}/{related.items} claimed
+                    </em>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {galleryZoomOpen && role === "Buyer" && (
         <Modal
           title={selectedGalleryItem?.name ?? `${batch.title} photo`}
@@ -1662,15 +1835,12 @@ export default function BatchPage({
             ) ?? claimTarget.p
           }
           remainingBuyerLimit={(() => {
-            const product = batch.products.find((p) =>
-              claimTarget.p.dbId
-                ? p.dbId === claimTarget.p.dbId
-                : p.name === claimTarget.p.name,
-            ) ?? claimTarget.p;
+            const product =
+              batch.products.find((p) =>
+                claimTarget.p.dbId ? p.dbId === claimTarget.p.dbId : p.name === claimTarget.p.name,
+              ) ?? claimTarget.p;
             const buyerLimit =
-              product.limitPerUser && product.limitPerUser > 0
-                ? product.limitPerUser
-                : 5;
+              product.limitPerUser && product.limitPerUser > 0 ? product.limitPerUser : 5;
             const claimedQty = claims
               .filter(
                 (claim) =>
@@ -1770,7 +1940,15 @@ export default function BatchPage({
                 if (item.id !== batch.id) return item;
                 return {
                   ...item,
-                  products: [...item.products, ...added.map((a, idx) => ({ ...a, dbId: `new-${batch.id}-${item.products.length + idx}`, id: `new-${batch.id}-${item.products.length + idx}` }))],
+                  products: [
+                    ...item.products,
+                    ...added.map((a, idx) => ({
+                      ...a,
+                      dbId: `new-${batch.id}-${item.products.length + idx}`,
+                      id: item.products.length + idx + 1,
+                      waitlist: 0,
+                    })),
+                  ],
                   items: item.items + added.reduce((s, p) => s + p.qty, 0),
                 };
               }),

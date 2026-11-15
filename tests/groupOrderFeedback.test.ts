@@ -33,7 +33,8 @@ test("replacement quantities include the buyers existing commitment without infl
   assert.equal(groupCommitmentMaximum({ qty: 10, claimed: 8 }, 2), 4);
   assert.equal(groupCommitmentMaximum({ qty: 10, claimed: 10 }, 0), 0);
 });
-test("zero, fractional, nonfinite and above-cap quantities cannot be submitted", () => {
-  for (const qty of [0, -1, 1.5, NaN, Infinity, 3]) assert(!validGroupCommitmentQuantity(qty, 2));
+test("zero clears a commitment; fractional, nonfinite and above-cap quantities cannot be submitted", () => {
+  assert(validGroupCommitmentQuantity(0, 2));
+  for (const qty of [-1, 1.5, NaN, Infinity, 3]) assert(!validGroupCommitmentQuantity(qty, 2));
   assert(validGroupCommitmentQuantity(1, 2));
 });

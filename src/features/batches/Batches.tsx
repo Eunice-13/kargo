@@ -78,6 +78,7 @@ import {
   extensionRequestStatus,
   type SellerExtensionRequest,
 } from "@/services/extensionRequests";
+import { formatMoney } from "@/lib/format";
 
 function ExtensionRequestsButton({
   pendingCount,
@@ -1658,7 +1659,9 @@ export default function Batches({
             <button
               type="button"
               className="seller-batch-quick-action"
-              onClick={() => setBuyingListBatch(batches.find((batch) => batch.seller === user.name) ?? null)}
+              onClick={() =>
+                setBuyingListBatch(batches.find((batch) => batch.seller === user.name) ?? null)
+              }
               aria-label="Open buying list"
             >
               <ClipboardList size={18} aria-hidden="true" />
@@ -1767,9 +1770,7 @@ export default function Batches({
         ) : (
           <BatchGrid batchList={myFiltered} />
         )}
-        <p className="seller-batches-mobile-hint">
-          Use the + button to add batches.
-        </p>
+        <p className="seller-batches-mobile-hint">Use the + button to add batches.</p>
         {/* Seller request pop-ups (opened from the header buttons above) */}
         {showExtReqModal && (
           <Modal
@@ -1790,7 +1791,11 @@ export default function Batches({
           <FinancialSummaryModal batch={financialBatch} onClose={() => setFinancialBatch(null)} />
         )}
         {buyingListBatch && (
-          <BatchBuyingListModal batches={batches.filter((batch) => batch.seller === user.name)} claims={claims} onClose={() => setBuyingListBatch(null)} />
+          <BatchBuyingListModal
+            batches={batches.filter((batch) => batch.seller === user.name)}
+            claims={claims}
+            onClose={() => setBuyingListBatch(null)}
+          />
         )}
         {confirmModals}
       </div>
@@ -1873,7 +1878,7 @@ export default function Batches({
               >
                 <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.product}</div>
                 <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-                  {c.seller} · ₱{c.amount.toLocaleString()}
+                  {c.seller} · {formatMoney(c.amount)}
                 </div>
               </button>
             ))}
@@ -1891,7 +1896,11 @@ export default function Batches({
         <FinancialSummaryModal batch={financialBatch} onClose={() => setFinancialBatch(null)} />
       )}
       {buyingListBatch && (
-        <BatchBuyingListModal batches={batches.filter((batch) => batch.seller === user.name)} claims={claims} onClose={() => setBuyingListBatch(null)} />
+        <BatchBuyingListModal
+          batches={batches.filter((batch) => batch.seller === user.name)}
+          claims={claims}
+          onClose={() => setBuyingListBatch(null)}
+        />
       )}
       {confirmModals}
     </div>

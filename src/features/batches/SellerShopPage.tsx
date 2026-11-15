@@ -41,6 +41,10 @@ export default function SellerShopPage({
   // identity used to match this shop's batches.
   const sellerDisplay =
     sellerBatches.find((batch) => batch.sellerShopName?.trim())?.sellerShopName?.trim() || seller;
+  const [fetchedSellerProfile, setFetchedSellerProfile] = useState<{
+    createdAt: string | null;
+    username: string | null;
+  } | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<SellerReceiveMethod[]>([]);
   const [methodsLoading, setMethodsLoading] = useState(false);
   // The seller's public join date, shown as "Seller since <year>". Fetched for
@@ -51,10 +55,14 @@ export default function SellerShopPage({
     if (!isSupabaseConfigured || !sellerId) return;
     let active = true;
     setFetchedMemberSince(null);
+    setFetchedSellerProfile(null);
     kargoApi
-      .loadSellerMemberSince(String(sellerId))
+      .loadSellerPublicProfile(String(sellerId))
       .then((value) => {
-        if (active) setFetchedMemberSince(value);
+        if (active) {
+          setFetchedMemberSince(value.createdAt);
+          setFetchedSellerProfile(value);
+        }
       })
       .catch(() => {
         if (active) setFetchedMemberSince(null);
@@ -86,6 +94,11 @@ export default function SellerShopPage({
 
   // Join date for the header, preferring the fetched public profile.
   const sellerMemberSince = fetchedMemberSince ?? profileData?.memberSince ?? null;
+  const sellerHandle =
+    fetchedSellerProfile?.username ??
+    (profileData && sellerId !== undefined && String(profileData.id) === String(sellerId)
+      ? profileData.username
+      : undefined);
   const sellerJoinedLabel = sellerMemberSince
     ? new Date(sellerMemberSince).toLocaleDateString("en-PH", {
         month: "long",
@@ -200,6 +213,18 @@ export default function SellerShopPage({
             >
               {sellerDisplay}
             </div>
+            {sellerHandle && (
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "rgba(255,255,255,0.85)",
+                  marginTop: 2,
+                }}
+              >
+                @{sellerHandle}
+              </div>
+            )}
             {sellerJoinedLabel && (
               <div
                 style={{

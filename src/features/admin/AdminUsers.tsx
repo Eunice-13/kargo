@@ -19,9 +19,10 @@ import {
 } from "./components";
 import { AdminErrorState } from "./components/AdminStates";
 import AdminUserDetailModal from "./components/AdminUserDetailModal";
+import { formatMoney } from "@/lib/format";
 
 const PAGE = 25;
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+const peso = (n: number) => `${formatMoney(n)}`;
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
@@ -341,8 +342,7 @@ export default function AdminUsers() {
                       className="admin-card-detail-cell"
                       data-label=""
                       style={{ padding: "10px 14px", color: "var(--kargo-muted)" }}
-                    >
-                    </td>
+                    ></td>
                   </tr>
                 ))}
               </tbody>

@@ -26,6 +26,7 @@ import type {
   AdminPaymentFilters,
   AdminPaymentRow,
   AdminTeamMember,
+  AdminSignupRequest,
   AdminUserDetail,
   AdminUserFilters,
   AdminUserRow,
@@ -44,6 +45,9 @@ import {
   demoGetPayment,
   demoGetUser,
   demoGrantAdmin,
+  demoListSignupRequests,
+  demoApproveSignupRequest,
+  demoRejectSignupRequest,
   demoListAudit,
   demoListBatches,
   demoGetCombinedPayment,
@@ -76,12 +80,28 @@ export function setAdminDemoMode(on: boolean) {
 }
 
 const DEMO_ANALYTICS_STAGES: FulfillmentAnalyticsStage[] = [
-  "payment_pending", "payment_submitted", "insufficient_payment", "payment_confirmed",
-  "preparing", "shipped", "in_transit", "delivered", "cancelled", "expired",
+  "payment_pending",
+  "payment_submitted",
+  "insufficient_payment",
+  "payment_confirmed",
+  "preparing",
+  "shipped",
+  "in_transit",
+  "delivered",
+  "cancelled",
+  "expired",
 ];
 const DEMO_CURRENT_STAGES: FulfillmentCurrentStatusStage[] = [
-  "payment_pending", "payment_submitted", "insufficient_payment", "payment_confirmed",
-  "preparing", "shipped", "delivered", "cancelled", "expired", "other",
+  "payment_pending",
+  "payment_submitted",
+  "insufficient_payment",
+  "payment_confirmed",
+  "preparing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "expired",
+  "other",
 ];
 
 function demoAnalyticsDates() {
@@ -91,57 +111,86 @@ function demoAnalyticsDates() {
   return { start, end, generatedAt: end.toISOString() };
 }
 
-function demoAnalyticsChart<T extends string>(
-  stages: T[],
-  totals: Record<T, number>,
-) {
+function demoAnalyticsChart<T extends string>(stages: T[], totals: Record<T, number>) {
   const { start, end } = demoAnalyticsDates();
   return Array.from({ length: 14 }, (_, index) => {
     const bucketStart = new Date(start);
     bucketStart.setDate(start.getDate() + index);
     const bucketEnd = new Date(bucketStart);
     bucketEnd.setDate(bucketEnd.getDate() + 1);
-    const counts = Object.fromEntries(stages.map((stage) => {
-      const total = totals[stage];
-      const daily = Math.floor(total / 14);
-      const remainder = total % 14;
-      return [stage, daily + (index < remainder ? 1 : 0)];
-    })) as Record<T, number>;
+    const counts = Object.fromEntries(
+      stages.map((stage) => {
+        const total = totals[stage];
+        const daily = Math.floor(total / 14);
+        const remainder = total % 14;
+        return [stage, daily + (index < remainder ? 1 : 0)];
+      }),
+    ) as Record<T, number>;
     return { bucketStart: bucketStart.toISOString(), bucketEnd: bucketEnd.toISOString(), counts };
-  }).map((bucket, index, rows) => index === rows.length - 1
-    ? { ...bucket, bucketEnd: end.toISOString() }
-    : bucket);
+  }).map((bucket, index, rows) =>
+    index === rows.length - 1 ? { ...bucket, bucketEnd: end.toISOString() } : bucket,
+  );
 }
 
 function demoFulfillmentAnalytics(filters: FulfillmentAnalyticsFilters): FulfillmentAnalytics {
   const { start, end, generatedAt } = demoAnalyticsDates();
   const stageTotals: Record<FulfillmentAnalyticsStage, number> = {
-    payment_pending: 120, payment_submitted: 96, insufficient_payment: 8,
-    payment_confirmed: 78, preparing: 70, shipped: 55, in_transit: 43,
-    delivered: 32, cancelled: 7, expired: 5,
+    payment_pending: 120,
+    payment_submitted: 96,
+    insufficient_payment: 8,
+    payment_confirmed: 78,
+    preparing: 70,
+    shipped: 55,
+    in_transit: 43,
+    delivered: 32,
+    cancelled: 7,
+    expired: 5,
   };
   return {
-    period: filters.period ?? "last_30_days", timezone: "Asia/Manila", startAt: start.toISOString(),
-    endAt: end.toISOString(), grouping: "day", generatedAt,
-    snapshot: generatedAt, captureStartedAt: start.toISOString(),
+    period: filters.period ?? "last_30_days",
+    timezone: "Asia/Manila",
+    startAt: start.toISOString(),
+    endAt: end.toISOString(),
+    grouping: "day",
+    generatedAt,
+    snapshot: generatedAt,
+    captureStartedAt: start.toISOString(),
     historicalCoverage: "full_recorded_history",
-    countingRule: "all_orders_reached_stages", totalEntries: 514, cohortSize: 120,
-    uniqueOrders: 120, stageTotals,
+    countingRule: "all_orders_reached_stages",
+    totalEntries: 514,
+    cohortSize: 120,
+    uniqueOrders: 120,
+    stageTotals,
     chart: demoAnalyticsChart(DEMO_ANALYTICS_STAGES, stageTotals),
   };
 }
 
-function demoFulfillmentCurrentStatus(filters: FulfillmentAnalyticsFilters): FulfillmentCurrentStatus {
+function demoFulfillmentCurrentStatus(
+  filters: FulfillmentAnalyticsFilters,
+): FulfillmentCurrentStatus {
   const { start, end, generatedAt } = demoAnalyticsDates();
   const counts: Record<FulfillmentCurrentStatusStage, number> = {
-    payment_pending: 12, payment_submitted: 15, insufficient_payment: 4,
-    payment_confirmed: 10, preparing: 18, shipped: 18, delivered: 32,
-    cancelled: 7, expired: 4, other: 0,
+    payment_pending: 12,
+    payment_submitted: 15,
+    insufficient_payment: 4,
+    payment_confirmed: 10,
+    preparing: 18,
+    shipped: 18,
+    delivered: 32,
+    cancelled: 7,
+    expired: 4,
+    other: 0,
   };
   return {
-    period: filters.period ?? "last_30_days", timezone: "Asia/Manila", startAt: start.toISOString(),
-    endAt: end.toISOString(), grouping: "day", cohortSize: 120, generatedAt,
-    counts, chart: demoAnalyticsChart(DEMO_CURRENT_STAGES, counts),
+    period: filters.period ?? "last_30_days",
+    timezone: "Asia/Manila",
+    startAt: start.toISOString(),
+    endAt: end.toISOString(),
+    grouping: "day",
+    cohortSize: 120,
+    generatedAt,
+    counts,
+    chart: demoAnalyticsChart(DEMO_CURRENT_STAGES, counts),
   };
 }
 
@@ -172,17 +221,20 @@ function demoFulfillmentOrdersPage(
     generatedAt,
     total: 1,
     nextOffset: offset + limit,
-    rows: offset === 0
-      ? [{
-          order_id: order.id,
-          order_number: order.number,
-          stage,
-          occurred_at: new Date(Date.now() - order.daysAgo * 86_400_000).toISOString(),
-          source: current ? "current_status" : "transition",
-          current_status: order.status,
-          current_fulfillment_stage: order.fulfillmentStage,
-        }]
-      : [],
+    rows:
+      offset === 0
+        ? [
+            {
+              order_id: order.id,
+              order_number: order.number,
+              stage,
+              occurred_at: new Date(Date.now() - order.daysAgo * 86_400_000).toISOString(),
+              source: current ? "current_status" : "transition",
+              current_status: order.status,
+              current_fulfillment_stage: order.fulfillmentStage,
+            },
+          ]
+        : [],
   };
 }
 
@@ -228,8 +280,14 @@ export const adminApi = {
   ): Promise<FulfillmentAnalyticsOrders> {
     if (demoMode) {
       const analyticsStage: FulfillmentAnalyticsStage =
-        stage === "other" ? "payment_confirmed" : stage as FulfillmentAnalyticsStage;
-      return demoFulfillmentOrdersPage(analyticsStage, new Date().toISOString(), limit, offset, true);
+        stage === "other" ? "payment_confirmed" : (stage as FulfillmentAnalyticsStage);
+      return demoFulfillmentOrdersPage(
+        analyticsStage,
+        new Date().toISOString(),
+        limit,
+        offset,
+        true,
+      );
     }
     return callAdmin("admin_fulfillment_current_status_orders", {
       p_period: filters.period ?? "last_30_days",
@@ -469,6 +527,30 @@ export const adminApi = {
   async revokeAdmin(userId: string, reason: string): Promise<{ changed: boolean }> {
     if (demoMode) return demoRevokeAdmin(userId, reason);
     return callAdmin("admin_revoke_admin", { p_user_id: userId, p_reason: reason });
+  },
+
+  // ─── Admin signup requests (Admin role chosen at signup) ──────────────────
+
+  async listSignupRequests(): Promise<{ rows: AdminSignupRequest[] }> {
+    if (demoMode) return demoListSignupRequests();
+    const rows = await callAdmin<AdminSignupRequest[]>("admin_list_signup_requests", {});
+    return { rows: rows ?? [] };
+  },
+
+  async approveSignupRequest(requestId: string, reason: string): Promise<{ changed: boolean }> {
+    if (demoMode) return demoApproveSignupRequest(requestId, reason);
+    return callAdmin("admin_approve_signup_request", {
+      p_request_id: requestId,
+      p_reason: reason,
+    });
+  },
+
+  async rejectSignupRequest(requestId: string, reason: string): Promise<{ changed: boolean }> {
+    if (demoMode) return demoRejectSignupRequest(requestId, reason);
+    return callAdmin("admin_reject_signup_request", {
+      p_request_id: requestId,
+      p_reason: reason,
+    });
   },
 
   // ─── The invitee's own invitation (no admin rights required) ───────────────

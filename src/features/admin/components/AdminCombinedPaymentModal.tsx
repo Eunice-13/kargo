@@ -8,8 +8,9 @@ import { useAdminResource } from "../useAdminResource";
 import useIsDesktop from "../useIsDesktop";
 import AdminBadge from "./AdminBadge";
 import { AdminEmptyText } from "./AdminFacts";
+import { formatMoney } from "@/lib/format";
 
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+const peso = (n: number) => `${formatMoney(n)}`;
 const statusLabel = (s: string) => s.replace(/_/g, " ");
 
 // Read-only detail for one combined-delivery group. Mirrors the seller's

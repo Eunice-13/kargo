@@ -12,8 +12,9 @@ import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminEmptyText, AdminModalSection } from "./AdminFacts";
+import { formatMoney } from "@/lib/format";
 
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+const peso = (n: number) => `${formatMoney(n)}`;
 
 const MOD_TONE: Record<string, string> = {
   visible: "good",

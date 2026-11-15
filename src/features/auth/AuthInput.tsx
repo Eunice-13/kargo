@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Eye, EyeOff, UserRound } from "lucide-react"
+import { useState } from "react";
+import { Eye, EyeOff, UserRound } from "lucide-react";
 
 export default function AuthInput({
   label,
@@ -9,25 +9,33 @@ export default function AuthInput({
   error,
   placeholder,
   required = false,
+  onBlur,
+  maxLength,
 }: {
-  label: string
-  type?: string
-  value: string
-  onChange: (v: string) => void
-  error?: string
-  placeholder?: string
-  required?: boolean
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+  placeholder?: string;
+  required?: boolean;
+  onBlur?: () => void;
+  maxLength?: number;
 }) {
-  const [showPassword, setShowPassword] = useState(false)
-  const isPassword = type === "password"
-  const PasswordIcon = showPassword ? Eye : EyeOff
-  const Icon = isPassword ? PasswordIcon : type === "email" ? UserRound : null
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
+  const PasswordIcon = showPassword ? Eye : EyeOff;
+  const Icon = isPassword ? PasswordIcon : type === "email" ? UserRound : null;
 
   return (
     <div className={`auth-field${error ? " auth-field--error" : ""}`}>
       <label>
         {label}
-        {required && <span className="auth-required-mark" aria-hidden="true">*</span>}
+        {required && (
+          <span className="auth-required-mark" aria-hidden="true">
+            *
+          </span>
+        )}
       </label>
       <div className="auth-input-shell">
         <input
@@ -35,6 +43,8 @@ export default function AuthInput({
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
+          maxLength={maxLength}
           aria-invalid={Boolean(error)}
         />
         {isPassword ? (
@@ -56,17 +66,11 @@ export default function AuthInput({
         <p className="auth-error fi">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
             <circle cx="6" cy="6" r="5.5" stroke="#EF4444" />
-            <path
-              d="M6 3.5v3M6 8h.01"
-              stroke="#EF4444"
-              strokeWidth="1.2"
-              strokeLinecap="round"
-            />
+            <path d="M6 3.5v3M6 8h.01" stroke="#EF4444" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
           {error}
         </p>
       )}
     </div>
-  )
+  );
 }
-

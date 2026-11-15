@@ -1,30 +1,35 @@
-import { formationExpired, formatFormationDeadline } from "@/services/groupFormation"
-import { batchOrdersClosed, formatBatchEndDate } from "./batchAvailability"
-import { groupOrderErrorMessage, groupCommitmentMaximum, validGroupCommitmentQuantity } from "./groupOrderFeedback"
-import GroupMembershipNotice from "./GroupMembershipNotice"
-import { GroupMembershipConflict } from "@/services/groupMembership"
-import { useEffect, useMemo, useState } from "react"
-import { Link2, RefreshCw, Users } from "lucide-react"
+import { formationExpired, formatFormationDeadline } from "@/services/groupFormation";
+import { batchOrdersClosed, formatBatchEndDate } from "./batchAvailability";
+import {
+  groupOrderErrorMessage,
+  groupCommitmentMaximum,
+  validGroupCommitmentQuantity,
+} from "./groupOrderFeedback";
+import GroupMembershipNotice from "./GroupMembershipNotice";
+import { GroupMembershipConflict } from "@/services/groupMembership";
+import { useEffect, useMemo, useState } from "react";
+import { Link2, RefreshCw, Users } from "lucide-react";
 
-import type { BatchType, GroupOrder } from "@/types"
+import type { BatchType, GroupOrder } from "@/types";
 import {
   LocationPinPicker,
   Modal,
   PrimaryBtn,
   SecondaryBtn,
   type LocationPinValue,
-} from "@/components/shared"
-import { kargoApi } from "@/services"
-import type { SellerReceiveMethod } from "@/services/kargoApi"
+} from "@/components/shared";
+import { kargoApi } from "@/services";
+import type { SellerReceiveMethod } from "@/services/kargoApi";
+import { formatMoney } from "@/lib/format";
 
 export function GroupOrderChoiceModal({
   onSolo,
   onGroup,
   onClose,
 }: {
-  onSolo: () => void
-  onGroup: () => void
-  onClose: () => void
+  onSolo: () => void;
+  onGroup: () => void;
+  onClose: () => void;
 }) {
   return (
     <Modal title="How would you like to order?" onClose={onClose} width={440}>
@@ -40,7 +45,7 @@ export function GroupOrderChoiceModal({
         </button>
       </div>
     </Modal>
-  )
+  );
 }
 
 export default function GroupOrderModal({
@@ -53,92 +58,102 @@ export default function GroupOrderModal({
   onClose,
   onCheckoutComplete,
 }: {
-  batch: BatchType
-  groupOrderId?: string
-  readOnly?: boolean
-  onOpenClaims?: () => void
-  initialProductId?: string
-  initialCode?: string
-  onClose: () => void
-  onCheckoutComplete: () => Promise<void>
+  batch: BatchType;
+  groupOrderId?: string;
+  readOnly?: boolean;
+  onOpenClaims?: () => void;
+  initialProductId?: string;
+  initialCode?: string;
+  onClose: () => void;
+  onCheckoutComplete: () => Promise<void>;
 }) {
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(Date.now());
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => window.clearInterval(timer)
-  }, [])
-  const [group, setGroup] = useState<GroupOrder | null>(null)
-  const [joining, setJoining] = useState(Boolean(initialCode))
-  const [code, setCode] = useState(initialCode)
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const [group, setGroup] = useState<GroupOrder | null>(null);
+  const [joining, setJoining] = useState(Boolean(initialCode));
+  const [code, setCode] = useState(initialCode);
   const [quantities, setQuantities] = useState<Record<string, number>>(
     initialProductId ? { [initialProductId]: 1 } : {},
-  )
-  const [loading, setLoading] = useState(true)
-  const [working, setWorking] = useState(false)
-  const [error, setError] = useState("")
-  const [membershipConflict, setMembershipConflict] = useState<GroupMembershipConflict | null>(null)
-  const [checkoutOpen, setCheckoutOpen] = useState(false)
-  const [methods, setMethods] = useState<SellerReceiveMethod[]>([])
-  const [paymentMethod, setPaymentMethod] = useState("")
-  const [pin, setPin] = useState<LocationPinValue>({})
-  const [acceptShipping, setAcceptShipping] = useState(false)
-  const [acknowledged, setAcknowledged] = useState(false)
+  );
+  const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState(false);
+  const [error, setError] = useState("");
+  const [membershipConflict, setMembershipConflict] = useState<GroupMembershipConflict | null>(
+    null,
+  );
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [methods, setMethods] = useState<SellerReceiveMethod[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [pin, setPin] = useState<LocationPinValue>({});
+  const [acceptShipping, setAcceptShipping] = useState(false);
+  const [acknowledged, setAcknowledged] = useState(false);
 
   const syncGroup = async () => {
-    if (!batch.dbId) return
+    if (!batch.dbId) return;
     const current = groupOrderId
       ? // Members open their own groups too; row-level security (not this
         // client filter) decides who can read a group.
         await kargoApi.loadGroupOrder(groupOrderId, false)
-      : await kargoApi.loadMyGroupOrder(batch.dbId)
-    if (current && current.batchId !== batch.dbId) throw new Error("This group no longer belongs to the selected batch.")
+      : await kargoApi.loadMyGroupOrder(batch.dbId);
+    if (current && current.batchId !== batch.dbId)
+      throw new Error("This group no longer belongs to the selected batch.");
     // An invitation must not silently reopen a completed historical group.
     if (!groupOrderId && initialCode && current?.status === "payment_confirmed") {
-      setGroup(null)
-      return
+      setGroup(null);
+      return;
     }
-    setGroup(current)
-    if (!groupOrderId && initialCode && current && current.referralCode !== initialCode.trim().toUpperCase() &&
-        ["forming", "waiting_for_seller", "payment_pending", "payment_submitted"].includes(current.status)) {
-      setMembershipConflict(new GroupMembershipConflict(current.status === "forming"))
+    setGroup(current);
+    if (
+      !groupOrderId &&
+      initialCode &&
+      current &&
+      current.referralCode !== initialCode.trim().toUpperCase() &&
+      ["forming", "waiting_for_seller", "payment_pending", "payment_submitted"].includes(
+        current.status,
+      )
+    ) {
+      setMembershipConflict(new GroupMembershipConflict(current.status === "forming"));
     }
     if (current) {
       const own = Object.fromEntries(
         current.commitments
           .filter((commitment) => commitment.userId === current.currentUserId)
           .map((commitment) => [commitment.productId, commitment.quantity]),
-      )
-      if (Object.keys(own).length > 0) setQuantities(own)
+      );
+      if (Object.keys(own).length > 0) setQuantities(own);
     }
-  }
+  };
 
   useEffect(() => {
     syncGroup()
-      .catch((caught) =>
-        setError(groupOrderErrorMessage(caught, "Unable to load group order.")),
-      )
-      .finally(() => setLoading(false))
-  }, [batch.dbId, groupOrderId])
+      .catch((caught) => setError(groupOrderErrorMessage(caught, "Unable to load group order.")))
+      .finally(() => setLoading(false));
+  }, [batch.dbId, groupOrderId]);
 
   useEffect(() => {
-    if (!checkoutOpen || !batch.sellerId) return
+    if (!checkoutOpen || !batch.sellerId) return;
     kargoApi
       .loadSellerReceiveMethods(batch.sellerId)
       .then((available) => {
-        setMethods(available)
-        setPaymentMethod(available[0]?.methodType ?? "")
+        setMethods(available);
+        setPaymentMethod(available[0]?.methodType ?? "");
       })
       .catch((caught) =>
         setError(groupOrderErrorMessage(caught, "Unable to load payment methods.")),
-      )
-  }, [checkoutOpen, batch.sellerId])
+      );
+  }, [checkoutOpen, batch.sellerId]);
 
-  const formationClosed = Boolean(group && formationExpired(group.status, group.formationDeadline, now))
+  const formationClosed = Boolean(
+    group && formationExpired(group.status, group.formationDeadline, now),
+  );
   // A batch past its end date can no longer start or join a group; the server
   // rejects both with "This batch has already closed". Existing groups stay
   // viewable so members can see the outcome.
-  const ordersClosed = batchOrdersClosed(batch)
-  const activeMembers = group?.members.filter((member) => member.status === "active") ?? []
+  const ordersClosed = batchOrdersClosed(batch);
+  const activeMembers = group?.members.filter((member) => member.status === "active") ?? [];
   const subtotal = useMemo(
     () =>
       group?.commitments.reduce(
@@ -146,65 +161,85 @@ export default function GroupOrderModal({
         0,
       ) ?? 0,
     [group],
-  )
+  );
   const qualifiesForDiscount = Boolean(
     batch.groupDiscountType &&
-      batch.groupDiscountValue &&
-      (!batch.groupDiscountMinSubtotal || subtotal >= batch.groupDiscountMinSubtotal),
-  )
+    batch.groupDiscountValue &&
+    (!batch.groupDiscountMinSubtotal || subtotal >= batch.groupDiscountMinSubtotal),
+  );
   const projectedDiscount = qualifiesForDiscount
     ? batch.groupDiscountType === "percentage"
-      ? Math.min(subtotal, subtotal * (batch.groupDiscountValue ?? 0) / 100)
+      ? Math.min(subtotal, (subtotal * (batch.groupDiscountValue ?? 0)) / 100)
       : Math.min(subtotal, batch.groupDiscountValue ?? 0)
-    : 0
+    : 0;
   const leaderHasItems = Boolean(
     group?.commitments.some(
       (commitment) => commitment.userId === group.leaderId && commitment.quantity > 0,
     ),
-  )
+  );
   const canCheckout = Boolean(
     group?.isLeader && activeMembers.length >= 2 && leaderHasItems && subtotal > 0,
-  )
-  const shippingApplies = Boolean(
-    paymentMethod && paymentMethod !== "Cash on Meetup",
-  )
+  );
+  const shippingApplies = Boolean(paymentMethod && paymentMethod !== "Cash on Meetup");
   const inviteUrl = group
     ? `${window.location.origin}${window.location.pathname}?batch=${encodeURIComponent(String(batch.id))}&group=${group.referralCode}`
-    : ""
+    : "";
 
   const run = async (action: () => Promise<void>) => {
-    setError("")
-    setMembershipConflict(null)
-    setWorking(true)
+    setError("");
+    setMembershipConflict(null);
+    setWorking(true);
     try {
-      await action()
+      await action();
     } catch (caught) {
       if (caught instanceof GroupMembershipConflict) {
-        setMembershipConflict(caught)
-        await syncGroup().catch(() => setGroup(null))
-      } else setError(groupOrderErrorMessage(caught, "Unable to update group order."))
+        setMembershipConflict(caught);
+        await syncGroup().catch(() => setGroup(null));
+      } else setError(groupOrderErrorMessage(caught, "Unable to update group order."));
     } finally {
-      setWorking(false)
+      setWorking(false);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <Modal title="Group Order" onClose={onClose} width={620} showTitleIcon={false} className="group-order-dialog">
+      <Modal
+        title="Group Order"
+        onClose={onClose}
+        width={620}
+        showTitleIcon={false}
+        className="group-order-dialog"
+      >
         <p className="group-order-loading">Loading group order…</p>
       </Modal>
-    )
+    );
   }
 
   if (groupOrderId && !group) {
-    return <Modal title="Group Order" onClose={onClose} width={620} showTitleIcon={false} className="group-order-dialog">
-      <p role="alert">{error || "This group is unavailable or you no longer have leader access."}</p>
-      <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
-    </Modal>
+    return (
+      <Modal
+        title="Group Order"
+        onClose={onClose}
+        width={620}
+        showTitleIcon={false}
+        className="group-order-dialog"
+      >
+        <p role="alert">
+          {error || "This group is unavailable or you no longer have leader access."}
+        </p>
+        <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
+      </Modal>
+    );
   }
 
   return (
-    <Modal title="Group Order" onClose={onClose} width={680} showTitleIcon={false} className="group-order-dialog">
+    <Modal
+      title="Group Order"
+      onClose={onClose}
+      width={680}
+      showTitleIcon={false}
+      className="group-order-dialog"
+    >
       <div className="group-order-modal">
         {!group ? (
           <div className="group-order-entry">
@@ -218,8 +253,8 @@ export default function GroupOrderModal({
             {ordersClosed ? (
               <p className="group-order-status" role="status">
                 This batch closed
-                {batch.endsOn ? ` on ${formatBatchEndDate(batch.endsOn)}` : ""}. New
-                group orders can no longer be started or joined.
+                {batch.endsOn ? ` on ${formatBatchEndDate(batch.endsOn)}` : ""}. New group orders
+                can no longer be started or joined.
               </p>
             ) : joining ? (
               <div className="group-order-code-entry">
@@ -231,9 +266,7 @@ export default function GroupOrderModal({
                 />
                 <PrimaryBtn
                   disabled={working || code.trim().length !== 8}
-                  onClick={() =>
-                    run(async () => setGroup(await kargoApi.joinGroupOrder(code)))
-                  }
+                  onClick={() => run(async () => setGroup(await kargoApi.joinGroupOrder(code)))}
                 >
                   Join Group
                 </PrimaryBtn>
@@ -251,9 +284,7 @@ export default function GroupOrderModal({
                 >
                   Start a Group
                 </PrimaryBtn>
-                <SecondaryBtn onClick={() => setJoining(true)}>
-                  Join with Code
-                </SecondaryBtn>
+                <SecondaryBtn onClick={() => setJoining(true)}>Join with Code</SecondaryBtn>
               </div>
             )}
           </div>
@@ -266,18 +297,15 @@ export default function GroupOrderModal({
               </div>
               {group.isLeader && group.status === "forming" && !formationClosed && !readOnly && (
                 <div className="group-order-share-actions">
-                  <button
-                    type="button"
-                    onClick={() => navigator.clipboard.writeText(inviteUrl)}
-                  >
+                  <button type="button" onClick={() => navigator.clipboard.writeText(inviteUrl)}>
                     <Link2 size={14} aria-hidden="true" /> Copy link
                   </button>
                   <button
                     type="button"
                     onClick={() =>
                       run(async () => {
-                        const nextCode = await kargoApi.regenerateGroupCode(group.id)
-                        setGroup({ ...group, referralCode: nextCode })
+                        const nextCode = await kargoApi.regenerateGroupCode(group.id);
+                        setGroup({ ...group, referralCode: nextCode });
                       })
                     }
                   >
@@ -288,8 +316,16 @@ export default function GroupOrderModal({
             </header>
 
             <p className="group-order-status" role="status">
-              Formation deadline: <time dateTime={group.formationDeadline}>{formatFormationDeadline(group.formationDeadline)}</time>
-              {formationClosed && <span className="block">The formation deadline has passed. Checkout is closed and un-checked-out commitments no longer reserve stock.</span>}
+              Formation deadline:{" "}
+              <time dateTime={group.formationDeadline}>
+                {formatFormationDeadline(group.formationDeadline)}
+              </time>
+              {formationClosed && (
+                <span className="block">
+                  The formation deadline has passed. Checkout is closed and un-checked-out
+                  commitments no longer reserve stock.
+                </span>
+              )}
             </p>
 
             <section className="group-order-members">
@@ -302,20 +338,22 @@ export default function GroupOrderModal({
                   <div key={member.userId}>
                     <span>{member.name}</span>
                     <small>{member.role === "leader" ? "Leader" : "Member"}</small>
-                    {group.isLeader && member.role !== "leader" && group.status === "forming" && !formationClosed && !readOnly && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          run(async () =>
-                            setGroup(
-                              await kargoApi.removeGroupMember(group.id, member.userId),
-                            ),
-                          )
-                        }
-                      >
-                        Remove
-                      </button>
-                    )}
+                    {group.isLeader &&
+                      member.role !== "leader" &&
+                      group.status === "forming" &&
+                      !formationClosed &&
+                      !readOnly && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            run(async () =>
+                              setGroup(await kargoApi.removeGroupMember(group.id, member.userId)),
+                            )
+                          }
+                        >
+                          Remove
+                        </button>
+                      )}
                   </div>
                 ))}
               </div>
@@ -333,10 +371,10 @@ export default function GroupOrderModal({
                     className="group-order-commitment-line"
                   >
                     <span>{commitment.memberName}</span>
-                    <span>{commitment.productName} ×{commitment.quantity}</span>
-                    <strong>
-                      ₱{(commitment.unitPrice * commitment.quantity).toLocaleString()}
-                    </strong>
+                    <span>
+                      {commitment.productName} ×{commitment.quantity}
+                    </span>
+                    <strong>{formatMoney(commitment.unitPrice * commitment.quantity)}</strong>
                   </div>
                 ))}
               </section>
@@ -345,94 +383,124 @@ export default function GroupOrderModal({
             <section className="group-order-products">
               <div className="group-order-section-title">
                 <strong>Your commitments</strong>
-                <span>{formationClosed || group.status === "expired" ? "Commitments are retained for history; inventory is released." : "Inventory is reserved after saving."}</span>
+                <span>
+                  {formationClosed || group.status === "expired"
+                    ? "Commitments are retained for history; inventory is released."
+                    : "Inventory is reserved after saving."}
+                </span>
               </div>
               {batch.products.map((product) => {
-                const key = product.dbId ?? product.name
-                const ownSaved = group.commitments.find(commitment =>
-                  commitment.productId === product.dbId && commitment.userId === group.currentUserId)?.quantity ?? 0
-                const maximum = groupCommitmentMaximum(product, ownSaved)
-                const hintId = `group-quantity-hint-${encodeURIComponent(key)}`
-                const quantity = quantities[key] ?? 0
-                const valid = validGroupCommitmentQuantity(quantity, maximum)
+                const key = product.dbId ?? product.name;
+                const ownSaved =
+                  group.commitments.find(
+                    (commitment) =>
+                      commitment.productId === product.dbId &&
+                      commitment.userId === group.currentUserId,
+                  )?.quantity ?? 0;
+                const maximum = groupCommitmentMaximum(product, ownSaved);
+                const hintId = `group-quantity-hint-${encodeURIComponent(key)}`;
+                const quantity = quantities[key] ?? 0;
+                const valid = validGroupCommitmentQuantity(quantity, maximum);
                 return (
-                <div key={key} className="group-order-product-row">
-                  <div>
-                    <strong>{product.name}</strong>
-                    <span>
-                      ₱{product.price.toLocaleString()} / {product.sellingUnit === "box" ? "box" : "piece"}
-                    </span>
-                  <p id={hintId} className="mt-1 text-xs text-[var(--kargo-muted)]">
-                    {product.limitPerUser ? `Limit: ${product.limitPerUser} per buyer. ` : ""}
-                    {maximum > 0 ? `Available for your commitment: ${maximum}.` : "No quantity is currently available."}
-                  </p>
-                  </div>
-                  <input
-                    aria-label={`Quantity for ${product.name}`}
-                    aria-describedby={hintId}
-                    aria-invalid={!valid}
-                    type="number"
-                    min="0"
-                    step="1"
-                    max={Math.max(0, maximum)}
-                    value={quantity}
-                    disabled={readOnly || formationClosed || group.status !== "forming"}
-                    onChange={(event) =>
-                      setQuantities((current) => ({
-                        ...current,
-                        [product.dbId ?? product.name]: Math.max(0, Number(event.target.value) || 0),
-                      }))
-                    }
-                  />
-                  <SecondaryBtn
-                    size="sm"
-                    disabled={readOnly || formationClosed || working || group.status !== "forming" || !product.dbId || !valid}
-                    onClick={() =>
-                      run(async () => {
-                        if (!valid) { setError(`Choose a whole-number quantity between 0 and ${maximum}.`); return }
-                        setGroup(
-                          await kargoApi.setGroupCommitment(
-                            group.id,
-                            product.dbId!,
-                            quantity,
+                  <div key={key} className="group-order-product-row">
+                    <div>
+                      <strong>{product.name}</strong>
+                      <span>
+                        {formatMoney(product.price)} /{" "}
+                        {product.sellingUnit === "box" ? "box" : "piece"}
+                      </span>
+                      <p id={hintId} className="mt-1 text-xs text-[var(--kargo-muted)]">
+                        {product.limitPerUser ? `Limit: ${product.limitPerUser} per buyer. ` : ""}
+                        {maximum > 0
+                          ? `Available for your commitment: ${maximum}.`
+                          : "No quantity is currently available."}
+                      </p>
+                    </div>
+                    <input
+                      aria-label={`Quantity for ${product.name}`}
+                      aria-describedby={hintId}
+                      aria-invalid={!valid}
+                      type="number"
+                      min="0"
+                      step="1"
+                      max={Math.max(0, maximum)}
+                      value={quantity}
+                      disabled={readOnly || formationClosed || group.status !== "forming"}
+                      onChange={(event) =>
+                        setQuantities((current) => ({
+                          ...current,
+                          [product.dbId ?? product.name]: Math.max(
+                            0,
+                            Number(event.target.value) || 0,
                           ),
-                        )
-                      })
-                    }
-                  >
-                    Save
-                  </SecondaryBtn>
-                </div>
-              )})}
+                        }))
+                      }
+                    />
+                    <SecondaryBtn
+                      size="sm"
+                      disabled={
+                        readOnly ||
+                        formationClosed ||
+                        working ||
+                        group.status !== "forming" ||
+                        !product.dbId ||
+                        !valid
+                      }
+                      onClick={() =>
+                        run(async () => {
+                          if (!valid) {
+                            setError(`Choose a whole-number quantity between 0 and ${maximum}.`);
+                            return;
+                          }
+                          setGroup(
+                            await kargoApi.setGroupCommitment(group.id, product.dbId!, quantity),
+                          );
+                        })
+                      }
+                    >
+                      Save
+                    </SecondaryBtn>
+                  </div>
+                );
+              })}
             </section>
 
             <section className="group-order-summary">
-              <div><span>Regular subtotal</span><strong>₱{subtotal.toLocaleString()}</strong></div>
+              <div>
+                <span>Regular subtotal</span>
+                <strong>{formatMoney(subtotal)}</strong>
+              </div>
               {batch.groupDiscountType && (
                 <div>
                   <span>
                     {qualifiesForDiscount
                       ? "Group discount"
-                      : `Discount unlocks at ₱${(batch.groupDiscountMinSubtotal ?? 0).toLocaleString()}`}
+                      : `Discount unlocks at ${formatMoney(batch.groupDiscountMinSubtotal ?? 0)}`}
                   </span>
-                  <strong>−₱{projectedDiscount.toLocaleString()}</strong>
+                  <strong>−{formatMoney(projectedDiscount)}</strong>
                 </div>
               )}
               <div className="is-total">
                 <span>Projected total</span>
-                <strong>₱{(subtotal - projectedDiscount).toLocaleString()}</strong>
+                <strong>{formatMoney(subtotal - projectedDiscount)}</strong>
               </div>
             </section>
 
-            {group.isLeader && group.status === "forming" && !formationClosed && !readOnly && !checkoutOpen && (
-              <PrimaryBtn disabled={!canCheckout} onClick={() => setCheckoutOpen(true)}>
-                Checkout Group Order
-              </PrimaryBtn>
-            )}
+            {group.isLeader &&
+              group.status === "forming" &&
+              !formationClosed &&
+              !readOnly &&
+              !checkoutOpen && (
+                <PrimaryBtn disabled={!canCheckout} onClick={() => setCheckoutOpen(true)}>
+                  Checkout Group Order
+                </PrimaryBtn>
+              )}
 
             {checkoutOpen && !readOnly && !formationClosed && (
               <section className="group-order-checkout">
-                <div className="group-order-section-title"><strong>Leader checkout</strong></div>
+                <div className="group-order-section-title">
+                  <strong>Leader checkout</strong>
+                </div>
                 <div className="group-order-methods">
                   {methods.map((method) => (
                     <button
@@ -474,8 +542,7 @@ export default function GroupOrderModal({
                       !paymentMethod ||
                       !acknowledged ||
                       (shippingApplies &&
-                        (!acceptShipping ||
-                          (!(pin.lat != null && pin.lng != null) && !pin.url)))
+                        (!acceptShipping || (!(pin.lat != null && pin.lng != null) && !pin.url)))
                     }
                     onClick={() =>
                       run(async () => {
@@ -487,9 +554,9 @@ export default function GroupOrderModal({
                           pinUrl: pin.url,
                           pinAddress: pin.address,
                           acceptShipping,
-                        })
-                        setGroup(checkedOut)
-                        await onCheckoutComplete()
+                        });
+                        setGroup(checkedOut);
+                        await onCheckoutComplete();
                       })
                     }
                   >
@@ -519,8 +586,8 @@ export default function GroupOrderModal({
                 className="group-order-leave"
                 onClick={() =>
                   run(async () => {
-                    await kargoApi.leaveGroupOrder(group.id)
-                    setGroup(null)
+                    await kargoApi.leaveGroupOrder(group.id);
+                    setGroup(null);
                   })
                 }
               >
@@ -533,9 +600,15 @@ export default function GroupOrderModal({
         {group && group.status !== "forming" && onOpenClaims && (
           <SecondaryBtn onClick={onOpenClaims}>Open My Claims</SecondaryBtn>
         )}
-        {membershipConflict && <GroupMembershipNotice message={membershipConflict.message} status={group?.status} />}
-        {error && <p className="group-order-error" role="alert">{error}</p>}
+        {membershipConflict && (
+          <GroupMembershipNotice message={membershipConflict.message} status={group?.status} />
+        )}
+        {error && (
+          <p className="group-order-error" role="alert">
+            {error}
+          </p>
+        )}
       </div>
     </Modal>
-  )
+  );
 }

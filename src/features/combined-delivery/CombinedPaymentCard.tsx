@@ -8,6 +8,7 @@ import PrimaryBtn from "@/components/shared/PrimaryBtn";
 import ProductThumb from "@/components/shared/ProductThumb";
 import { PaymentSubmitModal } from "@/features/payments";
 import { kargoApi } from "@/services";
+import { formatMoney } from "@/lib/format";
 
 const statusLabels = {
   ready: "Awaiting payment",
@@ -86,11 +87,7 @@ export default function CombinedPaymentCard({
               Combined Delivery
             </div>
             <div className="claims-to-pay-combined-note">
-              <button
-                type="button"
-                disabled={actionsDisabled}
-                onClick={onDetails}
-              >
+              <button type="button" disabled={actionsDisabled} onClick={onDetails}>
                 View details
               </button>
             </div>
@@ -139,11 +136,11 @@ export default function CombinedPaymentCard({
                 <span className="claims-to-pay-combined-amount__total">
                   <span className="sr-only">Combined total </span>
                   {Number.isFinite(Number(account.total))
-                    ? `₱${Number(account.total).toLocaleString()}`
+                    ? `${formatMoney(Number(account.total))}`
                     : "Unavailable"}
                 </span>
                 <span className="pending-product-card__note">
-                  Includes ₱{Number(account.shipping_fee).toLocaleString()} shipping
+                  Includes {formatMoney(Number(account.shipping_fee))} shipping
                 </span>
               </span>
             </div>

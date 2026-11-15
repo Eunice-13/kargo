@@ -101,4 +101,5 @@ export const ADMIN_ACTION_LABELS: Record<string, string> = {
   accept_admin: "Accepted admin invitation",
   decline_admin: "Declined admin invitation",
   revoke_admin: "Revoked admin access",
+  reject_admin_signup: "Rejected admin signup",
 };

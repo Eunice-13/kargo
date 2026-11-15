@@ -8,6 +8,7 @@ import { rejectionDeadlineHasPassed } from "./verifyTypes";
 import { confirmPaymentCopy } from "./confirmPaymentWarning";
 import { printPaymentInvoice } from "./paymentInvoice";
 import { kargoApi } from "@/services";
+import { formatMoney } from "@/lib/format";
 
 function ReceiptFileIcon({ size = 14, className }: { size?: number; className?: string }) {
   return (
@@ -42,9 +43,11 @@ export default function ReviewSubmissionModal({
   onNotifyBuyer,
   onMarkPaid,
   sellerName = "My Shop",
+  sellerLogoUrl,
 }: {
   reviewTarget: VerifyItem;
   sellerName?: string;
+  sellerLogoUrl?: string | null;
   setReviewTarget: (v: VerifyItem | null) => void;
   setVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>>;
   setRejectTarget: (v: VerifyItem | null) => void;
@@ -139,7 +142,7 @@ export default function ReviewSubmissionModal({
                 fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
-              ₱{reviewTarget.amount.toLocaleString()}
+              {formatMoney(reviewTarget.amount)}
             </div>
           </div>
 
@@ -189,7 +192,7 @@ export default function ReviewSubmissionModal({
                       [
                         "Amount Paid",
                         reviewTarget.amountPaid
-                          ? `₱${Number(reviewTarget.amountPaid).toLocaleString()}`
+                          ? `${formatMoney(Number(reviewTarget.amountPaid))}`
                           : "—",
                       ] as [string, string],
                     ]),
@@ -289,7 +292,12 @@ export default function ReviewSubmissionModal({
                 borderBottom: "1px solid #F3F4F6",
               }}
             >
-              <span className="payment-review-receipt-label" style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>Receipt File</span>
+              <span
+                className="payment-review-receipt-label"
+                style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}
+              >
+                Receipt File
+              </span>
               <button
                 type="button"
                 className="payment-review-action-button"
@@ -372,7 +380,12 @@ export default function ReviewSubmissionModal({
               <div className="kargo-modal-actions">
                 {reviewTarget.status === "Verified" && (
                   <button
-                    onClick={() => printPaymentInvoice(reviewTarget, sellerName)}
+                    onClick={() =>
+                      printPaymentInvoice(reviewTarget, {
+                        shopName: sellerName,
+                        shopLogoUrl: sellerLogoUrl,
+                      })
+                    }
                     style={{
                       ...btnBase,
                       justifyContent: "center",

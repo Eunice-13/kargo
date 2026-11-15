@@ -77,6 +77,7 @@ import {
   claimIsPayable,
   deadlineHasPassed,
 } from "@/features/claims/claimExpiry";
+import { sellerOrderReceivedStatus } from "@/features/claims/claimPaymentState";
 import { batchOrdersClosed } from "@/features/batches/batchAvailability";
 import {
   claimShortfall,
@@ -91,6 +92,7 @@ import {
   getToPayTotal,
   isOpenPaymentStatus,
 } from "@/features/claims/claimListRows";
+import { formatMoney } from "@/lib/format";
 
 export default function Dashboard({
   batches,
@@ -498,13 +500,36 @@ export default function Dashboard({
     ? urgentPhonePreview(collapsedSellerOrders)
     : collapsedSellerOrders.slice(0, RECENT_CLAIMS_PREVIEW);
 
-  // Only submitted proofs await seller verification. `payment_pending` means
+  // Keep this metric in sync with Orders Received. That screen derives the
+  // seller-facing status from the matching payment row and shows only the
+  // primary order for combined deliveries.
+  const paymentForSellerOrder = (claim: (typeof mySellerOrders)[number]) =>
+    payHistory
+      .filter(
+        (payment) =>
+          String(payment.orderId) === String(claim.id) ||
+          (payment.reservationIds?.includes(String(claim.id)) ?? false),
+      )
+      .sort((left, right) => {
+        const leftTime = left.submittedAt
+          ? new Date(left.submittedAt).getTime()
+          : Number(left.id) || 0;
+        const rightTime = right.submittedAt
+          ? new Date(right.submittedAt).getTime()
+          : Number(right.id) || 0;
+        return rightTime - leftTime;
+      })[0];
 
-  // the buyer has not paid yet, so it must not inflate this seller metric.
+  const paymentsToVerify = mySellerOrders.filter((claim) => {
+    const payment = paymentForSellerOrder(claim);
+    const isSecondaryCombinedOrder =
+      payment?.combinedDeliveryGroupId && String(payment.orderId) !== String(claim.id);
 
-  const paymentsToVerify = mySellerOrders.filter(
-    (claim) => claim.status === "Awaiting Verification",
-  );
+    return (
+      !isSecondaryCombinedOrder &&
+      sellerOrderReceivedStatus(claim.status, payment?.status) === "Awaiting Verification"
+    );
+  });
 
   // Match the seller's Orders Received > Pending filter, which is based on
 
@@ -562,7 +587,7 @@ export default function Dashboard({
     {
       label: "Pending Payment",
 
-      value: combinedDelivery.ready ? `₱${pendingTotal.toLocaleString()}` : "—",
+      value: combinedDelivery.ready ? `${formatMoney(pendingTotal)}` : "—",
 
       icon: CreditCard,
 
@@ -912,7 +937,7 @@ export default function Dashboard({
                             <span title={buyerName}>{buyerName}</span>
                           </div>
                         </td>
-                        <td className="seller-order-amount">₱{claim.amount.toLocaleString()}</td>
+                        <td className="seller-order-amount">{formatMoney(claim.amount)}</td>
                         <td className="seller-recent-orders__status-cell">
                           <div className="seller-recent-orders__status-group">
                             <StatusBadge
@@ -982,7 +1007,7 @@ export default function Dashboard({
 
                   label: "Payments to Verify",
 
-                  count: pendingReceivedOrders.length,
+                  count: paymentsToVerify.length,
 
                   tab: "My Claims" as Tab,
                 },
@@ -1247,7 +1272,7 @@ export default function Dashboard({
                         fontFamily: "'Josefin Sans',sans-serif",
                       }}
                     >
-                      ₱{c.amount.toLocaleString()}
+                      {formatMoney(c.amount)}
                     </td>
                     <td className="py-2.5 pr-3">
                       <StatusBadge status={displayClaimStatus(c.status)} />
@@ -1456,7 +1481,7 @@ export default function Dashboard({
                         </div>
                       </td>
                       <td>
-                        <span className="bdash-cell-amount">₱{c.amount.toLocaleString()}</span>
+                        <span className="bdash-cell-amount">{formatMoney(c.amount)}</span>
                       </td>
                       <td>
                         <div className="bdash-status-group">
@@ -1495,7 +1520,7 @@ export default function Dashboard({
                   <div className="bdash-deadline__seller">{d.seller}</div>
                 </div>
                 <div>
-                  <div className="bdash-deadline__amount">₱{d.amount.toLocaleString()}</div>
+                  <div className="bdash-deadline__amount">{formatMoney(d.amount)}</div>
                   <div className="bdash-deadline__time">
                     <Countdown hours={d.hours} id={d.id} expiresAt={d.expiresAt} />
                   </div>

@@ -143,6 +143,7 @@ export default function App() {
   }, [sharedBatchId]);
 
   const [stage, setStage] = useState<AppStage>(anyPreview ? "app" : "login");
+  const [signupRole, setSignupRole] = useState<"Buyer" | "Admin">("Buyer");
 
   // A recovery link can land either on the reset path or, when the redirect is
   // not allow-listed, on the root with the token in the fragment. Both are read
@@ -732,15 +733,29 @@ export default function App() {
       {stage === "signup" && (
         <div className="pu">
           <SignUp
-            onLogin={() => setStage("login")}
+            onLogin={() => {
+              setSignupRole("Buyer");
+              setStage("login");
+            }}
             onSuccess={handleSignupSuccess}
             fromBatchLink={viaBatchLink}
+            initialRole={signupRole}
           />
         </div>
       )}
       {stage === "login" && (
         <div className="pl">
-          <Login onSignUp={() => setStage("signup")} onSuccess={handleLoginSuccess} />
+          <Login
+            onSignUp={() => {
+              setSignupRole("Buyer");
+              setStage("signup");
+            }}
+            onAdminSignUp={() => {
+              setSignupRole("Admin");
+              setStage("signup");
+            }}
+            onSuccess={handleLoginSuccess}
+          />
         </div>
       )}
       {viaBatchLink && stage !== "app" && !booting && !originalPreview && showReservationGate && (
@@ -857,13 +872,13 @@ export default function App() {
                   setInviteDismissedFor(null);
                   // The RPC already committed, so clear the pending flag locally
                   // and let the refresh reconcile the rest (role, tabs, data).
-                   setUser((current) => ({
-                     ...current,
-                     adminEnabled: accepted,
-                     adminInvitePending: false,
-                   }));
-                   if (accepted) setTab("Dashboard");
-                   if (isSupabaseConfigured && !anyPreview) {
+                  setUser((current) => ({
+                    ...current,
+                    adminEnabled: accepted,
+                    adminInvitePending: false,
+                  }));
+                  if (accepted) setTab("Dashboard");
+                  if (isSupabaseConfigured && !anyPreview) {
                     void refreshData().catch(() => {});
                   }
                 }}

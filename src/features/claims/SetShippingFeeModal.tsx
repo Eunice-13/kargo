@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useState } from "react";
 
-import type { ClaimRow } from "@/types"
+import type { ClaimRow } from "@/types";
 import {
   Countdown,
   LocationPinPicker,
@@ -8,7 +8,8 @@ import {
   PrimaryBtn,
   SecondaryBtn,
   SummaryBlock,
-} from "@/components/shared"
+} from "@/components/shared";
+import { formatMoney } from "@/lib/format";
 
 export default function SetShippingFeeModal({
   claim,
@@ -17,18 +18,17 @@ export default function SetShippingFeeModal({
   onDecline,
   onClose,
 }: {
-  claim: ClaimRow
-  onSave: (fee: number) => void | Promise<void>
-  onRequestCorrection: () => void
-  onDecline: () => void
-  onClose: () => void
+  claim: ClaimRow;
+  onSave: (fee: number) => void | Promise<void>;
+  onRequestCorrection: () => void;
+  onDecline: () => void;
+  onClose: () => void;
 }) {
-  const [fee, setFee] = useState(String(claim.shippingFee ?? ""))
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const numericFee = Number(fee)
-  const valid =
-    fee.trim() !== "" && Number.isFinite(numericFee) && numericFee >= 0
+  const [fee, setFee] = useState(String(claim.shippingFee ?? ""));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const numericFee = Number(fee);
+  const valid = fee.trim() !== "" && Number.isFinite(numericFee) && numericFee >= 0;
 
   return (
     <Modal
@@ -43,7 +43,7 @@ export default function SetShippingFeeModal({
           <SummaryBlock
             title={`${claim.product} ×${claim.qty}`}
             product={claim.product}
-            details={[`Item amount: ₱${claim.amount.toLocaleString()}`]}
+            details={[`Item amount: ${formatMoney(claim.amount)}`]}
           />
           <div className="mt-2">
             <Countdown hours={claim.hours} expiresAt={claim.expiresAt} paused />
@@ -72,14 +72,11 @@ export default function SetShippingFeeModal({
         </label>
         {valid && (
           <p className="text-sm text-gray-600">
-            New total:{" "}
-            <strong>₱{(claim.amount + numericFee).toLocaleString()}</strong>
+            New total: <strong>{formatMoney(claim.amount + numericFee)}</strong>
           </p>
         )}
         <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
-          <SecondaryBtn onClick={onRequestCorrection}>
-            Request location correction
-          </SecondaryBtn>
+          <SecondaryBtn onClick={onRequestCorrection}>Request location correction</SecondaryBtn>
           <SecondaryBtn onClick={onDecline}>Decline order</SecondaryBtn>
         </div>
         <div className="kargo-modal-actions">
@@ -90,15 +87,15 @@ export default function SetShippingFeeModal({
             disabled={!valid || saving}
             loading={saving}
             onClick={async () => {
-              setSaving(true)
-              setError(null)
+              setSaving(true);
+              setError(null);
               try {
-                await onSave(numericFee)
+                await onSave(numericFee);
               } catch (err) {
                 // Supabase/PostgREST errors are plain objects ({ message, code,
                 // details, hint }), not Error instances, so read the message off
                 // whatever shape we get. Log the raw error for the Postgres code.
-                console.error("Set shipping fee failed:", err)
+                console.error("Set shipping fee failed:", err);
                 const parts =
                   err && typeof err === "object"
                     ? [
@@ -106,17 +103,16 @@ export default function SetShippingFeeModal({
                         (err as { details?: unknown }).details,
                         (err as { hint?: unknown }).hint,
                       ].filter(
-                        (part): part is string =>
-                          typeof part === "string" && part.trim() !== "",
+                        (part): part is string => typeof part === "string" && part.trim() !== "",
                       )
-                    : []
+                    : [];
                 setError(
                   parts.length > 0
                     ? parts.join(" — ")
                     : "Could not save the shipping fee. Please try again.",
-                )
+                );
               } finally {
-                setSaving(false)
+                setSaving(false);
               }
             }}
           >
@@ -130,5 +126,5 @@ export default function SetShippingFeeModal({
         )}
       </div>
     </Modal>
-  )
+  );
 }

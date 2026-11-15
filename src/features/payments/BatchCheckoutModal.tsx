@@ -1,111 +1,126 @@
-import { useEffect, useMemo, useState } from "react"
-import type { ToPayRow } from "@/types"
-import { Modal, PrimaryBtn, ProductThumb, SecondaryBtn } from "@/components/shared"
-import PaymentSubmitModal from "./PaymentSubmitModal"
-import type { PaymentSubmissionDetails } from "./PaymentSubmitModal"
-import { deadlineHasPassed } from "@/features/claims/claimExpiry"
+import { useEffect, useMemo, useState } from "react";
+import type { ToPayRow } from "@/types";
+import { Modal, PrimaryBtn, ProductThumb, SecondaryBtn } from "@/components/shared";
+import PaymentSubmitModal from "./PaymentSubmitModal";
+import type { PaymentSubmissionDetails } from "./PaymentSubmitModal";
+import { deadlineHasPassed } from "@/features/claims/claimExpiry";
+import { formatMoney } from "@/lib/format";
 
 export default function BatchCheckoutModal({
-    items,
-    contactPrefill,
-    onSubmit,
-    onClose,
+  items,
+  contactPrefill,
+  onSubmit,
+  onClose,
 }: {
-    items: ToPayRow[]
-    contactPrefill?: string
-    onSubmit: (
-        item: ToPayRow,
-        method: string,
-        refNo: string,
-        receipt: File | undefined,
-        details: PaymentSubmissionDetails,
-    ) => Promise<boolean | undefined>
-    onClose: () => void
+  items: ToPayRow[];
+  contactPrefill?: string;
+  onSubmit: (
+    item: ToPayRow,
+    method: string,
+    refNo: string,
+    receipt: File | undefined,
+    details: PaymentSubmissionDetails,
+  ) => Promise<boolean | undefined>;
+  onClose: () => void;
 }) {
-    const [payTarget, setPayTarget] = useState<ToPayRow | null>(null)
-    const payableItems = items.filter((item) => !deadlineHasPassed(item))
-    useEffect(() => {
-        if (payTarget && (
-            deadlineHasPassed(payTarget) ||
-            !items.some((item) => item.id === payTarget.id)
-        )) setPayTarget(null)
-    }, [payTarget, items])
-    const groups = useMemo(() => {
-        const grouped = new Map<string, ToPayRow[]>()
-        for (const item of payableItems) {
-            grouped.set(item.seller, [...(grouped.get(item.seller) ?? []), item])
-        }
-        return [...grouped.entries()]
-    }, [payableItems])
-
-    return (
-        <>
-            <Modal
-              title="Batch Checkout"
-              onClose={onClose}
-              width={680}
-              showTitleIcon={false}
-              className="batch-checkout-modal"
-            >
-                <div className="space-y-4">
-                    <div style={{ fontSize: 12, color: "#6B7280" }}>
-                        Payments are separated by seller so each proof is sent against the correct account.
-                    </div>
-                    {groups.length === 0 && (
-                        <p role="status" style={{ color: "#6B7280", fontSize: 13 }}>
-                            No claims are currently awaiting payment.
-                        </p>
-                    )}
-                    {groups.map(([seller, sellerItems]) => {
-                        const subtotal = sellerItems.reduce((sum, item) => sum + item.amount, 0)
-                        return (
-                            <section key={seller} style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: 16 }}>
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{seller}</div>
-                                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
-                                            {sellerItems.length} item{sellerItems.length === 1 ? "" : "s"}
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div style={{ fontSize: 11, color: "#9CA3AF" }}>Subtotal</div>
-                                        <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>
-                                            ₱{subtotal.toLocaleString()}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="mt-3 space-y-2">
-                                    {sellerItems.map((item) => (
-                                        <div key={item.id} className="flex items-center gap-3" style={{ background: "#F9FAFB", borderRadius: 7, padding: "8px 10px" }}>
-                                            <ProductThumb name={item.product} />
-                                            <div className="flex-1">
-                                                <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{item.product}</div>
-                                                <div style={{ fontSize: 11, color: "#6B7280" }}>₱{item.amount.toLocaleString()}</div>
-                                            </div>
-                                            <PrimaryBtn size="sm" onClick={() => setPayTarget(item)}>Submit Proof</PrimaryBtn>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )
-                    })}
-                    <div className="flex justify-end">
-                        <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
-                    </div>
-                </div>
-            </Modal>
-            {payTarget && (
-                <PaymentSubmitModal
-                    item={payTarget}
-                    contactPrefill={contactPrefill}
-                    onConfirm={async (method, refNo, receipt, paymentDetails) => {
-                        const submitted = await onSubmit(payTarget, method, refNo, receipt, paymentDetails)
-                        if (submitted) setPayTarget(null)
-                        return submitted
-                    }}
-                    onClose={() => setPayTarget(null)}
-                />
-            )}
-        </>
+  const [payTarget, setPayTarget] = useState<ToPayRow | null>(null);
+  const payableItems = items.filter((item) => !deadlineHasPassed(item));
+  useEffect(() => {
+    if (
+      payTarget &&
+      (deadlineHasPassed(payTarget) || !items.some((item) => item.id === payTarget.id))
     )
+      setPayTarget(null);
+  }, [payTarget, items]);
+  const groups = useMemo(() => {
+    const grouped = new Map<string, ToPayRow[]>();
+    for (const item of payableItems) {
+      grouped.set(item.seller, [...(grouped.get(item.seller) ?? []), item]);
+    }
+    return [...grouped.entries()];
+  }, [payableItems]);
+
+  return (
+    <>
+      <Modal
+        title="Batch Checkout"
+        onClose={onClose}
+        width={680}
+        showTitleIcon={false}
+        className="batch-checkout-modal"
+      >
+        <div className="space-y-4">
+          <div style={{ fontSize: 12, color: "#6B7280" }}>
+            Payments are separated by seller so each proof is sent against the correct account.
+          </div>
+          {groups.length === 0 && (
+            <p role="status" style={{ color: "#6B7280", fontSize: 13 }}>
+              No claims are currently awaiting payment.
+            </p>
+          )}
+          {groups.map(([seller, sellerItems]) => {
+            const subtotal = sellerItems.reduce((sum, item) => sum + item.amount, 0);
+            return (
+              <section
+                key={seller}
+                style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: 16 }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{seller}</div>
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                      {sellerItems.length} item{sellerItems.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div style={{ fontSize: 11, color: "#9CA3AF" }}>Subtotal</div>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>
+                      {formatMoney(subtotal)}
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {sellerItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3"
+                      style={{ background: "#F9FAFB", borderRadius: 7, padding: "8px 10px" }}
+                    >
+                      <ProductThumb name={item.product} />
+                      <div className="flex-1">
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>
+                          {item.product}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280" }}>
+                          {formatMoney(item.amount)}
+                        </div>
+                      </div>
+                      <PrimaryBtn size="sm" onClick={() => setPayTarget(item)}>
+                        Submit Proof
+                      </PrimaryBtn>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+          <div className="flex justify-end">
+            <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
+          </div>
+        </div>
+      </Modal>
+      {payTarget && (
+        <PaymentSubmitModal
+          item={payTarget}
+          contactPrefill={contactPrefill}
+          onConfirm={async (method, refNo, receipt, paymentDetails) => {
+            const submitted = await onSubmit(payTarget, method, refNo, receipt, paymentDetails);
+            if (submitted) setPayTarget(null);
+            return submitted;
+          }}
+          onClose={() => setPayTarget(null)}
+        />
+      )}
+    </>
+  );
 }

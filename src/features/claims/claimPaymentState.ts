@@ -1,78 +1,67 @@
-import type { ClaimRow, ClaimStatus, PayHistRow } from "@/types"
+import type { ClaimRow, ClaimStatus, PayHistRow } from "@/types";
 
 export type SellerOrderReceivedStatus =
   | "Pending"
   | "Awaiting Verification"
   | "Verified"
   | "Expired"
-  | "Cancelled"
+  | "Cancelled";
 
-type SellerPaymentReviewStatus = "Pending" | "Verified" | "Rejected"
+type SellerPaymentReviewStatus = "Pending" | "Verified" | "Rejected";
 
 // An insufficient payment is still an unpaid balance: every surface shows the
 // ordinary Pending badge plus a separate "Insufficient" tag and shortfall.
 export function displayClaimStatus(status: ClaimStatus): ClaimStatus {
-  return status === "Insufficient Payment" ? "Pending" : status
+  return status === "Insufficient Payment" ? "Pending" : status;
 }
 
 export function claimShortfall(claim: Pick<ClaimRow, "shortfallAmount">) {
-  return claim.shortfallAmount && claim.shortfallAmount > 0
-    ? claim.shortfallAmount
-    : undefined
+  return claim.shortfallAmount && claim.shortfallAmount > 0 ? claim.shortfallAmount : undefined;
 }
 
 // What the buyer still owes. An insufficient payment leaves only its stored
 // shortfall payable; otherwise the full order amount is due.
-export function claimAmountDue(
-  claim: Pick<ClaimRow, "amount" | "shortfallAmount">,
-) {
-  return claimShortfall(claim) ?? claim.amount
+export function claimAmountDue(claim: Pick<ClaimRow, "amount" | "shortfallAmount">) {
+  return claimShortfall(claim) ?? claim.amount;
 }
 
 export function sellerOrderReceivedStatus(
   claimStatus: ClaimStatus,
-  paymentStatus?: SellerPaymentReviewStatus,
+  paymentStatus?: SellerPaymentReviewStatus | string,
 ): SellerOrderReceivedStatus {
   // The order lifecycle is canonical. A historical payment decision must not
   // reopen or relabel an order that has already expired or been cancelled.
   if (claimStatus === "Expired" || claimStatus === "Cancelled") {
-    return claimStatus
+    return claimStatus;
   }
-  if (claimStatus === "Paid and Reserved") return "Verified"
+  if (claimStatus === "Paid and Reserved") return "Verified";
 
   // Insufficient payment: the seller accepted a partial amount. The order is
   // NOT fully paid, so show "Pending" even though the payment row is "Verified".
-  if (claimStatus === "Insufficient Payment") return "Pending"
+  if (claimStatus === "Insufficient Payment") return "Pending";
 
-  if (paymentStatus === "Verified") return "Verified"
-  if (paymentStatus === "Pending") return "Awaiting Verification"
-  if (paymentStatus === "Rejected") return "Pending"
+  if (paymentStatus === "Verified") return "Verified";
+  if (paymentStatus === "Pending") return "Awaiting Verification";
+  if (paymentStatus === "Rejected") return "Pending";
 
-  if (claimStatus === "Awaiting Verification") return "Awaiting Verification"
-  return "Pending"
+  if (claimStatus === "Awaiting Verification") return "Awaiting Verification";
+  return "Pending";
 }
 
 function matchesOrder(payment: PayHistRow, claim: ClaimRow) {
   return payment.orderId
     ? String(payment.orderId) === String(claim.id)
-    : payment.product === claim.product && payment.batch === claim.batch
+    : payment.product === claim.product && payment.batch === claim.batch;
 }
 
-export function latestClaimPayment(
-  claim: ClaimRow,
-  payments: PayHistRow[],
-) {
+export function latestClaimPayment(claim: ClaimRow, payments: PayHistRow[]) {
   return payments
     .filter((payment) => matchesOrder(payment, claim))
     .sort((left, right) => {
-      const leftTime = left.submittedAt
-        ? new Date(left.submittedAt).getTime()
-        : 0
-      const rightTime = right.submittedAt
-        ? new Date(right.submittedAt).getTime()
-        : 0
-      return rightTime - leftTime
-    })[0]
+      const leftTime = left.submittedAt ? new Date(left.submittedAt).getTime() : 0;
+      const rightTime = right.submittedAt ? new Date(right.submittedAt).getTime() : 0;
+      return rightTime - leftTime;
+    })[0];
 }
 
 /** Reconcile a stale awaiting-verification claim with its persisted rejection. */
@@ -81,15 +70,15 @@ export function reconcileRejectedClaim(
   payments: PayHistRow[],
   now = Date.now(),
 ): ClaimRow {
-  if (claim.status !== "Awaiting Verification") return claim
+  if (claim.status !== "Awaiting Verification") return claim;
 
-  const latestPayment = latestClaimPayment(claim, payments)
-  if (latestPayment?.status !== "Rejected") return claim
+  const latestPayment = latestClaimPayment(claim, payments);
+  if (latestPayment?.status !== "Rejected") return claim;
 
-  const expiresAt = latestPayment.rejectionDeadline ?? claim.expiresAt
-  const expires = expiresAt ? new Date(expiresAt).getTime() : Number.NaN
+  const expiresAt = latestPayment.rejectionDeadline ?? claim.expiresAt;
+  const expires = expiresAt ? new Date(expiresAt).getTime() : Number.NaN;
   if (Number.isFinite(expires) && expires <= now) {
-    return { ...claim, status: "Expired", expiresAt, hours: 0 }
+    return { ...claim, status: "Expired", expiresAt, hours: 0 };
   }
 
   return {
@@ -99,5 +88,5 @@ export function reconcileRejectedClaim(
     hours: Number.isFinite(expires)
       ? Math.max(1, Math.ceil((expires - now) / 3_600_000))
       : claim.hours,
-  }
+  };
 }

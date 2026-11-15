@@ -300,6 +300,15 @@ export type AdminPaymentFilters = {
 
 // ─── Phase 4: Team + Audit ──────────────────────────────────────────────────
 
+export type AdminSignupRequest = {
+  id: string;
+  userId: string;
+  displayName: string;
+  username: string | null;
+  email: string | null;
+  requestedAt: string;
+};
+
 export type AdminTeamMember = {
   id: string;
   name: string;

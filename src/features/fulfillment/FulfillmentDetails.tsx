@@ -7,6 +7,7 @@ import {
 } from "@/constants/fulfillmentTransitions";
 import { Modal, PrimaryBtn, SecondaryBtn, StageProgress, SummaryBlock } from "@/components/shared";
 import TrackingDetailsModal, { type TrackingDetailsInput } from "./TrackingDetailsModal";
+import { formatMoney } from "@/lib/format";
 
 export default function FulfillmentDetails({
   order,
@@ -34,7 +35,7 @@ export default function FulfillmentDetails({
       <SummaryBlock
         title={order.product}
         product={order.product}
-        details={[`Buyer: ${order.buyer} · ×${order.qty}`, `₱${order.amount.toLocaleString()}`]}
+        details={[`Buyer: ${order.buyer} · ×${order.qty}`, `${formatMoney(order.amount)}`]}
       />
       <StageProgress stages={SELLER_COLUMNS} current={order.col} compact />
       <label htmlFor={selectId} className="sr-only">

@@ -23,10 +23,11 @@ import { AdminErrorState } from "./components/AdminStates";
 import AdminOrderDetailModal from "./components/AdminOrderDetailModal";
 import AdminPaymentDetailModal from "./components/AdminPaymentDetailModal";
 import AdminCombinedPaymentModal from "./components/AdminCombinedPaymentModal";
+import { formatMoney } from "@/lib/format";
 
 type Section = "Orders" | "Payments" | "Combined";
 const PAGE = 25;
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+const peso = (n: number) => `${formatMoney(n)}`;
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 

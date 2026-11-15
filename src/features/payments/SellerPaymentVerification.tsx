@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react"
-import type React from "react"
+import { useEffect, useRef, useState } from "react";
+import type React from "react";
 import {
   Card,
   Avatar,
@@ -10,56 +10,60 @@ import {
   PaymentIcon,
   StatusBadge,
   recordKeys,
-} from "@/components/shared"
-import { ChevronDown, Pencil, Plus, Search, Trash2, Upload } from "lucide-react"
-import { isSupabaseConfigured, supabase } from "@/lib/supabase"
-import { kargoApi, errorMessage } from "@/services"
-import { verificationDisplayStatus, type VerifyItem } from "./verifyTypes"
-import ReviewSubmissionModal from "./ReviewSubmissionModal"
-import InsufficientPaymentModal from "./InsufficientPaymentModal"
-import RejectPaymentModal from "./RejectPaymentModal"
-import PaymentHistoryDateSort from "./PaymentHistoryDateSort"
-import type { SellerPaymentMethod } from "@/services"
+} from "@/components/shared";
+import { ChevronDown, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { kargoApi, errorMessage } from "@/services";
+import { verificationDisplayStatus, type VerifyItem } from "./verifyTypes";
+import QrUploadField from "./QrUploadField";
+import ReviewSubmissionModal from "./ReviewSubmissionModal";
+import InsufficientPaymentModal from "./InsufficientPaymentModal";
+import RejectPaymentModal from "./RejectPaymentModal";
+import PaymentHistoryDateSort from "./PaymentHistoryDateSort";
+import type { SellerPaymentMethod } from "@/services";
+import { formatMoney } from "@/lib/format";
 
-const LOCAL_PAYMENT_METHODS_KEY = "kargo.localSellerPaymentMethods"
+const LOCAL_PAYMENT_METHODS_KEY = "kargo.localSellerPaymentMethods";
 
 function readLocalPaymentMethods(): SellerPaymentMethod[] {
   try {
-    const value = localStorage.getItem(LOCAL_PAYMENT_METHODS_KEY)
-    return value ? (JSON.parse(value) as SellerPaymentMethod[]) : []
+    const value = localStorage.getItem(LOCAL_PAYMENT_METHODS_KEY);
+    return value ? (JSON.parse(value) as SellerPaymentMethod[]) : [];
   } catch {
-    return []
+    return [];
   }
 }
 
 function writeLocalPaymentMethods(methods: SellerPaymentMethod[]) {
-  localStorage.setItem(LOCAL_PAYMENT_METHODS_KEY, JSON.stringify(methods))
+  localStorage.setItem(LOCAL_PAYMENT_METHODS_KEY, JSON.stringify(methods));
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = () =>
       typeof reader.result === "string"
         ? resolve(reader.result)
-        : reject(new Error("Unable to read QR image."))
-    reader.onerror = () => reject(new Error("Unable to read QR image."))
-    reader.readAsDataURL(file)
-  })
+        : reject(new Error("Unable to read QR image."));
+    reader.onerror = () => reject(new Error("Unable to read QR image."));
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function SellerPaymentVerification({
   view = "history",
   refreshData,
   sellerName,
+  sellerLogoUrl,
 }: {
-  view?: "pending" | "history"
-  refreshData?: () => Promise<void>
-  sellerName?: string
+  view?: "pending" | "history";
+  refreshData?: () => Promise<void>;
+  sellerName?: string;
+  sellerLogoUrl?: string | null;
 }) {
   const localPaymentMode =
     !isSupabaseConfigured ||
-    new URLSearchParams(window.location.search).get("preview") === "original"
+    new URLSearchParams(window.location.search).get("preview") === "original";
 
   const VERIFY_SEED: VerifyItem[] = [
     {
@@ -107,100 +111,92 @@ export default function SellerPaymentVerification({
       amountPaid: "480",
       contact: "https://facebook.com/carla.reyes",
     },
-  ]
+  ];
   const [verifyItems, setVerifyItems] = useState<VerifyItem[]>(
     isSupabaseConfigured ? [] : VERIFY_SEED,
-  )
-  const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null)
-  const [rejectTarget, setRejectTarget] = useState<VerifyItem | null>(null)
-  const [rejectReason, setRejectReason] = useState("")
-  const [rejectCustom, setRejectCustom] = useState("")
-  const [insuffTarget, setInsuffTarget] = useState<VerifyItem | null>(null)
-  const [insuffAmtPaid, setInsuffAmtPaid] = useState("")
-  const [paymentMethods, setPaymentMethods] = useState<SellerPaymentMethod[]>([])
-  const [methodEditor, setMethodEditor] = useState<SellerPaymentMethod | "new" | null>(null)
-  const [methodType, setMethodType] = useState("GCash")
-  const [methodName, setMethodName] = useState("")
-  const [methodNumber, setMethodNumber] = useState("")
-  const [methodQr, setMethodQr] = useState<File | undefined>()
-  const [savingMethod, setSavingMethod] = useState(false)
-  const [historySearch, setHistorySearch] = useState("")
-  const [historyDateOrder, setHistoryDateOrder] = useState<"newest" | "oldest">("newest")
+  );
+  const [reviewTarget, setReviewTarget] = useState<VerifyItem | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<VerifyItem | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectCustom, setRejectCustom] = useState("");
+  const [insuffTarget, setInsuffTarget] = useState<VerifyItem | null>(null);
+  const [insuffAmtPaid, setInsuffAmtPaid] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState<SellerPaymentMethod[]>([]);
+  const [methodEditor, setMethodEditor] = useState<SellerPaymentMethod | "new" | null>(null);
+  const [methodType, setMethodType] = useState("GCash");
+  const [methodName, setMethodName] = useState("");
+  const [methodNumber, setMethodNumber] = useState("");
+  const [methodQr, setMethodQr] = useState<File | undefined>();
+  const [savingMethod, setSavingMethod] = useState(false);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyDateOrder, setHistoryDateOrder] = useState<"newest" | "oldest">("newest");
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return
+    if (!isSupabaseConfigured) return;
     kargoApi
       .loadSellerPaymentSubmissions()
       .then(setVerifyItems)
-      .catch((error) =>
-        alert(
-          error instanceof Error ? error.message : "Unable to load payments.",
-        ),
-      )
-  }, [])
+      .catch((error) => alert(error instanceof Error ? error.message : "Unable to load payments."));
+  }, []);
 
   const reloadPaymentMethods = async () => {
     if (localPaymentMode) {
-      setPaymentMethods(readLocalPaymentMethods())
-      return
+      setPaymentMethods(readLocalPaymentMethods());
+      return;
     }
-    setPaymentMethods(await kargoApi.loadOwnPaymentMethods())
-  }
+    setPaymentMethods(await kargoApi.loadOwnPaymentMethods());
+  };
 
   useEffect(() => {
-    if (view !== "history") return
-    reloadPaymentMethods()
-      .catch((error) =>
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Unable to load configured payment methods.",
-        ),
-      )
-  }, [view, localPaymentMode])
+    if (view !== "history") return;
+    reloadPaymentMethods().catch((error) =>
+      alert(error instanceof Error ? error.message : "Unable to load configured payment methods."),
+    );
+  }, [view, localPaymentMode]);
 
   const openMethodEditor = (method?: SellerPaymentMethod) => {
-    setMethodEditor(method ?? "new")
-    setMethodType(method?.methodType ?? "GCash")
-    setMethodName(method?.accountName ?? "")
-    setMethodNumber(method?.accountNumber ?? "")
-    setMethodQr(undefined)
-  }
+    setMethodEditor(method ?? "new");
+    setMethodType(method?.methodType ?? "GCash");
+    setMethodName(method?.accountName ?? "");
+    setMethodNumber(method?.accountNumber ?? "");
+    setMethodQr(undefined);
+  };
 
   const savePaymentMethod = async () => {
-    if (!methodEditor) return
+    if (!methodEditor) return;
     if (!methodName.trim()) {
-      alert("Account name is required.")
-      return
+      alert("Account name is required.");
+      return;
     }
     if (!methodNumber.trim()) {
-      alert("Account number / instructions are required.")
-      return
+      alert("Account number / instructions are required.");
+      return;
     }
-    setSavingMethod(true)
+    setSavingMethod(true);
     try {
       if (localPaymentMode) {
-        const existing = readLocalPaymentMethods()
-        const qrUrl = methodQr ? await readFileAsDataUrl(methodQr) : undefined
+        const existing = readLocalPaymentMethods();
+        const qrUrl = methodQr ? await readFileAsDataUrl(methodQr) : undefined;
         const nextMethod: SellerPaymentMethod = {
           id: methodEditor === "new" ? `local-${crypto.randomUUID()}` : methodEditor.id,
           methodType,
           accountName: methodName.trim() || null,
           accountNumber: methodNumber.trim() || null,
           qrUrl: qrUrl ?? (methodEditor === "new" ? undefined : methodEditor.qrUrl),
-        }
-        const next = methodEditor === "new"
-          ? [...existing, nextMethod]
-          : existing.map((method) => method.id === nextMethod.id ? nextMethod : method)
-        writeLocalPaymentMethods(next)
-        setPaymentMethods(next)
+        };
+        const next =
+          methodEditor === "new"
+            ? [...existing, nextMethod]
+            : existing.map((method) => (method.id === nextMethod.id ? nextMethod : method));
+        writeLocalPaymentMethods(next);
+        setPaymentMethods(next);
       } else if (methodEditor === "new") {
         await kargoApi.addPaymentMethod(
           methodType,
           methodName.trim(),
           methodNumber.trim(),
           methodQr,
-        )
+        );
       } else if (methodEditor) {
         await kargoApi.updatePaymentMethod(
           methodEditor.id,
@@ -209,107 +205,88 @@ export default function SellerPaymentVerification({
           methodNumber.trim(),
           undefined,
           methodQr,
-        )
+        );
       }
-      if (!localPaymentMode) await reloadPaymentMethods()
-      setMethodEditor(null)
+      if (!localPaymentMode) await reloadPaymentMethods();
+      setMethodEditor(null);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to save payment method.")
+      alert(error instanceof Error ? error.message : "Unable to save payment method.");
     } finally {
-      setSavingMethod(false)
+      setSavingMethod(false);
     }
-  }
+  };
 
   // New buyer submissions — including resubmissions after a rejection —
   // appear without a manual reload, so reviewing a repeat submission works
   // exactly like the first one.
   useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) return
+    if (!isSupabaseConfigured || !supabase) return;
     const channel = supabase
       .channel("seller-payment-review-submissions")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "payments" },
-        () => {
-          kargoApi
-            .loadSellerPaymentSubmissions()
-            .then(setVerifyItems)
-            .catch(() => {})
-        },
-      )
-      .subscribe()
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "payments" }, () => {
+        kargoApi
+          .loadSellerPaymentSubmissions()
+          .then(setVerifyItems)
+          .catch(() => {});
+      })
+      .subscribe();
     return () => {
-      if (channel && supabase) void supabase.removeChannel(channel)
-    }
-  }, [isSupabaseConfigured, supabase])
+      if (channel && supabase) void supabase.removeChannel(channel);
+    };
+  }, [isSupabaseConfigured, supabase]);
 
-  const verifyItemsRef = useRef<VerifyItem[]>(verifyItems)
-  verifyItemsRef.current = verifyItems
+  const verifyItemsRef = useRef<VerifyItem[]>(verifyItems);
+  verifyItemsRef.current = verifyItems;
 
-  const updateVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>> =
-    (action) => {
-      // Diff against the current list OUTSIDE the state updater: the updater
-      // must stay pure (React may invoke it more than once), and the review
-      // RPC must never fire from inside it.
-      const previous = verifyItemsRef.current
-      const next = typeof action === "function" ? action(previous) : action
-      if (isSupabaseConfigured) {
-        for (const item of next) {
-          const before = previous.find(
-            (candidate) => candidate.id === item.id,
-          )
-          if (!before) continue
-          let decision: "verified" | "rejected" | null = null
-          if (item.status !== before.status && item.status === "Verified")
-            decision = "verified"
-          if (item.status !== before.status && item.status === "Rejected")
-            decision = "rejected"
-          if (decision) {
-            const deadlineHours = item.rejectionDeadline
-              ? Math.max(
-                  0,
-                  (new Date(item.rejectionDeadline).getTime() - Date.now()) /
-                    3_600_000,
-                )
-              : undefined
-            void kargoApi
-              .reviewPayment(
-                String(item.id),
-                decision,
-                item.rejectReason,
-                deadlineHours,
-                item.combinedDeliveryGroupId,
-              )
-              .then(
-                () => {
-                  void refreshData?.().catch(() => {})
-                  // Reload from the server so the list reflects the persisted
-                  // state (a reload failure keeps the confirmed decision).
-                  kargoApi
-                    .loadSellerPaymentSubmissions()
-                    .then(setVerifyItems)
-                    .catch(() => {})
-                },
-                (error) => {
-                  alert(
-                    error instanceof Error
-                      ? error.message
-                      : "Unable to review payment.",
-                  )
-                  // Roll back the optimistic update so the list matches the server.
-                  setVerifyItems((current) =>
-                    current.map((candidate) =>
-                      candidate.id === item.id ? before : candidate,
-                    ),
-                  )
-                },
-              )
-          }
+  const updateVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>> = (action) => {
+    // Diff against the current list OUTSIDE the state updater: the updater
+    // must stay pure (React may invoke it more than once), and the review
+    // RPC must never fire from inside it.
+    const previous = verifyItemsRef.current;
+    const next = typeof action === "function" ? action(previous) : action;
+    if (isSupabaseConfigured) {
+      for (const item of next) {
+        const before = previous.find((candidate) => candidate.id === item.id);
+        if (!before) continue;
+        let decision: "verified" | "rejected" | null = null;
+        if (item.status !== before.status && item.status === "Verified") decision = "verified";
+        if (item.status !== before.status && item.status === "Rejected") decision = "rejected";
+        if (decision) {
+          const deadlineHours = item.rejectionDeadline
+            ? Math.max(0, (new Date(item.rejectionDeadline).getTime() - Date.now()) / 3_600_000)
+            : undefined;
+          void kargoApi
+            .reviewPayment(
+              String(item.id),
+              decision,
+              item.rejectReason,
+              deadlineHours,
+              item.combinedDeliveryGroupId,
+            )
+            .then(
+              () => {
+                void refreshData?.().catch(() => {});
+                // Reload from the server so the list reflects the persisted
+                // state (a reload failure keeps the confirmed decision).
+                kargoApi
+                  .loadSellerPaymentSubmissions()
+                  .then(setVerifyItems)
+                  .catch(() => {});
+              },
+              (error) => {
+                alert(error instanceof Error ? error.message : "Unable to review payment.");
+                // Roll back the optimistic update so the list matches the server.
+                setVerifyItems((current) =>
+                  current.map((candidate) => (candidate.id === item.id ? before : candidate)),
+                );
+              },
+            );
         }
       }
-      verifyItemsRef.current = next
-      setVerifyItems(next)
     }
+    verifyItemsRef.current = next;
+    setVerifyItems(next);
+  };
 
   const REJECT_REASONS = [
     "Wrong amount transferred",
@@ -317,7 +294,7 @@ export default function SellerPaymentVerification({
     "Payment method mismatch",
     "Duplicate submission",
     "Other",
-  ]
+  ];
   // Only the newest submission for an order represents its current payment
   // state. Older attempts remain in the database audit trail, but must not
   // produce contradictory Paid and Reserved / Pending Payment rows in the UI.
@@ -325,26 +302,24 @@ export default function SellerPaymentVerification({
     .sort((left, right) => {
       const leftTime = left.submittedAt
         ? new Date(left.submittedAt).getTime()
-        : Number(left.id) || 0
+        : Number(left.id) || 0;
       const rightTime = right.submittedAt
         ? new Date(right.submittedAt).getTime()
-        : Number(right.id) || 0
-      return rightTime - leftTime
+        : Number(right.id) || 0;
+      return rightTime - leftTime;
     })
     .filter((item, index, sorted) => {
-      if (!item.orderId) return true
+      if (!item.orderId) return true;
       return (
         index ===
-        sorted.findIndex(
-          (candidate) => String(candidate.orderId) === String(item.orderId),
-        )
-      )
-    })
-  const pendingItems = currentVerifyItems.filter((item) => item.status === "Pending")
+        sorted.findIndex((candidate) => String(candidate.orderId) === String(item.orderId))
+      );
+    });
+  const pendingItems = currentVerifyItems.filter((item) => item.status === "Pending");
   const historyItems = currentVerifyItems
     .filter((item) => item.status === "Verified")
     .filter((item) => {
-      const query = historySearch.trim().toLocaleLowerCase()
+      const query = historySearch.trim().toLocaleLowerCase();
       const searchableDetails = [
         item.buyer,
         item.product,
@@ -359,16 +334,20 @@ export default function SellerPaymentVerification({
       ]
         .filter((detail) => detail != null)
         .join(" ")
-        .toLocaleLowerCase()
-      return !query || searchableDetails.includes(query)
+        .toLocaleLowerCase();
+      return !query || searchableDetails.includes(query);
     })
     .sort((left, right) => {
-      const leftTime = left.submittedAt ? new Date(left.submittedAt).getTime() : new Date(left.date).getTime()
-      const rightTime = right.submittedAt ? new Date(right.submittedAt).getTime() : new Date(right.date).getTime()
-      const safeLeft = Number.isFinite(leftTime) ? leftTime : Number(left.id) || 0
-      const safeRight = Number.isFinite(rightTime) ? rightTime : Number(right.id) || 0
-      return historyDateOrder === "newest" ? safeRight - safeLeft : safeLeft - safeRight
-    })
+      const leftTime = left.submittedAt
+        ? new Date(left.submittedAt).getTime()
+        : new Date(left.date).getTime();
+      const rightTime = right.submittedAt
+        ? new Date(right.submittedAt).getTime()
+        : new Date(right.date).getTime();
+      const safeLeft = Number.isFinite(leftTime) ? leftTime : Number(left.id) || 0;
+      const safeRight = Number.isFinite(rightTime) ? rightTime : Number(right.id) || 0;
+      return historyDateOrder === "newest" ? safeRight - safeLeft : safeLeft - safeRight;
+    });
   const renderTable = (items: VerifyItem[], showAmountPaid: boolean, emptyMessage?: string) => (
     <Card
       className={`!p-0 overflow-hidden seller-payment-table${showAmountPaid ? " mobile-data-page" : " seller-payment-table--history"}`}
@@ -391,16 +370,20 @@ export default function SellerPaymentVerification({
               ].map((heading) => (
                 <th
                   key={heading}
-                  style={showAmountPaid ? {
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: 11,
-                    padding: "10px 14px",
-                    textAlign: "left",
-                    whiteSpace: "nowrap",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                  } : undefined}
+                  style={
+                    showAmountPaid
+                      ? {
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: 11,
+                          padding: "10px 14px",
+                          textAlign: "left",
+                          whiteSpace: "nowrap",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.04em",
+                        }
+                      : undefined
+                  }
                 >
                   {heading}
                 </th>
@@ -409,10 +392,9 @@ export default function SellerPaymentVerification({
           </thead>
           <tbody>
             {items.map((item, index) => {
-              const paidAmount =
-                item.amountPaid == null ? null : Number(item.amountPaid)
-              const isShort = paidAmount != null && paidAmount < item.amount
-              const displayStatus = verificationDisplayStatus(item)
+              const paidAmount = item.amountPaid == null ? null : Number(item.amountPaid);
+              const isShort = paidAmount != null && paidAmount < item.amount;
+              const displayStatus = verificationDisplayStatus(item);
               return (
                 <tr
                   key={item.id}
@@ -423,31 +405,43 @@ export default function SellerPaymentVerification({
                     combinedGroupId: item.combinedDeliveryGroupId,
                   })}
                   className={`${showAmountPaid ? "" : `seller-orders-row${index % 2 ? " seller-orders-row--alt" : ""}`} transition-colors hover:bg-gray-50`}
-                  style={showAmountPaid ? {
-                    borderTop: "1px solid #E5E7EB",
-                    background: index % 2 ? "#FAFAFA" : "#fff",
-                  } : undefined}
+                  style={
+                    showAmountPaid
+                      ? {
+                          borderTop: "1px solid #E5E7EB",
+                          background: index % 2 ? "#FAFAFA" : "#fff",
+                        }
+                      : undefined
+                  }
                 >
                   <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
-                    <div className={showAmountPaid ? "flex items-center gap-2" : "seller-product-cell"}>
+                    <div
+                      className={showAmountPaid ? "flex items-center gap-2" : "seller-product-cell"}
+                    >
                       <ProductThumb name={item.product} imageUrl={item.imageUrl} />
                       <span>{item.product}</span>
                     </div>
                   </td>
                   <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
-                    <div className={showAmountPaid ? "flex items-center gap-2" : "seller-buyer-cell"}>
+                    <div
+                      className={showAmountPaid ? "flex items-center gap-2" : "seller-buyer-cell"}
+                    >
                       <Avatar name={item.buyer} size={showAmountPaid ? 22 : 24} />
                       <span>{item.buyer}</span>
                     </div>
                   </td>
                   <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
-                    <span className={`inline-flex items-center gap-1 text-[12px]${showAmountPaid ? "" : " seller-orders-method"}`}>
+                    <span
+                      className={`inline-flex items-center gap-1 text-[12px]${showAmountPaid ? "" : " seller-orders-method"}`}
+                    >
                       {showAmountPaid && <PaymentIcon method={item.method} size={15} />}
                       {item.method}
                     </span>
                   </td>
-                  <td className={`seller-orders-amount${showAmountPaid ? "" : " seller-payment-history-card-row"}`}>
-                    ₱{item.amount.toLocaleString()}
+                  <td
+                    className={`seller-orders-amount${showAmountPaid ? "" : " seller-payment-history-card-row"}`}
+                  >
+                    {formatMoney(item.amount)}
                   </td>
                   {showAmountPaid && (
                     <td style={{ whiteSpace: "nowrap" }}>
@@ -463,7 +457,7 @@ export default function SellerPaymentVerification({
                               color: isShort ? "#D97706" : "#111827",
                             }}
                           >
-                            ₱{paidAmount.toLocaleString()}
+                            {formatMoney(paidAmount)}
                           </div>
                           {isShort && (
                             <div
@@ -473,15 +467,16 @@ export default function SellerPaymentVerification({
                                 fontSize: 10,
                               }}
                             >
-                              Short ₱
-                              {(item.amount - paidAmount).toLocaleString()}
+                              Short ₱{(item.amount - paidAmount).toLocaleString()}
                             </div>
                           )}
                         </div>
                       )}
                     </td>
                   )}
-                  <td className={`seller-payment-history-date${showAmountPaid ? "" : " seller-payment-history-card-row"}`}>
+                  <td
+                    className={`seller-payment-history-date${showAmountPaid ? "" : " seller-payment-history-card-row"}`}
+                  >
                     {item.date}
                   </td>
                   <td className={showAmountPaid ? undefined : "seller-payment-history-card-row"}>
@@ -506,23 +501,27 @@ export default function SellerPaymentVerification({
                       type="button"
                       className={`seller-payment-details-button${showAmountPaid ? "" : " seller-orders-review"}`}
                       onClick={() => setReviewTarget(item)}
-                      style={showAmountPaid ? {
-                        border: "1px solid #D1D5DB",
-                        borderRadius: 8,
-                        background: "#fff",
-                        color: "#374151",
-                        padding: "6px 12px",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                        cursor: "pointer",
-                      } : undefined}
+                      style={
+                        showAmountPaid
+                          ? {
+                              border: "1px solid #D1D5DB",
+                              borderRadius: 8,
+                              background: "#fff",
+                              color: "#374151",
+                              padding: "6px 12px",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              whiteSpace: "nowrap",
+                              cursor: "pointer",
+                            }
+                          : undefined
+                      }
                     >
                       View Details
                     </button>
                   </td>
                 </tr>
-              )
+              );
             })}
             {items.length === 0 && (
               <tr>
@@ -537,7 +536,7 @@ export default function SellerPaymentVerification({
                 >
                   {showAmountPaid
                     ? "No payments awaiting review."
-                    : emptyMessage ?? "No paid and reserved payments yet."}
+                    : (emptyMessage ?? "No paid and reserved payments yet.")}
                 </td>
               </tr>
             )}
@@ -545,7 +544,7 @@ export default function SellerPaymentVerification({
         </table>
       </div>
     </Card>
-  )
+  );
 
   return (
     <div className="seller-page-shell seller-payments-page space-y-8">
@@ -571,136 +570,176 @@ export default function SellerPaymentVerification({
       )}
 
       {view === "history" && (
-      <>
-      <section>
-        <div className="seller-payment-methods-heading-row mb-4 flex items-center justify-between gap-3">
-          <div className="seller-payment-methods-heading-copy">
-            <h2 className="seller-payment-section-heading">Payment Methods</h2>
-            <p className="seller-payment-methods-instructions">
-              Add payment methods so buyers know where to send payment.
-            </p>
-          </div>
-          <PrimaryBtn
-            size="sm"
-            onClick={() => openMethodEditor()}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              minHeight: 36,
-              padding: "8px 12px",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 700,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <Plus size={14} aria-hidden="true" /> Add Payment Method
-          </PrimaryBtn>
-        </div>
-        <Card className="seller-payment-methods-panel">
-          {paymentMethods.length > 0 ? (
-            <div
-              className="grid gap-3"
-              style={{
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 350px), 425px))",
-                columnGap: 36,
-                rowGap: 16,
-                justifyContent: "start",
-              }}
-            >
-              {paymentMethods.map((method) => (
-                        <div
-                  key={method.id}
+        <>
+          <section>
+            <div className="seller-payment-methods-heading-row mb-4 flex items-center justify-between gap-3">
+              <div className="seller-payment-methods-heading-copy">
+                <h2 className="seller-payment-section-heading">Payment Methods</h2>
+                <p className="seller-payment-methods-instructions">
+                  Add payment methods so buyers know where to send payment.
+                </p>
+              </div>
+              <PrimaryBtn
+                size="sm"
+                onClick={() => openMethodEditor()}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  minHeight: 36,
+                  padding: "8px 12px",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <Plus size={14} aria-hidden="true" /> Add Payment Method
+              </PrimaryBtn>
+            </div>
+            <Card className="seller-payment-methods-panel">
+              {paymentMethods.length > 0 ? (
+                <div
+                  className="grid gap-3"
                   style={{
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 10,
-                    minHeight: 84,
-                    padding: "16px 20px",
-                    background: "#fff",
-                    boxShadow: "0 2px 8px rgba(17, 24, 39, 0.10)",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 350px), 425px))",
+                    columnGap: 36,
+                    rowGap: 16,
+                    justifyContent: "start",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, fontWeight: 700, color: "#111827", flex: 1 }}>
-                      <PaymentIcon method={method.methodType} size={20} />
-                      <div>
-                        <div>{method.methodType}</div>
-                        {(method.accountName || method.accountNumber) && (
-                          <div style={{ marginTop: 3, color: "#9CA3AF", fontSize: 10.5, fontWeight: 500 }}>
-                            {[method.accountName, method.accountNumber].filter(Boolean).join(" · ")}
+                  {paymentMethods.map((method) => (
+                    <div
+                      key={method.id}
+                      style={{
+                        border: "1px solid #E5E7EB",
+                        borderRadius: 10,
+                        minHeight: 84,
+                        padding: "16px 20px",
+                        background: "#fff",
+                        boxShadow: "0 2px 8px rgba(17, 24, 39, 0.10)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 7,
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: "#111827",
+                            flex: 1,
+                          }}
+                        >
+                          <PaymentIcon method={method.methodType} size={20} />
+                          <div>
+                            <div>{method.methodType}</div>
+                            {(method.accountName || method.accountNumber) && (
+                              <div
+                                style={{
+                                  marginTop: 3,
+                                  color: "#9CA3AF",
+                                  fontSize: 10.5,
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {[method.accountName, method.accountNumber]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
+                        <button
+                          type="button"
+                          aria-label={`Edit ${method.methodType}`}
+                          onClick={() => openMethodEditor(method)}
+                          style={{
+                            border: 0,
+                            background: "transparent",
+                            color: "#6B7280",
+                            cursor: "pointer",
+                            padding: 4,
+                          }}
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`Delete ${method.methodType}`}
+                          onClick={async () => {
+                            if (paymentMethods.length <= 1) {
+                              alert("You must keep at least one payment method.");
+                              return;
+                            }
+                            if (!window.confirm(`Delete ${method.methodType}?`)) return;
+                            try {
+                              if (localPaymentMode) {
+                                const next = readLocalPaymentMethods().filter(
+                                  (item) => item.id !== method.id,
+                                );
+                                writeLocalPaymentMethods(next);
+                                setPaymentMethods(next);
+                              } else {
+                                await kargoApi.deactivatePaymentMethod(method.id);
+                                await reloadPaymentMethods();
+                              }
+                            } catch (error) {
+                              alert(
+                                error instanceof Error
+                                  ? error.message
+                                  : "Unable to delete payment method.",
+                              );
+                            }
+                          }}
+                          style={{
+                            border: 0,
+                            background: "transparent",
+                            color: "#E11D48",
+                            cursor: "pointer",
+                            padding: 4,
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </div>
-                    <button type="button" aria-label={`Edit ${method.methodType}`} onClick={() => openMethodEditor(method)} style={{ border: 0, background: "transparent", color: "#6B7280", cursor: "pointer", padding: 4 }}>
-                      <Pencil size={15} />
-                    </button>
-                    <button type="button" aria-label={`Delete ${method.methodType}`} onClick={async () => {
-                      if (paymentMethods.length <= 1) {
-                        alert("You must keep at least one payment method.")
-                        return
-                      }
-                      if (!window.confirm(`Delete ${method.methodType}?`)) return
-                      try {
-                        if (localPaymentMode) {
-                          const next = readLocalPaymentMethods().filter((item) => item.id !== method.id)
-                          writeLocalPaymentMethods(next)
-                          setPaymentMethods(next)
-                        } else {
-                          await kargoApi.deactivatePaymentMethod(method.id)
-                          await reloadPaymentMethods()
-                        }
-                      } catch (error) {
-                        alert(error instanceof Error ? error.message : "Unable to delete payment method.")
-                      }
-                    }} style={{ border: 0, background: "transparent", color: "#E11D48", cursor: "pointer", padding: 4 }}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="seller-payment-methods-empty" style={{ fontSize: 12 }}>
-              No payment methods are configured in seller settings.
-            </div>
-          )}
-        </Card>
-      </section>
+              ) : (
+                <div className="seller-payment-methods-empty" style={{ fontSize: 12 }}>
+                  No payment methods are configured in seller settings.
+                </div>
+              )}
+            </Card>
+          </section>
 
-      <section>
-        <h2
-          className="seller-payment-section-heading"
-        >
-          Payment History
-        </h2>
-        <p className="seller-payment-history-subtitle">
-          Verified payments for paid and reserved orders.
-        </p>
-        <div className="payment-history-controls">
-          <label className="payment-history-search">
-            <Search size={16} aria-hidden="true" />
-            <input
-              type="search"
-              value={historySearch}
-              onChange={(event) => setHistorySearch(event.target.value)}
-              placeholder="Search buyer or order details"
-              aria-label="Search payment history by buyer or order details"
-            />
-          </label>
-          <PaymentHistoryDateSort
-            value={historyDateOrder}
-            onChange={setHistoryDateOrder}
-          />
-        </div>
-        {renderTable(
-          historyItems,
-          false,
-          historySearch ? "No payments match your search." : undefined,
-        )}
-      </section>
-      </>
+          <section>
+            <h2 className="seller-payment-section-heading">Payment History</h2>
+            <p className="seller-payment-history-subtitle">
+              Verified payments for paid and reserved orders.
+            </p>
+            <div className="payment-history-controls">
+              <label className="payment-history-search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  type="search"
+                  value={historySearch}
+                  onChange={(event) => setHistorySearch(event.target.value)}
+                  placeholder="Search buyer or order details"
+                  aria-label="Search payment history by buyer or order details"
+                />
+              </label>
+              <PaymentHistoryDateSort value={historyDateOrder} onChange={setHistoryDateOrder} />
+            </div>
+            {renderTable(
+              historyItems,
+              false,
+              historySearch ? "No payments match your search." : undefined,
+            )}
+          </section>
+        </>
       )}
 
       {methodEditor && (
@@ -719,41 +758,74 @@ export default function SellerPaymentVerification({
                   className="payment-method-select"
                   value={methodType}
                   onChange={(event) => setMethodType(event.target.value)}
-                  style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", background: "#fff" }}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    marginTop: 5,
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 7,
+                    padding: "9px 10px",
+                    background: "#fff",
+                  }}
                 >
-                  {["GCash", "Maya", "Bank Transfer", "Cash on Meetup", "Cash on Delivery", "Others"].map((option) => <option key={option}>{option}</option>)}
+                  {[
+                    "GCash",
+                    "Maya",
+                    "Bank Transfer",
+                    "Cash on Meetup",
+                    "Cash on Delivery",
+                    "Others",
+                  ].map((option) => (
+                    <option key={option}>{option}</option>
+                  ))}
                 </select>
                 <ChevronDown size={14} aria-hidden="true" />
               </span>
             </label>
             <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
               Account Name
-              <input value={methodName} onChange={(event) => setMethodName(event.target.value)} style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", boxSizing: "border-box" }} />
+              <input
+                value={methodName}
+                onChange={(event) => setMethodName(event.target.value)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  marginTop: 5,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 7,
+                  padding: "9px 10px",
+                  boxSizing: "border-box",
+                }}
+              />
             </label>
             <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#374151" }}>
               Account Number / Instructions
-              <input value={methodNumber} onChange={(event) => setMethodNumber(event.target.value)} style={{ display: "block", width: "100%", marginTop: 5, border: "1px solid #E5E7EB", borderRadius: 7, padding: "9px 10px", boxSizing: "border-box" }} />
+              <input
+                value={methodNumber}
+                onChange={(event) => setMethodNumber(event.target.value)}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  marginTop: 5,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 7,
+                  padding: "9px 10px",
+                  boxSizing: "border-box",
+                }}
+              />
             </label>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-              <div>QR image (optional)</div>
-              <label
-                htmlFor="payment-method-qr"
-                className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-3 text-xs font-semibold text-gray-500 transition-colors hover:border-[#191BA9] hover:text-[#191BA9]"
-              >
-                <Upload size={16} aria-hidden="true" />
-                <span>{methodQr ? methodQr.name : "Upload Image"}</span>
-                <input
-                  id="payment-method-qr"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => setMethodQr(event.target.files?.[0])}
-                  className="sr-only"
-                />
-              </label>
-            </div>
+            <QrUploadField
+              file={methodQr ?? null}
+              setFile={(file) => setMethodQr(file ?? undefined)}
+              currentUrl={methodEditor !== "new" ? methodEditor.qrUrl : undefined}
+            />
             <div className="flex justify-end gap-2">
-              <SecondaryBtn onClick={() => setMethodEditor(null)} disabled={savingMethod}>Cancel</SecondaryBtn>
-              <PrimaryBtn onClick={savePaymentMethod} disabled={savingMethod}>{savingMethod ? "Saving…" : "Save Method"}</PrimaryBtn>
+              <SecondaryBtn onClick={() => setMethodEditor(null)} disabled={savingMethod}>
+                Cancel
+              </SecondaryBtn>
+              <PrimaryBtn onClick={savePaymentMethod} disabled={savingMethod}>
+                {savingMethod ? "Saving…" : "Save Method"}
+              </PrimaryBtn>
             </div>
           </div>
         </Modal>
@@ -764,6 +836,7 @@ export default function SellerPaymentVerification({
         <ReviewSubmissionModal
           reviewTarget={reviewTarget}
           sellerName={sellerName}
+          sellerLogoUrl={sellerLogoUrl}
           setReviewTarget={setReviewTarget}
           setVerifyItems={updateVerifyItems}
           setRejectTarget={setRejectTarget}
@@ -772,25 +845,21 @@ export default function SellerPaymentVerification({
           onNotifyBuyer={async (item) => {
             if (item.status === "Rejected") {
               if (isSupabaseConfigured) {
-                await kargoApi.notifyPaymentResubmission(String(item.id))
+                await kargoApi.notifyPaymentResubmission(String(item.id));
               }
               setVerifyItems((items) =>
                 items.map((candidate) =>
-                  candidate.id === item.id
-                    ? { ...candidate, buyerNotified: true }
-                    : candidate,
+                  candidate.id === item.id ? { ...candidate, buyerNotified: true } : candidate,
                 ),
-              )
+              );
               setReviewTarget((current) =>
-                current?.id === item.id
-                  ? { ...current, buyerNotified: true }
-                  : current,
-              )
-              return
+                current?.id === item.id ? { ...current, buyerNotified: true } : current,
+              );
+              return;
             }
-            setInsuffTarget(item)
-            setInsuffAmtPaid(item.amountPaid || "")
-            setReviewTarget(null)
+            setInsuffTarget(item);
+            setInsuffAmtPaid(item.amountPaid || "");
+            setReviewTarget(null);
           }}
           onMarkPaid={(item) => {
             updateVerifyItems((items) =>
@@ -799,8 +868,8 @@ export default function SellerPaymentVerification({
                   ? { ...candidate, status: "Verified" as const }
                   : candidate,
               ),
-            )
-            setReviewTarget(null)
+            );
+            setReviewTarget(null);
           }}
         />
       )}
@@ -814,7 +883,7 @@ export default function SellerPaymentVerification({
           setInsuffAmtPaid={setInsuffAmtPaid}
           setVerifyItems={updateVerifyItems}
           onConfirm={(paidAmt, shortAmt) => {
-            const item = insuffTarget
+            const item = insuffTarget;
 
             if (!isSupabaseConfigured) {
               setVerifyItems((items) =>
@@ -825,40 +894,30 @@ export default function SellerPaymentVerification({
                         status: "Rejected" as const,
                         amountPaid: String(paidAmt),
                         shortfallAmount: shortAmt,
-                        rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
+                        rejectReason: `Insufficient payment — ${formatMoney(shortAmt)} short`,
                       }
                     : candidate,
                 ),
-              )
-              return
+              );
+              return;
             }
 
             void kargoApi
-              .markInsufficientPayment(
-                String(item.id),
-                paidAmt,
-                shortAmt,
-                item.groupOrderId,
-              )
+              .markInsufficientPayment(String(item.id), paidAmt, shortAmt, item.groupOrderId)
               .then(() => {
-                void refreshData?.().catch(() => {})
+                void refreshData?.().catch(() => {});
                 kargoApi
                   .loadSellerPaymentSubmissions()
                   .then(setVerifyItems)
-                  .catch(() => {})
+                  .catch(() => {});
               })
               .catch((error) => {
-                alert(
-                  errorMessage(
-                    error,
-                    "Unable to mark payment as insufficient.",
-                  ),
-                )
+                alert(errorMessage(error, "Unable to mark payment as insufficient."));
                 kargoApi
                   .loadSellerPaymentSubmissions()
                   .then(setVerifyItems)
-                  .catch(() => {})
-              })
+                  .catch(() => {});
+              });
           }}
         />
       )}
@@ -879,5 +938,5 @@ export default function SellerPaymentVerification({
         />
       )}
     </div>
-  )
+  );
 }

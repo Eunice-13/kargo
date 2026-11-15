@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react"
-import { ChevronDown, ExternalLink, PackageOpen } from "lucide-react"
+import { useEffect, useState } from "react";
+import { ChevronDown, ExternalLink, PackageOpen } from "lucide-react";
 
-import type { FulfillmentOrder } from "@/types"
-import {
-  BUYER_COLUMNS,
-  SELLER_COLUMNS,
-  STAGE_COLORS,
-} from "@/constants/fulfillment"
+import type { FulfillmentOrder } from "@/types";
+import { BUYER_COLUMNS, SELLER_COLUMNS, STAGE_COLORS } from "@/constants/fulfillment";
 import {
   Avatar,
   CardSkeleton,
@@ -17,12 +13,13 @@ import {
   SummaryBlock,
   recordKeys,
   safeTrackingUrl,
-} from "@/components/shared"
+} from "@/components/shared";
 
-import FulfillmentDetails from "./FulfillmentDetails"
-import type { useFulfillmentBoard } from "./useFulfillmentBoard"
+import FulfillmentDetails from "./FulfillmentDetails";
+import type { useFulfillmentBoard } from "./useFulfillmentBoard";
+import { formatMoney } from "@/lib/format";
 
-type BoardController = ReturnType<typeof useFulfillmentBoard>
+type BoardController = ReturnType<typeof useFulfillmentBoard>;
 
 const SELLER_BOARD_ORDER = [
   "Payment Confirmed",
@@ -30,7 +27,7 @@ const SELLER_BOARD_ORDER = [
   "Shipped",
   "Delivered",
   "Cancelled",
-] as const
+] as const;
 
 export default function FulfillmentBoard({
   fulfillment,
@@ -43,53 +40,46 @@ export default function FulfillmentBoard({
   onOpenProfile,
   onViewOrder,
 }: {
-  fulfillment: FulfillmentOrder[]
-  role: "seller" | "buyer"
-  board: BoardController
-  expanded?: boolean
-  loading?: boolean
+  fulfillment: FulfillmentOrder[];
+  role: "seller" | "buyer";
+  board: BoardController;
+  expanded?: boolean;
+  loading?: boolean;
   // A notification deep link: open the column holding this order (columns
   // start collapsed on small screens, which hides the card).
-  focusOrderId?: string
-  onExpand?: () => void
-  onOpenProfile?: (order: FulfillmentOrder) => void
-  onViewOrder?: (order: FulfillmentOrder) => void
+  focusOrderId?: string;
+  onExpand?: () => void;
+  onOpenProfile?: (order: FulfillmentOrder) => void;
+  onViewOrder?: (order: FulfillmentOrder) => void;
 }) {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
-    if (
-      role !== "seller" ||
-      typeof window === "undefined" ||
-      window.innerWidth > 620
-    )
-      return {}
-    return Object.fromEntries(SELLER_COLUMNS.map((column) => [column, true]))
-  })
+    if (role !== "seller" || typeof window === "undefined" || window.innerWidth > 620) return {};
+    return Object.fromEntries(SELLER_COLUMNS.map((column) => [column, true]));
+  });
   useEffect(() => {
-    if (role !== "seller") return
+    if (role !== "seller") return;
 
-    const mobile = window.matchMedia("(max-width: 620px)")
+    const mobile = window.matchMedia("(max-width: 620px)");
     const syncCollapsedState = () => {
       setCollapsed(
-        mobile.matches
-          ? Object.fromEntries(SELLER_COLUMNS.map((column) => [column, true]))
-          : {},
-      )
-    }
+        mobile.matches ? Object.fromEntries(SELLER_COLUMNS.map((column) => [column, true])) : {},
+      );
+    };
 
-    syncCollapsedState()
-    mobile.addEventListener("change", syncCollapsedState)
-    return () => mobile.removeEventListener("change", syncCollapsedState)
-  }, [role])
-  const columns = role === "seller" ? SELLER_BOARD_ORDER : BUYER_COLUMNS
-  const scopedOrders = fulfillment.filter((order) => order.perspective === role)
+    syncCollapsedState();
+    mobile.addEventListener("change", syncCollapsedState);
+    return () => mobile.removeEventListener("change", syncCollapsedState);
+  }, [role]);
+  const columns = role === "seller" ? SELLER_BOARD_ORDER : BUYER_COLUMNS;
+  const scopedOrders = fulfillment.filter((order) => order.perspective === role);
 
   useEffect(() => {
-    if (!focusOrderId) return
+    if (!focusOrderId) return;
     const column = fulfillment.find(
       (order) => order.id === focusOrderId && order.perspective === role,
-    )?.col
-    if (column) setCollapsed((current) => ({ ...current, [column]: false }))
-  }, [focusOrderId, fulfillment, role])
+    )?.col;
+    if (column) setCollapsed((current) => ({ ...current, [column]: false }));
+  }, [focusOrderId, fulfillment, role]);
 
   if (loading) {
     return (
@@ -104,12 +94,18 @@ export default function FulfillmentBoard({
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (scopedOrders.length === 0 && role === "buyer") {
     return (
-      <div className={expanded ? "fulfillment-board-empty fulfillment-board-empty--expanded" : "fulfillment-board-empty"}>
+      <div
+        className={
+          expanded
+            ? "fulfillment-board-empty fulfillment-board-empty--expanded"
+            : "fulfillment-board-empty"
+        }
+      >
         <EmptyState
           icon={PackageOpen}
           title="No fulfillment orders yet"
@@ -120,7 +116,7 @@ export default function FulfillmentBoard({
           }
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -129,8 +125,8 @@ export default function FulfillmentBoard({
         className={`fulfillment-board${expanded ? " is-expanded" : ""}${role === "seller" ? " fulfillment-board--seller" : ""}`}
       >
         {columns.map((column) => {
-          const columnOrders = scopedOrders.filter((order) => order.col === column)
-          const visibleOrders = expanded ? columnOrders : columnOrders.slice(0, 3)
+          const columnOrders = scopedOrders.filter((order) => order.col === column);
+          const visibleOrders = expanded ? columnOrders : columnOrders.slice(0, 3);
           return (
             <section
               className={`fulfillment-board__column${collapsed[column] ? " is-collapsed" : ""}`}
@@ -140,9 +136,7 @@ export default function FulfillmentBoard({
                 className="fulfillment-board__column-head"
                 style={{ background: STAGE_COLORS[column].background }}
               >
-                <span style={{ color: STAGE_COLORS[column].foreground }}>
-                  {column}
-                </span>
+                <span style={{ color: STAGE_COLORS[column].foreground }}>{column}</span>
                 <span>{columnOrders.length}</span>
                 <button
                   type="button"
@@ -162,8 +156,8 @@ export default function FulfillmentBoard({
                 data-collapsed={collapsed[column] ? "true" : undefined}
               >
                 {visibleOrders.map((order) => {
-                  const isOpen = board.expandedId === order.id
-                  const trackingUrl = safeTrackingUrl(order.trackingUrl)
+                  const isOpen = board.expandedId === order.id;
+                  const trackingUrl = safeTrackingUrl(order.trackingUrl);
                   return (
                     <article
                       className="fulfillment-board__card"
@@ -182,22 +176,16 @@ export default function FulfillmentBoard({
                             name={role === "seller" ? order.buyer : order.seller || "Seller"}
                             size={22}
                           />
-                          <span>
-                            {role === "seller" ? order.buyer : order.seller || "Seller"}
-                          </span>
+                          <span>{role === "seller" ? order.buyer : order.seller || "Seller"}</span>
                         </div>
                         <strong>{order.product}</strong>
                         <div className="fulfillment-board__meta">
                           <span>×{order.qty}</span>
-                          <b>₱{order.amount.toLocaleString()}</b>
+                          <b>{formatMoney(order.amount)}</b>
                         </div>
                         <StageChip stage={order.col} />
                         {role === "buyer" && (
-                          <StageProgress
-                            stages={BUYER_COLUMNS}
-                            current={order.col}
-                            compact
-                          />
+                          <StageProgress stages={BUYER_COLUMNS} current={order.col} compact />
                         )}
                       </button>
                       {role === "seller" && (onOpenProfile || expanded) && (
@@ -236,20 +224,29 @@ export default function FulfillmentBoard({
                             product={order.product}
                             details={[
                               `${order.seller || "Seller"} · ×${order.qty}`,
-                              `₱${order.amount.toLocaleString()}`,
+                              `${formatMoney(order.amount)}`,
                             ]}
                           />
                           <StageProgress stages={BUYER_COLUMNS} current={order.col} />
                           {(order.courierCompany || order.trackingNumber || order.eta) && (
                             <dl className="fulfillment-board__tracking">
                               {order.courierCompany && (
-                                <div><dt>Courier</dt><dd>{order.courierCompany}</dd></div>
+                                <div>
+                                  <dt>Courier</dt>
+                                  <dd>{order.courierCompany}</dd>
+                                </div>
                               )}
                               {order.trackingNumber && (
-                                <div><dt>Tracking number</dt><dd>{order.trackingNumber}</dd></div>
+                                <div>
+                                  <dt>Tracking number</dt>
+                                  <dd>{order.trackingNumber}</dd>
+                                </div>
                               )}
                               {order.eta && (
-                                <div><dt>Estimated arrival</dt><dd>{new Date(order.eta).toLocaleString()}</dd></div>
+                                <div>
+                                  <dt>Estimated arrival</dt>
+                                  <dd>{new Date(order.eta).toLocaleString()}</dd>
+                                </div>
                               )}
                             </dl>
                           )}
@@ -268,25 +265,21 @@ export default function FulfillmentBoard({
                         </div>
                       )}
                     </article>
-                  )
+                  );
                 })}
                 {columnOrders.length === 0 && (
                   <span className="fulfillment-board__column-empty">No orders</span>
                 )}
                 {!expanded && columnOrders.length > 3 && onExpand && (
-                  <button
-                    type="button"
-                    className="fulfillment-board__more"
-                    onClick={onExpand}
-                  >
+                  <button type="button" className="fulfillment-board__more" onClick={onExpand}>
                     +{columnOrders.length - 3} more
                   </button>
                 )}
               </div>
             </section>
-          )
+          );
         })}
       </div>
     </>
-  )
+  );
 }

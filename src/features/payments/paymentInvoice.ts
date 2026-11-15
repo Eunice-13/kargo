@@ -1,4 +1,4 @@
-import type { VerifyItem } from "./verifyTypes"
+import type { VerifyItem } from "./verifyTypes";
 
 function escapeHtml(value: unknown) {
   return String(value ?? "")
@@ -6,19 +6,55 @@ function escapeHtml(value: unknown) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
+    .replace(/'/g, "&#39;");
 }
 
 function money(amount: number) {
-  return `₱${amount.toLocaleString("en-PH")}`
+  return `₱${amount.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+/** Header branding: the seller's own logo plus the Kargo mark. */
+export type InvoiceBranding = {
+  shopName: string;
+  shopLogoUrl?: string | null;
+};
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "K";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+/**
+ * Absolute so the print window (about:blank) can still resolve the asset.
+ * Malformed values fall back to the monogram rather than a broken <img>.
+ */
+function safeImageUrl(value: string | null | undefined) {
+  if (!value) return null;
+  try {
+    const base = typeof window !== "undefined" ? window.location.origin : "https://kargo.local";
+    const url = new URL(value, base);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function assetOrigin() {
+  return typeof window !== "undefined" ? window.location.origin : "https://kargo.local";
 }
 
 function invoiceNumber(item: VerifyItem) {
   const reference = String(item.orderId ?? item.groupOrderId ?? item.id)
     .replace(/[^a-zA-Z0-9]/g, "")
     .slice(-10)
-    .toUpperCase()
-  return `INV-${reference || "PAYMENT"}`
+    .toUpperCase();
+  return `INV-${reference || "PAYMENT"}`;
 }
 
 /**
@@ -26,14 +62,17 @@ function invoiceNumber(item: VerifyItem) {
  * seller opens this from Payment History and can hand it to the customer or
  * save it as a PDF.
  */
-export function buildPaymentInvoiceHtml(item: VerifyItem, shopName: string) {
-  const paid = item.amountPaid != null ? Number(item.amountPaid) : item.amount
-  const balance = Math.max(0, item.amount - paid)
+export function buildPaymentInvoiceHtml(item: VerifyItem, branding: InvoiceBranding) {
+  const shopName = branding.shopName;
+  const shopLogoUrl = safeImageUrl(branding.shopLogoUrl);
+  const kargoLogoUrl = `${assetOrigin()}/kargo-logo-head.png`;
+  const paid = item.amountPaid != null ? Number(item.amountPaid) : item.amount;
+  const balance = Math.max(0, item.amount - paid);
   const issued = new Date().toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
-  })
+  });
   const rows = [
     ["Invoice No.", invoiceNumber(item)],
     ["Date Issued", issued],
@@ -41,7 +80,7 @@ export function buildPaymentInvoiceHtml(item: VerifyItem, shopName: string) {
     ["Payment Method", item.method],
     ["Reference ID", item.ref || "—"],
     ["Order ID", item.orderId ?? item.groupOrderId ?? String(item.id)],
-  ]
+  ];
 
   return `<!doctype html>
 <html lang="en">
@@ -69,6 +108,23 @@ export function buildPaymentInvoiceHtml(item: VerifyItem, shopName: string) {
     padding: 36px 40px;
   }
   .top { display: flex; justify-content: space-between; gap: 24px; }
+  .brandbar { display: flex; align-items: flex-start; gap: 12px; }
+  .brand-seller { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; }
+  .brand-kargo { display: block; height: 32px; width: auto; object-fit: contain; }
+  .monogram {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    flex: 0 0 56px;
+    place-items: center;
+    border-radius: 10px;
+    background: #2e3192;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: .5px;
+  }
   .shop { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
   .kicker { font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #6b7280; }
   .title { font-size: 26px; font-weight: 800; text-align: right; color: #191ba9; margin: 0; }
@@ -119,7 +175,7 @@ export function buildPaymentInvoiceHtml(item: VerifyItem, shopName: string) {
   }
   .toolbar button.secondary { background: #fff; color: #374151; border-color: #d1d5db; }
   @media print {
-    body { background: #fff; padding: 0; }
+    body { background: #fff; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .sheet { border: 0; border-radius: 0; padding: 0; max-width: none; }
     .toolbar { display: none; }
     @page { margin: 18mm; }
@@ -134,8 +190,20 @@ export function buildPaymentInvoiceHtml(item: VerifyItem, shopName: string) {
   <main class="sheet">
     <div class="top">
       <div>
-        <div class="kicker">Invoice</div>
-        <div class="shop">${escapeHtml(shopName)}</div>
+        <div class="brandbar">
+          <div class="brand-seller">
+            ${
+              shopLogoUrl
+                ? `<img class="brand-logo" src="${escapeHtml(shopLogoUrl)}" width="56" height="56" alt="" />`
+                : `<div class="monogram" aria-hidden="true">${escapeHtml(initials(shopName))}</div>`
+            }
+            <div>
+              <div class="kicker">Invoice</div>
+              <div class="shop">${escapeHtml(shopName)}</div>
+            </div>
+          </div>
+          <img class="brand-kargo" src="${escapeHtml(kargoLogoUrl)}" height="32" alt="KARGO" />
+        </div>
       </div>
       <div>
         <h1 class="title">INVOICE</h1>
@@ -191,25 +259,25 @@ export function buildPaymentInvoiceHtml(item: VerifyItem, shopName: string) {
     </p>
   </main>
 </body>
-</html>`
+</html>`;
 }
 
-export function printPaymentInvoice(item: VerifyItem, shopName: string) {
-  const invoice = window.open("", "_blank", "width=860,height=900")
+export function printPaymentInvoice(item: VerifyItem, branding: InvoiceBranding) {
+  const invoice = window.open("", "_blank", "width=860,height=900");
   if (!invoice) {
-    alert("Please allow pop-ups to print this invoice.")
-    return
+    alert("Please allow pop-ups to print this invoice.");
+    return;
   }
-  invoice.document.open()
-  invoice.document.write(buildPaymentInvoiceHtml(item, shopName))
-  invoice.document.close()
-  invoice.focus()
+  invoice.document.open();
+  invoice.document.write(buildPaymentInvoiceHtml(item, branding));
+  invoice.document.close();
+  invoice.focus();
   // Give the new window a moment to lay out before opening its print dialog.
   setTimeout(() => {
     try {
-      invoice.print()
+      invoice.print();
     } catch {
       // The window's own Print button remains available if this is blocked.
     }
-  }, 300)
+  }, 300);
 }

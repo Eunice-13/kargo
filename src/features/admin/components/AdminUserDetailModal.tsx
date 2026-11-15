@@ -12,8 +12,9 @@ import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminEmptyText, AdminModalSection } from "./AdminFacts";
 import type { AdminUserDetail } from "../adminTypes";
+import { formatMoney } from "@/lib/format";
 
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+const peso = (n: number) => `${formatMoney(n)}`;
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, {
     year: "numeric",

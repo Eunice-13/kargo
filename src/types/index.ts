@@ -13,6 +13,9 @@ export type UserInfo = {
 
   name: string;
 
+  /** Public handle for this account (`@handle`), when one has been chosen. */
+  username?: string;
+
   // Seller's shop/store name (read-only in Settings; set at signup).
   shopName?: string;
 

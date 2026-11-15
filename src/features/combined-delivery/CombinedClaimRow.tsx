@@ -5,6 +5,7 @@ import ProductThumb from "@/components/shared/ProductThumb";
 import { recordKeys } from "@/components/shared/useRecordFocus";
 import type { CombinedDeliveryRequest } from "@/types/combinedDelivery";
 import { displayClaimStatus } from "@/features/claims/claimPaymentState";
+import { formatMoney } from "@/lib/format";
 
 /** Compact horizontal card for combined delivery items in the My Claims list */
 export default function CombinedClaimRow({
@@ -20,11 +21,11 @@ export default function CombinedClaimRow({
 }) {
   const first = request.members[0];
   const itemCount = request.members.length;
-  
+
   // Determine status from payment state
   const account = request.payment;
   const status = account?.status === "pending_review" ? "Awaiting Verification" : "Pending";
-  
+
   return (
     <Card
       recordKeys={recordKeys({
@@ -53,11 +54,7 @@ export default function CombinedClaimRow({
               fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
-            <button
-              type="button"
-              className="buyer-claim-item-preview-name"
-              onClick={onDetails}
-            >
+            <button type="button" className="buyer-claim-item-preview-name" onClick={onDetails}>
               Combined Delivery · {itemCount} {itemCount === 1 ? "item" : "items"}
             </button>
           </div>
@@ -88,9 +85,7 @@ export default function CombinedClaimRow({
             fontFamily: "'Josefin Sans',sans-serif",
           }}
         >
-          {account?.total
-            ? `₱${Number(account.total).toLocaleString()}`
-            : "—"}
+          {account?.total ? `${formatMoney(Number(account.total))}` : "—"}
         </span>
         <button
           type="button"

@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState } from "react";
 
-import type { OrderRow, SharedState } from "@/types"
-import { CREAM } from "@/constants/theme"
+import type { OrderRow, SharedState } from "@/types";
+import { CREAM } from "@/constants/theme";
 import {
   Avatar,
   Card,
@@ -12,18 +12,16 @@ import {
   StatusBadge,
   recordKeys,
   useRecordFocus,
-} from "@/components/shared"
-import {
-  claimShortfall,
-  displayClaimStatus,
-} from "@/features/claims/claimPaymentState"
+} from "@/components/shared";
+import { claimShortfall, displayClaimStatus } from "@/features/claims/claimPaymentState";
 import {
   FulfillmentBoard,
   FulfillmentLiveRegion,
   useFulfillmentBoard,
-} from "@/features/fulfillment"
+} from "@/features/fulfillment";
 
-import OrderDetailsModal from "./OrderDetailsModal"
+import OrderDetailsModal from "./OrderDetailsModal";
+import { formatMoney } from "@/lib/format";
 
 export default function Orders({
   orders,
@@ -33,25 +31,21 @@ export default function Orders({
   setFulfillment,
   payHistory,
 }: SharedState) {
-  const board = useFulfillmentBoard(setFulfillment)
-  const [contactOrder, setContact] = useState<OrderRow | null>(null)
-  const [trackOrder, setTrackOrder] = useState<OrderRow | null>(null)
+  const board = useFulfillmentBoard(setFulfillment);
+  const [contactOrder, setContact] = useState<OrderRow | null>(null);
+  const [trackOrder, setTrackOrder] = useState<OrderRow | null>(null);
   // The seller board starts with columns collapsed on small screens, so a
   // deep-linked order asks the board to open its column.
-  const [focusOrderId, setFocusOrderId] = useState<string | undefined>()
-  useRecordFocus("Orders", (target) => setFocusOrderId(target.orderId))
+  const [focusOrderId, setFocusOrderId] = useState<string | undefined>();
+  useRecordFocus("Orders", (target) => setFocusOrderId(target.orderId));
 
   if (role === "Seller") {
-    const insufficientOrders = claims.filter(
-      (claim) => claim.status === "Insufficient Payment",
-    )
+    const insufficientOrders = claims.filter((claim) => claim.status === "Insufficient Payment");
 
     return (
       <div className="seller-page-shell seller-fulfillment-page orders-page orders-page--seller">
         <SH title="Fulfillment Board" />
-        <p className="orders-board-intro">
-          Track all orders across fulfillment stages.
-        </p>
+        <p className="orders-board-intro">Track all orders across fulfillment stages.</p>
         {insufficientOrders.length > 0 && (
           <Card className="orders-payment-issues">
             <SH title="Payment issues" />
@@ -66,7 +60,10 @@ export default function Orders({
                   </span>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={displayClaimStatus(claim.status)} />
-                    <InsufficientPaymentNotice shortfall={claimShortfall(claim)} status={claim.status} />
+                    <InsufficientPaymentNotice
+                      shortfall={claimShortfall(claim)}
+                      status={claim.status}
+                    />
                   </div>
                 </div>
               ))}
@@ -82,7 +79,7 @@ export default function Orders({
         />
         <FulfillmentLiveRegion text={board.announcement} />
       </div>
-    )
+    );
   }
 
   return (
@@ -92,56 +89,50 @@ export default function Orders({
           order.dbId
             ? String(candidate.id) === String(order.dbId)
             : String(candidate.id) === String(order.id),
-        )
+        );
 
         return (
-        <Card
-          key={order.id}
-          className="buyer-order-card"
-          recordKeys={recordKeys({ orderId: order.dbId })}
-        >
-          <div className="flex items-start justify-between mb-4 buyer-order-card__head">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="buyer-order-card__product">{order.product}</span>
-                <span
-                  style={{ background: CREAM }}
-                  className="buyer-order-card__number"
-                >
-                  {order.id}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Avatar name={order.seller} size={18} />
-                <span className="buyer-order-card__seller">
-                  {order.seller}
-                  {order.batch ? ` · ${order.batch}` : ""}
-                </span>
-              </div>
-              {claim && (
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <StatusBadge status={displayClaimStatus(claim.status)} />
-                  <InsufficientPaymentNotice shortfall={claimShortfall(claim)} status={claim.status} />
+          <Card
+            key={order.id}
+            className="buyer-order-card"
+            recordKeys={recordKeys({ orderId: order.dbId })}
+          >
+            <div className="flex items-start justify-between mb-4 buyer-order-card__head">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="buyer-order-card__product">{order.product}</span>
+                  <span style={{ background: CREAM }} className="buyer-order-card__number">
+                    {order.id}
+                  </span>
                 </div>
-              )}
+                <div className="flex items-center gap-2">
+                  <Avatar name={order.seller} size={18} />
+                  <span className="buyer-order-card__seller">
+                    {order.seller}
+                    {order.batch ? ` · ${order.batch}` : ""}
+                  </span>
+                </div>
+                {claim && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <StatusBadge status={displayClaimStatus(claim.status)} />
+                    <InsufficientPaymentNotice
+                      shortfall={claimShortfall(claim)}
+                      status={claim.status}
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="buyer-order-card__amount">{formatMoney(order.amount)}</div>
             </div>
-            <div className="buyer-order-card__amount">
-              ₱{order.amount.toLocaleString()}
-            </div>
-          </div>
 
-          <div className="flex items-center justify-end">
-            <div className="flex items-center gap-2">
-              <SecondaryBtn onClick={() => setTrackOrder(order)}>
-                Track order
-              </SecondaryBtn>
-              <SecondaryBtn onClick={() => setContact(order)}>
-                Contact Seller
-              </SecondaryBtn>
+            <div className="flex items-center justify-end">
+              <div className="flex items-center gap-2">
+                <SecondaryBtn onClick={() => setTrackOrder(order)}>Track order</SecondaryBtn>
+                <SecondaryBtn onClick={() => setContact(order)}>Contact Seller</SecondaryBtn>
+              </div>
             </div>
-          </div>
-        </Card>
-        )
+          </Card>
+        );
       })}
       {contactOrder && (
         <ContactModal
@@ -153,13 +144,11 @@ export default function Orders({
       )}
       {trackOrder && (
         <OrderDetailsModal
-          order={
-            orders.find((order) => order.id === trackOrder.id) ?? trackOrder
-          }
+          order={orders.find((order) => order.id === trackOrder.id) ?? trackOrder}
           payHistory={payHistory}
           onClose={() => setTrackOrder(null)}
         />
       )}
     </div>
-  )
+  );
 }

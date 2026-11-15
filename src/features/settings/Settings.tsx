@@ -1,18 +1,19 @@
-import MyAddressesSection from "./MyAddressesSection"
-import { navIntent, subscribeNavIntent } from "@/state/navIntent"
-import { useState, useEffect } from "react"
-import { UserRound, Link2, Bell, Lock, MapPin, ShieldCheck } from "lucide-react"
-import type { SettingsSection, SharedState } from "@/types"
-import { INDIGO } from "@/constants/theme"
-import { Card } from "@/components/shared"
-import ProfileSection from "./ProfileSection"
-import AccountStatusSection from "./AccountStatusSection"
-import LinkedAccountsSection from "./LinkedAccountsSection"
-import NotificationsSection from "./NotificationsSection"
-import { NOTIF_DEFAULT_STATE } from "./notifDefaults"
-import SecuritySection from "./SecuritySection"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { kargoApi } from "@/services"
+import MyAddressesSection from "./MyAddressesSection";
+import { navIntent, subscribeNavIntent } from "@/state/navIntent";
+import { useState, useEffect } from "react";
+import { UserRound, Link2, Bell, Lock, MapPin, ShieldCheck } from "lucide-react";
+import type { SettingsSection, SharedState } from "@/types";
+import { INDIGO } from "@/constants/theme";
+import { Card } from "@/components/shared";
+import ProfileSection from "./ProfileSection";
+import AccountStatusSection from "./AccountStatusSection";
+import LinkedAccountsSection from "./LinkedAccountsSection";
+import NotificationsSection from "./NotificationsSection";
+import { NOTIF_DEFAULT_STATE } from "./notifDefaults";
+import SecuritySection from "./SecuritySection";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { normalizeUsername, validateUsername } from "@/lib/username";
+import { kargoApi } from "@/services";
 
 const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
   "My Addresses": MapPin,
@@ -21,7 +22,7 @@ const SECTION_ICONS: Record<SettingsSection, typeof UserRound> = {
   "Linked Accounts": Link2,
   Notifications: Bell,
   Security: Lock,
-}
+};
 
 export default function Settings({ user, setUser, role }: SharedState) {
   const [section, setSection] = useState<SettingsSection>(() =>
@@ -30,29 +31,33 @@ export default function Settings({ user, setUser, role }: SharedState) {
       : role === "Buyer" && navIntent.openAddressSettings
         ? "My Addresses"
         : "Profile",
-  )
-  const [socialLinks, setSocialLinks] = useState<Record<string, string>>(user.socialLinks ?? (user.fb ? { Facebook: user.fb } : {}))
-  const [socialVisibility, setSocialVisibility] = useState<Record<string, boolean>>(user.socialVisibility ?? {})
+  );
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>(
+    user.socialLinks ?? (user.fb ? { Facebook: user.fb } : {}),
+  );
+  const [socialVisibility, setSocialVisibility] = useState<Record<string, boolean>>(
+    user.socialVisibility ?? {},
+  );
   // Preferences use an opt-out model: a key missing from the saved map means
   // "opted in". Seed defaults, then overlay whatever the profile has stored.
   const [notifs, setNotifs] = useState<Record<string, boolean>>({
     ...NOTIF_DEFAULT_STATE,
     ...(user.notificationPreferences ?? {}),
-  })
-  const [notifsSaved, setNotifsSaved] = useState(false)
-  const [savingNotifs, setSavingNotifs] = useState(false)
-  const [firstName, setFirstName] = useState(user.name.split(" ")[0] || "")
-  const [lastName, setLastName] = useState(
-    user.name.split(" ").slice(1).join(" ") || "",
-  )
-  const [email, setEmail] = useState(user.email || "")
-  const [bio, setBio] = useState(user.bio || "")
-  const [saved, setSaved] = useState(false)
-  const [linksSaved, setLinksSaved] = useState(false)
-  const [savingProfile, setSavingProfile] = useState(false)
-  const [savingLinks, setSavingLinks] = useState(false)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl)
+  });
+  const [notifsSaved, setNotifsSaved] = useState(false);
+  const [savingNotifs, setSavingNotifs] = useState(false);
+  const [firstName, setFirstName] = useState(user.name.split(" ")[0] || "");
+  const [lastName, setLastName] = useState(user.name.split(" ").slice(1).join(" ") || "");
+  const [email, setEmail] = useState(user.email || "");
+  const [username, setUsername] = useState(user.username ?? "");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [bio, setBio] = useState(user.bio || "");
+  const [saved, setSaved] = useState(false);
+  const [linksSaved, setLinksSaved] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingLinks, setSavingLinks] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState(user.avatarUrl);
   const sections: SettingsSection[] = [
     "Profile",
     "Account status",
@@ -60,82 +65,120 @@ export default function Settings({ user, setUser, role }: SharedState) {
     "Linked Accounts",
     "Notifications",
     "Security",
-  ]
+  ];
   useEffect(() => {
-    if (!sections.includes(section)) setSection("Profile")
-  }, [role])
+    if (!sections.includes(section)) setSection("Profile");
+  }, [role]);
 
   useEffect(() => {
     if (section === "My Addresses") {
-      navIntent.openAddressSettings = false
-      document.getElementById("my-addresses")?.focus()
+      navIntent.openAddressSettings = false;
+      document.getElementById("my-addresses")?.focus();
     }
-  }, [section])
+  }, [section]);
 
   // A restore notification deep-links here. Consume the intent on mount and
   // listen while mounted, so tapping it while already on Settings still jumps.
   useEffect(() => {
     const consume = () => {
-      if (!navIntent.openAccountStatus) return
-      navIntent.openAccountStatus = false
-      setSection("Account status")
-    }
-    consume()
-    return subscribeNavIntent(consume)
-  }, [])
+      if (!navIntent.openAccountStatus) return;
+      navIntent.openAccountStatus = false;
+      setSection("Account status");
+    };
+    consume();
+    return subscribeNavIntent(consume);
+  }, []);
 
   const saveProfile = async () => {
-    const newName = [firstName, lastName].filter(Boolean).join(" ") || user.name
-    setSavingProfile(true)
-    let savedAvatarUrl = user.avatarUrl
+    const newName = [firstName, lastName].filter(Boolean).join(" ") || user.name;
+    const handle = normalizeUsername(username);
+    const handleError = validateUsername(handle);
+    if (!handle) {
+      setUsernameError("Choose a username.");
+      return;
+    }
+    if (handleError) {
+      setUsernameError(handleError);
+      return;
+    }
+    setUsernameError(null);
+    setSavingProfile(true);
+    let savedAvatarUrl = user.avatarUrl;
     if (isSupabaseConfigured) {
       try {
-        await kargoApi.updateProfile({ displayName: newName, bio, email })
-        if (avatarFile) savedAvatarUrl = await kargoApi.uploadProfileAvatar(avatarFile)
+        const usernameChanged = handle !== (user.username ?? "");
+        if (usernameChanged && !(await kargoApi.isUsernameAvailable(handle))) {
+          setUsernameError("That username is taken.");
+          setSavingProfile(false);
+          return;
+        }
+        await kargoApi.updateProfile({ displayName: newName, username: handle, bio, email });
+        if (avatarFile) savedAvatarUrl = await kargoApi.uploadProfileAvatar(avatarFile);
       } catch (error) {
-        setSavingProfile(false)
-        alert(error instanceof Error ? error.message : "Unable to save profile.")
-        return
+        setSavingProfile(false);
+        const message = error instanceof Error ? error.message : "Unable to save profile.";
+        if (/username/i.test(message)) setUsernameError(message);
+        else alert(message);
+        return;
       }
     }
-    setUser((u) => ({ ...u, name: newName, email, bio, avatarUrl: savedAvatarUrl || avatarPreview }))
-    setAvatarFile(null)
-    setSavingProfile(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }
+    setUser((u) => ({
+      ...u,
+      name: newName,
+      username: handle,
+      email,
+      bio,
+      avatarUrl: savedAvatarUrl || avatarPreview,
+    }));
+    setAvatarFile(null);
+    setSavingProfile(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   const saveSocialLinks = async () => {
-    const cleaned = Object.fromEntries(Object.entries(socialLinks).map(([key, value]) => [key, value.trim()]).filter(([, value]) => value))
-    const cleanedVisibility = Object.fromEntries(Object.keys(cleaned).map((key) => [key, socialVisibility[key] !== false]))
-    setSavingLinks(true)
+    const cleaned = Object.fromEntries(
+      Object.entries(socialLinks)
+        .map(([key, value]) => [key, value.trim()])
+        .filter(([, value]) => value),
+    );
+    const cleanedVisibility = Object.fromEntries(
+      Object.keys(cleaned).map((key) => [key, socialVisibility[key] !== false]),
+    );
+    setSavingLinks(true);
     try {
-      if (isSupabaseConfigured) await kargoApi.updateProfile({ socialLinks: cleaned, socialVisibility: cleanedVisibility })
-      setSocialLinks(cleaned)
-      setSocialVisibility(cleanedVisibility)
-      setUser((current) => ({ ...current, socialLinks: cleaned, socialVisibility: cleanedVisibility, fb: cleaned.Facebook }))
-      setLinksSaved(true)
-      setTimeout(() => setLinksSaved(false), 2000)
+      if (isSupabaseConfigured)
+        await kargoApi.updateProfile({ socialLinks: cleaned, socialVisibility: cleanedVisibility });
+      setSocialLinks(cleaned);
+      setSocialVisibility(cleanedVisibility);
+      setUser((current) => ({
+        ...current,
+        socialLinks: cleaned,
+        socialVisibility: cleanedVisibility,
+        fb: cleaned.Facebook,
+      }));
+      setLinksSaved(true);
+      setTimeout(() => setLinksSaved(false), 2000);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to save social links.")
+      alert(error instanceof Error ? error.message : "Unable to save social links.");
     } finally {
-      setSavingLinks(false)
+      setSavingLinks(false);
     }
-  }
+  };
 
   const saveNotifs = async () => {
-    setSavingNotifs(true)
+    setSavingNotifs(true);
     try {
-      if (isSupabaseConfigured) await kargoApi.updateProfile({ notificationPreferences: notifs })
-      setUser((current) => ({ ...current, notificationPreferences: notifs }))
-      setNotifsSaved(true)
-      setTimeout(() => setNotifsSaved(false), 2000)
+      if (isSupabaseConfigured) await kargoApi.updateProfile({ notificationPreferences: notifs });
+      setUser((current) => ({ ...current, notificationPreferences: notifs }));
+      setNotifsSaved(true);
+      setTimeout(() => setNotifsSaved(false), 2000);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Unable to save notification preferences.")
+      alert(error instanceof Error ? error.message : "Unable to save notification preferences.");
     } finally {
-      setSavingNotifs(false)
+      setSavingNotifs(false);
     }
-  }
+  };
 
   return (
     <div className="p-6 settings-page">
@@ -174,8 +217,8 @@ export default function Settings({ user, setUser, role }: SharedState) {
                 }}
               >
                 {(() => {
-                  const Icon = SECTION_ICONS[s]
-                  return <Icon size={15} aria-hidden="true" />
+                  const Icon = SECTION_ICONS[s];
+                  return <Icon size={15} aria-hidden="true" />;
                 })()}
                 {s}
               </button>
@@ -191,6 +234,12 @@ export default function Settings({ user, setUser, role }: SharedState) {
               setFirstName={setFirstName}
               lastName={lastName}
               setLastName={setLastName}
+              username={username}
+              setUsername={(value) => {
+                setUsername(value);
+                setUsernameError(null);
+              }}
+              usernameError={usernameError}
               email={email}
               setEmail={setEmail}
               bio={bio}
@@ -200,8 +249,8 @@ export default function Settings({ user, setUser, role }: SharedState) {
               avatarPreview={avatarPreview}
               avatarFileName={avatarFile?.name}
               onAvatarSelected={(file) => {
-                setAvatarFile(file)
-                setAvatarPreview(URL.createObjectURL(file))
+                setAvatarFile(file);
+                setAvatarPreview(URL.createObjectURL(file));
               }}
               saving={savingProfile}
             />
@@ -232,5 +281,5 @@ export default function Settings({ user, setUser, role }: SharedState) {
         </Card>
       </div>
     </div>
-  )
+  );
 }

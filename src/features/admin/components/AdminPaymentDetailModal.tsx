@@ -9,8 +9,9 @@ import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminFact, AdminFactGrid, AdminModalSection } from "./AdminFacts";
+import { formatMoney } from "@/lib/format";
 
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+const peso = (n: number) => `${formatMoney(n)}`;
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : "—");
 
 export default function AdminPaymentDetailModal({
@@ -159,7 +160,6 @@ export default function AdminPaymentDetailModal({
               Override only when the seller cannot act. This changes the order&apos;s paid state and
               notifies both parties.
             </p>
-
           </div>
         )}
       </Modal>

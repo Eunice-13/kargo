@@ -7,6 +7,7 @@ import Countdown from "@/components/shared/Countdown";
 import InsufficientPaymentNotice from "@/components/shared/InsufficientPaymentNotice";
 import ProductThumb from "@/components/shared/ProductThumb";
 import { claimAmountDue } from "./claimPaymentState";
+import { formatMoney } from "@/lib/format";
 import "./pendingPayments.css";
 
 /** Render each existing payment record independently; actions stay with their claim. */
@@ -92,7 +93,7 @@ export default function PendingPaymentCard({
         )}
       </div>
       <div className="pending-product-card__amount">
-        ₱{claimAmountDue(item).toLocaleString()}
+        {formatMoney(claimAmountDue(item))}
         {item.status === "Insufficient Payment" ? (
           <span className="pending-product-card__note">Remaining balance</span>
         ) : deliveryRequest?.status === "shipping_fee_set" ? (
@@ -103,7 +104,7 @@ export default function PendingPaymentCard({
           <span className="pending-product-card__note">Shipping fee pending</span>
         ) : item.shippingFee !== undefined ? (
           <span className="pending-product-card__note">
-            Includes ₱{item.shippingFee.toLocaleString()} shipping
+            Includes {formatMoney(item.shippingFee)} shipping
           </span>
         ) : null}
       </div>

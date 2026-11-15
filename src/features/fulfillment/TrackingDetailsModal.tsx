@@ -1,57 +1,50 @@
-import { useState } from "react"
+import { useState } from "react";
 
-import type { CourierCompany, FulfillmentOrder } from "@/types"
+import type { CourierCompany, FulfillmentOrder } from "@/types";
 import {
   COURIER_COMPANIES,
   Modal,
   PrimaryBtn,
   SecondaryBtn,
   SummaryBlock,
-} from "@/components/shared"
+} from "@/components/shared";
+import { formatMoney } from "@/lib/format";
 
 export type TrackingDetailsInput = {
-  courier: string
-  riderName: string
-  riderContact: string
-  trackingNumber: string
-  eta: string
-  trackingUrl?: string
-}
+  courier: string;
+  riderName: string;
+  riderContact: string;
+  trackingNumber: string;
+  eta: string;
+  trackingUrl?: string;
+};
 
 export default function TrackingDetailsModal({
   order,
   onSave,
   onClose,
 }: {
-  order: FulfillmentOrder
-  onSave: (details: TrackingDetailsInput) => void | Promise<void>
-  onClose: () => void
+  order: FulfillmentOrder;
+  onSave: (details: TrackingDetailsInput) => void | Promise<void>;
+  onClose: () => void;
 }) {
-  const initialCourier = COURIER_COMPANIES.includes(
-    order.courierCompany as CourierCompany,
-  )
-    ? order.courierCompany as CourierCompany
-    : "Others"
-  const [courier, setCourier] = useState<CourierCompany>(initialCourier)
+  const initialCourier = COURIER_COMPANIES.includes(order.courierCompany as CourierCompany)
+    ? (order.courierCompany as CourierCompany)
+    : "Others";
+  const [courier, setCourier] = useState<CourierCompany>(initialCourier);
   const [otherCourier, setOtherCourier] = useState(
     initialCourier === "Others" ? (order.courierCompany ?? "") : "",
-  )
-  const [riderName, setRiderName] = useState(order.riderName ?? "")
-  const [riderContact, setRiderContact] = useState(order.riderContact ?? "")
-  const [trackingNumber, setTrackingNumber] = useState(
-    order.trackingNumber ?? "",
-  )
-  const [eta, setEta] = useState(order.eta?.slice(0, 16) ?? "")
-  const [trackingUrl, setTrackingUrl] = useState(order.trackingUrl ?? "")
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState("")
-  const resolvedCourier = courier === "Others" ? otherCourier.trim() : courier
+  );
+  const [riderName, setRiderName] = useState(order.riderName ?? "");
+  const [riderContact, setRiderContact] = useState(order.riderContact ?? "");
+  const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber ?? "");
+  const [eta, setEta] = useState(order.eta?.slice(0, 16) ?? "");
+  const [trackingUrl, setTrackingUrl] = useState(order.trackingUrl ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const resolvedCourier = courier === "Others" ? otherCourier.trim() : courier;
   const valid =
-    resolvedCourier &&
-    riderName.trim() &&
-    riderContact.trim() &&
-    trackingNumber.trim() &&
-    eta
+    resolvedCourier && riderName.trim() && riderContact.trim() && trackingNumber.trim() && eta;
 
   return (
     <Modal
@@ -64,22 +57,17 @@ export default function TrackingDetailsModal({
         <SummaryBlock
           title={order.product}
           product={order.product}
-          details={[
-            `Buyer: ${order.buyer} · ×${order.qty}`,
-            `₱${order.amount.toLocaleString()}`,
-          ]}
+          details={[`Buyer: ${order.buyer} · ×${order.qty}`, `${formatMoney(order.amount)}`]}
         />
         <p className="text-sm leading-6 text-gray-600">
-          Add the courier and rider information the buyer will use after this
-          order is marked shipped.
+          Add the courier and rider information the buyer will use after this order is marked
+          shipped.
         </p>
         <label className="block text-xs font-semibold text-gray-700">
           Courier company
           <select
             value={courier}
-            onChange={(event) =>
-              setCourier(event.target.value as CourierCompany)
-            }
+            onChange={(event) => setCourier(event.target.value as CourierCompany)}
             className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
           >
             {COURIER_COMPANIES.map((company) => (
@@ -133,8 +121,7 @@ export default function TrackingDetailsModal({
           </label>
         </div>
         <label className="block text-xs font-semibold text-gray-700">
-          Tracking URL{" "}
-          <span className="font-normal text-gray-500">(optional)</span>
+          Tracking URL <span className="font-normal text-gray-500">(optional)</span>
           <input
             type="url"
             value={trackingUrl}
@@ -159,8 +146,8 @@ export default function TrackingDetailsModal({
             disabled={!valid || saving}
             loading={saving}
             onClick={async () => {
-              setSaveError("")
-              setSaving(true)
+              setSaveError("");
+              setSaving(true);
               try {
                 await onSave({
                   courier: resolvedCourier,
@@ -169,15 +156,15 @@ export default function TrackingDetailsModal({
                   trackingNumber: trackingNumber.trim(),
                   eta: new Date(eta).toISOString(),
                   trackingUrl: trackingUrl.trim() || undefined,
-                })
+                });
               } catch (error) {
                 setSaveError(
                   error instanceof Error
                     ? error.message
                     : "Unable to save tracking details. Please try again.",
-                )
+                );
               } finally {
-                setSaving(false)
+                setSaving(false);
               }
             }}
           >
@@ -186,5 +173,5 @@ export default function TrackingDetailsModal({
         </div>
       </div>
     </Modal>
-  )
+  );
 }

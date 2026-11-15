@@ -1,4 +1,8 @@
 import type { VerifyItem } from "./verifyTypes";
+// Relative with an explicit .ts because this module is also imported directly
+// by tests/confirmPaymentWarning.test.ts, which runs under plain node and has
+// no `@/` alias. tsconfig sets allowImportingTsExtensions for exactly this.
+import { formatMoney } from "../../lib/format.ts";
 
 // Decides what the seller's "Confirm Payment" popup should say. The warning is
 // shared by individual, group, combined-delivery and partial payments, so it
@@ -35,7 +39,7 @@ export function amountCoversDue(
 export function confirmPaymentCopy(
   item: Pick<VerifyItem, "amount" | "amountPaid" | "method" | "product">,
 ): ConfirmPaymentCopy {
-  const peso = (n: number) => `₱${n.toLocaleString()}`;
+  const peso = (n: number) => `${formatMoney(n)}`;
   const locksOrder = amountCoversDue(item);
 
   if (locksOrder) {

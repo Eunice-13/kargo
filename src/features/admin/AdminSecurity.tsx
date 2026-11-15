@@ -6,7 +6,7 @@ import { INDIGO } from "@/constants/theme";
 import { ADMIN_ACTION_LABELS } from "@/constants/admin";
 import { adminApi } from "@/services";
 import { consumeAdminIntent, navIntent, subscribeNavIntent } from "@/state/navIntent";
-import type { AdminAuditRow, AdminTeamMember } from "./adminTypes";
+import type { AdminAuditRow, AdminSignupRequest, AdminTeamMember } from "./adminTypes";
 
 import { useAdminResource } from "./useAdminResource";
 import { appendPage } from "./appendPage";
@@ -73,8 +73,11 @@ function TeamSection() {
     () => adminApi.listTeam(),
     [],
   );
+  const requests = useAdminResource(() => adminApi.listSignupRequests(), []);
   const [adding, setAdding] = useState(false);
   const [revoke, setRevoke] = useState<AdminTeamMember | null>(null);
+  const [approve, setApprove] = useState<AdminSignupRequest | null>(null);
+  const [reject, setReject] = useState<AdminSignupRequest | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
 
   return (
@@ -106,6 +109,81 @@ function TeamSection() {
           {noteOpen && <p className="admin-team-note__more">{TEAM_NOTE}</p>}
         </div>
       </div>
+
+      {requests.data && requests.data.rows.length > 0 && (
+        <Card className="!p-0 overflow-hidden" style={{ marginBottom: 14 }}>
+          <div style={{ padding: "12px 14px", borderBottom: "1px solid #EEF1F6" }}>
+            <h3 className="admin-team-actions__title" style={{ margin: 0 }}>
+              Admin requests <span>· {requests.data.rows.length}</span>
+            </h3>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--kargo-muted)" }}>
+              Signups that selected the Admin role. Approving sends an invitation they must accept
+              before the console unlocks.
+            </p>
+          </div>
+          {requests.data.rows.map((request) => (
+            <div
+              key={request.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "12px 14px",
+                borderTop: "1px solid #F3F4F6",
+                flexWrap: "wrap",
+              }}
+            >
+              <Avatar name={request.displayName} size={36} />
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--kargo-ink)" }}>
+                  {request.displayName}
+                  {request.username ? (
+                    <span style={{ marginLeft: 6, fontWeight: 500, color: "var(--kargo-muted)" }}>
+                      @{request.username}
+                    </span>
+                  ) : null}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--kargo-muted)" }}>
+                  {request.email ?? "—"} · {fmtDate(request.requestedAt)}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  className="admin-danger-link"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#B91C1C",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setReject(request)}
+                >
+                  Reject
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    background: "var(--kargo-navy, #2e3192)",
+                    border: "none",
+                    borderRadius: 8,
+                    color: "#fff",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    padding: "7px 12px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setApprove(request)}
+                >
+                  Approve
+                </button>
+              </div>
+            </div>
+          ))}
+        </Card>
+      )}
 
       <div className="admin-team-actions">
         <h3 className="admin-team-actions__title">
@@ -252,6 +330,34 @@ function TeamSection() {
       )}
 
       {adding && <AdminAddAdminModal onClose={() => setAdding(false)} onAdded={refresh} />}
+      {approve && (
+        <AdminConfirmModal
+          title="Approve admin request"
+          consequence={`${approve.displayName} gets an invitation to join the admin team. They still have to accept it before any admin capability turns on.`}
+          confirmLabel="Approve and invite"
+          tone="default"
+          onConfirm={async (reason) => {
+            await adminApi.approveSignupRequest(approve.id, reason);
+            setApprove(null);
+            requests.refresh();
+            refresh();
+          }}
+          onClose={() => setApprove(null)}
+        />
+      )}
+      {reject && (
+        <AdminConfirmModal
+          title="Reject admin request"
+          consequence={`${reject.displayName} stays a regular account. They can request again from a new signup or be invited directly by an admin.`}
+          confirmLabel="Reject request"
+          onConfirm={async (reason) => {
+            await adminApi.rejectSignupRequest(reject.id, reason);
+            setReject(null);
+            requests.refresh();
+          }}
+          onClose={() => setReject(null)}
+        />
+      )}
       {revoke && (
         <AdminConfirmModal
           title={revoke.acceptedAt === null ? "Cancel admin invitation" : "Revoke admin access"}

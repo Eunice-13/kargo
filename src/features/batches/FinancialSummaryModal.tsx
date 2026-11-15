@@ -1,41 +1,41 @@
-import { useEffect, useMemo, useState } from "react"
-import { createPortal } from "react-dom"
-import { Plus, Trash2, Printer, X } from "lucide-react"
-import type { BatchType, BatchExpenses, ExpenseItem, ExpenseMode } from "@/types"
-import { INDIGO, CREAM, TODAY } from "@/constants/theme"
-import { Modal, PrimaryBtn, SecondaryBtn, useDialogA11y } from "@/components/shared"
-import { isSupabaseConfigured } from "@/lib/supabase"
-import { kargoApi } from "@/services"
-import type { FinancialSummary } from "@/services"
-import { localExpenseStore } from "./expenseStore"
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import { Plus, Trash2, Printer, X } from "lucide-react";
+import type { BatchType, BatchExpenses, ExpenseItem, ExpenseMode } from "@/types";
+import { INDIGO, CREAM, TODAY } from "@/constants/theme";
+import { Modal, PrimaryBtn, SecondaryBtn, useDialogA11y } from "@/components/shared";
+import { isSupabaseConfigured } from "@/lib/supabase";
+import { kargoApi } from "@/services";
+import type { FinancialSummary } from "@/services";
+import { localExpenseStore } from "./expenseStore";
+import { formatMoney } from "@/lib/format";
 
 const uid = () =>
-  globalThis.crypto?.randomUUID?.() ??
-  `x-${Date.now()}-${Math.random().toString(36).slice(2)}`
-const blankExpenses = (): BatchExpenses => ({ mode: "single", total: 0, items: [] })
+  globalThis.crypto?.randomUUID?.() ?? `x-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const blankExpenses = (): BatchExpenses => ({ mode: "single", total: 0, items: [] });
 
 export default function FinancialSummaryModal({
   batch,
   onClose,
 }: {
-  batch: BatchType
-  onClose: () => void
+  batch: BatchType;
+  onClose: () => void;
 }) {
-  const localTotalOrders = batch.products.reduce((s, p) => s + p.price * p.claimed, 0)
-  const [tax, setTax] = useState("")
-  const [summary, setSummary] = useState<FinancialSummary | null>(null)
+  const localTotalOrders = batch.products.reduce((s, p) => s + p.price * p.claimed, 0);
+  const [tax, setTax] = useState("");
+  const [summary, setSummary] = useState<FinancialSummary | null>(null);
 
   // ── Recorded expenses (single / itemized) ──────────────────────────────────
-  const [mode, setMode] = useState<ExpenseMode>("single")
-  const [singleTotal, setSingleTotal] = useState("")
-  const [items, setItems] = useState<ExpenseItem[]>([])
-  const [expLoading, setExpLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [savedNote, setSavedNote] = useState(false)
-  const [showReceipt, setShowReceipt] = useState(false)
+  const [mode, setMode] = useState<ExpenseMode>("single");
+  const [singleTotal, setSingleTotal] = useState("");
+  const [items, setItems] = useState<ExpenseItem[]>([]);
+  const [expLoading, setExpLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savedNote, setSavedNote] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !batch.dbId) return
+    if (!isSupabaseConfigured || !batch.dbId) return;
     kargoApi
       .getFinancialSummary(
         new Date("2000-01-01T00:00:00Z"),
@@ -45,87 +45,87 @@ export default function FinancialSummaryModal({
       .then(setSummary)
       .catch((error) =>
         alert(error instanceof Error ? error.message : "Unable to load financial summary."),
-      )
-  }, [batch.dbId])
+      );
+  }, [batch.dbId]);
 
   // Load recorded expenses (Supabase or in-memory fallback).
   useEffect(() => {
-    let active = true
+    let active = true;
     const apply = (e: BatchExpenses | null) => {
-      if (!active) return
-      const v = e ?? blankExpenses()
-      setMode(v.mode)
-      setSingleTotal(v.mode === "single" && v.total ? String(v.total) : "")
-      setItems(v.items ?? [])
-      setExpLoading(false)
-    }
+      if (!active) return;
+      const v = e ?? blankExpenses();
+      setMode(v.mode);
+      setSingleTotal(v.mode === "single" && v.total ? String(v.total) : "");
+      setItems(v.items ?? []);
+      setExpLoading(false);
+    };
     if (isSupabaseConfigured && batch.dbId) {
       kargoApi
         .loadBatchExpenses(batch.dbId)
         .then(apply)
         .catch((err) => {
-          alert(err instanceof Error ? err.message : "Unable to load expenses.")
-          setExpLoading(false)
-        })
+          alert(err instanceof Error ? err.message : "Unable to load expenses.");
+          setExpLoading(false);
+        });
     } else {
-      apply(localExpenseStore.get(batch.id) ?? null)
+      apply(localExpenseStore.get(batch.id) ?? null);
     }
     return () => {
-      active = false
-    }
-  }, [batch.dbId, batch.id])
+      active = false;
+    };
+  }, [batch.dbId, batch.id]);
 
   const itemizedTotal = useMemo(
     () => items.reduce((s, i) => s + (Number(i.amount) || 0), 0),
     [items],
-  )
-  const recordedExpenses = mode === "itemized" ? itemizedTotal : Number(singleTotal) || 0
+  );
+  const recordedExpenses = mode === "itemized" ? itemizedTotal : Number(singleTotal) || 0;
 
-  const totalOrders = isSupabaseConfigured ? summary?.gross_sales ?? 0 : localTotalOrders
-  const profit = totalOrders - recordedExpenses - (Number(tax) || 0)
+  const totalOrders = isSupabaseConfigured ? (summary?.gross_sales ?? 0) : localTotalOrders;
+  const profit = totalOrders - recordedExpenses - (Number(tax) || 0);
 
   const addItem = () =>
-    setItems((prev) => [...prev, { id: uid(), label: "", amount: 0, category: "", date: "" }])
+    setItems((prev) => [...prev, { id: uid(), label: "", amount: 0, category: "", date: "" }]);
   const updateItem = (id: string, key: keyof ExpenseItem, value: string) =>
     setItems((prev) =>
       prev.map((it) =>
         it.id === id ? { ...it, [key]: key === "amount" ? Number(value) || 0 : value } : it,
       ),
-    )
-  const removeItem = (id: string) => setItems((prev) => prev.filter((it) => it.id !== id))
+    );
+  const removeItem = (id: string) => setItems((prev) => prev.filter((it) => it.id !== id));
 
   const handleSaveExpenses = async () => {
     const value: BatchExpenses = {
       mode,
       total: mode === "single" ? Number(singleTotal) || 0 : itemizedTotal,
       items: mode === "itemized" ? items.filter((i) => i.label.trim() || i.amount) : [],
-    }
-    setSaving(true)
+    };
+    setSaving(true);
     try {
       if (isSupabaseConfigured && batch.dbId) {
-        await kargoApi.saveBatchExpenses(batch.dbId, value)
+        await kargoApi.saveBatchExpenses(batch.dbId, value);
       } else {
-        localExpenseStore.set(batch.id, value)
+        localExpenseStore.set(batch.id, value);
       }
-      setSavedNote(true)
-      setTimeout(() => setSavedNote(false), 2200)
+      setSavedNote(true);
+      setTimeout(() => setSavedNote(false), 2200);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Unable to save expenses.")
+      alert(err instanceof Error ? err.message : "Unable to save expenses.");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handlePrintReceipt = () => {
-    document.body.classList.add("printing-receipt")
+    document.body.classList.add("printing-receipt");
     const cleanup = () => {
-      document.body.classList.remove("printing-receipt")
-      window.removeEventListener("afterprint", cleanup)
-    }
-    window.addEventListener("afterprint", cleanup)
-    window.print()
-    setTimeout(cleanup, 1500)
-  }
+      document.body.classList.remove("printing-receipt");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+    setTimeout(cleanup, 1500);
+  };
 
   const label = {
     fontSize: 12,
@@ -133,7 +133,7 @@ export default function FinancialSummaryModal({
     color: "#374151",
     display: "block" as const,
     marginBottom: 5,
-  }
+  };
   const field = {
     width: "100%",
     fontSize: 13,
@@ -144,7 +144,7 @@ export default function FinancialSummaryModal({
     color: "#374151",
     fontFamily: "inherit",
     boxSizing: "border-box" as const,
-  }
+  };
 
   if (showReceipt) {
     return (
@@ -160,7 +160,7 @@ export default function FinancialSummaryModal({
         onPrint={handlePrintReceipt}
         onClose={onClose}
       />
-    )
+    );
   }
 
   return (
@@ -184,7 +184,7 @@ export default function FinancialSummaryModal({
                 fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
-              ₱{totalOrders.toLocaleString()}
+              {formatMoney(totalOrders)}
             </span>
           </div>
           <div style={{ fontSize: 11, color: "#9CA3AF" }}>
@@ -204,9 +204,7 @@ export default function FinancialSummaryModal({
               marginBottom: 8,
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
-              Expenses
-            </span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Expenses</span>
             <span style={{ fontSize: 11, color: "#9CA3AF" }}>
               Private bookkeeping · not shown to buyers
             </span>
@@ -247,7 +245,10 @@ export default function FinancialSummaryModal({
                   <input
                     type="number"
                     value={singleTotal}
-                    placeholder="0"
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    onFocus={(e) => e.currentTarget.select()}
                     onChange={(e) => setSingleTotal(e.target.value)}
                     style={field}
                   />
@@ -290,7 +291,10 @@ export default function FinancialSummaryModal({
                         <input
                           type="number"
                           value={it.amount || ""}
-                          placeholder="0"
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                          onFocus={(e) => e.currentTarget.select()}
                           onChange={(e) => updateItem(it.id, "amount", e.target.value)}
                           style={{ ...field, padding: "7px 10px" }}
                         />
@@ -337,7 +341,7 @@ export default function FinancialSummaryModal({
               >
                 <span>Recorded expenses</span>
                 <span style={{ fontWeight: 700, color: "#374151" }}>
-                  ₱{recordedExpenses.toLocaleString()}
+                  {formatMoney(recordedExpenses)}
                 </span>
               </div>
 
@@ -366,7 +370,10 @@ export default function FinancialSummaryModal({
           <input
             type="number"
             value={tax}
-            placeholder="0"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            onFocus={(e) => e.currentTarget.select()}
             onChange={(e) => setTax(e.target.value)}
             style={field}
           />
@@ -395,22 +402,25 @@ export default function FinancialSummaryModal({
               fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
-            ₱{profit.toLocaleString()}
+            {formatMoney(profit)}
           </span>
         </div>
 
-        <p style={{ fontSize: 11, color: "#9CA3AF", fontStyle: "italic", lineHeight: 1.5, margin: 0 }}>
-          This is a prediction/estimate based on current claims, item prices, and your
-          recorded expenses — actual results may change once all items are paid, shipped,
-          and finalized.
+        <p
+          style={{
+            fontSize: 11,
+            color: "#9CA3AF",
+            fontStyle: "italic",
+            lineHeight: 1.5,
+            margin: 0,
+          }}
+        >
+          This is a prediction/estimate based on current claims, item prices, and your recorded
+          expenses — actual results may change once all items are paid, shipped, and finalized.
         </p>
 
         <div className="kargo-modal-actions">
-          <SecondaryBtn
-            size="sm"
-            onClick={onClose}
-            style={{ padding: "9px 12px" }}
-          >
+          <SecondaryBtn size="sm" onClick={onClose} style={{ padding: "9px 12px" }}>
             Close
           </SecondaryBtn>
           <PrimaryBtn
@@ -431,7 +441,7 @@ export default function FinancialSummaryModal({
         </div>
       </div>
     </Modal>
-  )
+  );
 }
 
 // ─── Printable batch financial summary receipt (internal bookkeeping) ─────────
@@ -449,19 +459,19 @@ function FinancialReceipt({
   onPrint,
   onClose,
 }: {
-  batch: BatchType
-  totalOrders: number
-  mode: ExpenseMode
-  expenses: number
-  items: ExpenseItem[]
-  tax: number
-  profit: number
-  onBack: () => void
-  onPrint: () => void
-  onClose: () => void
+  batch: BatchType;
+  totalOrders: number;
+  mode: ExpenseMode;
+  expenses: number;
+  items: ExpenseItem[];
+  tax: number;
+  profit: number;
+  onBack: () => void;
+  onPrint: () => void;
+  onClose: () => void;
 }) {
-  const dialogRef = useDialogA11y(onClose)
-  const dashed = "1px dashed #D1D5DB"
+  const dialogRef = useDialogA11y(onClose);
+  const dashed = "1px dashed #D1D5DB";
   const row = (labelText: string, value: string, strong = false, color = "#374151") => (
     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
       <span style={{ color: strong ? "#111827" : "#6B7280", fontWeight: strong ? 700 : 400 }}>
@@ -477,7 +487,7 @@ function FinancialReceipt({
         {value}
       </span>
     </div>
-  )
+  );
   return createPortal(
     <div
       ref={dialogRef}
@@ -523,7 +533,16 @@ function FinancialReceipt({
           className="no-print"
           onClick={onClose}
           aria-label="Close receipt"
-          style={{ position: "absolute", top: 14, right: 14, background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: 4 }}
+          style={{
+            position: "absolute",
+            top: 14,
+            right: 14,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#9CA3AF",
+            padding: 4,
+          }}
         >
           <X size={18} aria-hidden="true" />
         </button>
@@ -555,26 +574,43 @@ function FinancialReceipt({
 
         {/* Revenue */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {row("Total Orders / Revenue", `₱${totalOrders.toLocaleString()}`)}
+          {row("Total Orders / Revenue", `${formatMoney(totalOrders)}`)}
         </div>
 
         <div style={{ borderTop: dashed, margin: "14px 0" }} />
 
         {/* Expenses (with itemized breakdown when used) */}
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 8 }}>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#9CA3AF",
+            letterSpacing: 0.5,
+            textTransform: "uppercase",
+            marginBottom: 8,
+          }}
+        >
           Expenses
         </div>
         {mode === "itemized" && items.length > 0 ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 8 }}>
             {items.map((it) => (
-              <div key={it.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280" }}>
+              <div
+                key={it.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 12,
+                  color: "#6B7280",
+                }}
+              >
                 <span>
                   {it.label || "—"}
                   {it.category ? ` · ${it.category}` : ""}
                   {it.date ? ` · ${it.date}` : ""}
                 </span>
                 <span style={{ color: "#374151", fontWeight: 600 }}>
-                  ₱{(Number(it.amount) || 0).toLocaleString()}
+                  {formatMoney(Number(it.amount) || 0)}
                 </span>
               </div>
             ))}
@@ -584,8 +620,8 @@ function FinancialReceipt({
             {mode === "single" ? "Entered as a single total." : "No line items recorded."}
           </div>
         )}
-        {row("Total Expenses", `−₱${expenses.toLocaleString()}`)}
-        <div style={{ marginTop: 5 }}>{row("Estimated Tax", `−₱${tax.toLocaleString()}`)}</div>
+        {row("Total Expenses", `−${formatMoney(expenses)}`)}
+        <div style={{ marginTop: 5 }}>{row("Estimated Tax", `−${formatMoney(tax)}`)}</div>
 
         <div style={{ borderTop: "2px solid #111827", margin: "12px 0 10px" }} />
 
@@ -600,7 +636,9 @@ function FinancialReceipt({
             padding: "12px 14px",
           }}
         >
-          <span style={{ fontSize: 14, fontWeight: 800, color: profit >= 0 ? "#065F46" : "#991B1B" }}>
+          <span
+            style={{ fontSize: 14, fontWeight: 800, color: profit >= 0 ? "#065F46" : "#991B1B" }}
+          >
             Estimated Profit
           </span>
           <span
@@ -611,28 +649,31 @@ function FinancialReceipt({
               fontFamily: "'Josefin Sans',sans-serif",
             }}
           >
-            ₱{profit.toLocaleString()}
+            {formatMoney(profit)}
           </span>
         </div>
 
-        <p style={{ fontSize: 10, color: "#9CA3AF", fontStyle: "italic", textAlign: "center", margin: "12px 0 0" }}>
-          Estimate based on current claims, item prices, and recorded expenses. For
-          internal seller records only — not shared with buyers.
+        <p
+          style={{
+            fontSize: 10,
+            color: "#9CA3AF",
+            fontStyle: "italic",
+            textAlign: "center",
+            margin: "12px 0 0",
+          }}
+        >
+          Estimate based on current claims, item prices, and recorded expenses. For internal seller
+          records only — not shared with buyers.
         </p>
 
         <div className="no-print kargo-modal-actions">
-          <SecondaryBtn onClick={onBack}>
-            Back
-          </SecondaryBtn>
-          <PrimaryBtn
-            onClick={onPrint}
-            style={{ display: "flex", alignItems: "center", gap: 7 }}
-          >
+          <SecondaryBtn onClick={onBack}>Back</SecondaryBtn>
+          <PrimaryBtn onClick={onPrint} style={{ display: "flex", alignItems: "center", gap: 7 }}>
             <Printer size={16} aria-hidden="true" /> Print
           </PrimaryBtn>
         </div>
       </div>
     </div>,
     document.body,
-  )
+  );
 }

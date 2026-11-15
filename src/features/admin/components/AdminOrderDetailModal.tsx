@@ -10,8 +10,10 @@ import AdminBadge from "./AdminBadge";
 import AdminActionButton from "./AdminActionButton";
 import AdminConfirmModal from "./AdminConfirmModal";
 import { AdminEmptyText, AdminModalSection } from "./AdminFacts";
+import { formatMoney } from "@/lib/format";
+import { Check } from "lucide-react";
 
-const peso = (n: number) => `₱${Math.round(n).toLocaleString()}`;
+const peso = (n: number) => `${formatMoney(n)}`;
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : "—");
 
 // How much more the buyer still owes on an order that came up short.

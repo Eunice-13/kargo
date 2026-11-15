@@ -1,12 +1,14 @@
 import { useCallback, useRef, useState } from "react";
-import { Camera, ChevronDown, MapPin, Plane, Search, ShoppingBasket } from "lucide-react";
+import { Camera, ChevronDown, MapPin, Plane, Search, ShieldCheck, ShoppingBasket } from "lucide-react";
 import type { Role, UserInfo } from "@/types";
 
-// Signup can only ever create a Buyer or Seller; Admin is granted out-of-band.
-type SignupRole = Exclude<Role, "Admin">;
+// Admin is selectable at signup, but only as an approval request — the account
+// stays a plain non-seller until an existing admin approves it.
+type SignupRole = Role;
 import { Modal, PrimaryBtn, SecondaryBtn, Toggle } from "@/components/shared";
 import LocationPinPicker, { type LocationPinValue } from "@/components/shared/LocationPinPicker";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { normalizeUsername, validateUsername } from "@/lib/username";
 import { kargoApi } from "@/services";
 import AuthInput from "./AuthInput";
 import AuthLayout from "./AuthLayout";
@@ -19,15 +21,23 @@ export default function SignUp({
   onLogin,
   onSuccess,
   fromBatchLink = false,
+  initialRole = "Buyer",
 }: {
   onLogin: () => void;
   onSuccess: (u: UserInfo) => void;
   fromBatchLink?: boolean;
+  initialRole?: SignupRole;
 }) {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [middleInitial, setMiddleInitial] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameState, setUsernameState] = useState<"idle" | "checking" | "free" | "taken">(
+    "idle",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<SignupRole>("Buyer");
+  const [role, setRole] = useState<SignupRole>(initialRole);
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -51,17 +61,64 @@ export default function SignUp({
 
   const [terms, setTerms] = useState(false);
 
-  // Outcome of a signup that needs the user to do something by email.
-  const [notice, setNotice] = useState<{ kind: "sent" | "exists"; email: string } | null>(null);
+  // Outcome of a signup that needs the user to do something by email, or an
+  // admin request that is waiting for approval.
+  const [notice, setNotice] = useState<{
+    kind: "sent" | "exists" | "admin_pending";
+    email: string;
+  } | null>(null);
+
+  const displayName = [
+    firstName.trim(),
+    middleInitial.trim() ? `${middleInitial.trim().toUpperCase()}.` : "",
+    lastName.trim(),
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const checkUsername = useCallback(async (value: string) => {
+    const handle = normalizeUsername(value);
+    if (validateUsername(handle)) {
+      setUsernameState("idle");
+      return;
+    }
+    if (!isSupabaseConfigured) {
+      setUsernameState(handle === "kargo" ? "taken" : "free");
+      return;
+    }
+    setUsernameState("checking");
+    try {
+      const free = await kargoApi.isUsernameAvailable(handle);
+      setUsernameState(free ? "free" : "taken");
+    } catch {
+      setUsernameState("idle");
+    }
+  }, []);
 
   const submit = useCallback(async () => {
     const e: Record<string, string> = {};
-    if (!name.trim() || name.trim().split(" ").length < 2)
-      e.name = "Enter your full name (first and last).";
+    const namePattern = /^\p{L}[\p{L}\s'.-]*$/u;
+    const first = firstName.trim();
+    const last = lastName.trim();
+    const mi = middleInitial.trim();
+    if (!first) e.firstName = "Enter your first name.";
+    else if (!namePattern.test(first))
+      e.firstName = "Remove numbers and symbols from your first name.";
+    if (!last) e.lastName = "Enter your last name.";
+    else if (!namePattern.test(last))
+      e.lastName = "Remove numbers and symbols from your last name.";
+    if (mi && !/^\p{L}$/u.test(mi)) e.middleInitial = "Use one letter only.";
+    const usernameError = validateUsername(username);
+    if (usernameError) e.username = usernameError;
+    else if (usernameState === "taken") e.username = "That username is taken.";
     if (!email.includes("@")) e.email = "Enter a valid email address.";
+    else if (email.length > 254) e.email = "That email address is too long.";
     if (password.length < 8) e.password = "Password must be at least 8 characters.";
-    if (!Object.values(socials).some((s) => s.on && s.url.trim()))
-      e.social = "Turn on at least one social account and add its profile link.";
+    else if (password.length > 64) e.password = "Password must be 64 characters or fewer.";
+    if (role !== "Admin") {
+      if (!Object.values(socials).some((s) => s.on && s.url.trim()))
+        e.social = "Turn on at least one social account and add its profile link.";
+    }
     if (role === "Buyer") {
       const addressText = addressPin.address?.trim() ?? "";
       if (!addressText) e.address = "Search or pin your delivery address.";
@@ -85,8 +142,14 @@ export default function SignUp({
     if (!isSupabaseConfigured) {
       setTimeout(() => {
         setLoading(false);
+        if (role === "Admin") {
+          setErrs({});
+          setNotice({ kind: "admin_pending", email: email.trim() });
+          return;
+        }
         onSuccess({
-          name: name.trim(),
+          name: displayName,
+          username: normalizeUsername(username),
           email,
           role,
           sellerEnabled: role === "Seller",
@@ -101,7 +164,8 @@ export default function SignUp({
     }
     try {
       const result = await kargoApi.signUp({
-        name: name.trim(),
+        name: displayName,
+        username: normalizeUsername(username),
         email: email.trim(),
         password,
         shopName,
@@ -134,19 +198,28 @@ export default function SignUp({
       }
       if (result.status === "confirmation_sent") {
         setErrs({});
-        setNotice({ kind: "sent", email: email.trim() });
+        setNotice({
+          kind: role === "Admin" ? "admin_pending" : "sent",
+          email: email.trim(),
+        });
         return;
       }
       setNotice(null);
       onSuccess({ ...result.user, role });
     } catch (error) {
       setLoading(false);
+      const message = authErrorMessage(error, "Unable to create account. Please try again.");
       setErrs({
-        general: authErrorMessage(error, "Unable to create account. Please try again."),
+        general: /username/i.test(message) ? "That username was just taken. Try another." : message,
       });
     }
   }, [
-    name,
+    firstName,
+    middleInitial,
+    lastName,
+    displayName,
+    username,
+    usernameState,
     email,
     password,
     role,
@@ -194,7 +267,7 @@ export default function SignUp({
         </header>
 
         <div className="auth-signup-fields">
-          <div className="auth-signup-grid">
+          <div className={`auth-signup-grid${role === "Admin" ? " auth-signup-grid--single" : ""}`}>
             <div className="auth-signup-col auth-signup-col--main">
               <div className="auth-photo-field">
                 <button
@@ -219,14 +292,62 @@ export default function SignUp({
                 />
               </div>
 
-              <AuthInput
-                label="Full Name"
-                required
-                value={name}
-                onChange={setName}
-                error={errs.name}
-                placeholder="Juan Dela Cruz"
-              />
+              <div className="auth-signup-name-row">
+                <AuthInput
+                  label="First name"
+                  required
+                  value={firstName}
+                  onChange={setFirstName}
+                  error={errs.firstName}
+                  placeholder="Juan"
+                  maxLength={40}
+                />
+                <AuthInput
+                  label="Middle initial"
+                  value={middleInitial}
+                  onChange={(value) => setMiddleInitial(value.slice(0, 1))}
+                  error={errs.middleInitial}
+                  placeholder="D"
+                  maxLength={1}
+                />
+                <AuthInput
+                  label="Last name"
+                  required
+                  value={lastName}
+                  onChange={setLastName}
+                  error={errs.lastName}
+                  placeholder="Dela Cruz"
+                  maxLength={40}
+                />
+              </div>
+
+              <div>
+                <AuthInput
+                  label="Username"
+                  required
+                  value={username}
+                  onChange={(value) => {
+                    setUsername(value);
+                    setUsernameState("idle");
+                  }}
+                  error={errs.username}
+                  placeholder="juandc"
+                  maxLength={20}
+                  onBlur={() => void checkUsername(username)}
+                />
+                <p
+                  className={`auth-hint${usernameState === "taken" ? " auth-hint--error" : ""}`}
+                  aria-live="polite"
+                >
+                  {usernameState === "checking"
+                    ? "Checking availability…"
+                    : usernameState === "taken"
+                      ? "That username is taken."
+                      : usernameState === "free"
+                        ? `@${normalizeUsername(username)} is available.`
+                        : "Your public handle. You'll still sign in with your email."}
+                </p>
+              </div>
               <AuthInput
                 label="Email address"
                 type="email"
@@ -264,7 +385,10 @@ export default function SignUp({
                   className={`auth-field auth-address-field${errs.address ? " auth-field--error" : ""}`}
                 >
                   <label htmlFor="signup-address-trigger">
-                    Delivery address <span className="auth-required-mark" aria-hidden="true">*</span>
+                    Delivery address{" "}
+                    <span className="auth-required-mark" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <button
                     type="button"
@@ -302,7 +426,10 @@ export default function SignUp({
                   <div className="auth-payment-grid">
                     <div className="auth-field">
                       <label htmlFor="signup-payment-type">
-                        Method <span className="auth-required-mark" aria-hidden="true">*</span>
+                        Method{" "}
+                        <span className="auth-required-mark" aria-hidden="true">
+                          *
+                        </span>
                       </label>
                       <div className="auth-payment-select">
                         <button
@@ -355,7 +482,9 @@ export default function SignUp({
                               if (event.key === "ArrowDown" || event.key === "ArrowUp") {
                                 event.preventDefault();
                                 const direction = event.key === "ArrowDown" ? 1 : -1;
-                                options[(currentIndex + direction + options.length) % options.length]?.focus();
+                                options[
+                                  (currentIndex + direction + options.length) % options.length
+                                ]?.focus();
                               } else if (event.key === "Home") {
                                 event.preventDefault();
                                 options[0]?.focus();
@@ -387,9 +516,7 @@ export default function SignUp({
                           </div>
                         )}
                       </div>
-                      {errs.paymentType && (
-                        <p className="auth-error fi">{errs.paymentType}</p>
-                      )}
+                      {errs.paymentType && <p className="auth-error fi">{errs.paymentType}</p>}
                     </div>
                     <AuthInput
                       label="Account name"
@@ -411,84 +538,109 @@ export default function SignUp({
                 </div>
               )}
 
-              <div className="auth-socials">
-                <label className="auth-section-label">
-                  Contact &amp; Social Links <span>(at least one required)</span>
-                  <span className="auth-required-mark" aria-hidden="true">*</span>
-                </label>
-                {fromBatchLink && role === "Buyer" && (
-                  <p className="auth-social-note">
-                    Sellers check this before confirming a reservation, so use an account you check
-                    often.
-                  </p>
-                )}
-                <div className="auth-social-list">
-                  {platforms.map((platform) => (
-                    <div className="auth-social-row" key={platform}>
-                      <span
-                        className={`auth-social-icon auth-social-icon--${platform.toLowerCase()}`}
-                      >
-                        {socialIcon(platform)}
-                      </span>
-                      <span className="auth-social-name">{platform}</span>
-                      <Toggle
-                        on={socials[platform].on}
-                        onChange={(on) =>
-                          setSocials((current) => ({
-                            ...current,
-                            [platform]: { ...current[platform], on },
-                          }))
-                        }
-                        label={`Connect ${platform}`}
-                        compact
-                      />
-                      <input
-                        value={socials[platform].url}
-                        onChange={(event) =>
-                          setSocials((current) => ({
-                            ...current,
-                            [platform]: { ...current[platform], url: event.target.value },
-                          }))
-                        }
-                        placeholder="Profile URL or @username"
-                        aria-label={`${platform} profile`}
-                        disabled={!socials[platform].on}
-                      />
-                    </div>
-                  ))}
+              {role !== "Admin" && (
+                <div className="auth-socials">
+                  <label className="auth-section-label">
+                    Contact &amp; Social Links <span>(at least one required)</span>
+                    <span className="auth-required-mark" aria-hidden="true">
+                      *
+                    </span>
+                  </label>
+                  {fromBatchLink && role === "Buyer" && (
+                    <p className="auth-social-note">
+                      Sellers check this before confirming a reservation, so use an account you
+                      check often.
+                    </p>
+                  )}
+                  <div className="auth-social-list">
+                    {platforms.map((platform) => (
+                      <div className="auth-social-row" key={platform}>
+                        <span
+                          className={`auth-social-icon auth-social-icon--${platform.toLowerCase()}`}
+                        >
+                          {socialIcon(platform)}
+                        </span>
+                        <span className="auth-social-name">{platform}</span>
+                        <Toggle
+                          on={socials[platform].on}
+                          onChange={(on) =>
+                            setSocials((current) => ({
+                              ...current,
+                              [platform]: { ...current[platform], on },
+                            }))
+                          }
+                          label={`Connect ${platform}`}
+                          compact
+                        />
+                        <input
+                          value={socials[platform].url}
+                          onChange={(event) =>
+                            setSocials((current) => ({
+                              ...current,
+                              [platform]: { ...current[platform], url: event.target.value },
+                            }))
+                          }
+                          placeholder="Profile URL or @username"
+                          aria-label={`${platform} profile`}
+                          disabled={!socials[platform].on}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {errs.social && <p className="auth-error fi">{errs.social}</p>}
                 </div>
-                {errs.social && <p className="auth-error fi">{errs.social}</p>}
-              </div>
+              )}
             </div>
           </div>
 
           <div className="auth-role-field">
-            <span className="auth-section-label" id="signup-role-label">
-              I want to join as a...
-            </span>
-            <div className="auth-role-options" role="group" aria-labelledby="signup-role-label">
-              {(["Buyer", "Seller"] as SignupRole[]).map((option) => (
-                <button
-                  type="button"
-                  key={option}
-                  className={role === option ? "is-selected" : ""}
-                  onClick={() => setRole(option)}
-                  aria-pressed={role === option}
-                >
-                  <strong>
-                    {option === "Buyer" ? (
-                      <ShoppingBasket size={17} aria-hidden="true" />
-                    ) : (
-                      <Plane size={17} aria-hidden="true" />
-                    )}
-                    {option}
-                  </strong>
-                  <small>
-                    {option === "Buyer" ? "Claim items from batches" : "Run pasabuy batches"}
-                  </small>
-                </button>
-              ))}
-            </div>
+            {role === "Admin" ? (
+              <div className="auth-admin-only-label">
+                <ShieldCheck size={18} aria-hidden="true" />
+                <span>
+                  <strong>Admin access request</strong>
+                  <small>Approval is required before the admin console can be accessed.</small>
+                </span>
+              </div>
+            ) : (
+              <>
+                <span className="auth-section-label" id="signup-role-label">
+                  I want to join as a...
+                </span>
+                <div className="auth-role-options" role="group" aria-labelledby="signup-role-label">
+                  {(["Buyer", "Seller"] as SignupRole[]).map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      className={role === option ? "is-selected" : ""}
+                      onClick={() => {
+                        setRole(option);
+                        setErrs({});
+                      }}
+                      aria-pressed={role === option}
+                    >
+                      <strong>
+                        {option === "Buyer" ? (
+                          <ShoppingBasket size={17} aria-hidden="true" />
+                        ) : (
+                          <Plane size={17} aria-hidden="true" />
+                        )}
+                        {option}
+                      </strong>
+                      <small>
+                        {option === "Buyer" ? "Claim items from batches" : "Run pasabuy batches"}
+                      </small>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {role === "Admin" && (
+              <p className="auth-hint">
+                Admin signup is a request. An existing admin reviews it before the console unlocks —
+                you&apos;ll still confirm your email first.
+              </p>
+            )}
           </div>
 
           {role === "Seller" && (
@@ -500,7 +652,9 @@ export default function SignUp({
                   onChange={(event) => setTerms(event.target.checked)}
                 />
                 <span>
-                  <span className="auth-required-mark" aria-hidden="true">*</span>{" "}
+                  <span className="auth-required-mark" aria-hidden="true">
+                    *
+                  </span>{" "}
                   I agree to the <em>Terms of Service</em> and <em>Privacy Policy</em>. Linked
                   accounts are reference indicators only and are not automatically verified by
                   Kargo.
@@ -538,14 +692,26 @@ export default function SignUp({
             </>
           )}
 
+          {notice?.kind === "admin_pending" && (
+            <p role="status" className="auth-general-message is-success">
+              Admin request submitted. An existing admin must approve it before you can access the
+              console. We sent a confirmation link to <strong>{notice.email}</strong> — open it,
+              then log in.
+            </p>
+          )}
+
           <PrimaryBtn onClick={submit} loading={loading} style={{ width: "100%" }}>
             {loading
               ? role === "Seller"
                 ? "Creating shop…"
-                : "Creating account…"
+                : role === "Admin"
+                  ? "Submitting request…"
+                  : "Creating account…"
               : role === "Seller"
                 ? "Create Shop"
-                : "Create account"}
+                : role === "Admin"
+                  ? "Request admin access"
+                  : "Create account"}
           </PrimaryBtn>
         </div>
 

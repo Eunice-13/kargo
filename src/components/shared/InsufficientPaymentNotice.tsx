@@ -1,4 +1,5 @@
-import type { ClaimStatus } from "@/types"
+import type { ClaimStatus } from "@/types";
+import { formatMoney } from "@/lib/format";
 
 // A shortfall is never a status of its own: the claim stays Pending and this
 // tag carries the amount still owed. Shared by every buyer/seller surface.
@@ -6,7 +7,7 @@ import type { ClaimStatus } from "@/types"
 // The tag only makes sense while the order is still awaiting payment. Once it
 // has expired, been cancelled, or been paid, the balance is historical and the
 // tag is hidden.
-const OPEN_STATUSES: ClaimStatus[] = ["Pending", "Insufficient Payment"]
+const OPEN_STATUSES: ClaimStatus[] = ["Pending", "Insufficient Payment"];
 
 export default function InsufficientPaymentNotice({
   shortfall,
@@ -24,7 +25,7 @@ export default function InsufficientPaymentNotice({
 }) {
   if (status != null && !OPEN_STATUSES.includes(status)) return null;
   if (shortfall == null || !(shortfall > 0)) return null;
-  const label = `Insufficient · ₱${shortfall.toLocaleString()} short`;
+  const label = `Insufficient · ${formatMoney(shortfall)} short`;
   return (
     <span
       data-insufficient-payment

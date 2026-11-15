@@ -1,8 +1,9 @@
-import type React from "react"
-import { Phone } from "lucide-react"
-import { CYAN_L, SKY } from "@/constants/theme"
-import { Modal, SecondaryBtn } from "@/components/shared"
-import type { VerifyItem } from "./verifyTypes"
+import type React from "react";
+import { Phone } from "lucide-react";
+import { CYAN_L, SKY } from "@/constants/theme";
+import { Modal, SecondaryBtn } from "@/components/shared";
+import type { VerifyItem } from "./verifyTypes";
+import { formatMoney } from "@/lib/format";
 
 export default function InsufficientPaymentModal({
   insuffTarget,
@@ -12,20 +13,20 @@ export default function InsufficientPaymentModal({
   setVerifyItems,
   onConfirm,
 }: {
-  insuffTarget: VerifyItem
-  setInsuffTarget: (v: VerifyItem | null) => void
-  insuffAmtPaid: string
-  setInsuffAmtPaid: (v: string) => void
-  setVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>>
-  onConfirm?: (paidAmt: number, shortAmt: number) => void
+  insuffTarget: VerifyItem;
+  setInsuffTarget: (v: VerifyItem | null) => void;
+  insuffAmtPaid: string;
+  setInsuffAmtPaid: (v: string) => void;
+  setVerifyItems: React.Dispatch<React.SetStateAction<VerifyItem[]>>;
+  onConfirm?: (paidAmt: number, shortAmt: number) => void;
 }) {
-  const paidAmt = Number(insuffAmtPaid) || 0
-  const submittedAmt = Number(insuffTarget.amountPaid) || insuffTarget.amount
-  const shortAmt = insuffTarget.amount - paidAmt
+  const paidAmt = Number(insuffAmtPaid) || 0;
+  const submittedAmt = Number(insuffTarget.amountPaid) || insuffTarget.amount;
+  const shortAmt = insuffTarget.amount - paidAmt;
   // The seller is correcting the received amount downward; it cannot exceed
   // what the buyer submitted. The review RPC enforces the same rule.
-  const exceedsSubmitted = paidAmt > submittedAmt
-  const isValid = paidAmt > 0 && shortAmt > 0 && !exceedsSubmitted
+  const exceedsSubmitted = paidAmt > submittedAmt;
+  const isValid = paidAmt > 0 && shortAmt > 0 && !exceedsSubmitted;
   return (
     <Modal
       title="Insufficient Payment"
@@ -44,14 +45,10 @@ export default function InsufficientPaymentModal({
             color: "#92400E",
           }}
         >
-          The buyer submitted payment for{" "}
-          <strong>{insuffTarget.product}</strong> but the amount may
-          be short of ₱{insuffTarget.amount.toLocaleString()}.
+          The buyer submitted payment for <strong>{insuffTarget.product}</strong> but the amount may
+          be short of {formatMoney(insuffTarget.amount)}.
         </div>
-        <div
-          className="grid gap-3"
-          style={{ gridTemplateColumns: "1fr 1fr" }}
-        >
+        <div className="grid gap-3" style={{ gridTemplateColumns: "1fr 1fr" }}>
           <div>
             <label
               style={{
@@ -76,7 +73,7 @@ export default function InsufficientPaymentModal({
                 fontFamily: "'Josefin Sans',sans-serif",
               }}
             >
-              ₱{insuffTarget.amount.toLocaleString()}
+              {formatMoney(insuffTarget.amount)}
             </div>
           </div>
           <div>
@@ -89,8 +86,7 @@ export default function InsufficientPaymentModal({
                 marginBottom: 5,
               }}
             >
-              Amount Actually Paid{" "}
-              <span style={{ color: "#E11D2E" }}>*</span>
+              Amount Actually Paid <span style={{ color: "#E11D2E" }}>*</span>
             </label>
             <input
               type="number"
@@ -100,9 +96,7 @@ export default function InsufficientPaymentModal({
               style={{
                 width: "100%",
                 fontSize: 13,
-                border: `1.5px solid ${
-                  insuffAmtPaid && !isValid ? "#EF4444" : "#E5E7EB"
-                }`,
+                border: `1.5px solid ${insuffAmtPaid && !isValid ? "#EF4444" : "#E5E7EB"}`,
                 borderRadius: 7,
                 padding: "9px 12px",
                 outline: "none",
@@ -120,9 +114,7 @@ export default function InsufficientPaymentModal({
               justifyContent: "space-between",
               alignItems: "center",
               background: shortAmt > 0 ? "#FEF9C3" : "#D4F5EA",
-              border: `1px solid ${
-                shortAmt > 0 ? "#FCD34D" : "#6EE7B7"
-              }`,
+              border: `1px solid ${shortAmt > 0 ? "#FCD34D" : "#6EE7B7"}`,
               borderRadius: 8,
               padding: "10px 14px",
             }}
@@ -134,9 +126,7 @@ export default function InsufficientPaymentModal({
                 color: shortAmt > 0 ? "#92400E" : "#065F46",
               }}
             >
-              {shortAmt > 0
-                ? "Amount Short"
-                : "No shortfall detected"}
+              {shortAmt > 0 ? "Amount Short" : "No shortfall detected"}
             </span>
             {shortAmt > 0 && (
               <span
@@ -147,7 +137,7 @@ export default function InsufficientPaymentModal({
                   fontFamily: "'Josefin Sans',sans-serif",
                 }}
               >
-                ₱{shortAmt.toLocaleString()}
+                {formatMoney(shortAmt)}
               </span>
             )}
           </div>
@@ -172,25 +162,20 @@ export default function InsufficientPaymentModal({
                 marginRight: 5,
               }}
             />
-            The buyer will be notified: "Your payment for{" "}
-            <strong>{insuffTarget.product}</strong> is short by ₱
-            {shortAmt.toLocaleString()}. Please send the remaining
-            balance to avoid your reservation expiring."
+            The buyer will be notified: "Your payment for <strong>{insuffTarget.product}</strong> is
+            short by ₱{shortAmt.toLocaleString()}. Please send the remaining balance to avoid your
+            reservation expiring."
           </div>
         )}
         <div className="kargo-modal-actions">
-          <SecondaryBtn
-            onClick={() => setInsuffTarget(null)}
-          >
-            Cancel
-          </SecondaryBtn>
+          <SecondaryBtn onClick={() => setInsuffTarget(null)}>Cancel</SecondaryBtn>
           <button
             disabled={!isValid}
             onClick={() => {
               if (onConfirm) {
                 // The server owns the transition: reject-with-shortfall, never
                 // a verified payment. Do not optimistically verify here.
-                onConfirm(paidAmt, shortAmt)
+                onConfirm(paidAmt, shortAmt);
               } else {
                 setVerifyItems((p) =>
                   p.map((v) =>
@@ -200,13 +185,13 @@ export default function InsufficientPaymentModal({
                           status: "Rejected" as const,
                           amountPaid: String(paidAmt),
                           shortfallAmount: shortAmt,
-                          rejectReason: `Insufficient payment — ₱${shortAmt.toLocaleString()} short`,
+                          rejectReason: `Insufficient payment — ${formatMoney(shortAmt)} short`,
                         }
                       : v,
                   ),
-                )
+                );
               }
-              setInsuffTarget(null)
+              setInsuffTarget(null);
             }}
             style={{
               background: "#F59E0B",
@@ -227,5 +212,5 @@ export default function InsufficientPaymentModal({
         </div>
       </div>
     </Modal>
-  )
+  );
 }

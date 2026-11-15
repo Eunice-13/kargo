@@ -10,6 +10,10 @@ type ProfileSectionProps = {
   setFirstName: (v: string) => void;
   lastName: string;
   setLastName: (v: string) => void;
+  username: string;
+  setUsername: (v: string) => void;
+  usernameError?: string | null;
+  usernameHint?: string;
   email: string;
   setEmail: (v: string) => void;
   bio: string;
@@ -28,6 +32,10 @@ export default function ProfileSection({
   setFirstName,
   lastName,
   setLastName,
+  username,
+  setUsername,
+  usernameError,
+  usernameHint,
   email,
   setEmail,
   bio,
@@ -162,6 +170,70 @@ export default function ProfileSection({
             </p>
           </div>
         )}
+        <div className="col-span-2">
+          <label
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#374151",
+              display: "block",
+              marginBottom: 4,
+            }}
+          >
+            Username
+          </label>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              border: `1px solid ${usernameError ? "#FCA5A5" : "#E5E7EB"}`,
+              borderRadius: 7,
+              overflow: "hidden",
+              background: "#fff",
+            }}
+          >
+            <span
+              style={{
+                padding: "8px 0 8px 12px",
+                fontSize: 13,
+                color: "#9CA3AF",
+                fontWeight: 600,
+              }}
+              aria-hidden="true"
+            >
+              @
+            </span>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              maxLength={20}
+              aria-invalid={Boolean(usernameError)}
+              aria-label="Username"
+              style={{
+                flex: 1,
+                minWidth: 0,
+                fontSize: 13,
+                border: "none",
+                padding: "8px 12px 8px 4px",
+                outline: "none",
+                color: "#374151",
+                background: "transparent",
+              }}
+            />
+          </div>
+          <p
+            style={{
+              fontSize: 11,
+              color: usernameError ? "#DC2626" : "#9CA3AF",
+              margin: "4px 0 0",
+            }}
+            aria-live="polite"
+          >
+            {usernameError ||
+              usernameHint ||
+              "Your public handle. You sign in with your email, not this."}
+          </p>
+        </div>
         <div className="col-span-2">
           <label
             style={{

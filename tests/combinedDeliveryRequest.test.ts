@@ -106,12 +106,12 @@ test("separate confirmed destinations never merge, even with identical coordinat
   assert.equal(potentialDeliveryRequests([a, b], "buyer").length, 0);
   assert.equal(requestSelectionEligibility([a, second], "buyer").eligible, true);
 });
-test("active/rejected request association is per reservation, not seller name", () => {
+test("active request association is per reservation, not seller name", () => {
   const requests = [
     { id: "rejected", status: "rejected", members: [{ order_id: "order-a" }] },
     { id: "pending", status: "pending_approval", members: [{ order_id: "order-b" }] },
   ] as CombinedDeliveryRequest[];
-  assert.equal(latestDeliveryRequestForOrder(requests, "order-a")?.status, "rejected");
+  assert.equal(latestDeliveryRequestForOrder(requests, "order-a"), undefined);
   assert.equal(latestDeliveryRequestForOrder(requests, "order-b")?.status, "pending_approval");
   assert.equal(latestDeliveryRequestForOrder(requests, "unrelated"), undefined);
 });
