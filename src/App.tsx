@@ -154,7 +154,18 @@ export default function App() {
 
   const [booting, setBooting] = useState(isSupabaseConfigured && !anyPreview);
 
-  const [showReservationGate, setShowReservationGate] = useState(viaBatchLink && !originalPreview);
+  const reservationGateKey = sharedBatchId ? `kargo-reservation-gate:${sharedBatchId}` : "";
+  const [showReservationGate, setShowReservationGate] = useState(() => {
+    if (!viaBatchLink || originalPreview || typeof window === "undefined") return false;
+    return window.sessionStorage.getItem(reservationGateKey) !== "seen";
+  });
+
+  const dismissReservationGate = () => {
+    if (reservationGateKey && typeof window !== "undefined") {
+      window.sessionStorage.setItem(reservationGateKey, "seen");
+    }
+    setShowReservationGate(false);
+  };
 
   const [showOnboarding, setOnboard] = useState(false);
 
@@ -763,14 +774,14 @@ export default function App() {
           batchTitle={linkedBatch?.title}
           sellerName={linkedBatch?.seller}
           onLogin={() => {
-            setShowReservationGate(false);
+            dismissReservationGate();
             setStage("login");
           }}
           onSignUp={() => {
-            setShowReservationGate(false);
+            dismissReservationGate();
             setStage("signup");
           }}
-          onDismiss={() => setShowReservationGate(false)}
+          onDismiss={dismissReservationGate}
         />
       )}
       {stage === "app" && (

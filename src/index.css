@@ -890,6 +890,29 @@ button {
   cursor: pointer;
 }
 
+.auth-content--admin .auth-heading h1 {
+  color: #191ba9;
+}
+
+.auth-content--admin .auth-heading p::before {
+  content: "Approved administrators only · ";
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.auth-content--admin .auth-switch-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  font-size: 13px;
+}
+
+.auth-content--admin .auth-switch-copy .auth-link-button + .auth-link-button {
+  margin-left: 8px;
+}
+
 .auth-admin-only-label {
   display: flex;
   align-items: center;

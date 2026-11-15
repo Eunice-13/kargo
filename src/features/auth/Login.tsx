@@ -29,6 +29,7 @@ export default function Login({
     null,
   );
   const [adminPopup, setAdminPopup] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
 
   const submit = useCallback(async () => {
     let ok = true;
@@ -54,7 +55,14 @@ export default function Login({
       return;
     }
     try {
-      onSuccess(await kargoApi.signIn(email.trim(), password));
+      const signedInUser = await kargoApi.signIn(email.trim(), password);
+      if (adminMode && !signedInUser.adminEnabled) {
+        await kargoApi.signOut();
+        setLoading(false);
+        setPassErr("This account does not have approved admin access.");
+        return;
+      }
+      onSuccess(signedInUser);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -133,7 +141,10 @@ export default function Login({
             <button
               type="button"
               className="auth-admin-access-primary"
-              onClick={() => setAdminPopup(false)}
+              onClick={() => {
+                setAdminPopup(false);
+                setAdminMode(true);
+              }}
             >
               Admin sign in
             </button>
@@ -150,10 +161,14 @@ export default function Login({
           </section>
         </div>
       )}
-      <div className="auth-content pu">
+      <div className={`auth-content pu${adminMode ? " auth-content--admin" : ""}`}>
         <header className="auth-heading">
-          <h1>Your Budol, Our Kargo!</h1>
-          <p>Sign in to your Kargo account</p>
+          <h1>{adminMode ? "KARGO Admin console" : "Your Budol, Our Kargo!"}</h1>
+          <p>
+            {adminMode
+              ? "Sign in with your approved admin account"
+              : "Sign in to your Kargo account"}
+          </p>
         </header>
 
         <form
@@ -203,15 +218,33 @@ export default function Login({
           </div>
           {needsConfirm && <ResendConfirmation email={email.trim()} />}
           <PrimaryBtn loading={loading} style={{ width: "100%" }}>
-            {loading ? "Signing in…" : "Login"}
+            {loading ? "Signing in…" : adminMode ? "Admin sign in" : "Login"}
           </PrimaryBtn>
         </form>
 
         <div className="auth-switch-copy">
-          <span>Don’t have an account? </span>
-          <button onClick={onSignUp} className="auth-link-button">
-            Sign up
-          </button>
+          {adminMode ? (
+            <>
+              <span>Need admin access? </span>
+              <button type="button" onClick={onAdminSignUp} className="auth-link-button">
+                Request admin signup
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdminMode(false)}
+                className="auth-link-button"
+              >
+                Back to regular sign in
+              </button>
+            </>
+          ) : (
+            <>
+              <span>Don’t have an account? </span>
+              <button onClick={onSignUp} className="auth-link-button">
+                Sign up
+              </button>
+            </>
+          )}
         </div>
       </div>
     </AuthLayout>
