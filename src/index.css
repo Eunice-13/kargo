@@ -21038,3 +21038,168 @@ tr.record-focus {
     font-size: 13px !important;
   }
 }
+
+/* Sign-up page: readable text and visible, non-overlapping error messages. */
+.auth-page--signup .auth-field label,
+.auth-page--signup .auth-photo-field > label,
+.auth-page--signup .auth-section-label {
+  font-size: 1rem !important;
+}
+.auth-page--signup .auth-input-shell input,
+.auth-page--signup .auth-select,
+.auth-page--signup .auth-address-input,
+.auth-page--signup .auth-address-trigger,
+.auth-page--signup .auth-social-row input {
+  font-size: 1rem !important;
+}
+.auth-page--signup .auth-heading p,
+.auth-page--signup .auth-social-name,
+.auth-page--signup .auth-terms,
+.auth-page--signup .auth-social-note {
+  font-size: 0.95rem !important;
+}
+.auth-page--signup .auth-role-options strong {
+  font-size: 1.05rem !important;
+}
+.auth-page--signup .auth-role-options small,
+.auth-page--signup .auth-hint {
+  font-size: 0.85rem !important;
+}
+.auth-page--signup .auth-error {
+  position: static !important;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0.35rem 0 0.25rem !important;
+  color: #c62828 !important;
+  font-size: 0.875rem !important;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.auth-page--signup .auth-error svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+.auth-page--signup .auth-field--error .auth-input-shell input,
+.auth-page--signup .auth-field--error .auth-address-trigger {
+  border-color: #d32f2f !important;
+  background: #fff5f5 !important;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.15);
+}
+
+/* Name row: keep labels on one line so all three boxes line up. */
+.auth-page--signup .auth-signup-name-row {
+  grid-template-columns: minmax(0, 1fr) minmax(8.5rem, 0.5fr) minmax(0, 1fr);
+  align-items: start;
+}
+.auth-page--signup .auth-signup-name-row .auth-field label {
+  white-space: nowrap;
+}
+@media (max-width: 520px) {
+  .auth-page--signup .auth-signup-name-row {
+    grid-template-columns: minmax(0, 1fr) minmax(8.5rem, 0.6fr);
+  }
+}
+/* Even vertical rhythm between fields. */
+.auth-page--signup .auth-signup-col,
+.auth-page--signup .auth-signup-grid {
+  gap: 1.25rem !important;
+}
+.auth-page--signup .auth-error {
+  margin: 0.35rem 0 0 !important;
+}
+.auth-page--signup .auth-hint {
+  margin: 0.35rem 0 0 !important;
+}
+
+/* Login page: same readable text and visible errors as sign-up. */
+.auth-page--login .auth-field label {
+  font-size: 1rem !important;
+}
+.auth-page--login .auth-input-shell input {
+  font-size: 1rem !important;
+}
+.auth-page--login .auth-heading p,
+.auth-page--login .auth-switch-copy,
+.auth-page--login .auth-link-button,
+.auth-page--login .auth-recovery-status {
+  font-size: 0.95rem !important;
+}
+.auth-page--login .auth-error {
+  position: static !important;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0.35rem 0 0 !important;
+  color: #c62828 !important;
+  font-size: 0.875rem !important;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.auth-page--login .auth-error svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+.auth-page--login .auth-field--error .auth-input-shell input {
+  border-color: #d32f2f !important;
+  background: #fff5f5 !important;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.15);
+}
+
+/* Profile photo preview fills the circle. */
+.auth-photo-button .auth-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.auth-social-icon svg {
+  width: 56%;
+  height: 56%;
+}
+
+/* Payment method dropdown matches the other sign-up inputs. */
+.auth-page--signup .auth-payment-select__trigger,
+.auth-page--signup .auth-payment-select__trigger .is-placeholder,
+.auth-page--signup .auth-payment-select__options button {
+  font-size: 1rem !important;
+}
+
+/* Terms / Privacy links and document text. */
+.legal-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #3f6fb5;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.legal-link:hover {
+  color: #2c5391;
+}
+.legal-doc {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  color: #2a313c;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.legal-doc__meta {
+  margin: 0 0 0.75rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+.legal-doc h3 {
+  margin: 1.1rem 0 0.3rem;
+  color: #1f2530;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.legal-doc p {
+  margin: 0 0 0.5rem;
+}

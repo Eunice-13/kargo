@@ -12,6 +12,7 @@ import { normalizeUsername, validateUsername } from "@/lib/username";
 import { kargoApi } from "@/services";
 import AuthInput from "./AuthInput";
 import AuthLayout from "./AuthLayout";
+import LegalModal, { type LegalDoc } from "./LegalDocs";
 import ResendConfirmation from "./ResendConfirmation";
 import { authErrorMessage } from "./authErrors";
 
@@ -43,6 +44,7 @@ export default function SignUp({
 
   const photoRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
 
   const [shopName, setShopName] = useState("");
   const [socials, setSocials] = useState<Record<string, { on: boolean; url: string }>>({
@@ -60,6 +62,11 @@ export default function SignUp({
   const [paymentNumber, setPaymentNumber] = useState("");
 
   const [terms, setTerms] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<LegalDoc | null>(null);
+  const openLegal = (doc: LegalDoc) => (event: { preventDefault: () => void }) => {
+    event.preventDefault();
+    setLegalDoc(doc);
+  };
 
   // Outcome of a signup that needs the user to do something by email, or an
   // admin request that is waiting for approval.
@@ -255,7 +262,13 @@ export default function SignUp({
 
   const socialIcon = (platform: (typeof platforms)[number]) => {
     if (platform === "Instagram") return <Camera size={18} strokeWidth={3} />;
-    return <span>{platform === "Facebook" ? "f" : "♪"}</span>;
+    if (platform === "TikTok")
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.04-.1z" />
+        </svg>
+      );
+    return <span>f</span>;
   };
 
   return (
@@ -276,7 +289,11 @@ export default function SignUp({
                   aria-label="Upload profile photo"
                   onClick={() => photoRef.current?.click()}
                 >
-                  {photo ? <span>{photo}</span> : <b>＋</b>}
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="Profile photo preview" className="auth-photo-preview" />
+                  ) : (
+                    <b>＋</b>
+                  )}
                 </button>
                 <label>
                   Profile Photo <span>(optional)</span>
@@ -287,7 +304,13 @@ export default function SignUp({
                   accept="image/*"
                   hidden
                   onChange={(event) => {
-                    if (event.target.files?.[0]) setPhoto(event.target.files[0].name);
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    setPhoto(file.name);
+                    setPhotoUrl((previous) => {
+                      if (previous) URL.revokeObjectURL(previous);
+                      return URL.createObjectURL(file);
+                    });
                   }}
                 />
               </div>
@@ -385,7 +408,7 @@ export default function SignUp({
                   className={`auth-field auth-address-field${errs.address ? " auth-field--error" : ""}`}
                 >
                   <label htmlFor="signup-address-trigger">
-                    Delivery address{" "}
+                    Delivery address
                     <span className="auth-required-mark" aria-hidden="true">
                       *
                     </span>
@@ -426,7 +449,7 @@ export default function SignUp({
                   <div className="auth-payment-grid">
                     <div className="auth-field">
                       <label htmlFor="signup-payment-type">
-                        Method{" "}
+                        Method
                         <span className="auth-required-mark" aria-hidden="true">
                           *
                         </span>
@@ -655,7 +678,15 @@ export default function SignUp({
                   <span className="auth-required-mark" aria-hidden="true">
                     *
                   </span>{" "}
-                  I agree to the <em>Terms of Service</em> and <em>Privacy Policy</em>. Linked
+                  I agree to the{" "}
+                  <button type="button" className="legal-link" onClick={openLegal("terms")}>
+                    Terms of Service
+                  </button>{" "}
+                  and{" "}
+                  <button type="button" className="legal-link" onClick={openLegal("privacy")}>
+                    Privacy Policy
+                  </button>
+                  . Linked
                   accounts are reference indicators only and are not automatically verified by
                   Kargo.
                 </span>
@@ -722,7 +753,15 @@ export default function SignUp({
           </button>
         </div>
         <p className="auth-legal-copy">
-          By signing up, you agree to our <span>Terms</span> and <span>Privacy Policy</span>.
+          By signing up, you agree to our{" "}
+          <button type="button" className="legal-link" onClick={openLegal("terms")}>
+            Terms
+          </button>{" "}
+          and{" "}
+          <button type="button" className="legal-link" onClick={openLegal("privacy")}>
+            Privacy Policy
+          </button>
+          .
         </p>
       </div>
 
@@ -772,6 +811,7 @@ export default function SignUp({
           </div>
         </Modal>
       )}
+      {legalDoc && <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />}
     </AuthLayout>
   );
 }
