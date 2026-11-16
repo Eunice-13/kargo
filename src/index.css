@@ -21405,27 +21405,30 @@ tr.record-focus {
 /* Match the buyer home canvas: the detail page owns the shell width and
    restores the same edge rhythm at every breakpoint. */
 .batch-page {
-  width: 100%;
-  max-width: none !important;
-  margin: -24px !important;
-  padding: 24px clamp(24px, 2.2vw, 36px) 84px !important;
+  /* Match `.buyer-home__content`: a centered content rail rather than a
+     full-bleed detail canvas. */
+  width: min(calc(100% - 48px), 1080px);
+  max-width: 1080px !important;
+  margin: 0 auto !important;
+  padding: 0 0 84px !important;
 }
 
 @media (max-width: 1023px) {
   .batch-page {
-    margin: -16px !important;
-    padding: 16px 14px calc(92px + env(safe-area-inset-bottom)) !important;
+    width: calc(100% - 32px);
+    margin: 0 auto !important;
+    padding: 0 0 calc(92px + env(safe-area-inset-bottom)) !important;
   }
 }
 
 @media (max-width: 600px) {
   .batch-page {
-    padding-inline: 10px !important;
+    width: calc(100% - 24px);
   }
 }
 
 @media (max-width: 380px) {
   .batch-page {
-    padding-inline: 8px !important;
+    width: calc(100% - 16px);
   }
 }
