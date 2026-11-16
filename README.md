@@ -1,59 +1,75 @@
-# KARGO Order Fulfillment Platform
+# KARGO
 
-KARGO is a responsive pasabuy order-fulfillment workspace for Filipino buyers
-and independent sellers. Buyers can discover seller-run travel batches, claim
-items, submit payment details, and follow fulfillment progress. Sellers can
-publish batches, review claims and payments, and move orders through the
-fulfillment workflow.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-kargo--psi.vercel.app-191ba9?style=for-the-badge)](https://kargo-psi.vercel.app/)
+![React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-ready-3ecf8e?logo=supabase&logoColor=white)
 
-KARGO is backed by [Supabase](https://supabase.com/) for authentication and
-data. When Supabase credentials are supplied, the app runs against the live
-database with persistent auth sessions. When they are absent, it automatically
-falls back to an in-memory demo mode seeded from `src/data/` so the UI is fully
-explorable without any backend.
+<p align="center">
+  <img src="./public/kargo-logo-head.png" alt="KARGO logo" width="96" />
+</p>
 
-> [!NOTE]
-> The Supabase integration is detected at runtime via `isSupabaseConfigured`
-> (see `src/lib/supabase/client.ts`). Features such as auth, batches, claims,
-> payments, notifications, financial summaries, and sales reports have live
-> Supabase paths and an in-memory fallback. Payments still simulate money
-> movement — no payment provider is connected yet.
+KARGO is a centralized pasabuy order-fulfillment workspace for Filipino buyers
+and independent sellers. It replaces scattered spreadsheets, comment threads,
+and Messenger chains with one clear flow—from discovering travel batches and
+claiming items to payment review, fulfillment, and delivery updates.
 
-## Features
+**Try it now:** [kargo-psi.vercel.app](https://kargo-psi.vercel.app/)
 
-- Supabase-backed auth with an in-memory demo fallback
-- Seller access is unlocked only by a verified BIR Registration Seal Badge
-  (no free role switcher)
-- "Apply to Become a Seller" flow with a multi-stage badge verification pipeline
-  and Pending / Verified / Flagged status indicators
-- Live batch discovery, seller profiles, item claims, and request forms
-- Seller shop pages with collapsible batch cards that expand on tap
-- Claim deadlines, payment submission, and seller payment verification
-- Order tracking and a fulfillment Kanban board with an expandable full-screen view
-- Seller batch creation, financial summaries, a printable sales report, and
-  received-order management
-- Interactive notifications, profile settings, linked accounts, payment methods,
-  and security settings
-- Responsive layouts, accessible interaction states, and reduced-motion support
+## See the experience
 
-## Tech stack
+The product is designed around three connected flows:
 
-- React 19 and TypeScript 5.7
-- Vite 8
-- Tailwind CSS 4
-- Supabase (`@supabase/supabase-js`) for auth and data
-- Lucide React icons
-- oxfmt for formatting
+| Buyer discovery | Seller operations | Trust and access |
+| --- | --- | --- |
+| Browse travel batches, inspect items, claim a slot, and track the order. | Create batches, review claims and payments, and move orders through fulfillment. | Seller onboarding includes BIR Registration Seal verification and access controls. |
 
-## Requirements
+For a quick visual preview, open the [live demo](https://kargo-psi.vercel.app/)
+and explore the Buyer Home, Batch Detail, Seller Fulfillment Board, and seller
+verification flows.
 
-- Node.js 22
-- npm or pnpm 10
+## Core features
 
-The expected Node.js and pnpm versions are recorded in `.mise.toml`. If you use
-[mise](https://mise.jdx.dev/), run `mise install` from the project directory.
+### For buyers
 
-## Getting started
+- Live travel-batch discovery with seller profiles, item photos, prices, and
+  availability
+- Item claiming with reservation deadlines, quantity limits, and waitlists
+- Group orders for coordinating purchases
+- Payment-proof submission and seller verification status
+- Order tracking, notifications, delivery updates, and fulfillment history
+
+### For sellers
+
+- Gated onboarding through BIR Registration Seal verification
+- Batch creation with trip dates, product photos, pricing, quantities, and
+  waitlist limits
+- Claim, payment, and extension-request review
+- Fulfillment Kanban board for moving orders from payment to delivery
+- Financial summaries, sales reporting, and buyer communication
+
+### For administrators
+
+- User, batch, transaction, and security views
+- Seller and admin access management
+- Batch moderation and account-status controls
+- Payment review and auditable administrative actions
+
+## How it works
+
+- **Frontend:** React components are organized by product feature and shared
+  through the application shell.
+- **Data layer:** `kargoApi` keeps UI features independent from backend details.
+- **Backend:** Supabase provides authentication, persistence, database rules,
+  storage, and admin RPCs when configured.
+- **Fallback:** Without environment keys, the app automatically uses seeded
+  in-memory data so the complete product flow remains explorable locally.
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) and
+[DATABASE_FUNCTIONS.md](./DATABASE_FUNCTIONS.md) for implementation details.
+
+## Quick start
 
 ```bash
 git clone <repository-url>
@@ -62,149 +78,75 @@ npm install
 npm run dev
 ```
 
-The development server listens on `http://localhost:8443` by default. Set the
-`PORT` environment variable before starting Vite to use a different port.
+Open [http://localhost:8443](http://localhost:8443).
 
-### Connecting Supabase
+### Environment variables
 
-Copy `.env.example` to `.env.local` and fill in your project values. The client
-reads Vite-exposed variables, so the keys **must** be prefixed with `VITE_`:
+For persistent authentication and data, copy `.env.example` to `.env.local`:
 
 ```text
 VITE_SUPABASE_URL=https://<your-project>.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=<your-publishable-or-anon-key>
 ```
 
-Only `VITE_`-prefixed variables are bundled into the browser, and only the
-publishable/anon key belongs there. Keep any secret/service keys server-side and
-never expose them to the client. If these variables are missing or unprefixed,
-`isSupabaseConfigured` is `false` and the app runs in in-memory demo mode.
+If these values are omitted, KARGO runs in Demo Mode automatically.
 
-### Demo login (no Supabase)
+### Evaluator shortcuts
 
-When Supabase is not configured, the app opens on the sign-up screen. You can
-create a simulated buyer account, apply as a seller, or select **Log in** and
-use:
+When running locally without Supabase:
 
 ```text
 Email: any valid email address
 Password: password123
 ```
 
-To skip authentication and open the seeded demo directly, visit:
+Useful preview routes:
 
 ```text
 http://localhost:8443/?preview=original
+http://localhost:8443/?preview=admin
 ```
 
-### Trying the seller (BIR badge) verification
+The admin preview is available only in development builds. The deployed app
+requires a real approved admin account.
 
-Seller access is gated behind a verified BIR Registration Seal Badge. Apply
-from the sign-up screen or the profile dropdown ("Apply to Become a Seller") and
-upload any image. In demo mode the authoritative QR decode is simulated from the
-file name so you can exercise the full pipeline
-(Uploading -> Scanning -> Verifying -> Verified / Flagged):
+To exercise BIR verification states in Demo Mode, use filenames containing:
 
-- A normal file name verifies (badge domain check passes) and unlocks seller access.
-- A name containing `fake`, `tamper`, or `altered` is Flagged (fails the domain check).
-- A name containing `blur` or `empty` is Flagged (QR unreadable).
+- `fake`, `tamper`, or `altered` → flagged badge
+- `blur` or `empty` → unreadable/flagged badge
+- Any normal image filename → successful verification flow
 
-The strict `verify.bir.gov.ph` domain/allow-list check itself is real code; the
-authoritative QR decode is intended to run server-side (a Supabase Edge
-Function). See `src/features/auth/birVerification.ts` for the documented server
-boundary.
+## Tech stack
 
-## Available scripts
+- React 19
+- TypeScript 5.7
+- Vite 8
+- Tailwind CSS 4
+- Supabase
+- Lucide React
+- oxfmt
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the Vite development server with hot reload |
-| `npm run build` | Create a production build in `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm run typecheck` | Run TypeScript checks without emitting files |
-| `npm run format` | Format the project with oxfmt |
+## Documentation
 
-Equivalent `pnpm` commands can be used with `pnpm-lock.yaml`. Choose one package
-manager for a change and avoid updating both lockfiles unintentionally.
+- [PRODUCT.md](./PRODUCT.md) — product goals, audience, and priorities
+- [DESIGN.md](./DESIGN.md) — visual language and interaction guidance
+- [ARCHITECTURE.md](./ARCHITECTURE.md) — feature boundaries and project map
+- [DATABASE_FUNCTIONS.md](./DATABASE_FUNCTIONS.md) — backend RPC reference
+- [EMAILS.md](./EMAILS.md) — transactional email templates and behavior
+- [WALKTHROUGH.md](./WALKTHROUGH.md) — product walkthrough
 
-## Project structure
+## Roadmap
 
-```text
-src/
-|-- components/
-|   |-- layout/       # Header, navigation, and tab composition
-|   `-- shared/       # Reusable UI and cross-feature modals
-|-- constants/        # Theme and fulfillment constants
-|-- data/             # Seed data used for the in-memory demo fallback
-|-- features/         # Auth, batches, claims, payments, orders, and other screens
-|-- lib/              # Supabase client and configuration
-|-- services/         # kargoApi — the Supabase-backed data access layer
-|-- state/            # Cross-tab navigation intent
-|-- types/            # Shared TypeScript types
-|-- App.tsx           # Root state, authentication stage, and app shell
-|-- index.css         # Global styles and Tailwind import
-`-- main.tsx          # React entry point
-```
+KARGO’s next milestones are:
 
-Imports flow from foundational modules toward the application shell:
+- Live payment-gateway integration and reconciliation
+- Supabase Storage persistence for payment receipts and verification badges
+- Automated end-to-end coverage for buyer, seller, and admin journeys
+- Expanded delivery, notification, and reporting integrations
 
-```text
-types/constants/data/state -> lib/services -> shared components -> features -> layout -> App.tsx
-```
-
-Use the `@/` alias for imports across folders and relative imports for files in
-the same folder. Feature modules expose their public API through `index.ts`.
-
-For the complete folder map and guidance on adding tabs, modals, shared UI, and
-seed data, see [ARCHITECTURE.md](./ARCHITECTURE.md).
-
-## Data and backend status
-
-- Auth and data run against Supabase when `VITE_SUPABASE_URL` and
-  `VITE_SUPABASE_PUBLISHABLE_KEY` are set; otherwise the app uses the in-memory
-  demo seeded from `src/data/`.
-- In demo mode, actions update only the current browser session and refreshing
-  restores the original seed data.
-- Uploaded files are not yet persisted to storage; upload progress is simulated.
-- Payment actions do not transfer money or call a payment provider.
-- BIR badge verification runs a real domain/allow-list check; the authoritative
-  QR decode is intended to run server-side (see the note above). Social-account
-  indicators remain references, not verified guarantees.
-
-The broader database and integration plan is documented in
-[SUPABASE-WIRING-PLAN.md](./SUPABASE-WIRING-PLAN.md).
-
-## Quality checks
-
-Before submitting a change, run:
+## Local checks
 
 ```bash
 npm run typecheck
 npm run build
 ```
-
-There is currently no automated test suite. Validate affected buyer and seller
-flows manually in the browser in addition to running the checks above.
-
-## Additional documentation
-
-- [PRODUCT.md](./PRODUCT.md) — audience, product goals, voice, and design priorities
-- [DESIGN.md](./DESIGN.md) — visual and interaction guidance
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — module boundaries and contribution guidance
-- [REFACTOR_NOTES.md](./REFACTOR_NOTES.md) — refactor history and technical notes
-- [SUPABASE-WIRING-PLAN.md](./SUPABASE-WIRING-PLAN.md) — backend integration plan
-
-## Known prototype limitations
-
-- Claim quantities do not consistently update totals and remaining stock.
-- Header search has navigation and dismissal edge cases.
-- Some payment-history fields and dates are still placeholder values.
-- Accessibility work remains for contrast, form labels, and page headings.
-
-## Production readiness
-
-Before deploying KARGO for real transactions, complete payment-provider
-integration, secure file handling and storage, server-side authorization checks,
-input validation, audit logging, secrets management, and automated tests.
-Complete an independent privacy and security review before accepting personal
-documents or payment evidence.
