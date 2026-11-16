@@ -902,7 +902,9 @@ button {
 
 .batch-page {
   width: 100%;
-  max-width: 1200px;
+  max-width: none;
+  margin: -24px;
+  padding: 24px clamp(24px, 2.2vw, 36px) 84px !important;
   min-width: 0;
   overflow-x: clip;
 }
@@ -943,7 +945,8 @@ body:has(.batch-page) .kargo-tabbar {
 
 @media (max-width: 1023px) {
   .batch-page {
-    padding: 16px 12px calc(92px + env(safe-area-inset-bottom)) !important;
+    margin: -16px;
+    padding: 16px 14px calc(92px + env(safe-area-inset-bottom)) !important;
   }
 
   .batch-page .batch-gallery {
@@ -999,6 +1002,7 @@ body:has(.batch-page) .kargo-tabbar {
 
 @media (max-width: 600px) {
   .batch-page {
+    margin: -16px;
     padding-inline: 10px !important;
   }
 
@@ -1071,6 +1075,7 @@ body:has(.batch-page) .kargo-tabbar {
 
 @media (max-width: 380px) {
   .batch-page {
+    margin: -16px;
     padding-inline: 8px !important;
   }
 
@@ -21395,4 +21400,32 @@ tr.record-focus {
 }
 .legal-doc p {
   margin: 0 0 0.5rem;
+}
+
+/* Match the buyer home canvas: the detail page owns the shell width and
+   restores the same edge rhythm at every breakpoint. */
+.batch-page {
+  width: 100%;
+  max-width: none !important;
+  margin: -24px !important;
+  padding: 24px clamp(24px, 2.2vw, 36px) 84px !important;
+}
+
+@media (max-width: 1023px) {
+  .batch-page {
+    margin: -16px !important;
+    padding: 16px 14px calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .batch-page {
+    padding-inline: 10px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .batch-page {
+    padding-inline: 8px !important;
+  }
 }
