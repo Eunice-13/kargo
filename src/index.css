@@ -21407,8 +21407,8 @@ tr.record-focus {
 .batch-page {
   /* Match `.buyer-home__content`: a centered content rail rather than a
      full-bleed detail canvas. */
-  width: min(calc(100% - 32px), 1120px);
-  max-width: 1120px !important;
+  width: min(calc(100% - 48px), 1080px);
+  max-width: 1080px !important;
   margin: 0 auto !important;
   padding: 0 0 84px !important;
 }
