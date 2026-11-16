@@ -1738,7 +1738,7 @@ export default function BatchPage({
         </div>
       </div>
 
-      {relatedBatches.length >= 2 && (
+      {role !== "Seller" && relatedBatches.length >= 2 && (
         <section className="batch-related" aria-labelledby="related-batches-title">
           <div className="batch-related__header">
             <h2 id="related-batches-title">You might like</h2>

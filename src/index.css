@@ -907,6 +907,14 @@ button {
   overflow-x: clip;
 }
 
+/* The shell tab bar is sticky on catalogue pages, but it must not float over
+   the batch detail hero when the seller page is restored at a prior scroll
+   position. Keep the shell in normal flow for this full-page detail view. */
+body:has(.batch-page) .kargo-tabbar {
+  position: relative !important;
+  top: auto !important;
+}
+
 .batch-page .batch-gallery,
 .batch-page .batch-page-layout {
   width: 100%;
