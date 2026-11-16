@@ -23,11 +23,11 @@ The product is designed around three connected flows:
 
 | Buyer discovery | Seller operations | Trust and access |
 | --- | --- | --- |
-| Browse travel batches, inspect items, claim a slot, and track the order. | Create batches, review claims and payments, and move orders through fulfillment. | Seller onboarding includes BIR Registration Seal verification and access controls. |
+| Browse travel batches, inspect items, claim a slot, and track the order. | Create batches, review claims and payments, and move orders through fulfillment. | Admin tools support account access, moderation, and audit visibility. |
 
 For a quick visual preview, open the [live demo](https://kargo-psi.vercel.app/)
 and explore the Buyer Home, Batch Detail, Seller Fulfillment Board, and seller
-verification flows.
+onboarding flows.
 
 ## Core features
 
@@ -42,7 +42,7 @@ verification flows.
 
 ### For sellers
 
-- Gated onboarding through BIR Registration Seal verification
+- Guided seller onboarding and access approval
 - Batch creation with trip dates, product photos, pricing, quantities, and
   waitlist limits
 - Claim, payment, and extension-request review
@@ -110,12 +110,6 @@ http://localhost:8443/?preview=admin
 The admin preview is available only in development builds. The deployed app
 requires a real approved admin account.
 
-To exercise BIR verification states in Demo Mode, use filenames containing:
-
-- `fake`, `tamper`, or `altered` → flagged badge
-- `blur` or `empty` → unreadable/flagged badge
-- Any normal image filename → successful verification flow
-
 ## Tech stack
 
 - React 19
@@ -140,7 +134,7 @@ To exercise BIR verification states in Demo Mode, use filenames containing:
 KARGO’s next milestones are:
 
 - Live payment-gateway integration and reconciliation
-- Supabase Storage persistence for payment receipts and verification badges
+- Supabase Storage persistence for payment receipts and uploaded seller assets
 - Automated end-to-end coverage for buyer, seller, and admin journeys
 - Expanded delivery, notification, and reporting integrations
 
