@@ -97,8 +97,10 @@ export default function App() {
 
   // Admin demo boot: ?preview=admin mounts the admin console in-memory (no
   // Supabase), mirroring ?preview=original for buyer/seller. Separate flag so
-  // the buyer/seller demo is never affected.
-  const adminPreview = searchParams?.get("preview") === "admin";
+  // the buyer/seller demo is never affected. Dev builds only: in a deployed
+  // build the query string is ignored, so the admin console always requires a
+  // real account with approved admin access.
+  const adminPreview = import.meta.env.DEV && searchParams?.get("preview") === "admin";
 
   // Reviewer boot for the admin invitation gate: ?preview=admin-invite is a
   // buyer with an unanswered admin invitation, so Accept/Decline can be tried

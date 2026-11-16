@@ -169,7 +169,8 @@ src/
 - Admin pages use the `admin-page` class, NOT `mobile-data-page` (the latter
   restructures tables into labelled cards; admin tables scroll horizontally).
 - `?preview=admin` boots an in-memory admin demo (no Supabase), mirroring
-  `?preview=original`.
+  `?preview=original`. It is dev-only: deployed builds ignore the query string,
+  so the admin console there always requires an approved admin account.
 
 ### Supabase (admin)
 

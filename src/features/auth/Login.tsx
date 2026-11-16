@@ -48,6 +48,13 @@ export default function Login({
     setNeedsConfirm(false);
     setLoading(true);
     if (!isSupabaseConfigured) {
+      // The in-memory demo (no Supabase) only has buyer/seller accounts, so the
+      // admin console must refuse it rather than fall through to a buyer login.
+      if (adminMode) {
+        setLoading(false);
+        setPassErr("Admin sign-in requires a connected KARGO account.");
+        return;
+      }
       setTimeout(() => {
         setLoading(false);
         onSuccess({ name: "Juan Dela Cruz", email, role: "Buyer" });
@@ -76,7 +83,10 @@ export default function Login({
         detail.includes("email_not_confirmed") || detail.includes("email not confirmed"),
       );
     }
-  }, [email, password, onSuccess]);
+    // `adminMode` must be a dependency: without it a submit handler memoized
+    // before the admin console was opened keeps `adminMode: false` (browser
+    // autofill makes this easy to hit) and lets a non-admin sign in.
+  }, [email, password, adminMode, onSuccess]);
 
   const requestReset = useCallback(async () => {
     if (!email.includes("@")) {
