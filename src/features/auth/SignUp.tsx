@@ -273,10 +273,16 @@ export default function SignUp({
 
   return (
     <AuthLayout page="signup">
-      <div className="auth-content auth-signup-content">
+      <div
+        className={`auth-content auth-signup-content${role === "Admin" ? " auth-signup-content--admin" : ""}`}
+      >
         <header className="auth-heading auth-heading--start">
-          <h1>Create your account</h1>
-          <p>Join Kargo to buy or sell pasabuy items</p>
+          <h1>{role === "Admin" ? "Request Admin Access" : "Create your account"}</h1>
+          <p>
+            {role === "Admin"
+              ? "Submit your details. An existing admin will review your request."
+              : "Join Kargo to buy or sell pasabuy items"}
+          </p>
         </header>
 
         <div className="auth-signup-fields">
@@ -371,15 +377,17 @@ export default function SignUp({
                         : "Your public handle. You'll still sign in with your email."}
                 </p>
               </div>
-              <AuthInput
-                label="Email address"
-                type="email"
-                required
-                value={email}
-                onChange={setEmail}
-                error={errs.email}
-                placeholder="juan@gmail.com"
-              />
+              <div className={role === "Admin" ? "auth-admin-email-field" : undefined}>
+                <AuthInput
+                  label="Email address"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={setEmail}
+                  error={errs.email}
+                  placeholder="juan@gmail.com"
+                />
+              </div>
               <AuthInput
                 label="Password"
                 type="password"
@@ -621,8 +629,11 @@ export default function SignUp({
               <div className="auth-admin-only-label">
                 <ShieldCheck size={18} aria-hidden="true" />
                 <span>
-                  <strong>Admin access request</strong>
-                  <small>Approval is required before the admin console can be accessed.</small>
+                  <strong>Admin access request.</strong>
+                  <small>
+                    Confirm your email first, then wait for an admin to approve. The console unlocks
+                    after approval.
+                  </small>
                 </span>
               </div>
             ) : (
@@ -657,12 +668,6 @@ export default function SignUp({
                   ))}
                 </div>
               </>
-            )}
-            {role === "Admin" && (
-              <p className="auth-hint">
-                Admin signup is a request. An existing admin reviews it before the console unlocks —
-                you&apos;ll still confirm your email first.
-              </p>
             )}
           </div>
 
@@ -731,19 +736,21 @@ export default function SignUp({
             </p>
           )}
 
-          <PrimaryBtn onClick={submit} loading={loading} style={{ width: "100%" }}>
-            {loading
-              ? role === "Seller"
-                ? "Creating shop…"
-                : role === "Admin"
-                  ? "Submitting request…"
-                  : "Creating account…"
-              : role === "Seller"
-                ? "Create Shop"
-                : role === "Admin"
-                  ? "Request admin access"
-                  : "Create account"}
-          </PrimaryBtn>
+          <div className={role === "Admin" ? "auth-admin-submit-area" : undefined}>
+            <PrimaryBtn onClick={submit} loading={loading} style={{ width: "100%" }}>
+              {loading
+                ? role === "Seller"
+                  ? "Creating shop…"
+                  : role === "Admin"
+                    ? "Submitting request…"
+                    : "Creating account…"
+                : role === "Seller"
+                  ? "Create Shop"
+                  : role === "Admin"
+                    ? "Submit request"
+                    : "Create account"}
+            </PrimaryBtn>
+          </div>
         </div>
 
         <div className="auth-switch-copy auth-signup-switch">

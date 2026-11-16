@@ -1092,12 +1092,6 @@ body:has(.batch-page) .kargo-tabbar {
   color: #191ba9;
 }
 
-.auth-content--admin .auth-heading p::before {
-  content: "Approved administrators only · ";
-  color: #6b7280;
-  font-weight: 600;
-}
-
 .auth-content--admin .auth-switch-copy {
   display: flex;
   align-items: center;
@@ -21430,5 +21424,186 @@ tr.record-focus {
 @media (max-width: 380px) {
   .batch-page {
     width: calc(100% - 12px);
+  }
+}
+
+/* Allowed admin-auth adjustments only. */
+.auth-content--admin .auth-forgot-row {
+  text-align: center;
+}
+
+.auth-content--admin .auth-switch-copy {
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 24px;
+  font-size: 14px !important;
+  line-height: 1.45;
+}
+
+.auth-content--admin .auth-switch-copy .auth-link-button + .auth-link-button {
+  margin-left: 0;
+}
+
+.auth-admin-access-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.auth-content--admin .auth-switch-copy .auth-link-button {
+  min-height: 0;
+  line-height: inherit;
+}
+
+.auth-content--admin .auth-admin-back-link {
+  font-size: 12px !important;
+}
+
+.auth-admin-email-field .auth-input-shell > svg {
+  display: none;
+}
+
+.auth-admin-email-field .auth-input-shell::after {
+  position: absolute;
+  top: 50%;
+  right: clamp(0.7rem, 1.72dvh, 1.75rem);
+  width: 18px;
+  height: 18px;
+  content: "";
+  background: center / contain no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23969696' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='16' x='2' y='4' rx='2'/%3E%3Cpath d='m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7'/%3E%3C/svg%3E");
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.auth-signup-content--admin .auth-photo-field {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-signup-content--admin .auth-photo-field > label {
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .auth-signup-content--admin .auth-admin-submit-area .kargo-primary {
+    min-height: 48px;
+  }
+
+  .auth-signup-content--admin .auth-signup-switch {
+    margin-top: clamp(0.55rem, 1.5dvh, 1rem);
+    text-align: center;
+    font-size: clamp(0.7rem, 1.1dvh, 0.85rem);
+    line-height: 1.45;
+  }
+
+  .auth-signup-content--admin .auth-legal-copy {
+    margin-top: 0.3rem;
+    text-align: center;
+    font-size: clamp(0.6rem, 0.9dvh, 0.72rem);
+    line-height: 1.45;
+  }
+
+  .auth-signup-content--admin :is(.auth-signup-switch, .auth-legal-copy) button {
+    min-height: 0;
+    line-height: inherit;
+    vertical-align: baseline;
+  }
+}
+
+/* Admin access popup: centered desktop card and mobile bottom sheet. */
+.auth-admin-access-modal {
+  width: min(100%, 420px);
+  box-sizing: border-box;
+  padding: 32px;
+  border-radius: 16px;
+}
+
+.auth-admin-access-handle {
+  display: none;
+}
+
+.auth-admin-access-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #edf4ff;
+  color: #191ba9;
+}
+
+.auth-admin-access-modal h2 {
+  margin: 14px 0 8px;
+}
+
+.auth-admin-access-modal p {
+  margin: 0 0 24px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.auth-admin-access-close {
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  place-items: center;
+  border-radius: 12px;
+}
+
+.auth-admin-access-primary,
+.auth-admin-access-secondary {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.auth-admin-access-primary {
+  background: #191ba9;
+}
+
+.auth-admin-access-secondary {
+  margin-top: 12px;
+  border-color: #b9d1f4;
+  color: #191ba9;
+}
+
+@media (max-width: 700px) {
+  .auth-admin-access-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .auth-admin-access-modal {
+    width: 100%;
+    max-width: none;
+    padding: 28px 20px calc(20px + env(safe-area-inset-bottom));
+    border-radius: 16px 16px 0 0;
+  }
+
+  .auth-admin-access-handle {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: #d5dbe5;
+    transform: translateX(-50%);
+  }
+
+  .auth-admin-access-primary,
+  .auth-admin-access-secondary {
+    height: 52px;
   }
 }

@@ -137,6 +137,7 @@ export default function Login({
             aria-modal="true"
             aria-labelledby="admin-access-title"
           >
+            <span className="auth-admin-access-handle" aria-hidden="true" />
             <button
               type="button"
               className="auth-admin-access-close"
@@ -145,9 +146,14 @@ export default function Login({
             >
               <X size={18} />
             </button>
-            <ShieldCheck size={30} aria-hidden="true" />
-            <h2 id="admin-access-title">KARGO Admin access</h2>
-            <p>Admins use the same secure email sign-in. New admin accounts require approval.</p>
+            <span className="auth-admin-access-icon" aria-hidden="true">
+              <ShieldCheck size={24} />
+            </span>
+            <h2 id="admin-access-title">Admin access</h2>
+            <p>
+              Sign in with your admin account. New admin accounts need approval before they can log
+              in.
+            </p>
             <button
               type="button"
               className="auth-admin-access-primary"
@@ -156,7 +162,7 @@ export default function Login({
                 setAdminMode(true);
               }}
             >
-              Admin sign in
+              Sign in as admin
             </button>
             <button
               type="button"
@@ -166,17 +172,17 @@ export default function Login({
                 onAdminSignUp();
               }}
             >
-              Request admin signup
+              Request admin access
             </button>
           </section>
         </div>
       )}
       <div className={`auth-content pu${adminMode ? " auth-content--admin" : ""}`}>
         <header className="auth-heading">
-          <h1>{adminMode ? "KARGO Admin console" : "Your Budol, Our Kargo!"}</h1>
+          <h1>{adminMode ? "KARGO Admin Console" : "Your Budol, Our Kargo!"}</h1>
           <p>
             {adminMode
-              ? "Sign in with your approved admin account"
+              ? "Manage Pasabuy Seller and Buyer Accounts"
               : "Sign in to your Kargo account"}
           </p>
         </header>
@@ -188,14 +194,16 @@ export default function Login({
             void submit();
           }}
         >
-          <AuthInput
-            label="Email address"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            error={emailErr}
-            placeholder="juan@gmail.com"
-          />
+          <div className={adminMode ? "auth-admin-email-field" : undefined}>
+            <AuthInput
+              label={adminMode ? "Admin email" : "Email address"}
+              type="email"
+              value={email}
+              onChange={setEmail}
+              error={emailErr}
+              placeholder={adminMode ? "admin@kargo.com" : "juan@gmail.com"}
+            />
+          </div>
           <div className="auth-password-group">
             <AuthInput
               label="Password"
@@ -228,23 +236,25 @@ export default function Login({
           </div>
           {needsConfirm && <ResendConfirmation email={email.trim()} />}
           <PrimaryBtn loading={loading} style={{ width: "100%" }}>
-            {loading ? "Signing in…" : adminMode ? "Admin sign in" : "Login"}
+            {loading ? "Signing in…" : adminMode ? "Sign in" : "Login"}
           </PrimaryBtn>
         </form>
 
         <div className="auth-switch-copy">
           {adminMode ? (
             <>
-              <span>Need admin access? </span>
-              <button type="button" onClick={onAdminSignUp} className="auth-link-button">
-                Request admin signup
-              </button>
+              <span className="auth-admin-access-line">
+                <span>Need admin access? </span>
+                <button type="button" onClick={onAdminSignUp} className="auth-link-button">
+                  Request admin access
+                </button>
+              </span>
               <button
                 type="button"
                 onClick={() => setAdminMode(false)}
-                className="auth-link-button"
+                className="auth-link-button auth-admin-back-link"
               >
-                Back to regular sign in
+                &larr; Back to regular sign in
               </button>
             </>
           ) : (
