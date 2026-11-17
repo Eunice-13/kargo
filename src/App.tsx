@@ -183,6 +183,22 @@ export default function App() {
     setShowReservationGate(false);
   };
 
+  // Signing out ends the shared-link visit. Drop `batch`/`group` from the URL so
+  // the login screen does not keep carrying the batch link into the next
+  // session (or show its reservation notice again).
+  const clearBatchLink = () => {
+    setShowReservationGate(false);
+
+    if (typeof window === "undefined") return;
+
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("batch") && !url.searchParams.has("group")) return;
+
+    url.searchParams.delete("batch");
+    url.searchParams.delete("group");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+
   const [showOnboarding, setOnboard] = useState(false);
 
   const [tab, setTab] = useState<Tab>(() =>
@@ -735,6 +751,7 @@ export default function App() {
             type="button"
             onClick={() => {
               if (isSupabaseConfigured) void kargoApi.signOut();
+              clearBatchLink();
               setStage("login");
             }}
             style={{
@@ -828,6 +845,8 @@ export default function App() {
               user={user}
               onLogout={() => {
                 if (isSupabaseConfigured) void kargoApi.signOut();
+
+                clearBatchLink();
 
                 setInviteDismissedFor(null);
 
