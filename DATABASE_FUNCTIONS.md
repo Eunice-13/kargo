@@ -139,6 +139,18 @@ Two further locations are **deployment copies, not separate schema**:
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `202611110001_signup_required_address_payment` | Requires a buyer delivery address + map pin, one seller payment method, and at least one social account at signup; saves the buyer address to `buyer_addresses` and inserts the seller method from auth metadata. |
 
+### Account Facebook links (2026-11-18)
+
+| Migration                                  | Purpose                                                                                                                                                               |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `202611180001_profile_facebook_links`      | Keeps only exact Facebook profile URLs. Removes generated people-search links and non-URL placeholders so accounts without a verified profile stay blank.              |
+
+### Username backfill (2026-11-18)
+
+| Migration                              | Purpose                                                                                                                                                   |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `202611180002_backfill_usernames`      | Gives every account a unique lowercase username derived from its display name, adds numeric suffixes for duplicate names, and fills missing handles on insert. |
+
 ### Manual insufficient review (2026-11-11)
 
 | Migration                                    | Purpose                                                                                                                                                                                       |
@@ -165,6 +177,9 @@ the final behavior.
 | ------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `set_updated_at`                                 | Trigger    | Stamps `updated_at` on row updates.                                                                                                                           |
 | `handle_new_auth_user`                           | Trigger    | Creates a profile when an auth user signs up, including the required social account, buyer signup address and seller payment method from the signup metadata. |
+| `ensure_profile_username`                        | Trigger    | Fills a missing `user_profiles.username` from the display name, adding a numeric suffix when the handle is taken.                                               |
+| `username_base`                                  | Helper     | Derives the first-choice lowercase username from a display name.                                                                                                |
+| `username_with_suffix`                           | Helper     | Appends a numeric suffix while keeping a username within the 20-character limit.                                                                                |
 | `is_active`                                      | RPC/helper | Returns whether an account is active (not suspended).                                                                                                         |
 | `can_sell`                                       | RPC/helper | Returns whether the user has seller capability.                                                                                                               |
 | `enable_seller_access`                           | RPC        | Grants seller capability through a controlled path.                                                                                                           |
