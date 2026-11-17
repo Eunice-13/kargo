@@ -5,7 +5,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { ChevronDown, MessageCircle, Package, Clock3, CalendarDays, Heart } from "lucide-react";
 import type { BatchType, Role, UserInfo } from "@/types";
 import { INDIGO, CREAM, AMBER, CAT_GRAD, batchCoverSrc } from "@/constants/theme";
-import { Card, Avatar, PrimaryBtn, ContactModal, PaymentIcon } from "@/components/shared";
+import { Card, Avatar, PrimaryBtn, ContactModal, PaymentIcon, resolveContactUrl } from "@/components/shared";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { kargoApi, type SellerReceiveMethod } from "@/services";
 import { sortSoldOutLast } from "./batchSort";
@@ -44,6 +44,7 @@ export default function SellerShopPage({
   const [fetchedSellerProfile, setFetchedSellerProfile] = useState<{
     createdAt: string | null;
     username: string | null;
+    socialLinks: Record<string, string>;
   } | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<SellerReceiveMethod[]>([]);
   const [methodsLoading, setMethodsLoading] = useState(false);
@@ -115,11 +116,11 @@ export default function SellerShopPage({
 
   // ── Contact (reuses the shared ContactModal) ───────────────────────────────
   const [showChat, setShowChat] = useState(false);
-  const contactUrl = profileData?.socialLinks
-    ? Object.entries(profileData.socialLinks).find(
-        ([label]) => profileData.socialVisibility?.[label] !== false,
-      )?.[1]
-    : undefined;
+  // public_profiles applies each seller's visibility settings. Own-shop views
+  // fall back to the profile already in app state.
+  const contactUrl = resolveContactUrl(
+    fetchedSellerProfile?.socialLinks ?? profileData?.socialLinks,
+  );
 
   // ── Tab / category nav ──────────────────────────────────────────────────────
   const categories = Array.from(new Set(sellerBatches.map((b) => b.category)));

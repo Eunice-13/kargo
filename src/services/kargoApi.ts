@@ -2810,10 +2810,14 @@ export async function loadSellerMemberSince(sellerId: string): Promise<string | 
 
 export async function loadSellerPublicProfile(
   sellerId: string,
-): Promise<{ createdAt: string | null; username: string | null }> {
+): Promise<{
+  createdAt: string | null;
+  username: string | null;
+  socialLinks: Record<string, string>;
+}> {
   const { data, error } = await requireSupabase()
     .from("public_profiles")
-    .select("created_at,username")
+    .select("created_at,username,social_links")
     .eq("id", sellerId)
     .maybeSingle();
 
@@ -2822,6 +2826,7 @@ export async function loadSellerPublicProfile(
   return {
     createdAt: (data?.created_at as string | undefined) ?? null,
     username: (data?.username as string | undefined) ?? null,
+    socialLinks: (data?.social_links as Record<string, string> | undefined) ?? {},
   };
 }
 
