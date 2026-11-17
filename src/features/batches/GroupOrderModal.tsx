@@ -8,19 +8,26 @@ import {
 import GroupMembershipNotice from "./GroupMembershipNotice";
 import { GroupMembershipConflict } from "@/services/groupMembership";
 import { useEffect, useMemo, useState } from "react";
-import { Link2, RefreshCw, Users } from "lucide-react";
+import { CheckCircle2, Clock3, Link2, RefreshCw, TriangleAlert, Users, X } from "lucide-react";
 
 import type { BatchType, GroupOrder } from "@/types";
 import {
+  BatchActionDialog,
   LocationPinPicker,
   Modal,
-  PrimaryBtn,
-  SecondaryBtn,
   type LocationPinValue,
 } from "@/components/shared";
 import { kargoApi } from "@/services";
 import type { SellerReceiveMethod } from "@/services/kargoApi";
 import { formatMoney } from "@/lib/format";
+
+const memberInitials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "?";
 
 export function GroupOrderChoiceModal({
   onSolo,
@@ -203,93 +210,118 @@ export default function GroupOrderModal({
 
   if (loading) {
     return (
-      <Modal
+      <BatchActionDialog
         title="Group Order"
         onClose={onClose}
-        width={620}
-        showTitleIcon={false}
-        className="group-order-dialog"
+        className="group-order-existing-dialog"
       >
         <p className="group-order-loading">Loading group order…</p>
-      </Modal>
+      </BatchActionDialog>
     );
   }
 
   if (groupOrderId && !group) {
     return (
-      <Modal
+      <BatchActionDialog
         title="Group Order"
         onClose={onClose}
-        width={620}
-        showTitleIcon={false}
-        className="group-order-dialog"
+        className="group-order-existing-dialog"
       >
-        <p role="alert">
-          {error || "This group is unavailable or you no longer have leader access."}
+        <p className="group-order-error" role="alert">
+          <TriangleAlert size={18} aria-hidden="true" />
+          <span>{error || "This group is unavailable or you no longer have leader access."}</span>
         </p>
-        <SecondaryBtn onClick={onClose}>Close</SecondaryBtn>
-      </Modal>
+        <button type="button" className="batch-action-secondary" onClick={onClose}>
+          Close
+        </button>
+      </BatchActionDialog>
+    );
+  }
+
+  if (!group) {
+    return (
+      <BatchActionDialog title="Group Order" onClose={onClose} className="group-order-popup">
+        <div className="group-order-popup__intro">
+          <span className="group-order-popup__icon" aria-hidden="true">
+            <Users size={22} />
+          </span>
+          <div className="group-order-popup__copy">
+            <strong>Order together from {batch.title}</strong>
+            <span>At least two separate KARGO accounts are required.</span>
+          </div>
+        </div>
+        {ordersClosed ? (
+          <p className="group-order-popup__status" role="status">
+            This batch closed
+            {batch.endsOn ? ` on ${formatBatchEndDate(batch.endsOn)}` : ""}. New group orders can
+            no longer be started or joined.
+          </p>
+        ) : joining ? (
+          <div className="group-order-popup__code">
+            <input
+              value={code}
+              onChange={(event) => setCode(event.target.value.toUpperCase())}
+              placeholder="Enter 8-character code"
+              maxLength={8}
+            />
+            <button
+              type="button"
+              className="batch-action-primary"
+              disabled={working || code.trim().length !== 8}
+              onClick={() => run(async () => setGroup(await kargoApi.joinGroupOrder(code)))}
+            >
+              Join Group
+            </button>
+            <button
+              type="button"
+              className="group-order-popup__switch"
+              onClick={() => setJoining(false)}
+            >
+              Start a new group instead
+            </button>
+          </div>
+        ) : (
+          <div className="group-order-popup__actions">
+            <button
+              type="button"
+              className="batch-action-primary"
+              disabled={working || !batch.dbId}
+              onClick={() =>
+                run(async () => setGroup(await kargoApi.startGroupOrder(batch.dbId!)))
+              }
+            >
+              Start a Group
+            </button>
+            <button
+              type="button"
+              className="batch-action-secondary"
+              onClick={() => setJoining(true)}
+            >
+              Join with Code
+            </button>
+          </div>
+        )}
+        {membershipConflict && (
+          <GroupMembershipNotice message={membershipConflict.message} />
+        )}
+        {error && (
+          <p className="group-order-error" role="alert">
+            <TriangleAlert size={18} aria-hidden="true" />
+            <span>{error}</span>
+          </p>
+        )}
+      </BatchActionDialog>
     );
   }
 
   return (
-    <Modal
+    <BatchActionDialog
       title="Group Order"
       onClose={onClose}
-      width={680}
-      showTitleIcon={false}
-      className="group-order-dialog"
+      className="group-order-existing-dialog"
     >
       <div className="group-order-modal">
-        {!group ? (
-          <div className="group-order-entry">
-            <div className="group-order-entry__intro">
-              <Users size={24} aria-hidden="true" />
-              <div>
-                <strong>Order together from {batch.title}</strong>
-                <span>At least two separate KARGO accounts are required.</span>
-              </div>
-            </div>
-            {ordersClosed ? (
-              <p className="group-order-status" role="status">
-                This batch closed
-                {batch.endsOn ? ` on ${formatBatchEndDate(batch.endsOn)}` : ""}. New group orders
-                can no longer be started or joined.
-              </p>
-            ) : joining ? (
-              <div className="group-order-code-entry">
-                <input
-                  value={code}
-                  onChange={(event) => setCode(event.target.value.toUpperCase())}
-                  placeholder="Enter 8-character code"
-                  maxLength={8}
-                />
-                <PrimaryBtn
-                  disabled={working || code.trim().length !== 8}
-                  onClick={() => run(async () => setGroup(await kargoApi.joinGroupOrder(code)))}
-                >
-                  Join Group
-                </PrimaryBtn>
-                <button type="button" onClick={() => setJoining(false)}>
-                  Start a new group instead
-                </button>
-              </div>
-            ) : (
-              <div className="group-order-entry__actions">
-                <PrimaryBtn
-                  disabled={working || !batch.dbId}
-                  onClick={() =>
-                    run(async () => setGroup(await kargoApi.startGroupOrder(batch.dbId!)))
-                  }
-                >
-                  Start a Group
-                </PrimaryBtn>
-                <SecondaryBtn onClick={() => setJoining(true)}>Join with Code</SecondaryBtn>
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
+        <>
             <header className="group-order-header">
               <div>
                 <span>Referral code</span>
@@ -297,11 +329,16 @@ export default function GroupOrderModal({
               </div>
               {group.isLeader && group.status === "forming" && !formationClosed && !readOnly && (
                 <div className="group-order-share-actions">
-                  <button type="button" onClick={() => navigator.clipboard.writeText(inviteUrl)}>
+                  <button
+                    type="button"
+                    className="batch-action-secondary"
+                    onClick={() => navigator.clipboard.writeText(inviteUrl)}
+                  >
                     <Link2 size={14} aria-hidden="true" /> Copy link
                   </button>
                   <button
                     type="button"
+                    className="batch-action-secondary"
                     onClick={() =>
                       run(async () => {
                         const nextCode = await kargoApi.regenerateGroupCode(group.id);
@@ -315,17 +352,24 @@ export default function GroupOrderModal({
               )}
             </header>
 
-            <p className="group-order-status" role="status">
-              Formation deadline:{" "}
-              <time dateTime={group.formationDeadline}>
-                {formatFormationDeadline(group.formationDeadline)}
-              </time>
-              {formationClosed && (
-                <span className="block">
-                  The formation deadline has passed. Checkout is closed and un-checked-out
-                  commitments no longer reserve stock.
-                </span>
-              )}
+            <p
+              className="group-order-deadline"
+              data-state={formationClosed ? "danger" : "ready"}
+              role="status"
+            >
+              <Clock3 size={16} aria-hidden="true" />
+              <span>
+                Formation deadline:{" "}
+                <time dateTime={group.formationDeadline}>
+                  {formatFormationDeadline(group.formationDeadline)}
+                </time>
+                {formationClosed && (
+                  <span className="block">
+                    The formation deadline has passed. Checkout is closed and un-checked-out
+                    commitments no longer reserve stock.
+                  </span>
+                )}
+              </span>
             </p>
 
             <section className="group-order-members">
@@ -335,9 +379,22 @@ export default function GroupOrderModal({
               </div>
               <div className="group-order-member-list">
                 {activeMembers.map((member) => (
-                  <div key={member.userId}>
-                    <span>{member.name}</span>
-                    <small>{member.role === "leader" ? "Leader" : "Member"}</small>
+                  <div key={member.userId} title={member.name}>
+                    <span className="group-order-member-avatar" aria-hidden="true">
+                      {memberInitials(member.name)}
+                    </span>
+                    <span className="group-order-member-name" title={member.name}>
+                      {member.name}
+                    </span>
+                    <small
+                      className={
+                        member.role === "leader"
+                          ? "group-order-member-role is-leader"
+                          : "group-order-member-role"
+                      }
+                    >
+                      {member.role === "leader" ? "Leader" : "Member"}
+                    </small>
                     {group.isLeader &&
                       member.role !== "leader" &&
                       group.status === "forming" &&
@@ -345,13 +402,14 @@ export default function GroupOrderModal({
                       !readOnly && (
                         <button
                           type="button"
+                          aria-label={`Remove ${member.name}`}
                           onClick={() =>
                             run(async () =>
                               setGroup(await kargoApi.removeGroupMember(group.id, member.userId)),
                             )
                           }
                         >
-                          Remove
+                          <X size={14} aria-hidden="true" />
                         </button>
                       )}
                   </div>
@@ -370,8 +428,8 @@ export default function GroupOrderModal({
                     key={`${commitment.userId}-${commitment.productId}`}
                     className="group-order-commitment-line"
                   >
-                    <span>{commitment.memberName}</span>
-                    <span>
+                    <span title={commitment.memberName}>{commitment.memberName}</span>
+                    <span title={`${commitment.productName} ×${commitment.quantity}`}>
                       {commitment.productName} ×{commitment.quantity}
                     </span>
                     <strong>{formatMoney(commitment.unitPrice * commitment.quantity)}</strong>
@@ -436,8 +494,9 @@ export default function GroupOrderModal({
                         }))
                       }
                     />
-                    <SecondaryBtn
-                      size="sm"
+                    <button
+                      type="button"
+                      className="group-order-save"
                       disabled={
                         readOnly ||
                         formationClosed ||
@@ -459,7 +518,7 @@ export default function GroupOrderModal({
                       }
                     >
                       Save
-                    </SecondaryBtn>
+                    </button>
                   </div>
                 );
               })}
@@ -491,9 +550,14 @@ export default function GroupOrderModal({
               !formationClosed &&
               !readOnly &&
               !checkoutOpen && (
-                <PrimaryBtn disabled={!canCheckout} onClick={() => setCheckoutOpen(true)}>
+                <button
+                  type="button"
+                  className="batch-action-primary group-order-checkout-button"
+                  disabled={!canCheckout}
+                  onClick={() => setCheckoutOpen(true)}
+                >
                   Checkout Group Order
-                </PrimaryBtn>
+                </button>
               )}
 
             {checkoutOpen && !readOnly && !formationClosed && (
@@ -535,8 +599,16 @@ export default function GroupOrderModal({
                   <span>I’ll pay the full group total and receive the combined delivery.</span>
                 </label>
                 <div className="kargo-modal-actions">
-                  <SecondaryBtn onClick={() => setCheckoutOpen(false)}>Back</SecondaryBtn>
-                  <PrimaryBtn
+                  <button
+                    type="button"
+                    className="batch-action-secondary"
+                    onClick={() => setCheckoutOpen(false)}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className="batch-action-primary"
                     disabled={
                       working ||
                       !paymentMethod ||
@@ -561,22 +633,31 @@ export default function GroupOrderModal({
                     }
                   >
                     Confirm Group Checkout
-                  </PrimaryBtn>
+                  </button>
                 </div>
               </section>
             )}
 
             {group.status !== "forming" && (
-              <p className="group-order-status" role="status">
-                {group.status === "waiting_for_seller"
-                  ? "Waiting for the seller to set the shipping fee."
-                  : group.status === "payment_pending"
-                    ? "Checkout is ready. The leader can submit payment from My Claims."
-                    : group.status === "payment_submitted"
-                      ? "Payment submitted for seller review."
-                      : group.status === "payment_confirmed"
-                        ? "Payment confirmed."
-                        : "This group order is closed."}
+              <p className="group-order-status" data-state={group.status} role="status">
+                {group.status === "payment_confirmed" ? (
+                  <CheckCircle2 size={18} aria-hidden="true" />
+                ) : group.status === "expired" ? (
+                  <TriangleAlert size={18} aria-hidden="true" />
+                ) : (
+                  <Clock3 size={18} aria-hidden="true" />
+                )}
+                <span>
+                  {group.status === "waiting_for_seller"
+                    ? "Waiting for the seller to set the shipping fee."
+                    : group.status === "payment_pending"
+                      ? "Checkout is ready. The leader can submit payment from My Claims."
+                      : group.status === "payment_submitted"
+                        ? "Payment submitted for seller review."
+                        : group.status === "payment_confirmed"
+                          ? "Payment confirmed."
+                          : "This group order is closed."}
+                </span>
               </p>
             )}
 
@@ -594,21 +675,23 @@ export default function GroupOrderModal({
                 {group.isLeader ? "Cancel group" : "Leave group"}
               </button>
             )}
-          </>
-        )}
+        </>
 
         {group && group.status !== "forming" && onOpenClaims && (
-          <SecondaryBtn onClick={onOpenClaims}>Open My Claims</SecondaryBtn>
+          <button type="button" className="batch-action-secondary" onClick={onOpenClaims}>
+            Open My Claims
+          </button>
         )}
         {membershipConflict && (
           <GroupMembershipNotice message={membershipConflict.message} status={group?.status} />
         )}
         {error && (
           <p className="group-order-error" role="alert">
-            {error}
+            <TriangleAlert size={18} aria-hidden="true" />
+            <span>{error}</span>
           </p>
         )}
       </div>
-    </Modal>
+    </BatchActionDialog>
   );
 }

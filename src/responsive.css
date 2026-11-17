@@ -640,7 +640,7 @@
     box-sizing: border-box;
   }
 
-  :is(button, a[href], [role="button"]):active {
+  :is(button:not(.buyer-home-filter__trigger):not(.bd-item__toggle), a[href], [role="button"]):active {
     transform: scale(0.98);
   }
 
@@ -1017,7 +1017,14 @@
 }
 
 @media (max-width: 1024px) and (pointer: coarse) {
-  :is(button, a[href], [role="button"], select, input[type="checkbox"], input[type="radio"]) {
+  :is(
+    button:not(.bd-item__toggle):not(.bd-item__save):not(.batch-action-dialog__close),
+    a[href],
+    [role="button"],
+    select,
+    input[type="checkbox"],
+    input[type="radio"]
+  ) {
     min-height: 44px;
   }
 }
@@ -1145,7 +1152,7 @@
 
   /* Phone type scale: badge 10, meta 11, control/card title 12,
      body 13, section heading 14, page title 20, metric 22. */
-  .kargo-original-app main :is(input, select, textarea) {
+  .kargo-original-app main :is(input:not(.bd-item__input), select, textarea) {
     font-size: 16px !important;
   }
 
@@ -1162,36 +1169,7 @@
   .buyer-home {
     margin: -16px;
     padding-bottom: 40px;
-  }
-
-  .buyer-home-filter {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    margin: 12px 14px 0;
-    padding: 6px;
-    border: 1px solid #dfe6ee;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 3px 12px rgba(24, 50, 74, 0.09);
-  }
-
-  .buyer-home-filter>strong {
-    display: none;
-  }
-
-  .buyer-home-filter select {
-    width: 100% !important;
-    min-width: 0;
-    min-height: 36px;
-    flex: none;
-    padding: 0 28px 0 10px;
-    border: 1px solid #e4e9ef;
-    border-radius: 8px;
-    background-color: #f6f8fa;
-    color: #253545;
-    font-size: 12px !important;
-    font-weight: 650;
+    overflow-x: clip;
   }
 
   .buyer-home-section {
@@ -2309,7 +2287,7 @@
     min-height: 44px !important;
   }
 
-  .kargo-original-app :is(button, [role="button"], a.kargo-primary, a.kargo-secondary) {
+  .kargo-original-app :is(button:not(.bd-item__save):not(.bd-item__toggle):not(.buyer-home-filter__trigger), [role="button"], a.kargo-primary, a.kargo-secondary) {
     min-height: 44px !important;
   }
 
@@ -2372,7 +2350,55 @@
     gap: 14px !important;
   }
 
-  .buyer-home-filter,
+  .buyer-home-filter {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    margin: 12px 14px 0;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 9px;
+    background: #6995d7;
+    box-shadow: 0 3px 7px rgba(33, 58, 105, 0.2);
+    overflow-anchor: none;
+  }
+
+  .buyer-home-filter>strong {
+    display: block;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .buyer-home-filter__dropdown {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .buyer-home-filter__trigger {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+    padding: 0 28px 0 10px;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 16px;
+    overflow: hidden;
+  }
+
+  .buyer-home-filter__trigger:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  .buyer-home-filter__trigger>svg {
+    position: absolute;
+    right: 10px;
+    width: 14px;
+    height: 14px;
+  }
+
   .batch-filter-bar {
     align-items: stretch !important;
     flex-direction: column;
@@ -4253,7 +4279,7 @@
 /* ===== Scoped mobile control repairs ===== */
 @media (max-width: 767px) {
   /* Bottom tab navigation: four equal columns with complete labels. */
-  .kargo-original-app:not(.admin-app) {
+  .kargo-original-app:not(.admin-app):not(:has(.bd-page--buyer)) {
     padding-bottom: calc(60px + env(safe-area-inset-bottom));
   }
 
@@ -4542,8 +4568,8 @@
 
   /* The shared switch keeps its desktop track dimensions; the global mobile
      tap-target floor previously expanded only its height into a circle. */
-  .kargo-original-app button.kargo-toggle,
-  .auth-page button.kargo-toggle {
+  .kargo-original-app button.kargo-toggle:not(.bd-item__toggle),
+  .auth-page button.kargo-toggle:not(.bd-item__toggle) {
     width: 44px !important;
     min-width: 44px !important;
     height: 24px !important;
@@ -4553,16 +4579,16 @@
     border-radius: 999px !important;
   }
 
-  .kargo-original-app button.kargo-toggle>div,
-  .auth-page button.kargo-toggle>div {
+  .kargo-original-app button.kargo-toggle:not(.bd-item__toggle)>div,
+  .auth-page button.kargo-toggle:not(.bd-item__toggle)>div {
     top: 3px !important;
     left: 3px !important;
     width: 18px !important;
     height: 18px !important;
   }
 
-  .kargo-original-app button.kargo-toggle[aria-checked="true"]>div,
-  .auth-page button.kargo-toggle[aria-checked="true"]>div {
+  .kargo-original-app button.kargo-toggle:not(.bd-item__toggle)[aria-checked="true"]>div,
+  .auth-page button.kargo-toggle:not(.bd-item__toggle)[aria-checked="true"]>div {
     left: 23px !important;
   }
 

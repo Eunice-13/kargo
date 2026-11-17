@@ -1,7 +1,18 @@
-import { useState } from "react";
-import { ImageUp, X } from "lucide-react";
+import { useId, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  Camera,
+  ChevronDown,
+  ChevronUp,
+  ImagePlus,
+  PackagePlus,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import type { SellingUnit } from "@/types";
-import { Modal, PrimaryBtn, SecondaryBtn } from "@/components/shared";
+import { useDialogA11y } from "@/components/shared";
+import "./addBatchItemsModal.css";
 
 export type BatchItemInput = {
   name: string;
@@ -16,10 +27,37 @@ export type BatchItemInput = {
   imagePreview?: string;
 };
 
+const emptyItem = (): BatchItemInput => ({
+  name: "",
+  basePrice: "",
+  markup: "",
+  qty: "",
+  limit: "",
+  waitlistLimit: "0",
+  sellingUnit: "piece",
+  piecesPerBox: "",
+});
+
+const buyerPays = (product: BatchItemInput) => {
+  const base = Number(product.basePrice);
+  const markup = Number(product.markup);
+  const total = Number.isFinite(base) && Number.isFinite(markup) ? base + markup : 0;
+  return Math.max(0, total).toFixed(2);
+};
+
+const hasMissingRequiredField = (product: BatchItemInput) =>
+  !product.name.trim() ||
+  Number(product.basePrice) + Number(product.markup) <= 0 ||
+  Number(product.qty) <= 0 ||
+  (product.sellingUnit === "box" &&
+    (!Number.isInteger(Number(product.piecesPerBox)) || Number(product.piecesPerBox) < 1));
+
 export default function AddBatchItemsModal({
+  batchTitle,
   onAdd,
   onClose,
 }: {
+  batchTitle: string;
   onAdd: (
     items: Array<{
       name: string;
@@ -36,46 +74,39 @@ export default function AddBatchItemsModal({
   ) => void;
   onClose: () => void;
 }) {
-  const [products, setProducts] = useState<BatchItemInput[]>([
-    {
-      name: "",
-      basePrice: "",
-      markup: "",
-      qty: "",
-      limit: "",
-      waitlistLimit: "0",
-      sellingUnit: "piece",
-      piecesPerBox: "",
-    },
-  ]);
+  const [products, setProducts] = useState<BatchItemInput[]>([emptyItem()]);
+  const [expandedItem, setExpandedItem] = useState<number | null>(0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const dialogRef = useDialogA11y(onClose);
+  const titleId = useId();
+  const photoInputPrefix = useId();
 
-  const addRow = () =>
-    setProducts((p) => [
-      ...p,
-      {
-        name: "",
-        basePrice: "",
-        markup: "",
-        qty: "",
-        limit: "",
-        waitlistLimit: "0",
-        sellingUnit: "piece",
-        piecesPerBox: "",
-      },
-    ]);
+  const addRow = () => {
+    setExpandedItem(products.length);
+    setProducts((current) => [...current, emptyItem()]);
+  };
 
-  const removeRow = (i: number) =>
-    setProducts((p) => {
-      if (p[i]?.imagePreview) URL.revokeObjectURL(p[i].imagePreview);
-      return p.filter((_, idx) => idx !== i);
+  const removeRow = (index: number) => {
+    if (products[index]?.imagePreview) URL.revokeObjectURL(products[index].imagePreview);
+    const nextLength = products.length - 1;
+    setProducts((current) => current.filter((_, productIndex) => productIndex !== index));
+    setExpandedItem((expanded) => {
+      if (nextLength === 0) return null;
+      if (expanded === null) return null;
+      if (expanded === index) return Math.min(index, nextLength - 1);
+      return expanded > index ? expanded - 1 : expanded;
     });
+  };
 
-  const updateRow = (i: number, k: keyof BatchItemInput, v: string) =>
-    setProducts((p) => p.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
+  const updateRow = (index: number, key: keyof BatchItemInput, value: string) =>
+    setProducts((current) =>
+      current.map((row, productIndex) =>
+        productIndex === index ? { ...row, [key]: value } : row,
+      ),
+    );
 
-  const chooseImage = (i: number, file?: File) => {
+  const chooseImage = (index: number, file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/") || file.size > 5 * 1024 * 1024) {
       setError("Choose an image file that is 5 MB or smaller.");
@@ -83,8 +114,8 @@ export default function AddBatchItemsModal({
     }
     setError("");
     setProducts((current) =>
-      current.map((product, index) => {
-        if (index !== i) return product;
+      current.map((product, productIndex) => {
+        if (productIndex !== index) return product;
         if (product.imagePreview) URL.revokeObjectURL(product.imagePreview);
         return { ...product, imageFile: file, imagePreview: URL.createObjectURL(file) };
       }),
@@ -93,7 +124,10 @@ export default function AddBatchItemsModal({
 
   const submit = async () => {
     const valid = products.filter(
-      (p) => p.name.trim() && Number(p.basePrice) + Number(p.markup) > 0 && Number(p.qty) > 0,
+      (product) =>
+        product.name.trim() &&
+        Number(product.basePrice) + Number(product.markup) > 0 &&
+        Number(product.qty) > 0,
     );
     if (valid.length === 0) {
       setError("Add at least one product with a name, price, and quantity.");
@@ -101,9 +135,9 @@ export default function AddBatchItemsModal({
     }
     if (
       valid.some(
-        (p) =>
-          p.sellingUnit === "box" &&
-          (!Number.isInteger(Number(p.piecesPerBox)) || Number(p.piecesPerBox) < 1),
+        (product) =>
+          product.sellingUnit === "box" &&
+          (!Number.isInteger(Number(product.piecesPerBox)) || Number(product.piecesPerBox) < 1),
       )
     ) {
       setError("Enter the number of pieces included in every box item.");
@@ -111,141 +145,281 @@ export default function AddBatchItemsModal({
     }
     setError("");
     setLoading(true);
-    const added = valid.map((p) => ({
-      name: p.name.trim(),
-      price: Number(p.basePrice) + Number(p.markup),
-      qty: Number(p.qty),
+    const added = valid.map((product) => ({
+      name: product.name.trim(),
+      price: Number(product.basePrice) + Number(product.markup),
+      qty: Number(product.qty),
       claimed: 0,
       locked: false,
-      limitPerUser: Number(p.limit) > 0 ? Number(p.limit) : undefined,
-      waitlistLimit: Number(p.waitlistLimit || 0),
-      sellingUnit: p.sellingUnit,
-      piecesPerBox: p.sellingUnit === "box" ? Number(p.piecesPerBox) : undefined,
-      imageUrl: p.imagePreview || undefined,
+      limitPerUser: Number(product.limit) > 0 ? Number(product.limit) : undefined,
+      waitlistLimit: Number(product.waitlistLimit || 0),
+      sellingUnit: product.sellingUnit,
+      piecesPerBox:
+        product.sellingUnit === "box" ? Number(product.piecesPerBox) : undefined,
+      imageUrl: product.imagePreview || undefined,
     }));
     setLoading(false);
     onAdd(added);
     onClose();
   };
 
-  return (
-    <Modal title="Add Items to Batch" onClose={onClose} width={560}>
-      <div className="space-y-4">
-        {products.map((p, i) => (
-          <div key={i} className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <input
-                value={p.name}
-                onChange={(e) => updateRow(i, "name", e.target.value)}
-                placeholder="Item name"
-                className="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 outline-none focus:border-[#191BA9]"
-              />
-              <button
-                type="button"
-                onClick={() => removeRow(i)}
-                aria-label="Remove"
-                className="p-1 text-red-600 hover:bg-red-50 rounded-md"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <input
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Base price"
-                value={p.basePrice}
-                onChange={(e) => updateRow(i, "basePrice", e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-2 outline-none"
-              />
-              <input
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Markup"
-                value={p.markup}
-                onChange={(e) => updateRow(i, "markup", e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-2 outline-none"
-              />
-              <input
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Qty"
-                value={p.qty}
-                onChange={(e) => updateRow(i, "qty", e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-2 outline-none"
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <input
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Limit per buyer"
-                value={p.limit}
-                onChange={(e) => updateRow(i, "limit", e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-2 outline-none"
-              />
-              <select
-                value={p.sellingUnit}
-                onChange={(e) => updateRow(i, "sellingUnit", e.target.value)}
-                className="text-sm border border-gray-300 rounded-md px-3 py-2 bg-white outline-none"
-              >
-                <option value="piece">Piece</option>
-                <option value="box">Box</option>
-              </select>
-              {p.sellingUnit === "box" && (
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="Pieces/box"
-                  value={p.piecesPerBox}
-                  onChange={(e) => updateRow(i, "piecesPerBox", e.target.value)}
-                  className="text-sm border border-gray-300 rounded-md px-3 py-2 outline-none"
-                />
-              )}
-            </div>
-            <label className="flex items-center gap-2 text-xs font-semibold text-gray-500 cursor-pointer border-2 border-dashed border-gray-300 rounded-lg px-3 py-2 hover:border-[#191BA9] hover:text-[#191BA9] transition-colors w-fit">
-              <ImageUp size={14} />
-              <span>{p.imagePreview ? "Change image" : "Upload image"}</span>
-              <input
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={(e) => chooseImage(i, e.target.files?.[0])}
-              />
-            </label>
-            {p.imagePreview && (
-              <img
-                src={p.imagePreview}
-                alt=""
-                className="w-24 h-24 object-cover rounded-lg border"
-              />
-            )}
+  return createPortal(
+    <div
+      className="add-items-overlay"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        className="add-items-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
+        <header className="add-items-modal__header">
+          <span className="add-items-modal__icon" aria-hidden="true">
+            <PackagePlus size={18} />
+          </span>
+          <div className="add-items-modal__heading">
+            <h2 id={titleId}>Add items to batch</h2>
+            <p>{batchTitle}</p>
           </div>
-        ))}
-        <button
-          type="button"
-          onClick={addRow}
-          className="text-sm font-semibold text-[#191BA9] hover:underline"
-        >
-          + Add another item
-        </button>
-        {error && (
-          <p className="text-xs text-red-600" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="flex justify-end gap-2 pt-2">
-          <SecondaryBtn onClick={onClose}>Cancel</SecondaryBtn>
-          <PrimaryBtn onClick={submit} disabled={loading}>
-            {loading ? "Adding…" : "Add Items"}
-          </PrimaryBtn>
+          <button
+            type="button"
+            className="add-items-modal__close"
+            aria-label="Close"
+            onClick={onClose}
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </header>
+
+        <div className="add-items-modal__body">
+          <div className="add-items-modal__list">
+            {products.map((product, index) => {
+              const expanded = expandedItem === index;
+              const photoInputId = `${photoInputPrefix}-photo-${index}`;
+              const missingRequired = hasMissingRequiredField(product);
+              return (
+                <article className="add-items-item" data-expanded={expanded} key={index}>
+                  <div className="add-items-item__header">
+                    <button
+                      type="button"
+                      className="add-items-item__toggle"
+                      aria-expanded={expanded}
+                      onClick={() => setExpandedItem(expanded ? null : index)}
+                    >
+                      <span>Item {index + 1}</span>
+                      {expanded ? (
+                        <ChevronUp size={16} aria-hidden="true" />
+                      ) : (
+                        <ChevronDown size={16} aria-hidden="true" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className="add-items-item__remove"
+                      aria-label={`Remove item ${index + 1}`}
+                      onClick={() => removeRow(index)}
+                    >
+                      <Trash2 size={14} aria-hidden="true" /> Remove
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="add-items-item__summary"
+                    aria-expanded={expanded}
+                    onClick={() => setExpandedItem(index)}
+                  >
+                    <span
+                      className={`add-items-item__summary-photo${product.imagePreview ? "" : " add-items-item__summary-photo--empty"}`}
+                    >
+                      {product.imagePreview ? (
+                        <img src={product.imagePreview} alt="" />
+                      ) : (
+                        <ImagePlus size={16} aria-hidden="true" />
+                      )}
+                    </span>
+                    <span className="add-items-item__summary-copy">
+                      <strong>{product.name.trim() || `Item ${index + 1}`}</strong>
+                      <small data-invalid={missingRequired}>
+                        ₱{buyerPays(product)} · {product.qty || 0} pcs
+                      </small>
+                    </span>
+                    <ChevronDown size={18} aria-hidden="true" />
+                  </button>
+
+                  <div className="add-items-item__body">
+                    <button
+                      type="button"
+                      className={`add-items-item__photo${product.imagePreview ? " has-photo" : ""}`}
+                      aria-label={product.imagePreview ? "Change photo" : "Add photo"}
+                      onClick={() => document.getElementById(photoInputId)?.click()}
+                    >
+                      {product.imagePreview ? (
+                        <>
+                          <img src={product.imagePreview} alt="" />
+                          <span className="add-items-item__photo-badge" aria-hidden="true">
+                            <Camera size={13} />
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <ImagePlus size={20} aria-hidden="true" />
+                          <span>Add photo</span>
+                        </>
+                      )}
+                    </button>
+                    <input
+                      id={photoInputId}
+                      className="sr-only"
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => chooseImage(index, event.target.files?.[0])}
+                    />
+
+                    <label className="add-items-field add-items-field--name">
+                      <span>Item name</span>
+                      <input
+                        className="add-items-field__control"
+                        value={product.name}
+                        onChange={(event) => updateRow(index, "name", event.target.value)}
+                        placeholder="e.g. Matcha cookies"
+                      />
+                    </label>
+
+                    <div className="add-items-item__prices">
+                      <label className="add-items-field">
+                        <span>Base price</span>
+                        <span className="add-items-field__money">
+                          <i aria-hidden="true">₱</i>
+                          <input
+                            className="add-items-field__control"
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="0.00"
+                            value={product.basePrice}
+                            onChange={(event) => updateRow(index, "basePrice", event.target.value)}
+                          />
+                        </span>
+                      </label>
+                      <label className="add-items-field">
+                        <span>Markup</span>
+                        <span className="add-items-field__money">
+                          <i aria-hidden="true">₱</i>
+                          <input
+                            className="add-items-field__control"
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="0.00"
+                            value={product.markup}
+                            onChange={(event) => updateRow(index, "markup", event.target.value)}
+                          />
+                        </span>
+                      </label>
+                      <div className="add-items-field add-items-field--buyer-pays">
+                        <span>Buyer pays</span>
+                        <output>₱{buyerPays(product)}</output>
+                      </div>
+                    </div>
+
+                    <div className="add-items-item__stock">
+                      <label className="add-items-field">
+                        <span>Quantity</span>
+                        <input
+                          className="add-items-field__control"
+                          type="number"
+                          min="1"
+                          step="1"
+                          placeholder="1"
+                          value={product.qty}
+                          onChange={(event) => updateRow(index, "qty", event.target.value)}
+                        />
+                      </label>
+                      <label className="add-items-field">
+                        <span>Limit per buyer</span>
+                        <input
+                          className="add-items-field__control"
+                          type="number"
+                          min="0"
+                          step="1"
+                          placeholder="Optional"
+                          value={product.limit}
+                          onChange={(event) => updateRow(index, "limit", event.target.value)}
+                        />
+                      </label>
+                      <label className="add-items-field add-items-field--unit">
+                        <span>Unit</span>
+                        <select
+                          className="add-items-field__control"
+                          value={product.sellingUnit}
+                          onChange={(event) => updateRow(index, "sellingUnit", event.target.value)}
+                        >
+                          <option value="piece">Piece</option>
+                          <option value="box">Box</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    {product.sellingUnit === "box" && (
+                      <label className="add-items-field add-items-field--pieces">
+                        <span>Pieces per box</span>
+                        <input
+                          className="add-items-field__control"
+                          type="number"
+                          min="1"
+                          step="1"
+                          placeholder="1"
+                          value={product.piecesPerBox}
+                          onChange={(event) =>
+                            updateRow(index, "piecesPerBox", event.target.value)
+                          }
+                        />
+                      </label>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <button type="button" className="add-items-modal__add" onClick={addRow}>
+            <Plus size={16} aria-hidden="true" /> Add another item
+          </button>
+          {error && (
+            <p className="add-items-modal__error" role="alert">
+              {error}
+            </p>
+          )}
         </div>
+
+        <footer className="add-items-modal__footer">
+          <p>
+            {products.length} {products.length === 1 ? "item" : "items"} ready
+          </p>
+          <div>
+            <button type="button" className="add-items-modal__cancel" onClick={onClose}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="add-items-modal__submit"
+              disabled={loading}
+              onClick={submit}
+            >
+              {loading
+                ? "Adding…"
+                : `Add ${products.length} ${products.length === 1 ? "item" : "items"}`}
+            </button>
+          </div>
+        </footer>
       </div>
-    </Modal>
+    </div>,
+    document.body,
   );
 }

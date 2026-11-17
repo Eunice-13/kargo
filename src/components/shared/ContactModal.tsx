@@ -1,9 +1,10 @@
-import { ArrowUpRight, MessageCircleOff } from "lucide-react"
+import { ArrowUpRight, Info, MessageCircleOff } from "lucide-react"
 import { CREAM } from "@/constants/theme"
 import Modal from "./Modal"
 import PrimaryBtn from "./PrimaryBtn"
 import SecondaryBtn from "./SecondaryBtn"
 import Avatar from "./Avatar"
+import BatchActionDialog from "./BatchActionDialog"
 
 // Contact redirect modal — replaces the old in-app chat. Opens the other
 // party's real contact link (Facebook/IG/etc.) in a new tab, or shows a
@@ -13,12 +14,69 @@ export default function ContactModal({
   context,
   contactUrl,
   onClose,
+  batchDetail = false,
 }: {
   name: string
   context?: string
   contactUrl?: string
   onClose: () => void
+  batchDetail?: boolean
 }) {
+  if (batchDetail) {
+    return (
+      <BatchActionDialog title="Contact" onClose={onClose} className="batch-contact">
+        <div className="batch-contact__seller">
+          <Avatar name={name} size={44} />
+          <div className="batch-contact__seller-copy">
+            <strong>{name}</strong>
+            {context && <span>Re: {context}</span>}
+          </div>
+        </div>
+
+        {contactUrl ? (
+          <>
+            <p className="batch-contact__message">
+              KARGO doesn't handle messages in-app. Continue the conversation through the contact
+              link shared by {name}.
+            </p>
+            <div className="batch-contact__actions">
+              <button
+                type="button"
+                className="batch-action-primary"
+                onClick={() => {
+                  window.open(contactUrl, "_blank", "noopener,noreferrer")
+                  onClose()
+                }}
+              >
+                Open contact link <ArrowUpRight size={14} aria-hidden="true" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="batch-contact__empty">
+              <MessageCircleOff size={30} aria-hidden="true" />
+              <strong>This user hasn't added a contact link yet</strong>
+              <span>Ask them to add a Facebook or other contact link in their profile settings.</span>
+            </div>
+            <div className="batch-contact__actions">
+              <button type="button" className="batch-action-primary" onClick={onClose}>
+                Done
+              </button>
+            </div>
+          </>
+        )}
+
+        <p className="batch-contact__notice">
+          <Info size={15} aria-hidden="true" />
+          <span>
+            Links open in a new tab. Verify the destination before sharing personal details.
+          </span>
+        </p>
+      </BatchActionDialog>
+    )
+  }
+
   return (
     <Modal
       title="Contact"

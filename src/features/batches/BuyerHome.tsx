@@ -228,7 +228,7 @@ function batchProgress(batch: BatchType) {
   };
 }
 
-function BatchCard({
+export function BatchCard({
   batch,
   favorited,
   reactionCount,
@@ -236,6 +236,7 @@ function BatchCard({
   rank,
   onFavorite,
   onOpen,
+  topRightElement,
 }: {
   batch: BatchType;
   favorited: boolean;
@@ -244,6 +245,7 @@ function BatchCard({
   rank?: number;
   onFavorite: () => void;
   onOpen: () => void;
+  topRightElement?: React.ReactNode;
 }) {
   const { percentage, color: progressColor } = batchProgress(batch);
   const closed = batchCardClosed(batch);
@@ -286,22 +288,24 @@ function BatchCard({
         />
         <span className="buyer-batch-card__category">{normalizeBatchCategory(batch.category)}</span>
         {closed && <ClosedBatchBadge size="small" endsOn={batch.endsOn} />}
-        <button
-          type="button"
-          className={`buyer-batch-card__favorite${favorited ? " is-favorite" : ""}`}
-          aria-label={
-            favorited ? `Remove ${batch.title} from favorites` : `Add ${batch.title} to favorites`
-          }
-          aria-pressed={favorited}
-          disabled={reactionPending || closed}
-          onClick={(event) => {
-            event.stopPropagation();
-            onFavorite();
-          }}
-        >
-          <Heart size={22} strokeWidth={2.2} fill={favorited ? "currentColor" : "transparent"} />
-          <span>{reactionCount}</span>
-        </button>
+        {topRightElement ?? (
+          <button
+            type="button"
+            className={`buyer-batch-card__favorite${favorited ? " is-favorite" : ""}`}
+            aria-label={
+              favorited ? `Remove ${batch.title} from favorites` : `Add ${batch.title} to favorites`
+            }
+            aria-pressed={favorited}
+            disabled={reactionPending || closed}
+            onClick={(event) => {
+              event.stopPropagation();
+              onFavorite();
+            }}
+          >
+            <Heart size={22} strokeWidth={2.2} fill={favorited ? "currentColor" : "transparent"} />
+            <span>{reactionCount}</span>
+          </button>
+        )}
         {rank !== undefined && (
           <span className="buyer-batch-card__rank" aria-hidden="true">
             {rank === 1 && <Flame size={12} strokeWidth={2.4} fill="currentColor" />}

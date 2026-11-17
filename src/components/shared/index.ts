@@ -16,6 +16,7 @@ export { default as PrimaryBtn } from "./PrimaryBtn";
 export { default as SecondaryBtn } from "./SecondaryBtn";
 export { default as Toggle } from "./Toggle";
 export { default as Modal, useDialogA11y } from "./Modal";
+export { default as BatchActionDialog } from "./BatchActionDialog";
 export { default as ContactModal } from "./ContactModal";
 export { resolveContactUrl, normalizeUrl } from "./contactLink";
 export { default as ShareButton } from "./ShareButton";
