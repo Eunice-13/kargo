@@ -2166,6 +2166,7 @@ export default function BatchPage({
           name={sellerLabel(batch)}
           context={batch.title}
           contactUrl={batch.sellerFb}
+          sellerId={batch.sellerId}
           batchDetail
           onClose={() => setContact(false)}
         />

@@ -1037,6 +1037,8 @@ export async function loadCurrentAppData(): Promise<LoadedAppData | null> {
 
         seller: sellerName,
 
+        sellerId: row.seller_id,
+
         sellerFb: participantLinks.get(row.seller_id),
 
         amount: orderTotal,

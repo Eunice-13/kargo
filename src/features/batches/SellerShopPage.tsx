@@ -575,6 +575,7 @@ export default function SellerShopPage({
           name={sellerDisplay}
           context="shop inquiry"
           contactUrl={contactUrl}
+          sellerId={sellerId ? String(sellerId) : undefined}
           onClose={() => setShowChat(false)}
         />
       )}

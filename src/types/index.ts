@@ -339,6 +339,8 @@ export type OrderRow = {
 
   seller: string;
 
+  sellerId?: string;
+
   sellerFb?: string;
 
   amount: number;

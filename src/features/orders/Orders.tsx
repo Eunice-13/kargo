@@ -139,6 +139,7 @@ export default function Orders({
           name={contactOrder.seller}
           context={contactOrder.product}
           contactUrl={contactOrder.sellerFb}
+          sellerId={contactOrder.sellerId}
           onClose={() => setContact(null)}
         />
       )}

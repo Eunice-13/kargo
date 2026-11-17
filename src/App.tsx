@@ -159,25 +159,26 @@ export default function App() {
   const reservationGateKey = sharedBatchId ? `kargo-reservation-gate:${sharedBatchId}` : "";
   const [showReservationGate, setShowReservationGate] = useState(() => {
     if (!viaBatchLink || originalPreview || typeof window === "undefined") return false;
-    return window.sessionStorage.getItem(reservationGateKey) !== "seen";
+    return window.localStorage.getItem(reservationGateKey) !== "seen";
   });
 
-  // Treat the gate as a one-time notice for this shared batch. Marking it when
-  // it is shown (rather than only when it is dismissed) prevents browser
-  // history navigation/reloads from showing the same reservation dialog again.
+  // Treat the gate as a one-time notice for this shared batch. It lives in
+  // localStorage so opening the same link in a new tab does not show it again.
+  // Marking it when shown (rather than only when dismissed) also covers browser
+  // history navigation and reloads.
   useEffect(() => {
     if (
       showReservationGate &&
       reservationGateKey &&
       typeof window !== "undefined"
     ) {
-      window.sessionStorage.setItem(reservationGateKey, "seen");
+      window.localStorage.setItem(reservationGateKey, "seen");
     }
   }, [reservationGateKey, showReservationGate]);
 
   const dismissReservationGate = () => {
     if (reservationGateKey && typeof window !== "undefined") {
-      window.sessionStorage.setItem(reservationGateKey, "seen");
+      window.localStorage.setItem(reservationGateKey, "seen");
     }
     setShowReservationGate(false);
   };

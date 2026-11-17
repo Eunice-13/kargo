@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react"
 import { ArrowUpRight, Info, MessageCircleOff } from "lucide-react"
 import { CREAM } from "@/constants/theme"
+import { isSupabaseConfigured, requireSupabase } from "@/lib/supabase"
 import Modal from "./Modal"
 import PrimaryBtn from "./PrimaryBtn"
 import SecondaryBtn from "./SecondaryBtn"
 import Avatar from "./Avatar"
 import BatchActionDialog from "./BatchActionDialog"
+import { resolveContactUrl } from "./contactLink"
 
 // Contact redirect modal — replaces the old in-app chat. Opens the other
 // party's real contact link (Facebook/IG/etc.) in a new tab, or shows a
@@ -13,15 +16,62 @@ export default function ContactModal({
   name,
   context,
   contactUrl,
+  sellerId,
   onClose,
   batchDetail = false,
 }: {
   name: string
   context?: string
   contactUrl?: string
+  // Used only when the caller could not resolve a link (for example a shop
+  // profile fetch that failed). Lets the modal read the public profile itself
+  // instead of claiming the seller never added one.
+  sellerId?: string
   onClose: () => void
   batchDetail?: boolean
 }) {
+  const [fetchedUrl, setFetchedUrl] = useState<string | undefined>(undefined)
+  const [checking, setChecking] = useState(
+    () => !contactUrl && Boolean(sellerId) && isSupabaseConfigured,
+  )
+
+  useEffect(() => {
+    setFetchedUrl(undefined)
+    if (contactUrl || !sellerId || !isSupabaseConfigured) {
+      setChecking(false)
+      return
+    }
+
+    let active = true
+    setChecking(true)
+
+    void (async () => {
+      try {
+        const { data, error } = await requireSupabase()
+          .from("public_profiles")
+          .select("social_links")
+          .eq("id", sellerId)
+          .maybeSingle()
+
+        if (active && !error) {
+          setFetchedUrl(
+            resolveContactUrl((data?.social_links as Record<string, string>) ?? {}),
+          )
+        }
+      } catch {
+        // Leave the link unresolved; the modal then shows the empty state.
+      } finally {
+        if (active) setChecking(false)
+      }
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [contactUrl, sellerId])
+
+  const resolvedUrl = contactUrl ?? fetchedUrl
+
   if (batchDetail) {
     return (
       <BatchActionDialog title="Contact" onClose={onClose} className="batch-contact">
@@ -33,7 +83,7 @@ export default function ContactModal({
           </div>
         </div>
 
-        {contactUrl ? (
+        {resolvedUrl ? (
           <>
             <p className="batch-contact__message">
               KARGO doesn't handle messages in-app. Continue the conversation through the contact
@@ -44,7 +94,7 @@ export default function ContactModal({
                 type="button"
                 className="batch-action-primary"
                 onClick={() => {
-                  window.open(contactUrl, "_blank", "noopener,noreferrer")
+                  window.open(resolvedUrl, "_blank", "noopener,noreferrer")
                   onClose()
                 }}
               >
@@ -52,6 +102,8 @@ export default function ContactModal({
               </button>
             </div>
           </>
+        ) : checking ? (
+          <p className="batch-contact__message">Checking the seller's contact link…</p>
         ) : (
           <>
             <div className="batch-contact__empty">
@@ -107,7 +159,7 @@ export default function ContactModal({
           </div>
         </div>
 
-        {contactUrl ? (
+        {resolvedUrl ? (
           <>
             <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.5 }}>
               KARGO doesn't handle messages in-app. Continue the conversation on
@@ -122,7 +174,7 @@ export default function ContactModal({
               <PrimaryBtn
                 style={{ display: "flex", alignItems: "center", gap: 5 }}
                 onClick={() => {
-                  window.open(contactUrl, "_blank", "noopener,noreferrer")
+                  window.open(resolvedUrl, "_blank", "noopener,noreferrer")
                   onClose()
                 }}
               >
@@ -130,6 +182,10 @@ export default function ContactModal({
               </PrimaryBtn>
             </div>
           </>
+        ) : checking ? (
+          <p style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.5 }}>
+            Checking the seller's contact link…
+          </p>
         ) : (
           <>
             <div
