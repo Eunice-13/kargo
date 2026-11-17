@@ -162,6 +162,19 @@ export default function App() {
     return window.sessionStorage.getItem(reservationGateKey) !== "seen";
   });
 
+  // Treat the gate as a one-time notice for this shared batch. Marking it when
+  // it is shown (rather than only when it is dismissed) prevents browser
+  // history navigation/reloads from showing the same reservation dialog again.
+  useEffect(() => {
+    if (
+      showReservationGate &&
+      reservationGateKey &&
+      typeof window !== "undefined"
+    ) {
+      window.sessionStorage.setItem(reservationGateKey, "seen");
+    }
+  }, [reservationGateKey, showReservationGate]);
+
   const dismissReservationGate = () => {
     if (reservationGateKey && typeof window !== "undefined") {
       window.sessionStorage.setItem(reservationGateKey, "seen");
