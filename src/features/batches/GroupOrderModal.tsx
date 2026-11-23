@@ -82,7 +82,7 @@ export default function GroupOrderModal({
   const [group, setGroup] = useState<GroupOrder | null>(null);
   const [joining, setJoining] = useState(Boolean(initialCode));
   const [code, setCode] = useState(initialCode);
-  const [quantities, setQuantities] = useState<Record<string, number>>(
+  const [quantities, setQuantities] = useState<Record<string, number | "">>(
     initialProductId ? { [initialProductId]: 1 } : {},
   );
   const [loading, setLoading] = useState(true);
@@ -457,8 +457,13 @@ export default function GroupOrderModal({
                   )?.quantity ?? 0;
                 const maximum = groupCommitmentMaximum(product, ownSaved);
                 const hintId = `group-quantity-hint-${encodeURIComponent(key)}`;
-                const quantity = quantities[key] ?? 0;
-                const valid = validGroupCommitmentQuantity(quantity, maximum);
+                 const quantity = quantities[key] ?? 0;
+                 const numericQuantity = quantity === "" ? 0 : quantity;
+                 const valid =
+                   quantity !== "" && validGroupCommitmentQuantity(numericQuantity, maximum);
+                // Zero removes an existing commitment, but a buyer cannot
+                // create/save a zero-quantity commitment in the first place.
+                const canSaveQuantity = numericQuantity > 0 || ownSaved > 0;
                 return (
                   <div key={key} className="group-order-product-row">
                     <div>
@@ -486,11 +491,11 @@ export default function GroupOrderModal({
                       disabled={readOnly || formationClosed || group.status !== "forming"}
                       onChange={(event) =>
                         setQuantities((current) => ({
-                          ...current,
-                          [product.dbId ?? product.name]: Math.max(
-                            0,
-                            Number(event.target.value) || 0,
-                          ),
+                           ...current,
+                           [product.dbId ?? product.name]:
+                             event.target.value === ""
+                               ? ""
+                               : Math.max(0, Number(event.target.value) || 0),
                         }))
                       }
                     />
@@ -503,7 +508,8 @@ export default function GroupOrderModal({
                         working ||
                         group.status !== "forming" ||
                         !product.dbId ||
-                        !valid
+                        !valid ||
+                        !canSaveQuantity
                       }
                       onClick={() =>
                         run(async () => {
@@ -511,8 +517,16 @@ export default function GroupOrderModal({
                             setError(`Choose a whole-number quantity between 0 and ${maximum}.`);
                             return;
                           }
+                          if (!canSaveQuantity) {
+                            setError("Choose at least 1 item before saving.");
+                            return;
+                          }
                           setGroup(
-                            await kargoApi.setGroupCommitment(group.id, product.dbId!, quantity),
+                           await kargoApi.setGroupCommitment(
+                             group.id,
+                             product.dbId!,
+                             numericQuantity,
+                           ),
                           );
                         })
                       }
