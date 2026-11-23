@@ -21,6 +21,8 @@ import kargoLogoUrl from "@/assets/kargo-logo.png";
 
 import { requestBatchOpen, requestSellerOpen } from "@/state/navIntent";
 
+import { clearBatchUrlParam } from "@/state/routeUrl";
+
 import { useScrollToTopOnRouteChange } from "@/state/routeScroll";
 
 import { BATCHES_INIT } from "@/data/batches";
@@ -125,6 +127,11 @@ export default function App() {
     return Number.isFinite(n) && n > 0 ? n : null;
   })();
 
+  // Only the batch this page loaded with is treated as a deep link. Later URL
+  // edits (as the user moves around the app) must not re-trigger the boot flow
+  // or the reservation notice.
+  const [bootSharedBatchId] = useState(sharedBatchId);
+
   const viaBatchLink = sharedBatchId !== null;
 
   // A batch link outranks an email tab: it promises to open that batch's page.
@@ -141,8 +148,8 @@ export default function App() {
         : (linkedTab ?? (u.sellerEnabled ? "Dashboard" : "Batches"));
 
   useEffect(() => {
-    if (sharedBatchId !== null) requestBatchOpen(sharedBatchId);
-  }, [sharedBatchId]);
+    if (bootSharedBatchId !== null) requestBatchOpen(bootSharedBatchId);
+  }, [bootSharedBatchId]);
 
   const [stage, setStage] = useState<AppStage>(anyPreview ? "app" : "login");
   const [signupRole, setSignupRole] = useState<"Buyer" | "Admin">("Buyer");
@@ -208,6 +215,12 @@ export default function App() {
         ? "Batches"
         : (linkedTab ?? (originalPreview ? "Dashboard" : "Batches")),
   );
+
+  // Leaving the Batches tab drops its batch deep link so the address bar never
+  // keeps pointing at a batch the user is no longer looking at.
+  useEffect(() => {
+    if (tab !== "Batches") clearBatchUrlParam();
+  }, [tab]);
   // Every page opens at the top. The shell owns this policy (see
   // state/routeScroll.ts); the key is the current stage plus tab, and tabs with
   // their own sub-pages extend it themselves.

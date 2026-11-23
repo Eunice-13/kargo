@@ -27,7 +27,8 @@ import type {
   SellingUnit,
 } from "@/types";
 
-import { requireSupabase } from "@/lib/supabase";
+import { isSupabaseConfigured, requireSupabase } from "@/lib/supabase";
+import { bundledMedia } from "@/lib/media";
 
 import { normalizeUsername } from "@/lib/username";
 
@@ -1768,9 +1769,18 @@ function assertBatchImage(file: File) {
 function batchMediaUrl(path?: string | null) {
   if (!path) return undefined;
 
+  // Bundled copies win: they load from the flash drive with no Supabase keys,
+  // and they work for third-party hosts that block hotlinking.
+  const bundled = bundledMedia(path);
+  if (bundled !== path) return bundled;
+
   // Absolute URLs (externally hosted images) and blob/data URLs are used as-is.
   // Only bucket-relative storage paths get resolved through Supabase storage.
   if (/^(?:https?:|blob:|data:|\/)/i.test(path)) return path;
+
+  // Without credentials a storage path cannot be resolved; returning undefined
+  // lets the UI fall back to its category artwork instead of crashing.
+  if (!isSupabaseConfigured) return undefined;
 
   return requireSupabase().storage.from(BATCH_MEDIA_BUCKET).getPublicUrl(path).data.publicUrl;
 }

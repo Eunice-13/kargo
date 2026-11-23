@@ -123,6 +123,7 @@ export default function BatchPage({
   onBack,
   backLabel = "Back to Batches",
   onSellerClick,
+  onOpenBatch,
 
   setBatches,
 
@@ -151,6 +152,9 @@ export default function BatchPage({
   onBack: () => void;
   backLabel?: string;
   onSellerClick: (name: string) => void;
+  // Opens another batch in place. Falls back to a full page load when the
+  // parent does not provide an in-app handler.
+  onOpenBatch?: (batch: BatchType) => void;
 
   setBatches: React.Dispatch<React.SetStateAction<BatchType[]>>;
 
@@ -319,7 +323,9 @@ export default function BatchPage({
     }
   });
   const derivedGalleryItems = (batch.galleryImages ?? []).length
-    ? (batch.galleryImages ?? []).map((imageUrl, index) => {
+    ? (batch.galleryImages ?? [])
+        .filter((imageUrl) => Boolean(imageUrl && imageUrl.trim()))
+        .map((imageUrl, index) => {
         const productIndex = productIndexByImage.get(imageUrl);
         return {
           key: `batch-${index}`,
@@ -820,6 +826,7 @@ export default function BatchPage({
               setSelectedProductIndex((index) => (index + 1) % galleryItems.length)
             }
             select={setSelectedProductIndex}
+            fallback={batchImage(batch.category, batch.id)}
           />
         </div>
         <section className="bd-info">
@@ -875,31 +882,42 @@ export default function BatchPage({
               </div>
               <div className="bd-card bd-card--buyer-grow">
                 <p className="bd-muted">In this batch ({batch.products.length})</p>
-                {batch.products.map((product, index) => (
-                  <div className="bd-row" key={product.dbId ?? product.id ?? index}>
-                    <img
-                      className="bd-row__thumb"
-                      src={productImageUrl(product.name, 80, product.imageUrl)}
-                      alt=""
-                    />
-                    <div className="bd-row__main">
-                      <p className="bd-row__name">{product.name}</p>
-                      <p className="bd-muted">{formatMoney(product.price)}</p>
+                {batch.products.map((product, index) => {
+                  // Claim stock = units the seller listed minus units buyers already claimed.
+                  const stockLeft = Math.max(0, product.qty - product.claimed);
+                  const soldOut = stockLeft === 0;
+
+                  return (
+                    <div className="bd-row" key={product.dbId ?? product.id ?? index}>
+                      <img
+                        className="bd-row__thumb"
+                        src={productImageUrl(product.name, 80, product.imageUrl)}
+                        alt=""
+                      />
+                      <div className="bd-row__main">
+                        <p className="bd-row__name">{product.name}</p>
+                        <p className="bd-muted">{formatMoney(product.price)}</p>
+                        <span className="bd-row__stock">
+                          <span className="bd-row__stock-count">
+                            {soldOut ? "Sold out" : `${stockLeft} left`}
+                          </span>
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="bd-claim"
+                        disabled={ordersClosed || soldOut}
+                        onClick={() => {
+                          const target = { p: product, key: `${batch.id}-${index}` };
+                          if (batch.groupOrdersEnabled) setPurchaseModeTarget(target);
+                          else setClaimTarget(target);
+                        }}
+                      >
+                        <Plus size={14} /> Claim
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      className="bd-claim"
-                      disabled={ordersClosed || product.qty - product.claimed <= 0}
-                      onClick={() => {
-                        const target = { p: product, key: `${batch.id}-${index}` };
-                        if (batch.groupOrdersEnabled) setPurchaseModeTarget(target);
-                        else setClaimTarget(target);
-                      }}
-                    >
-                      <Plus size={14} /> Claim
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div ref={groupOrderButtonRef} className="bd-actions bd-cta-inline">
                 <button
@@ -1992,6 +2010,12 @@ export default function BatchPage({
                   reactionPending={false}
                   onFavorite={() => undefined}
                   onOpen={() => {
+                    // Stay inside the app so the boot/loading screen never
+                    // flashes when hopping between related batches.
+                    if (onOpenBatch) {
+                      onOpenBatch(related);
+                      return;
+                    }
                     const url = new URL(window.location.href);
                     url.searchParams.set("batch", String(related.id));
                     window.location.assign(url);

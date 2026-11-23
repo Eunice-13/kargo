@@ -1,3 +1,5 @@
+import { bundledMedia } from "@/lib/media"
+
 export const PROD_IMG: Record<string, string> = {
   "Tokyo Banana":
     "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=60&h=60&fit=crop&auto=format",
@@ -22,15 +24,22 @@ export const PROD_IMG: Record<string, string> = {
 }
 
 export function productImageUrl(name: string, size = 60, imageUrl?: string) {
-  if (imageUrl) return imageUrl
+  if (imageUrl) return bundledMedia(imageUrl) ?? imageUrl
 
-  const url = new URL(
+  const base =
     PROD_IMG[name] ||
-      "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=60&h=60&fit=crop&auto=format",
-  )
+    "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=60&h=60&fit=crop&auto=format"
+  const url = new URL(base)
   url.searchParams.set("w", String(size))
   url.searchParams.set("h", String(size))
-  return url.toString()
+
+  const sized = url.toString()
+  const exact = bundledMedia(sized)
+  if (exact !== sized) return exact!
+  // Bundled copies keep the size they were downloaded at, so fall back to the
+  // base image rather than a remote request for another size variant.
+  const baseMapped = bundledMedia(base)
+  return baseMapped !== base ? baseMapped! : sized
 }
 
 export default function ProductThumb({

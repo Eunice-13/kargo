@@ -73,6 +73,8 @@
 .bd-row__name{margin:0;color:#141414;font-size:14px;font-weight:500;line-height:1.55;letter-spacing:normal;font-style:normal;overflow-wrap:anywhere}
 .bd-row__main .bd-muted{color:#141414;font-size:14px;font-weight:600;line-height:1.55}
 .bd-claim{display:inline-flex;align-items:center;gap:5px;height:36px;padding:0 14px;border:0;border-radius:8px;background:#1e23b5;color:#fff;font-size:13px;font-weight:600;line-height:1.55;text-transform:none;font-style:normal;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.bd-row__stock{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:3px}
+.bd-row__stock-count{color:#6b6760;font-size:12px;font-weight:500;line-height:1.4;font-variant-numeric:tabular-nums}
 .bd-claim:hover{filter:brightness(.92)}
 .bd-claim:disabled{opacity:.5;cursor:not-allowed}
 .bd-actions{display:flex;gap:8px}

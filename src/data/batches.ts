@@ -1,4 +1,5 @@
 import type { BatchItem } from "@/types"
+import { batchImage } from "@/constants/categories"
 
 const BASE_BATCHES_SEED: Omit<BatchItem, "sellerId">[] =
   [
@@ -999,7 +1000,11 @@ let productImageIndex = 0
 
 export const BATCHES_INIT: BatchItem[] = BATCHES_SEED.map((batch) => ({
   ...batch,
-  coverImage: unsplashImage(BATCH_COVER_IMAGE_IDS[batch.id - 1]),
+  // A missing id (the id list is shorter than the seed) must not produce a
+  // "photo-undefined" URL; fall back to the category artwork instead.
+  coverImage: BATCH_COVER_IMAGE_IDS[batch.id - 1]
+    ? unsplashImage(BATCH_COVER_IMAGE_IDS[batch.id - 1])
+    : batchImage(batch.category, batch.id),
   products: batch.products.map((product) => ({
     ...product,
     imageUrl: unsplashImage(PRODUCT_IMAGE_IDS[productImageIndex++]),

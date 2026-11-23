@@ -7,6 +7,7 @@ export default function BatchGallery({
   prev,
   next,
   select,
+  fallback,
 }: {
   photos: string[];
   title: string;
@@ -14,9 +15,19 @@ export default function BatchGallery({
   prev: () => void;
   next: () => void;
   select: (index: number) => void;
+  // Shown when a photo fails to load (expired link, missing file, etc.) so a
+  // batch never renders a broken-image placeholder.
+  fallback?: string;
 }) {
   const count = photos.length;
   const current = photos[index] ?? photos[0] ?? "";
+
+  const onImageError = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    const image = event.currentTarget;
+    if (!fallback || image.dataset.fallbackApplied === "1") return;
+    image.dataset.fallbackApplied = "1";
+    image.src = fallback;
+  };
 
   return (
     <div className="bd-gallery">
@@ -28,7 +39,7 @@ export default function BatchGallery({
           }}
           aria-hidden="true"
         />
-        <img className="bd-gallery__img" src={current} alt={title} />
+        <img className="bd-gallery__img" src={current} alt={title} onError={onImageError} />
         {count > 1 && (
           <>
             <button
@@ -64,7 +75,7 @@ export default function BatchGallery({
               aria-label={`Photo ${photoIndex + 1}`}
               onClick={() => select(photoIndex)}
             >
-              <img src={photo} alt="" />
+              <img src={photo} alt="" onError={onImageError} />
             </button>
           ))}
         </div>

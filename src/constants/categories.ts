@@ -1,3 +1,5 @@
+import { bundledMedia } from "@/lib/media"
+
 export const BATCH_CATEGORIES = [
   "Food",
   "Beauty",
@@ -40,7 +42,7 @@ const BATCH_IMAGE_VARIANTS = [
 ] as const
 
 export function categoryImage(category: string) {
-  return CATEGORY_IMAGES[category] ?? CATEGORY_IMAGES.Others
+  return bundledMedia(CATEGORY_IMAGES[category] ?? CATEGORY_IMAGES.Others)!
 }
 
 export function batchImage(category: string, id: string | number) {
@@ -52,9 +54,11 @@ export function batchImage(category: string, id: string | number) {
     typeof id === "number"
       ? id
       : [...id].reduce((sum, character) => sum + character.charCodeAt(0), 0)
-  return BATCH_IMAGE_VARIANTS[
-    (categoryIndex + numericId) % BATCH_IMAGE_VARIANTS.length
-  ]
+  return bundledMedia(
+    BATCH_IMAGE_VARIANTS[
+      (categoryIndex + numericId) % BATCH_IMAGE_VARIANTS.length
+    ],
+  )!
 }
 
 // Keep older saved batches visible under the current category choices.

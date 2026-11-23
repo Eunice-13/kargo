@@ -69,6 +69,8 @@ import { toggleBatchLock } from "./toggleBatchLock";
 
 import { isSupabaseConfigured } from "@/lib/supabase";
 
+import { setBatchUrlParam } from "@/state/routeUrl";
+
 import { kargoApi } from "@/services";
 
 import { formatBatchDateRange } from "@/services/batchDates";
@@ -214,6 +216,14 @@ export default function Batches({
   useScrollToTopOnRouteChange(
     ["Batches", sellerDir ? "directory" : "", shopPage ?? "", batchPage?.id ?? ""].join(":"),
   );
+
+  // Keep the address bar honest about what is on screen: the open batch's id,
+  // or no batch param once the buyer returns to the grid, a shop, or the
+  // directory. Share links (`?batch=`) keep working because the id is re-added
+  // whenever that same batch is opened.
+  useEffect(() => {
+    setBatchUrlParam(batchPage ? batchPage.id : null);
+  }, [batchPage]);
 
   useEffect(() => {
     const applyNavigationIntent = () => {
@@ -936,6 +946,7 @@ export default function Batches({
           onBack={handleBatchBack}
           backLabel={batchReturnSeller ? "Back to Shop" : "Back to Batches"}
           onSellerClick={openSellerShop}
+          onOpenBatch={openBatchFromList}
           setBatches={setBatches}
           waitlist={waitlist}
           setWaitlist={setWaitlist}

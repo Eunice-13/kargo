@@ -18,7 +18,8 @@
     "screenshot:emails": "node scripts/screenshot-emails.mjs",
     "upload:brand": "node scripts/upload-brand-assets.mjs",
     "test:seed": "node --experimental-strip-types --import ./scripts/lib/register.mjs scripts/check-batch-seed.mjs",
-    "test:claimmatch": "node --experimental-strip-types --import ./scripts/lib/register.mjs scripts/repro-claim-match.mjs"
+    "test:claimmatch": "node --experimental-strip-types --import ./scripts/lib/register.mjs scripts/repro-claim-match.mjs",
+    "bundle:media": "node scripts/bundle-media.mjs"
   },
   "dependencies": {
     "@supabase/server": "^1.7.0",

@@ -1,4 +1,5 @@
 import type { PaymentHistoryStatus } from "@/types"
+import { bundledMedia } from "@/lib/media"
 
 // ─── Palette ──────────────────────────────────────────────────────────────────
 
@@ -84,8 +85,8 @@ export const CATEGORY_COVER: Record<string, string> = {
 // Resolve a batch's banner image: the seller's uploaded cover if present,
 // otherwise the category default. Always returns a usable image URL.
 export function batchCoverSrc(coverImage: string | undefined, category: string): string {
-  if (coverImage && coverImage.trim()) return coverImage
-  return CATEGORY_COVER[category] || CATEGORY_COVER["Others"]
+  if (coverImage && coverImage.trim()) return bundledMedia(coverImage)!
+  return bundledMedia(CATEGORY_COVER[category] || CATEGORY_COVER["Others"])!
 }
 
 // ─── Status colours ───────────────────────────────────────────────────────────

@@ -285,6 +285,13 @@ export function BatchCard({
           alt=""
           draggable={false}
           className="buyer-batch-card__image"
+          onError={(event) => {
+            // Broken/expired cover links fall back to the category artwork.
+            const image = event.currentTarget;
+            if (image.dataset.fallbackApplied === "1") return;
+            image.dataset.fallbackApplied = "1";
+            image.src = batchImage(batch.category, batch.id);
+          }}
         />
         <span className="buyer-batch-card__category">{normalizeBatchCategory(batch.category)}</span>
         {closed && <ClosedBatchBadge size="small" endsOn={batch.endsOn} />}
