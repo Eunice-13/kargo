@@ -106,6 +106,8 @@ export default function Modal({
   showTitleIcon = true,
   className = "",
   overlayClassName = "",
+  maxHeight,
+  closeAriaLabel,
   titleAside,
   headerAside,
 }: {
@@ -120,6 +122,8 @@ export default function Modal({
   showTitleIcon?: boolean
   className?: string
   overlayClassName?: string
+  maxHeight?: React.CSSProperties["maxHeight"]
+  closeAriaLabel?: string
   /** Extra content right after the title, e.g. a status pill. */
   titleAside?: React.ReactNode
   /** Extra content on the right of the header, before the close button. */
@@ -221,7 +225,7 @@ export default function Modal({
         className={`si kargo-modal${isClosing ? " is-closing" : ""} ${className}`}
         style={{
           maxWidth: width,
-          maxHeight: `calc(100dvh - ${topOffset + 32}px)`,
+          maxHeight: maxHeight ?? `calc(100dvh - ${topOffset + 32}px)`,
         }}
       >
         <header
@@ -254,7 +258,7 @@ export default function Modal({
               <button
                 type="button"
                 className="kargo-modal__close"
-                aria-label={title ? `Close ${title}` : "Close dialog"}
+                aria-label={closeAriaLabel ?? (title ? `Close ${title}` : "Close dialog")}
                 onClick={requestClose}
               >
                 <X size={18} aria-hidden="true" />
@@ -264,7 +268,7 @@ export default function Modal({
             <button
               type="button"
               className="kargo-modal__close"
-              aria-label={title ? `Close ${title}` : "Close dialog"}
+              aria-label={closeAriaLabel ?? (title ? `Close ${title}` : "Close dialog")}
               onClick={requestClose}
             >
               <X size={18} aria-hidden="true" />

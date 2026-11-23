@@ -21,6 +21,13 @@ export default function BatchGallery({
   return (
     <div className="bd-gallery">
       <div className="bd-gallery__frame">
+        <div
+          className="bd-gallery__bg"
+          style={{
+            backgroundImage: current ? `url("${current.replace(/"/g, "%22")}")` : undefined,
+          }}
+          aria-hidden="true"
+        />
         <img className="bd-gallery__img" src={current} alt={title} />
         {count > 1 && (
           <>

@@ -69,7 +69,7 @@ function BuyerHomeFilterDropdown({
   }, [open]);
 
   return (
-    <div ref={rootRef} className="buyer-home-filter__dropdown">
+    <div ref={rootRef} className="buyer-home-filter__dropdown hf-select">
       <button
         type="button"
         className="buyer-home-filter__trigger"
@@ -774,8 +774,8 @@ export default function BuyerHome({
   );
   return (
     <div className="buyer-home">
-      <div className="buyer-home-filter">
-        <strong>Filter:</strong>
+      <div className="buyer-home-filter hf-panel">
+        <strong className="hf-label">Filter:</strong>
         <BuyerHomeFilterDropdown
           label="Filter batches by category"
           value={category}
