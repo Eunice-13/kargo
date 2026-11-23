@@ -548,7 +548,18 @@ export default function ItemClaimModal({
           width={900}
           onClose={() => setShowPhotoZoom(false)}
         >
-          <div className="claim-review-photo-zoom">
+          <div className="claim-review-photo-zoom bd-photo-viewer">
+            <div
+              className="bd-photo-viewer__bg"
+              style={{
+                backgroundImage: `url("${productImageUrl(
+                  product.name,
+                  1200,
+                  product.imageUrl,
+                ).replace(/"/g, "%22")}")`,
+              }}
+              aria-hidden="true"
+            />
             <img src={productImageUrl(product.name, 1200, product.imageUrl)} alt={product.name} />
           </div>
         </Modal>

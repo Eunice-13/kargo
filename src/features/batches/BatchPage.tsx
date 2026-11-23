@@ -2037,7 +2037,16 @@ export default function BatchPage({
           width={900}
           onClose={() => setGalleryZoomOpen(false)}
         >
-          <div className="claim-review-photo-zoom">
+          <div className="claim-review-photo-zoom bd-photo-viewer">
+            <div
+              className="bd-photo-viewer__bg"
+              style={{
+                backgroundImage: selectedGalleryItem?.imageUrl
+                  ? `url("${selectedGalleryItem.imageUrl.replace(/"/g, "%22")}")`
+                  : `url("${batchCoverSrc(batch.coverImage, batch.category).replace(/"/g, "%22")}")`,
+              }}
+              aria-hidden="true"
+            />
             <img
               src={selectedGalleryItem?.imageUrl ?? batchCoverSrc(batch.coverImage, batch.category)}
               alt={selectedGalleryItem?.name ?? `${batch.title} cover`}
@@ -2054,7 +2063,18 @@ export default function BatchPage({
           width={900}
           onClose={() => setPhotoPreview(null)}
         >
-          <div className="claim-review-photo-zoom">
+          <div className="claim-review-photo-zoom bd-photo-viewer">
+            <div
+              className="bd-photo-viewer__bg"
+              style={{
+                backgroundImage: `url("${productImageUrl(
+                  photoPreview.name,
+                  1200,
+                  photoPreview.imageUrl,
+                ).replace(/"/g, "%22")}")`,
+              }}
+              aria-hidden="true"
+            />
             <img
               src={productImageUrl(photoPreview.name, 1200, photoPreview.imageUrl)}
               alt={photoPreview.name}
